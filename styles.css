@@ -45,15 +45,28 @@ body {
   place-items: center;
 }
 
-.totem span {
-  display: block;
+.totem a,
+.totem .symbol {
+  display: grid;
   width: 60px;
   height: 60px;
+  place-items: center;
+  color: inherit;
   font-size: 58px;
   line-height: 1;
   text-align: center;
   text-decoration: none;
   filter: saturate(1.02);
+}
+
+.totem a:focus-visible {
+  outline: 2px solid rgba(17, 17, 17, 0.35);
+  outline-offset: 6px;
+  border-radius: 14px;
+}
+
+.totem a span {
+  display: block;
 }
 
 .totem li:nth-child(1) {
@@ -114,9 +127,9 @@ body {
   }
 
   .totem {
-    top: 158px;
-    left: calc(100vw + 2px);
-    width: 84px;
+    top: 72px;
+    left: 50%;
+    width: 116px;
     transform: translateX(-50%);
   }
 
@@ -125,7 +138,8 @@ body {
     height: 43px;
   }
 
-  .totem span {
+  .totem a,
+  .totem .symbol {
     width: 52px;
     height: 52px;
     font-size: 50px;
