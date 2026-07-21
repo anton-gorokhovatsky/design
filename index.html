@@ -3,31 +3,432 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Привет, меня зовут Антон 👋</title>
+    <title>Антон Гороховатский — digital / web</title>
     <meta
       name="description"
-      content="Лаконичная пересборка Readymag-страницы: вертикальная колонна любимых символов на спокойном светлом фоне."
+      content="Антон Гороховатский: личные символы и избранные digital-проекты."
     >
-    <meta name="theme-color" content="#eeece5">
-    <link rel="stylesheet" href="styles.css">
+    <meta name="theme-color" content="#f8f8f6">
+    <meta name="color-scheme" content="light dark">
+    <script>
+      (() => {
+        let savedTheme = null;
+
+        try {
+          savedTheme = window.localStorage.getItem("anton-theme");
+        } catch {
+          savedTheme = null;
+        }
+
+        const theme = savedTheme === "light" || savedTheme === "dark"
+          ? savedTheme
+          : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+
+        document.documentElement.dataset.theme = theme;
+        document.querySelector('meta[name="theme-color"]').content = theme === "dark" ? "#171817" : "#f8f8f6";
+      })();
+    </script>
+    <link rel="stylesheet" href="styles.css?v=20260721-motion-release">
+    <script src="script.js?v=20260721-motion-release" defer></script>
   </head>
   <body>
-    <main class="page" aria-label="Привет, меня зовут Антон">
-      <ol class="totem" aria-label="Символы страницы">
-        <li><span aria-label="суши">🍣</span></li>
-        <li><span aria-label="сэндвич">🥪</span></li>
-        <li><span aria-label="персик">🍑</span></li>
-        <li><span aria-label="кофе">☕</span></li>
-        <li><span aria-label="радио">📻</span></li>
-        <li><span aria-label="бокалы">🥂</span></li>
-        <li><span aria-label="сноуборд">🏂</span></li>
-        <li><span aria-label="футбол">⚽</span></li>
-        <li><span aria-label="телевизор">📺</span></li>
-        <li><span aria-label="волна">🌊</span></li>
-        <li><span aria-label="поклон">🙇‍♂️</span></li>
-        <li><span aria-label="компьютер">🖥️</span></li>
-        <li><span aria-label="привет">👋</span></li>
-      </ol>
+    <a class="skip-link" href="#projects">К проектам</a>
+
+    <header class="site-header">
+      <nav class="quick-links" aria-label="Контакты">
+        <a
+          class="chip-link"
+          href="https://gorokhovatsky.notion.site/digital-web-digital-f68fc13247614ccb9738d9a85acf29b4?pvs=74"
+          target="_blank"
+          rel="noreferrer"
+        >
+          CV <span aria-hidden="true">↗</span>
+        </a>
+        <a class="round-link" href="mailto:anton.gorokhovatsky@gmail.com" aria-label="Написать Антону">
+          <span aria-hidden="true">@</span>
+        </a>
+        <button
+          class="round-link theme-toggle"
+          type="button"
+          data-theme-toggle
+          aria-label="Включить тёмную тему"
+          aria-pressed="false"
+          title="Тёмная тема"
+        >
+          <span class="theme-toggle-icon theme-toggle-icon--moon" aria-hidden="true">☾</span>
+          <span class="theme-toggle-icon theme-toggle-icon--sun" aria-hidden="true">☀</span>
+        </button>
+      </nav>
+    </header>
+
+    <main>
+      <section class="symbol-stage" id="start" aria-labelledby="page-title">
+        <h1 class="visually-hidden" id="page-title">Антон Гороховатский</h1>
+
+        <div class="symbol-instrument" data-symbol-instrument>
+          <div class="symbol-rail-wrap">
+            <button class="rail-button rail-button--prev" type="button" aria-label="Предыдущий символ">
+              <span aria-hidden="true">←</span>
+            </button>
+
+            <div class="symbol-viewport">
+              <ol class="symbol-rail" role="listbox" aria-label="Личный индекс Антона">
+              <li>
+                <button
+                  class="symbol-item is-active"
+                  type="button"
+                  role="option"
+                  aria-selected="true"
+                  data-title="Суши"
+                  data-meta="вкус"
+                  data-bg="#f8f8f6"
+                  data-bg-dark="#171817"
+                  data-ink="#242421"
+                ><span aria-hidden="true">🍣</span><span class="visually-hidden">Суши</span></button>
+              </li>
+              <li>
+                <button
+                  class="symbol-item"
+                  type="button"
+                  role="option"
+                  aria-selected="false"
+                  data-title="Пастрами"
+                  data-meta="еда / статья"
+                  data-href="https://daily.afisha.ru/eating/11366-uchimsya-ocenivat-pastrami-po-zhirnosti-nezhnosti-cvetu-speciyam-i-pravilno-ee-est/"
+                  data-bg="#e6e0d7"
+                  data-bg-dark="#211d19"
+                  data-ink="#242421"
+                ><span aria-hidden="true">🥪</span><span class="visually-hidden">Пастрами</span></button>
+              </li>
+              <li>
+                <button
+                  class="symbol-item"
+                  type="button"
+                  role="option"
+                  aria-selected="false"
+                  data-title="Лето"
+                  data-meta="состояние"
+                  data-bg="#e8d0c5"
+                  data-bg-dark="#251c1b"
+                  data-ink="#242421"
+                ><span aria-hidden="true">🍑</span><span class="visually-hidden">Лето</span></button>
+              </li>
+              <li>
+                <button
+                  class="symbol-item"
+                  type="button"
+                  role="option"
+                  aria-selected="false"
+                  data-title="Кофе"
+                  data-meta="Dale Cooper"
+                  data-href="https://en.wikipedia.org/wiki/Dale_Cooper"
+                  data-bg="#d9cec4"
+                  data-bg-dark="#211b18"
+                  data-ink="#242421"
+                ><span aria-hidden="true">☕</span><span class="visually-hidden">Кофе</span></button>
+              </li>
+              <li>
+                <button
+                  class="symbol-item"
+                  type="button"
+                  role="option"
+                  aria-selected="false"
+                  data-title="Музыка"
+                  data-meta="слушать"
+                  data-href="https://open.spotify.com/track/3GVkPk8mqxz0itaAriG1L7?si=233684c3f400482d"
+                  data-bg="#d5d8cf"
+                  data-bg-dark="#1b211d"
+                  data-ink="#242421"
+                ><span aria-hidden="true">📻</span><span class="visually-hidden">Музыка</span></button>
+              </li>
+              <li>
+                <button
+                  class="symbol-item"
+                  type="button"
+                  role="option"
+                  aria-selected="false"
+                  data-title="Вино"
+                  data-meta="праздновать"
+                  data-href="https://realauthenticwine.ru/catalog/product/o7743/"
+                  data-bg="#d7d2dc"
+                  data-bg-dark="#211c24"
+                  data-ink="#242421"
+                ><span aria-hidden="true">🥂</span><span class="visually-hidden">Вино</span></button>
+              </li>
+              <li>
+                <button
+                  class="symbol-item"
+                  type="button"
+                  role="option"
+                  aria-selected="false"
+                  data-title="Снег"
+                  data-meta="движение"
+                  data-bg="#d8e3e2"
+                  data-bg-dark="#192225"
+                  data-ink="#242421"
+                ><span aria-hidden="true">🏂</span><span class="visually-hidden">Сноуборд</span></button>
+              </li>
+              <li>
+                <button
+                  class="symbol-item"
+                  type="button"
+                  role="option"
+                  aria-selected="false"
+                  data-title="Футбол"
+                  data-meta="читать"
+                  data-href="https://www.sports.ru/tribuna/blogs/vadimlukomski/2249320.html"
+                  data-bg="#d9e1d4"
+                  data-bg-dark="#1b221b"
+                  data-ink="#242421"
+                ><span aria-hidden="true">⚽</span><span class="visually-hidden">Футбол</span></button>
+              </li>
+              <li>
+                <button
+                  class="symbol-item"
+                  type="button"
+                  role="option"
+                  aria-selected="false"
+                  data-title="Кино"
+                  data-meta="смотреть"
+                  data-href="https://www.netflix.com/watch/20557937"
+                  data-bg="#d4d4d1"
+                  data-bg-dark="#1c1d20"
+                  data-ink="#242421"
+                ><span aria-hidden="true">📺</span><span class="visually-hidden">Кино</span></button>
+              </li>
+              <li>
+                <button
+                  class="symbol-item"
+                  type="button"
+                  role="option"
+                  aria-selected="false"
+                  data-title="Волна"
+                  data-meta="в пути"
+                  data-href="https://www.instagram.com/stories/highlights/17870996476264206/"
+                  data-bg="#cddfe0"
+                  data-bg-dark="#182326"
+                  data-ink="#242421"
+                ><span aria-hidden="true">🌊</span><span class="visually-hidden">Волна</span></button>
+              </li>
+              <li>
+                <button
+                  class="symbol-item"
+                  type="button"
+                  role="option"
+                  aria-selected="false"
+                  data-title="Резюме"
+                  data-meta="digital / web"
+                  data-href="https://gorokhovatsky.notion.site/digital-web-digital-f68fc13247614ccb9738d9a85acf29b4?pvs=74"
+                  data-bg="#e1ddd7"
+                  data-bg-dark="#211e1b"
+                  data-ink="#242421"
+                ><span aria-hidden="true">🙇‍♂️</span><span class="visually-hidden">Резюме</span></button>
+              </li>
+              <li>
+                <button
+                  class="symbol-item"
+                  type="button"
+                  role="option"
+                  aria-selected="false"
+                  data-title="Искусство"
+                  data-meta="Garage"
+                  data-href="https://garagemca.org/en"
+                  data-bg="#d5d6dd"
+                  data-bg-dark="#1c1d24"
+                  data-ink="#242421"
+                ><span aria-hidden="true">🖥️</span><span class="visually-hidden">Искусство</span></button>
+              </li>
+              <li>
+                <button
+                  class="symbol-item"
+                  type="button"
+                  role="option"
+                  aria-selected="false"
+                  data-title="Привет"
+                  data-meta="написать"
+                  data-href="mailto:anton.gorokhovatsky@gmail.com"
+                  data-bg="#d7efd0"
+                  data-bg-dark="#1b251d"
+                  data-ink="#242421"
+                ><span aria-hidden="true">👋</span><span class="visually-hidden">Написать Антону</span></button>
+              </li>
+              </ol>
+            </div>
+
+            <button class="rail-button rail-button--next" type="button" aria-label="Следующий символ">
+              <span aria-hidden="true">→</span>
+            </button>
+          </div>
+
+          <a class="symbol-readout" id="symbol-readout" aria-live="polite">
+            <span class="readout-content">
+              <span class="readout-meta" id="symbol-meta">вкус</span>
+              <strong class="readout-title" id="symbol-title">Суши</strong>
+              <span class="readout-action" aria-hidden="true">↗</span>
+            </span>
+          </a>
+        </div>
+
+        <section class="projects" id="projects" aria-labelledby="projects-title">
+          <h2 class="visually-hidden" id="projects-title">Избранные проекты</h2>
+          <div class="project-toolbar">
+            <div class="project-view-switch" role="group" aria-label="Вид работ" data-view="grid">
+              <button
+                class="project-view-button is-active"
+                type="button"
+                data-project-view="grid"
+                aria-label="Показать работы плиткой"
+                aria-pressed="true"
+                title="Плитка"
+              ><span aria-hidden="true">▦</span></button>
+              <button
+                class="project-view-button"
+                type="button"
+                data-project-view="list"
+                aria-label="Показать работы списком"
+                aria-pressed="false"
+                title="Список"
+              ><span aria-hidden="true">≡</span></button>
+            </div>
+          </div>
+
+        <div class="project-clouds" data-project-clouds>
+          <div class="project-item">
+            <a
+              class="project-cloud project-cloud--tarski"
+              href="https://tarski.ru/"
+              target="_blank"
+              rel="noreferrer"
+              draggable="false"
+              data-project-cloud
+              aria-label="Открыть сайт Tarski"
+            >
+              <span class="project-number">01</span>
+              <span class="project-domain">tarski.ru</span>
+              <span class="project-action">
+                <strong class="project-title">Tarski</strong>
+                <span class="project-arrow" aria-hidden="true">↗</span>
+              </span>
+            </a>
+          </div>
+
+          <div class="project-item">
+            <a
+              class="project-cloud project-cloud--herman"
+              href="https://barberherman.ru/"
+              target="_blank"
+              rel="noreferrer"
+              draggable="false"
+              data-project-cloud
+              aria-label="Открыть сайт Herman & Co"
+            >
+              <span class="project-number">02</span>
+              <span class="project-domain">barberherman.ru</span>
+              <span class="project-action">
+                <strong class="project-title">Herman &amp; Co</strong>
+                <span class="project-arrow" aria-hidden="true">↗</span>
+              </span>
+            </a>
+          </div>
+
+          <div class="project-item">
+            <a
+              class="project-cloud project-cloud--merch"
+              href="https://merch.dustydumbbells.com/"
+              target="_blank"
+              rel="noreferrer"
+              draggable="false"
+              data-project-cloud
+              aria-label="Открыть магазин Dusty Dumbbells"
+            >
+              <span class="project-number">03</span>
+              <span class="project-domain">dustydumbbells</span>
+              <span class="project-action">
+                <strong class="project-title">Dusty Merch</strong>
+                <span class="project-arrow" aria-hidden="true">↗</span>
+              </span>
+            </a>
+          </div>
+
+          <div class="project-item">
+            <a
+              class="project-cloud project-cloud--camp"
+              href="https://camp.dustydumbbells.com/"
+              target="_blank"
+              rel="noreferrer"
+              draggable="false"
+              data-project-cloud
+              aria-label="Открыть сайт DD Camp"
+            >
+              <span class="project-number">04</span>
+              <span class="project-domain">dustydumbbells</span>
+              <span class="project-action">
+                <strong class="project-title">DD Camp</strong>
+                <span class="project-arrow" aria-hidden="true">↗</span>
+              </span>
+            </a>
+          </div>
+
+          <div class="project-item">
+            <a
+              class="project-cloud project-cloud--life"
+              href="https://11111.life/"
+              target="_blank"
+              rel="noreferrer"
+              draggable="false"
+              data-project-cloud
+              aria-label="Открыть сайт проекта 11 111"
+            >
+              <span class="project-number">05</span>
+              <span class="project-domain">11111.life</span>
+              <span class="project-action">
+                <strong class="project-title">11 111</strong>
+                <span class="project-arrow" aria-hidden="true">↗</span>
+              </span>
+            </a>
+          </div>
+
+          <div class="project-item">
+            <a
+              class="project-cloud project-cloud--fish"
+              href="https://ks.fish/"
+              target="_blank"
+              rel="noreferrer"
+              draggable="false"
+              data-project-cloud
+              aria-label="Открыть сайт Рыбной лавки капитана Селёдкина"
+            >
+              <span class="project-number">06</span>
+              <span class="project-domain">ks.fish</span>
+              <span class="project-action">
+                <strong class="project-title">KS Fish</strong>
+                <span class="project-arrow" aria-hidden="true">↗</span>
+              </span>
+            </a>
+          </div>
+
+          <div class="project-item">
+            <a
+              class="project-cloud project-cloud--doronin"
+              href="https://doronin.store/"
+              target="_blank"
+              rel="noreferrer"
+              draggable="false"
+              data-project-cloud
+              aria-label="Открыть сайт Doronin"
+            >
+              <span class="project-number">07</span>
+              <span class="project-domain">doronin.store</span>
+              <span class="project-action">
+                <strong class="project-title">Doronin</strong>
+                <span class="project-arrow" aria-hidden="true">↗</span>
+              </span>
+            </a>
+          </div>
+          </div>
+        </section>
+      </section>
+
     </main>
   </body>
 </html>
