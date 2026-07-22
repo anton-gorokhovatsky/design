@@ -16,3 +16,11 @@ opened through direct external links.
 
 The site is static HTML, CSS, and JavaScript and can be published directly with
 GitHub Pages.
+
+## Shape rules
+
+Large matte surfaces should use continuous corners, not arbitrary circular
+rounding. Keep `border-radius` as the fallback geometry, then add
+`corner-shape: superellipse(...)` through the shared tokens in `styles.css`.
+Use smoother shapes for the project clouds and dynamic readout; keep true icon
+buttons circular.
