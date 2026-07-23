@@ -3,19 +3,46 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Антон Гороховатский — digital / web</title>
+    <title>Антон Гороховатский — product, design &amp; web</title>
     <meta
       name="description"
-      content="Антон Гороховатский: личные символы и избранные digital-проекты."
+      content="Антон Гороховатский — менеджер digital-продуктов, руководитель web-проектов и дизайн-инженер. От исследования и концепции до запуска."
     >
-    <meta name="theme-color" content="#f8f8f6">
+    <meta name="theme-color" content="#f2f1ec">
     <meta name="color-scheme" content="light dark">
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="ru_RU">
+    <meta property="og:title" content="Антон Гороховатский — product, design &amp; web">
+    <meta
+      property="og:description"
+      content="Придаю форму сложным digital-задачам — от исследования и концепции до запуска."
+    >
+    <meta property="og:url" content="https://anton-gorokhovatsky.github.io/design/">
+    <meta
+      property="og:image"
+      content="https://anton-gorokhovatsky.github.io/design/assets/og-signal.jpg?v=20260723-shaper"
+    >
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="ASCII-сигнал и монограмма AG на сайте Антона Гороховатского">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Антон Гороховатский — product, design &amp; web">
+    <meta
+      name="twitter:description"
+      content="Придаю форму сложным digital-задачам — от исследования и концепции до запуска."
+    >
+    <meta
+      name="twitter:image"
+      content="https://anton-gorokhovatsky.github.io/design/assets/og-signal.jpg?v=20260723-shaper"
+    >
+    <link rel="canonical" href="https://anton-gorokhovatsky.github.io/design/">
     <script>
       (() => {
         let savedTheme = null;
 
         try {
-          savedTheme = window.localStorage.getItem("anton-theme");
+          savedTheme = window.localStorage.getItem("anton-signal-theme");
         } catch {
           savedTheme = null;
         }
@@ -25,410 +52,448 @@
           : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
 
         document.documentElement.dataset.theme = theme;
-        document.querySelector('meta[name="theme-color"]').content = theme === "dark" ? "#171817" : "#f8f8f6";
       })();
     </script>
-    <link rel="stylesheet" href="styles.css?v=20260722-corners">
-    <script src="script.js?v=20260722-corners" defer></script>
+    <link rel="stylesheet" href="styles.css?v=20260723-signal">
+    <script src="script.js?v=20260723-signal" defer></script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Антон Гороховатский",
+        "url": "https://anton-gorokhovatsky.github.io/design/",
+        "email": "mailto:anton.gorokhovatsky@gmail.com",
+        "jobTitle": "Digital product manager, web project lead and design engineer"
+      }
+    </script>
   </head>
   <body>
-    <a class="skip-link" href="#projects">К проектам</a>
+    <a class="skip-link" href="#work">К избранным работам</a>
 
     <header class="site-header">
-      <nav class="quick-links" aria-label="Контакты">
+      <a class="brand" href="#top" aria-label="Антон Гороховатский — в начало">
+        <span class="brand__signal" aria-hidden="true"></span>
+        <span>ANTON GOROKHOVATSKY</span>
+        <sup>®</sup>
+      </a>
+
+      <p class="header-discipline">PRODUCT + DESIGN + DELIVERY</p>
+
+      <nav class="header-nav" aria-label="Основная навигация">
+        <a href="#work">WORK</a>
+        <a href="#index">INDEX</a>
         <a
-          class="chip-link"
           href="https://gorokhovatsky.notion.site/digital-web-digital-f68fc13247614ccb9738d9a85acf29b4?pvs=74"
           target="_blank"
           rel="noreferrer"
-        >
-          CV <span aria-hidden="true">↗</span>
-        </a>
-        <a class="round-link" href="mailto:anton.gorokhovatsky@gmail.com" aria-label="Написать Антону">
-          <span aria-hidden="true">@</span>
-        </a>
-        <button
-          class="round-link theme-toggle"
-          type="button"
-          data-theme-toggle
-          aria-label="Включить тёмную тему"
-          aria-pressed="false"
-          title="Тёмная тема"
-        >
-          <span class="theme-toggle-icon theme-toggle-icon--moon" aria-hidden="true">☾</span>
-          <span class="theme-toggle-icon theme-toggle-icon--sun" aria-hidden="true">☀</span>
+        >CV↗</a>
+        <button class="theme-toggle" type="button" data-theme-toggle aria-label="Включить тёмную тему">
+          <span data-theme-label>LIGHT</span>
         </button>
       </nav>
     </header>
 
     <main>
-      <section class="symbol-stage" id="start" aria-labelledby="page-title">
-        <h1 class="visually-hidden" id="page-title">Антон Гороховатский</h1>
+      <section class="hero" id="top" aria-labelledby="hero-title">
+        <div class="hero-meta">
+          <p>[AG / SINCE 2009]</p>
+          <p>PRODUCT / DESIGN / DELIVERY</p>
+          <p><span class="status-dot" aria-hidden="true"></span> MSK <span data-clock>--:--</span></p>
+        </div>
 
-        <div class="symbol-instrument" data-symbol-instrument>
-          <div class="symbol-rail-wrap">
-            <button class="rail-button rail-button--prev" type="button" aria-label="Предыдущий символ">
-              <span aria-hidden="true">←</span>
-            </button>
+        <div class="signal-field" data-signal-field>
+          <div class="signal-cross signal-cross--x" aria-hidden="true"></div>
+          <div class="signal-cross signal-cross--y" aria-hidden="true"></div>
+          <pre class="signal-ascii" data-signal-ascii aria-hidden="true">             .:+*#*+:.
+        .:+#@@@@@@@@@@#+:.
+     .+%@@@#*+::::+*#@@@%+.
+    +@@%+:            :+%@@+
+   #@@+        AG        +@@#
+    +@@%+:            :+%@@+
+     .+%@@@#*+::::+*#@@@%+.
+        .:+#@@@@@@@@@@#+:.
+             .:+*#*+:.</pre>
 
-            <div class="symbol-viewport">
-              <ol class="symbol-rail" role="listbox" aria-label="Личный индекс Антона">
-              <li>
-                <button
-                  class="symbol-item is-active"
-                  type="button"
-                  role="option"
-                  aria-selected="true"
-                  data-title="Суши"
-                  data-meta="вкус"
-                  data-bg="#f8f8f6"
-                  data-bg-dark="#171817"
-                  data-ink="#242421"
-                ><span aria-hidden="true">🍣</span><span class="visually-hidden">Суши</span></button>
-              </li>
-              <li>
-                <button
-                  class="symbol-item"
-                  type="button"
-                  role="option"
-                  aria-selected="false"
-                  data-title="Пастрами"
-                  data-meta="еда / статья"
-                  data-href="https://daily.afisha.ru/eating/11366-uchimsya-ocenivat-pastrami-po-zhirnosti-nezhnosti-cvetu-speciyam-i-pravilno-ee-est/"
-                  data-bg="#e6e0d7"
-                  data-bg-dark="#211d19"
-                  data-ink="#242421"
-                ><span aria-hidden="true">🥪</span><span class="visually-hidden">Пастрами</span></button>
-              </li>
-              <li>
-                <button
-                  class="symbol-item"
-                  type="button"
-                  role="option"
-                  aria-selected="false"
-                  data-title="Лето"
-                  data-meta="состояние"
-                  data-bg="#e8d0c5"
-                  data-bg-dark="#251c1b"
-                  data-ink="#242421"
-                ><span aria-hidden="true">🍑</span><span class="visually-hidden">Лето</span></button>
-              </li>
-              <li>
-                <button
-                  class="symbol-item"
-                  type="button"
-                  role="option"
-                  aria-selected="false"
-                  data-title="Кофе"
-                  data-meta="Dale Cooper"
-                  data-href="https://en.wikipedia.org/wiki/Dale_Cooper"
-                  data-bg="#d9cec4"
-                  data-bg-dark="#211b18"
-                  data-ink="#242421"
-                ><span aria-hidden="true">☕</span><span class="visually-hidden">Кофе</span></button>
-              </li>
-              <li>
-                <button
-                  class="symbol-item"
-                  type="button"
-                  role="option"
-                  aria-selected="false"
-                  data-title="Музыка"
-                  data-meta="слушать"
-                  data-href="https://open.spotify.com/track/3GVkPk8mqxz0itaAriG1L7?si=233684c3f400482d"
-                  data-bg="#d5d8cf"
-                  data-bg-dark="#1b211d"
-                  data-ink="#242421"
-                ><span aria-hidden="true">📻</span><span class="visually-hidden">Музыка</span></button>
-              </li>
-              <li>
-                <button
-                  class="symbol-item"
-                  type="button"
-                  role="option"
-                  aria-selected="false"
-                  data-title="Вино"
-                  data-meta="праздновать"
-                  data-href="https://realauthenticwine.ru/catalog/product/o7743/"
-                  data-bg="#d7d2dc"
-                  data-bg-dark="#211c24"
-                  data-ink="#242421"
-                ><span aria-hidden="true">🥂</span><span class="visually-hidden">Вино</span></button>
-              </li>
-              <li>
-                <button
-                  class="symbol-item"
-                  type="button"
-                  role="option"
-                  aria-selected="false"
-                  data-title="Снег"
-                  data-meta="движение"
-                  data-bg="#d8e3e2"
-                  data-bg-dark="#192225"
-                  data-ink="#242421"
-                ><span aria-hidden="true">🏂</span><span class="visually-hidden">Сноуборд</span></button>
-              </li>
-              <li>
-                <button
-                  class="symbol-item"
-                  type="button"
-                  role="option"
-                  aria-selected="false"
-                  data-title="Футбол"
-                  data-meta="читать"
-                  data-href="https://www.sports.ru/tribuna/blogs/vadimlukomski/2249320.html"
-                  data-bg="#d9e1d4"
-                  data-bg-dark="#1b221b"
-                  data-ink="#242421"
-                ><span aria-hidden="true">⚽</span><span class="visually-hidden">Футбол</span></button>
-              </li>
-              <li>
-                <button
-                  class="symbol-item"
-                  type="button"
-                  role="option"
-                  aria-selected="false"
-                  data-title="Кино"
-                  data-meta="смотреть"
-                  data-href="https://www.netflix.com/watch/20557937"
-                  data-bg="#d4d4d1"
-                  data-bg-dark="#1c1d20"
-                  data-ink="#242421"
-                ><span aria-hidden="true">📺</span><span class="visually-hidden">Кино</span></button>
-              </li>
-              <li>
-                <button
-                  class="symbol-item"
-                  type="button"
-                  role="option"
-                  aria-selected="false"
-                  data-title="Волна"
-                  data-meta="в пути"
-                  data-href="https://www.instagram.com/stories/highlights/17870996476264206/"
-                  data-bg="#cddfe0"
-                  data-bg-dark="#182326"
-                  data-ink="#242421"
-                ><span aria-hidden="true">🌊</span><span class="visually-hidden">Волна</span></button>
-              </li>
-              <li>
-                <button
-                  class="symbol-item"
-                  type="button"
-                  role="option"
-                  aria-selected="false"
-                  data-title="Резюме"
-                  data-meta="digital / web"
-                  data-href="https://gorokhovatsky.notion.site/digital-web-digital-f68fc13247614ccb9738d9a85acf29b4?pvs=74"
-                  data-bg="#e1ddd7"
-                  data-bg-dark="#211e1b"
-                  data-ink="#242421"
-                ><span aria-hidden="true">🙇‍♂️</span><span class="visually-hidden">Резюме</span></button>
-              </li>
-              <li>
-                <button
-                  class="symbol-item"
-                  type="button"
-                  role="option"
-                  aria-selected="false"
-                  data-title="Искусство"
-                  data-meta="Garage"
-                  data-href="https://garagemca.org/en"
-                  data-bg="#d5d6dd"
-                  data-bg-dark="#1c1d24"
-                  data-ink="#242421"
-                ><span aria-hidden="true">🖥️</span><span class="visually-hidden">Искусство</span></button>
-              </li>
-              <li>
-                <button
-                  class="symbol-item"
-                  type="button"
-                  role="option"
-                  aria-selected="false"
-                  data-title="Привет"
-                  data-meta="написать"
-                  data-href="mailto:anton.gorokhovatsky@gmail.com"
-                  data-bg="#d7efd0"
-                  data-bg-dark="#1b251d"
-                  data-ink="#242421"
-                ><span aria-hidden="true">👋</span><span class="visually-hidden">Написать Антону</span></button>
-              </li>
-              </ol>
+          <div class="signal-core" data-signal-core>
+            <div class="signal-core__topline">
+              <span>15Y / DIGITAL</span>
+              <span>SHAPER</span>
             </div>
-
-            <button class="rail-button rail-button--next" type="button" aria-label="Следующий символ">
-              <span aria-hidden="true">→</span>
-            </button>
+            <strong aria-hidden="true">AG</strong>
+            <div class="signal-core__baseline">
+              <span>RESEARCH ↔ RELEASE</span>
+              <span class="signal-pulse" aria-hidden="true"></span>
+            </div>
           </div>
 
-          <a class="symbol-readout" id="symbol-readout" aria-live="polite">
-            <span class="readout-content">
-              <span class="readout-meta" id="symbol-meta">вкус</span>
-              <strong class="readout-title" id="symbol-title">Суши</strong>
-              <span class="readout-action" aria-hidden="true">↗</span>
-            </span>
+          <p class="signal-caption signal-caption--left">INPUT: COMPLEXITY / CONTEXT / PEOPLE</p>
+          <p class="signal-caption signal-caption--right">OUTPUT: FORM / SYSTEM / LAUNCH</p>
+        </div>
+
+        <div class="hero-copy">
+          <p class="section-kicker">2009—NOW / DIGITAL PROJECTS</p>
+          <h1 id="hero-title">
+            <span>ПРИДАЮ ФОРМУ</span>
+            <span>СЛОЖНЫМ ЗАДАЧАМ.</span>
+          </h1>
+          <div class="hero-copy__foot">
+            <p>
+              На стыке продукта, дизайна, менеджмента и разработки.<br>
+              От исследования и концепции до запуска и первых итераций.
+            </p>
+            <a href="#work">ИЗБРАННЫЕ РАБОТЫ ↓</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="work-section" id="work" aria-labelledby="work-title">
+        <div class="section-head">
+          <p>01 / SELECTED WORK</p>
+          <p>8 PROJECTS</p>
+          <p>2023—2026</p>
+        </div>
+
+        <div class="work-intro">
+          <h2 id="work-title">ИЗБРАННЫЕ<br>ПРОЕКТЫ.</h2>
+          <p>
+            Исследование, концепция, прототип,<br>
+            координация, дизайн и код — роль<br>
+            меняется вместе с задачей.
+          </p>
+        </div>
+
+        <div class="work-list">
+          <a
+            class="work-row"
+            href="https://shirokostup.site/"
+            target="_blank"
+            rel="noreferrer"
+            data-preview="OLGA SHIROKOSTUP / CURATOR PORTFOLIO"
+            data-seed="7"
+            data-tone="#ece2bf"
+            data-preview-ink="#10110f"
+          >
+            <span class="work-row__number">01</span>
+            <span class="work-row__title">Shirokostup</span>
+            <span class="work-row__scope">EDITORIAL / WEB</span>
+            <span class="work-row__domain">SHIROKOSTUP.SITE</span>
+            <span class="work-row__arrow" aria-hidden="true">↗</span>
+          </a>
+
+          <a
+            class="work-row"
+            href="https://tarski.ru/"
+            target="_blank"
+            rel="noreferrer"
+            data-preview="TARSKI / PRODUCT SYSTEM"
+            data-seed="17"
+            data-tone="#d8ff47"
+            data-preview-ink="#10110f"
+          >
+            <span class="work-row__number">02</span>
+            <span class="work-row__title">Tarski</span>
+            <span class="work-row__scope">DIGITAL PRODUCT / WEB</span>
+            <span class="work-row__domain">TARSKI.RU</span>
+            <span class="work-row__arrow" aria-hidden="true">↗</span>
+          </a>
+
+          <a
+            class="work-row"
+            href="https://barberherman.ru/"
+            target="_blank"
+            rel="noreferrer"
+            data-preview="HERMAN / SERVICE INTERFACE"
+            data-seed="29"
+            data-tone="#ff6b45"
+            data-preview-ink="#10110f"
+          >
+            <span class="work-row__number">03</span>
+            <span class="work-row__title">Herman &amp; Co</span>
+            <span class="work-row__scope">SERVICE / WEB</span>
+            <span class="work-row__domain">BARBERHERMAN.RU</span>
+            <span class="work-row__arrow" aria-hidden="true">↗</span>
+          </a>
+
+          <a
+            class="work-row"
+            href="https://merch.dustydumbbells.com/"
+            target="_blank"
+            rel="noreferrer"
+            data-preview="DUSTY / COMMERCE SIGNAL"
+            data-seed="43"
+            data-tone="#a8b5ff"
+            data-preview-ink="#10110f"
+          >
+            <span class="work-row__number">04</span>
+            <span class="work-row__title">Dusty Merch</span>
+            <span class="work-row__scope">COMMERCE / WEB</span>
+            <span class="work-row__domain">DUSTYDUMBBELLS</span>
+            <span class="work-row__arrow" aria-hidden="true">↗</span>
+          </a>
+
+          <a
+            class="work-row"
+            href="https://camp.dustydumbbells.com/"
+            target="_blank"
+            rel="noreferrer"
+            data-preview="DD CAMP / RUN THE HILLS"
+            data-seed="61"
+            data-tone="#ffd3a8"
+            data-preview-ink="#10110f"
+          >
+            <span class="work-row__number">05</span>
+            <span class="work-row__title">DD Camp</span>
+            <span class="work-row__scope">EXPERIENCE / WEB</span>
+            <span class="work-row__domain">DUSTYDUMBBELLS</span>
+            <span class="work-row__arrow" aria-hidden="true">↗</span>
+          </a>
+
+          <a
+            class="work-row"
+            href="https://11111.life/"
+            target="_blank"
+            rel="noreferrer"
+            data-preview="11 111 / GREEN FREQUENCY"
+            data-seed="71"
+            data-tone="#143b2c"
+            data-preview-ink="#f4f3ee"
+          >
+            <span class="work-row__number">06</span>
+            <span class="work-row__title">11 111</span>
+            <span class="work-row__scope">BRAND / WEB</span>
+            <span class="work-row__domain">11111.LIFE</span>
+            <span class="work-row__arrow" aria-hidden="true">↗</span>
+          </a>
+
+          <a
+            class="work-row"
+            href="https://ks.fish/"
+            target="_blank"
+            rel="noreferrer"
+            data-preview="KS FISH / COLD CURRENT"
+            data-seed="83"
+            data-tone="#6bd9df"
+            data-preview-ink="#10110f"
+          >
+            <span class="work-row__number">07</span>
+            <span class="work-row__title">KS Fish</span>
+            <span class="work-row__scope">CATALOG / WEB</span>
+            <span class="work-row__domain">KS.FISH</span>
+            <span class="work-row__arrow" aria-hidden="true">↗</span>
+          </a>
+
+          <a
+            class="work-row"
+            href="https://doronin.store/"
+            target="_blank"
+            rel="noreferrer"
+            data-preview="DORONIN / DIGITAL STORE"
+            data-seed="97"
+            data-tone="#d9c0ff"
+            data-preview-ink="#10110f"
+          >
+            <span class="work-row__number">08</span>
+            <span class="work-row__title">Doronin</span>
+            <span class="work-row__scope">COMMERCE / WEB</span>
+            <span class="work-row__domain">DORONIN.STORE</span>
+            <span class="work-row__arrow" aria-hidden="true">↗</span>
           </a>
         </div>
 
-        <section class="projects" id="projects" aria-labelledby="projects-title">
-          <h2 class="visually-hidden" id="projects-title">Избранные проекты</h2>
-          <div class="project-toolbar">
-            <div class="project-view-switch" role="group" aria-label="Вид работ" data-view="grid">
-              <button
-                class="project-view-button is-active"
-                type="button"
-                data-project-view="grid"
-                aria-label="Показать работы плиткой"
-                aria-pressed="true"
-                title="Плитка"
-              ><span aria-hidden="true">▦</span></button>
-              <button
-                class="project-view-button"
-                type="button"
-                data-project-view="list"
-                aria-label="Показать работы списком"
-                aria-pressed="false"
-                title="Список"
-              ><span aria-hidden="true">≡</span></button>
+        <div class="work-preview" data-work-preview aria-hidden="true">
+          <div class="work-preview__bar">
+            <span data-preview-number>01</span>
+            <span>LIVE LINK ↗</span>
+          </div>
+          <pre data-work-ascii></pre>
+          <p data-preview-title>OLGA SHIROKOSTUP / CURATOR PORTFOLIO</p>
+        </div>
+      </section>
+
+      <section class="index-section" id="index" aria-labelledby="index-title">
+        <div class="section-head section-head--inverse">
+          <p>02 / PERSONAL INDEX</p>
+          <p>9 STORED SIGNALS</p>
+          <p>UPDATED OCCASIONALLY</p>
+        </div>
+
+        <div class="index-intro">
+          <h2 id="index-title">ЛИЧНЫЙ<br>ИНДЕКС.</h2>
+          <p>
+            Вкусы, интересы и несколько вещей,<br>
+            которые помогают сохранять любопытство<br>
+            и внимание к деталям.
+          </p>
+        </div>
+
+        <div class="index-console">
+          <div class="index-display" aria-live="polite">
+            <div class="index-display__visual" aria-hidden="true">
+              <span data-index-emoji>🍣</span>
+              <pre data-index-ascii></pre>
+            </div>
+            <div class="index-display__copy">
+              <p data-index-number>01 / TASTE</p>
+              <h3 data-index-title>СУШИ</h3>
+              <p data-index-meta>ВКУС / DEFAULT STATE</p>
+              <a class="index-display__link is-disabled" data-index-link aria-disabled="true">
+                NO EXTERNAL LINK
+              </a>
             </div>
           </div>
 
-        <div class="project-clouds" data-project-clouds>
-          <div class="project-item">
-            <a
-              class="project-cloud project-cloud--tarski"
-              href="https://tarski.ru/"
-              target="_blank"
-              rel="noreferrer"
-              draggable="false"
-              data-project-cloud
-              aria-label="Открыть сайт Tarski"
+          <div class="index-stream" role="group" aria-label="Личный индекс">
+            <button
+              class="index-item is-active"
+              type="button"
+              data-index-item
+              data-number="01 / TASTE"
+              data-title="СУШИ"
+              data-meta="ВКУС / DEFAULT STATE"
+              data-emoji="🍣"
+              data-seed="11"
             >
-              <span class="project-number">01</span>
-              <span class="project-domain">tarski.ru</span>
-              <span class="project-action">
-                <strong class="project-title">Tarski</strong>
-                <span class="project-arrow" aria-hidden="true">↗</span>
-              </span>
-            </a>
-          </div>
-
-          <div class="project-item">
-            <a
-              class="project-cloud project-cloud--herman"
-              href="https://barberherman.ru/"
-              target="_blank"
-              rel="noreferrer"
-              draggable="false"
-              data-project-cloud
-              aria-label="Открыть сайт Herman & Co"
+              <span>01</span><span>🍣</span><strong>SUSHI</strong>
+            </button>
+            <button
+              class="index-item"
+              type="button"
+              data-index-item
+              data-number="02 / FOOD"
+              data-title="ПАСТРАМИ"
+              data-meta="ЕДА / LONG READ"
+              data-emoji="🥪"
+              data-seed="23"
+              data-href="https://daily.afisha.ru/eating/11366-uchimsya-ocenivat-pastrami-po-zhirnosti-nezhnosti-cvetu-speciyam-i-pravilno-ee-est/"
             >
-              <span class="project-number">02</span>
-              <span class="project-domain">barberherman.ru</span>
-              <span class="project-action">
-                <strong class="project-title">Herman &amp; Co</strong>
-                <span class="project-arrow" aria-hidden="true">↗</span>
-              </span>
-            </a>
-          </div>
-
-          <div class="project-item">
-            <a
-              class="project-cloud project-cloud--merch"
-              href="https://merch.dustydumbbells.com/"
-              target="_blank"
-              rel="noreferrer"
-              draggable="false"
-              data-project-cloud
-              aria-label="Открыть магазин Dusty Dumbbells"
+              <span>02</span><span>🥪</span><strong>PASTRAMI</strong>
+            </button>
+            <button
+              class="index-item"
+              type="button"
+              data-index-item
+              data-number="03 / RITUAL"
+              data-title="КОФЕ"
+              data-meta="DALE COOPER / BLACK"
+              data-emoji="☕"
+              data-seed="37"
+              data-href="https://en.wikipedia.org/wiki/Dale_Cooper"
             >
-              <span class="project-number">03</span>
-              <span class="project-domain">dustydumbbells</span>
-              <span class="project-action">
-                <strong class="project-title">Dusty Merch</strong>
-                <span class="project-arrow" aria-hidden="true">↗</span>
-              </span>
-            </a>
-          </div>
-
-          <div class="project-item">
-            <a
-              class="project-cloud project-cloud--camp"
-              href="https://camp.dustydumbbells.com/"
-              target="_blank"
-              rel="noreferrer"
-              draggable="false"
-              data-project-cloud
-              aria-label="Открыть сайт DD Camp"
+              <span>03</span><span>☕</span><strong>COFFEE</strong>
+            </button>
+            <button
+              class="index-item"
+              type="button"
+              data-index-item
+              data-number="04 / AUDIO"
+              data-title="МУЗЫКА"
+              data-meta="PLAY / REPEAT"
+              data-emoji="📻"
+              data-seed="41"
+              data-href="https://open.spotify.com/track/3GVkPk8mqxz0itaAriG1L7?si=233684c3f400482d"
             >
-              <span class="project-number">04</span>
-              <span class="project-domain">dustydumbbells</span>
-              <span class="project-action">
-                <strong class="project-title">DD Camp</strong>
-                <span class="project-arrow" aria-hidden="true">↗</span>
-              </span>
-            </a>
-          </div>
-
-          <div class="project-item">
-            <a
-              class="project-cloud project-cloud--life"
-              href="https://11111.life/"
-              target="_blank"
-              rel="noreferrer"
-              draggable="false"
-              data-project-cloud
-              aria-label="Открыть сайт проекта 11 111"
+              <span>04</span><span>📻</span><strong>MUSIC</strong>
+            </button>
+            <button
+              class="index-item"
+              type="button"
+              data-index-item
+              data-number="05 / WINTER"
+              data-title="СНЕГ"
+              data-meta="ДВИЖЕНИЕ / DOWNHILL"
+              data-emoji="🏂"
+              data-seed="53"
             >
-              <span class="project-number">05</span>
-              <span class="project-domain">11111.life</span>
-              <span class="project-action">
-                <strong class="project-title">11 111</strong>
-                <span class="project-arrow" aria-hidden="true">↗</span>
-              </span>
-            </a>
-          </div>
-
-          <div class="project-item">
-            <a
-              class="project-cloud project-cloud--fish"
-              href="https://ks.fish/"
-              target="_blank"
-              rel="noreferrer"
-              draggable="false"
-              data-project-cloud
-              aria-label="Открыть сайт Рыбной лавки капитана Селёдкина"
+              <span>05</span><span>🏂</span><strong>SNOW</strong>
+            </button>
+            <button
+              class="index-item"
+              type="button"
+              data-index-item
+              data-number="06 / GAME"
+              data-title="ФУТБОЛ"
+              data-meta="СМОТРЕТЬ / ЧИТАТЬ"
+              data-emoji="⚽"
+              data-seed="67"
+              data-href="https://www.sports.ru/tribuna/blogs/vadimlukomski/2249320.html"
             >
-              <span class="project-number">06</span>
-              <span class="project-domain">ks.fish</span>
-              <span class="project-action">
-                <strong class="project-title">KS Fish</strong>
-                <span class="project-arrow" aria-hidden="true">↗</span>
-              </span>
-            </a>
-          </div>
-
-          <div class="project-item">
-            <a
-              class="project-cloud project-cloud--doronin"
-              href="https://doronin.store/"
-              target="_blank"
-              rel="noreferrer"
-              draggable="false"
-              data-project-cloud
-              aria-label="Открыть сайт Doronin"
+              <span>06</span><span>⚽</span><strong>FOOTBALL</strong>
+            </button>
+            <button
+              class="index-item"
+              type="button"
+              data-index-item
+              data-number="07 / WATER"
+              data-title="ВОЛНА"
+              data-meta="В ПУТИ / BLUE HOUR"
+              data-emoji="🌊"
+              data-seed="79"
+              data-href="https://www.instagram.com/stories/highlights/17870996476264206/"
             >
-              <span class="project-number">07</span>
-              <span class="project-domain">doronin.store</span>
-              <span class="project-action">
-                <strong class="project-title">Doronin</strong>
-                <span class="project-arrow" aria-hidden="true">↗</span>
-              </span>
-            </a>
+              <span>07</span><span>🌊</span><strong>WAVE</strong>
+            </button>
+            <button
+              class="index-item"
+              type="button"
+              data-index-item
+              data-number="08 / CULTURE"
+              data-title="ИСКУССТВО"
+              data-meta="GARAGE / LOOK AGAIN"
+              data-emoji="🖥️"
+              data-seed="89"
+              data-href="https://garagemca.org/en"
+            >
+              <span>08</span><span>🖥️</span><strong>ART</strong>
+            </button>
+            <button
+              class="index-item"
+              type="button"
+              data-index-item
+              data-number="09 / CONTACT"
+              data-title="ПРИВЕТ"
+              data-meta="ОТКРЫТЬ КАНАЛ / SAY HI"
+              data-emoji="👋"
+              data-seed="101"
+              data-href="mailto:anton.gorokhovatsky@gmail.com"
+            >
+              <span>09</span><span>👋</span><strong>HELLO</strong>
+            </button>
           </div>
-          </div>
-        </section>
+        </div>
       </section>
 
+      <section class="contact-section" id="contact" aria-labelledby="contact-title">
+        <div class="section-head">
+          <p>03 / CONTACT</p>
+          <p>FULL-TIME / PART-TIME / PROJECTS</p>
+          <p>MOSCOW / REMOTE</p>
+        </div>
+
+        <div class="contact-copy">
+          <h2 id="contact-title">
+            БУДУ РАД<br>
+            <a href="mailto:anton.gorokhovatsky@gmail.com">ПОГОВОРИТЬ ↗</a>
+          </h2>
+          <div>
+            <p>ПРЕДЛОЖЕНИЯ / РЕКОМЕНДАЦИИ / ИНТРО / ХОРОШИЕ НАВОДКИ</p>
+            <a href="mailto:anton.gorokhovatsky@gmail.com">ANTON.GOROKHOVATSKY@GMAIL.COM</a>
+          </div>
+        </div>
+
+        <pre class="contact-mark" aria-hidden="true">
+    AAAAAA      GGGGGG
+   AA    AA    GG
+   AAAAAAAA    GG  GGG
+   AA    AA    GG   GG
+   AA    AA     GGGGG
+        </pre>
+      </section>
     </main>
+
+    <footer class="site-footer">
+      <p>© 2026 ANTON GOROKHOVATSKY</p>
+      <p>MADE WITH TEXT, SIGNALS + JAVASCRIPT</p>
+      <a href="#top">TOP ↑</a>
+    </footer>
   </body>
 </html>

@@ -1,775 +1,306 @@
-const motionEasing = {
-  enter: "cubic-bezier(0, 0, 0.58, 1)",
-  exit: "cubic-bezier(0.42, 0, 1, 1)",
-  move: "cubic-bezier(0.42, 0, 0.58, 1)",
-};
-
+const root = document.documentElement;
 const themeToggle = document.querySelector("[data-theme-toggle]");
+const themeLabel = document.querySelector("[data-theme-label]");
 const themeColor = document.querySelector('meta[name="theme-color"]');
 const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
-const themeReduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-let savedTheme = null;
-let themeTransition = null;
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+const captureMode = new URLSearchParams(window.location.search).has("og");
 
-try {
-  const preference = window.localStorage.getItem("anton-theme");
-  savedTheme = preference === "light" || preference === "dark" ? preference : null;
-} catch {
-  savedTheme = null;
-}
-
-const updateThemeColor = (item = document.querySelector(".symbol-item.is-active")) => {
-  const isDark = document.documentElement.dataset.theme === "dark";
-  const background = isDark
-    ? (item?.dataset.bgDark || "#171817")
-    : (item?.dataset.bg || "#f8f8f6");
-
-  themeColor?.setAttribute("content", background);
-};
-
-const commitTheme = (theme) => {
+const setTheme = (theme, persist = false) => {
+  root.dataset.theme = theme;
   const isDark = theme === "dark";
-  const actionLabel = isDark ? "Включить светлую тему" : "Включить тёмную тему";
 
-  document.documentElement.dataset.theme = theme;
-  themeToggle?.setAttribute("aria-pressed", String(isDark));
-  themeToggle?.setAttribute("aria-label", actionLabel);
-  themeToggle?.setAttribute("title", isDark ? "Светлая тема" : "Тёмная тема");
-  updateThemeColor();
-};
-
-const applyTheme = (theme, options = {}) => {
-  const { animate = false, persist = false } = options;
+  themeToggle?.setAttribute("aria-label", isDark ? "Включить светлую тему" : "Включить тёмную тему");
+  themeLabel.textContent = isDark ? "DARK" : "LIGHT";
+  themeColor?.setAttribute("content", isDark ? "#11120f" : "#f2f1ec");
 
   if (persist) {
-    savedTheme = theme;
-
     try {
-      window.localStorage.setItem("anton-theme", theme);
+      window.localStorage.setItem("anton-signal-theme", theme);
     } catch {
-      // Theme switching still works when storage is unavailable.
+      // The interface remains usable when storage is blocked.
     }
-  }
-
-  const update = () => commitTheme(theme);
-
-  if (
-    animate
-    && !themeReduceMotion.matches
-    && typeof document.startViewTransition === "function"
-    && !themeTransition
-  ) {
-    document.documentElement.classList.add("is-theme-transition");
-    themeTransition = document.startViewTransition(update);
-    themeTransition.finished.finally(() => {
-      document.documentElement.classList.remove("is-theme-transition");
-      themeTransition = null;
-    });
-  } else {
-    update();
   }
 };
 
-const initialTheme = savedTheme
-  || document.documentElement.dataset.theme
-  || (systemTheme.matches ? "dark" : "light");
-
-commitTheme(initialTheme);
+setTheme(root.dataset.theme || (systemTheme.matches ? "dark" : "light"));
 
 themeToggle?.addEventListener("click", () => {
-  const nextTheme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
-  applyTheme(nextTheme, { animate: true, persist: true });
+  setTheme(root.dataset.theme === "dark" ? "light" : "dark", true);
 });
 
 systemTheme.addEventListener?.("change", (event) => {
+  let savedTheme = null;
+
+  try {
+    savedTheme = window.localStorage.getItem("anton-signal-theme");
+  } catch {
+    savedTheme = null;
+  }
+
   if (!savedTheme) {
-    applyTheme(event.matches ? "dark" : "light", { animate: true });
+    setTheme(event.matches ? "dark" : "light");
   }
 });
 
-const instrument = document.querySelector("[data-symbol-instrument]");
-
-if (instrument) {
-  const stage = document.querySelector(".symbol-stage");
-  const rail = instrument.querySelector(".symbol-rail");
-  const items = Array.from(instrument.querySelectorAll(".symbol-item"));
-  const cloneRows = () => items.map((item, index) => {
-    const row = document.createElement("li");
-    const clone = document.createElement("span");
-
-    row.setAttribute("aria-hidden", "true");
-    clone.className = item.className;
-    clone.dataset.symbolIndex = String(index);
-    clone.setAttribute("aria-hidden", "true");
-    clone.innerHTML = item.innerHTML;
-    row.append(clone);
-    return row;
-  });
-
-  rail.prepend(...cloneRows());
-  rail.append(...cloneRows());
-
-  items.forEach((item, index) => {
-    item.dataset.symbolIndex = String(index);
-  });
-
-  const visualItems = Array.from(rail.querySelectorAll(".symbol-item"));
-  const previousButton = instrument.querySelector(".rail-button--prev");
-  const nextButton = instrument.querySelector(".rail-button--next");
-  const readout = instrument.querySelector(".symbol-readout");
-  const readoutContent = instrument.querySelector(".readout-content");
-  const title = document.querySelector("#symbol-title");
-  const meta = document.querySelector("#symbol-meta");
-  const link = readout;
-  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-
-  let activeIndex = -1;
-  let scrollFrame = 0;
-  let resizeFrame = 0;
-  let railAnimationFrame = 0;
-  let railMotionTimer = 0;
-  let settleTimer = 0;
-  let readoutAnimation = null;
-  let readoutContentAnimation = null;
-  let readoutToken = 0;
-
-  const clamp = (value, minimum, maximum) => Math.min(Math.max(value, minimum), maximum);
-  const easeOutCubic = (progress) => 1 - Math.pow(1 - progress, 3);
-
-  const markRailInMotion = () => {
-    rail.classList.add("is-in-motion");
-    window.clearTimeout(railMotionTimer);
-    railMotionTimer = window.setTimeout(() => {
-      rail.classList.remove("is-in-motion");
-    }, 120);
-  };
-
-  const itemTarget = (item) => {
-    const railRect = rail.getBoundingClientRect();
-    const itemRect = item.getBoundingClientRect();
-    return rail.scrollLeft + itemRect.left + itemRect.width / 2 - railRect.left - railRect.width / 2;
-  };
-
-  const findNearestVisualItem = () => {
-    const railCenter = rail.getBoundingClientRect().left + rail.clientWidth / 2;
-    let nearestItem = visualItems[0];
-    let nearestDistance = Number.POSITIVE_INFINITY;
-
-    visualItems.forEach((item) => {
-      const rect = item.getBoundingClientRect();
-      const distance = Math.abs(rect.left + rect.width / 2 - railCenter);
-
-      if (distance < nearestDistance) {
-        nearestDistance = distance;
-        nearestItem = item;
-      }
-    });
-
-    return nearestItem;
-  };
-
-  const nearestInstance = (index) => {
-    let nearestItem = items[index];
-    let nearestDistance = Number.POSITIVE_INFINITY;
-
-    visualItems.forEach((item) => {
-      if (Number(item.dataset.symbolIndex) !== index) {
-        return;
-      }
-
-      const distance = Math.abs(itemTarget(item) - rail.scrollLeft);
-
-      if (distance < nearestDistance) {
-        nearestDistance = distance;
-        nearestItem = item;
-      }
-    });
-
-    return nearestItem;
-  };
-
-  const normalizeLoopPosition = () => {
-    const nearestItem = findNearestVisualItem();
-    const visualIndex = visualItems.indexOf(nearestItem);
-    const cycleWidth = itemTarget(visualItems[items.length]) - itemTarget(visualItems[0]);
-
-    if (visualIndex < items.length) {
-      rail.scrollLeft += cycleWidth;
-    } else if (visualIndex >= items.length * 2) {
-      rail.scrollLeft -= cycleWidth;
-    }
-  };
-
-  const updateProximity = () => {
-    const railRect = rail.getBoundingClientRect();
-    const railCenter = railRect.left + railRect.width / 2;
-    const falloff = Math.max(150, railRect.width * 0.42);
-
-    visualItems.forEach((item) => {
-      const rect = item.getBoundingClientRect();
-      const signedDistance = rect.left + rect.width / 2 - railCenter;
-      const distance = Math.abs(signedDistance);
-      const normalizedDistance = clamp(signedDistance / falloff, -1, 1);
-      const proximity = Math.pow(clamp(1 - distance / falloff, 0, 1), 0.78);
-      const rotation = Math.sign(normalizedDistance)
-        * Math.pow(Math.abs(normalizedDistance), 0.86)
-        * 2.8;
-
-      item.style.setProperty("--symbol-opacity", (0.16 + proximity * 0.84).toFixed(3));
-      item.style.setProperty("--symbol-scale", (0.72 + proximity * 0.44).toFixed(3));
-      item.style.setProperty("--symbol-lift", `${(-11 * proximity).toFixed(2)}px`);
-      item.style.setProperty("--symbol-rotate", `${rotation.toFixed(2)}deg`);
-      item.style.setProperty("--symbol-grayscale", (0.32 - proximity * 0.32).toFixed(3));
-      item.style.setProperty("--symbol-saturation", (0.7 + proximity * 0.35).toFixed(3));
-    });
-  };
-
-  const centerItem = (item, immediate = false) => {
-    window.cancelAnimationFrame(railAnimationFrame);
-    railAnimationFrame = 0;
-
-    const start = rail.scrollLeft;
-    const target = itemTarget(item);
-    const distance = target - start;
-
-    markRailInMotion();
-
-    if (immediate || reduceMotion.matches || Math.abs(distance) < 1) {
-      rail.scrollLeft = target;
-      normalizeLoopPosition();
-      updateProximity();
-      return;
-    }
-
-    const startedAt = performance.now();
-    const duration = clamp(360 + Math.abs(distance) * 0.24, 360, 620);
-
-    const animate = (now) => {
-      const progress = clamp((now - startedAt) / duration, 0, 1);
-      rail.scrollLeft = start + distance * easeOutCubic(progress);
-      updateProximity();
-
-      if (progress < 1) {
-        railAnimationFrame = window.requestAnimationFrame(animate);
-      } else {
-        railAnimationFrame = 0;
-        normalizeLoopPosition();
-        updateProximity();
-      }
-    };
-
-    railAnimationFrame = window.requestAnimationFrame(animate);
-  };
-
-  const applyReadout = (item) => {
-    const href = item.dataset.href || "";
-    title.textContent = item.dataset.title || "";
-    meta.textContent = item.dataset.meta || "";
-
-    if (href) {
-      link.classList.add("is-linked");
-      link.href = href;
-      link.setAttribute("aria-label", `Открыть: ${item.dataset.title}`);
-
-      if (href.startsWith("mailto:")) {
-        link.removeAttribute("target");
-        link.removeAttribute("rel");
-      } else {
-        link.target = "_blank";
-        link.rel = "noreferrer";
-      }
-    } else {
-      link.classList.remove("is-linked");
-      link.removeAttribute("href");
-      link.removeAttribute("target");
-      link.removeAttribute("rel");
-      link.removeAttribute("aria-label");
-    }
-  };
-
-  const morphReadout = (item, animate) => {
-    readoutToken += 1;
-    const token = readoutToken;
-
-    if (!animate || reduceMotion.matches || typeof readout.animate !== "function") {
-      readoutAnimation?.cancel();
-      readoutContentAnimation?.cancel();
-      readoutAnimation = null;
-      readoutContentAnimation = null;
-      readout.style.width = "";
-      applyReadout(item);
-      return;
-    }
-
-    readoutAnimation?.cancel();
-    readoutContentAnimation?.cancel();
-    const startWidth = readout.getBoundingClientRect().width;
-
-    readoutContentAnimation = readoutContent.animate(
-      [
-        { opacity: 1, transform: "scale(1)", filter: "blur(0)" },
-        { opacity: 0, transform: "scale(0.88)", filter: "blur(3px)" },
-      ],
-      {
-        duration: 150,
-        easing: motionEasing.exit,
-        fill: "forwards",
-      },
-    );
-
-    readoutContentAnimation.finished.then(() => {
-      if (token !== readoutToken) {
-        return;
-      }
-
-      applyReadout(item);
-      readoutContentAnimation?.cancel();
-      readout.style.width = "";
-      const targetWidth = readout.getBoundingClientRect().width;
-      const middleWidth = startWidth + (targetWidth - startWidth) * 0.42;
-
-      readoutAnimation = readout.animate(
-        [
-          { width: `${startWidth}px`, transform: "scale(1)" },
-          {
-            width: `${middleWidth}px`,
-            transform: "scale(0.985, 0.92)",
-            offset: 0.34,
-          },
-          { width: `${targetWidth}px`, transform: "scale(1)" },
-        ],
-        {
-          duration: 520,
-          easing: motionEasing.move,
-          fill: "both",
-        },
-      );
-
-      readoutContentAnimation = readoutContent.animate(
-        [
-          { opacity: 0, transform: "scale(0.88)", filter: "blur(3px)" },
-          { opacity: 1, transform: "scale(1)", filter: "blur(0)" },
-        ],
-        {
-          duration: 360,
-          delay: 90,
-          easing: motionEasing.enter,
-          fill: "both",
-        },
-      );
-
-      readoutContentAnimation.finished.then(() => {
-        if (token === readoutToken) {
-          readoutContentAnimation?.cancel();
-          readoutContentAnimation = null;
-        }
-      }).catch(() => {});
-
-      readoutAnimation.finished.then(() => {
-        if (token === readoutToken) {
-          readoutAnimation?.cancel();
-          readoutAnimation = null;
-          readout.style.width = "";
-        }
-      }).catch(() => {});
-    }).catch(() => {});
-  };
-
-  const selectItem = (nextIndex, options = {}) => {
-    const { center = true, focus = false, targetItem = null } = options;
-    const index = (nextIndex % items.length + items.length) % items.length;
-    const item = items[index];
-
-    if (index !== activeIndex) {
-      const shouldMorph = activeIndex >= 0;
-
-      visualItems.forEach((candidate) => {
-        const isActive = Number(candidate.dataset.symbolIndex) === index;
-        candidate.classList.toggle("is-active", isActive);
-      });
-
-      items.forEach((candidate, candidateIndex) => {
-        candidate.setAttribute("aria-selected", String(candidateIndex === index));
-      });
-
-      activeIndex = index;
-      const background = item.dataset.bg || "#f8f8f6";
-      const darkBackground = item.dataset.bgDark || "#171817";
-      const foreground = item.dataset.ink || "#242421";
-      const darkForeground = item.dataset.inkDark || "#f0efe9";
-
-      stage.style.setProperty("--stage-bg-light", background);
-      stage.style.setProperty("--stage-bg-dark", darkBackground);
-      stage.style.setProperty("--stage-ink-light", foreground);
-      stage.style.setProperty("--stage-ink-dark", darkForeground);
-      updateThemeColor(item);
-      morphReadout(item, shouldMorph);
-    }
-
-    if (center) {
-      centerItem(targetItem || nearestInstance(index), reduceMotion.matches);
-    }
-
-    if (focus) {
-      item.focus({ preventScroll: true });
-    }
-  };
-
-  visualItems.forEach((item) => {
-    item.addEventListener("pointerdown", (event) => {
-      if (event.pointerType === "mouse") {
-        event.preventDefault();
-      }
-    });
-    item.addEventListener("click", () => {
-      selectItem(Number(item.dataset.symbolIndex), { targetItem: item });
-    });
-  });
-
-  [previousButton, nextButton].forEach((button) => {
-    button.addEventListener("pointerdown", (event) => {
-      if (event.pointerType === "mouse") {
-        event.preventDefault();
-      }
-    });
-  });
-
-  previousButton.addEventListener("click", () => selectItem(activeIndex - 1));
-  nextButton.addEventListener("click", () => selectItem(activeIndex + 1));
-
-  rail.addEventListener("scroll", () => {
-    markRailInMotion();
-    window.cancelAnimationFrame(scrollFrame);
-    scrollFrame = window.requestAnimationFrame(() => {
-      if (!railAnimationFrame) {
-        normalizeLoopPosition();
-      }
-      updateProximity();
-    });
-
-    window.clearTimeout(settleTimer);
-    settleTimer = window.setTimeout(() => {
-      if (!railAnimationFrame) {
-        normalizeLoopPosition();
-        const nearestItem = findNearestVisualItem();
-        selectItem(Number(nearestItem.dataset.symbolIndex), { center: false });
-      }
-    }, 160);
-  }, { passive: true });
-
-  rail.addEventListener("keydown", (event) => {
-    const keyActions = {
-      ArrowLeft: () => selectItem(activeIndex - 1, { focus: true }),
-      ArrowRight: () => selectItem(activeIndex + 1, { focus: true }),
-      Home: () => selectItem(0, { focus: true }),
-      End: () => selectItem(items.length - 1, { focus: true }),
-    };
-
-    if (keyActions[event.key]) {
-      event.preventDefault();
-      keyActions[event.key]();
-    }
-  });
-
-  window.addEventListener("resize", () => {
-    window.cancelAnimationFrame(resizeFrame);
-    resizeFrame = window.requestAnimationFrame(() => {
-      window.cancelAnimationFrame(railAnimationFrame);
-      railAnimationFrame = 0;
-      centerItem(nearestInstance(activeIndex), true);
-      updateProximity();
-    });
-  });
-
-  selectItem(0, { center: false });
-  window.requestAnimationFrame(() => centerItem(items[0], true));
-}
-
-const projectField = document.querySelector("[data-project-clouds]");
-
-if (projectField) {
-  const dragBounds = projectField.closest(".symbol-stage") || projectField;
-  const projectItems = Array.from(projectField.querySelectorAll(".project-item"));
-  const viewButtons = Array.from(document.querySelectorAll("[data-project-view]"));
-  const viewSwitch = document.querySelector(".project-view-switch");
-  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-  const resetProjects = [];
-  let topLayer = 10;
-  let projectResizeFrame = 0;
-
-  const clamp = (value, minimum, maximum) => Math.min(Math.max(value, minimum), maximum);
-
-  projectField.style.viewTransitionName = "projects-field";
-
-  projectItems.forEach((item, index) => {
-    const cloud = item.querySelector("[data-project-cloud]");
-    item.style.viewTransitionName = `project-${index + 1}`;
-    let pointerId = null;
-    let inertiaFrame = 0;
-    let startX = 0;
-    let startY = 0;
-    let originX = 0;
-    let originY = 0;
-    let currentX = 0;
-    let currentY = 0;
-    let minimumX = 0;
-    let maximumX = 0;
-    let minimumY = 0;
-    let maximumY = 0;
-    let velocityX = 0;
-    let velocityY = 0;
-    let lastMoveTime = 0;
-    let moved = false;
-    let suppressClick = false;
-
-    const setPosition = (nextX, nextY) => {
-      currentX = clamp(nextX, minimumX, maximumX);
-      currentY = clamp(nextY, minimumY, maximumY);
-      item.style.setProperty("--drag-x", `${currentX}px`);
-      item.style.setProperty("--drag-y", `${currentY}px`);
-    };
-
-    const stopInertia = () => {
-      window.cancelAnimationFrame(inertiaFrame);
-      inertiaFrame = 0;
-      item.classList.remove("is-settling");
-    };
-
-    const startInertia = () => {
-      if (reduceMotion.matches || Math.hypot(velocityX, velocityY) < 0.04) {
-        return;
-      }
-
-      item.classList.add("is-settling");
-      let previousTime = performance.now();
-      let elapsed = 0;
-
-      const glide = (now) => {
-        const deltaTime = Math.min(32, now - previousTime);
-        const decay = Math.pow(0.84, deltaTime / 16);
-        previousTime = now;
-        elapsed += deltaTime;
-        velocityX *= decay;
-        velocityY *= decay;
-
-        let nextX = currentX + velocityX * deltaTime;
-        let nextY = currentY + velocityY * deltaTime;
-
-        if (nextX < minimumX || nextX > maximumX) {
-          nextX = clamp(nextX, minimumX, maximumX);
-          velocityX *= -0.16;
-        }
-
-        if (nextY < minimumY || nextY > maximumY) {
-          nextY = clamp(nextY, minimumY, maximumY);
-          velocityY *= -0.16;
-        }
-
-        setPosition(nextX, nextY);
-
-        if (Math.hypot(velocityX, velocityY) > 0.018 && elapsed < 900) {
-          inertiaFrame = window.requestAnimationFrame(glide);
-        } else {
-          inertiaFrame = 0;
-          item.classList.remove("is-settling");
-        }
-      };
-
-      inertiaFrame = window.requestAnimationFrame(glide);
-    };
-
-    const finishDrag = (event) => {
-      if (event.pointerId !== pointerId) {
-        return;
-      }
-
-      if (cloud.hasPointerCapture(pointerId)) {
-        cloud.releasePointerCapture(pointerId);
-      }
-
-      pointerId = null;
-      item.classList.remove("is-dragging");
-
-      if (moved) {
-        suppressClick = true;
-        if (event.type !== "pointercancel") {
-          startInertia();
-        }
-        window.setTimeout(() => {
-          suppressClick = false;
-        }, 0);
-      }
-    };
-
-    cloud.addEventListener("dragstart", (event) => event.preventDefault());
-
-    cloud.addEventListener("pointerdown", (event) => {
-      if (
-        projectField.classList.contains("is-list")
-        || event.pointerType !== "mouse"
-        || event.button !== 0
-        || !event.isPrimary
-      ) {
-        return;
-      }
-
-      const itemRect = item.getBoundingClientRect();
-      const boundsRect = dragBounds.getBoundingClientRect();
-      const styles = window.getComputedStyle(item);
-
-      event.preventDefault();
-      stopInertia();
-      pointerId = event.pointerId;
-      startX = event.clientX;
-      startY = event.clientY;
-      originX = Number.parseFloat(styles.getPropertyValue("--drag-x")) || 0;
-      originY = Number.parseFloat(styles.getPropertyValue("--drag-y")) || 0;
-      currentX = originX;
-      currentY = originY;
-      minimumX = boundsRect.left + 8 - (itemRect.left - originX);
-      maximumX = boundsRect.right - 8 - (itemRect.right - originX);
-      minimumY = boundsRect.top + 8 - (itemRect.top - originY);
-      maximumY = boundsRect.bottom - 8 - (itemRect.bottom - originY);
-      velocityX = 0;
-      velocityY = 0;
-      lastMoveTime = performance.now();
-      moved = false;
-
-      topLayer += 1;
-      item.style.zIndex = String(topLayer);
-      item.classList.add("is-dragging");
-      cloud.setPointerCapture(pointerId);
-    });
-
-    cloud.addEventListener("pointermove", (event) => {
-      if (event.pointerId !== pointerId) {
-        return;
-      }
-
-      const deltaX = event.clientX - startX;
-      const deltaY = event.clientY - startY;
-
-      if (!moved && Math.hypot(deltaX, deltaY) < 5) {
-        return;
-      }
-
-      moved = true;
-      event.preventDefault();
-
-      const now = performance.now();
-      const deltaTime = Math.max(8, now - lastMoveTime);
-      const nextX = clamp(originX + deltaX, minimumX, maximumX);
-      const nextY = clamp(originY + deltaY, minimumY, maximumY);
-      const instantVelocityX = (nextX - currentX) / deltaTime;
-      const instantVelocityY = (nextY - currentY) / deltaTime;
-
-      velocityX = clamp(velocityX * 0.48 + instantVelocityX * 0.52, -0.72, 0.72);
-      velocityY = clamp(velocityY * 0.48 + instantVelocityY * 0.52, -0.72, 0.72);
-      lastMoveTime = now;
-      setPosition(nextX, nextY);
-    });
-
-    cloud.addEventListener("pointerup", finishDrag);
-    cloud.addEventListener("pointercancel", finishDrag);
-
-    cloud.addEventListener("click", (event) => {
-      if (!suppressClick) {
-        return;
-      }
-
-      event.preventDefault();
-      event.stopPropagation();
-    });
-
-    resetProjects.push(() => {
-      stopInertia();
-      pointerId = null;
-      currentX = 0;
-      currentY = 0;
-      suppressClick = false;
-      item.classList.remove("is-dragging");
-      item.style.removeProperty("--drag-x");
-      item.style.removeProperty("--drag-y");
-      item.style.removeProperty("z-index");
-    });
-  });
-
-  const setProjectView = (nextView, options = {}) => {
-    const { animate = true, persist = true } = options;
-    const view = nextView === "list" ? "list" : "grid";
-    const currentView = projectField.classList.contains("is-list") ? "list" : "grid";
-
-    const updateView = () => {
-      resetProjects.forEach((resetProject) => resetProject());
-      projectField.classList.toggle("is-list", view === "list");
-      projectField.dataset.view = view;
-      viewSwitch?.setAttribute("data-view", view);
-
-      viewButtons.forEach((button) => {
-        const isActive = button.dataset.projectView === view;
-        button.classList.toggle("is-active", isActive);
-        button.setAttribute("aria-pressed", String(isActive));
-      });
-    };
-
-    if (
-      animate
-      && currentView !== view
-      && !reduceMotion.matches
-      && typeof document.startViewTransition === "function"
-    ) {
-      document.startViewTransition(updateView);
-    } else {
-      updateView();
-    }
-
-    if (persist) {
-      try {
-        window.localStorage.setItem("anton-project-view", view);
-      } catch {
-        // The selected mode still works when storage is unavailable.
-      }
-    }
-  };
-
-  viewButtons.forEach((button, index) => {
-    button.addEventListener("pointerdown", (event) => {
-      if (event.pointerType === "mouse") {
-        event.preventDefault();
-      }
-    });
-
-    button.addEventListener("click", () => {
-      setProjectView(button.dataset.projectView);
-    });
-
-    button.addEventListener("keydown", (event) => {
-      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") {
-        return;
-      }
-
-      event.preventDefault();
-      const direction = event.key === "ArrowRight" ? 1 : -1;
-      const nextButton = viewButtons[(index + direction + viewButtons.length) % viewButtons.length];
-      nextButton.focus();
-      setProjectView(nextButton.dataset.projectView);
-    });
-  });
-
-  let initialProjectView = "grid";
-
-  try {
-    initialProjectView = window.localStorage.getItem("anton-project-view") || "grid";
-  } catch {
-    initialProjectView = "grid";
+const clock = document.querySelector("[data-clock]");
+const updateClock = () => {
+  if (!clock) {
+    return;
   }
 
-  setProjectView(initialProjectView, { animate: false, persist: false });
+  clock.textContent = new Intl.DateTimeFormat("ru-RU", {
+    timeZone: "Europe/Moscow",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(new Date());
+};
 
-  window.addEventListener("resize", () => {
-    window.cancelAnimationFrame(projectResizeFrame);
-    projectResizeFrame = window.requestAnimationFrame(() => {
-      resetProjects.forEach((resetProject) => resetProject());
+if (captureMode) {
+  clock.textContent = "MSK / UTC+3";
+} else {
+  updateClock();
+  window.setInterval(updateClock, 30000);
+}
+
+const asciiCharacters = " .·:+*#%@";
+const createSignal = (columns, rows, phase = 0, seed = 0) => {
+  const output = [];
+  const aspect = columns / rows;
+
+  for (let row = 0; row < rows; row += 1) {
+    let line = "";
+
+    for (let column = 0; column < columns; column += 1) {
+      const x = ((column / (columns - 1)) * 2 - 1) * aspect * 0.54;
+      const y = (row / (rows - 1)) * 2 - 1;
+      const radius = Math.sqrt(x * x + y * y);
+      const angle = Math.atan2(y, x);
+      const petal = Math.sin(angle * 5 + phase * 0.7 + seed) * 0.11;
+      const orbit = 0.5 + petal + Math.sin(angle * 2 - phase) * 0.035;
+      const ring = Math.max(0, 1 - Math.abs(radius - orbit) * 10.5);
+      const inner = Math.max(0, 1 - Math.abs(radius - 0.24 - Math.sin(angle * 3 + phase) * 0.028) * 18);
+      const ray = Math.max(0, Math.cos(angle * 7 - phase * 0.5) - 0.72) * Math.max(0, 0.88 - radius);
+      const noise = (Math.sin(column * 1.73 + row * 2.17 + seed * 3.1) + 1) * 0.035;
+      const fade = Math.max(0, 1 - Math.pow(radius / 0.98, 3));
+      const intensity = Math.min(1, (ring * 0.72 + inner * 0.46 + ray * 0.52 + noise) * fade);
+      const characterIndex = Math.floor(intensity * (asciiCharacters.length - 1));
+
+      line += intensity > 0.07 ? asciiCharacters[characterIndex] : " ";
+    }
+
+    output.push(line.trimEnd());
+  }
+
+  return output.join("\n");
+};
+
+const signalField = document.querySelector("[data-signal-field]");
+const signalAscii = document.querySelector("[data-signal-ascii]");
+const signalCore = document.querySelector("[data-signal-core]");
+let signalPhase = 0;
+let signalFrame = 0;
+let lastSignalRender = 0;
+
+const renderHeroSignal = (time = 0) => {
+  if (!signalAscii) {
+    return;
+  }
+
+  const isCompact = window.innerWidth < 680;
+  const columns = isCompact ? 76 : 132;
+  const rows = isCompact ? 42 : 50;
+
+  if (time - lastSignalRender > 95 || time === 0) {
+    signalPhase += 0.045;
+    signalAscii.textContent = createSignal(columns, rows, signalPhase, 0.3);
+    lastSignalRender = time;
+  }
+
+  if (!reducedMotion.matches && !captureMode) {
+    signalFrame = window.requestAnimationFrame(renderHeroSignal);
+  }
+};
+
+renderHeroSignal();
+
+signalField?.addEventListener("pointermove", (event) => {
+  if (!signalCore || reducedMotion.matches) {
+    return;
+  }
+
+  const bounds = signalField.getBoundingClientRect();
+  const x = (event.clientX - bounds.left) / bounds.width - 0.5;
+  const y = (event.clientY - bounds.top) / bounds.height - 0.5;
+
+  signalField.style.setProperty("--core-x", `${x * 18}px`);
+  signalField.style.setProperty("--core-y", `${y * 14}px`);
+});
+
+signalField?.addEventListener("pointerleave", () => {
+  signalField.style.setProperty("--core-x", "0px");
+  signalField.style.setProperty("--core-y", "0px");
+});
+
+const workRows = Array.from(document.querySelectorAll(".work-row"));
+const workPreview = document.querySelector("[data-work-preview]");
+const workAscii = document.querySelector("[data-work-ascii]");
+const previewNumber = document.querySelector("[data-preview-number]");
+const previewTitle = document.querySelector("[data-preview-title]");
+
+const createPreviewAscii = (seed) => {
+  const width = 58;
+  const height = 25;
+  const lines = [];
+
+  for (let row = 0; row < height; row += 1) {
+    let line = "";
+
+    for (let column = 0; column < width; column += 1) {
+      const x = column / width;
+      const y = row / height;
+      const waveA = Math.sin((x * 7.2 + y * 3.1 + seed) * Math.PI);
+      const waveB = Math.cos((x * 2.3 - y * 6.4 + seed * 0.13) * Math.PI);
+      const distance = Math.abs(y - 0.5 - Math.sin(x * 7 + seed) * 0.18);
+      const intensity = Math.max(0, (waveA + waveB + 2) * 0.23 - distance * 1.2);
+      const index = Math.min(asciiCharacters.length - 1, Math.floor(intensity * asciiCharacters.length));
+
+      line += intensity > 0.14 ? asciiCharacters[index] : " ";
+    }
+
+    lines.push(line.trimEnd());
+  }
+
+  return lines.join("\n");
+};
+
+const showWorkPreview = (row) => {
+  if (!workPreview || !workAscii) {
+    return;
+  }
+
+  const tone = row.dataset.tone || "#d8ff47";
+  const ink = row.dataset.previewInk || "#10110f";
+  const seed = Number(row.dataset.seed || 1);
+  const number = row.querySelector(".work-row__number")?.textContent || "";
+
+  row.style.setProperty("--row-tone", tone);
+  row.style.setProperty("--row-ink", ink);
+  workPreview.style.setProperty("--preview-tone", tone);
+  workPreview.style.setProperty("--preview-ink", ink);
+  workAscii.textContent = createPreviewAscii(seed);
+  previewNumber.textContent = number;
+  previewTitle.textContent = row.dataset.preview || "";
+  workPreview.classList.add("is-visible");
+};
+
+const positionWorkPreview = (event) => {
+  if (!workPreview || window.innerWidth < 681) {
+    return;
+  }
+
+  const previewWidth = 292;
+  const previewHeight = 204;
+  const offset = 22;
+  const x = Math.min(window.innerWidth - previewWidth - 12, event.clientX + offset);
+  const y = Math.min(window.innerHeight - previewHeight - 12, event.clientY + offset);
+
+  workPreview.style.setProperty("--preview-x", `${Math.max(12, x)}px`);
+  workPreview.style.setProperty("--preview-y", `${Math.max(60, y)}px`);
+};
+
+workRows.forEach((row) => {
+  row.style.setProperty("--row-tone", row.dataset.tone || "#d8ff47");
+  row.style.setProperty("--row-ink", row.dataset.previewInk || "#10110f");
+
+  row.addEventListener("pointerenter", (event) => {
+    showWorkPreview(row);
+    positionWorkPreview(event);
+  });
+  row.addEventListener("pointermove", positionWorkPreview);
+  row.addEventListener("pointerleave", () => workPreview?.classList.remove("is-visible"));
+  row.addEventListener("focus", () => {
+    showWorkPreview(row);
+    workPreview?.style.setProperty("--preview-x", `${Math.max(12, window.innerWidth - 320)}px`);
+    workPreview?.style.setProperty("--preview-y", "92px");
+  });
+  row.addEventListener("blur", () => workPreview?.classList.remove("is-visible"));
+});
+
+const indexItems = Array.from(document.querySelectorAll("[data-index-item]"));
+const indexEmoji = document.querySelector("[data-index-emoji]");
+const indexAscii = document.querySelector("[data-index-ascii]");
+const indexNumber = document.querySelector("[data-index-number]");
+const indexTitle = document.querySelector("[data-index-title]");
+const indexMeta = document.querySelector("[data-index-meta]");
+const indexLink = document.querySelector("[data-index-link]");
+
+const selectIndexItem = (item) => {
+  indexItems.forEach((candidate) => {
+    candidate.classList.toggle("is-active", candidate === item);
+    candidate.setAttribute("aria-pressed", String(candidate === item));
+  });
+
+  indexEmoji.textContent = item.dataset.emoji || "✳";
+  indexAscii.textContent = createSignal(62, 34, Number(item.dataset.seed || 1) * 0.04, Number(item.dataset.seed || 1));
+  indexNumber.textContent = item.dataset.number || "";
+  indexTitle.textContent = item.dataset.title || "";
+  indexMeta.textContent = item.dataset.meta || "";
+
+  if (item.dataset.href) {
+    indexLink.href = item.dataset.href;
+    indexLink.textContent = item.dataset.href.startsWith("mailto:") ? "OPEN MAIL ↗" : "OPEN SIGNAL ↗";
+    indexLink.classList.remove("is-disabled");
+    indexLink.removeAttribute("aria-disabled");
+
+    if (item.dataset.href.startsWith("mailto:")) {
+      indexLink.removeAttribute("target");
+      indexLink.removeAttribute("rel");
+    } else {
+      indexLink.target = "_blank";
+      indexLink.rel = "noreferrer";
+    }
+  } else {
+    indexLink.removeAttribute("href");
+    indexLink.removeAttribute("target");
+    indexLink.removeAttribute("rel");
+    indexLink.textContent = "NO EXTERNAL LINK";
+    indexLink.classList.add("is-disabled");
+    indexLink.setAttribute("aria-disabled", "true");
+  }
+};
+
+indexItems.forEach((item) => {
+  item.addEventListener("click", () => selectIndexItem(item));
+});
+
+if (indexItems[0]) {
+  selectIndexItem(indexItems[0]);
+}
+
+const revealTargets = document.querySelectorAll(".work-row, .index-item, .contact-copy");
+
+if ("IntersectionObserver" in window && !reducedMotion.matches) {
+  root.classList.add("has-reveal");
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("is-revealed");
+        observer.unobserve(entry.target);
+      }
     });
+  }, { threshold: 0.08 });
+
+  revealTargets.forEach((target, index) => {
+    target.style.setProperty("--reveal-delay", `${Math.min(index, 8) * 24}ms`);
+    observer.observe(target);
   });
 }
+
+window.addEventListener("resize", () => {
+  window.cancelAnimationFrame(signalFrame);
+  lastSignalRender = 0;
+  renderHeroSignal();
+});

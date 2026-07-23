@@ -1,11 +1,13 @@
-# Anton — personal index
+# Anton — personal signal index
 
-Mobile-first personal site built as a single tactile index of universal
-symbols and selected live work. Project surfaces can be moved with a mouse and
-opened through direct external links.
+Static personal portfolio for a digital product manager, web project lead, and
+design engineer. The interface combines a procedural ASCII field, one
+interactive `AG` object, a typographic index of selected work, and a small
+personal data stream.
 
 ## Selected work
 
+- [Olga Shirokostup](https://shirokostup.site/)
 - [Tarski](https://tarski.ru/)
 - [Herman & Co](https://barberherman.ru/)
 - [Dusty Dumbbells Merch](https://merch.dustydumbbells.com/)
@@ -14,13 +16,19 @@ opened through direct external links.
 - [KS Fish](https://ks.fish/)
 - [Doronin](https://doronin.store/)
 
-The site is static HTML, CSS, and JavaScript and can be published directly with
-GitHub Pages.
+## Visual system
 
-## Shape rules
+- Use whitespace, typography, grid lines, and one active signal instead of a
+  collection of floating UI cards.
+- Keep ASCII procedural and text-based. It should feel like live data, not a
+  pasted illustration.
+- Project links are the primary content. Their hover previews may be expressive,
+  but the rows must remain readable and useful without hover or JavaScript.
+- Large surfaces stay rectangular. Continuous corners are reserved for the
+  central signal object and its floating previews; true status indicators stay
+  circular.
+- Light and dark themes deliberately swap the personal index between electric
+  blue and acid lime.
 
-Large matte surfaces should use continuous corners, not arbitrary circular
-rounding. Keep `border-radius` as the fallback geometry, then add
-`corner-shape: superellipse(...)` through the shared tokens in `styles.css`.
-Use smoother shapes for the project clouds and dynamic readout; keep true icon
-buttons circular.
+The site uses only static HTML, CSS, and JavaScript and publishes directly from
+the repository's `gh-pages` branch.
