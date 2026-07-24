@@ -80,18 +80,72 @@
         <sup>®</sup>
       </a>
 
-      <nav class="header-nav" aria-label="Основная навигация">
-        <div class="header-nav__group" role="group" aria-label="Разделы" data-context="SECTIONS">
-          <button type="button" data-open-panel="work">ПРОЕКТЫ</button>
-          <button type="button" data-open-panel="approach">ПОДХОД</button>
-          <button type="button" data-open-panel="contact">КОНТАКТ</button>
-        </div>
-        <div class="header-nav__group" role="group" aria-label="Документы" data-context="DOSSIER">
+      <nav class="constellation-nav" aria-label="Основная навигация" data-constellation-nav>
+        <button
+          class="constellation-nav__toggle"
+          type="button"
+          data-constellation-nav-toggle
+          aria-expanded="false"
+          aria-controls="constellation-nav-orbit"
+        >
+          <span class="constellation-nav__cluster" aria-hidden="true">
+            <i></i><i></i><i></i><i></i>
+          </span>
+          <span class="visually-hidden" data-constellation-nav-toggle-label>Открыть навигацию</span>
+        </button>
+
+        <div class="constellation-nav__orbit" id="constellation-nav-orbit" data-constellation-nav-orbit>
           <a
+            class="constellation-nav__item is-current"
+            data-nav-view="map"
+            data-nav-index="00"
+            href="#map"
+            aria-current="page"
+          >
+            <span class="constellation-nav__shape" aria-hidden="true">◎</span>
+            <span class="constellation-nav__label">КАРТА</span>
+          </a>
+          <button
+            class="constellation-nav__item"
+            type="button"
+            data-nav-view="work"
+            data-nav-index="01"
+            data-open-panel="work"
+          >
+            <span class="constellation-nav__shape" aria-hidden="true">●</span>
+            <span class="constellation-nav__label">ПРОЕКТЫ</span>
+          </button>
+          <button
+            class="constellation-nav__item"
+            type="button"
+            data-nav-view="approach"
+            data-nav-index="02"
+            data-open-panel="approach"
+          >
+            <span class="constellation-nav__shape" aria-hidden="true">＋</span>
+            <span class="constellation-nav__label">ПОДХОД</span>
+          </button>
+          <button
+            class="constellation-nav__item"
+            type="button"
+            data-nav-view="contact"
+            data-nav-index="03"
+            data-open-panel="contact"
+          >
+            <span class="constellation-nav__shape" aria-hidden="true">•</span>
+            <span class="constellation-nav__label">КОНТАКТ</span>
+          </button>
+          <a
+            class="constellation-nav__item"
+            data-nav-view="cv"
+            data-nav-index="04"
             href="https://gorokhovatsky.notion.site/digital-web-digital-f68fc13247614ccb9738d9a85acf29b4?pvs=74"
             target="_blank"
             rel="noreferrer"
-          >CV↗</a>
+          >
+            <span class="constellation-nav__shape" aria-hidden="true">↗</span>
+            <span class="constellation-nav__label">CV</span>
+          </a>
         </div>
       </nav>
     </header>

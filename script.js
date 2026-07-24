@@ -1636,6 +1636,59 @@ mapFilterButtons.forEach((button) => {
   });
 });
 
+const constellationNav = document.querySelector("[data-constellation-nav]");
+const constellationNavToggle = document.querySelector("[data-constellation-nav-toggle]");
+const constellationNavToggleLabel = document.querySelector("[data-constellation-nav-toggle-label]");
+const constellationNavOrbit = document.querySelector("[data-constellation-nav-orbit]");
+const constellationNavItems = Array.from(document.querySelectorAll("[data-nav-view]"));
+const constellationNavHome = document.querySelector('[data-nav-view="map"]');
+const compactConstellationNav = window.matchMedia("(max-width: 680px)");
+let isConstellationNavOpen = false;
+
+const syncConstellationNavInteractivity = () => {
+  if (constellationNavOrbit) {
+    constellationNavOrbit.inert = compactConstellationNav.matches && !isConstellationNavOpen;
+  }
+};
+
+const setConstellationNavOpen = (isOpen) => {
+  isConstellationNavOpen = isOpen;
+  constellationNav?.classList.toggle("is-open", isOpen);
+  constellationNavToggle?.setAttribute("aria-expanded", String(isOpen));
+
+  if (constellationNavToggleLabel) {
+    constellationNavToggleLabel.textContent = isOpen ? "Закрыть навигацию" : "Открыть навигацию";
+  }
+
+  syncConstellationNavInteractivity();
+};
+
+const setConstellationNavCurrent = (view) => {
+  constellationNavItems.forEach((item) => {
+    const isCurrent = item.dataset.navView === view;
+    item.classList.toggle("is-current", isCurrent);
+
+    if (isCurrent) {
+      item.setAttribute("aria-current", "page");
+    } else {
+      item.removeAttribute("aria-current");
+    }
+  });
+};
+
+constellationNavToggle?.addEventListener("click", () => {
+  setConstellationNavOpen(!isConstellationNavOpen);
+});
+
+constellationNavItems.forEach((item) => {
+  item.addEventListener("click", () => {
+    setConstellationNavOpen(false);
+  });
+});
+
+compactConstellationNav.addEventListener("change", syncConstellationNavInteractivity);
+syncConstellationNavInteractivity();
+
 const contentPanel = document.querySelector("[data-content-panel]");
 const panelScrim = document.querySelector("[data-panel-scrim]");
 const panelClose = document.querySelector("[data-close-panel]");
@@ -1683,6 +1736,8 @@ const openContentPanel = (view, trigger = null) => {
 
   activePanelView = view;
   lastPanelTrigger = trigger instanceof HTMLElement ? trigger : document.activeElement;
+  setConstellationNavCurrent(view);
+  setConstellationNavOpen(false);
   panelSections.forEach((section) => {
     section.hidden = section.dataset.panelSection !== view;
   });
@@ -1708,6 +1763,7 @@ const closeContentPanel = ({ restoreFocus = true } = {}) => {
 
   setPanelOpen(false);
   activePanelView = null;
+  setConstellationNavCurrent("map");
 
   if (restoreFocus && lastPanelTrigger instanceof HTMLElement) {
     lastPanelTrigger.focus();
@@ -1722,6 +1778,14 @@ panelOpenButtons.forEach((button) => {
 
 panelClose?.addEventListener("click", () => closeContentPanel());
 panelScrim?.addEventListener("click", () => closeContentPanel());
+constellationNavHome?.addEventListener("click", () => {
+  if (activePanelView) {
+    closeContentPanel({ restoreFocus: false });
+  }
+
+  setInspectorOpen(false);
+  setConstellationNavCurrent("map");
+});
 
 const commandForm = document.querySelector("[data-command-form]");
 const commandInput = document.querySelector("[data-command-input]");
@@ -1935,7 +1999,10 @@ document.addEventListener("keydown", (event) => {
     return;
   }
 
-  if (activePanelView) {
+  if (isConstellationNavOpen) {
+    setConstellationNavOpen(false);
+    constellationNavToggle?.focus();
+  } else if (activePanelView) {
     closeContentPanel();
   } else if (mapInspector?.classList.contains("is-open")) {
     setInspectorOpen(false);
