@@ -114,10 +114,38 @@ let signalMetrics = { width: 0, height: 0, dpr: 1 };
 let signalFrame = 0;
 let lastSignalRender = 0;
 let signalStartedAt = performance.now();
+const signalInitialRotation = { x: -0.18, y: 0.3, z: -0.035 };
+const signalRotation = { ...signalInitialRotation };
+const signalAngularVelocity = { x: 0, y: 0 };
+let signalLastFrameAt = performance.now();
+let signalReleasedAt = signalLastFrameAt - 2200;
+const signalDrag = {
+  active: false,
+  pointerId: null,
+  x: 0,
+  y: 0,
+  time: 0,
+};
 
 const smootherStep = (value) => {
   const clamped = Math.max(0, Math.min(1, value));
   return clamped * clamped * clamped * (clamped * (clamped * 6 - 15) + 10);
+};
+
+const clampSignal = (value, minimum, maximum) => Math.max(minimum, Math.min(maximum, value));
+
+const getSignalDepth = (index, x, y, weight) => {
+  const noiseSeed = Math.sin(
+    (index + 1) * 12.9898
+    + x * 78.233
+    + y * 37.719,
+  ) * 43758.5453;
+  const noise = (noiseSeed - Math.floor(noiseSeed)) * 2 - 1;
+  const radius = Math.min(1, Math.hypot(x, y) * 2);
+  const thickness = 0.12 + (1 - radius) * 0.09 + weight * 0.045;
+  const relief = Math.sin(index * 0.31 + Math.atan2(y, x) * 3) * 0.024;
+
+  return noise * thickness + relief;
 };
 
 const createEmojiPointSet = (emoji) => {
@@ -171,6 +199,7 @@ const createEmojiPointSet = (emoji) => {
       return {
         x: Math.cos(angle) * 0.5,
         y: Math.sin(angle) * 0.5,
+        z: Math.sin(index * 0.37) * 0.16,
         weight: 0.7,
       };
     });
@@ -208,10 +237,15 @@ const createEmojiPointSet = (emoji) => {
     const upper = normalized[Math.ceil(position)] || lower;
     const mix = position - Math.floor(position);
 
+    const x = lower.x + (upper.x - lower.x) * mix;
+    const y = lower.y + (upper.y - lower.y) * mix;
+    const weight = lower.weight + (upper.weight - lower.weight) * mix;
+
     return {
-      x: lower.x + (upper.x - lower.x) * mix,
-      y: lower.y + (upper.y - lower.y) * mix,
-      weight: lower.weight + (upper.weight - lower.weight) * mix,
+      x,
+      y,
+      z: getSignalDepth(index, x, y, weight),
+      weight,
     };
   });
 };
@@ -239,6 +273,33 @@ const resizeSignalConstellation = () => {
   signalMetrics = { width, height, dpr };
 };
 
+const updateSignalRotation = (time) => {
+  const delta = Math.min(50, Math.max(0, time - signalLastFrameAt));
+  signalLastFrameAt = time;
+
+  if (
+    !delta
+    || signalDrag.active
+    || reducedMotion.matches
+    || captureMode
+  ) {
+    return;
+  }
+
+  signalRotation.x += signalAngularVelocity.x * delta;
+  signalRotation.y += signalAngularVelocity.y * delta;
+
+  const damping = Math.pow(0.918, delta / 16.667);
+  signalAngularVelocity.x *= damping;
+  signalAngularVelocity.y *= damping;
+
+  const idleBlend = smootherStep((time - signalReleasedAt - 450) / 1500);
+
+  signalRotation.y += 0.000058 * delta * idleBlend;
+  signalRotation.x += Math.sin(time * 0.00017) * 0.000004 * delta * idleBlend;
+  signalRotation.z = signalInitialRotation.z + Math.sin(time * 0.00012) * 0.035;
+};
+
 const drawSignalConstellation = (time = performance.now()) => {
   if (!signalContext || !signalPointSets.length) {
     return;
@@ -247,11 +308,15 @@ const drawSignalConstellation = (time = performance.now()) => {
   resizeSignalConstellation();
 
   const { width, height, dpr } = signalMetrics;
+  const animationTime = time === 0 ? performance.now() : time;
 
   signalContext.setTransform(dpr, 0, 0, dpr, 0, 0);
   signalContext.clearRect(0, 0, width, height);
+  updateSignalRotation(animationTime);
 
-  const elapsed = captureMode || reducedMotion.matches ? 0 : Math.max(0, time - signalStartedAt);
+  const elapsed = captureMode || reducedMotion.matches
+    ? 0
+    : Math.max(0, animationTime - signalStartedAt);
   const cycleDuration = 5200;
   const cycle = elapsed / cycleDuration;
   const currentIndex = Math.floor(cycle) % signalPointSets.length;
@@ -261,40 +326,101 @@ const drawSignalConstellation = (time = performance.now()) => {
   const currentPoints = signalPointSets[currentIndex];
   const nextPoints = signalPointSets[nextIndex];
   const isCompact = width < 680;
-  const pointStep = isCompact ? 3 : 1;
+  const pointStep = isCompact ? 2 : 1;
   const fieldScale = Math.min(width * 0.82, height * 0.92);
-  const rotation = (elapsed / 96000) * Math.PI * 2;
   const breathing = 1 + Math.sin(elapsed * 0.0008) * 0.018;
   const signalColor = getComputedStyle(root).getPropertyValue("--signal").trim() || "#2448ed";
+  const signalAlphaBoost = root.dataset.theme === "dark" ? 1.42 : 1;
   const glyphSize = Math.max(6, Math.min(10.5, fieldScale / 64));
+  const cameraDistance = fieldScale * 1.42;
+  const cosX = Math.cos(signalRotation.x);
+  const sinX = Math.sin(signalRotation.x);
+  const cosY = Math.cos(signalRotation.y);
+  const sinY = Math.sin(signalRotation.y);
+  const cosZ = Math.cos(signalRotation.z);
+  const sinZ = Math.sin(signalRotation.z);
+
+  const projectSignalPoint = (sourceX, sourceY, sourceZ = 0) => {
+    const x = sourceX * breathing;
+    const y = sourceY * breathing;
+    const z = sourceZ * breathing;
+    const yAfterX = y * cosX - z * sinX;
+    const zAfterX = y * sinX + z * cosX;
+    const xAfterY = x * cosY + zAfterX * sinY;
+    const zAfterY = -x * sinY + zAfterX * cosY;
+    const xAfterZ = xAfterY * cosZ - yAfterX * sinZ;
+    const yAfterZ = xAfterY * sinZ + yAfterX * cosZ;
+    const perspective = clampSignal(
+      cameraDistance / Math.max(cameraDistance * 0.42, cameraDistance - zAfterY),
+      0.66,
+      1.58,
+    );
+
+    return {
+      x: xAfterZ * perspective,
+      y: yAfterZ * perspective,
+      z: zAfterY,
+      perspective,
+    };
+  };
 
   signalContext.save();
   signalContext.translate(width / 2, height / 2);
-  signalContext.rotate(rotation);
-  signalContext.scale(breathing, breathing);
 
   signalContext.strokeStyle = signalColor;
   signalContext.lineWidth = 0.75;
-  signalContext.globalAlpha = 0.13;
   signalContext.setLineDash([1, 7]);
-  signalContext.beginPath();
-  signalContext.arc(0, 0, fieldScale * 0.535, -0.24, Math.PI * 1.24);
-  signalContext.stroke();
-  signalContext.beginPath();
-  signalContext.arc(0, 0, fieldScale * 0.49, Math.PI * 0.74, Math.PI * 1.92);
-  signalContext.stroke();
+
+  const drawProjectedOrbit = (radius, startAngle, endAngle, depthWave) => {
+    const segments = 96;
+
+    signalContext.beginPath();
+
+    for (let segment = 0; segment <= segments; segment += 1) {
+      const progress = segment / segments;
+      const angle = startAngle + (endAngle - startAngle) * progress;
+      const point = projectSignalPoint(
+        Math.cos(angle) * radius,
+        Math.sin(angle) * radius,
+        Math.sin(angle * 2.4) * depthWave,
+      );
+
+      if (segment === 0) {
+        signalContext.moveTo(point.x, point.y);
+      } else {
+        signalContext.lineTo(point.x, point.y);
+      }
+    }
+
+    signalContext.stroke();
+  };
+
+  signalContext.globalAlpha = 0.13 * signalAlphaBoost;
+  drawProjectedOrbit(fieldScale * 0.535, -0.24, Math.PI * 1.24, fieldScale * 0.026);
+  drawProjectedOrbit(fieldScale * 0.49, Math.PI * 0.74, Math.PI * 1.92, -fieldScale * 0.02);
   signalContext.setLineDash([]);
 
   for (let orbitIndex = 0; orbitIndex < signalEmojis.length; orbitIndex += 1) {
     const angle = (orbitIndex / signalEmojis.length) * Math.PI * 2 - Math.PI / 2;
     const radius = fieldScale * 0.535;
-
-    signalContext.globalAlpha = orbitIndex === currentIndex ? 0.72 : 0.2;
-    signalContext.beginPath();
-    signalContext.arc(
+    const orbitPoint = projectSignalPoint(
       Math.cos(angle) * radius,
       Math.sin(angle) * radius,
-      orbitIndex === currentIndex ? 2.2 : 1.2,
+      Math.sin(angle * 2.4) * fieldScale * 0.026,
+    );
+
+    signalContext.globalAlpha = clampSignal(
+      (orbitIndex === currentIndex ? 0.72 : 0.2)
+        * clampSignal(0.74 + orbitPoint.perspective * 0.24, 0.72, 1.12)
+        * signalAlphaBoost,
+      0,
+      1,
+    );
+    signalContext.beginPath();
+    signalContext.arc(
+      orbitPoint.x,
+      orbitPoint.y,
+      (orbitIndex === currentIndex ? 2.2 : 1.2) * orbitPoint.perspective,
       0,
       Math.PI * 2,
     );
@@ -303,11 +429,12 @@ const drawSignalConstellation = (time = performance.now()) => {
   }
 
   signalContext.fillStyle = signalColor;
-  signalContext.font = `${glyphSize}px "IBM Plex Mono", "SFMono-Regular", "SF Mono", monospace`;
   signalContext.textAlign = "center";
   signalContext.textBaseline = "middle";
-  signalContext.shadowBlur = isCompact ? 1.5 : 2.5;
+  signalContext.shadowBlur = (isCompact ? 1.5 : 2.5) * signalAlphaBoost;
   signalContext.shadowColor = signalColor;
+
+  const projectedPoints = [];
 
   for (let index = 0; index < signalPointCount; index += pointStep) {
     const start = currentPoints[index];
@@ -315,18 +442,55 @@ const drawSignalConstellation = (time = performance.now()) => {
     const drift = Math.sin(index * 0.73 + elapsed * 0.0012) * fieldScale * 0.0025;
     const x = (start.x + (end.x - start.x) * morphProgress) * fieldScale;
     const y = (start.y + (end.y - start.y) * morphProgress) * fieldScale;
+    const z = (start.z + (end.z - start.z) * morphProgress) * fieldScale;
     const weight = start.weight + (end.weight - start.weight) * morphProgress;
+    const point = projectSignalPoint(
+      x + drift,
+      y - drift,
+      z + Math.cos(index * 0.41 + elapsed * 0.0009) * fieldScale * 0.003,
+    );
 
     const glyphIndex = Math.min(
       signalGlyphs.length - 1,
       Math.floor(weight * signalGlyphs.length),
     );
 
-    signalContext.globalAlpha = 0.34 + weight * 0.66;
+    projectedPoints.push({
+      ...point,
+      glyph: signalGlyphs[glyphIndex],
+      weight,
+    });
+  }
+
+  projectedPoints.sort((pointA, pointB) => pointA.z - pointB.z);
+
+  let currentFontSize = 0;
+
+  for (const point of projectedPoints) {
+    const depthTone = clampSignal(
+      (point.z / (fieldScale * 0.58) + 1) / 2,
+      0,
+      1,
+    );
+    const fontScale = clampSignal(0.76 + point.perspective * 0.26, 0.86, 1.18);
+    const fontSize = Math.round(glyphSize * fontScale * 2) / 2;
+
+    if (fontSize !== currentFontSize) {
+      currentFontSize = fontSize;
+      signalContext.font = `${fontSize}px "IBM Plex Mono", "SFMono-Regular", "SF Mono", monospace`;
+    }
+
+    signalContext.globalAlpha = clampSignal(
+      (0.22 + point.weight * 0.68)
+        * (0.58 + depthTone * 0.54)
+        * signalAlphaBoost,
+      0.16,
+      1,
+    );
     signalContext.fillText(
-      signalGlyphs[glyphIndex],
-      x + drift,
-      y - drift,
+      point.glyph,
+      point.x,
+      point.y,
     );
   }
 
@@ -335,7 +499,9 @@ const drawSignalConstellation = (time = performance.now()) => {
 };
 
 const renderSignalConstellation = (time = performance.now()) => {
-  if (time - lastSignalRender > 40 || time === 0) {
+  const renderInterval = signalDrag.active ? 15 : 30;
+
+  if (time - lastSignalRender > renderInterval || time === 0) {
     drawSignalConstellation(time);
     lastSignalRender = time;
   }
@@ -353,6 +519,8 @@ const initializeSignalConstellation = () => {
   signalContext = signalConstellation.getContext("2d");
   signalPointSets = signalEmojis.map(createEmojiPointSet);
   signalStartedAt = performance.now();
+  signalLastFrameAt = signalStartedAt;
+  signalReleasedAt = signalStartedAt - 2200;
   resizeSignalConstellation();
   renderSignalConstellation(0);
 };
@@ -373,8 +541,152 @@ new MutationObserver(() => drawSignalConstellation()).observe(root, {
   attributeFilter: ["data-theme"],
 });
 
+const drawSignalAfterInteraction = () => {
+  if (reducedMotion.matches || captureMode) {
+    drawSignalConstellation(performance.now());
+  }
+};
+
+signalConstellation?.addEventListener("pointerdown", (event) => {
+  if (
+    captureMode
+    || (event.pointerType === "mouse" && event.button !== 0)
+  ) {
+    return;
+  }
+
+  const now = performance.now();
+
+  event.preventDefault();
+  signalDrag.active = true;
+  signalDrag.pointerId = event.pointerId;
+  signalDrag.x = event.clientX;
+  signalDrag.y = event.clientY;
+  signalDrag.time = now;
+  signalAngularVelocity.x = 0;
+  signalAngularVelocity.y = 0;
+  signalLastFrameAt = now;
+  signalConstellation.classList.add("is-dragging", "is-pointer-focused");
+  signalConstellation.focus({ preventScroll: true });
+
+  try {
+    signalConstellation.setPointerCapture(event.pointerId);
+  } catch {
+    // Pointer capture is an enhancement; dragging still works inside the field.
+  }
+});
+
+signalConstellation?.addEventListener("pointermove", (event) => {
+  if (!signalDrag.active || event.pointerId !== signalDrag.pointerId) {
+    return;
+  }
+
+  const now = performance.now();
+  const deltaTime = Math.max(8, now - signalDrag.time);
+  const deltaX = event.clientX - signalDrag.x;
+  const deltaY = event.clientY - signalDrag.y;
+  const sensitivity = event.pointerType === "touch" ? 0.0062 : 0.0052;
+  const rotationXDelta = -deltaY * sensitivity;
+  const rotationYDelta = deltaX * sensitivity;
+  const velocityMix = 0.42;
+
+  event.preventDefault();
+  signalRotation.x += rotationXDelta;
+  signalRotation.y += rotationYDelta;
+  signalAngularVelocity.x += (
+    clampSignal(rotationXDelta / deltaTime, -0.013, 0.013)
+    - signalAngularVelocity.x
+  ) * velocityMix;
+  signalAngularVelocity.y += (
+    clampSignal(rotationYDelta / deltaTime, -0.013, 0.013)
+    - signalAngularVelocity.y
+  ) * velocityMix;
+  signalDrag.x = event.clientX;
+  signalDrag.y = event.clientY;
+  signalDrag.time = now;
+  drawSignalAfterInteraction();
+});
+
+const finishSignalDrag = (event, keepInertia = true) => {
+  if (!signalDrag.active || event.pointerId !== signalDrag.pointerId) {
+    return;
+  }
+
+  const pointerId = signalDrag.pointerId;
+
+  signalDrag.active = false;
+  signalDrag.pointerId = null;
+  signalReleasedAt = performance.now();
+  signalConstellation?.classList.remove("is-dragging");
+
+  if (!keepInertia || reducedMotion.matches) {
+    signalAngularVelocity.x = 0;
+    signalAngularVelocity.y = 0;
+  }
+
+  try {
+    if (signalConstellation?.hasPointerCapture(pointerId)) {
+      signalConstellation.releasePointerCapture(pointerId);
+    }
+  } catch {
+    // The pointer may already have been released by the browser.
+  }
+
+  drawSignalAfterInteraction();
+};
+
+signalConstellation?.addEventListener("pointerup", (event) => finishSignalDrag(event));
+signalConstellation?.addEventListener("pointercancel", (event) => finishSignalDrag(event, false));
+signalConstellation?.addEventListener("lostpointercapture", (event) => finishSignalDrag(event));
+
+signalConstellation?.addEventListener("keydown", (event) => {
+  signalConstellation.classList.remove("is-pointer-focused");
+
+  if (captureMode) {
+    return;
+  }
+
+  const step = event.shiftKey ? 0.24 : 0.12;
+  let handled = true;
+
+  switch (event.key) {
+    case "ArrowLeft":
+      signalRotation.y -= step;
+      break;
+    case "ArrowRight":
+      signalRotation.y += step;
+      break;
+    case "ArrowUp":
+      signalRotation.x -= step;
+      break;
+    case "ArrowDown":
+      signalRotation.x += step;
+      break;
+    case "Home":
+      Object.assign(signalRotation, signalInitialRotation);
+      break;
+    default:
+      handled = false;
+  }
+
+  if (!handled) {
+    return;
+  }
+
+  event.preventDefault();
+  signalAngularVelocity.x = 0;
+  signalAngularVelocity.y = 0;
+  signalLastFrameAt = performance.now();
+  signalReleasedAt = signalLastFrameAt;
+  drawSignalConstellation(signalLastFrameAt);
+});
+
+signalConstellation?.addEventListener("blur", () => {
+  signalConstellation.classList.remove("is-pointer-focused");
+});
+
 signalField?.addEventListener("pointermove", (event) => {
-  if (reducedMotion.matches) {
+  if (reducedMotion.matches || signalDrag.active) {
     return;
   }
 

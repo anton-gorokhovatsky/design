@@ -54,8 +54,8 @@
         document.documentElement.dataset.theme = theme;
       })();
     </script>
-    <link rel="stylesheet" href="styles.css?v=20260724-air-controls">
-    <script src="script.js?v=20260723-emoji-reels" defer></script>
+    <link rel="stylesheet" href="styles.css?v=20260724-readable-controls">
+    <script src="script.js?v=20260724-orbit-drag" defer></script>
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -117,7 +117,9 @@
           <canvas
             class="signal-constellation"
             data-signal-constellation
-            aria-hidden="true"
+            role="img"
+            tabindex="0"
+            aria-label="Объёмное поле личной практики. Зажмите и тяните, чтобы вращать его; с клавиатуры используйте стрелки."
           ></canvas>
 
           <svg

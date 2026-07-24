@@ -389,8 +389,9 @@ button {
   width: 100%;
   height: 100%;
   margin: 0;
+  cursor: grab;
   opacity: 0.96;
-  pointer-events: none;
+  touch-action: none;
   transform: translate(var(--core-x), var(--core-y));
   transform-origin: center;
   filter: drop-shadow(0 0 24px color-mix(in srgb, var(--signal) 24%, transparent));
@@ -398,6 +399,19 @@ button {
     opacity 360ms var(--ease-out),
     transform 900ms var(--ease-move),
     filter 360ms var(--ease-out);
+}
+
+.signal-constellation.is-dragging {
+  cursor: grabbing;
+}
+
+.signal-constellation:focus-visible {
+  outline: 1px dashed color-mix(in srgb, var(--signal) 58%, transparent);
+  outline-offset: -9px;
+}
+
+.signal-constellation.is-pointer-focused:focus-visible {
+  outline: none;
 }
 
 .signal-core {
@@ -504,6 +518,7 @@ button {
 
 .map-nodes {
   z-index: 5;
+  pointer-events: none;
 }
 
 .map-speck {
@@ -559,6 +574,7 @@ button {
   place-items: center;
   background: transparent;
   cursor: pointer;
+  pointer-events: auto;
   transform: translate(-50%, -50%) scale(var(--node-scale));
   transition:
     transform 260ms var(--ease-out),
@@ -2989,13 +3005,13 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 /* Airier navigation and instrument scales */
 
 .site-header {
-  top: 14px;
+  top: 16px;
   right: 16px;
   left: 16px;
-  min-height: 32px;
+  min-height: 40px;
   grid-template-columns: 1fr auto;
   align-items: center;
-  gap: 24px;
+  gap: 28px;
   pointer-events: none;
 }
 
@@ -3004,13 +3020,13 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 }
 
 .brand {
-  min-height: 32px;
+  min-height: 40px;
   padding: 0;
   border: 0;
   background: transparent;
   color: var(--ink);
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: clamp(10px, 0.62vw, 12px);
   font-weight: 600;
   letter-spacing: 0.02em;
   backdrop-filter: none;
@@ -3018,8 +3034,8 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 }
 
 .brand__signal {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   box-shadow: none;
 }
 
@@ -3033,17 +3049,17 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 
 .header-nav {
   display: flex;
-  height: 32px;
+  height: 40px;
   align-items: center;
-  gap: 18px;
+  gap: 22px;
 }
 
 .header-nav__group,
 .header-nav__group:first-child {
   display: flex;
-  height: 32px;
+  height: 40px;
   align-items: center;
-  gap: 14px;
+  gap: 18px;
   padding: 0;
   border: 0;
   background: transparent;
@@ -3059,11 +3075,11 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 .header-nav button {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   padding: 0;
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: clamp(10px, 0.62vw, 12px);
   font-weight: 500;
   letter-spacing: 0.015em;
 }
@@ -3071,8 +3087,8 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 .header-nav a::before,
 .header-nav button::before {
   display: block;
-  width: 4px;
-  height: 4px;
+  width: 5px;
+  height: 5px;
   border: 1px solid currentColor;
   border-radius: 50%;
   content: "";
@@ -3100,13 +3116,13 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 }
 
 .map-meta {
-  top: 54px;
+  top: 64px;
   right: 16px;
   left: auto;
   display: block;
   min-height: 0;
   color: var(--muted);
-  font-size: 6px;
+  font-size: clamp(8px, 0.48vw, 10px);
   letter-spacing: 0.08em;
 }
 
@@ -3132,9 +3148,9 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 }
 
 .status-dot {
-  width: 4px;
-  height: 4px;
-  margin-right: 3px;
+  width: 5px;
+  height: 5px;
+  margin-right: 4px;
   box-shadow: 0 0 0 2px color-mix(in srgb, #76b487 12%, transparent);
   vertical-align: 0;
 }
@@ -3143,12 +3159,12 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
   padding: 0;
   background: transparent;
   color: color-mix(in srgb, var(--ink) 52%, transparent);
-  font-size: 6px;
+  font-size: clamp(8px, 0.44vw, 9px);
   letter-spacing: 0.06em;
 }
 
 .map-axis-label--north {
-  top: 54px;
+  top: 64px;
 }
 
 .map-axis-label--east {
@@ -3164,10 +3180,10 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 }
 
 .command-dock {
-  bottom: 56px;
-  width: min(460px, calc(100vw - 520px));
-  min-height: 40px;
-  grid-template-columns: 26px 1fr 30px;
+  bottom: 68px;
+  width: min(560px, calc(100vw - 64px));
+  min-height: 46px;
+  grid-template-columns: 32px 1fr 36px;
   padding: 0;
   border: 0;
   border-bottom: 1px solid color-mix(in srgb, var(--ink) 34%, transparent);
@@ -3189,13 +3205,13 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
   height: 100%;
   border: 0;
   color: var(--muted);
-  font-size: 15px;
+  font-size: 18px;
 }
 
 .command-dock input {
-  padding: 0 8px;
+  padding: 0 10px;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: clamp(14px, 0.8vw, 16px);
   letter-spacing: 0.01em;
 }
 
@@ -3204,13 +3220,13 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 }
 
 .command-dock__submit {
-  width: 30px;
+  width: 36px;
   height: 100%;
-  min-height: 38px;
+  min-height: 44px;
   border: 0;
   background: transparent;
   color: var(--muted);
-  font-size: 18px;
+  font-size: 22px;
 }
 
 .command-dock__submit:hover,
@@ -3222,16 +3238,16 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 
 .system-dock {
   right: 16px;
-  bottom: 12px;
+  bottom: 14px;
   left: 16px;
-  height: 32px;
+  height: 40px;
   align-items: center;
-  gap: 24px;
+  gap: 32px;
 }
 
 .system-dock .map-controls {
-  height: 32px;
-  gap: 14px;
+  height: 40px;
+  gap: 18px;
   overflow: visible;
   border: 0;
   background: transparent;
@@ -3242,23 +3258,23 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 .system-dock .map-controls::before,
 .display-control::before {
   height: 100%;
-  padding: 0 5px 0 0;
+  padding: 0 7px 0 0;
   border: 0;
   color: color-mix(in srgb, var(--ink) 38%, transparent);
-  font-size: 5px;
+  font-size: 7px;
 }
 
 .system-dock .map-control {
   position: relative;
-  min-height: 32px;
-  grid-template-columns: 10px auto;
-  gap: 5px;
+  min-height: 40px;
+  grid-template-columns: 12px auto;
+  gap: 6px;
   padding: 0;
   border: 0;
   background: transparent;
   box-shadow: none;
   color: color-mix(in srgb, var(--ink) 50%, transparent);
-  font-size: 7px;
+  font-size: clamp(8px, 0.5vw, 10px);
 }
 
 .system-dock .map-control:last-child {
@@ -3289,15 +3305,15 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 .system-dock .map-control:hover::after,
 .system-dock .map-control:focus-visible::after,
 .system-dock .map-control.is-active::after {
-  width: 12px;
+  width: 16px;
 }
 
 .system-dock .map-control__symbol {
-  width: 9px;
-  height: 9px;
+  width: 12px;
+  height: 12px;
   margin: 0;
   color: currentColor;
-  font-size: 9px;
+  font-size: 12px;
   opacity: 0.48;
   transition:
     color 180ms var(--ease-out),
@@ -3306,25 +3322,25 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 }
 
 .system-dock .map-control__symbol--company {
-  width: 5px;
-  height: 5px;
+  width: 7px;
+  height: 7px;
   margin-left: 2px;
 }
 
 .system-dock .map-control__symbol--project {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   margin-left: 1px;
 }
 
 .system-dock .map-control__symbol--project::after {
-  width: 2px;
-  height: 2px;
+  width: 3px;
+  height: 3px;
 }
 
 .system-dock .map-control__symbol--personal {
-  width: 4px;
-  height: 4px;
+  width: 6px;
+  height: 6px;
   margin-left: 3px;
 }
 
@@ -3337,7 +3353,7 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 }
 
 .display-control {
-  height: 32px;
+  height: 40px;
   align-items: center;
   overflow: visible;
   border: 0;
@@ -3349,14 +3365,14 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 .display-control .theme-toggle {
   display: inline-flex;
   min-width: auto;
-  height: 32px;
+  height: 40px;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   padding: 0;
   background: transparent;
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 7px;
+  font-size: clamp(8px, 0.5vw, 10px);
   font-weight: 500;
 }
 
@@ -3364,7 +3380,7 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
   display: block;
   color: var(--signal);
   content: "◐";
-  font-size: 10px;
+  font-size: 13px;
   line-height: 1;
 }
 
@@ -3379,7 +3395,97 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 }
 
 .map-inspector {
-  bottom: 112px;
+  bottom: 126px;
+}
+
+@media (min-width: 681px) {
+  .brand,
+  .header-nav a,
+  .header-nav button {
+    font-size: clamp(11px, 0.68vw, 13px);
+  }
+
+  .map-meta {
+    font-size: clamp(9px, 0.52vw, 11px);
+  }
+
+  .map-axis-label {
+    font-size: clamp(9px, 0.5vw, 10px);
+  }
+
+  .system-dock {
+    top: 38%;
+    right: 18px;
+    bottom: auto;
+    left: 18px;
+    height: 0;
+    align-items: center;
+    gap: 0;
+    transform: none;
+  }
+
+  .system-dock .map-controls {
+    height: auto;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  .system-dock .map-controls::before,
+  .display-control::before {
+    width: 100%;
+    height: auto;
+    padding: 0 0 10px;
+    font-size: 8px;
+  }
+
+  .system-dock .map-control {
+    min-height: 36px;
+    grid-template-columns: 14px auto;
+    justify-items: start;
+    gap: 8px;
+    font-size: clamp(9px, 0.56vw, 11px);
+  }
+
+  .system-dock .map-control::after {
+    top: 50%;
+    bottom: auto;
+    left: -9px;
+    width: 1px;
+    height: 0;
+    transform: translateY(-50%);
+    transition: height 180ms var(--ease-out);
+  }
+
+  .system-dock .map-control:hover::after,
+  .system-dock .map-control:focus-visible::after,
+  .system-dock .map-control.is-active::after {
+    width: 1px;
+    height: 16px;
+  }
+
+  .display-control {
+    height: auto;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  .display-control::before {
+    justify-content: flex-end;
+  }
+
+  .display-control .theme-toggle {
+    height: 36px;
+    font-size: clamp(9px, 0.56vw, 11px);
+  }
+
+  .command-dock {
+    bottom: 22px;
+  }
+
+  .map-inspector {
+    bottom: 84px;
+  }
 }
 
 @media (max-width: 680px) {
@@ -3387,89 +3493,89 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
     top: 8px;
     right: 8px;
     left: 8px;
-    min-height: 32px;
-    gap: 10px;
+    min-height: 40px;
+    gap: 8px;
   }
 
   .brand {
-    min-height: 32px;
+    min-height: 40px;
   }
 
   .header-nav {
-    height: 32px;
+    height: 40px;
     gap: 10px;
   }
 
   .header-nav__group,
   .header-nav__group:first-child {
-    height: 32px;
+    height: 40px;
     gap: 10px;
   }
 
   .header-nav a,
   .header-nav button {
-    min-height: 32px;
+    min-height: 40px;
   }
 
   .map-meta {
-    top: 46px;
+    top: 54px;
     right: 8px;
     left: auto;
   }
 
   .map-axis-label--north {
-    top: 54px;
+    top: 62px;
   }
 
   .system-dock {
     right: 8px;
     bottom: 8px;
     left: 8px;
-    height: 40px;
+    height: 44px;
     gap: 8px;
   }
 
   .system-dock .map-controls {
-    height: 40px;
+    height: 44px;
     gap: 0;
   }
 
   .system-dock .map-control {
-    min-height: 40px;
+    min-height: 44px;
     grid-template-columns: 1fr;
     padding: 0;
   }
 
   .display-control {
-    height: 40px;
+    height: 44px;
   }
 
   .display-control .theme-toggle {
     min-width: 50px;
-    height: 40px;
+    height: 44px;
     justify-content: flex-end;
   }
 
   .command-dock {
     right: 14px;
-    bottom: 54px;
+    bottom: 60px;
     left: 14px;
     width: auto;
-    min-height: 40px;
-    grid-template-columns: 24px 1fr 32px;
+    min-height: 44px;
+    grid-template-columns: 28px 1fr 36px;
     transform: none;
   }
 
   .command-dock input {
-    font-size: 13px;
+    font-size: 14px;
   }
 
   .command-dock__submit {
-    width: 32px;
-    min-height: 40px;
+    width: 36px;
+    min-height: 44px;
   }
 
   .map-inspector {
-    bottom: 104px;
+    bottom: 114px;
   }
 }
