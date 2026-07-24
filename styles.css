@@ -1900,7 +1900,7 @@ main {
 
 .map-inspector {
   position: fixed;
-  z-index: 56;
+  z-index: 64;
   right: 12px;
   bottom: 78px;
   display: grid;
@@ -1956,7 +1956,11 @@ main {
 
 .map-inspector .map-readout__description {
   grid-column: 1;
+  max-height: min(38vh, 340px);
+  padding-right: 8px;
+  overflow-y: auto;
   font-size: 12px;
+  scrollbar-width: thin;
 }
 
 .map-inspector .map-readout__link {
