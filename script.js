@@ -1702,15 +1702,15 @@ let lastPanelTrigger = null;
 const panelViews = {
   work: {
     index: "01 / SELECTED WORK",
-    title: "ИЗБРАННЫЕ ПРОЕКТЫ",
+    title: "ПРОЕКТЫ",
   },
   approach: {
     index: "02 / HOW I WORK",
-    title: "КАК Я РАБОТАЮ",
+    title: "ПОДХОД",
   },
   contact: {
     index: "03 / CONTACT",
-    title: "МОЖНО ПОГОВОРИТЬ",
+    title: "КОНТАКТ",
   },
 };
 
@@ -1736,6 +1736,7 @@ const openContentPanel = (view, trigger = null) => {
 
   activePanelView = view;
   lastPanelTrigger = trigger instanceof HTMLElement ? trigger : document.activeElement;
+  contentPanel?.setAttribute("data-view", view);
   setConstellationNavCurrent(view);
   setConstellationNavOpen(false);
   panelSections.forEach((section) => {
@@ -1763,6 +1764,7 @@ const closeContentPanel = ({ restoreFocus = true } = {}) => {
 
   setPanelOpen(false);
   activePanelView = null;
+  contentPanel?.removeAttribute("data-view");
   setConstellationNavCurrent("map");
 
   if (restoreFocus && lastPanelTrigger instanceof HTMLElement) {

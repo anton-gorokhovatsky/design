@@ -30,10 +30,13 @@ logo card.
 - The map is the full-screen default state; the portfolio does not continue as
   a conventional scrolling page.
 - Node selection opens a compact inspector over the map.
-- A compact `VIEW MODE` selector in the bottom system rail isolates the four
+- A compact `VIEW` selector in the system rail isolates the four
   semantic fields without moving nodes.
 - The query bar sits above the system rail and uses the functional prompt
   `НАЙТИ ИЛИ ОТКРЫТЬ…` to search nodes or open content panels.
+- Primary navigation is part of the map rather than a separate header: an
+  indexed row of satellite points on desktop becomes a small expandable orbit
+  on narrow screens.
 - Hovering or focusing an institutional node or one of the eight selected
   project nodes temporarily turns the central origin into a media receiver.
   Museum Garage uses a muted nine-second excerpt from the Charmer showreel.
@@ -42,23 +45,29 @@ logo card.
   ASCII fallback.
 - Touch devices keep the direct node-to-inspector interaction and do not render
   hover-only media.
-- Long-form content lives in soft, dismissible overlay panels so the coordinate
-  system remains the site's primary interface.
+- Long-form content remains inside the same coordinate system. Projects,
+  approach, and contact appear as groups of soft, dismissible floating
+  materials; they never replace the map with a full-height drawer.
 
 ## Instrument interface language
 
 - Retrofuturism is used as interaction logic, not as visual pastiche: the map
   scans a field, controls change observation modes, and conventional lists
   remain available as a secondary route.
-- Content navigation (`SECTIONS`, `DOSSIER`) stays at the top; observation
-  settings (`VIEW MODE`, `DISPLAY`) form a separate system rail at the bottom.
-- Rectilinear compartments, thin dividers, and micro-labels define controls and
-  overlays. Rounded geometry is reserved for semantic map nodes and status
-  lights.
-- IBM Plex Sans and Mono carry the instrument layer. IBM Plex Serif appears
-  only when the interface reveals human content: project titles, dossiers, and
-  media captions. This keeps the control surface rational while giving the
-  work itself a more editorial voice.
+- Observation settings (`VIEW`, `DISPLAY`) stay at the edges of the field.
+  Content navigation uses indexed points rather than button bars.
+- IBM Plex Mono carries the instrument layer. Human content switches to a
+  neutral Arial/Helvetica sans-serif voice: large, grey, compact, and direct.
+- Content surfaces use roughly half-transparent white (or its dark-theme
+  counterpart) with a 24px backdrop blur and no heavy shadow or enclosing
+  screen. Subtle blush and lilac light belong to the field behind the material,
+  so the tint is produced through translucency rather than opaque card colour.
+- Typography follows Max Kohler's
+  [continuous typography](https://www.maxkohler.com/posts/continuous-typography/)
+  principle: type size, measure, spacing, and line-height are relationships to
+  the available viewport and reader defaults, expressed with `clamp()`,
+  viewport/rem inputs, and unitless leading. Breakpoints may regroup the
+  composition, but must not introduce unrelated typographic scales.
 - Museum Garage is the largest black node and is named directly. Its importance
   is communicated by scale and connections rather than a slogan.
 
