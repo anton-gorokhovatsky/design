@@ -2687,7 +2687,25 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
   top: 50%;
   left: 50%;
   display: grid;
-  width: clamp(340px, 34vw, 520px);
+  width: clamp(240px, 20vw, 340px);
+  grid-template-rows: 1fr;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #f2f1ec;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -47%) scale(0.96);
+  transform-origin: center;
+  transition:
+    opacity 180ms var(--ease-out),
+    transform 300ms var(--ease-move);
+}
+
+.map-hover-preview:not(.has-video) {
+  width: clamp(300px, 30vw, 440px);
   grid-template-rows: 27px auto 38px;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.24);
@@ -2696,14 +2714,6 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
   box-shadow:
     0 28px 80px rgba(0, 0, 0, 0.24),
     0 0 0 1px color-mix(in srgb, var(--ink) 10%, transparent);
-  color: #f2f1ec;
-  opacity: 0;
-  pointer-events: none;
-  transform: translate(-50%, -47%) scale(0.94) rotate(-0.8deg);
-  transform-origin: center;
-  transition:
-    opacity 180ms var(--ease-out),
-    transform 360ms var(--ease-move);
 }
 
 .practice-map:has(.map-hover-preview.is-visible) .signal-constellation {
@@ -2718,14 +2728,14 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 
 .map-hover-preview.is-visible {
   opacity: 1;
-  transform: translate(-50%, -50%) scale(1) rotate(-0.8deg);
+  transform: translate(-50%, -50%) scale(1);
 }
 
 .map-hover-preview__topline,
 .map-hover-preview__footer {
   position: relative;
   z-index: 2;
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
@@ -2733,6 +2743,11 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
   font-family: var(--font-mono);
   font-size: 6px;
   line-height: 1;
+}
+
+.map-hover-preview:not(.has-video) .map-hover-preview__topline,
+.map-hover-preview:not(.has-video) .map-hover-preview__footer {
+  display: flex;
 }
 
 .map-hover-preview__topline {
@@ -2743,8 +2758,16 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 .map-hover-preview__media {
   position: relative;
   overflow: hidden;
+  aspect-ratio: 4 / 5;
+  border-radius: clamp(12px, 1vw, 18px);
+  background: #0c0c0c;
+  box-shadow: 0 24px 72px rgba(0, 0, 0, 0.24);
+}
+
+.map-hover-preview:not(.has-video) .map-hover-preview__media {
   aspect-ratio: 16 / 9;
-  background: #111;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .map-hover-preview__media video,
@@ -2760,14 +2783,8 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
   z-index: 1;
   object-fit: cover;
   opacity: 0;
-  transform: scale(1.015);
-  transition:
-    opacity 220ms var(--ease-out),
-    transform 900ms var(--ease-move);
-}
-
-.map-hover-preview.is-visible .map-hover-preview__media video {
-  transform: scale(1.055);
+  transform: none;
+  transition: opacity 220ms var(--ease-out);
 }
 
 .map-hover-preview.has-video.is-video-ready .map-hover-preview__media video {
