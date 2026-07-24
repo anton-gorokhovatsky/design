@@ -1316,10 +1316,6 @@ const mapInspector = document.querySelector("[data-map-inspector]");
 const inspectorClose = document.querySelector("[data-close-inspector]");
 const mapPreview = document.querySelector("[data-map-preview]");
 const mapPreviewVideo = document.querySelector("[data-map-preview-video]");
-const mapPreviewAscii = document.querySelector("[data-map-preview-ascii]");
-const mapPreviewKind = document.querySelector("[data-map-preview-kind]");
-const mapPreviewTitle = document.querySelector("[data-map-preview-title]");
-const mapPreviewMeta = document.querySelector("[data-map-preview-meta]");
 const hoverCapable = window.matchMedia("(hover: hover) and (pointer: fine)");
 const mapButtons = new Map();
 let selectedMapId = "garage";
@@ -1349,57 +1345,34 @@ const hideMapPreview = ({ immediate = false } = {}) => {
 const showMapPreview = (item) => {
   if (
     !mapPreview
-    || (item.kind !== "company" && !item.previewVideo)
+    || !mapPreviewVideo
+    || !item.previewVideo
     || !hoverCapable.matches
     || mapInspector?.classList.contains("is-open")
   ) {
+    hideMapPreview({ immediate: true });
     return;
   }
 
   window.clearTimeout(previewHideTimer);
   activePreviewItem = item;
 
-  if (mapPreviewKind) {
-    mapPreviewKind.textContent = item.kindLabel;
-  }
+  mapPreview.classList.add("has-video");
 
-  if (mapPreviewTitle) {
-    mapPreviewTitle.textContent = item.title;
-  }
-
-  if (mapPreviewMeta) {
-    mapPreviewMeta.textContent = item.previewMeta || item.meta;
-  }
-
-  if (mapPreviewAscii) {
-    const seed = item.id.split("").reduce((total, character) => total + character.charCodeAt(0), 0);
-    mapPreviewAscii.textContent = createSignal(62, 30, 0.45, seed * 0.01);
-  }
-
-  const hasVideo = Boolean(item.previewVideo && mapPreviewVideo);
-  mapPreview.classList.toggle("has-video", hasVideo);
-
-  if (hasVideo) {
-    if (mapPreviewVideo.dataset.previewId !== item.id) {
-      mapPreview.classList.remove("is-video-ready");
-      mapPreviewVideo.dataset.previewId = item.id;
-      mapPreviewVideo.src = item.previewVideo;
-    }
-
-    if (mapPreviewVideo.readyState >= 1) {
-      mapPreviewVideo.currentTime = item.previewStart || 0;
-    }
-
-    mapPreviewVideo.play().catch(() => {
-      // The textual preview remains available if autoplay is blocked.
-    });
-  } else {
-    activePreviewItem = null;
-    mapPreviewVideo?.pause();
+  if (mapPreviewVideo.dataset.previewId !== item.id) {
     mapPreview.classList.remove("is-video-ready");
+    mapPreviewVideo.dataset.previewId = item.id;
+    mapPreviewVideo.src = item.previewVideo;
   }
 
-  mapPreview.setAttribute("aria-hidden", "false");
+  if (mapPreviewVideo.readyState >= 1) {
+    mapPreviewVideo.currentTime = item.previewStart || 0;
+  }
+
+  mapPreviewVideo.play().catch(() => {
+    // The receiver can remain paused when autoplay is blocked.
+  });
+
   previewShowFrame = window.requestAnimationFrame(() => {
     previewShowFrame = 0;
 
@@ -1481,6 +1454,7 @@ const selectMapItem = (id, { reveal = false } = {}) => {
     const itemHref = item.href || (item.kind === "practice" ? principlesSourceHref : "");
 
     if (itemHref) {
+      mapLink.hidden = false;
       mapLink.href = itemHref;
       mapLink.textContent = item.kind === "practice" ? "ИСХОДНИК В NOTION ↗" : "ОТКРЫТЬ ↗";
       mapLink.classList.remove("is-disabled");
@@ -1491,9 +1465,10 @@ const selectMapItem = (id, { reveal = false } = {}) => {
       mapLink.removeAttribute("href");
       mapLink.removeAttribute("target");
       mapLink.removeAttribute("rel");
-      mapLink.textContent = "БЕЗ ВНЕШНЕЙ ССЫЛКИ";
-      mapLink.classList.add("is-disabled");
-      mapLink.setAttribute("aria-disabled", "true");
+      mapLink.textContent = "";
+      mapLink.hidden = true;
+      mapLink.classList.remove("is-disabled");
+      mapLink.removeAttribute("aria-disabled");
     }
   }
 
@@ -1543,7 +1518,7 @@ if (mapNodesRoot) {
     });
     button.addEventListener("focus", () => selectMapItem(item.id));
 
-    if (item.kind === "company" || item.previewVideo) {
+    if (item.previewVideo) {
       button.addEventListener("pointerenter", () => showMapPreview(item));
       button.addEventListener("pointerleave", () => hideMapPreview());
       button.addEventListener("focus", () => showMapPreview(item));
@@ -1648,6 +1623,132 @@ mapFilterButtons.forEach((button) => {
     setMapFilter(button.dataset.mapFilter || "all");
   });
 });
+
+const floatingConsoleModules = Array.from(document.querySelectorAll("[data-floating-console]"));
+const floatingConsoleMedia = window.matchMedia(
+  "(min-width: 681px) and (hover: hover) and (pointer: fine)",
+);
+const consoleInteractiveSelector = [
+  "a",
+  "button",
+  "input",
+  "textarea",
+  "select",
+  "label",
+  "form",
+  "[contenteditable='true']",
+].join(",");
+
+const getConsoleOffset = (module) => ({
+  x: Number.parseFloat(module.dataset.dragX || "0") || 0,
+  y: Number.parseFloat(module.dataset.dragY || "0") || 0,
+});
+
+const setConsoleOffset = (module, x, y) => {
+  module.dataset.dragX = x.toFixed(2);
+  module.dataset.dragY = y.toFixed(2);
+  module.style.setProperty("--console-drag-x", `${x.toFixed(2)}px`);
+  module.style.setProperty("--console-drag-y", `${y.toFixed(2)}px`);
+};
+
+const clampConsoleOffset = (module, desiredX, desiredY, basePosition = null) => {
+  const margin = 8;
+  const currentOffset = getConsoleOffset(module);
+  const rect = module.getBoundingClientRect();
+  const baseLeft = basePosition?.left ?? rect.left - currentOffset.x;
+  const baseTop = basePosition?.top ?? rect.top - currentOffset.y;
+  const minimumX = margin - baseLeft;
+  const maximumX = window.innerWidth - margin - baseLeft - rect.width;
+  const minimumY = margin - baseTop;
+  const maximumY = window.innerHeight - margin - baseTop - rect.height;
+
+  return {
+    x: Math.min(Math.max(desiredX, minimumX), Math.max(minimumX, maximumX)),
+    y: Math.min(Math.max(desiredY, minimumY), Math.max(minimumY, maximumY)),
+  };
+};
+
+floatingConsoleModules.forEach((module) => {
+  module.addEventListener("pointerdown", (event) => {
+    if (
+      !floatingConsoleMedia.matches
+      || event.button !== 0
+      || event.target.closest(consoleInteractiveSelector)
+    ) {
+      return;
+    }
+
+    const startOffset = getConsoleOffset(module);
+    const startRect = module.getBoundingClientRect();
+    const basePosition = {
+      left: startRect.left - startOffset.x,
+      top: startRect.top - startOffset.y,
+    };
+    const startPointer = { x: event.clientX, y: event.clientY };
+    let hasFinished = false;
+
+    const finishDrag = (finishEvent) => {
+      if (hasFinished || finishEvent.pointerId !== event.pointerId) {
+        return;
+      }
+
+      hasFinished = true;
+      module.classList.remove("is-dragging");
+      module.removeEventListener("pointermove", moveModule);
+      module.removeEventListener("pointerup", finishDrag);
+      module.removeEventListener("pointercancel", finishDrag);
+      module.removeEventListener("lostpointercapture", finishDrag);
+
+      if (module.hasPointerCapture?.(event.pointerId)) {
+        module.releasePointerCapture(event.pointerId);
+      }
+    };
+
+    const moveModule = (moveEvent) => {
+      if (moveEvent.pointerId !== event.pointerId) {
+        return;
+      }
+
+      const nextOffset = clampConsoleOffset(
+        module,
+        startOffset.x + moveEvent.clientX - startPointer.x,
+        startOffset.y + moveEvent.clientY - startPointer.y,
+        basePosition,
+      );
+
+      moveEvent.preventDefault();
+      setConsoleOffset(module, nextOffset.x, nextOffset.y);
+    };
+
+    event.preventDefault();
+    module.classList.add("is-dragging");
+    module.addEventListener("pointermove", moveModule);
+    module.addEventListener("pointerup", finishDrag);
+    module.addEventListener("pointercancel", finishDrag);
+    module.addEventListener("lostpointercapture", finishDrag);
+    module.setPointerCapture?.(event.pointerId);
+  });
+});
+
+const syncFloatingConsoleBounds = () => {
+  if (!floatingConsoleMedia.matches) {
+    floatingConsoleModules.forEach((module) => setConsoleOffset(module, 0, 0));
+    return;
+  }
+
+  floatingConsoleModules.forEach((module) => {
+    const currentOffset = getConsoleOffset(module);
+    const nextOffset = clampConsoleOffset(module, currentOffset.x, currentOffset.y);
+    setConsoleOffset(module, nextOffset.x, nextOffset.y);
+  });
+};
+
+let consoleResizeFrame = 0;
+window.addEventListener("resize", () => {
+  window.cancelAnimationFrame(consoleResizeFrame);
+  consoleResizeFrame = window.requestAnimationFrame(syncFloatingConsoleBounds);
+});
+floatingConsoleMedia.addEventListener?.("change", syncFloatingConsoleBounds);
 
 const constellationNav = document.querySelector("[data-constellation-nav]");
 const constellationNavToggle = document.querySelector("[data-constellation-nav-toggle]");

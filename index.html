@@ -54,8 +54,8 @@
         document.documentElement.dataset.theme = theme;
       })();
     </script>
-    <link rel="stylesheet" href="styles.css?v=20260724-unified-glass-arial">
-    <script src="script.js?v=20260724-unified-glass-arial" defer></script>
+    <link rel="stylesheet" href="styles.css?v=20260724-material-01">
+    <script src="script.js?v=20260724-material-01" defer></script>
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -80,84 +80,10 @@
         <sup>®</sup>
       </a>
 
-      <nav class="constellation-nav" aria-label="Основная навигация" data-constellation-nav>
-        <button
-          class="constellation-nav__toggle"
-          type="button"
-          data-constellation-nav-toggle
-          aria-expanded="false"
-          aria-controls="constellation-nav-orbit"
-        >
-          <span class="constellation-nav__cluster" aria-hidden="true">
-            <i></i><i></i><i></i><i></i>
-          </span>
-          <span class="visually-hidden" data-constellation-nav-toggle-label>Открыть навигацию</span>
-        </button>
-
-        <div class="constellation-nav__orbit" id="constellation-nav-orbit" data-constellation-nav-orbit>
-          <a
-            class="constellation-nav__item is-current"
-            data-nav-view="map"
-            data-nav-index="00"
-            href="#map"
-            aria-current="page"
-          >
-            <span class="constellation-nav__shape" aria-hidden="true">◎</span>
-            <span class="constellation-nav__label">КАРТА</span>
-          </a>
-          <button
-            class="constellation-nav__item"
-            type="button"
-            data-nav-view="work"
-            data-nav-index="01"
-            data-open-panel="work"
-          >
-            <span class="constellation-nav__shape" aria-hidden="true">●</span>
-            <span class="constellation-nav__label">ПРОЕКТЫ</span>
-          </button>
-          <button
-            class="constellation-nav__item"
-            type="button"
-            data-nav-view="approach"
-            data-nav-index="02"
-            data-open-panel="approach"
-          >
-            <span class="constellation-nav__shape" aria-hidden="true">＋</span>
-            <span class="constellation-nav__label">ПОДХОД</span>
-          </button>
-          <button
-            class="constellation-nav__item"
-            type="button"
-            data-nav-view="contact"
-            data-nav-index="03"
-            data-open-panel="contact"
-          >
-            <span class="constellation-nav__shape" aria-hidden="true">•</span>
-            <span class="constellation-nav__label">КОНТАКТ</span>
-          </button>
-          <a
-            class="constellation-nav__item"
-            data-nav-view="cv"
-            data-nav-index="04"
-            href="https://gorokhovatsky.notion.site/digital-web-digital-f68fc13247614ccb9738d9a85acf29b4?pvs=74"
-            target="_blank"
-            rel="noreferrer"
-          >
-            <span class="constellation-nav__shape" aria-hidden="true">↗</span>
-            <span class="constellation-nav__label">CV</span>
-          </a>
-        </div>
-      </nav>
     </header>
 
     <main>
       <section class="map-hero" id="map" aria-labelledby="map-title">
-        <div class="map-meta">
-          <h1 id="map-title">КАРТА ПРАКТИКИ</h1>
-          <p>4 ПОЛЯ / 2009—NOW</p>
-          <p><span class="status-dot" aria-hidden="true"></span> MSK <span data-clock>--:--</span></p>
-        </div>
-
         <div class="practice-map" data-practice-map data-signal-field>
           <div class="map-grid" aria-hidden="true"></div>
           <div class="map-axis map-axis--horizontal" aria-hidden="true"></div>
@@ -193,17 +119,8 @@
           </div>
 
           <aside class="map-hover-preview" data-map-preview aria-hidden="true">
-            <div class="map-hover-preview__topline">
-              <span data-map-preview-kind>INSTITUTION / SIGNAL</span>
-              <span>LIVE FEED</span>
-            </div>
             <div class="map-hover-preview__media">
               <video data-map-preview-video muted loop playsinline preload="metadata"></video>
-              <pre data-map-preview-ascii aria-hidden="true"></pre>
-            </div>
-            <div class="map-hover-preview__footer">
-              <strong data-map-preview-title>МУЗЕЙ «ГАРАЖ»</strong>
-              <span data-map-preview-meta>SHOWREEL / MUTED / LOOP</span>
             </div>
           </aside>
 
@@ -248,24 +165,104 @@
           КООРДИНАТЫ СУБЪЕКТИВНЫ: ПОЛОЖЕНИЕ = СМЫСЛОВАЯ БЛИЗОСТЬ, РАЗМЕР = ЛИЧНЫЙ ВЕС ОПЫТА.
         </p>
 
-        <form class="command-dock" data-command-form role="search">
-          <label class="visually-hidden" for="map-command">Найти точку или открыть раздел</label>
-          <span class="command-dock__mark" aria-hidden="true">⌕</span>
-          <input
-            id="map-command"
-            data-command-input
-            type="search"
-            placeholder="НАЙТИ ИЛИ ОТКРЫТЬ…"
-            autocomplete="off"
-            aria-expanded="false"
-            aria-controls="command-results"
-          >
-          <button class="command-dock__submit" type="submit" aria-label="Выполнить запрос">→</button>
-          <div class="command-results" id="command-results" data-command-results role="listbox"></div>
-        </form>
+        <div
+          class="control-console"
+          data-floating-console="navigation"
+          aria-label="Навигация и поиск"
+        >
+          <nav class="constellation-nav" aria-label="Основная навигация" data-constellation-nav>
+            <button
+              class="constellation-nav__toggle"
+              type="button"
+              data-constellation-nav-toggle
+              aria-expanded="false"
+              aria-controls="constellation-nav-orbit"
+            >
+              <span class="constellation-nav__cluster" aria-hidden="true">
+                <i></i><i></i><i></i><i></i>
+              </span>
+              <span class="visually-hidden" data-constellation-nav-toggle-label>Открыть навигацию</span>
+            </button>
+
+            <div class="constellation-nav__orbit" id="constellation-nav-orbit" data-constellation-nav-orbit>
+              <a
+                class="constellation-nav__item is-current"
+                data-nav-view="map"
+                data-nav-index="00"
+                href="#map"
+                aria-current="page"
+              >
+                <span class="constellation-nav__shape" aria-hidden="true">◎</span>
+                <span class="constellation-nav__label">КАРТА</span>
+              </a>
+              <button
+                class="constellation-nav__item"
+                type="button"
+                data-nav-view="work"
+                data-nav-index="01"
+                data-open-panel="work"
+              >
+                <span class="constellation-nav__shape" aria-hidden="true">●</span>
+                <span class="constellation-nav__label">ПРОЕКТЫ</span>
+              </button>
+              <button
+                class="constellation-nav__item"
+                type="button"
+                data-nav-view="approach"
+                data-nav-index="02"
+                data-open-panel="approach"
+              >
+                <span class="constellation-nav__shape" aria-hidden="true">＋</span>
+                <span class="constellation-nav__label">ПОДХОД</span>
+              </button>
+              <button
+                class="constellation-nav__item"
+                type="button"
+                data-nav-view="contact"
+                data-nav-index="03"
+                data-open-panel="contact"
+              >
+                <span class="constellation-nav__shape" aria-hidden="true">•</span>
+                <span class="constellation-nav__label">КОНТАКТ</span>
+              </button>
+              <a
+                class="constellation-nav__item"
+                data-nav-view="cv"
+                data-nav-index="04"
+                href="https://gorokhovatsky.notion.site/digital-web-digital-f68fc13247614ccb9738d9a85acf29b4?pvs=74"
+                target="_blank"
+                rel="noreferrer"
+              >
+                <span class="constellation-nav__shape" aria-hidden="true">↗</span>
+                <span class="constellation-nav__label">CV</span>
+              </a>
+            </div>
+          </nav>
+
+          <form class="command-dock" data-command-form role="search">
+            <label class="visually-hidden" for="map-command">Найти точку или открыть раздел</label>
+            <span class="command-dock__mark" aria-hidden="true">⌕</span>
+            <input
+              id="map-command"
+              data-command-input
+              type="search"
+              placeholder="НАЙТИ ИЛИ ОТКРЫТЬ…"
+              autocomplete="off"
+              aria-expanded="false"
+              aria-controls="command-results"
+            >
+            <button class="command-dock__submit" type="submit" aria-label="Выполнить запрос">→</button>
+            <div class="command-results" id="command-results" data-command-results role="listbox"></div>
+          </form>
+        </div>
 
         <div class="system-dock" aria-label="Режимы карты и экрана">
-          <nav class="map-controls" aria-label="Режим отображения карты" data-context="VIEW">
+          <nav
+            class="map-controls"
+            data-floating-console="view"
+            aria-label="Режим отображения карты"
+            data-context="VIEW"
+          >
             <button class="map-control is-active" type="button" data-map-filter="all" aria-pressed="true">
               <span class="map-control__symbol" aria-hidden="true">◎</span>
               <span>ВСЁ</span>
@@ -288,7 +285,12 @@
             </button>
           </nav>
 
-          <div class="display-control" data-context="DISPLAY">
+          <div class="display-control" data-floating-console="display" data-context="DISPLAY">
+            <div class="map-meta">
+              <h1 id="map-title">КАРТА ПРАКТИКИ</h1>
+              <p>4 ПОЛЯ / 2009—NOW</p>
+              <p><span class="status-dot" aria-hidden="true"></span> MSK <span data-clock>--:--</span></p>
+            </div>
             <button class="theme-toggle" type="button" data-theme-toggle aria-label="Включить тёмную тему">
               <span data-theme-label>LIGHT</span>
             </button>

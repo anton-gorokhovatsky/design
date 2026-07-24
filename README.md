@@ -29,7 +29,8 @@ logo card.
 
 - The map is the full-screen default state; the portfolio does not continue as
   a conventional scrolling page.
-- Node selection opens a compact inspector over the map.
+- Node selection opens a compact readout assembled around the selected point as
+  the composition's anchor object.
 - A compact `VIEW` selector in the system rail isolates the four
   semantic fields without moving nodes.
 - The query bar sits above the system rail and uses the functional prompt
@@ -41,11 +42,13 @@ logo card.
   origin into a media receiver. Every reel is a muted seven-to-ten-second
   walkthrough of characteristic live states: full-page scrolls, meaningful
   inner routes, theme changes, or distinctive interface controls. Nodes without
-  recorded media keep the generated ASCII fallback.
+  recorded media do not open an empty or decorative media receiver.
 - A site reel is a window, not a crop: the captured site occupies 100% of the
   reel width, the video uses square pixels and a 4:5 display aspect ratio, and
   the receiver uses `object-fit: contain` with top alignment. Never use
-  `cover` to fill the receiver by cutting off the website. Run
+  `cover` to fill the receiver by cutting off the website. The reel is presented
+  as one uninterrupted media shape without a frame, title bar, footer, or
+  decorative loading fallback. Run
   `node scripts/check-reels.mjs` after assembling or replacing reels.
 - Touch devices keep the direct node-to-inspector interaction and do not render
   hover-only media.
@@ -64,15 +67,32 @@ logo card.
   and a line means a real relationship. Visual properties must never be added
   without a meaning.
 - Observation settings (`VIEW`, `DISPLAY`) stay at the edges of the field.
-  Content navigation uses indexed points rather than button bars.
+  Content navigation uses indexed points rather than button bars. These
+  controls belong to one instrument-console family: the same material,
+  typography, spacing rhythm, focus behavior, and motion are adapted into a
+  left observation module, right status module, and bottom navigation/search
+  module. On desktop the three modules can be dragged by their free material
+  and rearranged inside the viewport without changing the behavior of their
+  controls. Consistency means predictable principles, not identical shapes.
+  Crisp strokes remain reserved for active controls and focus.
 - Arial/Helvetica carries every textual interface and content layer. IBM Plex
   Mono remains only inside ASCII fields whose geometry depends on a fixed-width
   grid.
-- Every transient card — content, hover preview, map inspector, and search
-  results — uses the same locally blurred glass material: translucent layered
-  light, a fine bright edge, and no enclosing full-screen milk layer. Subtle
-  blush and lilac belong to the field behind the material, so tint is produced
-  through translucency rather than opaque card colour.
+- A visual review includes an explicit optical-alignment pass at desktop,
+  tablet, 390 px, and 320 px: shared text baselines, perceived icon centres,
+  equal internal air, stable row rhythm, and aligned axes between neighbouring
+  modules are checked in both themes. Mathematical centring alone is not a
+  finished composition. Alignment fixes must preserve the shared compositing
+  path rather than flattening surfaces into opaque white cards.
+- `MATERIAL / 01` is the only interface-surface material. It translates the
+  text-panel rule from [Natalie Liu's info page](https://www.natalieliu.com/info):
+  a theme-aware 50% translucent fill, `blur(24px)`, no border, and no shadow.
+  Every content panel, map readout, search result, and instrument console uses
+  that exact recipe. Components own only geometry, spacing, and interaction
+  state; they cannot introduce a stronger, tinted, edged, or shadowed material.
+  Subtle blush and lilac belong to the field behind `MATERIAL / 01`, so colour
+  appears through translucency. Media and showreels are content shapes rather
+  than interface surfaces and remain unframed.
 - Typography follows Max Kohler's
   [continuous typography](https://www.maxkohler.com/posts/continuous-typography/)
   principle: type size, measure, spacing, and line-height are relationships to

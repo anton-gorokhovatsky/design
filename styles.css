@@ -4025,18 +4025,7 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 :root {
   --content-font: Arial, Helvetica, sans-serif;
   --content-ink: #686864;
-  --content-surface: rgba(255, 255, 255, 0.34);
-  --content-surface-strong: rgba(255, 255, 255, 0.56);
-  --content-surface-blush: rgba(250, 240, 244, 0.42);
-  --content-surface-lilac: rgba(244, 242, 251, 0.4);
-  --content-glass-edge: rgba(255, 255, 255, 0.58);
-  --content-glass-shadow: rgba(16, 17, 15, 0.055);
-  --content-glass-gradient: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.38),
-    rgba(255, 255, 255, 0.08) 48%,
-    rgba(255, 255, 255, 0.24)
-  );
+  --material-01: rgba(255, 255, 255, 0.5);
   --content-blush: rgba(229, 199, 210, 0.3);
   --content-lilac: rgba(202, 202, 232, 0.2);
   --content-type-micro: clamp(0.5rem, calc(0.46rem + 0.12vw), 0.66rem);
@@ -4050,18 +4039,7 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 
 html[data-theme="dark"] {
   --content-ink: #c5c5be;
-  --content-surface: rgba(35, 36, 32, 0.58);
-  --content-surface-strong: rgba(49, 50, 45, 0.76);
-  --content-surface-blush: rgba(73, 57, 64, 0.62);
-  --content-surface-lilac: rgba(55, 54, 76, 0.62);
-  --content-glass-edge: rgba(255, 255, 255, 0.17);
-  --content-glass-shadow: rgba(0, 0, 0, 0.18);
-  --content-glass-gradient: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.12),
-    rgba(255, 255, 255, 0.025) 48%,
-    rgba(255, 255, 255, 0.07)
-  );
+  --material-01: rgba(35, 36, 32, 0.5);
   --content-blush: rgba(115, 76, 91, 0.24);
   --content-lilac: rgba(79, 79, 132, 0.2);
 }
@@ -4137,16 +4115,12 @@ html[data-theme="dark"] {
   flex-direction: column;
   justify-content: center;
   padding: 11px 16px 12px;
-  border: 1px solid var(--content-glass-edge);
+  border: 0;
   border-radius: 19px;
-  background:
-    var(--content-glass-gradient),
-    var(--content-surface);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.34),
-    0 10px 30px var(--content-glass-shadow);
-  backdrop-filter: blur(24px) saturate(1.05);
-  -webkit-backdrop-filter: blur(24px) saturate(1.05);
+  background: var(--material-01);
+  box-shadow: none;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
 }
 
 .content-panel__header p {
@@ -4174,26 +4148,20 @@ html[data-theme="dark"] {
   width: 44px;
   height: 44px;
   align-self: stretch;
-  border: 1px solid var(--content-glass-edge);
+  border: 0;
   border-radius: 50%;
-  background:
-    var(--content-glass-gradient),
-    var(--content-surface);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.34),
-    0 10px 30px var(--content-glass-shadow);
+  background: var(--material-01);
+  box-shadow: none;
   color: var(--content-ink);
   font-family: var(--content-font);
   font-size: 20px;
-  backdrop-filter: blur(24px) saturate(1.05);
-  -webkit-backdrop-filter: blur(24px) saturate(1.05);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
 }
 
 .content-panel .overlay-close:hover,
 .content-panel .overlay-close:focus-visible {
-  background:
-    var(--content-glass-gradient),
-    var(--content-surface-strong);
+  background: var(--material-01);
   color: var(--ink);
   outline: 2px solid var(--signal);
   outline-offset: 2px;
@@ -4242,18 +4210,13 @@ html[data-theme="dark"] {
 .content-panel .approach-grid li,
 .content-panel .contact-copy h2,
 .content-panel .contact-copy > div {
-  border: 1px solid var(--content-glass-edge);
-  background:
-    var(--content-glass-gradient),
-    var(--content-surface);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.34),
-    inset 0 -1px 0 rgba(16, 17, 15, 0.025),
-    0 12px 34px var(--content-glass-shadow);
+  border: 0;
+  background: var(--material-01);
+  box-shadow: none;
   color: var(--content-ink);
   pointer-events: auto;
-  backdrop-filter: blur(24px) saturate(1.04);
-  -webkit-backdrop-filter: blur(24px) saturate(1.04);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
 }
 
 .content-panel.is-open .work-intro,
@@ -4299,15 +4262,11 @@ html[data-theme="dark"] {
   padding: 28px;
   border-radius: 32px;
   container-type: inline-size;
-  background:
-    var(--content-glass-gradient),
-    var(--content-surface-blush);
+  background: var(--material-01);
 }
 
 .content-panel .approach-intro {
-  background:
-    var(--content-glass-gradient),
-    var(--content-surface-lilac);
+  background: var(--material-01);
 }
 
 .content-panel .work-intro h2,
@@ -4371,9 +4330,7 @@ html[data-theme="dark"] {
 .content-panel .work-row:hover,
 .content-panel .work-row:focus-visible {
   padding: 15px 16px;
-  background:
-    var(--content-glass-gradient),
-    color-mix(in srgb, var(--row-tone) 34%, var(--content-surface-strong));
+  background: var(--material-01);
   color: var(--row-ink);
   outline: 2px solid color-mix(in srgb, var(--row-tone) 68%, transparent);
   outline-offset: 2px;
@@ -4457,15 +4414,11 @@ html[data-theme="dark"] {
 
 .content-panel .approach-grid li:nth-child(2),
 .content-panel .approach-grid li:nth-child(3) {
-  background:
-    var(--content-glass-gradient),
-    var(--content-surface-lilac);
+  background: var(--material-01);
 }
 
 .content-panel .approach-grid li:hover {
-  background:
-    var(--content-glass-gradient),
-    var(--content-surface-strong);
+  background: var(--material-01);
   transform: translateY(-4px);
 }
 
@@ -4514,9 +4467,7 @@ html[data-theme="dark"] {
   margin: 0;
   padding: 34px 38px 42px;
   border-radius: 36px;
-  background:
-    var(--content-glass-gradient),
-    var(--content-surface-blush);
+  background: var(--material-01);
   font-family: var(--content-font);
   font-size: var(--content-type-display);
   font-weight: 700;
@@ -4772,16 +4723,11 @@ body.has-content-panel .constellation-nav {
 .map-inspector,
 .command-results,
 .work-preview {
-  border: 1px solid var(--content-glass-edge);
-  background:
-    var(--content-glass-gradient),
-    var(--content-surface);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.34),
-    inset 0 -1px 0 rgba(16, 17, 15, 0.025),
-    0 16px 42px var(--content-glass-shadow);
-  backdrop-filter: blur(24px) saturate(1.06);
-  -webkit-backdrop-filter: blur(24px) saturate(1.06);
+  border: 0;
+  background: var(--material-01);
+  box-shadow: none;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
 }
 
 .map-hover-preview {
@@ -4801,15 +4747,10 @@ body.has-content-panel .constellation-nav {
 
 .map-hover-preview:not(.has-video) {
   grid-template-rows: 34px auto 54px;
-  border-color: var(--content-glass-edge);
+  border: 0;
   border-radius: 30px;
-  background:
-    var(--content-glass-gradient),
-    var(--content-surface);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.34),
-    inset 0 -1px 0 rgba(16, 17, 15, 0.025),
-    0 16px 42px var(--content-glass-shadow);
+  background: var(--material-01);
+  box-shadow: none;
 }
 
 .map-hover-preview__topline,
@@ -4853,15 +4794,10 @@ body.has-content-panel .constellation-nav {
 
 .map-inspector {
   padding: 20px;
-  border-color: var(--content-glass-edge);
+  border: 0;
   border-radius: 34px;
-  background:
-    var(--content-glass-gradient),
-    var(--content-surface);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.34),
-    inset 0 -1px 0 rgba(16, 17, 15, 0.025),
-    0 16px 42px var(--content-glass-shadow);
+  background: var(--material-01);
+  box-shadow: none;
 }
 
 .map-inspector .map-readout__identity h2 {
@@ -4873,21 +4809,17 @@ body.has-content-panel .constellation-nav {
 }
 
 .map-inspector .overlay-close {
-  border-color: var(--content-glass-edge);
+  border: 0;
   border-radius: 50%;
-  background:
-    var(--content-glass-gradient),
-    var(--content-surface);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.34),
-    0 8px 24px var(--content-glass-shadow);
+  background: var(--material-01);
+  box-shadow: none;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
 }
 
 .map-inspector .overlay-close:hover,
 .map-inspector .overlay-close:focus-visible {
-  background:
-    var(--content-glass-gradient),
-    var(--content-surface-strong);
+  background: var(--material-01);
   color: var(--ink);
   outline: 2px solid var(--signal);
   outline-offset: 2px;
@@ -4895,14 +4827,10 @@ body.has-content-panel .constellation-nav {
 
 .command-results {
   padding: 7px;
-  border-color: var(--content-glass-edge);
+  border: 0;
   border-radius: 26px;
-  background:
-    var(--content-glass-gradient),
-    var(--content-surface);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.34),
-    0 16px 42px var(--content-glass-shadow);
+  background: var(--material-01);
+  box-shadow: none;
 }
 
 .command-result {
@@ -4911,18 +4839,15 @@ body.has-content-panel .constellation-nav {
 
 .command-result:hover,
 .command-result:focus-visible {
-  background:
-    var(--content-glass-gradient),
-    var(--content-surface-strong);
+  background: color-mix(in srgb, var(--content-ink) 6%, transparent);
 }
 
 .work-preview {
-  border-color: var(--content-glass-edge);
+  border: 0;
   border-radius: 28px;
-  background:
-    var(--content-glass-gradient),
-    var(--content-surface);
+  background: var(--material-01);
   color: var(--content-ink);
+  box-shadow: none;
 }
 
 .work-preview__bar,
@@ -4934,12 +4859,12 @@ body.has-content-panel .constellation-nav {
 }
 
 .origin-marker__label {
-  border-color: var(--content-glass-edge);
+  border: 0;
   border-radius: 12px;
-  background:
-    var(--content-glass-gradient),
-    var(--content-surface);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  background: var(--material-01);
+  box-shadow: none;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
 }
 
 @media (max-width: 680px) {
@@ -4951,4 +4876,787 @@ body.has-content-panel .constellation-nav {
   .command-results {
     border-radius: 22px;
   }
+}
+
+/* Edge controls form one predictable instrument-console family. Context
+   changes the geometry, while material, type, spacing, focus, and motion stay
+   shared with every other transient interface surface. */
+
+.control-console,
+.system-dock .map-controls,
+.display-control {
+  border: 0;
+  background: var(--material-01);
+  box-shadow: none;
+  color: var(--content-ink);
+  font-family: var(--font-sans);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.control-console {
+  position: fixed;
+  z-index: 63;
+  bottom: 14px;
+  left: 50%;
+  display: grid;
+  width: min(920px, calc(100vw - 390px));
+  min-height: 76px;
+  grid-template-columns: auto minmax(270px, 1fr);
+  align-items: center;
+  gap: 14px;
+  padding: 9px 12px 9px 10px;
+  overflow: visible;
+  border-radius: 30px;
+  corner-shape: superellipse(1.7);
+  transform: translateX(-50%);
+}
+
+body.has-content-panel .control-console {
+  z-index: 94;
+}
+
+.control-console .constellation-nav {
+  position: static;
+  width: auto;
+  height: auto;
+  color: var(--content-ink);
+  font-family: var(--font-sans);
+}
+
+.control-console .constellation-nav__orbit {
+  gap: 4px;
+}
+
+.control-console .constellation-nav__item {
+  --nav-size: 34px;
+  width: 39px;
+  height: 54px;
+  color: color-mix(in srgb, var(--content-ink) 70%, transparent);
+}
+
+.control-console .constellation-nav__item[data-nav-view="map"] {
+  --nav-size: 38px;
+}
+
+.control-console .constellation-nav__item[data-nav-view="work"] {
+  --nav-size: 33px;
+}
+
+.control-console .constellation-nav__item[data-nav-view="approach"] {
+  --nav-size: 35px;
+}
+
+.control-console .constellation-nav__item[data-nav-view="contact"] {
+  --nav-size: 31px;
+}
+
+.control-console .constellation-nav__item[data-nav-view="cv"] {
+  --nav-size: 34px;
+}
+
+.control-console .constellation-nav__shape {
+  margin-bottom: 7px;
+  border-color: color-mix(in srgb, var(--content-ink) 20%, transparent);
+  background: color-mix(in srgb, var(--content-ink) 3%, transparent);
+  color: currentColor;
+  font-family: var(--font-sans);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.control-console .constellation-nav__label {
+  border: 0;
+  background: var(--material-01);
+  box-shadow: none;
+  color: var(--content-ink);
+  font-family: var(--font-sans);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.control-console .constellation-nav__item.is-current .constellation-nav__shape {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--bg);
+}
+
+.control-console .command-dock {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  min-height: 54px;
+  grid-template-columns: 38px minmax(0, 1fr) 42px;
+  padding: 0 0 0 11px;
+  border: 0;
+  border-left: 1px solid color-mix(in srgb, var(--content-ink) 17%, transparent);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.control-console .command-dock:focus-within,
+.control-console .command-dock.is-open {
+  border-color: var(--signal);
+  background: color-mix(in srgb, var(--content-ink) 3%, transparent);
+  box-shadow: none;
+}
+
+.control-console .command-dock__mark,
+.control-console .command-dock__submit {
+  border: 0;
+  color: color-mix(in srgb, var(--content-ink) 72%, transparent);
+  font-family: var(--font-sans);
+}
+
+.control-console .command-dock input {
+  padding: 0 11px;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: clamp(0.9rem, calc(0.82rem + 0.25vw), 1.05rem);
+}
+
+.control-console .command-dock__submit:hover,
+.control-console .command-dock__submit:focus-visible {
+  background: transparent;
+  color: var(--signal);
+}
+
+.system-dock {
+  top: 50%;
+  right: 16px;
+  bottom: auto;
+  left: 16px;
+  height: 0;
+  align-items: center;
+  gap: 0;
+  transform: translateY(-50%);
+}
+
+.system-dock .map-controls {
+  width: 148px;
+  height: auto;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  padding: 12px;
+  overflow: visible;
+  border-radius: 28px;
+  corner-shape: superellipse(1.7);
+}
+
+.system-dock .map-controls::before,
+.display-control::before {
+  width: auto;
+  height: auto;
+  align-items: center;
+  padding: 2px 6px 10px;
+  border: 0;
+  color: color-mix(in srgb, var(--content-ink) 58%, transparent);
+  font-family: var(--font-sans);
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+}
+
+.system-dock .map-control {
+  min-height: 38px;
+  grid-template-columns: 16px minmax(0, 1fr);
+  gap: 8px;
+  padding: 0 7px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  box-shadow: none;
+  color: color-mix(in srgb, var(--content-ink) 72%, transparent);
+  font-family: var(--font-sans);
+  font-size: clamp(0.62rem, calc(0.56rem + 0.18vw), 0.72rem);
+}
+
+.system-dock .map-control::after {
+  top: 50%;
+  bottom: auto;
+  left: -13px;
+  width: 2px;
+  height: 0;
+  border-radius: 2px;
+  transform: translateY(-50%);
+  transition: height 220ms var(--motion-enter);
+}
+
+.system-dock .map-control:hover,
+.system-dock .map-control:focus-visible,
+.system-dock .map-control.is-active {
+  background: color-mix(in srgb, var(--content-ink) 6%, transparent);
+  color: var(--ink);
+}
+
+.system-dock .map-control:hover::after,
+.system-dock .map-control:focus-visible::after,
+.system-dock .map-control.is-active::after {
+  width: 2px;
+  height: 18px;
+}
+
+.display-control {
+  display: grid;
+  width: 148px;
+  height: auto;
+  min-height: 128px;
+  grid-template-rows: auto auto auto;
+  align-items: stretch;
+  padding: 12px;
+  overflow: visible;
+  border-radius: 28px;
+  corner-shape: superellipse(1.7);
+}
+
+.display-control::before {
+  justify-content: flex-start;
+}
+
+.display-control .map-meta {
+  position: static;
+  display: block;
+  min-height: 0;
+  padding: 0 6px 10px;
+  color: var(--content-ink);
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+}
+
+.display-control .map-meta h1,
+.display-control .map-meta p:nth-child(2) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  margin: -1px;
+  white-space: nowrap;
+}
+
+.display-control .map-meta p:last-child {
+  display: flex;
+  min-height: 31px;
+  align-items: center;
+  padding-bottom: 10px;
+  border-bottom: 1px solid color-mix(in srgb, var(--content-ink) 17%, transparent);
+}
+
+.display-control .theme-toggle {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  height: 38px;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 0 6px;
+  border-radius: 12px;
+  background: transparent;
+  color: color-mix(in srgb, var(--content-ink) 76%, transparent);
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+}
+
+.display-control .theme-toggle:hover,
+.display-control .theme-toggle:focus-visible {
+  background: color-mix(in srgb, var(--content-ink) 6%, transparent);
+  color: var(--ink);
+  outline: 2px solid var(--signal);
+  outline-offset: 1px;
+}
+
+.content-panel .contact-copy {
+  container-type: inline-size;
+}
+
+.content-panel .contact-copy h2,
+.content-panel .contact-copy > div {
+  min-width: 0;
+  container-type: inline-size;
+}
+
+.content-panel .contact-copy h2 {
+  font-size: clamp(3rem, 9.6cqi, 6rem);
+}
+
+.content-panel .contact-copy > div a {
+  max-width: 100%;
+  font-size: clamp(0.78rem, 4.1cqi, 1.15rem);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 900px) {
+  .control-console {
+    width: min(760px, calc(100vw - 330px));
+    grid-template-columns: auto minmax(150px, 1fr);
+    gap: 8px;
+    padding-inline: 8px;
+  }
+
+  .control-console .constellation-nav__orbit {
+    gap: 0;
+  }
+
+  .control-console .constellation-nav__item {
+    width: 31px;
+    height: 48px;
+  }
+
+  .control-console .constellation-nav__shape {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+@media (max-width: 680px) {
+  .control-console {
+    display: contents;
+  }
+
+  .control-console .constellation-nav {
+    position: fixed;
+    top: 8px;
+    right: 8px;
+    bottom: auto;
+    left: auto;
+    width: 42px;
+    height: 42px;
+  }
+
+  .control-console .constellation-nav__toggle {
+    border: 0;
+    background: var(--material-01);
+    box-shadow: none;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+
+  .control-console .constellation-nav__item {
+    width: var(--nav-size);
+    height: calc(var(--nav-size) + 22px);
+  }
+
+  .control-console .constellation-nav__shape {
+    width: var(--nav-size);
+    height: var(--nav-size);
+    border: 0;
+    background: var(--material-01);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+
+  .control-console .command-dock {
+    position: fixed;
+    right: 8px;
+    bottom: 64px;
+    left: 8px;
+    width: auto;
+    min-height: 48px;
+    grid-template-columns: 34px minmax(0, 1fr) 40px;
+    padding: 5px 6px;
+    border: 0;
+    border-radius: 22px;
+    background: var(--material-01);
+    box-shadow: none;
+    corner-shape: superellipse(1.7);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+
+  .system-dock {
+    top: auto;
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+    height: 48px;
+    align-items: stretch;
+    padding: 4px;
+    border: 0;
+    border-radius: 22px;
+    background: var(--material-01);
+    box-shadow: none;
+    corner-shape: superellipse(1.7);
+    transform: none;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+
+  .system-dock .map-controls {
+    width: auto;
+    height: 38px;
+    flex: 1 1 auto;
+    flex-direction: row;
+    gap: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .system-dock .map-controls::before,
+  .display-control::before,
+  .display-control .map-meta {
+    display: none;
+  }
+
+  .system-dock .map-control {
+    min-height: 38px;
+    flex: 1 1 20%;
+    grid-template-columns: 1fr;
+    justify-items: center;
+    padding: 0;
+  }
+
+  .system-dock .map-control::after {
+    top: auto;
+    bottom: -4px;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    transform: translateX(-50%);
+    transition: width 220ms var(--motion-enter);
+  }
+
+  .system-dock .map-control:hover::after,
+  .system-dock .map-control:focus-visible::after,
+  .system-dock .map-control.is-active::after {
+    width: 18px;
+    height: 2px;
+  }
+
+  .display-control {
+    display: flex;
+    width: auto;
+    min-height: 38px;
+    flex: 0 0 auto;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .display-control .theme-toggle {
+    width: 48px;
+    height: 38px;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .display-control .theme-toggle span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .map-inspector {
+    bottom: 124px;
+  }
+}
+
+@media (min-width: 1281px) {
+  .content-panel .work-section,
+  .content-panel .approach-section,
+  .content-panel .contact-section {
+    width: min(1160px, calc(100vw - 380px));
+  }
+}
+
+@media (min-width: 681px) and (max-width: 1280px) {
+  .content-panel .work-section,
+  .content-panel .approach-section,
+  .content-panel .contact-section {
+    width: min(760px, calc(100vw - 380px));
+  }
+
+  .content-panel .work-section,
+  .content-panel .approach-section {
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    gap: 12px;
+    padding-top: 92px;
+    padding-bottom: 118px;
+  }
+
+  .content-panel .work-intro,
+  .content-panel .approach-intro {
+    width: 100%;
+  }
+
+  .content-panel .contact-copy {
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .content-panel .contact-copy > div {
+    width: min(480px, 78%);
+    justify-self: end;
+    transform: none;
+  }
+}
+
+/* The selected node remains the anchor object. Its readout is assembled from
+   small material fragments instead of becoming another dominant screen. */
+
+.map-inspector {
+  right: 178px;
+  bottom: 112px;
+  width: min(450px, calc(100vw - 390px));
+  grid-template-columns: minmax(0, 1fr) 42px;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.map-inspector .map-readout__kind {
+  min-width: 0;
+  margin: 0;
+  padding: 0 8px;
+  color: color-mix(in srgb, var(--content-ink) 68%, transparent);
+  font-size: clamp(0.56rem, calc(0.51rem + 0.14vw), 0.66rem);
+  letter-spacing: 0.035em;
+}
+
+.map-inspector .map-readout__identity,
+.map-inspector .map-readout__description {
+  border: 0;
+  background: var(--material-01);
+  box-shadow: none;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.map-inspector .map-readout__identity {
+  grid-column: 1 / -1;
+  padding: 18px 20px 19px;
+  border-radius: 30px;
+  corner-shape: superellipse(1.7);
+}
+
+.map-inspector .map-readout__identity h2 {
+  max-width: 14ch;
+  margin-bottom: 12px;
+  font-size: clamp(1.65rem, calc(1.16rem + 2.1vw), 2.65rem);
+  line-height: 0.94;
+}
+
+.map-inspector .map-readout__identity p {
+  max-width: 42rem;
+  line-height: 1.28;
+}
+
+.map-inspector .map-readout__description {
+  grid-column: 1 / -1;
+  max-height: min(27vh, 220px);
+  padding: 14px 18px 15px;
+  border-radius: 24px;
+  corner-shape: superellipse(1.7);
+  font-size: clamp(0.78rem, calc(0.72rem + 0.18vw), 0.9rem);
+  line-height: 1.35;
+}
+
+.map-inspector .map-readout__link {
+  grid-column: 1 / -1;
+  justify-self: start;
+  margin-left: 10px;
+  padding: 3px 0;
+}
+
+.map-inspector .overlay-close {
+  width: 42px;
+  height: 42px;
+}
+
+/* Three edge modules can be spatially arranged like instruments. Their
+   controls stay clickable; only free material around them starts a drag. */
+
+.control-console,
+.system-dock .map-controls,
+.display-control {
+  --console-drag-x: 0px;
+  --console-drag-y: 0px;
+}
+
+.control-console {
+  width: min(1040px, calc(100vw - 320px));
+  min-height: 84px;
+  grid-template-columns: auto minmax(300px, 1fr);
+  gap: 22px;
+  padding: 11px 18px 11px 14px;
+  border-radius: 34px;
+  transform:
+    translateX(-50%)
+    translate3d(var(--console-drag-x), var(--console-drag-y), 0);
+}
+
+.control-console .constellation-nav__orbit {
+  gap: 8px;
+}
+
+.control-console .constellation-nav__item {
+  width: 44px;
+  height: 60px;
+}
+
+.control-console .command-dock {
+  min-height: 62px;
+  grid-template-columns: 44px minmax(0, 1fr) 48px;
+  padding-left: 16px;
+}
+
+.control-console .command-dock input {
+  padding-inline: 14px;
+  font-size: clamp(0.96rem, calc(0.87rem + 0.28vw), 1.1rem);
+}
+
+.system-dock {
+  z-index: 64;
+}
+
+.system-dock .map-controls,
+.display-control {
+  transform: translate3d(var(--console-drag-x), var(--console-drag-y), 0);
+}
+
+@media (min-width: 681px) and (hover: hover) and (pointer: fine) {
+  [data-floating-console] {
+    cursor: grab;
+    touch-action: none;
+    will-change: transform;
+  }
+
+  [data-floating-console] :is(a, button, input, textarea, select, label) {
+    cursor: pointer;
+  }
+
+  [data-floating-console] input,
+  [data-floating-console] textarea {
+    cursor: text;
+  }
+
+  [data-floating-console].is-dragging {
+    z-index: 4;
+    cursor: grabbing;
+    user-select: none;
+  }
+}
+
+@media (min-width: 681px) and (max-width: 900px) {
+  .control-console {
+    width: min(820px, calc(100vw - 300px));
+    min-height: 78px;
+    grid-template-columns: auto minmax(160px, 1fr);
+    gap: 12px;
+    padding: 9px 11px;
+  }
+
+  .control-console .constellation-nav__orbit {
+    gap: 1px;
+  }
+
+  .control-console .constellation-nav__item {
+    width: 35px;
+    height: 52px;
+  }
+
+  .control-console .command-dock {
+    min-height: 56px;
+    grid-template-columns: 36px minmax(0, 1fr) 40px;
+    padding-left: 9px;
+  }
+
+  .map-inspector {
+    right: 170px;
+    width: min(430px, calc(100vw - 350px));
+  }
+}
+
+@media (max-width: 680px) {
+  .control-console,
+  .system-dock .map-controls,
+  .display-control {
+    --console-drag-x: 0px;
+    --console-drag-y: 0px;
+    transform: none;
+  }
+
+  .map-inspector {
+    right: 8px;
+    bottom: 136px;
+    left: 8px;
+    width: auto;
+    gap: 6px;
+  }
+
+  .map-inspector .map-readout__kind {
+    padding-inline: 7px;
+  }
+
+  .map-inspector .map-readout__identity {
+    padding: 15px 16px 16px;
+    border-radius: 25px;
+  }
+
+  .map-inspector .map-readout__identity h2 {
+    max-width: 15ch;
+    font-size: clamp(1.55rem, 8vw, 2.2rem);
+  }
+
+  .map-inspector .map-readout__description {
+    max-height: min(22vh, 150px);
+    padding: 12px 15px 13px;
+    border-radius: 21px;
+  }
+}
+
+/* A reel is the media shape itself, never a framed card. Project identity and
+   navigation already live in the map node and its selected-point readout. */
+
+.map-hover-preview.has-video {
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: clamp(28px, 4vw, 58px);
+  background: transparent;
+  box-shadow: none;
+  corner-shape: superellipse(1.65);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.map-hover-preview.has-video .map-hover-preview__media {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  box-shadow: none;
+  corner-shape: inherit;
+}
+
+.map-hover-preview.has-video .map-hover-preview__media video {
+  border-radius: inherit;
 }
