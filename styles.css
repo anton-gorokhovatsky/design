@@ -2985,3 +2985,491 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
     display: none;
   }
 }
+
+/* Airier navigation and instrument scales */
+
+.site-header {
+  top: 14px;
+  right: 16px;
+  left: 16px;
+  min-height: 32px;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 24px;
+  pointer-events: none;
+}
+
+.site-header > * {
+  pointer-events: auto;
+}
+
+.brand {
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.brand__signal {
+  width: 6px;
+  height: 6px;
+  box-shadow: none;
+}
+
+.brand sup {
+  color: var(--muted);
+}
+
+.header-discipline {
+  display: none;
+}
+
+.header-nav {
+  display: flex;
+  height: 32px;
+  align-items: center;
+  gap: 18px;
+}
+
+.header-nav__group,
+.header-nav__group:first-child {
+  display: flex;
+  height: 32px;
+  align-items: center;
+  gap: 14px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.header-nav__group::before {
+  display: none;
+}
+
+.header-nav a,
+.header-nav button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: 0.015em;
+}
+
+.header-nav a::before,
+.header-nav button::before {
+  display: block;
+  width: 4px;
+  height: 4px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  content: "";
+  transition:
+    border-color 180ms var(--ease-out),
+    background-color 180ms var(--ease-out),
+    transform 180ms var(--ease-out);
+}
+
+.header-nav a:hover,
+.header-nav a:focus-visible,
+.header-nav button:hover,
+.header-nav button:focus-visible {
+  background: transparent;
+  color: var(--ink);
+}
+
+.header-nav a:hover::before,
+.header-nav a:focus-visible::before,
+.header-nav button:hover::before,
+.header-nav button:focus-visible::before {
+  border-color: var(--signal);
+  background: var(--signal);
+  transform: scale(1.25);
+}
+
+.map-meta {
+  top: 54px;
+  right: 16px;
+  left: auto;
+  display: block;
+  min-height: 0;
+  color: var(--muted);
+  font-size: 6px;
+  letter-spacing: 0.08em;
+}
+
+.map-meta h1 {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  border: 0;
+  margin: -1px;
+  white-space: nowrap;
+}
+
+.map-meta p:nth-child(2) {
+  display: none;
+}
+
+.map-meta p:last-child {
+  justify-self: auto;
+}
+
+.status-dot {
+  width: 4px;
+  height: 4px;
+  margin-right: 3px;
+  box-shadow: 0 0 0 2px color-mix(in srgb, #76b487 12%, transparent);
+  vertical-align: 0;
+}
+
+.map-axis-label {
+  padding: 0;
+  background: transparent;
+  color: color-mix(in srgb, var(--ink) 52%, transparent);
+  font-size: 6px;
+  letter-spacing: 0.06em;
+}
+
+.map-axis-label--north {
+  top: 54px;
+}
+
+.map-axis-label--east {
+  right: 14px;
+}
+
+.map-axis-label--south {
+  bottom: 8px;
+}
+
+.map-axis-label--west {
+  left: 14px;
+}
+
+.command-dock {
+  bottom: 56px;
+  width: min(460px, calc(100vw - 520px));
+  min-height: 40px;
+  grid-template-columns: 26px 1fr 30px;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--ink) 34%, transparent);
+  border-radius: 0;
+  background: color-mix(in srgb, var(--bg) 48%, transparent);
+  box-shadow: none;
+  backdrop-filter: blur(12px) saturate(1.04);
+  -webkit-backdrop-filter: blur(12px) saturate(1.04);
+}
+
+.command-dock:focus-within,
+.command-dock.is-open {
+  border-color: var(--signal);
+  background: color-mix(in srgb, var(--bg) 76%, transparent);
+  box-shadow: none;
+}
+
+.command-dock__mark {
+  height: 100%;
+  border: 0;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.command-dock input {
+  padding: 0 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.01em;
+}
+
+.command-dock input::placeholder {
+  color: color-mix(in srgb, var(--ink) 38%, transparent);
+}
+
+.command-dock__submit {
+  width: 30px;
+  height: 100%;
+  min-height: 38px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 18px;
+}
+
+.command-dock__submit:hover,
+.command-dock__submit:focus-visible {
+  background: transparent;
+  color: var(--signal);
+  transform: translateX(2px);
+}
+
+.system-dock {
+  right: 16px;
+  bottom: 12px;
+  left: 16px;
+  height: 32px;
+  align-items: center;
+  gap: 24px;
+}
+
+.system-dock .map-controls {
+  height: 32px;
+  gap: 14px;
+  overflow: visible;
+  border: 0;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.system-dock .map-controls::before,
+.display-control::before {
+  height: 100%;
+  padding: 0 5px 0 0;
+  border: 0;
+  color: color-mix(in srgb, var(--ink) 38%, transparent);
+  font-size: 5px;
+}
+
+.system-dock .map-control {
+  position: relative;
+  min-height: 32px;
+  grid-template-columns: 10px auto;
+  gap: 5px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: color-mix(in srgb, var(--ink) 50%, transparent);
+  font-size: 7px;
+}
+
+.system-dock .map-control:last-child {
+  border: 0;
+}
+
+.system-dock .map-control:hover,
+.system-dock .map-control:focus-visible,
+.system-dock .map-control.is-active {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--ink);
+}
+
+.system-dock .map-control::after {
+  position: absolute;
+  bottom: 1px;
+  left: 50%;
+  width: 0;
+  height: 1px;
+  background: var(--signal);
+  content: "";
+  transform: translateX(-50%);
+  transition: width 180ms var(--ease-out);
+}
+
+.system-dock .map-control:hover::after,
+.system-dock .map-control:focus-visible::after,
+.system-dock .map-control.is-active::after {
+  width: 12px;
+}
+
+.system-dock .map-control__symbol {
+  width: 9px;
+  height: 9px;
+  margin: 0;
+  color: currentColor;
+  font-size: 9px;
+  opacity: 0.48;
+  transition:
+    color 180ms var(--ease-out),
+    opacity 180ms var(--ease-out),
+    transform 180ms var(--ease-out);
+}
+
+.system-dock .map-control__symbol--company {
+  width: 5px;
+  height: 5px;
+  margin-left: 2px;
+}
+
+.system-dock .map-control__symbol--project {
+  width: 8px;
+  height: 8px;
+  margin-left: 1px;
+}
+
+.system-dock .map-control__symbol--project::after {
+  width: 2px;
+  height: 2px;
+}
+
+.system-dock .map-control__symbol--personal {
+  width: 4px;
+  height: 4px;
+  margin-left: 3px;
+}
+
+.system-dock .map-control:hover .map-control__symbol,
+.system-dock .map-control:focus-visible .map-control__symbol,
+.system-dock .map-control.is-active .map-control__symbol {
+  color: var(--signal);
+  opacity: 1;
+  transform: scale(1.12);
+}
+
+.display-control {
+  height: 32px;
+  align-items: center;
+  overflow: visible;
+  border: 0;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.display-control .theme-toggle {
+  display: inline-flex;
+  min-width: auto;
+  height: 32px;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 7px;
+  font-weight: 500;
+}
+
+.display-control .theme-toggle::before {
+  display: block;
+  color: var(--signal);
+  content: "◐";
+  font-size: 10px;
+  line-height: 1;
+}
+
+.display-control .theme-toggle:hover,
+.display-control .theme-toggle:focus-visible {
+  background: transparent;
+  color: var(--ink);
+}
+
+.map-note {
+  display: none;
+}
+
+.map-inspector {
+  bottom: 112px;
+}
+
+@media (max-width: 680px) {
+  .site-header {
+    top: 8px;
+    right: 8px;
+    left: 8px;
+    min-height: 32px;
+    gap: 10px;
+  }
+
+  .brand {
+    min-height: 32px;
+  }
+
+  .header-nav {
+    height: 32px;
+    gap: 10px;
+  }
+
+  .header-nav__group,
+  .header-nav__group:first-child {
+    height: 32px;
+    gap: 10px;
+  }
+
+  .header-nav a,
+  .header-nav button {
+    min-height: 32px;
+  }
+
+  .map-meta {
+    top: 46px;
+    right: 8px;
+    left: auto;
+  }
+
+  .map-axis-label--north {
+    top: 54px;
+  }
+
+  .system-dock {
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+    height: 40px;
+    gap: 8px;
+  }
+
+  .system-dock .map-controls {
+    height: 40px;
+    gap: 0;
+  }
+
+  .system-dock .map-control {
+    min-height: 40px;
+    grid-template-columns: 1fr;
+    padding: 0;
+  }
+
+  .display-control {
+    height: 40px;
+  }
+
+  .display-control .theme-toggle {
+    min-width: 50px;
+    height: 40px;
+    justify-content: flex-end;
+  }
+
+  .command-dock {
+    right: 14px;
+    bottom: 54px;
+    left: 14px;
+    width: auto;
+    min-height: 40px;
+    grid-template-columns: 24px 1fr 32px;
+    transform: none;
+  }
+
+  .command-dock input {
+    font-size: 13px;
+  }
+
+  .command-dock__submit {
+    width: 32px;
+    min-height: 40px;
+  }
+
+  .map-inspector {
+    bottom: 104px;
+  }
+}
