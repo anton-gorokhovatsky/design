@@ -765,7 +765,7 @@ const mapItems = [
     description: "Исследование, развитие и ежедневная работа с главным цифровым продуктом Музея и его командой.",
     href: "https://garagemca.org/",
     kindLabel: "ПРОЕКТ / GARAGE GRAPH",
-    previewVideo: "assets/reels/garage-site.mp4?v=20260724-ui-walkthroughs-2",
+    previewVideo: "assets/reels/garage-site.mp4?v=20260724-fullwidth-reels",
     previewMeta: "SITE WALKTHROUGH / 00:08",
     x: 58,
     y: 14,
@@ -781,7 +781,7 @@ const mapItems = [
     description: "Дизайн сайта Дома Наркомфина — от интерактивной модели здания и световых состояний до календаря и цельной цифровой навигации.",
     href: "https://narkomfin.ru/",
     kindLabel: "ПРОЕКТ / GARAGE GRAPH",
-    previewVideo: "assets/reels/narkomfin.mp4?v=20260724-ui-walkthroughs-2",
+    previewVideo: "assets/reels/narkomfin.mp4?v=20260724-fullwidth-reels",
     previewMeta: "SITE WALKTHROUGH / 00:07",
     x: 67,
     y: 21,
@@ -797,7 +797,7 @@ const mapItems = [
     description: "Запуск каталога коллекции и открытого хранения: продуктовая логика, исследования, интерфейс и координация реализации.",
     href: "https://garagemca.org/collection/catalogue",
     kindLabel: "ПРОЕКТ / GARAGE GRAPH",
-    previewVideo: "assets/reels/garage-collection.mp4?v=20260724-ui-walkthroughs-2",
+    previewVideo: "assets/reels/garage-collection.mp4?v=20260724-fullwidth-reels",
     previewMeta: "3-PAGE WALKTHROUGH / 00:08",
     x: 75,
     y: 14,
@@ -827,6 +827,8 @@ const mapItems = [
     description: "Бесплатные образовательные продукты: запуск курсов, улучшение сценариев и работа с партнёрами.",
     href: "https://garagemca.org/learn/online-courses",
     kindLabel: "ПРОЕКТ / GARAGE GRAPH",
+    previewVideo: "assets/reels/garage-courses.mp4?v=20260724-fullwidth-reels",
+    previewMeta: "3-PAGE WALKTHROUGH / 00:07",
     x: 80,
     y: 25,
     size: 17,
@@ -855,6 +857,8 @@ const mapItems = [
     description: "Небольшой исследовательский web-зин, собранный руками как самостоятельная цифровая форма.",
     href: "https://non-human-animals.garage.digital/index.html",
     kindLabel: "ПРОЕКТ / GARAGE GRAPH",
+    previewVideo: "assets/reels/garage-webzine.mp4?v=20260724-fullwidth-reels",
+    previewMeta: "THEME + TEXT / 00:08",
     x: 72,
     y: 34,
     size: 15,
@@ -895,7 +899,7 @@ const mapItems = [
     description: "Портфолио куратора и исследовательницы: редакционная структура, спокойный интерфейс и самостоятельный запуск.",
     href: "https://shirokostup.site/",
     kindLabel: "ПРОЕКТ / INDEPENDENT",
-    previewVideo: "assets/reels/shirokostup.mp4?v=20260724-ui-walkthroughs",
+    previewVideo: "assets/reels/shirokostup.mp4?v=20260724-fullwidth-reels",
     previewMeta: "SITE WALKTHROUGH / 00:07",
     x: 89,
     y: 48,
@@ -910,7 +914,7 @@ const mapItems = [
     description: "Цифровой продукт и web-система: продуктовая логика, интерфейс и последовательное развитие.",
     href: "https://tarski.ru/",
     kindLabel: "ПРОЕКТ / INDEPENDENT",
-    previewVideo: "assets/reels/tarski.mp4?v=20260724-ui-walkthroughs-2",
+    previewVideo: "assets/reels/tarski.mp4?v=20260724-fullwidth-reels",
     previewMeta: "SITE WALKTHROUGH / 00:08",
     x: 78,
     y: 47,
@@ -925,7 +929,7 @@ const mapItems = [
     description: "Сервисный сайт с живым статусом, ясной записью и одной цельной системой материалов и состояний.",
     href: "https://barberherman.ru/",
     kindLabel: "ПРОЕКТ / INDEPENDENT",
-    previewVideo: "assets/reels/herman.mp4?v=20260724-ui-walkthroughs-2",
+    previewVideo: "assets/reels/herman.mp4?v=20260724-fullwidth-reels",
     previewMeta: "SITE WALKTHROUGH / 00:07",
     x: 88,
     y: 58,
@@ -940,7 +944,7 @@ const mapItems = [
     description: "Небольшой commerce-проект с самостоятельной визуальной системой и быстрым запуском.",
     href: "https://merch.dustydumbbells.com/",
     kindLabel: "ПРОЕКТ / INDEPENDENT",
-    previewVideo: "assets/reels/dusty-merch.mp4?v=20260724-ui-walkthroughs",
+    previewVideo: "assets/reels/dusty-merch.mp4?v=20260724-fullwidth-reels",
     previewMeta: "SITE WALKTHROUGH / 00:07",
     x: 73,
     y: 61,
@@ -955,7 +959,7 @@ const mapItems = [
     description: "Сайт спортивного кемпа: структура программы, атмосфера события и практичная точка входа.",
     href: "https://camp.dustydumbbells.com/",
     kindLabel: "ПРОЕКТ / INDEPENDENT",
-    previewVideo: "assets/reels/dusty-camp.mp4?v=20260724-ui-walkthroughs",
+    previewVideo: "assets/reels/dusty-camp.mp4?v=20260724-fullwidth-reels",
     previewMeta: "SITE WALKTHROUGH / 00:07",
     x: 84,
     y: 68,
@@ -970,7 +974,7 @@ const mapItems = [
     description: "Небольшой брендовый web-проект, где цифровая форма работает как самостоятельный характер.",
     href: "https://11111.life/",
     kindLabel: "ПРОЕКТ / INDEPENDENT",
-    previewVideo: "assets/reels/11111.mp4?v=20260724-ui-walkthroughs",
+    previewVideo: "assets/reels/11111.mp4?v=20260724-fullwidth-reels",
     previewMeta: "SITE WALKTHROUGH / 00:07",
     x: 68,
     y: 72,
@@ -985,7 +989,7 @@ const mapItems = [
     description: "Каталожный сайт с ясной продуктовой структурой и визуальным ощущением холодного течения.",
     href: "https://ks.fish/",
     kindLabel: "ПРОЕКТ / INDEPENDENT",
-    previewVideo: "assets/reels/ks-fish.mp4?v=20260724-ui-walkthroughs-2",
+    previewVideo: "assets/reels/ks-fish.mp4?v=20260724-fullwidth-reels",
     previewMeta: "SITE WALKTHROUGH / 00:07",
     x: 91,
     y: 75,
@@ -1000,7 +1004,7 @@ const mapItems = [
     description: "Цифровой магазин с компактной, собранной и понятной системой взаимодействия.",
     href: "https://doronin.store/",
     kindLabel: "ПРОЕКТ / INDEPENDENT",
-    previewVideo: "assets/reels/doronin.mp4?v=20260724-ui-walkthroughs",
+    previewVideo: "assets/reels/doronin.mp4?v=20260724-fullwidth-reels",
     previewMeta: "SITE WALKTHROUGH / 00:07",
     x: 77,
     y: 81,
@@ -1320,10 +1324,13 @@ const hoverCapable = window.matchMedia("(hover: hover) and (pointer: fine)");
 const mapButtons = new Map();
 let selectedMapId = "garage";
 let previewHideTimer = 0;
+let previewShowFrame = 0;
 let activePreviewItem = null;
 
 const hideMapPreview = ({ immediate = false } = {}) => {
   window.clearTimeout(previewHideTimer);
+  window.cancelAnimationFrame(previewShowFrame);
+  previewShowFrame = 0;
 
   const hide = () => {
     mapPreview?.classList.remove("is-visible");
@@ -1393,7 +1400,13 @@ const showMapPreview = (item) => {
   }
 
   mapPreview.setAttribute("aria-hidden", "false");
-  window.requestAnimationFrame(() => mapPreview.classList.add("is-visible"));
+  previewShowFrame = window.requestAnimationFrame(() => {
+    previewShowFrame = 0;
+
+    if (!mapInspector?.classList.contains("is-open")) {
+      mapPreview.classList.add("is-visible");
+    }
+  });
 };
 
 mapPreviewVideo?.addEventListener("canplay", () => {

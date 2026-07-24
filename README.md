@@ -37,12 +37,16 @@ logo card.
 - Primary navigation is part of the map rather than a separate header: an
   indexed row of satellite points on desktop becomes a small expandable orbit
   on narrow screens.
-- Hovering or focusing an institutional node or one of the eight selected
-  project nodes temporarily turns the central origin into a media receiver.
-  Museum Garage uses a muted nine-second excerpt from the Charmer showreel.
-  Each selected project uses a muted eight-second site reel assembled from four
-  characteristic live states; institutions without media keep the generated
-  ASCII fallback.
+- Hovering or focusing an eligible project node temporarily turns the central
+  origin into a media receiver. Every reel is a muted seven-to-ten-second
+  walkthrough of characteristic live states: full-page scrolls, meaningful
+  inner routes, theme changes, or distinctive interface controls. Nodes without
+  recorded media keep the generated ASCII fallback.
+- A site reel is a window, not a crop: the captured site occupies 100% of the
+  reel width, the video uses square pixels and a 4:5 display aspect ratio, and
+  the receiver uses `object-fit: contain` with top alignment. Never use
+  `cover` to fill the receiver by cutting off the website. Run
+  `node scripts/check-reels.mjs` after assembling or replacing reels.
 - Touch devices keep the direct node-to-inspector interaction and do not render
   hover-only media.
 - Long-form content remains inside the same coordinate system. Projects,
@@ -54,20 +58,48 @@ logo card.
 - Retrofuturism is used as interaction logic, not as visual pastiche: the map
   scans a field, controls change observation modes, and conventional lists
   remain available as a secondary route.
+- The map is a data visualization before it is a cosmic image. A node is one
+  experience, project, principle, or personal subject; position is semantic
+  proximity inside the four fields, size is personal weight, shape is type,
+  and a line means a real relationship. Visual properties must never be added
+  without a meaning.
 - Observation settings (`VIEW`, `DISPLAY`) stay at the edges of the field.
   Content navigation uses indexed points rather than button bars.
-- IBM Plex Mono carries the instrument layer. Human content switches to a
-  neutral Arial/Helvetica sans-serif voice: large, grey, compact, and direct.
-- Content surfaces use roughly half-transparent white (or its dark-theme
-  counterpart) with a 24px backdrop blur and no heavy shadow or enclosing
-  screen. Subtle blush and lilac light belong to the field behind the material,
-  so the tint is produced through translucency rather than opaque card colour.
+- Arial/Helvetica carries every textual interface and content layer. IBM Plex
+  Mono remains only inside ASCII fields whose geometry depends on a fixed-width
+  grid.
+- Every transient card — content, hover preview, map inspector, and search
+  results — uses the same locally blurred glass material: translucent layered
+  light, a fine bright edge, and no enclosing full-screen milk layer. Subtle
+  blush and lilac belong to the field behind the material, so tint is produced
+  through translucency rather than opaque card colour.
 - Typography follows Max Kohler's
   [continuous typography](https://www.maxkohler.com/posts/continuous-typography/)
   principle: type size, measure, spacing, and line-height are relationships to
   the available viewport and reader defaults, expressed with `clamp()`,
-  viewport/rem inputs, and unitless leading. Breakpoints may regroup the
-  composition, but must not introduce unrelated typographic scales.
+  viewport/rem inputs, container-relative units for card typography, and
+  unitless leading. Breakpoints may regroup the composition, but must not
+  introduce unrelated typographic scales.
+- Motion has three semantic curves: objects enter decisively with
+  `--motion-enter`, leave with `--motion-exit`, and travel between two visible
+  states with the symmetrical `--motion-shift`. Reduced-motion preferences
+  collapse all travel while preserving the final state.
+
+## Accessibility release gate
+
+- Keep one interface rather than a separate accessible version. The map,
+  content cards, inspector, search, and navigation must expose native roles,
+  unique names, and a coherent accessibility tree.
+- Complete the primary routes with keyboard only; preserve a visible focus
+  indicator and return focus to the invoking control when an inspector or
+  content group closes.
+- No information may exist only on hover. Hover reels are atmospheric; click,
+  focus, and touch still expose the same project identity and destination.
+- Check light and dark contrast, 200% zoom, 320 CSS-pixel reflow, reduced
+  motion, and the 390×844 touch layout before release.
+- Decorative ASCII is hidden from assistive technology. The central canvas has
+  a concise text alternative, and every interactive node has a specific
+  accessible name.
 - Museum Garage is the largest black node and is named directly. Its importance
   is communicated by scale and connections rather than a slogan.
 
