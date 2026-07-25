@@ -47,17 +47,15 @@ logo card.
   walkthrough of characteristic live states: full-page scrolls, meaningful
   inner routes, theme changes, or distinctive interface controls. Nodes without
   recorded media do not open an empty or decorative media receiver.
-- A site reel is a window, not a crop: every video is 600 px wide, uses square
-  pixels, and keeps the display ratio of its source. Native vertical recordings
-  stay 600×750; sources recorded as `640:617` are resampled to `600×578`
-  without internal letterboxing. The stable receiver is vertical `4:5`, and
-  uses `object-fit: contain` with top alignment; unoccupied space is the same
-  `MATERIAL / 01` as the map, never a field baked into the video. The only
-  content-led orientation exception is the House of Narkomfin reel: its
-  receiver is horizontal `5:4`, matching the site's architectural layout.
-  Never use `cover`, stretch to a common frame, or merely rewrite a non-square
-  SAR. The reel has no title bar, footer, border, or decorative loading
-  fallback. Run
+- A site reel is a window, not a crop: all 13 videos use square pixels and are
+  captured directly in the receiver's display ratio. Twelve recordings are
+  `600×750` / `4:5`; the single content-led exception is the House of
+  Narkomfin at `750×600` / `5:4`, matching the site's horizontal architectural
+  layout. The receiver uses the same `MATERIAL / 01`, while the native video
+  fills its silhouette without stretching, artificial padding, or empty
+  fields. Never use `cover`, reshape an existing recording, or merely rewrite
+  a non-square SAR. The reel has no title bar, footer, border, shadow, or
+  decorative loading fallback. Run
   `node scripts/check-reels.mjs` after assembling or replacing reels.
 - Touch devices keep the direct node-to-inspector interaction and do not render
   hover-only media.

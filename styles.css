@@ -2325,6 +2325,12 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
   transform: translateY(-50%) translateX(-4px);
 }
 
+.practice-map:has(.map-hover-preview.is-visible)
+  .map-node:is(.map-node--garage, .map-node--running)
+  .map-node__label {
+  opacity: 0;
+}
+
 .map-hover-preview__media {
   position: relative;
   overflow: hidden;
@@ -3952,6 +3958,11 @@ body.has-content-panel .practice-map {
   opacity: 1;
 }
 
+body.has-content-panel
+  :is(.map-meta, .map-axis-label, .origin-marker__label, .map-node__label) {
+  opacity: 0;
+}
+
 body.has-content-panel .constellation-nav {
   z-index: 94;
 }
@@ -3996,12 +4007,13 @@ body.has-content-panel .constellation-nav {
     position: absolute;
     top: 58px;
     right: 8px;
-    grid-template-columns: minmax(126px, auto) 42px;
+    width: min(calc(100vw - 16px), calc(9rem + 48px));
+    grid-template-columns: minmax(0, 1fr) 42px;
     gap: 6px;
   }
 
   .content-panel__header > div {
-    min-width: 132px;
+    min-width: 0;
     padding: 9px 13px 10px;
     border-radius: 17px;
   }
@@ -4020,7 +4032,7 @@ body.has-content-panel .constellation-nav {
   }
 
   .content-panel__body {
-    top: 112px;
+    top: calc(80px + 2rem);
     padding-top: 0;
     padding-bottom: 92px;
   }
@@ -5646,15 +5658,17 @@ body:has(.command-dock.is-open) .origin-marker__label {
   }
 }
 
-/* A reel is the media shape itself, never a framed card. Project identity and
-   navigation already live in the map node and its selected-point readout. */
+/* A reel is a source-faithful window with one stable silhouette. The video is
+   captured in the receiver's native ratio, so the frame never stretches it or
+   manufactures empty fields. */
 
 .map-hover-preview.has-video {
+  width: clamp(240px, 24vw, 340px);
   aspect-ratio: 4 / 5;
   padding: 0;
-  overflow: visible;
+  overflow: hidden;
   border: 0;
-  border-radius: 0;
+  border-radius: clamp(18px, 1.6vw, 26px);
   background: var(--material-01);
   box-shadow: none;
   corner-shape: round;
@@ -5663,7 +5677,7 @@ body:has(.command-dock.is-open) .origin-marker__label {
 }
 
 .map-hover-preview.has-video.is-landscape {
-  width: clamp(320px, 40vw, 520px);
+  width: clamp(300px, 32vw, 440px);
   aspect-ratio: 5 / 4;
 }
 
@@ -5673,10 +5687,10 @@ body:has(.command-dock.is-open) .origin-marker__label {
   min-width: 0;
   min-height: 0;
   margin: 0;
-  overflow: visible;
+  overflow: hidden;
   aspect-ratio: inherit;
   border: 0;
-  border-radius: 0;
+  border-radius: inherit;
   background: transparent;
   box-shadow: none;
   corner-shape: round;
@@ -5797,7 +5811,7 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
   font-weight: 700;
 }
 
-.map-node:not(.map-node--garage, .map-node--running) .map-node__label {
+.map-node__label {
   padding: 7px 9px;
   border: 0;
   border-radius: 12px;
@@ -5806,6 +5820,12 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
   corner-shape: var(--corner-card-shape);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
+}
+
+.map-node--garage .map-node__label {
+  top: calc(100% + 18px);
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .map-node--label-west .map-node__label {
