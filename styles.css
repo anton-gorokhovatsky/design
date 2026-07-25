@@ -255,12 +255,126 @@ button {
   position: absolute;
   z-index: -2;
   inset: 0;
+  overflow: hidden;
   background-image:
     linear-gradient(var(--line-soft) 1px, transparent 1px),
     linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
   background-position: center;
   background-size: 12.5% 25%;
   opacity: 0.62;
+}
+
+.map-depth-grid {
+  position: absolute;
+  z-index: 0;
+  inset: 6% 18% 10%;
+  width: auto;
+  height: auto;
+  color: color-mix(in srgb, var(--signal) 30%, var(--line));
+  opacity: 0.34;
+  pointer-events: none;
+  mask-image: radial-gradient(ellipse at 50% 50%, #000 0 60%, transparent 96%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 50%, #000 0 60%, transparent 96%);
+}
+
+.map-depth-grid :is(rect, line, ellipse) {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-width: 0.55;
+  vector-effect: non-scaling-stroke;
+}
+
+.map-depth-grid__frames rect:nth-child(1),
+.map-depth-grid__orbits ellipse:nth-child(1) {
+  opacity: 0.42;
+}
+
+.map-depth-grid__frames rect:nth-child(2),
+.map-depth-grid__orbits ellipse:nth-child(2) {
+  opacity: 0.58;
+}
+
+.map-depth-grid__frames rect:nth-child(n + 3),
+.map-depth-grid__orbits ellipse:nth-child(3) {
+  opacity: 0.78;
+}
+
+.map-depth-grid__rays {
+  opacity: 0.68;
+}
+
+.share-heading,
+.share-domain {
+  display: none;
+}
+
+html[data-capture="og"] :is(
+  .control-console,
+  .system-dock,
+  .site-header,
+  .map-meta,
+  .map-note,
+  .map-legend,
+  .map-axis-label,
+  .origin-marker__label,
+  .map-node__label
+) {
+  display: none;
+}
+
+html[data-capture="og"] .share-heading {
+  position: absolute;
+  z-index: 22;
+  top: 34px;
+  left: 40px;
+  display: grid;
+  gap: 7px;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  line-height: 1;
+  pointer-events: none;
+}
+
+html[data-capture="og"] .share-heading strong {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+html[data-capture="og"] .share-heading span,
+html[data-capture="og"] .share-domain {
+  color: color-mix(in srgb, var(--content-ink) 64%, transparent);
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+}
+
+html[data-capture="og"] .share-domain {
+  position: absolute;
+  z-index: 22;
+  right: 40px;
+  bottom: 30px;
+  display: block;
+  margin: 0;
+  font-family: var(--font-sans);
+  line-height: 1;
+  pointer-events: none;
+}
+
+html[data-capture="og"] .map-depth-grid {
+  opacity: 0.42;
+}
+
+html[data-capture="og"] .map-grid {
+  opacity: 0.48;
+}
+
+@media (max-width: 680px) {
+  .map-depth-grid {
+    inset: 14% 5% 18%;
+    opacity: 0.18;
+  }
 }
 
 .map-axis {
@@ -397,6 +511,11 @@ button {
 .map-links line.is-garage-link {
   stroke: color-mix(in srgb, var(--signal) 46%, transparent);
   stroke-width: 0.8;
+}
+
+.map-links line.is-private-practice-link {
+  stroke: color-mix(in srgb, var(--ink) 30%, transparent);
+  stroke-width: 0.65;
 }
 
 .map-specks {
@@ -2623,7 +2742,7 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 
 .map-axis-label--east {
   top: calc(50% + 12px);
-  right: 182px;
+  right: clamp(76px, 7.5vw, 132px);
   transform: none;
 }
 
@@ -2636,7 +2755,7 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 
 .map-axis-label--west {
   top: calc(50% - 28px);
-  left: 182px;
+  left: clamp(76px, 7.5vw, 132px);
   transform: none;
 }
 
@@ -2962,6 +3081,14 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 
   .map-axis-label--north {
     top: 62px;
+  }
+
+  .map-axis-label--east {
+    right: 10px;
+  }
+
+  .map-axis-label--west {
+    left: 10px;
   }
 
   .system-dock {
@@ -5722,59 +5849,44 @@ body:has(.command-dock.is-open) .origin-marker__label {
 }
 
 .map-node--company .map-node__glyph {
-  border: 1px solid rgba(255, 255, 255, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 50%;
   background:
-    radial-gradient(circle at 34% 28%, #292a26 0, #11120f 38%, #020302 78%);
+    radial-gradient(circle at 34% 27%, #30312b 0, #171814 34%, #080906 72%, #030402 100%);
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.07),
-    0 0 0 3px color-mix(in srgb, var(--ink) 9%, transparent),
-    0 8px 20px rgba(0, 0, 0, 0.14);
+    inset -4px -6px 10px rgba(0, 0, 0, 0.22),
+    0 7px 16px rgba(0, 0, 0, 0.13);
 }
 
-.map-node--company .map-node__glyph::before {
-  position: absolute;
-  inset: -12%;
-  border: 1px solid color-mix(in srgb, var(--ink) 16%, transparent);
-  border-radius: 50%;
-  content: "";
-}
-
+.map-node--company .map-node__glyph::before,
 .map-node--company .map-node__glyph::after {
-  position: absolute;
-  inset: 4%;
-  border-top: 1px solid rgba(255, 255, 255, 0.42);
-  border-right: 1px solid transparent;
-  border-radius: 50%;
-  content: "";
-  transform: rotate(-24deg);
+  content: none;
 }
 
 .map-node--company.is-selected .map-node__glyph {
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.1),
-    0 0 0 4px color-mix(in srgb, var(--signal) 18%, transparent),
-    0 12px 28px rgba(0, 0, 0, 0.18);
+    inset -4px -6px 10px rgba(0, 0, 0, 0.22),
+    0 0 0 2px color-mix(in srgb, var(--signal) 24%, transparent),
+    0 9px 20px rgba(0, 0, 0, 0.16);
 }
 
 .map-node--garage .map-node__glyph,
 .map-node--garage.is-selected .map-node__glyph {
-  border-color: rgba(255, 255, 255, 0.56);
+  border-color: rgba(255, 255, 255, 0.34);
   background:
-    radial-gradient(circle at 34% 28%, #20211e 0, #090a08 42%, #000 80%);
+    radial-gradient(circle at 34% 27%, #292a25 0, #11120f 36%, #050604 74%, #000 100%);
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.11),
-    0 0 0 5px color-mix(in srgb, var(--ink) 12%, transparent),
-    0 16px 38px rgba(0, 0, 0, 0.22);
+    inset -8px -11px 18px rgba(0, 0, 0, 0.28),
+    0 12px 28px rgba(0, 0, 0, 0.2);
 }
 
 html[data-theme="dark"] .map-node--company .map-node__glyph {
-  border-color: rgba(255, 255, 255, 0.38);
+  border-color: rgba(255, 255, 255, 0.26);
 }
 
 html[data-theme="dark"] .map-node--garage .map-node__glyph,
 html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
-  border-color: rgba(255, 255, 255, 0.72);
+  border-color: rgba(255, 255, 255, 0.42);
 }
 
 .map-node--personal .map-node__glyph {
@@ -5785,11 +5897,18 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 .map-node--running .map-node__glyph {
   width: calc(var(--size) * 0.72);
   height: calc(var(--size) * 0.72);
-  border: 1px solid color-mix(in srgb, var(--running-dusk) 55%, var(--ink));
-  background: var(--running-dusk);
+  border: 1px solid color-mix(in srgb, var(--running-dusk) 64%, white);
+  background:
+    radial-gradient(
+      circle at 34% 27%,
+      #c7c1d1 0,
+      var(--running-dusk) 36%,
+      #696273 74%,
+      #39353f 100%
+    );
   box-shadow:
-    0 0 0 7px color-mix(in srgb, var(--running-dusk) 13%, transparent),
-    0 0 32px color-mix(in srgb, var(--running-dusk) 40%, transparent);
+    inset -6px -9px 14px rgba(31, 27, 36, 0.24),
+    0 9px 22px rgba(0, 0, 0, 0.18);
 }
 
 .map-node--running .map-node__glyph::after {
@@ -5802,8 +5921,9 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 
 .map-node--running.is-selected .map-node__glyph {
   box-shadow:
-    0 0 0 7px color-mix(in srgb, var(--running-dusk) 22%, transparent),
-    0 0 40px color-mix(in srgb, var(--running-dusk) 54%, transparent);
+    inset -6px -9px 14px rgba(31, 27, 36, 0.24),
+    0 0 0 2px color-mix(in srgb, var(--signal) 28%, transparent),
+    0 11px 26px rgba(0, 0, 0, 0.2);
 }
 
 .map-node--running .map-node__label {
@@ -5812,11 +5932,12 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 }
 
 .map-node__label {
-  padding: 7px 9px;
+  padding: 8px 9px 6px;
   border: 0;
   border-radius: 12px;
   background: var(--material-01);
   box-shadow: none;
+  line-height: 1;
   corner-shape: var(--corner-card-shape);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
@@ -5856,6 +5977,10 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 
 .constellation-nav__shape--external {
   position: relative;
+}
+
+.control-console .constellation-nav__item[data-nav-view="cv"] .constellation-nav__shape {
+  border: 0;
 }
 
 .constellation-nav__shape--external::before {

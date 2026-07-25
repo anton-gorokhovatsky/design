@@ -10,7 +10,13 @@
     >
     <meta name="theme-color" content="#f2f1ec">
     <meta name="color-scheme" content="light dark">
-    <link rel="icon" href="assets/favicon.svg?v=20260725-map-final" type="image/svg+xml">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="icon" href="assets/favicon.svg?v=20260725-spatial-map-1" type="image/svg+xml">
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="assets/apple-touch-icon.png?v=20260725-spatial-map-1"
+    >
     <meta property="og:type" content="website">
     <meta property="og:locale" content="ru_RU">
     <meta property="og:site_name" content="gorokhovatsky.tech">
@@ -22,14 +28,18 @@
     <meta property="og:url" content="https://gorokhovatsky.tech/">
     <meta
       property="og:image"
-      content="https://gorokhovatsky.tech/assets/og-signal.jpg?v=20260725-map-final"
+      content="https://gorokhovatsky.tech/assets/og-signal.jpg?v=20260725-spatial-map-1"
+    >
+    <meta
+      property="og:image:secure_url"
+      content="https://gorokhovatsky.tech/assets/og-signal.jpg?v=20260725-spatial-map-1"
     >
     <meta property="og:image:type" content="image/jpeg">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta
       property="og:image:alt"
-      content="Тёмная интерактивная карта практики Антона Гороховатского с профессиональным центром «Гараж», проектами, принципами и личным светилом — бегом."
+      content="Тёмная пространственная карта практики Антона Гороховатского: Музей «Гараж», текущие проекты, рабочие принципы и личный центр — бег."
     >
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Антон Гороховатский — карта практики">
@@ -39,16 +49,17 @@
     >
     <meta
       name="twitter:image"
-      content="https://gorokhovatsky.tech/assets/og-signal.jpg?v=20260725-map-final"
+      content="https://gorokhovatsky.tech/assets/og-signal.jpg?v=20260725-spatial-map-1"
     >
     <meta
       name="twitter:image:alt"
-      content="Тёмная интерактивная карта практики Антона Гороховатского с профессиональным центром «Гараж», проектами, принципами и личным светилом — бегом."
+      content="Тёмная пространственная карта практики Антона Гороховатского: Музей «Гараж», текущие проекты, рабочие принципы и личный центр — бег."
     >
     <link rel="canonical" href="https://gorokhovatsky.tech/">
     <script>
       (() => {
         let savedTheme = null;
+        const isShareCapture = new URLSearchParams(window.location.search).has("og");
 
         try {
           savedTheme = window.localStorage.getItem("anton-signal-theme");
@@ -56,15 +67,21 @@
           savedTheme = null;
         }
 
-        const theme = savedTheme === "light" || savedTheme === "dark"
-          ? savedTheme
-          : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        const theme = isShareCapture
+          ? "dark"
+          : savedTheme === "light" || savedTheme === "dark"
+            ? savedTheme
+            : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
 
         document.documentElement.dataset.theme = theme;
+
+        if (isShareCapture) {
+          document.documentElement.dataset.capture = "og";
+        }
       })();
     </script>
-    <link rel="stylesheet" href="styles.css?v=20260725-map-final-9">
-    <script src="script.js?v=20260725-map-final-9" defer></script>
+    <link rel="stylesheet" href="styles.css?v=20260725-spatial-map-1">
+    <script src="script.js?v=20260725-spatial-map-1" defer></script>
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -111,11 +128,12 @@
           {
             "@type": "ImageObject",
             "@id": "https://gorokhovatsky.tech/#share-image",
-            "url": "https://gorokhovatsky.tech/assets/og-signal.jpg?v=20260725-map-final",
-            "contentUrl": "https://gorokhovatsky.tech/assets/og-signal.jpg?v=20260725-map-final",
+            "url": "https://gorokhovatsky.tech/assets/og-signal.jpg?v=20260725-spatial-map-1",
+            "contentUrl": "https://gorokhovatsky.tech/assets/og-signal.jpg?v=20260725-spatial-map-1",
+            "encodingFormat": "image/jpeg",
             "width": 1200,
             "height": 630,
-            "caption": "Карта практики Антона Гороховатского с профессиональным центром «Гараж» и личным центром — бегом."
+            "caption": "Пространственная карта практики Антона Гороховатского с профессиональным центром «Гараж» и личным центром — бегом."
           }
         ]
       }
@@ -137,7 +155,48 @@
     <main>
       <section class="map-hero" id="map" aria-labelledby="map-title">
         <div class="practice-map" data-practice-map data-signal-field>
+          <div class="share-heading" aria-hidden="true">
+            <strong>АНТОН ГОРОХОВАТСКИЙ</strong>
+            <span>КАРТА ПРАКТИКИ / 2009—2026</span>
+          </div>
+          <p class="share-domain" aria-hidden="true">GOROKHOVATSKY.TECH</p>
           <div class="map-grid" aria-hidden="true"></div>
+          <svg
+            class="map-depth-grid"
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <g class="map-depth-grid__frames">
+              <rect x="2" y="2" width="96" height="96" rx="2"></rect>
+              <rect x="15" y="13" width="70" height="74" rx="1.5"></rect>
+              <rect x="28" y="25" width="44" height="50" rx="1"></rect>
+              <rect x="39" y="36" width="22" height="28" rx="0.7"></rect>
+              <rect x="46" y="44" width="8" height="12" rx="0.4"></rect>
+            </g>
+            <g class="map-depth-grid__rays">
+              <line x1="2" y1="2" x2="50" y2="50"></line>
+              <line x1="25" y1="2" x2="50" y2="50"></line>
+              <line x1="50" y1="2" x2="50" y2="50"></line>
+              <line x1="75" y1="2" x2="50" y2="50"></line>
+              <line x1="98" y1="2" x2="50" y2="50"></line>
+              <line x1="2" y1="98" x2="50" y2="50"></line>
+              <line x1="25" y1="98" x2="50" y2="50"></line>
+              <line x1="50" y1="98" x2="50" y2="50"></line>
+              <line x1="75" y1="98" x2="50" y2="50"></line>
+              <line x1="98" y1="98" x2="50" y2="50"></line>
+              <line x1="2" y1="25" x2="50" y2="50"></line>
+              <line x1="2" y1="75" x2="50" y2="50"></line>
+              <line x1="98" y1="25" x2="50" y2="50"></line>
+              <line x1="98" y1="75" x2="50" y2="50"></line>
+            </g>
+            <g class="map-depth-grid__orbits">
+              <ellipse cx="50" cy="50" rx="36" ry="45"></ellipse>
+              <ellipse cx="50" cy="50" rx="23" ry="31"></ellipse>
+              <ellipse cx="50" cy="50" rx="11" ry="16"></ellipse>
+            </g>
+          </svg>
           <div class="map-axis map-axis--horizontal" aria-hidden="true"></div>
           <div class="map-axis map-axis--vertical" aria-hidden="true"></div>
 

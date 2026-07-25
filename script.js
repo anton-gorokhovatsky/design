@@ -76,7 +76,7 @@ const updateClock = () => {
 
 if (captureMode) {
   if (clock) {
-    clock.textContent = "МСК";
+    clock.textContent = "";
   }
 } else {
   updateClock();
@@ -906,6 +906,7 @@ const mapItems = [
   },
   {
     id: "shirokostup",
+    parent: "private-practice",
     kind: "project",
     label: "SHIROKOSTUP",
     mapLabel: "Сайт независимого куратора и исследователя Ольги Широкоступ",
@@ -922,6 +923,7 @@ const mapItems = [
   },
   {
     id: "tarski",
+    parent: "private-practice",
     kind: "project",
     label: "TARSKI",
     mapLabel: "Сайт среды изучения и поддержки социально ориентированного и вовлекающего искусства Tarski",
@@ -938,6 +940,7 @@ const mapItems = [
   },
   {
     id: "herman",
+    parent: "private-practice",
     kind: "project",
     label: "HERMAN & CO",
     mapLabel: "Сайт стилиста и эксперта по уходу Германа Винокурова",
@@ -954,6 +957,7 @@ const mapItems = [
   },
   {
     id: "dusty",
+    parent: "private-practice",
     kind: "project",
     label: "DUSTY MERCH",
     mapLabel: "Интернет-магазин мерча бегового клуба Dusty Dumbbells",
@@ -970,6 +974,7 @@ const mapItems = [
   },
   {
     id: "dd-camp",
+    parent: "private-practice",
     kind: "project",
     label: "DD CAMP",
     mapLabel: "Сайт осеннего кэмпа Dusty Dumbbells",
@@ -986,6 +991,7 @@ const mapItems = [
   },
   {
     id: "eleven",
+    parent: "private-practice",
     kind: "project",
     label: "11 111",
     mapLabel: "Сайт проекта «11 111» Виктора Доронина",
@@ -1002,6 +1008,7 @@ const mapItems = [
   },
   {
     id: "ks-fish",
+    parent: "private-practice",
     kind: "project",
     label: "KS FISH",
     mapLabel: "Сайт «Рыбной лавки капитана Селедкина»",
@@ -1018,6 +1025,7 @@ const mapItems = [
   },
   {
     id: "doronin",
+    parent: "private-practice",
     kind: "project",
     label: "DORONIN",
     mapLabel: "Интернет-магазин мерча Виктора Доронина",
@@ -1784,6 +1792,10 @@ if (mapLinksRoot) {
 
     if (item.parent === "garage") {
       line.classList.add("is-garage-link");
+    }
+
+    if (item.parent === "private-practice") {
+      line.classList.add("is-private-practice-link");
     }
 
     mapLinksRoot.append(line);
