@@ -37,10 +37,11 @@ logo card.
 - A compact `VIEW` selector in the system rail isolates the four
   semantic fields without moving nodes.
 - The query bar sits above the system rail and uses the functional prompt
-  `НАЙТИ ИЛИ ОТКРЫТЬ…` to search nodes or open content panels.
+  `Найти или открыть…` to search nodes or open content panels.
 - Primary navigation is part of the map rather than a separate header: an
-  indexed row of satellite points on desktop becomes a small expandable orbit
-  on narrow screens.
+  indexed row of satellite points on desktop becomes a compact regular menu
+  with one icon column, one label column, and equal hit areas on narrow
+  screens.
 - Hovering or focusing an eligible project node temporarily turns the central
   origin into a media receiver. Every reel is a muted seven-to-ten-second
   walkthrough of characteristic live states: full-page scrolls, meaningful
@@ -96,6 +97,10 @@ logo card.
   Equality includes the field behind the surface and its stacking context:
   a local scrim, dimmed map, or persistent transform must not make one family
   look more opaque or prevent the shared backdrop blur from sampling the map.
+  Every surface is registered in markup with `data-material-surface` and an
+  explicit responsive mode. The release gate compares computed fill, blur,
+  border, shadow, and material ancestry in every active state; a mismatch or
+  nested glass surface fails the entire family.
   Subtle blush and lilac belong to the field behind `MATERIAL / 01`, so colour
   appears through translucency. Media and showreels are content shapes rather
   than interface surfaces and remain unframed.
@@ -139,6 +144,7 @@ The project keeps its static runtime and uses a small deterministic audit layer
 instead of adding Storybook:
 
 - `node scripts/audit-project.mjs` inventories map semantics, reel references,
+  the complete material-surface registry, detached search compositing,
   material/type/motion contracts, accessibility hooks, metadata drift, and
   CSS-cleanup candidates.
 - `node scripts/audit-project.mjs --json` returns the same report as structured

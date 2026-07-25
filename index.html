@@ -10,7 +10,7 @@
     >
     <meta name="theme-color" content="#f2f1ec">
     <meta name="color-scheme" content="light dark">
-    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="assets/favicon.svg?v=20260725-full-audit-2" type="image/svg+xml">
     <meta property="og:type" content="website">
     <meta property="og:locale" content="ru_RU">
     <meta property="og:site_name" content="gorokhovatsky.tech">
@@ -22,7 +22,7 @@
     <meta property="og:url" content="https://gorokhovatsky.tech/">
     <meta
       property="og:image"
-      content="https://gorokhovatsky.tech/assets/og-signal.jpg?v=20260724-audit-2"
+      content="https://gorokhovatsky.tech/assets/og-signal.jpg?v=20260725-full-audit-2"
     >
     <meta property="og:image:type" content="image/jpeg">
     <meta property="og:image:width" content="1200">
@@ -39,7 +39,7 @@
     >
     <meta
       name="twitter:image"
-      content="https://gorokhovatsky.tech/assets/og-signal.jpg?v=20260724-audit-2"
+      content="https://gorokhovatsky.tech/assets/og-signal.jpg?v=20260725-full-audit-2"
     >
     <meta
       name="twitter:image:alt"
@@ -63,8 +63,8 @@
         document.documentElement.dataset.theme = theme;
       })();
     </script>
-    <link rel="stylesheet" href="styles.css?v=20260725-visual-12">
-    <script src="script.js?v=20260725-visual-4" defer></script>
+    <link rel="stylesheet" href="styles.css?v=20260725-full-audit-2">
+    <script src="script.js?v=20260725-full-audit-2" defer></script>
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -108,8 +108,8 @@
           {
             "@type": "ImageObject",
             "@id": "https://gorokhovatsky.tech/#share-image",
-            "url": "https://gorokhovatsky.tech/assets/og-signal.jpg?v=20260724-audit-2",
-            "contentUrl": "https://gorokhovatsky.tech/assets/og-signal.jpg?v=20260724-audit-2",
+            "url": "https://gorokhovatsky.tech/assets/og-signal.jpg?v=20260725-full-audit-2",
+            "contentUrl": "https://gorokhovatsky.tech/assets/og-signal.jpg?v=20260725-full-audit-2",
             "width": 1200,
             "height": 630,
             "caption": "Карта практики Антона Гороховатского с профессиональным центром «Гараж» и личным центром — бегом."
@@ -126,9 +126,7 @@
 
     <header class="site-header">
       <a class="brand" href="#map" aria-label="Антон Гороховатский — к карте практики">
-        <span class="brand__signal" aria-hidden="true"></span>
         <span>ANTON GOROKHOVATSKY</span>
-        <sup>®</sup>
       </a>
 
     </header>
@@ -174,7 +172,12 @@
             <span class="signal-pulse" aria-hidden="true"></span>
           </div>
 
-          <aside class="map-hover-preview" data-map-preview aria-hidden="true">
+          <aside
+            class="map-hover-preview"
+            data-map-preview
+            data-content-media="project-reel"
+            aria-hidden="true"
+          >
             <div class="map-hover-preview__media">
               <video data-map-preview-video muted loop playsinline preload="metadata"></video>
             </div>
@@ -197,21 +200,44 @@
           aria-labelledby="map-inspector-title"
           inert
         >
-          <button class="overlay-close map-inspector__close" type="button" data-close-inspector aria-label="Закрыть карточку">
+          <button
+            class="overlay-close map-inspector__close"
+            type="button"
+            data-close-inspector
+            data-material-surface="inspector-close"
+            data-material-active="always"
+            aria-label="Закрыть карточку"
+          >
             <span aria-hidden="true">×</span>
           </button>
-          <p class="map-readout__kind" data-map-kind>ИНСТИТУЦИЯ / 2021—2025</p>
-          <div class="map-readout__identity">
+          <p
+            class="map-readout__kind"
+            data-map-kind
+            data-material-surface="inspector-kind"
+            data-material-active="always"
+          >ИНСТИТУЦИЯ / 2021—2025</p>
+          <div
+            class="map-readout__identity"
+            data-material-surface="inspector-identity"
+            data-material-active="always"
+          >
             <h2 id="map-inspector-title" data-map-title>МУЗЕЙ «ГАРАЖ»</h2>
             <p data-map-meta>ОКТ 2021—МАР 2025 / СТАРШИЙ МЕНЕДЖЕР ВЕБ-РАЗРАБОТКИ</p>
           </div>
-          <p class="map-readout__description" data-map-description>
+          <p
+            class="map-readout__description"
+            data-map-description
+            data-material-surface="inspector-description"
+            data-material-active="always"
+          >
             Самый важный профессиональный период: здесь сошлись культура, продукт,
             исследования, дизайн и большая веб-разработка.
           </p>
           <a
             class="map-readout__link"
             data-map-link
+            data-material-surface="inspector-link"
+            data-material-active="always"
             href="https://garagemca.org/ru"
             target="_blank"
             rel="noreferrer"
@@ -225,13 +251,17 @@
         <div
           class="control-console"
           data-floating-console="navigation"
-          aria-label="Навигация и поиск"
+          data-material-surface="desktop-console"
+          data-material-active="desktop"
+          aria-label="Навигация и&nbsp;поиск"
         >
           <nav class="constellation-nav" aria-label="Основная навигация" data-constellation-nav>
             <button
               class="constellation-nav__toggle"
               type="button"
               data-constellation-nav-toggle
+              data-material-surface="mobile-navigation-toggle"
+              data-material-active="mobile"
               aria-expanded="false"
               aria-controls="constellation-nav-orbit"
             >
@@ -241,7 +271,13 @@
               <span class="visually-hidden" data-constellation-nav-toggle-label>Открыть навигацию</span>
             </button>
 
-            <div class="constellation-nav__orbit" id="constellation-nav-orbit" data-constellation-nav-orbit>
+            <div
+              class="constellation-nav__orbit"
+              id="constellation-nav-orbit"
+              data-constellation-nav-orbit
+              data-material-surface="mobile-navigation-menu"
+              data-material-active="mobile"
+            >
               <a
                 class="constellation-nav__item is-current"
                 data-nav-view="map"
@@ -299,14 +335,20 @@
             </div>
           </nav>
 
-          <form class="command-dock" data-command-form role="search">
-            <label class="visually-hidden" for="map-command">Найти точку или открыть раздел</label>
+          <form
+            class="command-dock"
+            data-command-form
+            data-material-surface="mobile-search"
+            data-material-active="mobile"
+            role="search"
+          >
+            <label class="visually-hidden" for="map-command">Найти точку или&nbsp;открыть раздел</label>
             <span class="command-dock__mark" aria-hidden="true">⌕</span>
             <input
               id="map-command"
               data-command-input
               type="search"
-              placeholder="НАЙТИ ИЛИ ОТКРЫТЬ…"
+              placeholder="Найти или&nbsp;открыть…"
               autocomplete="off"
               role="combobox"
               aria-autocomplete="list"
@@ -317,22 +359,32 @@
             <button class="command-dock__submit" type="submit" aria-label="Выполнить запрос">
               <span class="command-dock__submit-mark" aria-hidden="true"></span>
             </button>
-            <div
-              class="command-results"
-              id="command-results"
-              data-command-results
-              role="listbox"
-              aria-label="Результаты поиска"
-              aria-hidden="true"
-              inert
-            ></div>
           </form>
         </div>
 
-        <div class="system-dock" aria-label="Режимы карты и экрана">
+        <div
+          class="command-results"
+          id="command-results"
+          data-command-results
+          data-material-surface="search-results"
+          data-material-active="always"
+          role="listbox"
+          aria-label="Результаты поиска"
+          aria-hidden="true"
+          inert
+        ></div>
+
+        <div
+          class="system-dock"
+          data-material-surface="mobile-system-dock"
+          data-material-active="mobile"
+          aria-label="Режимы карты и&nbsp;экрана"
+        >
           <nav
             class="map-controls"
             data-floating-console="view"
+            data-material-surface="desktop-view-console"
+            data-material-active="desktop"
             aria-label="Режим отображения карты"
             data-context="VIEW"
           >
@@ -388,7 +440,13 @@
             </button>
           </nav>
 
-          <div class="display-control" data-floating-console="display" data-context="DISPLAY">
+          <div
+            class="display-control"
+            data-floating-console="display"
+            data-material-surface="desktop-display-console"
+            data-material-active="desktop"
+            data-context="DISPLAY"
+          >
             <div class="map-meta">
               <h1 id="map-title">КАРТА ПРАКТИКИ</h1>
               <p>4 ПОЛЯ / 2009—NOW</p>
@@ -416,11 +474,21 @@
         inert
       >
         <header class="content-panel__header">
-          <div>
+          <div
+            data-material-surface="panel-heading"
+            data-material-active="always"
+          >
             <p data-panel-index>01 / SELECTED WORK</p>
             <h2 id="content-panel-title" data-panel-title>ИЗБРАННЫЕ ПРОЕКТЫ</h2>
           </div>
-          <button class="overlay-close" type="button" data-close-panel aria-label="Закрыть раздел">
+          <button
+            class="overlay-close"
+            type="button"
+            data-close-panel
+            data-material-surface="panel-close"
+            data-material-active="always"
+            aria-label="Закрыть раздел"
+          >
             <span aria-hidden="true">×</span>
           </button>
         </header>
@@ -436,7 +504,11 @@
           <p>2023—2026</p>
         </div>
 
-        <div class="work-intro">
+        <div
+          class="work-intro"
+          data-material-surface="work-intro"
+          data-material-active="always"
+        >
           <h2 id="work-title">ИЗБРАННЫЕ <span>WEB‑ПРОЕКТЫ</span></h2>
           <p>
             Исследование, концепция, прототип, координация,
@@ -447,6 +519,8 @@
         <div class="work-list">
           <a
             class="work-row"
+            data-material-surface="work-01"
+            data-material-active="always"
             href="https://shirokostup.site/"
             target="_blank"
             rel="noreferrer"
@@ -459,6 +533,8 @@
 
           <a
             class="work-row"
+            data-material-surface="work-02"
+            data-material-active="always"
             href="https://tarski.ru/"
             target="_blank"
             rel="noreferrer"
@@ -471,6 +547,8 @@
 
           <a
             class="work-row"
+            data-material-surface="work-03"
+            data-material-active="always"
             href="https://barberherman.ru/"
             target="_blank"
             rel="noreferrer"
@@ -483,6 +561,8 @@
 
           <a
             class="work-row"
+            data-material-surface="work-04"
+            data-material-active="always"
             href="https://merch.dustydumbbells.com/"
             target="_blank"
             rel="noreferrer"
@@ -495,6 +575,8 @@
 
           <a
             class="work-row"
+            data-material-surface="work-05"
+            data-material-active="always"
             href="https://camp.dustydumbbells.com/"
             target="_blank"
             rel="noreferrer"
@@ -507,6 +589,8 @@
 
           <a
             class="work-row"
+            data-material-surface="work-06"
+            data-material-active="always"
             href="https://11111.life/"
             target="_blank"
             rel="noreferrer"
@@ -519,6 +603,8 @@
 
           <a
             class="work-row"
+            data-material-surface="work-07"
+            data-material-active="always"
             href="https://ks.fish/"
             target="_blank"
             rel="noreferrer"
@@ -531,6 +617,8 @@
 
           <a
             class="work-row"
+            data-material-surface="work-08"
+            data-material-active="always"
             href="https://doronin.store/"
             target="_blank"
             rel="noreferrer"
@@ -551,7 +639,11 @@
           <p>COMPLEXITY → FORM</p>
         </div>
 
-        <div class="approach-intro">
+        <div
+          class="approach-intro"
+          data-material-surface="approach-intro"
+          data-material-active="always"
+        >
           <h2 id="approach-title">СЛОЖНОЕ СТАНОВИТСЯ ПОНЯТНЫМ ПО&nbsp;ЧАСТЯМ.</h2>
           <p>
             Не привязан к&nbsp;одной роли или&nbsp;набору инструментов:
@@ -560,22 +652,22 @@
         </div>
 
         <ol class="approach-grid">
-          <li>
+          <li data-material-surface="approach-01" data-material-active="always">
             <span>01 / RESEARCH</span>
             <h3>Разобраться</h3>
             <p>Понять контекст, людей, ограничения и&nbsp;настоящее устройство задачи.</p>
           </li>
-          <li>
+          <li data-material-surface="approach-02" data-material-active="always">
             <span>02 / SHAPE</span>
             <h3>Придать форму</h3>
             <p>Собрать концепцию, требования и&nbsp;прототип, с&nbsp;которым уже можно работать.</p>
           </li>
-          <li>
+          <li data-material-surface="approach-03" data-material-active="always">
             <span>03 / COORDINATE</span>
             <h3>Соединить</h3>
             <p>Свести команды, сроки, бюджет, документацию и&nbsp;принимаемые решения.</p>
           </li>
-          <li>
+          <li data-material-surface="approach-04" data-material-active="always">
             <span>04 / MAKE</span>
             <h3>Подключиться</h3>
             <p>Когда нужно — рисовать, верстать, тестировать и&nbsp;доводить до&nbsp;первых итераций.</p>
@@ -591,8 +683,15 @@
         </div>
 
         <div class="contact-copy">
-          <h2 id="contact-title"><span>МОЖНО</span><span>ПОГОВОРИТЬ.</span></h2>
-          <div>
+          <h2
+            id="contact-title"
+            data-material-surface="contact-title"
+            data-material-active="always"
+          ><span>МОЖНО</span><span>ПОГОВОРИТЬ.</span></h2>
+          <div
+            data-material-surface="contact-details"
+            data-material-active="always"
+          >
             <p>ПРЕДЛОЖЕНИЯ / РЕКОМЕНДАЦИИ / ИНТРО / ХОРОШИЕ НАВОДКИ</p>
             <a href="mailto:anton.gorokhovatsky@gmail.com">ANTON.GOROKHOVATSKY@GMAIL.COM</a>
           </div>

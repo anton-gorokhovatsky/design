@@ -1,4 +1,17 @@
 const root = document.documentElement;
+const shortRussianUiWords = [
+  "а", "без", "в", "во", "для", "до", "за", "и", "из", "или",
+  "к", "ко", "на", "над", "не", "ни", "но", "о", "об", "от",
+  "по", "под", "при", "с", "со", "у",
+].join("|");
+const shortRussianUiWordPattern = new RegExp(
+  `(^|[\\s([«„\"'])(${shortRussianUiWords})[\\t \\r\\n]+(?=\\S)`,
+  "giu",
+);
+const typographUiText = (value = "") => String(value).replace(
+  shortRussianUiWordPattern,
+  "$1$2\u00a0",
+);
 const themeToggle = document.querySelector("[data-theme-toggle]");
 const themeLabel = document.querySelector("[data-theme-label]");
 const themeColor = document.querySelector('meta[name="theme-color"]');
@@ -896,7 +909,7 @@ const mapItems = [
     label: "SHIROKOSTUP",
     title: "SHIROKOSTUP",
     meta: "EDITORIAL / WEB / 2026",
-    description: "Портфолио куратора и исследовательницы: редакционная структура, спокойный интерфейс и самостоятельный запуск.",
+    description: "Портфолио куратора и исследовательницы: редакционная структура, спокойный интерфейс и самостоятельный\u00a0запуск.",
     href: "https://shirokostup.site/",
     kindLabel: "ПРОЕКТ / INDEPENDENT",
     previewVideo: "assets/reels/shirokostup.mp4?v=20260724-fullwidth-reels",
@@ -1574,19 +1587,19 @@ const selectMapItem = (id, { reveal = false } = {}) => {
   setMapRovingId(id);
 
   if (mapKind) {
-    mapKind.textContent = item.kindLabel;
+    mapKind.textContent = typographUiText(item.kindLabel);
   }
 
   if (mapTitle) {
-    mapTitle.textContent = item.title;
+    mapTitle.textContent = typographUiText(item.title);
   }
 
   if (mapMeta) {
-    mapMeta.textContent = item.meta;
+    mapMeta.textContent = typographUiText(item.meta);
   }
 
   if (mapDescription) {
-    mapDescription.textContent = item.description;
+    mapDescription.textContent = typographUiText(item.description);
   }
 
   if (mapLink) {
@@ -1595,7 +1608,7 @@ const selectMapItem = (id, { reveal = false } = {}) => {
     if (itemHref) {
       mapLink.hidden = false;
       mapLink.href = itemHref;
-      mapLink.textContent = item.kind === "practice" ? "ИСХОДНИК В NOTION" : "ОТКРЫТЬ";
+      mapLink.textContent = item.kind === "practice" ? "ИСХОДНИК В\u00a0NOTION" : "ОТКРЫТЬ";
       mapLink.classList.remove("is-disabled");
       mapLink.removeAttribute("aria-disabled");
       mapLink.target = "_blank";
@@ -1635,7 +1648,7 @@ if (mapNodesRoot) {
     button.style.setProperty("--x", `${item.x}%`);
     button.style.setProperty("--y", `${item.y}%`);
     button.style.setProperty("--size", `${item.size}px`);
-    button.setAttribute("aria-label", `${item.title}. ${item.meta}`);
+    button.setAttribute("aria-label", typographUiText(`${item.title}. ${item.meta}`));
     button.setAttribute("aria-pressed", "false");
     button.setAttribute("aria-expanded", "false");
     button.setAttribute("aria-controls", "map-inspector");
@@ -1655,7 +1668,7 @@ if (mapNodesRoot) {
     glyph.className = "map-node__glyph";
     glyph.setAttribute("aria-hidden", "true");
     label.className = "map-node__label";
-    label.textContent = item.label;
+    label.textContent = typographUiText(item.label);
 
     button.append(glyph, label);
     button.addEventListener("click", () => {
@@ -1797,6 +1810,25 @@ mapFilterButtons.forEach((button) => {
   });
 });
 
+const positionDetachedCommandResults = () => {
+  const dock = document.querySelector("[data-command-form]");
+  const results = document.querySelector("[data-command-results]");
+
+  if (!dock || !results) {
+    return;
+  }
+
+  const bounds = dock.getBoundingClientRect();
+  const gap = window.matchMedia("(max-width: 680px)").matches ? 8 : 19;
+
+  results.style.setProperty("--command-results-left", `${bounds.left.toFixed(2)}px`);
+  results.style.setProperty("--command-results-width", `${bounds.width.toFixed(2)}px`);
+  results.style.setProperty(
+    "--command-results-bottom",
+    `${(window.innerHeight - bounds.top + gap).toFixed(2)}px`,
+  );
+};
+
 const floatingConsoleModules = Array.from(document.querySelectorAll("[data-floating-console]"));
 const floatingConsoleMedia = window.matchMedia(
   "(min-width: 681px) and (hover: hover) and (pointer: fine)",
@@ -1891,6 +1923,7 @@ floatingConsoleModules.forEach((module) => {
 
       moveEvent.preventDefault();
       setConsoleOffset(module, nextOffset.x, nextOffset.y);
+      positionDetachedCommandResults();
     };
 
     event.preventDefault();
@@ -1914,6 +1947,8 @@ const syncFloatingConsoleBounds = () => {
     const nextOffset = clampConsoleOffset(module, currentOffset.x, currentOffset.y);
     setConsoleOffset(module, nextOffset.x, nextOffset.y);
   });
+
+  positionDetachedCommandResults();
 };
 
 let consoleResizeFrame = 0;
@@ -2074,7 +2109,7 @@ const openContentPanel = (view, trigger = null) => {
   contentPanelBody?.scrollTo({ top: 0, behavior: "auto" });
 
   if (panelTitle) {
-    panelTitle.textContent = config.title;
+    panelTitle.textContent = typographUiText(config.title);
   }
 
   if (panelIndex) {
@@ -2098,7 +2133,14 @@ const closeContentPanel = ({ restoreFocus = true } = {}) => {
   setConstellationNavCurrent("map");
 
   if (restoreFocus && lastPanelTrigger instanceof HTMLElement) {
-    lastPanelTrigger.focus();
+    const triggerIsInCompactNavigation = compactConstellationNav.matches
+      && Boolean(lastPanelTrigger.closest("[data-constellation-nav-orbit]"));
+
+    if (triggerIsInCompactNavigation) {
+      setConstellationNavOpen(true);
+    }
+
+    lastPanelTrigger.focus({ preventScroll: true });
   }
 };
 
@@ -2216,7 +2258,12 @@ const commandViews = [
 ];
 
 const setCommandOpen = (isOpen) => {
+  if (isOpen) {
+    positionDetachedCommandResults();
+  }
+
   commandForm?.classList.toggle("is-open", isOpen);
+  commandResults?.classList.toggle("is-open", isOpen);
   commandInput?.setAttribute("aria-expanded", String(isOpen));
   commandResults?.setAttribute("aria-hidden", String(!isOpen));
 
@@ -2336,7 +2383,7 @@ const renderCommandResults = (query = "") => {
     const empty = document.createElement("p");
     empty.className = "command-results__empty";
     empty.setAttribute("role", "status");
-    empty.textContent = "НИЧЕГО НЕ НАШЛОСЬ — ПОПРОБУЙТЕ ДРУГОЕ СЛОВО";
+    empty.textContent = "Ничего не\u00a0нашлось — попробуйте другое слово";
     commandResults.append(empty);
     setCommandOpen(true);
     return;
@@ -2357,8 +2404,8 @@ const renderCommandResults = (query = "") => {
     button.setAttribute("role", "option");
     button.setAttribute("aria-selected", "false");
 
-    title.textContent = result.title;
-    meta.textContent = result.meta;
+    title.textContent = typographUiText(result.title);
+    meta.textContent = typographUiText(result.meta);
     mark.className = "command-result__mark";
     mark.classList.add(
       result.type === "node"

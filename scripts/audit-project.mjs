@@ -272,6 +272,59 @@ const materialThemeDefinitions = materialDefinitions.filter((value) => (
 ));
 const materialAccessibilityDefinitions = materialDefinitions.filter((value) => value === "Canvas");
 const materialUsages = (styleSource.match(/var\(--material-01\)/g) || []).length;
+const requiredMaterialSurfaces = [
+  "inspector-close",
+  "inspector-kind",
+  "inspector-identity",
+  "inspector-description",
+  "inspector-link",
+  "desktop-console",
+  "mobile-navigation-toggle",
+  "mobile-navigation-menu",
+  "mobile-search",
+  "search-results",
+  "mobile-system-dock",
+  "desktop-view-console",
+  "desktop-display-console",
+  "panel-heading",
+  "panel-close",
+  "work-intro",
+  "work-01",
+  "work-02",
+  "work-03",
+  "work-04",
+  "work-05",
+  "work-06",
+  "work-07",
+  "work-08",
+  "approach-intro",
+  "approach-01",
+  "approach-02",
+  "approach-03",
+  "approach-04",
+  "contact-title",
+  "contact-details",
+];
+const materialSurfaceTags = [
+  ...indexSource.matchAll(/<[^>]*\sdata-material-surface="([^"]+)"[^>]*>/gs),
+].map((match) => ({
+  name: match[1],
+  mode: match[0].match(/\sdata-material-active="([^"]+)"/)?.[1] || "",
+  tag: match[0].replace(/\s+/g, " ").trim(),
+}));
+const materialSurfaceNames = materialSurfaceTags.map(({ name }) => name);
+const duplicateMaterialSurfaces = materialSurfaceNames.filter(
+  (name, index, names) => names.indexOf(name) !== index,
+);
+const missingMaterialSurfaces = requiredMaterialSurfaces.filter(
+  (name) => !materialSurfaceNames.includes(name),
+);
+const unexpectedMaterialSurfaces = materialSurfaceNames.filter(
+  (name) => !requiredMaterialSurfaces.includes(name),
+);
+const invalidMaterialModes = materialSurfaceTags.filter(
+  ({ mode }) => !["always", "desktop", "mobile"].includes(mode),
+);
 const backdropValues = [
   ...styleSource.matchAll(/(?:-webkit-)?backdrop-filter:\s*([^;]+);/g),
 ].map((match) => match[1].replace(/\s+/g, " ").trim());
@@ -302,6 +355,57 @@ requireContract(
     && styleSource.includes("-webkit-backdrop-filter: blur(24px)"),
   "material-blur",
   "MATERIAL / 01 needs the 24px standard and WebKit fallback.",
+);
+requireContract(
+  duplicateMaterialSurfaces.length === 0
+    && missingMaterialSurfaces.length === 0
+    && unexpectedMaterialSurfaces.length === 0,
+  "material-surface-registry",
+  "Every interface surface must appear exactly once in the explicit material registry.",
+  {
+    actual: materialSurfaceNames,
+    duplicate: [...new Set(duplicateMaterialSurfaces)],
+    missing: missingMaterialSurfaces,
+    unexpected: unexpectedMaterialSurfaces,
+  },
+);
+requireContract(
+  invalidMaterialModes.length === 0,
+  "material-surface-mode",
+  "Every registered material surface needs an always, desktop, or mobile activation mode.",
+  invalidMaterialModes,
+);
+
+const controlConsoleStart = indexSource.indexOf('class="control-console"');
+const commandFormEnd = indexSource.indexOf("</form>", controlConsoleStart);
+const controlConsoleEnd = indexSource.indexOf("</div>", commandFormEnd);
+const commandResultsStart = indexSource.indexOf('class="command-results"');
+requireContract(
+  controlConsoleStart !== -1
+    && commandFormEnd !== -1
+    && controlConsoleEnd !== -1
+    && commandResultsStart > controlConsoleEnd,
+  "material-search-detached",
+  "Search results must remain outside the console material ancestor.",
+);
+requireContract(
+  scriptSource.includes("positionDetachedCommandResults")
+    && scriptSource.includes('commandResults?.classList.toggle("is-open", isOpen)'),
+  "material-search-positioning",
+  "Detached search results need explicit positioning and open-state synchronization.",
+);
+requireContract(
+  !styleSource.includes(".control-console .command-results")
+    && !styleSource.includes(".command-dock.is-open .command-results"),
+  "material-search-legacy-selector",
+  "Historical descendant selectors must not reconnect search results to a material ancestor.",
+);
+requireContract(
+  indexSource.includes('data-content-media="project-reel"')
+    && !/<[^>]*data-content-media="project-reel"[^>]*data-material-surface=/s.test(indexSource)
+    && !/<[^>]*data-material-surface=[^>]*data-content-media="project-reel"/s.test(indexSource),
+  "material-media-boundary",
+  "Project reels are unframed content media and must not enter the interface material registry.",
 );
 
 const motionTokens = ["enter", "exit", "shift"];
@@ -517,6 +621,7 @@ const report = {
   designSystem: {
     materialDefinitions,
     materialUsages,
+    materialSurfaces: materialSurfaceTags.map(({ name, mode }) => ({ name, mode })),
     backdropInventory,
     rawBezierValues,
     fixedPixelFontSizeDeclarations: fixedPixelFontSizes.length,
