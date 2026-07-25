@@ -93,6 +93,9 @@ logo card.
   Every content panel, map readout, search result, and instrument console uses
   that exact recipe. Components own only geometry, spacing, and interaction
   state; they cannot introduce a stronger, tinted, edged, or shadowed material.
+  Equality includes the field behind the surface and its stacking context:
+  a local scrim, dimmed map, or persistent transform must not make one family
+  look more opaque or prevent the shared backdrop blur from sampling the map.
   Subtle blush and lilac belong to the field behind `MATERIAL / 01`, so colour
   appears through translucency. Media and showreels are content shapes rather
   than interface surfaces and remain unframed.
@@ -102,7 +105,11 @@ logo card.
   the available viewport and reader defaults, expressed with `clamp()`,
   viewport/rem inputs, container-relative units for card typography, and
   unitless leading. Breakpoints may regroup the composition, but must not
-  introduce unrelated typographic scales.
+  introduce unrelated typographic scales or replace editorial typography:
+  short Russian prepositions and conjunctions stay with the following word,
+  while names, numbers, initials, and compound brands are joined only when
+  they form an indivisible semantic unit. Actual line endings are checked in
+  rendered control widths.
 - Motion has three semantic curves: objects enter decisively with
   `--motion-enter`, leave with `--motion-exit`, and travel between two visible
   states with the symmetrical `--motion-shift`. Reduced-motion preferences

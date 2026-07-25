@@ -151,10 +151,19 @@ Storybook для проекта не нужен: компонентов немн
 - `node scripts/check-project.mjs`: PASS, 0 errors, 0 warnings; 46 точек карты,
   9 связей, 17 принципов и 13 шоурилов.
 
-## Полный визуальный проход 2026-07-25 — новая приёмка
+## Полный визуальный проход 2026-07-25 — приёмка отозвана
 
-Новая приёмка выполнена после повторной типографической, material и optical
-доводки. Рабочие артефакты сохранены в
+После публикации пользовательские рендеры на ширине около `900 CSS px`
+показали, что приёмка семейств `content-work` и `content-approach` была
+ошибочной: одинаковый background token находился в другом compositing context,
+а растягивающие grid-строки создавали крупные пустые поля и разрывали
+типографические группы. По правилу связанного семейства отозвана вся
+визуальная приёмка контентных карточек; перечисленные ниже артефакты остаются
+историческим свидетельством выполненного, но недостаточного прохода и не
+являются доказательством готовности.
+
+Отозванный проход был выполнен после повторной типографической, material и
+optical доводки. Его рабочие артефакты сохранены в
 `/Users/antonj/Documents/Резюме/.portfolio-audit-artifacts/`: 18 полноразмерных
 рендеров, 14 крупных модульных кропов, JSON-отчёт
 `visual-matrix-report.json` и два системных рендера.
@@ -180,3 +189,29 @@ Storybook для проекта не нужен: компонентов немн
 Финальный `node scripts/check-project.mjs`: PASS, 0 errors, 0 warnings;
 46 точек карты, 9 связей, 17 принципов, 13 шоурилов и 0 кандидатов на удаление
 без runtime-подтверждения.
+
+## Корректирующий проход 2026-07-25 — контентная система
+
+Новый проход выполнен от пользовательского контрольного состояния около
+`900 CSS px`, а не от прежнего широкого baseline. Финальные артефакты находятся
+в `.portfolio-audit-artifacts/content-system-fix/final/`; машинный отчёт —
+`content-system-report.json`.
+
+| Семейство | Контрольные состояния | Результат |
+|---|---|---|
+| `MATERIAL / 01` | Work/approach/contact в `1024`, `896`, `390`, `320`; light/dark; idle desktop/mobile | Удалены визуальный scrim и отдельное затухание карты. После entrance-анимации у panel/group/card `transform: none`; surface реально получает `rgba(..., 0.5)` + `blur(24px)` над тем же полем, что и консоли |
+| Проекты | `896x690-light-work-top.png`, `896x690-dark-work-grid.png`, `1024x768-light-work-grid.png`, `390x844-light-work.png`, `390x844-dark-work.png`, `320x720-light-work.png` | Удалены flexible spacer-row и завышенный `min-height`; title/domain образуют одну группу с контролируемым интервалом, короткая и длинная карточки остаются собранными |
+| Подход | `896x690-light-approach-top.png`, `896x690-dark-approach-grid.png`, `1024x768-dark-approach-grid.png`, `390x844-light-approach.png`, `390x844-dark-approach.png`, `320x720-dark-approach.png` | Meta/title/body используют content-driven rows; мера body ограничена `28ch`, четыре операции имеют одинаковый трёхстрочный ритм без искусственного вертикального провала |
+| Контакт | `896x690-light-contact.png`, `390x844-dark-contact.png` | Тот же исправленный compositing path; display-фраза и email-card не перекрываются и не выходят за viewport |
+| Header/scroll | Tablet `1024`, intermediate `896`, mobile `390/320` | Scroll-область физически начинается ниже panel header; при прокрутке intro и карточки не проходят под заголовком и close control |
+| Focus/search/readout | `896x690-dark-work-focus.png`, `390x844-dark-search.png`, `390x844-dark-running-selected.png` | Focus остаётся отдельной синей обводкой, поиск не конфликтует с мобильными консолями, running readout не закрывает южное светило |
+| Весь экран | `1280x720-light-idle-left-outer.png`, `1280x720-dark-idle-right-outer.png`, `390x844-light-idle.png` | VIEW, DISPLAY, command/search и осевые подписи сохраняют принятые оптические оси и общий material path |
+
+Браузерный typographic gate измерил фактические line boxes `64` текстовых
+состояний: `10` блоков проектов и `6` блоков подхода на `1024`, `896`, `390`
+и `320 px`. Результат: `0` коротких русских слов в конце строки и `0`
+одиночных последних строк. Для восьми work/approach viewport-проб:
+`overflowX = 0`; фон и blur плитки совпадают с общим token.
+
+Финальный `node scripts/check-project.mjs`: PASS, 0 errors, 0 warnings;
+46 точек карты, 9 связей, 17 принципов и 13 шоурилов. `git diff --check`: PASS.
