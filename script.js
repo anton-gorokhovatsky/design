@@ -63,7 +63,7 @@ const updateClock = () => {
 
 if (captureMode) {
   if (clock) {
-    clock.textContent = "MSK / UTC+3";
+    clock.textContent = "UTC+3";
   }
 } else {
   updateClock();
@@ -901,8 +901,8 @@ const mapItems = [
     kindLabel: "ПРОЕКТ / INDEPENDENT",
     previewVideo: "assets/reels/shirokostup.mp4?v=20260724-fullwidth-reels",
     previewMeta: "SITE WALKTHROUGH / 00:07",
-    x: 89,
-    y: 48,
+    x: 82,
+    y: 52,
     size: 22,
   },
   {
@@ -931,7 +931,7 @@ const mapItems = [
     kindLabel: "ПРОЕКТ / INDEPENDENT",
     previewVideo: "assets/reels/herman.mp4?v=20260724-fullwidth-reels",
     previewMeta: "SITE WALKTHROUGH / 00:07",
-    x: 88,
+    x: 82,
     y: 58,
     size: 19,
   },
@@ -1009,6 +1009,19 @@ const mapItems = [
     x: 77,
     y: 81,
     size: 13,
+  },
+  {
+    id: "running",
+    kind: "personal",
+    label: "БЕГ ᕕ( ᐛ )ᕗ",
+    title: "БЕГ ᕕ( ᐛ )ᕗ",
+    meta: "ЛИЧНЫЙ ЦЕНТР / ДИСТАНЦИЯ / РИТМ",
+    description: "Личный центр притяжения. Бег собирает ритм, выносливость и внимание — и снова возвращает ощущение движения вперёд.",
+    href: "https://www.instagram.com/stories/highlights/18054491965888038/",
+    kindLabel: "ЛИЧНОЕ / ЦЕНТР ПРИТЯЖЕНИЯ",
+    x: 50,
+    y: 75,
+    size: 60,
   },
   {
     id: "art",
@@ -1214,7 +1227,7 @@ const mapItems = [
     meta: "DIGITAL / MEDIA / TECHNOLOGY",
     description: "Обладаю способностью быстро генерировать креативные идеи и решения. Слежу за цифровыми- и медиатрендами, развивающимися технологиями и платформами.",
     kindLabel: "ПРИНЦИП / 10",
-    x: 14,
+    x: 15,
     y: 57,
     size: 11,
   },
@@ -1286,8 +1299,8 @@ const mapItems = [
     meta: "ПРИДАТЬ ФОРМУ / УБРАТЬ ЛИШНЕЕ / НАЙТИ ЦЕННОСТЬ",
     description: "Я встречал ещё пару метафор своего подхода к работе. Иногда такая роль называется «shaper» (придающий форму): подобно скульптору, вы постепенно откалываете лишнее, чтобы оставить суть. Ещё один вариант — сравнение с работой археолога; в отличие от скульптора, вы не принимаете творческих решений: нужная людям ценность уже хранится под толщей земли, и нужно методично убирать лишнее, не задевая важного.",
     kindLabel: "ПРИНЦИП / 16",
-    x: 35,
-    y: 70,
+    x: 38,
+    y: 64,
     size: 12,
   },
   {
@@ -1319,9 +1332,100 @@ const mapPreviewVideo = document.querySelector("[data-map-preview-video]");
 const hoverCapable = window.matchMedia("(hover: hover) and (pointer: fine)");
 const mapButtons = new Map();
 let selectedMapId = "garage";
+let rovingMapId = "garage";
 let previewHideTimer = 0;
 let previewShowFrame = 0;
 let activePreviewItem = null;
+
+const getNavigableMapItems = () => {
+  const activeKind = document.querySelector("[data-practice-map]")?.dataset.activeKind || "all";
+
+  return mapItems.filter((item) => {
+    const button = mapButtons.get(item.id);
+
+    return button
+      && !button.classList.contains("is-search-miss")
+      && (activeKind === "all" || item.kind === activeKind);
+  });
+};
+
+const syncMapNodeAvailability = () => {
+  const activeKind = document.querySelector("[data-practice-map]")?.dataset.activeKind || "all";
+
+  mapItems.forEach((item) => {
+    const button = mapButtons.get(item.id);
+
+    if (!button) {
+      return;
+    }
+
+    const isAvailable = !button.classList.contains("is-search-miss")
+      && (activeKind === "all" || item.kind === activeKind);
+
+    button.inert = !isAvailable;
+    button.setAttribute("aria-hidden", String(!isAvailable));
+  });
+};
+
+const setMapRovingId = (id, { focus = false } = {}) => {
+  const target = mapButtons.get(id);
+
+  if (!target) {
+    return;
+  }
+
+  rovingMapId = id;
+  mapButtons.forEach((button, buttonId) => {
+    button.tabIndex = buttonId === rovingMapId ? 0 : -1;
+  });
+
+  if (focus) {
+    target.focus();
+  }
+};
+
+const getDirectionalMapItem = (id, key) => {
+  const current = mapItems.find((item) => item.id === id);
+  const candidates = getNavigableMapItems();
+
+  if (!current || !candidates.length) {
+    return null;
+  }
+
+  if (key === "Home") {
+    return candidates.find((item) => item.id === "garage") || candidates[0];
+  }
+
+  if (key === "End") {
+    return candidates[candidates.length - 1];
+  }
+
+  const isHorizontal = key === "ArrowLeft" || key === "ArrowRight";
+  const direction = key === "ArrowLeft" || key === "ArrowUp" ? -1 : 1;
+
+  return candidates
+    .filter((item) => item.id !== id)
+    .map((item) => {
+      const dx = ((item.x - current.x) / 100) * window.innerWidth;
+      const dy = ((item.y - current.y) / 100) * window.innerHeight;
+      const primary = isHorizontal ? dx : dy;
+      const cross = isHorizontal ? dy : dx;
+
+      if (Math.sign(primary) !== direction || Math.abs(primary) < 1) {
+        return null;
+      }
+
+      const distance = Math.hypot(dx, dy);
+      const anglePenalty = Math.abs(cross) / Math.max(Math.abs(primary), 1);
+
+      return {
+        item,
+        score: distance * (1 + anglePenalty * 1.6),
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.score - b.score)[0]?.item || null;
+};
 
 const hideMapPreview = ({ immediate = false } = {}) => {
   window.clearTimeout(previewHideTimer);
@@ -1369,9 +1473,13 @@ const showMapPreview = (item) => {
     mapPreviewVideo.currentTime = item.previewStart || 0;
   }
 
-  mapPreviewVideo.play().catch(() => {
-    // The receiver can remain paused when autoplay is blocked.
-  });
+  if (reducedMotion.matches) {
+    mapPreviewVideo.pause();
+  } else {
+    mapPreviewVideo.play().catch(() => {
+      // The receiver can remain paused when autoplay is blocked.
+    });
+  }
 
   previewShowFrame = window.requestAnimationFrame(() => {
     previewShowFrame = 0;
@@ -1392,10 +1500,14 @@ mapPreviewVideo?.addEventListener("loadedmetadata", () => {
   }
 
   mapPreviewVideo.currentTime = activePreviewItem.previewStart || 0;
+
+  if (reducedMotion.matches) {
+    mapPreviewVideo.pause();
+  }
 });
 
 mapPreviewVideo?.addEventListener("timeupdate", () => {
-  if (!activePreviewItem?.previewDuration) {
+  if (reducedMotion.matches || !activePreviewItem?.previewDuration) {
     return;
   }
 
@@ -1409,6 +1521,20 @@ mapPreviewVideo?.addEventListener("timeupdate", () => {
   }
 });
 
+reducedMotion.addEventListener?.("change", () => {
+  if (!mapPreviewVideo || !activePreviewItem) {
+    return;
+  }
+
+  if (reducedMotion.matches) {
+    mapPreviewVideo.pause();
+  } else if (mapPreview?.classList.contains("is-visible")) {
+    mapPreviewVideo.play().catch(() => {
+      // The preview can remain paused when autoplay is blocked.
+    });
+  }
+});
+
 const setInspectorOpen = (isOpen) => {
   if (!mapInspector) {
     return;
@@ -1417,6 +1543,9 @@ const setInspectorOpen = (isOpen) => {
   mapInspector.classList.toggle("is-open", isOpen);
   mapInspector.setAttribute("aria-hidden", String(!isOpen));
   mapInspector.inert = !isOpen;
+  mapButtons.forEach((button, buttonId) => {
+    button.setAttribute("aria-expanded", String(isOpen && buttonId === selectedMapId));
+  });
 };
 
 const selectMapItem = (id, { reveal = false } = {}) => {
@@ -1432,7 +1561,12 @@ const selectMapItem = (id, { reveal = false } = {}) => {
     const isSelected = buttonId === selectedMapId;
     button.classList.toggle("is-selected", isSelected);
     button.setAttribute("aria-pressed", String(isSelected));
+    button.setAttribute(
+      "aria-expanded",
+      String(isSelected && mapInspector?.classList.contains("is-open")),
+    );
   });
+  setMapRovingId(id);
 
   if (mapKind) {
     mapKind.textContent = item.kindLabel;
@@ -1489,6 +1623,7 @@ if (mapNodesRoot) {
     const label = document.createElement("span");
 
     button.type = "button";
+    button.tabIndex = -1;
     button.className = `map-node map-node--${item.kind}`;
     button.dataset.mapId = item.id;
     button.dataset.mapKind = item.kind;
@@ -1497,9 +1632,15 @@ if (mapNodesRoot) {
     button.style.setProperty("--size", `${item.size}px`);
     button.setAttribute("aria-label", `${item.title}. ${item.meta}`);
     button.setAttribute("aria-pressed", "false");
+    button.setAttribute("aria-expanded", "false");
+    button.setAttribute("aria-controls", "map-inspector");
 
     if (item.id === "garage") {
       button.classList.add("map-node--garage");
+    }
+
+    if (item.id === "running") {
+      button.classList.add("map-node--running");
     }
 
     if (item.parent === "garage") {
@@ -1515,6 +1656,26 @@ if (mapNodesRoot) {
     button.addEventListener("click", () => {
       hideMapPreview({ immediate: true });
       selectMapItem(item.id, { reveal: true });
+    });
+    button.addEventListener("keydown", (event) => {
+      if (["Enter", " "].includes(event.key)) {
+        event.preventDefault();
+        button.click();
+        return;
+      }
+
+      if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) {
+        return;
+      }
+
+      const nextItem = getDirectionalMapItem(item.id, event.key);
+
+      if (!nextItem) {
+        return;
+      }
+
+      event.preventDefault();
+      setMapRovingId(nextItem.id, { focus: true });
     });
     button.addEventListener("focus", () => selectMapItem(item.id));
 
@@ -1616,6 +1777,13 @@ const setMapFilter = (kind) => {
     button.classList.toggle("is-active", isActive);
     button.setAttribute("aria-pressed", String(isActive));
   });
+
+  syncMapNodeAvailability();
+  const navigableItems = getNavigableMapItems();
+
+  if (!navigableItems.some((item) => item.id === rovingMapId) && navigableItems[0]) {
+    selectMapItem(navigableItems[0].id);
+  }
 };
 
 mapFilterButtons.forEach((button) => {
@@ -1769,6 +1937,7 @@ const setConstellationNavOpen = (isOpen) => {
   isConstellationNavOpen = isOpen;
   constellationNav?.classList.toggle("is-open", isOpen);
   constellationNavToggle?.setAttribute("aria-expanded", String(isOpen));
+  document.body.classList.toggle("has-constellation-nav", isOpen);
 
   if (constellationNavToggleLabel) {
     constellationNavToggleLabel.textContent = isOpen ? "Закрыть навигацию" : "Открыть навигацию";
@@ -1808,8 +1977,20 @@ const panelScrim = document.querySelector("[data-panel-scrim]");
 const panelClose = document.querySelector("[data-close-panel]");
 const panelTitle = document.querySelector("[data-panel-title]");
 const panelIndex = document.querySelector("[data-panel-index]");
+const contentPanelBody = document.querySelector(".content-panel__body");
 const panelSections = Array.from(document.querySelectorAll("[data-panel-section]"));
 const panelOpenButtons = Array.from(document.querySelectorAll("[data-open-panel]"));
+const controlConsole = document.querySelector(".control-console");
+const controlConsoleHome = document.createComment("control-console-home");
+let controlConsolePanelOffset = null;
+
+controlConsole?.before(controlConsoleHome);
+
+const panelBackgroundRoots = [
+  document.querySelector(".map-hero"),
+  document.querySelector(".site-header"),
+  ...document.querySelectorAll(".skip-link"),
+].filter(Boolean);
 let activePanelView = null;
 let lastPanelTrigger = null;
 
@@ -1829,6 +2010,12 @@ const panelViews = {
 };
 
 const setPanelOpen = (isOpen) => {
+  if (isOpen && contentPanel && controlConsole && !contentPanel.contains(controlConsole)) {
+    controlConsolePanelOffset = getConsoleOffset(controlConsole);
+    setConsoleOffset(controlConsole, 0, 0);
+    contentPanel.append(controlConsole);
+  }
+
   contentPanel?.classList.toggle("is-open", isOpen);
   contentPanel?.setAttribute("aria-hidden", String(!isOpen));
 
@@ -1836,9 +2023,32 @@ const setPanelOpen = (isOpen) => {
     contentPanel.inert = !isOpen;
   }
 
+  panelBackgroundRoots.forEach((element) => {
+    element.inert = isOpen;
+  });
+
   panelScrim?.classList.toggle("is-visible", isOpen);
   panelScrim?.setAttribute("aria-hidden", String(!isOpen));
+  panelOpenButtons.forEach((button) => {
+    button.setAttribute(
+      "aria-expanded",
+      String(isOpen && button.dataset.openPanel === activePanelView),
+    );
+  });
   document.body.classList.toggle("has-content-panel", isOpen);
+
+  if (!isOpen && controlConsole && controlConsoleHome.parentNode) {
+    controlConsoleHome.parentNode.insertBefore(controlConsole, controlConsoleHome.nextSibling);
+
+    if (controlConsolePanelOffset) {
+      setConsoleOffset(
+        controlConsole,
+        controlConsolePanelOffset.x,
+        controlConsolePanelOffset.y,
+      );
+      controlConsolePanelOffset = null;
+    }
+  }
 };
 
 const openContentPanel = (view, trigger = null) => {
@@ -1856,6 +2066,7 @@ const openContentPanel = (view, trigger = null) => {
   panelSections.forEach((section) => {
     section.hidden = section.dataset.panelSection !== view;
   });
+  contentPanelBody?.scrollTo({ top: 0, behavior: "auto" });
 
   if (panelTitle) {
     panelTitle.textContent = config.title;
@@ -1887,8 +2098,68 @@ const closeContentPanel = ({ restoreFocus = true } = {}) => {
 };
 
 panelOpenButtons.forEach((button) => {
+  button.setAttribute("aria-controls", "content-panel");
+  button.setAttribute("aria-expanded", "false");
+  button.setAttribute("aria-haspopup", "dialog");
   button.addEventListener("click", () => {
     openContentPanel(button.dataset.openPanel, button);
+  });
+});
+
+contentPanel?.addEventListener("keydown", (event) => {
+  if (event.key !== "Tab" || !activePanelView) {
+    return;
+  }
+
+  const focusableElements = Array.from(contentPanel.querySelectorAll(
+    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+  )).filter((element) => (
+    !element.hidden
+    && !element.closest("[hidden]")
+    && !element.closest("[inert]")
+    && element.getClientRects().length > 0
+  ));
+  const firstFocusable = focusableElements[0];
+  const lastFocusable = focusableElements.at(-1);
+
+  if (!firstFocusable || !lastFocusable) {
+    event.preventDefault();
+    panelClose?.focus();
+    return;
+  }
+
+  if (event.shiftKey && document.activeElement === firstFocusable) {
+    event.preventDefault();
+    lastFocusable.focus();
+  } else if (!event.shiftKey && document.activeElement === lastFocusable) {
+    event.preventDefault();
+    firstFocusable.focus();
+  }
+});
+
+contentPanelBody?.addEventListener("keydown", (event) => {
+  if (!["ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End"].includes(event.key)) {
+    return;
+  }
+
+  const maximumScroll = contentPanelBody.scrollHeight - contentPanelBody.clientHeight;
+  const step = event.key.startsWith("Page")
+    ? contentPanelBody.clientHeight * 0.82
+    : 48;
+  let nextScroll = contentPanelBody.scrollTop;
+
+  if (event.key === "Home") {
+    nextScroll = 0;
+  } else if (event.key === "End") {
+    nextScroll = maximumScroll;
+  } else {
+    nextScroll += ["ArrowDown", "PageDown"].includes(event.key) ? step : -step;
+  }
+
+  event.preventDefault();
+  contentPanelBody.scrollTo({
+    top: Math.max(0, Math.min(maximumScroll, nextScroll)),
+    behavior: reducedMotion.matches ? "auto" : "smooth",
   });
 });
 
@@ -1907,6 +2178,7 @@ const commandForm = document.querySelector("[data-command-form]");
 const commandInput = document.querySelector("[data-command-input]");
 const commandResults = document.querySelector("[data-command-results]");
 let currentCommandResults = [];
+let activeCommandIndex = -1;
 
 const normalizeSearch = (value) => value
   .toLocaleLowerCase("ru")
@@ -1941,10 +2213,45 @@ const commandViews = [
 const setCommandOpen = (isOpen) => {
   commandForm?.classList.toggle("is-open", isOpen);
   commandInput?.setAttribute("aria-expanded", String(isOpen));
+  commandResults?.setAttribute("aria-hidden", String(!isOpen));
+
+  if (commandResults) {
+    commandResults.inert = !isOpen;
+  }
+
+  if (!isOpen) {
+    commandInput?.removeAttribute("aria-activedescendant");
+  }
+};
+
+const setActiveCommandResult = (index) => {
+  const resultButtons = Array.from(commandResults?.querySelectorAll(".command-result") || []);
+
+  if (!currentCommandResults.length || !resultButtons.length) {
+    activeCommandIndex = -1;
+    commandInput?.removeAttribute("aria-activedescendant");
+    return;
+  }
+
+  activeCommandIndex = (index + currentCommandResults.length) % currentCommandResults.length;
+
+  resultButtons.forEach((button, buttonIndex) => {
+    const isActive = buttonIndex === activeCommandIndex;
+    button.classList.toggle("is-active", isActive);
+    button.setAttribute("aria-selected", String(isActive));
+  });
+
+  const activeButton = resultButtons[activeCommandIndex];
+
+  if (activeButton) {
+    commandInput?.setAttribute("aria-activedescendant", activeButton.id);
+    activeButton.scrollIntoView({ block: "nearest" });
+  }
 };
 
 const clearSearchHighlight = () => {
   mapButtons.forEach((button) => button.classList.remove("is-search-miss"));
+  syncMapNodeAvailability();
 };
 
 const applySearchHighlight = (query) => {
@@ -1965,6 +2272,13 @@ const applySearchHighlight = (query) => {
     ].join(" "));
     mapButtons.get(item.id)?.classList.toggle("is-search-miss", !haystack.includes(normalizedQuery));
   });
+
+  syncMapNodeAvailability();
+  const navigableItems = getNavigableMapItems();
+
+  if (!navigableItems.some((item) => item.id === rovingMapId) && navigableItems[0]) {
+    selectMapItem(navigableItems[0].id);
+  }
 };
 
 const makeNodeCommandResult = (item) => ({
@@ -2009,11 +2323,14 @@ const renderCommandResults = (query = "") => {
   }
 
   currentCommandResults = getCommandResults(query);
+  activeCommandIndex = -1;
+  commandInput?.removeAttribute("aria-activedescendant");
   commandResults.replaceChildren();
 
   if (!currentCommandResults.length) {
     const empty = document.createElement("p");
     empty.className = "command-results__empty";
+    empty.setAttribute("role", "status");
     empty.textContent = "НИЧЕГО НЕ НАШЛОСЬ — ПОПРОБУЙТЕ ДРУГОЕ СЛОВО";
     commandResults.append(empty);
     setCommandOpen(true);
@@ -2028,9 +2345,12 @@ const renderCommandResults = (query = "") => {
 
     button.type = "button";
     button.className = "command-result";
+    button.id = `command-result-${result.type}-${result.id}`;
+    button.tabIndex = -1;
     button.dataset.resultType = result.type;
     button.dataset.resultId = result.id;
     button.setAttribute("role", "option");
+    button.setAttribute("aria-selected", "false");
 
     title.textContent = result.title;
     meta.textContent = result.meta;
@@ -2041,6 +2361,7 @@ const renderCommandResults = (query = "") => {
     commandResults.append(button);
   });
 
+  setActiveCommandResult(0);
   setCommandOpen(true);
 };
 
@@ -2052,6 +2373,7 @@ const runCommandResult = (result) => {
   if (result.type === "node") {
     setMapFilter("all");
     selectMapItem(result.id, { reveal: true });
+    window.requestAnimationFrame(() => inspectorClose?.focus());
 
     if (commandInput) {
       commandInput.value = "";
@@ -2067,12 +2389,42 @@ const runCommandResult = (result) => {
 };
 
 commandInput?.addEventListener("focus", () => {
+  hideMapPreview({ immediate: true });
+  setInspectorOpen(false);
   renderCommandResults(commandInput.value);
 });
 
 commandInput?.addEventListener("input", () => {
   applySearchHighlight(commandInput.value);
   renderCommandResults(commandInput.value);
+});
+
+commandInput?.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" && !event.isComposing) {
+    event.preventDefault();
+    runCommandResult(
+      currentCommandResults[activeCommandIndex]
+      || currentCommandResults[0]
+      || getCommandResults(commandInput.value)[0],
+    );
+    return;
+  }
+
+  if (!["ArrowDown", "ArrowUp"].includes(event.key)) {
+    return;
+  }
+
+  event.preventDefault();
+
+  if (!commandForm?.classList.contains("is-open")) {
+    renderCommandResults(commandInput.value);
+  }
+
+  if (!currentCommandResults.length) {
+    return;
+  }
+
+  setActiveCommandResult(activeCommandIndex + (event.key === "ArrowDown" ? 1 : -1));
 });
 
 commandInput?.addEventListener("blur", () => {
@@ -2097,7 +2449,11 @@ commandResults?.addEventListener("click", (event) => {
 
 commandForm?.addEventListener("submit", (event) => {
   event.preventDefault();
-  runCommandResult(currentCommandResults[0] || getCommandResults(commandInput?.value || "")[0]);
+  runCommandResult(
+    currentCommandResults[activeCommandIndex]
+    || currentCommandResults[0]
+    || getCommandResults(commandInput?.value || "")[0],
+  );
 });
 
 document.addEventListener("keydown", (event) => {
@@ -2122,6 +2478,7 @@ document.addEventListener("keydown", (event) => {
     closeContentPanel();
   } else if (mapInspector?.classList.contains("is-open")) {
     setInspectorOpen(false);
+    mapButtons.get(selectedMapId)?.focus();
   } else {
     setCommandOpen(false);
     commandInput?.blur();
@@ -2132,94 +2489,6 @@ document.addEventListener("keydown", (event) => {
 if (["#work", "#approach", "#contact"].includes(window.location.hash)) {
   openContentPanel(window.location.hash.slice(1));
 }
-
-const workRows = Array.from(document.querySelectorAll(".work-row"));
-const workPreview = document.querySelector("[data-work-preview]");
-const workAscii = document.querySelector("[data-work-ascii]");
-const previewNumber = document.querySelector("[data-preview-number]");
-const previewTitle = document.querySelector("[data-preview-title]");
-
-const createPreviewAscii = (seed) => {
-  const width = 58;
-  const height = 25;
-  const lines = [];
-
-  for (let row = 0; row < height; row += 1) {
-    let line = "";
-
-    for (let column = 0; column < width; column += 1) {
-      const x = column / width;
-      const y = row / height;
-      const waveA = Math.sin((x * 7.2 + y * 3.1 + seed) * Math.PI);
-      const waveB = Math.cos((x * 2.3 - y * 6.4 + seed * 0.13) * Math.PI);
-      const distance = Math.abs(y - 0.5 - Math.sin(x * 7 + seed) * 0.18);
-      const intensity = Math.max(0, (waveA + waveB + 2) * 0.23 - distance * 1.2);
-      const characterIndex = Math.min(
-        asciiCharacters.length - 1,
-        Math.floor(intensity * asciiCharacters.length),
-      );
-
-      line += intensity > 0.14 ? asciiCharacters[characterIndex] : " ";
-    }
-
-    lines.push(line.trimEnd());
-  }
-
-  return lines.join("\n");
-};
-
-const showWorkPreview = (row) => {
-  if (!workPreview || !workAscii || !previewNumber || !previewTitle) {
-    return;
-  }
-
-  const tone = row.dataset.tone || "#d8ff47";
-  const ink = row.dataset.previewInk || "#10110f";
-  const seed = Number(row.dataset.seed || 1);
-  const number = row.querySelector(".work-row__number")?.textContent || "";
-
-  row.style.setProperty("--row-tone", tone);
-  row.style.setProperty("--row-ink", ink);
-  workPreview.style.setProperty("--preview-tone", tone);
-  workPreview.style.setProperty("--preview-ink", ink);
-  workAscii.textContent = createPreviewAscii(seed);
-  previewNumber.textContent = number;
-  previewTitle.textContent = row.dataset.preview || "";
-  workPreview.classList.add("is-visible");
-};
-
-const positionWorkPreview = (event) => {
-  if (!workPreview || window.innerWidth < 681) {
-    return;
-  }
-
-  const previewWidth = 292;
-  const previewHeight = 204;
-  const offset = 22;
-  const x = Math.min(window.innerWidth - previewWidth - 12, event.clientX + offset);
-  const y = Math.min(window.innerHeight - previewHeight - 12, event.clientY + offset);
-
-  workPreview.style.setProperty("--preview-x", `${Math.max(12, x)}px`);
-  workPreview.style.setProperty("--preview-y", `${Math.max(60, y)}px`);
-};
-
-workRows.forEach((row) => {
-  row.style.setProperty("--row-tone", row.dataset.tone || "#d8ff47");
-  row.style.setProperty("--row-ink", row.dataset.previewInk || "#10110f");
-
-  row.addEventListener("pointerenter", (event) => {
-    showWorkPreview(row);
-    positionWorkPreview(event);
-  });
-  row.addEventListener("pointermove", positionWorkPreview);
-  row.addEventListener("pointerleave", () => workPreview?.classList.remove("is-visible"));
-  row.addEventListener("focus", () => {
-    showWorkPreview(row);
-    workPreview?.style.setProperty("--preview-x", `${Math.max(12, window.innerWidth - 320)}px`);
-    workPreview?.style.setProperty("--preview-y", "92px");
-  });
-  row.addEventListener("blur", () => workPreview?.classList.remove("is-visible"));
-});
 
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) {

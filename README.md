@@ -123,6 +123,24 @@ logo card.
 - Museum Garage is the largest black node and is named directly. Its importance
   is communicated by scale and connections rather than a slogan.
 
+## Audit workflow
+
+The project keeps its static runtime and uses a small deterministic audit layer
+instead of adding Storybook:
+
+- `node scripts/audit-project.mjs` inventories map semantics, reel references,
+  material/type/motion contracts, accessibility hooks, metadata drift, and
+  CSS-cleanup candidates.
+- `node scripts/audit-project.mjs --json` returns the same report as structured
+  JSON for comparison or external tooling.
+- `node scripts/check-project.mjs` runs JavaScript syntax, project contracts,
+  reel validation, and `git diff --check`.
+- `docs/ui-state-matrix.md` is the visual state catalog used for matched
+  desktop, tablet, mobile, theme, zoom, contrast, and reduced-motion renders.
+
+Static cleanup candidates are never deletion instructions. Confirm them with
+computed styles, runtime state coverage, and matched before/after renders.
+
 ## Selected work
 
 - [Olga Shirokostup](https://shirokostup.site/)
