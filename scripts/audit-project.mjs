@@ -197,6 +197,20 @@ const kindCounts = Object.fromEntries(
 );
 const garage = mapItems.find((item) => item.id === "garage");
 const maximumSize = Math.max(0, ...mapItems.map((item) => item.size));
+const independentProjectIds = [
+  "shirokostup",
+  "tarski",
+  "herman",
+  "dusty",
+  "dd-camp",
+  "eleven",
+  "ks-fish",
+  "doronin",
+];
+const missingProjectMapLabels = independentProjectIds.filter((id) => {
+  const item = mapItems.find((candidate) => candidate.id === id);
+  return !item || typeof item.mapLabel !== "string" || !item.mapLabel.trim();
+});
 
 requireContract(
   Boolean(garage),
@@ -213,6 +227,12 @@ requireContract(
   "principle-count",
   "The map must keep exactly 17 principle nodes.",
   { actual: kindCounts.practice },
+);
+requireContract(
+  missingProjectMapLabels.length === 0,
+  "project-map-labels",
+  "All eight current projects must repeat their descriptive title in the map focus label.",
+  missingProjectMapLabels,
 );
 
 const reelDirectory = join(projectRoot, "assets", "reels");
@@ -279,8 +299,7 @@ const requiredMaterialSurfaces = [
   "inspector-description",
   "inspector-link",
   "desktop-console",
-  "mobile-navigation-toggle",
-  "mobile-navigation-menu",
+  "mobile-navigation",
   "mobile-search",
   "search-results",
   "mobile-system-dock",
@@ -400,6 +419,52 @@ requireContract(
   "material-search-legacy-selector",
   "Historical descendant selectors must not reconnect search results to a material ancestor.",
 );
+
+const mobileNavigationStart = indexSource.indexOf('class="constellation-nav"');
+const mobileNavigationEnd = indexSource.indexOf("</nav>", mobileNavigationStart);
+const mobileNavigationSource = mobileNavigationStart === -1 || mobileNavigationEnd === -1
+  ? ""
+  : indexSource.slice(mobileNavigationStart, mobileNavigationEnd + "</nav>".length);
+const mobileNavigationItems = [
+  ...mobileNavigationSource.matchAll(/\sdata-nav-view="([^"]+)"/g),
+].map((match) => match[1]);
+const mobileNavigationLabels = [
+  ...mobileNavigationSource.matchAll(/class="constellation-nav__label">([^<]+)</g),
+].map((match) => match[1].trim());
+
+requireContract(
+  mobileNavigationSource.includes('data-navigation-pattern="disclosed-route-list"')
+    && mobileNavigationSource.includes('aria-label="Основная навигация"')
+    && mobileNavigationSource.includes('aria-expanded="false"')
+    && mobileNavigationSource.includes('aria-controls="constellation-nav-orbit"')
+    && mobileNavigationSource.includes('id="constellation-nav-orbit"'),
+  "mobile-navigation-disclosure",
+  "Mobile routes need one labelled navigation disclosure with explicit expanded state and control ownership.",
+);
+requireContract(
+  mobileNavigationItems.length === 5
+    && new Set(mobileNavigationItems).size === 5
+    && mobileNavigationLabels.length === 5
+    && mobileNavigationSource.includes('aria-current="page"'),
+  "mobile-navigation-visible-routes",
+  "The disclosed mobile navigation must expose five uniquely named routes and identify the current route.",
+  {
+    items: mobileNavigationItems,
+    labels: mobileNavigationLabels,
+  },
+);
+requireContract(
+  !/<select\b|role="listbox"|aria-selected=/i.test(mobileNavigationSource),
+  "mobile-navigation-not-form-dropdown",
+  "Primary navigation must remain semantic navigation, not a form dropdown or listbox.",
+);
+requireContract(
+  scriptSource.includes("if (isConstellationNavOpen)")
+    && scriptSource.includes("setConstellationNavOpen(false);")
+    && scriptSource.includes("constellationNavToggle?.focus();"),
+  "mobile-navigation-escape-return",
+  "Escape must close the mobile navigation and return focus to its disclosure button.",
+);
 requireContract(
   indexSource.includes('data-content-media="project-reel"')
     && !/<[^>]*data-content-media="project-reel"[^>]*data-material-surface=/s.test(indexSource)
@@ -490,6 +555,30 @@ requireContract(
   /<canvas[\s\S]*?role="img"[\s\S]*?tabindex="0"[\s\S]*?aria-label=/m.test(indexSource),
   "canvas-accessibility",
   "The signal canvas needs role=img, keyboard focus, and a text alternative.",
+);
+const navigationIndices = [
+  ...indexSource.matchAll(/data-nav-index="(\d{2})"/g),
+].map((match) => match[1]);
+requireContract(
+  navigationIndices.join(",") === "01,02,03,04,05",
+  "navigation-indices",
+  "Primary navigation numbering must run from 01 through 05.",
+  navigationIndices,
+);
+requireContract(
+  /<p class="brand"[^>]*>[\s\S]*ANTON GOROKHOVATSKY © 2026[\s\S]*<\/p>/.test(indexSource)
+    && !/<a class="brand"/.test(indexSource),
+  "brand-authorship",
+  "The authorship mark must be a non-interactive bottom-corner signature with the current year.",
+);
+requireContract(
+  indexSource.includes('data-context="ВИД"')
+    && indexSource.includes('data-context="ЭКРАН"')
+    && indexSource.includes("<span data-theme-label>СВЕТЛАЯ</span>")
+    && indexSource.includes('<span class="constellation-nav__heading" aria-hidden="true">РАЗДЕЛЫ</span>')
+    && !/data-context="(?:VIEW|DISPLAY)"/.test(indexSource),
+  "interface-localization",
+  "Core controls must use the accepted Russian interface labels.",
 );
 requireContract(
   /data-map-nodes[\s\S]*?role="group"[\s\S]*?aria-label=/m.test(indexSource),

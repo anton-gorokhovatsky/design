@@ -26,7 +26,7 @@ const setTheme = (theme, persist = false) => {
   themeToggle?.setAttribute("aria-label", isDark ? "Включить светлую тему" : "Включить тёмную тему");
 
   if (themeLabel) {
-    themeLabel.textContent = isDark ? "DARK" : "LIGHT";
+    themeLabel.textContent = isDark ? "ТЁМНАЯ" : "СВЕТЛАЯ";
   }
 
   themeColor?.setAttribute("content", isDark ? "#11120f" : "#f2f1ec");
@@ -76,7 +76,7 @@ const updateClock = () => {
 
 if (captureMode) {
   if (clock) {
-    clock.textContent = "UTC+3";
+    clock.textContent = "МСК";
   }
 } else {
   updateClock();
@@ -737,9 +737,9 @@ const mapItems = [
     kind: "company",
     label: "ЧАСТНАЯ ПРАКТИКА",
     title: "ЧАСТНАЯ ПРАКТИКА",
-    meta: "СЕЙЧАС / НЕБОЛЬШИЕ DIGITAL-ПРОЕКТЫ",
+    meta: "СЕЙЧАС / НЕБОЛЬШИЕ ЦИФРОВЫЕ ПРОЕКТЫ",
     description: "Самостоятельная работа с проектами, которым нужно быстро разобраться в задаче, придать форму и дойти до запуска.",
-    kindLabel: "РАБОТА / INDEPENDENT",
+    kindLabel: "РАБОТА / ЧАСТНАЯ ПРАКТИКА",
     x: 34,
     y: 30,
     size: 34,
@@ -748,10 +748,10 @@ const mapItems = [
     id: "optimal",
     kind: "company",
     label: "ОПТИМАЛГРУПП",
-    title: "DIGITAL-АГЕНТСТВО «ОПТИМАЛГРУПП»",
-    meta: "EARLIER EXPERIENCE / DIGITAL AGENCY",
+    title: "ЦИФРОВОЕ АГЕНТСТВО «ОПТИМАЛГРУПП»",
+    meta: "РАННИЙ ОПЫТ / ЦИФРОВОЕ АГЕНТСТВО",
     description: "Клиентские web-проекты, производство, коммуникация и ранний опыт работы на стыке задач и команд.",
-    kindLabel: "КОМПАНИЯ / AGENCY",
+    kindLabel: "КОМПАНИЯ / АГЕНТСТВО",
     x: 24,
     y: 18,
     size: 29,
@@ -761,9 +761,9 @@ const mapItems = [
     kind: "company",
     label: "ИЛЬМИКСГРУПП",
     title: "«ИЛЬМИКСГРУПП»",
-    meta: "EARLIER EXPERIENCE / IN-HOUSE DIGITAL",
+    meta: "РАННИЙ ОПЫТ / ЦИФРОВОЕ НАПРАВЛЕНИЕ",
     description: "Digital-работа внутри фармацевтической компании и опыт развития внутренних web-направлений.",
-    kindLabel: "КОМПАНИЯ / IN-HOUSE",
+    kindLabel: "КОМПАНИЯ / ВНУТРЕННЯЯ КОМАНДА",
     x: 16,
     y: 30,
     size: 24,
@@ -774,12 +774,12 @@ const mapItems = [
     kind: "project",
     label: "САЙТ МУЗЕЯ",
     title: "САЙТ МУЗЕЯ «ГАРАЖ»",
-    meta: "UX / UI / DESIGN ENGINEERING / WEB MANAGEMENT",
+    meta: "UX / UI / ДИЗАЙН-ИНЖИНИРИНГ / ВЕБ-МЕНЕДЖМЕНТ",
     description: "Исследование, развитие и ежедневная работа с главным цифровым продуктом Музея и его командой.",
     href: "https://garagemca.org/",
-    kindLabel: "ПРОЕКТ / GARAGE GRAPH",
-    previewVideo: "assets/reels/garage-site.mp4?v=20260724-fullwidth-reels",
-    previewMeta: "SITE WALKTHROUGH / 00:08",
+    kindLabel: "ПРОЕКТ / ГРАФ «ГАРАЖА»",
+    previewVideo: "assets/reels/garage-site.mp4?v=20260725-natural-reels",
+    previewMeta: "ПРОХОД ПО САЙТУ / 00:08",
     x: 58,
     y: 14,
     size: 23,
@@ -790,12 +790,13 @@ const mapItems = [
     kind: "project",
     label: "ДОМ НАРКОМФИНА",
     title: "ДОМ НАРКОМФИНА",
-    meta: "DESIGN / UX / UI / DIGITAL EXPERIENCE",
+    meta: "ДИЗАЙН / UX / UI / ЦИФРОВОЙ ОПЫТ",
     description: "Дизайн сайта Дома Наркомфина — от интерактивной модели здания и световых состояний до календаря и цельной цифровой навигации.",
     href: "https://narkomfin.ru/",
-    kindLabel: "ПРОЕКТ / GARAGE GRAPH",
-    previewVideo: "assets/reels/narkomfin.mp4?v=20260724-fullwidth-reels",
-    previewMeta: "SITE WALKTHROUGH / 00:07",
+    kindLabel: "ПРОЕКТ / ГРАФ «ГАРАЖА»",
+    previewVideo: "assets/reels/narkomfin.mp4?v=20260725-natural-reels",
+    previewOrientation: "landscape",
+    previewMeta: "ПРОХОД ПО САЙТУ / 00:07",
     x: 67,
     y: 21,
     size: 25,
@@ -806,12 +807,12 @@ const mapItems = [
     kind: "project",
     label: "КОЛЛЕКЦИЯ",
     title: "КОЛЛЕКЦИЯ И ОТКРЫТОЕ ХРАНЕНИЕ",
-    meta: "2024 / PRODUCT / RESEARCH / DELIVERY",
+    meta: "2024 / ПРОДУКТ / ИССЛЕДОВАНИЕ / ЗАПУСК",
     description: "Запуск каталога коллекции и открытого хранения: продуктовая логика, исследования, интерфейс и координация реализации.",
     href: "https://garagemca.org/collection/catalogue",
-    kindLabel: "ПРОЕКТ / GARAGE GRAPH",
-    previewVideo: "assets/reels/garage-collection.mp4?v=20260724-fullwidth-reels",
-    previewMeta: "3-PAGE WALKTHROUGH / 00:08",
+    kindLabel: "ПРОЕКТ / ГРАФ «ГАРАЖА»",
+    previewVideo: "assets/reels/garage-collection.mp4?v=20260725-natural-reels",
+    previewMeta: "ТРИ СТРАНИЦЫ / 00:08",
     x: 75,
     y: 14,
     size: 22,
@@ -822,10 +823,10 @@ const mapItems = [
     kind: "project",
     label: "АРХИВЫ",
     title: "АРХИВНЫЕ ПРОЕКТЫ",
-    meta: "RUSSIAN ART ARCHIVE / I-M-I / NNS",
+    meta: "АРХИВ РОССИЙСКОГО ИСКУССТВА / I-M-I / NNS",
     description: "Поддержка и развитие цифровых архивов — от повседневных задач до проектирования новых сценариев доступа к материалам.",
     href: "https://russianartarchive.net/ru",
-    kindLabel: "ПРОЕКТ / GARAGE GRAPH",
+    kindLabel: "ПРОЕКТ / ГРАФ «ГАРАЖА»",
     x: 59,
     y: 28,
     size: 18,
@@ -836,12 +837,12 @@ const mapItems = [
     kind: "project",
     label: "ОНЛАЙН-КУРСЫ",
     title: "ОНЛАЙН-КУРСЫ МУЗЕЯ",
-    meta: "LEARNING / PRODUCT / PARTNERSHIPS",
+    meta: "ОБУЧЕНИЕ / ПРОДУКТ / ПАРТНЁРСТВА",
     description: "Бесплатные образовательные продукты: запуск курсов, улучшение сценариев и работа с партнёрами.",
     href: "https://garagemca.org/learn/online-courses",
-    kindLabel: "ПРОЕКТ / GARAGE GRAPH",
-    previewVideo: "assets/reels/garage-courses.mp4?v=20260724-fullwidth-reels",
-    previewMeta: "3-PAGE WALKTHROUGH / 00:07",
+    kindLabel: "ПРОЕКТ / ГРАФ «ГАРАЖА»",
+    previewVideo: "assets/reels/garage-courses.mp4?v=20260725-natural-reels",
+    previewMeta: "ТРИ СТРАНИЦЫ / 00:07",
     x: 80,
     y: 25,
     size: 17,
@@ -852,10 +853,10 @@ const mapItems = [
     kind: "project",
     label: "Я ИДУ В МУЗЕЙ",
     title: "«Я ИДУ В МУЗЕЙ»",
-    meta: "ACCESSIBILITY / MOBILE PRODUCT / RELAUNCH",
+    meta: "ДОСТУПНОСТЬ / МОБИЛЬНЫЙ ПРОДУКТ / ПЕРЕЗАПУСК",
     description: "Перезапуск приложения для людей с ментальными особенностями и их близких: доступность, навигация и понятный маршрут.",
     href: "https://apps.apple.com/ru/app/я-иду-в-музей/id1558275984",
-    kindLabel: "ПРОЕКТ / GARAGE GRAPH",
+    kindLabel: "ПРОЕКТ / ГРАФ «ГАРАЖА»",
     x: 84,
     y: 36,
     size: 17,
@@ -866,12 +867,12 @@ const mapItems = [
     kind: "project",
     label: "ВЕБ-ЗИН",
     title: "«НЕЧЕЛОВЕЧЕСКИЕ ЖИВОТНЫЕ И ТЕХНИКА»",
-    meta: "RESEARCH / DESIGN ENGINEERING / CODE",
+    meta: "ИССЛЕДОВАНИЕ / ДИЗАЙН-ИНЖИНИРИНГ / КОД",
     description: "Небольшой исследовательский web-зин, собранный руками как самостоятельная цифровая форма.",
     href: "https://non-human-animals.garage.digital/index.html",
-    kindLabel: "ПРОЕКТ / GARAGE GRAPH",
-    previewVideo: "assets/reels/garage-webzine.mp4?v=20260724-fullwidth-reels",
-    previewMeta: "THEME + TEXT / 00:08",
+    kindLabel: "ПРОЕКТ / ГРАФ «ГАРАЖА»",
+    previewVideo: "assets/reels/garage-webzine.mp4?v=20260725-natural-reels",
+    previewMeta: "ТЕМА + ТЕКСТ / 00:08",
     x: 72,
     y: 34,
     size: 15,
@@ -882,9 +883,9 @@ const mapItems = [
     kind: "project",
     label: "ПОМОЩЬ ИНСТИТУЦИЯМ",
     title: "ПОМОЩЬ КУЛЬТУРНЫМ ИНСТИТУЦИЯМ",
-    meta: "CONSULTING / DESIGN / TECHNICAL SUPPORT",
+    meta: "КОНСУЛЬТАЦИИ / ДИЗАЙН / ТЕХНИЧЕСКАЯ ПОМОЩЬ",
     description: "Знания, консультации и конкретная техническая помощь культурным институциям и НКО — с акцентом на быстрый запуск.",
-    kindLabel: "ПРОЕКТ / GARAGE GRAPH",
+    kindLabel: "ПРОЕКТ / ГРАФ «ГАРАЖА»",
     x: 55,
     y: 37,
     size: 16,
@@ -895,10 +896,10 @@ const mapItems = [
     kind: "project",
     label: "ЭНДАУМЕНТ",
     title: "ЭНДАУМЕНТ-ФОНД МУЗЕЯ",
-    meta: "SUPPORT / DEVELOPMENT / CONTENT",
+    meta: "ПОДДЕРЖКА / РАЗВИТИЕ / КОНТЕНТ",
     description: "Поддержка и развитие отдельного цифрового продукта эндаумент-фонда Музея.",
     href: "https://endowment.garagemca.org/ru/",
-    kindLabel: "ПРОЕКТ / GARAGE GRAPH",
+    kindLabel: "ПРОЕКТ / ГРАФ «ГАРАЖА»",
     x: 53,
     y: 23,
     size: 12,
@@ -907,13 +908,14 @@ const mapItems = [
     id: "shirokostup",
     kind: "project",
     label: "SHIROKOSTUP",
+    mapLabel: "Сайт независимого куратора и исследователя Ольги Широкоступ",
     title: "SHIROKOSTUP",
-    meta: "EDITORIAL / WEB / 2026",
+    meta: "РЕДАКЦИОННЫЙ ДИЗАЙН / САЙТ / 2026",
     description: "Портфолио куратора и исследовательницы: редакционная структура, спокойный интерфейс и самостоятельный\u00a0запуск.",
     href: "https://shirokostup.site/",
-    kindLabel: "ПРОЕКТ / INDEPENDENT",
-    previewVideo: "assets/reels/shirokostup.mp4?v=20260724-fullwidth-reels",
-    previewMeta: "SITE WALKTHROUGH / 00:07",
+    kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
+    previewVideo: "assets/reels/shirokostup.mp4?v=20260725-natural-reels",
+    previewMeta: "ПРОХОД ПО САЙТУ / 00:07",
     x: 82,
     y: 52,
     size: 22,
@@ -922,13 +924,14 @@ const mapItems = [
     id: "tarski",
     kind: "project",
     label: "TARSKI",
+    mapLabel: "Сайт среды изучения и поддержки социально ориентированного и вовлекающего искусства Tarski",
     title: "TARSKI",
-    meta: "DIGITAL PRODUCT / WEB",
+    meta: "ЦИФРОВОЙ ПРОДУКТ / САЙТ",
     description: "Цифровой продукт и web-система: продуктовая логика, интерфейс и последовательное развитие.",
     href: "https://tarski.ru/",
-    kindLabel: "ПРОЕКТ / INDEPENDENT",
-    previewVideo: "assets/reels/tarski.mp4?v=20260724-fullwidth-reels",
-    previewMeta: "SITE WALKTHROUGH / 00:08",
+    kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
+    previewVideo: "assets/reels/tarski.mp4?v=20260725-natural-reels",
+    previewMeta: "ПРОХОД ПО САЙТУ / 00:08",
     x: 78,
     y: 47,
     size: 23,
@@ -937,13 +940,14 @@ const mapItems = [
     id: "herman",
     kind: "project",
     label: "HERMAN & CO",
+    mapLabel: "Сайт стилиста и эксперта по уходу Германа Винокурова",
     title: "HERMAN & CO",
-    meta: "SERVICE / WEB",
+    meta: "СЕРВИС / САЙТ",
     description: "Сервисный сайт с живым статусом, ясной записью и одной цельной системой материалов и состояний.",
     href: "https://barberherman.ru/",
-    kindLabel: "ПРОЕКТ / INDEPENDENT",
-    previewVideo: "assets/reels/herman.mp4?v=20260724-fullwidth-reels",
-    previewMeta: "SITE WALKTHROUGH / 00:07",
+    kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
+    previewVideo: "assets/reels/herman.mp4?v=20260725-natural-reels",
+    previewMeta: "ПРОХОД ПО САЙТУ / 00:07",
     x: 82,
     y: 58,
     size: 19,
@@ -952,13 +956,14 @@ const mapItems = [
     id: "dusty",
     kind: "project",
     label: "DUSTY MERCH",
+    mapLabel: "Интернет-магазин мерча бегового клуба Dusty Dumbbells",
     title: "DUSTY MERCH",
-    meta: "COMMERCE / WEB",
+    meta: "МАГАЗИН / САЙТ",
     description: "Небольшой commerce-проект с самостоятельной визуальной системой и быстрым запуском.",
     href: "https://merch.dustydumbbells.com/",
-    kindLabel: "ПРОЕКТ / INDEPENDENT",
-    previewVideo: "assets/reels/dusty-merch.mp4?v=20260724-fullwidth-reels",
-    previewMeta: "SITE WALKTHROUGH / 00:07",
+    kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
+    previewVideo: "assets/reels/dusty-merch.mp4?v=20260725-natural-reels",
+    previewMeta: "ПРОХОД ПО САЙТУ / 00:07",
     x: 73,
     y: 61,
     size: 17,
@@ -967,13 +972,14 @@ const mapItems = [
     id: "dd-camp",
     kind: "project",
     label: "DD CAMP",
+    mapLabel: "Сайт осеннего кэмпа Dusty Dumbbells",
     title: "DUSTY DUMBBELLS CAMP",
-    meta: "EXPERIENCE / WEB",
+    meta: "СОБЫТИЕ / САЙТ",
     description: "Сайт спортивного кемпа: структура программы, атмосфера события и практичная точка входа.",
     href: "https://camp.dustydumbbells.com/",
-    kindLabel: "ПРОЕКТ / INDEPENDENT",
-    previewVideo: "assets/reels/dusty-camp.mp4?v=20260724-fullwidth-reels",
-    previewMeta: "SITE WALKTHROUGH / 00:07",
+    kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
+    previewVideo: "assets/reels/dusty-camp.mp4?v=20260725-natural-reels",
+    previewMeta: "ПРОХОД ПО САЙТУ / 00:07",
     x: 84,
     y: 68,
     size: 15,
@@ -982,13 +988,14 @@ const mapItems = [
     id: "eleven",
     kind: "project",
     label: "11 111",
+    mapLabel: "Сайт проекта «11 111» Виктора Доронина",
     title: "11 111",
-    meta: "BRAND / WEB",
+    meta: "БРЕНД / САЙТ",
     description: "Небольшой брендовый web-проект, где цифровая форма работает как самостоятельный характер.",
     href: "https://11111.life/",
-    kindLabel: "ПРОЕКТ / INDEPENDENT",
-    previewVideo: "assets/reels/11111.mp4?v=20260724-fullwidth-reels",
-    previewMeta: "SITE WALKTHROUGH / 00:07",
+    kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
+    previewVideo: "assets/reels/11111.mp4?v=20260725-natural-reels",
+    previewMeta: "ПРОХОД ПО САЙТУ / 00:07",
     x: 68,
     y: 72,
     size: 14,
@@ -997,13 +1004,14 @@ const mapItems = [
     id: "ks-fish",
     kind: "project",
     label: "KS FISH",
+    mapLabel: "Сайт «Рыбной лавки капитана Селедкина»",
     title: "KS FISH",
-    meta: "CATALOG / WEB",
+    meta: "КАТАЛОГ / САЙТ",
     description: "Каталожный сайт с ясной продуктовой структурой и визуальным ощущением холодного течения.",
     href: "https://ks.fish/",
-    kindLabel: "ПРОЕКТ / INDEPENDENT",
-    previewVideo: "assets/reels/ks-fish.mp4?v=20260724-fullwidth-reels",
-    previewMeta: "SITE WALKTHROUGH / 00:07",
+    kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
+    previewVideo: "assets/reels/ks-fish.mp4?v=20260725-natural-reels",
+    previewMeta: "ПРОХОД ПО САЙТУ / 00:07",
     x: 91,
     y: 75,
     size: 13,
@@ -1012,13 +1020,14 @@ const mapItems = [
     id: "doronin",
     kind: "project",
     label: "DORONIN",
+    mapLabel: "Интернет-магазин мерча Виктора Доронина",
     title: "DORONIN",
-    meta: "COMMERCE / WEB",
+    meta: "МАГАЗИН / САЙТ",
     description: "Цифровой магазин с компактной, собранной и понятной системой взаимодействия.",
     href: "https://doronin.store/",
-    kindLabel: "ПРОЕКТ / INDEPENDENT",
-    previewVideo: "assets/reels/doronin.mp4?v=20260724-fullwidth-reels",
-    previewMeta: "SITE WALKTHROUGH / 00:07",
+    kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
+    previewVideo: "assets/reels/doronin.mp4?v=20260725-natural-reels",
+    previewMeta: "ПРОХОД ПО САЙТУ / 00:07",
     x: 77,
     y: 81,
     size: 13,
@@ -1032,8 +1041,8 @@ const mapItems = [
     description: "Личный центр притяжения. Бег собирает ритм, выносливость и внимание — и снова возвращает ощущение движения вперёд.",
     href: "https://www.instagram.com/stories/highlights/18054491965888038/",
     kindLabel: "ЛИЧНОЕ / ЦЕНТР ПРИТЯЖЕНИЯ",
-    x: 50,
-    y: 75,
+    x: 58,
+    y: 77,
     size: 60,
   },
   {
@@ -1041,9 +1050,9 @@ const mapItems = [
     kind: "personal",
     label: "ИСКУССТВО",
     title: "ИСКУССТВО",
-    meta: "CULTURE / LOOK AGAIN",
+    meta: "КУЛЬТУРА / СМОТРЕТЬ ЗАНОВО",
     description: "Не отдельное хобби, а способ смотреть внимательнее и постоянно перенастраивать собственную оптику.",
-    kindLabel: "ЛИЧНОЕ / INTEREST",
+    kindLabel: "ЛИЧНОЕ / ИНТЕРЕС",
     x: 54,
     y: 84,
     size: 17,
@@ -1053,10 +1062,10 @@ const mapItems = [
     kind: "personal",
     label: "ФУТБОЛ",
     title: "ФУТБОЛ",
-    meta: "WATCH / READ / DISCUSS",
+    meta: "СМОТРЕТЬ / ЧИТАТЬ / ОБСУЖДАТЬ",
     description: "Игра, в которой интересны движение, пространство, системы и исключения из них.",
     href: "https://www.sports.ru/tribuna/blogs/vadimlukomski/2249320.html",
-    kindLabel: "ЛИЧНОЕ / INTEREST",
+    kindLabel: "ЛИЧНОЕ / ИНТЕРЕС",
     x: 43,
     y: 81,
     size: 14,
@@ -1066,9 +1075,9 @@ const mapItems = [
     kind: "personal",
     label: "СНЕГ",
     title: "СНЕГ",
-    meta: "SNOWBOARD / MOVEMENT",
+    meta: "СНОУБОРД / ДВИЖЕНИЕ",
     description: "Способ переключить режим внимания и снова почувствовать скорость, склон и тело.",
-    kindLabel: "ЛИЧНОЕ / INTEREST",
+    kindLabel: "ЛИЧНОЕ / ИНТЕРЕС",
     x: 34,
     y: 72,
     size: 13,
@@ -1078,10 +1087,10 @@ const mapItems = [
     kind: "personal",
     label: "МУЗЫКА",
     title: "МУЗЫКА",
-    meta: "PLAY / REPEAT",
+    meta: "СЛУШАТЬ / ПОВТОРЯТЬ",
     description: "Постоянный фон, источник ритма и иногда самый быстрый способ изменить состояние.",
     href: "https://open.spotify.com/track/3GVkPk8mqxz0itaAriG1L7?si=233684c3f400482d",
-    kindLabel: "ЛИЧНОЕ / INTEREST",
+    kindLabel: "ЛИЧНОЕ / ИНТЕРЕС",
     x: 44,
     y: 91,
     size: 12,
@@ -1091,10 +1100,10 @@ const mapItems = [
     kind: "personal",
     label: "КОФЕ",
     title: "КОФЕ",
-    meta: "RITUAL / BLACK",
+    meta: "РИТУАЛ / ЧЁРНЫЙ",
     description: "Маленький ежедневный ритуал и уважительный кивок агенту Куперу.",
     href: "https://en.wikipedia.org/wiki/Dale_Cooper",
-    kindLabel: "ЛИЧНОЕ / INTEREST",
+    kindLabel: "ЛИЧНОЕ / ИНТЕРЕС",
     x: 62,
     y: 89,
     size: 10,
@@ -1104,10 +1113,10 @@ const mapItems = [
     kind: "personal",
     label: "ВОЛНА",
     title: "ВОЛНА",
-    meta: "SEA / HORIZON / MORE",
+    meta: "МОРЕ / ГОРИЗОНТ / ЕЩЁ",
     description: "Море, горизонт и повторяющееся MORE — способ снова почувствовать масштаб и выйти за пределы привычного.",
     href: "https://www.instagram.com/stories/highlights/17870996476264206/",
-    kindLabel: "ЛИЧНОЕ / INTEREST",
+    kindLabel: "ЛИЧНОЕ / ИНТЕРЕС",
     x: 68,
     y: 78,
     size: 12,
@@ -1117,9 +1126,9 @@ const mapItems = [
     kind: "personal",
     label: "ЕДА",
     title: "ЕДА",
-    meta: "TASTE / DETAILS",
+    meta: "ВКУС / ДЕТАЛИ",
     description: "Суши, пастрами и другие доказательства того, что детали действительно меняют всё.",
-    kindLabel: "ЛИЧНОЕ / INTEREST",
+    kindLabel: "ЛИЧНОЕ / ИНТЕРЕС",
     x: 31,
     y: 84,
     size: 10,
@@ -1130,7 +1139,7 @@ const mapItems = [
     label: "ДОВЕРЯТЬ КРЫЛЬЯМ",
     title: "ПТИЦА ДОВЕРЯЕТ КРЫЛЬЯМ",
     meta: "НЕОПРЕДЕЛЁННОСТЬ / ГИБКОСТЬ / РЕЗУЛЬТАТ",
-    description: "Несмотря на времена — стандартные вещи перестают работать, сервисы прекращают оказывать услуги, механизмы ломаются, фундаменты рушатся, то, что раньше было очевидно и не обсуждаемо, стало неочевидно и обсуждаемо — в таких условиях задача не в том, чтобы держаться процедур, а в том чтобы перепридумывать их на лету и себя заодно (это же как раз про ту самую гибкость методологии, непрерывное сотрудничество и совершенствование). Я умею двигаться в полной неопределённости и за минимальное количество времени и денег получить результат: ведь суть не в инструментах, а в опыте, навыках, знаниях и упорстве, желании делать. Мне нравится поговорка про птицу, что не боится, что ветка под ней сломается — птица доверяет крыльям.",
+    description: "Когда привычные сервисы и механизмы перестают работать, не держусь за процедуру: быстро пересобираю её под новую реальность. Умею двигаться в неопределённости и получать результат при ограниченных времени и бюджете. Как птица не боится сломанной ветки, потому что доверяет крыльям, так я опираюсь на опыт, знания и упорство.",
     kindLabel: "ПРИНЦИП / 01",
     x: 7,
     y: 41,
@@ -1141,8 +1150,8 @@ const mapItems = [
     kind: "practice",
     label: "СИСТЕМНОСТЬ",
     title: "СИСТЕМНЫЙ ПОДХОД",
-    meta: "AS IS → TO BE → GAP MAP / ДЕКОМПОЗИЦИЯ",
-    description: "Всегда стремлюсь к системному подходу: декомпозирую (AS IS → TO BE → GAP MAP), раскладываю большие задачи на части, оформляю свои решения, мысли и документы в понятном виде и масштабирую лучшие практики. Умею прогнозировать проекты: выстраивать тайминг, успевать к намеченным дедлайнам, оценивать риски.",
+    meta: "ТЕКУЩЕЕ → ЦЕЛЕВОЕ → РАЗРЫВЫ / ДЕКОМПОЗИЦИЯ",
+    description: "Фиксирую текущее и целевое состояние, нахожу разрывы, раскладываю большие задачи на части и оформляю решения так, чтобы их можно было повторить и масштабировать. Планирую сроки, оцениваю риски и довожу проект до результата.",
     kindLabel: "ПРИНЦИП / 02",
     x: 14,
     y: 37,
@@ -1154,7 +1163,7 @@ const mapItems = [
     label: "САМОСТОЯТЕЛЬНОСТЬ",
     title: "САМОСТОЯТЕЛЬНОСТЬ",
     meta: "ПРОАКТИВНОСТЬ / УСТОЙЧИВОСТЬ / НАДЁЖНОСТЬ",
-    description: "У меня всё отлично с самостоятельностью — меня не нужно пушить и контролировать, я проактивно прихожу с вопросами, проблемами и идеями. Проявляю устойчивость к частой смене приоритетов и всегда сохраняю адекватность, трудоспособность, этичность и ответственность — на меня можно реально положиться и просто спокойно работать.",
+    description: "Работаю самостоятельно: мне не нужен постоянный контроль. Сам прихожу с вопросами, проблемами и идеями, спокойно переживаю смену приоритетов и сохраняю работоспособность, этичность и ответственность. На меня можно положиться.",
     kindLabel: "ПРИНЦИП / 03",
     x: 22,
     y: 40,
@@ -1166,7 +1175,7 @@ const mapItems = [
     label: "ДОКУМЕНТЫ + ФИНАНСЫ",
     title: "ДОКУМЕНТЫ И ФИНАНСЫ",
     meta: "ДОГОВОРЫ / АКТЫ / БЮДЖЕТ",
-    description: "Внимателен к документам: сам составляю договоры, не пропускаю детали юридических договорённостей и вовремя закрываю все работы актами. На «ты» обращаюсь с финансами: могу оценить и спланировать бюджет проекта, а затем контролировать его выполнение.",
+    description: "Сам составляю договоры, не пропускаю детали юридических договорённостей и вовремя закрываю работы актами. Умею оценить и спланировать бюджет проекта, а затем контролировать его выполнение.",
     kindLabel: "ПРИНЦИП / 04",
     x: 30,
     y: 43,
@@ -1178,7 +1187,7 @@ const mapItems = [
     label: "ЦЕЛЬ > ФРЕЙМВОРКИ",
     title: "ЦЕЛЬ ВАЖНЕЕ ФРЕЙМВОРКОВ",
     meta: "PMBOK / TRIPLE DIAMOND / JTBD / TDD",
-    description: "В работе опираюсь на фреймворки — PMBoK, Triple Diamond от Zendesk, JTBD, test-driven design и всё, что оказывается полезным в конкретный момент, — а также на опыт, здравый смысл, идеалы, принципы и ценности. Мне нравится мысль о том, что обсессия средствами производства — частый синдром отсутствия смысла своей деятельности. Когда ты чётко понимаешь цель, тебе вообще не нужны фреймворки, системы приоритизации и таск-менеджеры.",
+    description: "Использую PMBOK, Triple Diamond, JTBD, разработку через тестирование и другие полезные методы, но не превращаю их в цель. Когда смысл и результат определены ясно, опыт и здравый смысл важнее очередной системы приоритизации или диспетчера задач.",
     kindLabel: "ПРИНЦИП / 05",
     x: 10,
     y: 45,
@@ -1190,7 +1199,7 @@ const mapItems = [
     label: "УПРАВЛЯТЬ + УЛУЧШАТЬ",
     title: "УПРАВЛЯТЬ И УЛУЧШАТЬ",
     meta: "ПРОЕКТЫ / КОМАНДА / ПРОЦЕССЫ",
-    description: "За последние несколько лет успешно управлял, координировал и руководил проектами (и командой до 10 человек) с различной степенью сложности, включая масштабные и многоэтапные, соблюдая бюджет и сроки. Постоянно внедряю новые инструменты, технологии и методологии управления проектами, обучаю команду, проактивно инициирую и поддерживаю инициативы других по улучшению процессов и повышению эффективности, что приводит к улучшению качества, оптимизации, уменьшению сроков выполнения рутинных задач и снижению стоимости их реализации. К примеру, больше дизайна сейчас делаем сами в Figma, собирая макеты и лишь на финальном этапе обращаясь к внешним арт-директорам; сменил Mailchimp на Юнисендер для всей команды: сначала освоил сам, унифицировал все шаблоны писем, а затем обучил коллег работе в новом инструменте — по итогу письма собираем быстрее и растим OR, а затраты на сервис снизил в 4 раза.",
+    description: "Управлял многоэтапными проектами и командой до 10 человек, соблюдая сроки и бюджет. Улучшаю процессы, осваиваю инструменты и обучаю коллег: так мы перенесли больше дизайна внутрь команды, ускорили сборку рассылок и в четыре раза снизили стоимость сервиса.",
     kindLabel: "ПРИНЦИП / 06",
     x: 18,
     y: 43,
@@ -1202,7 +1211,7 @@ const mapItems = [
     label: "ЛИДЕР + КОММУНИКАТОР",
     title: "ЛИДЕР И КОММУНИКАТОР",
     meta: "ДОГОВАРИВАТЬСЯ / МОТИВИРОВАТЬ / АРГУМЕНТИРОВАТЬ",
-    description: "Я лидер и уверенный коммуникатор — легко могу договариваться с внешними людьми и замотивировать свою команду. Коммуникабелен: могу уверенно рассказать о результате работ, работать с возражениями и аргументировать свою позицию независимо от того, с кем общаюсь.",
+    description: "Договариваюсь с внешними партнёрами и помогаю команде двигаться к результату. Умею ясно представить работу, услышать возражения и аргументировать позицию независимо от аудитории.",
     kindLabel: "ПРИНЦИП / 07",
     x: 26,
     y: 55,
@@ -1237,8 +1246,8 @@ const mapItems = [
     kind: "practice",
     label: "ИДЕИ + ТРЕНДЫ",
     title: "КРЕАТИВНЫЕ ИДЕИ И ТРЕНДЫ",
-    meta: "DIGITAL / MEDIA / TECHNOLOGY",
-    description: "Обладаю способностью быстро генерировать креативные идеи и решения. Слежу за цифровыми- и медиатрендами, развивающимися технологиями и платформами.",
+    meta: "ЦИФРОВАЯ СРЕДА / МЕДИА / ТЕХНОЛОГИИ",
+    description: "Быстро генерирую идеи и решения. Слежу за цифровыми и медиатрендами, развивающимися технологиями и платформами.",
     kindLabel: "ПРИНЦИП / 10",
     x: 15,
     y: 57,
@@ -1261,7 +1270,7 @@ const mapItems = [
     kind: "practice",
     label: "БЫСТРО НАЙТИ ПОДХОД",
     title: "БЫСТРО НАЙТИ ПОДХОД",
-    meta: "FIGMA / NOTION / CODE / AI / И ДАЛЬШЕ",
+    meta: "FIGMA / NOTION / КОД / ИИ / И ДАЛЬШЕ",
     description: "На «ты» с Figma, Photoshop, Notion, Trello, Jira, MailChimp, UniSender, Tilda, Readymag, Webflow, Miro, FigJam, JSON, HTML, большими языковыми моделями и нейросетями — а с чем ещё нет, то гарантированно быстро найду к этому подход.",
     kindLabel: "ПРИНЦИП / 12",
     x: 31,
@@ -1274,7 +1283,7 @@ const mapItems = [
     label: "НОВОЕ — СЕЙЧАС",
     title: "НОВОЕ — ПРЯМО СЕЙЧАС",
     meta: "ИННОВАЦИИ / OPENAI / ПОВСЕДНЕВНАЯ РАБОТА",
-    description: "Инновации: беру всё новое и лучшее и применяю прямо сейчас в повседневных задачах — вижу именно в этом смысл своей работы. Например, с продуктами OpenAI применяю два принципа: принцип первый — нельзя не использовать ChatGPT; принцип второй — участие ChatGPT не должно быть заметно.",
+    description: "Беру полезное новое и сразу проверяю его в повседневной работе. Для продуктов OpenAI держу два правила: нельзя игнорировать возможности ChatGPT, но его участие не должно быть заметнее качества результата.",
     kindLabel: "ПРИНЦИП / 13",
     x: 10,
     y: 68,
@@ -1286,7 +1295,7 @@ const mapItems = [
     label: "ЦИФРЫ + ИНТУИЦИЯ",
     title: "АНАЛИТИКА И ИНТУИЦИЯ",
     meta: "ДАННЫЕ / ВПЕЧАТЛЕНИЯ / ДОСТУПНОСТЬ",
-    description: "С одной стороны считаю, что лучшие менеджеры — это аналитики, которые лучше всех на цифрах понимают, как работает продукт, и имеют огромное желание свои исследования превратить в реальные продуктовые изменения, и стараюсь это качество в себе развить. С другой стороны не понимаю, как можно придумать классный продукт на A/B-тестах и фокус-группах. На них можно сделать классный продукт на 2% лучше, а плохой продукт не улучшат никакие тесты. Поэтому, занимаясь созданием чего-то, придумыванием, думаю не цифрами, а интуицией (Эндрю Чен пишет о том, что управлять на основе данных — сложная и часто невозможная задача) — думаю о дизайне впечатлений и снижении стоимости взаимодействия, доступности (быть дружелюбными и демократизировать технологии для людей, фокусироваться на человеческих потребностях и мотивах), идеалах, принципах и ценностях. Цифры не предскажут трепета и возбуждения, которые возникают в душе от хорошей идеи.",
+    description: "Данные помогают понять продукт и превратить наблюдения в изменения, но не заменяют замысел. Тесты способны улучшить сильное решение, однако не придумают его. Поэтому соединяю аналитику с интуицией, проектированием впечатлений, доступностью и вниманием к человеческим мотивам.",
     kindLabel: "ПРИНЦИП / 14",
     x: 18,
     y: 67,
@@ -1298,7 +1307,7 @@ const mapItems = [
     label: "ДИЗАЙН-ИНЖЕНЕР",
     title: "ДИЗАЙН-ИНЖЕНЕР",
     meta: "ДИЗАЙН / КОД / РАБОЧИЙ ПРОТОТИП",
-    description: "Мехмет Байтас написал о дизайн-инженерах — универсальных специалистах, которые сочетают в себе навыки и дизайнера, и разработчика. Они могут самостоятельно спроектировать дизайн и довести его до рабочего прототипа, написав код. Вот всегда думаю и о себе в таком ключе: одновременно чувствую и композицию, и технические ограничения.",
+    description: "Дизайн-инженер соединяет композицию и код: самостоятельно проектирует решение и доводит его до работающего прототипа. Этот подход мне близок — я одновременно вижу визуальную систему, пользовательский сценарий и технические ограничения.",
     kindLabel: "ПРИНЦИП / 15",
     x: 27,
     y: 66,
@@ -1307,10 +1316,10 @@ const mapItems = [
   {
     id: "principle-shaper",
     kind: "practice",
-    label: "SHAPER / АРХЕОЛОГ",
-    title: "SHAPER / АРХЕОЛОГ",
+    label: "СКУЛЬПТОР / АРХЕОЛОГ",
+    title: "СКУЛЬПТОР / АРХЕОЛОГ",
     meta: "ПРИДАТЬ ФОРМУ / УБРАТЬ ЛИШНЕЕ / НАЙТИ ЦЕННОСТЬ",
-    description: "Я встречал ещё пару метафор своего подхода к работе. Иногда такая роль называется «shaper» (придающий форму): подобно скульптору, вы постепенно откалываете лишнее, чтобы оставить суть. Ещё один вариант — сравнение с работой археолога; в отличие от скульптора, вы не принимаете творческих решений: нужная людям ценность уже хранится под толщей земли, и нужно методично убирать лишнее, не задевая важного.",
+    description: "Работаю в двух режимах. Как скульптор — постепенно убираю лишнее, пока не проявится форма. Как археолог — не навязываю решение, а бережно освобождаю уже существующую ценность. В обоих случаях важно вовремя остановиться и не задеть главное.",
     kindLabel: "ПРИНЦИП / 16",
     x: 38,
     y: 64,
@@ -1321,8 +1330,8 @@ const mapItems = [
     kind: "practice",
     label: "ГОСТЕПРИИМСТВО + ЗАБОТА",
     title: "ЦИФРОВОЕ ГОСТЕПРИИМСТВО И ЗАБОТА",
-    meta: "CX / IXD / ИНКЛЮЗИВНОСТЬ / GENERATIVE AI",
-    description: "Области интереса сейчас: CX и IxD — «цифровое» гостеприимство и забота, как я понимаю их, инклюзивные практики в веб-дизайне и веб-продакшне. Генеративный искусственный интеллект в контексте этих точек интереса. Мне всегда было интересно то, чем занимаются люди на позициях «продакт-проджект-гроус-хакеров» или «ченджеров» — создавать внутри компании то, чего ещё не было. Такие проекты не всегда про IT, не по должностной инструкции, не будут оплачены отдельно, но мне интересно это сделать, потому что это кажется возможным и важным, новым. Если говорить тут о «работодателе / проекте мечты», то хотелось бы быть частью компании, которая осознаёт важность экспериментов и даёт экспериментировать «легально».",
+    meta: "CX / IXD / ИНКЛЮЗИВНОСТЬ / ГЕНЕРАТИВНЫЙ ИИ",
+    description: "Исследую цифровое гостеприимство, инклюзивный веб и генеративный ИИ как инструменты заботы о пользователе. Мне интересны инициативы на стыке ролей — новые процессы и продукты, которых ещё не было. Ищу команды, где такие эксперименты являются законной частью работы.",
     kindLabel: "ПРИНЦИП / 17",
     x: 20,
     y: 77,
@@ -1349,6 +1358,41 @@ let rovingMapId = "garage";
 let previewHideTimer = 0;
 let previewShowFrame = 0;
 let activePreviewItem = null;
+
+const syncMapMetaOverflow = () => {
+  const track = mapMeta?.querySelector(".map-readout__meta-track");
+
+  if (!mapMeta || !track) {
+    return;
+  }
+
+  const travel = Math.max(0, track.scrollWidth - mapMeta.clientWidth + 8);
+  const shouldMarquee = travel > 8;
+
+  mapMeta.classList.toggle("is-marquee", shouldMarquee);
+  mapMeta.style.setProperty("--map-meta-travel", `${-travel}px`);
+  mapMeta.style.setProperty(
+    "--map-meta-duration",
+    `${Math.min(16, Math.max(10, 8 + travel / 48)).toFixed(2)}s`,
+  );
+};
+
+const setMapMetaText = (value) => {
+  if (!mapMeta) {
+    return;
+  }
+
+  const text = typographUiText(value);
+  const track = document.createElement("span");
+
+  track.className = "map-readout__meta-track";
+  track.textContent = text;
+  track.setAttribute("aria-hidden", "true");
+  mapMeta.classList.remove("is-marquee");
+  mapMeta.setAttribute("aria-label", text);
+  mapMeta.replaceChildren(track);
+  window.requestAnimationFrame(syncMapMetaOverflow);
+};
 
 const getNavigableMapItems = () => {
   const activeKind = document.querySelector("[data-practice-map]")?.dataset.activeKind || "all";
@@ -1475,6 +1519,10 @@ const showMapPreview = (item) => {
   activePreviewItem = item;
 
   mapPreview.classList.add("has-video");
+  mapPreview.classList.toggle(
+    "is-landscape",
+    item.previewOrientation === "landscape",
+  );
 
   if (mapPreviewVideo.dataset.previewId !== item.id) {
     mapPreview.classList.remove("is-video-ready");
@@ -1595,7 +1643,7 @@ const selectMapItem = (id, { reveal = false } = {}) => {
   }
 
   if (mapMeta) {
-    mapMeta.textContent = typographUiText(item.meta);
+    setMapMetaText(item.meta);
   }
 
   if (mapDescription) {
@@ -1648,7 +1696,8 @@ if (mapNodesRoot) {
     button.style.setProperty("--x", `${item.x}%`);
     button.style.setProperty("--y", `${item.y}%`);
     button.style.setProperty("--size", `${item.size}px`);
-    button.setAttribute("aria-label", typographUiText(`${item.title}. ${item.meta}`));
+    const visibleMapLabel = item.mapLabel || item.label;
+    button.setAttribute("aria-label", typographUiText(`${visibleMapLabel}. ${item.meta}`));
     button.setAttribute("aria-pressed", "false");
     button.setAttribute("aria-expanded", "false");
     button.setAttribute("aria-controls", "map-inspector");
@@ -1665,10 +1714,14 @@ if (mapNodesRoot) {
       button.classList.add("map-node--garage-child");
     }
 
+    if (item.x >= 72) {
+      button.classList.add("map-node--label-west");
+    }
+
     glyph.className = "map-node__glyph";
     glyph.setAttribute("aria-hidden", "true");
     label.className = "map-node__label";
-    label.textContent = typographUiText(item.label);
+    label.textContent = typographUiText(visibleMapLabel);
 
     button.append(glyph, label);
     button.addEventListener("click", () => {
@@ -1778,6 +1831,10 @@ if (mapSpecksRoot) {
 }
 
 selectMapItem("garage");
+
+if (mapMeta && "ResizeObserver" in window) {
+  new ResizeObserver(syncMapMetaOverflow).observe(mapMeta);
+}
 
 const practiceMap = document.querySelector("[data-practice-map]");
 const mapFilterButtons = Array.from(document.querySelectorAll("[data-map-filter]"));
@@ -2036,15 +2093,15 @@ let lastPanelTrigger = null;
 
 const panelViews = {
   work: {
-    index: "01 / SELECTED WORK",
+    index: "01 / ПРОЕКТЫ",
     title: "ПРОЕКТЫ",
   },
   approach: {
-    index: "02 / HOW I WORK",
+    index: "02 / ПОДХОД",
     title: "ПОДХОД",
   },
   contact: {
-    index: "03 / CONTACT",
+    index: "03 / КОНТАКТ",
     title: "КОНТАКТ",
   },
 };
@@ -2237,22 +2294,22 @@ const commandViews = [
   {
     type: "panel",
     id: "work",
-    title: "ИЗБРАННЫЕ ПРОЕКТЫ",
-    meta: "8 LIVE PROJECTS / 2023—2026",
-    keywords: "проекты работы портфолио selected work sites сайты",
+    title: "ПОСЛЕДНИЕ ПРОЕКТЫ",
+    meta: "8 САЙТОВ / 2023—2026",
+    keywords: "проекты работы портфолио последние текущие сайты",
   },
   {
     type: "panel",
     id: "approach",
     title: "КАК Я РАБОТАЮ",
-    meta: "RESEARCH → SHAPE → COORDINATE → MAKE",
+    meta: "ИССЛЕДОВАНИЕ → ФОРМА → КООРДИНАЦИЯ → РЕАЛИЗАЦИЯ",
     keywords: "подход метод процесс принципы работа approach how",
   },
   {
     type: "panel",
     id: "contact",
     title: "КОНТАКТ",
-    meta: "MOSCOW / REMOTE / EMAIL",
+    meta: "МОСКВА / УДАЛЁННО / ПОЧТА",
     keywords: "контакт почта написать связаться contact email",
   },
 ];

@@ -25,7 +25,7 @@ morphs from one silhouette to the next, and slowly rotates as one orbital
 system. Running remains a clean `БЕГ` map node; its figurative image belongs to
 the central constellation rather than to the label. The running light uses the
 `--running-dusk` token sampled from SATISFY's Dusk Space-O™ Singlet.
-`AG / ORIGIN` remains a small coordinate label inside the field, not a separate
+`АГ / НАЧАЛО` remains a small coordinate label inside the field, not a separate
 logo card.
 
 ## Interaction model
@@ -34,7 +34,7 @@ logo card.
   a conventional scrolling page.
 - Node selection opens a compact readout assembled around the selected point as
   the composition's anchor object.
-- A compact `VIEW` selector in the system rail isolates the four
+- A compact `ВИД` selector in the system rail isolates the four
   semantic fields without moving nodes.
 - The query bar sits above the system rail and uses the functional prompt
   `Найти или открыть…` to search nodes or open content panels.
@@ -47,18 +47,26 @@ logo card.
   walkthrough of characteristic live states: full-page scrolls, meaningful
   inner routes, theme changes, or distinctive interface controls. Nodes without
   recorded media do not open an empty or decorative media receiver.
-- A site reel is a window, not a crop: the captured site occupies 100% of the
-  reel width, the video uses square pixels and a 4:5 display aspect ratio, and
-  the receiver uses `object-fit: contain` with top alignment. Never use
-  `cover` to fill the receiver by cutting off the website. The reel is presented
-  as one uninterrupted media shape without a frame, title bar, footer, or
-  decorative loading fallback. Run
+- A site reel is a window, not a crop: every video is 600 px wide, uses square
+  pixels, and keeps the display ratio of its source. Native vertical recordings
+  stay 600×750; sources recorded as `640:617` are resampled to `600×578`
+  without internal letterboxing. The stable receiver is vertical `4:5`, and
+  uses `object-fit: contain` with top alignment; unoccupied space is the same
+  `MATERIAL / 01` as the map, never a field baked into the video. The only
+  content-led orientation exception is the House of Narkomfin reel: its
+  receiver is horizontal `5:4`, matching the site's architectural layout.
+  Never use `cover`, stretch to a common frame, or merely rewrite a non-square
+  SAR. The reel has no title bar, footer, border, or decorative loading
+  fallback. Run
   `node scripts/check-reels.mjs` after assembling or replacing reels.
 - Touch devices keep the direct node-to-inspector interaction and do not render
   hover-only media.
 - Long-form content remains inside the same coordinate system. Projects,
   approach, and contact appear as groups of soft, dismissible floating
   materials; they never replace the map with a full-height drawer.
+- Contact destinations remain inside their links: the visible interface uses
+  parallel action labels (`НАПИСАТЬ ПИСЬМО`, `НАПИСАТЬ В TELEGRAM`) and does
+  not expose either the email address or Telegram handle as display copy.
 
 ## Instrument interface language
 
@@ -70,12 +78,12 @@ logo card.
   proximity inside the four fields, size is personal weight, shape is type,
   and a line means a real relationship. Visual properties must never be added
   without a meaning.
-- Observation settings (`VIEW`, `DISPLAY`) stay at the edges of the field.
+- Observation settings (`ВИД`, `ЭКРАН`) stay at the edges of the field.
   Content navigation uses indexed points rather than button bars. These
   controls belong to one instrument-console family: the same material,
   typography, spacing rhythm, focus behavior, and motion are adapted into a
-  left observation module, right status module, and bottom navigation/search
-  module. On desktop the three modules can be dragged by their free material
+  upper-left observation module, upper-right status module, and lower-left
+  navigation/search module. On desktop the three modules can be dragged by their free material
   and rearranged inside the viewport without changing the behavior of their
   controls. Consistency means predictable principles, not identical shapes.
   Crisp strokes remain reserved for active controls and focus.
