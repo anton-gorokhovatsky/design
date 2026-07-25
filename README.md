@@ -19,9 +19,12 @@ instead of a conventional résumé timeline.
   cultural institutions.
 
 An unframed point constellation is the visual origin of the coordinate system.
-It samples the nine emoji signatures from the earlier portfolio
-(`🍣 🥪 ☕ 📻 🏂 ⚽ 🌊 🖥️ 👋`), redraws them with small mono glyphs, morphs from
-one silhouette to the next, and slowly rotates as one orbital system.
+It samples ten emoji signatures
+(`🍣 🥪 ☕ 📻 🏂 ⚽ 🌊 🖥️ 👋 🏃🏼‍♂️`), redraws them with small mono glyphs,
+morphs from one silhouette to the next, and slowly rotates as one orbital
+system. Running remains a clean `БЕГ` map node; its figurative image belongs to
+the central constellation rather than to the label. The running light uses the
+`--running-dusk` token sampled from SATISFY's Dusk Space-O™ Singlet.
 `AG / ORIGIN` remains a small coordinate label inside the field, not a separate
 logo card.
 

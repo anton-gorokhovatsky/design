@@ -105,7 +105,7 @@ const createSignal = (columns, rows, phase = 0, seed = 0) => {
 const signalField = document.querySelector("[data-signal-field]");
 const signalConstellation = document.querySelector("[data-signal-constellation]");
 const signalCore = document.querySelector("[data-signal-core]");
-const signalEmojis = ["🍣", "🥪", "☕", "📻", "🏂", "⚽", "🌊", "🖥️", "👋"];
+const signalEmojis = ["🍣", "🥪", "☕", "📻", "🏂", "⚽", "🌊", "🖥️", "👋", "🏃🏼‍♂️"];
 const signalGlyphs = ["·", "+", "×", ":", "∙", "*"];
 const signalPointCount = 1240;
 let signalPointSets = [];
@@ -1013,8 +1013,8 @@ const mapItems = [
   {
     id: "running",
     kind: "personal",
-    label: "БЕГ ᕕ( ᐛ )ᕗ",
-    title: "БЕГ ᕕ( ᐛ )ᕗ",
+    label: "БЕГ",
+    title: "БЕГ",
     meta: "ЛИЧНЫЙ ЦЕНТР / ДИСТАНЦИЯ / РИТМ",
     description: "Личный центр притяжения. Бег собирает ритм, выносливость и внимание — и снова возвращает ощущение движения вперёд.",
     href: "https://www.instagram.com/stories/highlights/18054491965888038/",
@@ -1557,6 +1557,11 @@ const selectMapItem = (id, { reveal = false } = {}) => {
 
   selectedMapId = id;
 
+  if (mapInspector) {
+    mapInspector.dataset.selectedMapId = item.id;
+    mapInspector.dataset.mobilePlacement = item.y >= 48 ? "top" : "bottom";
+  }
+
   mapButtons.forEach((button, buttonId) => {
     const isSelected = buttonId === selectedMapId;
     button.classList.toggle("is-selected", isSelected);
@@ -1590,7 +1595,7 @@ const selectMapItem = (id, { reveal = false } = {}) => {
     if (itemHref) {
       mapLink.hidden = false;
       mapLink.href = itemHref;
-      mapLink.textContent = item.kind === "practice" ? "ИСХОДНИК В NOTION ↗" : "ОТКРЫТЬ ↗";
+      mapLink.textContent = item.kind === "practice" ? "ИСХОДНИК В NOTION" : "ОТКРЫТЬ";
       mapLink.classList.remove("is-disabled");
       mapLink.removeAttribute("aria-disabled");
       mapLink.target = "_blank";
@@ -2354,7 +2359,13 @@ const renderCommandResults = (query = "") => {
 
     title.textContent = result.title;
     meta.textContent = result.meta;
-    mark.textContent = result.type === "node" ? "●" : "↗";
+    mark.className = "command-result__mark";
+    mark.classList.add(
+      result.type === "node"
+        ? "command-result__mark--node"
+        : "command-result__mark--panel",
+    );
+    mark.textContent = "";
     mark.setAttribute("aria-hidden", "true");
 
     button.append(title, meta, mark);

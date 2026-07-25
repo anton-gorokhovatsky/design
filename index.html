@@ -63,8 +63,8 @@
         document.documentElement.dataset.theme = theme;
       })();
     </script>
-    <link rel="stylesheet" href="styles.css?v=20260724-audit-2">
-    <script src="script.js?v=20260724-audit-2" defer></script>
+    <link rel="stylesheet" href="styles.css?v=20260725-visual-11">
+    <script src="script.js?v=20260725-visual-4" defer></script>
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -150,7 +150,7 @@
             data-signal-constellation
             role="img"
             tabindex="0"
-            aria-label="Объёмное поле личной вселенной. Зажмите и тяните, чтобы вращать его; с клавиатуры используйте стрелки."
+            aria-label="Объёмное поле личной вселенной, морфирующее десять эмодзи-силуэтов, включая бегущего человека. Зажмите и тяните, чтобы вращать его; с клавиатуры используйте стрелки."
           ></canvas>
 
           <svg
@@ -215,7 +215,7 @@
             href="https://garagemca.org/ru"
             target="_blank"
             rel="noreferrer"
-          >ОТКРЫТЬ ↗</a>
+          >ОТКРЫТЬ</a>
         </aside>
 
         <p class="map-note">
@@ -290,7 +290,10 @@
                 target="_blank"
                 rel="noreferrer"
               >
-                <span class="constellation-nav__shape" aria-hidden="true">↗</span>
+                <span
+                  class="constellation-nav__shape constellation-nav__shape--external"
+                  aria-hidden="true"
+                ></span>
                 <span class="constellation-nav__label">CV</span>
               </a>
             </div>
@@ -311,7 +314,9 @@
               aria-expanded="false"
               aria-controls="command-results"
             >
-            <button class="command-dock__submit" type="submit" aria-label="Выполнить запрос">→</button>
+            <button class="command-dock__submit" type="submit" aria-label="Выполнить запрос">
+              <span class="command-dock__submit-mark" aria-hidden="true"></span>
+            </button>
             <div
               class="command-results"
               id="command-results"
@@ -338,7 +343,7 @@
               aria-label="Показать все точки"
               aria-pressed="true"
             >
-              <span class="map-control__symbol" aria-hidden="true">◎</span>
+              <span class="map-control__symbol map-control__symbol--all" aria-hidden="true"></span>
               <span>ВСЁ</span>
             </button>
             <button
@@ -378,7 +383,7 @@
               aria-label="Показать принципы"
               aria-pressed="false"
             >
-              <span class="map-control__symbol map-control__symbol--practice" aria-hidden="true">＋</span>
+              <span class="map-control__symbol map-control__symbol--practice" aria-hidden="true"></span>
               <span>ПРИНЦИПЫ</span>
             </button>
           </nav>
@@ -387,7 +392,10 @@
             <div class="map-meta">
               <h1 id="map-title">КАРТА ПРАКТИКИ</h1>
               <p>4 ПОЛЯ / 2009—NOW</p>
-              <p><span class="status-dot" aria-hidden="true"></span> MSK <span data-clock>--:--</span></p>
+              <p>
+                <span class="status-dot" aria-hidden="true"></span>
+                <span class="display-control__value">MSK <span data-clock>--:--</span></span>
+              </p>
             </div>
             <button class="theme-toggle" type="button" data-theme-toggle aria-label="Включить тёмную тему">
               <span data-theme-label>LIGHT</span>
@@ -447,7 +455,6 @@
             <span class="work-row__title">Сайт независимого куратора и исследователя Ольги Широкоступ</span>
             <span class="work-row__scope">EDITORIAL / WEB</span>
             <span class="work-row__domain">SHIROKOSTUP.SITE</span>
-            <span class="work-row__arrow" aria-hidden="true">↗</span>
           </a>
 
           <a
@@ -460,7 +467,6 @@
             <span class="work-row__title">Сайт — среда изучения и поддержки социально ориентированного и вовлекающего искусства Tarski</span>
             <span class="work-row__scope">DIGITAL PRODUCT / WEB</span>
             <span class="work-row__domain">TARSKI.RU</span>
-            <span class="work-row__arrow" aria-hidden="true">↗</span>
           </a>
 
           <a
@@ -473,7 +479,6 @@
             <span class="work-row__title">Сайт стилиста и эксперта по уходу Германа Винокурова</span>
             <span class="work-row__scope">SERVICE / WEB</span>
             <span class="work-row__domain">BARBERHERMAN.RU</span>
-            <span class="work-row__arrow" aria-hidden="true">↗</span>
           </a>
 
           <a
@@ -486,7 +491,6 @@
             <span class="work-row__title">Интернет-магазин мерча бегового клуба Dusty Dumbbells</span>
             <span class="work-row__scope">COMMERCE / WEB</span>
             <span class="work-row__domain">DUSTYDUMBBELLS</span>
-            <span class="work-row__arrow" aria-hidden="true">↗</span>
           </a>
 
           <a
@@ -499,7 +503,6 @@
             <span class="work-row__title">Сайт осеннего кэмпа Dusty Dumbbells</span>
             <span class="work-row__scope">EXPERIENCE / WEB</span>
             <span class="work-row__domain">DUSTYDUMBBELLS</span>
-            <span class="work-row__arrow" aria-hidden="true">↗</span>
           </a>
 
           <a
@@ -512,7 +515,6 @@
             <span class="work-row__title">Сайт проекта «11 111» Виктора Доронина</span>
             <span class="work-row__scope">BRAND / WEB</span>
             <span class="work-row__domain">11111.LIFE</span>
-            <span class="work-row__arrow" aria-hidden="true">↗</span>
           </a>
 
           <a
@@ -525,7 +527,6 @@
             <span class="work-row__title">Сайт «Рыбной лавки капитана Селедкина»</span>
             <span class="work-row__scope">CATALOG / WEB</span>
             <span class="work-row__domain">KS.FISH</span>
-            <span class="work-row__arrow" aria-hidden="true">↗</span>
           </a>
 
           <a
@@ -538,7 +539,6 @@
             <span class="work-row__title">Интернет-магазин мерча Виктора Доронина</span>
             <span class="work-row__scope">COMMERCE / WEB</span>
             <span class="work-row__domain">DORONIN.STORE</span>
-            <span class="work-row__arrow" aria-hidden="true">↗</span>
           </a>
         </div>
 
@@ -591,10 +591,10 @@
         </div>
 
         <div class="contact-copy">
-          <h2 id="contact-title">МОЖНО<br>ПОГОВОРИТЬ.</h2>
+          <h2 id="contact-title"><span>МОЖНО</span><span>ПОГОВОРИТЬ.</span></h2>
           <div>
             <p>ПРЕДЛОЖЕНИЯ / РЕКОМЕНДАЦИИ / ИНТРО / ХОРОШИЕ НАВОДКИ</p>
-            <a href="mailto:anton.gorokhovatsky@gmail.com">ANTON.GOROKHOVATSKY@GMAIL.COM ↗</a>
+            <a href="mailto:anton.gorokhovatsky@gmail.com">ANTON.GOROKHOVATSKY@GMAIL.COM</a>
           </div>
         </div>
       </section>
@@ -605,7 +605,7 @@
     <footer class="site-footer">
       <p>ANTON GOROKHOVATSKY © 2026</p>
       <p>PRODUCT / DESIGN / DELIVERY</p>
-      <a href="#map">BACK TO MAP ↑</a>
+      <a href="#map">BACK TO MAP</a>
     </footer>
   </body>
 </html>
