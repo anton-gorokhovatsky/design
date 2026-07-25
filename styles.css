@@ -267,12 +267,15 @@ button {
 .map-depth-grid {
   position: absolute;
   z-index: 0;
-  inset: 6% 18% 10%;
-  width: auto;
+  top: 50%;
+  left: 50%;
+  width: 64%;
   height: auto;
+  aspect-ratio: 1;
   color: color-mix(in srgb, var(--signal) 30%, var(--line));
   opacity: 0.34;
   pointer-events: none;
+  transform: translate(-50%, -50%);
   mask-image: radial-gradient(ellipse at 50% 50%, #000 0 60%, transparent 96%);
   -webkit-mask-image: radial-gradient(ellipse at 50% 50%, #000 0 60%, transparent 96%);
 }
@@ -372,7 +375,7 @@ html[data-capture="og"] .map-grid {
 
 @media (max-width: 680px) {
   .map-depth-grid {
-    inset: 14% 5% 18%;
+    width: 90%;
     opacity: 0.18;
   }
 }
@@ -693,9 +696,7 @@ html[data-capture="og"] .map-grid {
 
 .map-node:hover .map-node__label,
 .map-node:focus-visible .map-node__label,
-.practice-map:has(.map-inspector.is-open) .map-node.is-selected .map-node__label,
-.map-node--garage .map-node__label,
-.map-node--running .map-node__label {
+.practice-map:has(.map-inspector.is-open) .map-node.is-selected .map-node__label {
   opacity: 1;
   transform: translateY(-50%) translateX(0);
 }
@@ -1166,8 +1167,8 @@ html[data-capture="og"] .map-grid {
   }
 
   .practice-map:has(.map-inspector.is-open) .map-node.is-selected .map-node__label,
-  .map-node--garage .map-node__label,
-  .map-node--running .map-node__label {
+  .map-node--garage:focus-visible .map-node__label,
+  .map-node--running:focus-visible .map-node__label {
     display: block;
   }
 
@@ -5648,6 +5649,8 @@ body:has(.command-dock.is-open) .origin-marker__label {
   }
 
   .control-console .constellation-nav__label,
+  .control-console .constellation-nav__item:hover .constellation-nav__label,
+  .control-console .constellation-nav__item:focus-visible .constellation-nav__label,
   .control-console .constellation-nav__item.is-current .constellation-nav__label {
     position: static;
     grid-column: 2;
@@ -5849,7 +5852,7 @@ body:has(.command-dock.is-open) .origin-marker__label {
 }
 
 .map-node--company .map-node__glyph {
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 0;
   border-radius: 50%;
   background:
     radial-gradient(circle at 34% 27%, #30312b 0, #171814 34%, #080906 72%, #030402 100%);
@@ -5866,27 +5869,17 @@ body:has(.command-dock.is-open) .origin-marker__label {
 .map-node--company.is-selected .map-node__glyph {
   box-shadow:
     inset -4px -6px 10px rgba(0, 0, 0, 0.22),
-    0 0 0 2px color-mix(in srgb, var(--signal) 24%, transparent),
     0 9px 20px rgba(0, 0, 0, 0.16);
 }
 
 .map-node--garage .map-node__glyph,
 .map-node--garage.is-selected .map-node__glyph {
-  border-color: rgba(255, 255, 255, 0.34);
+  border: 0;
   background:
     radial-gradient(circle at 34% 27%, #292a25 0, #11120f 36%, #050604 74%, #000 100%);
   box-shadow:
     inset -8px -11px 18px rgba(0, 0, 0, 0.28),
     0 12px 28px rgba(0, 0, 0, 0.2);
-}
-
-html[data-theme="dark"] .map-node--company .map-node__glyph {
-  border-color: rgba(255, 255, 255, 0.26);
-}
-
-html[data-theme="dark"] .map-node--garage .map-node__glyph,
-html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
-  border-color: rgba(255, 255, 255, 0.42);
 }
 
 .map-node--personal .map-node__glyph {
@@ -5897,7 +5890,7 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 .map-node--running .map-node__glyph {
   width: calc(var(--size) * 0.72);
   height: calc(var(--size) * 0.72);
-  border: 1px solid color-mix(in srgb, var(--running-dusk) 64%, white);
+  border: 0;
   background:
     radial-gradient(
       circle at 34% 27%,
@@ -5912,17 +5905,12 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 }
 
 .map-node--running .map-node__glyph::after {
-  position: absolute;
-  inset: 34%;
-  border-radius: 50%;
-  background: #10110f;
-  content: "";
+  content: none;
 }
 
 .map-node--running.is-selected .map-node__glyph {
   box-shadow:
     inset -6px -9px 14px rgba(31, 27, 36, 0.24),
-    0 0 0 2px color-mix(in srgb, var(--signal) 28%, transparent),
     0 11px 26px rgba(0, 0, 0, 0.2);
 }
 
@@ -5974,6 +5962,16 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 /* Directional affordances use one geometric construction. Decorative
    Unicode arrows are intentionally absent from links, cards and labels.
    The resume route uses a document metaphor rather than an abstract slash. */
+
+.control-console .constellation-nav__cluster,
+.control-console .constellation-nav__cluster::before,
+.control-console .constellation-nav__cluster::after,
+.control-console .constellation-nav__shape,
+.control-console .constellation-nav__shape::before,
+.control-console .constellation-nav__shape::after,
+.control-console .constellation-nav__item::after {
+  pointer-events: none;
+}
 
 .constellation-nav__shape--external {
   position: relative;
@@ -6222,6 +6220,13 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 
   .control-console .constellation-nav__item.is-current {
     background: transparent;
+  }
+
+  .control-console
+    .constellation-nav__item:not(.is-current):hover
+    .constellation-nav__shape {
+    color: color-mix(in srgb, var(--content-ink) 72%, transparent);
+    transform: none;
   }
 
   .control-console .constellation-nav__label,
