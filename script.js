@@ -2089,9 +2089,12 @@ const panelIndex = document.querySelector("[data-panel-index]");
 const contentPanelBody = document.querySelector(".content-panel__body");
 const panelSections = Array.from(document.querySelectorAll("[data-panel-section]"));
 const panelOpenButtons = Array.from(document.querySelectorAll("[data-open-panel]"));
+const mobileWorkStack = window.matchMedia("(max-width: 680px)");
+const workStackRows = Array.from(document.querySelectorAll(".work-list .work-row"));
 const controlConsole = document.querySelector(".control-console");
 const controlConsoleHome = document.createComment("control-console-home");
 let controlConsolePanelOffset = null;
+let workStackFrame = 0;
 
 controlConsole?.before(controlConsoleHome);
 
@@ -2102,6 +2105,54 @@ const panelBackgroundRoots = [
 ].filter(Boolean);
 let activePanelView = null;
 let lastPanelTrigger = null;
+
+const clearWorkStackState = () => {
+  workStackRows.forEach((row) => {
+    row.classList.remove("is-work-stack-card");
+    row.style.removeProperty("--work-stack-scale");
+  });
+};
+
+const syncWorkStack = () => {
+  workStackFrame = 0;
+
+  if (
+    !mobileWorkStack.matches
+    || activePanelView !== "work"
+    || !contentPanelBody
+  ) {
+    clearWorkStackState();
+    return;
+  }
+
+  const scrollportTop = contentPanelBody.getBoundingClientRect().top;
+  const stackedRows = workStackRows.filter((row, index) => {
+    const stickyTop = 8 + (index * 14);
+    return row.getBoundingClientRect().top <= scrollportTop + stickyTop + 1;
+  });
+
+  stackedRows.forEach((row, index) => {
+    const rowsBehindFront = stackedRows.length - index - 1;
+    const scale = 1 - Math.min(rowsBehindFront, 5) * 0.012;
+    row.classList.add("is-work-stack-card");
+    row.style.setProperty("--work-stack-scale", scale.toFixed(3));
+  });
+
+  workStackRows.forEach((row) => {
+    if (!stackedRows.includes(row)) {
+      row.classList.remove("is-work-stack-card");
+      row.style.removeProperty("--work-stack-scale");
+    }
+  });
+};
+
+const scheduleWorkStackSync = () => {
+  if (workStackFrame) {
+    return;
+  }
+
+  workStackFrame = window.requestAnimationFrame(syncWorkStack);
+};
 
 const panelViews = {
   work: {
@@ -2176,6 +2227,7 @@ const openContentPanel = (view, trigger = null) => {
     section.hidden = section.dataset.panelSection !== view;
   });
   contentPanelBody?.scrollTo({ top: 0, behavior: "auto" });
+  scheduleWorkStackSync();
 
   if (panelTitle) {
     panelTitle.textContent = typographUiText(config.title);
@@ -2200,6 +2252,7 @@ const closeContentPanel = ({ restoreFocus = true } = {}) => {
   activePanelView = null;
   contentPanel?.removeAttribute("data-view");
   setConstellationNavCurrent("map");
+  scheduleWorkStackSync();
 
   if (restoreFocus && lastPanelTrigger instanceof HTMLElement) {
     const triggerIsInCompactNavigation = compactConstellationNav.matches
@@ -2281,6 +2334,9 @@ contentPanelBody?.addEventListener("keydown", (event) => {
 
 panelClose?.addEventListener("click", () => closeContentPanel());
 panelScrim?.addEventListener("click", () => closeContentPanel());
+contentPanelBody?.addEventListener("scroll", scheduleWorkStackSync, { passive: true });
+mobileWorkStack.addEventListener("change", scheduleWorkStackSync);
+window.addEventListener("resize", scheduleWorkStackSync, { passive: true });
 constellationNavHome?.addEventListener("click", () => {
   if (activePanelView) {
     closeContentPanel({ restoreFocus: false });

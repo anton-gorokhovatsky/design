@@ -4195,15 +4195,80 @@ body.has-content-panel .constellation-nav {
     gap: 8px;
   }
 
+  .content-panel .work-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding-bottom: clamp(8rem, 38svh, 16rem);
+    isolation: isolate;
+  }
+
   .content-panel .work-row {
+    position: sticky;
+    z-index: var(--work-stack-depth, 1);
+    top: var(--work-stack-top, 8px);
     min-height: 0;
+    margin: 0 0 10px;
     padding: 18px 19px 20px;
     border-radius: 25px;
+    scroll-margin-top: 64px;
+    transform-origin: top center;
   }
 
   .content-panel .work-row:hover,
   .content-panel .work-row:focus-visible {
     padding: 18px 19px 20px;
+    z-index: 20;
+    transform: none;
+  }
+
+  .content-panel .work-row.is-work-stack-card {
+    transform: scale(var(--work-stack-scale, 1));
+  }
+
+  .content-panel .work-row.is-work-stack-card:hover,
+  .content-panel .work-row.is-work-stack-card:focus-visible {
+    transform: scale(1);
+  }
+
+  .content-panel .work-row:nth-child(1) {
+    --work-stack-depth: 1;
+    --work-stack-top: 8px;
+  }
+
+  .content-panel .work-row:nth-child(2) {
+    --work-stack-depth: 2;
+    --work-stack-top: 22px;
+  }
+
+  .content-panel .work-row:nth-child(3) {
+    --work-stack-depth: 3;
+    --work-stack-top: 36px;
+  }
+
+  .content-panel .work-row:nth-child(4) {
+    --work-stack-depth: 4;
+    --work-stack-top: 50px;
+  }
+
+  .content-panel .work-row:nth-child(5) {
+    --work-stack-depth: 5;
+    --work-stack-top: 64px;
+  }
+
+  .content-panel .work-row:nth-child(6) {
+    --work-stack-depth: 6;
+    --work-stack-top: 78px;
+  }
+
+  .content-panel .work-row:nth-child(7) {
+    --work-stack-depth: 7;
+    --work-stack-top: 92px;
+  }
+
+  .content-panel .work-row:nth-child(8) {
+    --work-stack-depth: 8;
+    --work-stack-top: 106px;
   }
 
   .content-panel .work-row__title {
@@ -5957,6 +6022,58 @@ body:has(.command-dock.is-open) .origin-marker__label {
 .map-node:focus-visible .map-node__glyph {
   outline: 2px solid var(--signal);
   outline-offset: 3px;
+}
+
+/* Career centres reveal their existing relation families as one readable
+   route. Hover, keyboard focus and the disclosed card share one map state. */
+
+.map-links line {
+  transition:
+    opacity 180ms var(--motion-shift),
+    stroke 180ms var(--motion-shift),
+    stroke-width 220ms var(--motion-shift);
+}
+
+.practice-map:has(
+    .map-node--garage:is(:hover, :focus-visible),
+    .map-node[data-map-id="private-practice"]:is(:hover, :focus-visible),
+    .map-inspector.is-open[data-selected-map-id="garage"],
+    .map-inspector.is-open[data-selected-map-id="private-practice"]
+  )
+  .map-links {
+  opacity: 1;
+}
+
+.practice-map:has(
+    .map-node--garage:is(:hover, :focus-visible),
+    .map-inspector.is-open[data-selected-map-id="garage"]
+  )
+  .map-links
+  line:not(.is-garage-link),
+.practice-map:has(
+    .map-node[data-map-id="private-practice"]:is(:hover, :focus-visible),
+    .map-inspector.is-open[data-selected-map-id="private-practice"]
+  )
+  .map-links
+  line:not(.is-private-practice-link) {
+  opacity: 0.14;
+}
+
+.practice-map:has(
+    .map-node--garage:is(:hover, :focus-visible),
+    .map-inspector.is-open[data-selected-map-id="garage"]
+  )
+  .map-links
+  line.is-garage-link,
+.practice-map:has(
+    .map-node[data-map-id="private-practice"]:is(:hover, :focus-visible),
+    .map-inspector.is-open[data-selected-map-id="private-practice"]
+  )
+  .map-links
+  line.is-private-practice-link {
+  stroke: color-mix(in srgb, var(--signal) 74%, var(--ink));
+  stroke-width: 1.4;
+  opacity: 1;
 }
 
 /* Directional affordances use one geometric construction. Decorative
