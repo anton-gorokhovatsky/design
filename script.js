@@ -118,6 +118,76 @@ const createSignal = (columns, rows, phase = 0, seed = 0) => {
 const signalField = document.querySelector("[data-signal-field]");
 const signalConstellation = document.querySelector("[data-signal-constellation]");
 const signalCore = document.querySelector("[data-signal-core]");
+const depthGrid = document.querySelector("[data-depth-grid]");
+const depthSections = depthGrid?.querySelector("[data-depth-sections]");
+const depthRays = depthGrid?.querySelector("[data-depth-rays]");
+const svgNamespace = "http://www.w3.org/2000/svg";
+
+const renderPerspectiveDepthGrid = () => {
+  if (!depthSections || !depthRays) {
+    return;
+  }
+
+  const vanishingPoint = { x: 50, y: 50 };
+  const outerFrame = {
+    left: 4,
+    right: 96,
+    top: 3,
+    bottom: 97,
+  };
+  const perspectiveDistance = 1.6;
+  const worldDepths = [0, 0.52, 1.28, 2.55, 4.9, 8.4];
+  const projectAtDepth = (coordinate, origin, depth) => {
+    // CSS Transforms defines w = 1 - z / d. The tunnel recedes along
+    // negative z, so the screen scale after the perspective divide is
+    // d / (d + depth), not an evenly spaced visual interpolation.
+    const scale = perspectiveDistance / (perspectiveDistance + depth);
+    return origin + (coordinate - origin) * scale;
+  };
+
+  const sectionElements = worldDepths.map((depth, index) => {
+    const left = projectAtDepth(outerFrame.left, vanishingPoint.x, depth);
+    const right = projectAtDepth(outerFrame.right, vanishingPoint.x, depth);
+    const top = projectAtDepth(outerFrame.top, vanishingPoint.y, depth);
+    const bottom = projectAtDepth(outerFrame.bottom, vanishingPoint.y, depth);
+    const section = document.createElementNS(svgNamespace, "path");
+
+    section.setAttribute(
+      "d",
+      `M${left.toFixed(3)} ${top.toFixed(3)}`
+        + `H${right.toFixed(3)}`
+        + `V${bottom.toFixed(3)}`
+        + `H${left.toFixed(3)}Z`,
+    );
+    section.style.setProperty(
+      "--depth-opacity",
+      String(Math.max(0.12, 0.64 - index * 0.1)),
+    );
+
+    return section;
+  });
+
+  const rayElements = [
+    [outerFrame.left, outerFrame.top],
+    [outerFrame.right, outerFrame.top],
+    [outerFrame.left, outerFrame.bottom],
+    [outerFrame.right, outerFrame.bottom],
+  ].map(([x, y]) => {
+    const ray = document.createElementNS(svgNamespace, "line");
+
+    ray.setAttribute("x1", String(x));
+    ray.setAttribute("y1", String(y));
+    ray.setAttribute("x2", String(vanishingPoint.x));
+    ray.setAttribute("y2", String(vanishingPoint.y));
+
+    return ray;
+  });
+
+  depthSections.replaceChildren(...sectionElements);
+  depthRays.replaceChildren(...rayElements);
+};
+
+renderPerspectiveDepthGrid();
 const signalEmojis = ["🍣", "🥪", "☕", "📻", "🏂", "⚽", "🌊", "🖥️", "👋", "🏃🏼‍♂️"];
 const signalGlyphs = ["·", "+", "×", ":", "∙", "*"];
 const signalPointCount = 1240;
@@ -491,7 +561,7 @@ const drawSignalConstellation = (time = performance.now()) => {
 
     if (fontSize !== currentFontSize) {
       currentFontSize = fontSize;
-      signalContext.font = `${fontSize}px "IBM Plex Mono", "SFMono-Regular", "SF Mono", monospace`;
+      signalContext.font = `${fontSize}px "Golos Text", Arial, Helvetica, sans-serif`;
     }
 
     signalContext.globalAlpha = clampSignal(
@@ -819,7 +889,7 @@ const mapItems = [
     previewVideo: "assets/reels/garage-collection.mp4?v=20260725-native-reels-1",
     previewMeta: "ТРИ СТРАНИЦЫ / 00:08",
     x: 75,
-    y: 14,
+    y: 19,
     size: 22,
   },
   {
@@ -849,7 +919,7 @@ const mapItems = [
     previewVideo: "assets/reels/garage-courses.mp4?v=20260725-native-reels-1",
     previewMeta: "ТРИ СТРАНИЦЫ / 00:07",
     x: 80,
-    y: 25,
+    y: 30,
     size: 17,
   },
   {
@@ -990,8 +1060,8 @@ const mapItems = [
     kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
     previewVideo: "assets/reels/dusty-camp.mp4?v=20260725-native-reels-1",
     previewMeta: "ПРОХОД ПО САЙТУ / 00:07",
-    x: 84,
-    y: 68,
+    x: 85,
+    y: 66,
     size: 15,
   },
   {
@@ -1024,8 +1094,8 @@ const mapItems = [
     kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
     previewVideo: "assets/reels/ks-fish.mp4?v=20260725-native-reels-1",
     previewMeta: "ПРОХОД ПО САЙТУ / 00:07",
-    x: 91,
-    y: 75,
+    x: 90,
+    y: 78,
     size: 13,
   },
   {
@@ -1777,34 +1847,113 @@ if (mapNodesRoot) {
 
 if (mapLinksRoot) {
   const itemById = new Map(mapItems.map((item) => [item.id, item]));
+  const childrenByParent = new Map();
 
   mapItems.forEach((item) => {
-    if (!item.parent) {
+    if (!item.parent || !itemById.has(item.parent)) {
       return;
     }
 
-    const parent = itemById.get(item.parent);
-
-    if (!parent) {
-      return;
-    }
-
-    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-    line.setAttribute("x1", String(parent.x));
-    line.setAttribute("y1", String(parent.y));
-    line.setAttribute("x2", String(item.x));
-    line.setAttribute("y2", String(item.y));
-
-    if (item.parent === "garage") {
-      line.classList.add("is-garage-link");
-    }
-
-    if (item.parent === "private-practice") {
-      line.classList.add("is-private-practice-link");
-    }
-
-    mapLinksRoot.append(line);
+    const siblings = childrenByParent.get(item.parent) || [];
+    siblings.push(item);
+    childrenByParent.set(item.parent, siblings);
   });
+
+  const renderMapLinks = () => {
+    const bounds = mapLinksRoot.getBoundingClientRect();
+
+    if (!bounds.width || !bounds.height) {
+      return;
+    }
+
+    const linkElements = [];
+
+    childrenByParent.forEach((children, parentId) => {
+      const parent = itemById.get(parentId);
+      const measuredChildren = children
+        .map((item) => {
+          const deltaX = ((item.x - parent.x) / 100) * bounds.width;
+          const deltaY = ((item.y - parent.y) / 100) * bounds.height;
+
+          return {
+            item,
+            angle: Math.atan2(deltaY, deltaX),
+          };
+        })
+        .sort((left, right) => left.angle - right.angle);
+      const minimumGap = (parentId === "garage" ? 6 : 7) * (Math.PI / 180);
+      const portAngles = [];
+
+      measuredChildren.forEach(({ angle }, index) => {
+        portAngles[index] = index === 0
+          ? angle
+          : Math.max(angle, portAngles[index - 1] + minimumGap);
+      });
+
+      const exactMean = measuredChildren
+        .reduce((total, child) => total + child.angle, 0) / measuredChildren.length;
+      const portMean = portAngles
+        .reduce((total, angle) => total + angle, 0) / portAngles.length;
+      const centeringOffset = exactMean - portMean;
+
+      measuredChildren.forEach(({ item, angle }, index) => {
+        const portAngle = portAngles[index] + centeringOffset;
+        const parentRadius = parent.size / 2 + 3;
+        const childRadius = item.size / 2 + 2;
+        const path = document.createElementNS(svgNamespace, "path");
+        const sourceX = parent.x
+          + (Math.cos(portAngle) * parentRadius / bounds.width) * 100;
+        const sourceY = parent.y
+          + (Math.sin(portAngle) * parentRadius / bounds.height) * 100;
+        const targetX = item.x
+          - (Math.cos(angle) * childRadius / bounds.width) * 100;
+        const targetY = item.y
+          - (Math.sin(angle) * childRadius / bounds.height) * 100;
+        const distance = Math.hypot(
+          ((targetX - sourceX) / 100) * bounds.width,
+          ((targetY - sourceY) / 100) * bounds.height,
+        );
+        const lead = Math.min(150, Math.max(55, distance * 0.22));
+        const control1X = sourceX
+          + (Math.cos(portAngle) * lead / bounds.width) * 100;
+        const control1Y = sourceY
+          + (Math.sin(portAngle) * lead / bounds.height) * 100;
+        const control2X = targetX
+          - (Math.cos(angle) * lead * 0.28 / bounds.width) * 100;
+        const control2Y = targetY
+          - (Math.sin(angle) * lead * 0.28 / bounds.height) * 100;
+
+        path.setAttribute(
+          "d",
+          `M${sourceX.toFixed(3)} ${sourceY.toFixed(3)}`
+            + `C${control1X.toFixed(3)} ${control1Y.toFixed(3)}`
+            + ` ${control2X.toFixed(3)} ${control2Y.toFixed(3)}`
+            + ` ${targetX.toFixed(3)} ${targetY.toFixed(3)}`,
+        );
+
+        if (parentId === "garage") {
+          path.classList.add("is-garage-link");
+        }
+
+        if (parentId === "private-practice") {
+          path.classList.add("is-private-practice-link");
+        }
+
+        linkElements.push(path);
+      });
+    });
+
+    mapLinksRoot.replaceChildren(...linkElements);
+  };
+
+  let mapLinksResizeFrame = 0;
+  const scheduleMapLinksRender = () => {
+    window.cancelAnimationFrame(mapLinksResizeFrame);
+    mapLinksResizeFrame = window.requestAnimationFrame(renderMapLinks);
+  };
+
+  renderMapLinks();
+  window.addEventListener("resize", scheduleMapLinksRender, { passive: true });
 }
 
 const seededRandom = (seed) => {
@@ -2094,12 +2243,9 @@ const panelIndex = document.querySelector("[data-panel-index]");
 const contentPanelBody = document.querySelector(".content-panel__body");
 const panelSections = Array.from(document.querySelectorAll("[data-panel-section]"));
 const panelOpenButtons = Array.from(document.querySelectorAll("[data-open-panel]"));
-const mobileWorkStack = window.matchMedia("(max-width: 680px)");
-const workStackRows = Array.from(document.querySelectorAll(".work-list .work-row"));
 const controlConsole = document.querySelector(".control-console");
 const controlConsoleHome = document.createComment("control-console-home");
 let controlConsolePanelOffset = null;
-let workStackFrame = 0;
 
 controlConsole?.before(controlConsoleHome);
 
@@ -2110,53 +2256,68 @@ const panelBackgroundRoots = [
 ].filter(Boolean);
 let activePanelView = null;
 let lastPanelTrigger = null;
+const compactContentStack = window.matchMedia("(max-width: 680px)");
+const contentStackGroups = {
+  work: [
+    document.querySelector(".work-intro"),
+    ...document.querySelectorAll(".work-list .work-row"),
+  ].filter(Boolean),
+  approach: [
+    document.querySelector(".approach-intro"),
+    ...document.querySelectorAll(".approach-grid li"),
+  ].filter(Boolean),
+};
+let contentStackFrame = 0;
 
-const clearWorkStackState = () => {
-  workStackRows.forEach((row) => {
-    row.classList.remove("is-work-stack-card");
-    row.style.removeProperty("--work-stack-scale");
+const clearContentStackState = () => {
+  Object.values(contentStackGroups).flat().forEach((surface) => {
+    surface.classList.remove(
+      "is-content-stack-active",
+      "is-content-stack-behind",
+      "is-content-stack-hidden",
+    );
+    surface.style.removeProperty("--content-stack-visibility");
+    surface.style.removeProperty("--content-stack-layer");
   });
 };
 
-const syncWorkStack = () => {
-  workStackFrame = 0;
+const syncContentStack = () => {
+  contentStackFrame = 0;
 
-  if (
-    !mobileWorkStack.matches
-    || activePanelView !== "work"
-    || !contentPanelBody
-  ) {
-    clearWorkStackState();
+  if (!compactContentStack.matches || !activePanelView) {
+    clearContentStackState();
     return;
   }
 
-  const scrollportTop = contentPanelBody.getBoundingClientRect().top;
-  const stackedRows = workStackRows.filter((row, index) => {
-    const stickyTop = 8 + (index * 14);
-    return row.getBoundingClientRect().top <= scrollportTop + stickyTop + 1;
-  });
+  const surfaces = contentStackGroups[activePanelView] || [];
+  const stackAnchor = contentPanelBody.getBoundingClientRect().top + 14;
+  const activeIndex = Math.max(0, surfaces.findLastIndex((surface) => (
+    surface.getBoundingClientRect().top <= stackAnchor + 1
+  )));
 
-  stackedRows.forEach((row, index) => {
-    const rowsBehindFront = stackedRows.length - index - 1;
-    const scale = 1 - Math.min(rowsBehindFront, 5) * 0.012;
-    row.classList.add("is-work-stack-card");
-    row.style.setProperty("--work-stack-scale", scale.toFixed(3));
-  });
+  surfaces.forEach((surface, index) => {
+    const layer = activeIndex - index;
+    const isActive = index === activeIndex;
+    const isBehind = layer > 0 && layer <= 2;
+    const isHidden = layer > 2;
 
-  workStackRows.forEach((row) => {
-    if (!stackedRows.includes(row)) {
-      row.classList.remove("is-work-stack-card");
-      row.style.removeProperty("--work-stack-scale");
-    }
+    surface.classList.toggle("is-content-stack-active", isActive);
+    surface.classList.toggle("is-content-stack-behind", isBehind);
+    surface.classList.toggle("is-content-stack-hidden", isHidden);
+    surface.style.setProperty("--content-stack-layer", String(Math.max(0, layer)));
+    surface.style.setProperty(
+      "--content-stack-visibility",
+      isBehind || isHidden ? "0" : "1",
+    );
   });
 };
 
-const scheduleWorkStackSync = () => {
-  if (workStackFrame) {
+const scheduleContentStackSync = () => {
+  if (contentStackFrame) {
     return;
   }
 
-  workStackFrame = window.requestAnimationFrame(syncWorkStack);
+  contentStackFrame = window.requestAnimationFrame(syncContentStack);
 };
 
 const panelViews = {
@@ -2232,7 +2393,6 @@ const openContentPanel = (view, trigger = null) => {
     section.hidden = section.dataset.panelSection !== view;
   });
   contentPanelBody?.scrollTo({ top: 0, behavior: "auto" });
-  scheduleWorkStackSync();
 
   if (panelTitle) {
     panelTitle.textContent = typographUiText(config.title);
@@ -2245,7 +2405,10 @@ const openContentPanel = (view, trigger = null) => {
   hideMapPreview({ immediate: true });
   setInspectorOpen(false);
   setPanelOpen(true);
-  window.requestAnimationFrame(() => panelClose?.focus());
+  window.requestAnimationFrame(() => {
+    scheduleContentStackSync();
+    panelClose?.focus();
+  });
 };
 
 const closeContentPanel = ({ restoreFocus = true } = {}) => {
@@ -2254,10 +2417,10 @@ const closeContentPanel = ({ restoreFocus = true } = {}) => {
   }
 
   setPanelOpen(false);
+  clearContentStackState();
   activePanelView = null;
   contentPanel?.removeAttribute("data-view");
   setConstellationNavCurrent("map");
-  scheduleWorkStackSync();
 
   if (restoreFocus && lastPanelTrigger instanceof HTMLElement) {
     const triggerIsInCompactNavigation = compactConstellationNav.matches
@@ -2339,9 +2502,27 @@ contentPanelBody?.addEventListener("keydown", (event) => {
 
 panelClose?.addEventListener("click", () => closeContentPanel());
 panelScrim?.addEventListener("click", () => closeContentPanel());
-contentPanelBody?.addEventListener("scroll", scheduleWorkStackSync, { passive: true });
-mobileWorkStack.addEventListener("change", scheduleWorkStackSync);
-window.addEventListener("resize", scheduleWorkStackSync, { passive: true });
+contentPanelBody?.addEventListener("scroll", scheduleContentStackSync, { passive: true });
+compactContentStack.addEventListener("change", scheduleContentStackSync);
+window.addEventListener("resize", scheduleContentStackSync, { passive: true });
+
+contentPanelBody?.addEventListener("focusin", (event) => {
+  if (!compactContentStack.matches) {
+    return;
+  }
+
+  const focusedCard = event.target.closest(".work-row");
+
+  if (!focusedCard) {
+    return;
+  }
+
+  focusedCard.scrollIntoView({
+    block: "start",
+    behavior: reducedMotion.matches ? "auto" : "smooth",
+  });
+  scheduleContentStackSync();
+});
 constellationNavHome?.addEventListener("click", () => {
   if (activePanelView) {
     closeContentPanel({ restoreFocus: false });
@@ -2367,9 +2548,9 @@ const commandViews = [
   {
     type: "panel",
     id: "work",
-    title: "ПОСЛЕДНИЕ ПРОЕКТЫ",
-    meta: "8 САЙТОВ / 2023—2026",
-    keywords: "проекты работы портфолио последние текущие сайты",
+    title: "НЕДАВНИЕ ПРОЕКТЫ",
+    meta: "8 ПРОЕКТОВ / 2023—2026",
+    keywords: "проекты работы портфолио недавние последние текущие сайты",
   },
   {
     type: "panel",

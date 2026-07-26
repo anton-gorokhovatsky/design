@@ -80,8 +80,36 @@
         }
       })();
     </script>
-    <link rel="stylesheet" href="styles.css?v=20260726-spatial-depth-1">
-    <script src="script.js?v=20260726-spatial-depth-1" defer></script>
+    <link
+      rel="preload"
+      href="assets/fonts/GolosText-Regular.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    >
+    <link
+      rel="preload"
+      href="assets/fonts/GolosText-Medium.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    >
+    <link
+      rel="preload"
+      href="assets/fonts/GolosText-SemiBold.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    >
+    <link
+      rel="preload"
+      href="assets/fonts/GolosText-Bold.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    >
+    <link rel="stylesheet" href="styles.css?v=20260726-golos-release-14">
+    <script src="script.js?v=20260726-golos-release-14" defer></script>
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -142,7 +170,7 @@
   <body>
     <a class="skip-link" href="#map">К интерактивной карте</a>
     <button class="skip-link skip-link--secondary" type="button" data-open-panel="work">
-      Открыть последние проекты
+      Открыть недавние проекты
     </button>
 
     <header class="site-header">
@@ -163,29 +191,14 @@
           <div class="map-grid" aria-hidden="true"></div>
           <svg
             class="map-depth-grid"
+            data-depth-grid
             viewBox="0 0 100 100"
             preserveAspectRatio="none"
             aria-hidden="true"
             focusable="false"
           >
-            <g class="map-depth-grid__planes">
-              <path d="M5 4H95L56 43H44Z"></path>
-              <path d="M5 96H95L56 57H44Z"></path>
-              <path d="M5 4L44 43V57L5 96Z"></path>
-              <path d="M95 4L56 43V57L95 96Z"></path>
-            </g>
-            <g class="map-depth-grid__frames">
-              <rect x="5" y="4" width="90" height="92" rx="3"></rect>
-              <rect x="20" y="19" width="60" height="62" rx="2"></rect>
-              <rect x="34" y="33" width="32" height="34" rx="1.2"></rect>
-              <rect x="44" y="43" width="12" height="14" rx="0.6"></rect>
-            </g>
-            <g class="map-depth-grid__rays">
-              <line x1="5" y1="4" x2="44" y2="43"></line>
-              <line x1="95" y1="4" x2="56" y2="43"></line>
-              <line x1="5" y1="96" x2="44" y2="57"></line>
-              <line x1="95" y1="96" x2="56" y2="57"></line>
-            </g>
+            <g class="map-depth-grid__sections" data-depth-sections></g>
+            <g class="map-depth-grid__rays" data-depth-rays></g>
           </svg>
           <div class="map-axis map-axis--horizontal" aria-hidden="true"></div>
           <div class="map-axis map-axis--vertical" aria-hidden="true"></div>
@@ -540,7 +553,7 @@
             data-material-active="always"
           >
             <p data-panel-index>01 / ПРОЕКТЫ</p>
-            <h2 id="content-panel-title" data-panel-title>ПОСЛЕДНИЕ ПРОЕКТЫ</h2>
+            <h2 id="content-panel-title" data-panel-title>НЕДАВНИЕ ПРОЕКТЫ</h2>
           </div>
           <button
             class="overlay-close"
@@ -561,7 +574,7 @@
       <section class="work-section" id="work" data-panel-section="work" aria-labelledby="work-title">
         <div class="section-head">
           <p>01 / ПРОЕКТЫ</p>
-          <p>8 САЙТОВ</p>
+          <p>8 ПРОЕКТОВ</p>
           <p>2023—2026</p>
         </div>
 
@@ -570,7 +583,7 @@
           data-material-surface="work-intro"
           data-material-active="always"
         >
-          <h2 id="work-title">ПОСЛЕДНИЕ <span>САЙТЫ</span></h2>
+          <h2 id="work-title">НЕДАВНИЕ <span>ПРОЕКТЫ</span></h2>
           <p>
             Исследование, концепция, прототип, координация,
             дизайн и&nbsp;код — роль меняется вместе с&nbsp;задачей.
@@ -743,26 +756,32 @@
           <p>МОСКВА / УДАЛЁННО</p>
         </div>
 
-        <div class="contact-copy">
-          <h2
-            id="contact-title"
-            data-material-surface="contact-title"
-            data-material-active="always"
-          ><span>МОЖНО</span><span>ПОГОВОРИТЬ.</span></h2>
-          <div
-            data-material-surface="contact-details"
-            data-material-active="always"
-          >
-            <p>ПРЕДЛОЖЕНИЯ / РЕКОМЕНДАЦИИ / ИНТРО / ХОРОШИЕ НАВОДКИ</p>
+        <div
+          class="contact-copy"
+          data-material-surface="contact"
+          data-material-active="always"
+        >
+          <h2 id="contact-title"><span>Привет!</span></h2>
+          <div class="contact-details">
+            <p>Для предложений, рекомендаций и&nbsp;хороших наводок.</p>
             <div class="contact-links">
-              <a href="mailto:anton.gorokhovatsky@gmail.com">НАПИСАТЬ ПИСЬМО</a>
+              <a
+                href="mailto:anton.gorokhovatsky@gmail.com"
+                aria-label="Написать письмо: anton.gorokhovatsky@gmail.com"
+              >
+                <span class="contact-link__index" aria-hidden="true">01</span>
+                <span class="contact-link__channel">ЭЛ. ПОЧТА</span>
+                <span class="contact-link__action">Написать письмо</span>
+              </a>
               <a
                 href="https://t.me/gorokhovatsky"
                 target="_blank"
                 rel="noreferrer"
                 aria-label="Написать в Telegram: @gorokhovatsky"
               >
-                НАПИСАТЬ В TELEGRAM
+                <span class="contact-link__index" aria-hidden="true">02</span>
+                <span class="contact-link__channel">TELEGRAM</span>
+                <span class="contact-link__action">Открыть чат</span>
               </a>
             </div>
           </div>

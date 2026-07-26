@@ -321,8 +321,7 @@ const requiredMaterialSurfaces = [
   "approach-02",
   "approach-03",
   "approach-04",
-  "contact-title",
-  "contact-details",
+  "contact",
 ];
 const materialSurfaceTags = [
   ...indexSource.matchAll(/<[^>]*\sdata-material-surface="([^"]+)"[^>]*>/gs),
@@ -498,15 +497,44 @@ warnContract(
 
 for (const token of ["font-sans", "font-mono", "font-serif"]) {
   requireContract(
-    new RegExp(`--${token}:\\s*Arial,\\s*Helvetica,\\s*sans-serif`).test(styleSource),
+    new RegExp(
+      `--${token}:\\s*"Golos Text",\\s*Arial,\\s*Helvetica,\\s*sans-serif`,
+    ).test(styleSource),
     "font-contract",
-    `${token} must resolve to Arial/Helvetica.`,
+    `${token} must resolve to the self-hosted Golos Text family with system fallbacks.`,
   );
 }
 requireContract(
-  /--font-ascii:\s*"IBM Plex Mono"/.test(styleSource),
+  /--font-ascii:\s*var\(--font-sans\)/.test(styleSource),
   "font-ascii",
-  "ASCII geometry must retain the dedicated IBM Plex Mono token.",
+  "Canvas glyphs must inherit the shared Golos Text token.",
+);
+
+for (const weight of [400, 500, 600, 700]) {
+  requireContract(
+    new RegExp(
+      `@font-face\\s*\\{[^}]*font-family:\\s*"Golos Text";`
+        + `[^}]*font-weight:\\s*${weight};`
+        + `[^}]*font-display:\\s*swap;`,
+      "s",
+    ).test(styleSource),
+    "font-face-golos",
+    `Golos Text weight ${weight} must be declared locally with font-display: swap.`,
+  );
+}
+
+requireContract(
+  /signalContext\.font\s*=\s*`\$\{fontSize\}px "Golos Text", Arial, Helvetica, sans-serif`/.test(
+    scriptSource,
+  ),
+  "font-canvas",
+  "The canvas constellation must use Golos Text with the shared system fallbacks.",
+);
+
+requireContract(
+  !/IBM Plex/.test(`${indexSource}\n${scriptSource}\n${styleSource}`),
+  "font-legacy",
+  "Rendered source must not retain IBM Plex declarations or references.",
 );
 
 const fixedPixelFontSizes = [
@@ -522,7 +550,7 @@ requireContract(
   pureViewportFontSizes,
 );
 
-const legacyFontFaces = ["IBM Plex Sans", "IBM Plex Serif"].filter((family) => {
+const legacyFontFaces = ["IBM Plex Mono", "IBM Plex Sans", "IBM Plex Serif"].filter((family) => {
   const uses = styleSource.match(new RegExp(`font-family:\\s*"${family}"`, "g")) || [];
   return uses.length > 0
     && !styleSource.includes(`--font-sans: "${family}"`)
@@ -531,7 +559,7 @@ const legacyFontFaces = ["IBM Plex Sans", "IBM Plex Serif"].filter((family) => {
 warnContract(
   legacyFontFaces.length === 0,
   "font-face-legacy",
-  "Historical non-ASCII @font-face declarations remain candidates for cleanup.",
+  "Historical IBM Plex @font-face declarations remain candidates for cleanup.",
   legacyFontFaces,
 );
 

@@ -85,9 +85,11 @@ logo card.
   and rearranged inside the viewport without changing the behavior of their
   controls. Consistency means predictable principles, not identical shapes.
   Crisp strokes remain reserved for active controls and focus.
-- Arial/Helvetica carries every textual interface and content layer. IBM Plex
-  Mono remains only inside ASCII fields whose geometry depends on a fixed-width
-  grid.
+- Self-hosted Golos Text carries every textual interface, content layer, and
+  the central point constellation in weights 400/500/600/700.
+  Arial/Helvetica remain system fallbacks only. The constellation positions
+  each glyph independently on the canvas, so its geometry does not require a
+  monospace font.
 - A visual review includes an explicit optical-alignment pass at desktop,
   tablet, 390 px, and 320 px: shared text baselines, perceived icon centres,
   equal internal air, stable row rhythm, and aligned axes between neighbouring
@@ -177,5 +179,5 @@ computed styles, runtime state coverage, and matched before/after renders.
 The site uses static HTML, CSS, and JavaScript and publishes from the
 repository's `gh-pages` branch.
 
-IBM Plex font files are self-hosted under the SIL Open Font License 1.1; the
-license is included at `assets/fonts/LICENSE.txt`.
+Golos Text font files are self-hosted under the SIL Open Font License 1.1; the
+license is included at `assets/fonts/OFL-GolosText.txt`.
