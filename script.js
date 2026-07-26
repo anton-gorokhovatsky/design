@@ -343,7 +343,7 @@ const drawSignalConstellation = (time = performance.now()) => {
   const fieldScale = Math.min(width * 0.82, height * 0.92);
   const breathing = 1 + Math.sin(elapsed * 0.0008) * 0.018;
   const signalColor = getComputedStyle(root).getPropertyValue("--signal").trim() || "#2448ed";
-  const signalAlphaBoost = root.dataset.theme === "dark" ? 1.42 : 1;
+  const signalAlphaBoost = root.dataset.theme === "dark" ? 1.28 : 0.9;
   const glyphSize = Math.max(6, Math.min(10.5, fieldScale / 64));
   const cameraDistance = fieldScale * 1.42;
   const cosX = Math.cos(signalRotation.x);
@@ -485,8 +485,9 @@ const drawSignalConstellation = (time = performance.now()) => {
       0,
       1,
     );
-    const fontScale = clampSignal(0.76 + point.perspective * 0.26, 0.86, 1.18);
+    const fontScale = clampSignal(0.22 + point.perspective * 0.8, 0.58, 1.42);
     const fontSize = Math.round(glyphSize * fontScale * 2) / 2;
+    const depthCurve = depthTone ** 1.7;
 
     if (fontSize !== currentFontSize) {
       currentFontSize = fontSize;
@@ -494,10 +495,10 @@ const drawSignalConstellation = (time = performance.now()) => {
     }
 
     signalContext.globalAlpha = clampSignal(
-      (0.22 + point.weight * 0.68)
-        * (0.58 + depthTone * 0.54)
+      (0.1 + point.weight * 0.72)
+        * (0.22 + depthCurve * 0.98)
         * signalAlphaBoost,
-      0.16,
+      0.05,
       1,
     );
     signalContext.fillText(
@@ -709,11 +710,15 @@ signalField?.addEventListener("pointermove", (event) => {
 
   signalField.style.setProperty("--core-x", `${x * 12}px`);
   signalField.style.setProperty("--core-y", `${y * 9}px`);
+  signalField.style.setProperty("--depth-x", `${x * -4}px`);
+  signalField.style.setProperty("--depth-y", `${y * -3}px`);
 });
 
 signalField?.addEventListener("pointerleave", () => {
   signalField.style.setProperty("--core-x", "0px");
   signalField.style.setProperty("--core-y", "0px");
+  signalField.style.setProperty("--depth-x", "0px");
+  signalField.style.setProperty("--depth-y", "0px");
 });
 
 const principlesSourceHref = "https://app.notion.com/p/digital-web-digital-f68fc13247614ccb9738d9a85acf29b4?source=copy_link#70405c2623e342fb98d027c8634f2207";
@@ -734,14 +739,14 @@ const mapItems = [
   },
   {
     id: "private-practice",
-    kind: "company",
+    kind: "project",
     label: "ЧАСТНАЯ ПРАКТИКА",
     title: "ЧАСТНАЯ ПРАКТИКА",
     meta: "СЕЙЧАС / НЕБОЛЬШИЕ ЦИФРОВЫЕ ПРОЕКТЫ",
     description: "Самостоятельная работа с проектами, которым нужно быстро разобраться в задаче, придать форму и дойти до запуска.",
-    kindLabel: "РАБОТА / ЧАСТНАЯ ПРАКТИКА",
-    x: 34,
-    y: 30,
+    kindLabel: "ПРАКТИКА / СВЯЗУЮЩИЙ УЗЕЛ",
+    x: 61,
+    y: 43,
     size: 34,
   },
   {

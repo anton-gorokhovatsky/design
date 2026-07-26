@@ -80,8 +80,8 @@
         }
       })();
     </script>
-    <link rel="stylesheet" href="styles.css?v=20260725-mobile-stack-1">
-    <script src="script.js?v=20260725-mobile-stack-1" defer></script>
+    <link rel="stylesheet" href="styles.css?v=20260726-spatial-depth-1">
+    <script src="script.js?v=20260726-spatial-depth-1" defer></script>
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -168,33 +168,23 @@
             aria-hidden="true"
             focusable="false"
           >
+            <g class="map-depth-grid__planes">
+              <path d="M5 4H95L56 43H44Z"></path>
+              <path d="M5 96H95L56 57H44Z"></path>
+              <path d="M5 4L44 43V57L5 96Z"></path>
+              <path d="M95 4L56 43V57L95 96Z"></path>
+            </g>
             <g class="map-depth-grid__frames">
-              <rect x="2" y="2" width="96" height="96" rx="2"></rect>
-              <rect x="15" y="13" width="70" height="74" rx="1.5"></rect>
-              <rect x="28" y="25" width="44" height="50" rx="1"></rect>
-              <rect x="39" y="36" width="22" height="28" rx="0.7"></rect>
-              <rect x="46" y="44" width="8" height="12" rx="0.4"></rect>
+              <rect x="5" y="4" width="90" height="92" rx="3"></rect>
+              <rect x="20" y="19" width="60" height="62" rx="2"></rect>
+              <rect x="34" y="33" width="32" height="34" rx="1.2"></rect>
+              <rect x="44" y="43" width="12" height="14" rx="0.6"></rect>
             </g>
             <g class="map-depth-grid__rays">
-              <line x1="2" y1="2" x2="50" y2="50"></line>
-              <line x1="25" y1="2" x2="50" y2="50"></line>
-              <line x1="50" y1="2" x2="50" y2="50"></line>
-              <line x1="75" y1="2" x2="50" y2="50"></line>
-              <line x1="98" y1="2" x2="50" y2="50"></line>
-              <line x1="2" y1="98" x2="50" y2="50"></line>
-              <line x1="25" y1="98" x2="50" y2="50"></line>
-              <line x1="50" y1="98" x2="50" y2="50"></line>
-              <line x1="75" y1="98" x2="50" y2="50"></line>
-              <line x1="98" y1="98" x2="50" y2="50"></line>
-              <line x1="2" y1="25" x2="50" y2="50"></line>
-              <line x1="2" y1="75" x2="50" y2="50"></line>
-              <line x1="98" y1="25" x2="50" y2="50"></line>
-              <line x1="98" y1="75" x2="50" y2="50"></line>
-            </g>
-            <g class="map-depth-grid__orbits">
-              <ellipse cx="50" cy="50" rx="36" ry="45"></ellipse>
-              <ellipse cx="50" cy="50" rx="23" ry="31"></ellipse>
-              <ellipse cx="50" cy="50" rx="11" ry="16"></ellipse>
+              <line x1="5" y1="4" x2="44" y2="43"></line>
+              <line x1="95" y1="4" x2="56" y2="43"></line>
+              <line x1="5" y1="96" x2="44" y2="57"></line>
+              <line x1="95" y1="96" x2="56" y2="57"></line>
             </g>
           </svg>
           <div class="map-axis map-axis--horizontal" aria-hidden="true"></div>

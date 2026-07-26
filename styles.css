@@ -232,6 +232,8 @@ button {
 .practice-map {
   --core-x: 0px;
   --core-y: 0px;
+  --depth-x: 0px;
+  --depth-y: 0px;
   position: relative;
   height: clamp(500px, 63svh, 660px);
   overflow: hidden;
@@ -269,42 +271,62 @@ button {
   z-index: 0;
   top: 50%;
   left: 50%;
-  width: 64%;
-  height: auto;
-  aspect-ratio: 1;
-  color: color-mix(in srgb, var(--signal) 30%, var(--line));
-  opacity: 0.34;
+  width: min(58%, 820px);
+  height: 76%;
+  color: color-mix(in srgb, var(--signal) 40%, var(--line));
+  opacity: 0.52;
   pointer-events: none;
-  transform: translate(-50%, -50%);
-  mask-image: radial-gradient(ellipse at 50% 50%, #000 0 60%, transparent 96%);
-  -webkit-mask-image: radial-gradient(ellipse at 50% 50%, #000 0 60%, transparent 96%);
+  transform: translate(
+    calc(-50% + var(--depth-x)),
+    calc(-50% + var(--depth-y))
+  );
+  transition: transform 900ms var(--motion-shift);
 }
 
-.map-depth-grid :is(rect, line, ellipse) {
+.map-depth-grid :is(rect, line) {
   fill: none;
   stroke: currentColor;
   stroke-linecap: round;
-  stroke-width: 0.55;
+  stroke-width: 0.7;
   vector-effect: non-scaling-stroke;
 }
 
-.map-depth-grid__frames rect:nth-child(1),
-.map-depth-grid__orbits ellipse:nth-child(1) {
-  opacity: 0.42;
+.map-depth-grid__planes path {
+  fill: currentColor;
+  stroke: none;
 }
 
-.map-depth-grid__frames rect:nth-child(2),
-.map-depth-grid__orbits ellipse:nth-child(2) {
-  opacity: 0.58;
+.map-depth-grid__planes path:nth-child(1) {
+  opacity: 0.04;
 }
 
-.map-depth-grid__frames rect:nth-child(n + 3),
-.map-depth-grid__orbits ellipse:nth-child(3) {
-  opacity: 0.78;
+.map-depth-grid__planes path:nth-child(2) {
+  opacity: 0.018;
+}
+
+.map-depth-grid__planes path:nth-child(3),
+.map-depth-grid__planes path:nth-child(4) {
+  opacity: 0.028;
+}
+
+.map-depth-grid__frames rect:nth-child(1) {
+  opacity: 0.74;
+}
+
+.map-depth-grid__frames rect:nth-child(2) {
+  opacity: 0.52;
+}
+
+.map-depth-grid__frames rect:nth-child(3) {
+  opacity: 0.32;
+}
+
+.map-depth-grid__frames rect:nth-child(4) {
+  opacity: 0.18;
 }
 
 .map-depth-grid__rays {
-  opacity: 0.68;
+  opacity: 0.44;
 }
 
 .share-heading,
@@ -375,8 +397,9 @@ html[data-capture="og"] .map-grid {
 
 @media (max-width: 680px) {
   .map-depth-grid {
-    width: 90%;
-    opacity: 0.18;
+    width: 78%;
+    height: 66%;
+    opacity: 0.2;
   }
 }
 
@@ -519,6 +542,10 @@ html[data-capture="og"] .map-grid {
 .map-links line.is-private-practice-link {
   stroke: color-mix(in srgb, var(--ink) 30%, transparent);
   stroke-width: 0.65;
+}
+
+.map-links line:is(.is-garage-link, .is-private-practice-link) {
+  opacity: 0.28;
 }
 
 .map-specks {
@@ -4966,12 +4993,12 @@ body:has(.command-dock.is-open) .origin-marker__label {
 }
 
 .display-control .theme-toggle:hover {
-  background: color-mix(in srgb, var(--content-ink) 6%, transparent);
+  background: transparent;
   color: var(--ink);
 }
 
 .display-control .theme-toggle:focus-visible {
-  background: color-mix(in srgb, var(--content-ink) 6%, transparent);
+  background: transparent;
   color: var(--ink);
   outline: 2px solid var(--signal);
   outline-offset: 1px;
