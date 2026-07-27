@@ -50,7 +50,7 @@ logo card.
 - A site reel is a window, not a crop: all 13 videos use square pixels and are
   captured directly in the receiver's display ratio. Twelve recordings are
   `600×750` / `4:5`; the single content-led exception is the House of
-  Narkomfin at `750×600` / `5:4`, matching the site's horizontal architectural
+  Narkomfin at `900×600` / `3:2`, captured at `1200×800` to match the site's horizontal architectural
   layout. The receiver uses the same `MATERIAL / 01`, while the native video
   fills its silhouette without stretching, artificial padding, or empty
   fields. Never use `cover`, reshape an existing recording, or merely rewrite

@@ -37,10 +37,10 @@ const reelSpecs = new Map([
   [
     "narkomfin.mp4",
     {
-      width: 750,
+      width: 900,
       height: 600,
-      displayAspect: "5:4",
-      sourceViewport: "1500x1200",
+      displayAspect: "3:2",
+      sourceViewport: "1200x800",
     },
   ],
 ]);
@@ -166,8 +166,8 @@ if (
   );
 }
 
-if (!/aspect-ratio:\s*5\s*\/\s*4/.test(landscapeViewerRule)) {
-  failures.push("receiver: the House of Narkomfin exception must remain horizontal 5:4");
+if (!/aspect-ratio:\s*3\s*\/\s*2/.test(landscapeViewerRule)) {
+  failures.push("receiver: the House of Narkomfin exception must remain horizontal 3:2");
 }
 
 if (
@@ -187,5 +187,5 @@ if (failures.length) {
 }
 
 console.log(
-  `Reel check passed: ${reelNames.length} native captures, square pixels, 4:5 material receiver, 5:4 Narkomfin exception.`,
+  `Reel check passed: ${reelNames.length} native captures, square pixels, 4:5 material receiver, 3:2 Narkomfin exception.`,
 );

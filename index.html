@@ -11,11 +11,11 @@
     <meta name="theme-color" content="#f2f1ec">
     <meta name="color-scheme" content="light dark">
     <meta name="robots" content="index, follow, max-image-preview:large">
-    <link rel="icon" href="assets/favicon.svg?v=20260725-spatial-map-2" type="image/svg+xml">
+    <link rel="icon" href="assets/favicon.svg?v=20260727-final-system-1" type="image/svg+xml">
     <link
       rel="apple-touch-icon"
       sizes="180x180"
-      href="assets/apple-touch-icon.png?v=20260725-spatial-map-2"
+      href="assets/apple-touch-icon.png?v=20260727-final-system-1"
     >
     <meta property="og:type" content="website">
     <meta property="og:locale" content="ru_RU">
@@ -28,11 +28,11 @@
     <meta property="og:url" content="https://gorokhovatsky.tech/">
     <meta
       property="og:image"
-      content="https://gorokhovatsky.tech/assets/og-signal.jpg?v=20260725-spatial-map-2"
+      content="https://gorokhovatsky.tech/assets/og-signal.jpg?v=20260727-final-system-1"
     >
     <meta
       property="og:image:secure_url"
-      content="https://gorokhovatsky.tech/assets/og-signal.jpg?v=20260725-spatial-map-2"
+      content="https://gorokhovatsky.tech/assets/og-signal.jpg?v=20260727-final-system-1"
     >
     <meta property="og:image:type" content="image/jpeg">
     <meta property="og:image:width" content="1200">
@@ -49,7 +49,7 @@
     >
     <meta
       name="twitter:image"
-      content="https://gorokhovatsky.tech/assets/og-signal.jpg?v=20260725-spatial-map-2"
+      content="https://gorokhovatsky.tech/assets/og-signal.jpg?v=20260727-final-system-1"
     >
     <meta
       name="twitter:image:alt"
@@ -117,8 +117,8 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=20260727-observatory-release-1">
-    <script src="script.js?v=20260727-observatory-release-1" defer></script>
+    <link rel="stylesheet" href="styles.css?v=20260727-final-system-1">
+    <script src="script.js?v=20260727-final-system-1" defer></script>
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -165,8 +165,8 @@
           {
             "@type": "ImageObject",
             "@id": "https://gorokhovatsky.tech/#share-image",
-            "url": "https://gorokhovatsky.tech/assets/og-signal.jpg?v=20260725-spatial-map-2",
-            "contentUrl": "https://gorokhovatsky.tech/assets/og-signal.jpg?v=20260725-spatial-map-2",
+            "url": "https://gorokhovatsky.tech/assets/og-signal.jpg?v=20260727-final-system-1",
+            "contentUrl": "https://gorokhovatsky.tech/assets/og-signal.jpg?v=20260727-final-system-1",
             "encodingFormat": "image/jpeg",
             "width": 1200,
             "height": 630,
@@ -194,7 +194,7 @@
         <div class="practice-map" data-practice-map data-signal-field>
           <div class="share-heading" aria-hidden="true">
             <strong>АНТОН ГОРОХОВАТСКИЙ</strong>
-            <span>КАРТА / 2009—2026</span>
+            <span>ДИЗАЙН-ИНЖЕНЕР / 2009—2026</span>
           </div>
           <p class="share-domain" aria-hidden="true">GOROKHOVATSKY.TECH</p>
           <div class="map-camera" data-map-camera>
@@ -213,10 +213,26 @@
             <div class="map-axis map-axis--horizontal" aria-hidden="true"></div>
             <div class="map-axis map-axis--vertical" aria-hidden="true"></div>
 
-            <p class="map-axis-label map-axis-label--north">С / ИНСТИТУЦИИ</p>
-            <p class="map-axis-label map-axis-label--east">В / ПРОЕКТЫ</p>
-            <p class="map-axis-label map-axis-label--south">Ю / ЛИЧНОЕ</p>
-            <p class="map-axis-label map-axis-label--west">З / ПРИНЦИПЫ</p>
+            <p
+              class="map-axis-label map-axis-label--north"
+              data-material-surface="axis-north"
+              data-material-active="always"
+            >С / ИНСТИТУЦИИ</p>
+            <p
+              class="map-axis-label map-axis-label--east"
+              data-material-surface="axis-east"
+              data-material-active="always"
+            >В / ПРОЕКТЫ</p>
+            <p
+              class="map-axis-label map-axis-label--south"
+              data-material-surface="axis-south"
+              data-material-active="always"
+            >Ю / ЛИЧНОЕ</p>
+            <p
+              class="map-axis-label map-axis-label--west"
+              data-material-surface="axis-west"
+              data-material-active="always"
+            >З / ПРИНЦИПЫ</p>
 
             <canvas
               class="signal-constellation"
@@ -240,10 +256,15 @@
               role="group"
               aria-label="Точки интерактивной карты опыта, проектов и интересов. Используйте стрелки, чтобы перемещаться между точками."
             ></div>
+            <div class="map-labels" data-map-labels aria-hidden="true"></div>
 
             <div class="origin-marker" data-signal-core role="img" aria-label="Антон Гороховатский — точка отсчёта">
               <span class="origin-marker__cross" aria-hidden="true"></span>
-              <span class="origin-marker__label">АГ / НАЧАЛО</span>
+              <span
+                class="origin-marker__label"
+                data-material-surface="origin-label"
+                data-material-active="always"
+              >АГ / НАЧАЛО</span>
               <span class="signal-pulse" aria-hidden="true"></span>
             </div>
           </div>
@@ -264,7 +285,7 @@
             >
               <span class="map-hover-preview__index" data-map-preview-index>01 / 13</span>
               <strong data-map-preview-title>ПРОЕКТ</strong>
-              <span data-map-preview-meta>ПРОХОД ПО САЙТУ</span>
+              <span data-map-preview-meta>ФРАГМЕНТ ИНТЕРФЕЙСА</span>
             </div>
           </aside>
 
@@ -405,7 +426,7 @@
                 data-open-panel="contact"
               >
                 <span class="constellation-nav__shape" aria-hidden="true">•</span>
-                <span class="constellation-nav__label">КОНТАКТ</span>
+                <span class="constellation-nav__label">СВЯЗАТЬСЯ</span>
               </button>
               <a
                 class="constellation-nav__item"
@@ -662,7 +683,7 @@
             rel="noreferrer"
           >
             <span class="work-row__number">04</span>
-            <span class="work-row__title">Интернет-магазин мерча бегового клуба Dusty Dumbbells</span>
+            <span class="work-row__title">Интернет-магазин мерча бегового клуба Dusty Dumbbells</span>
             <span class="work-row__scope">МАГАЗИН / САЙТ</span>
             <span class="work-row__domain">DUSTYDUMBBELLS</span>
           </a>
@@ -676,7 +697,7 @@
             rel="noreferrer"
           >
             <span class="work-row__number">05</span>
-            <span class="work-row__title">Сайт осеннего кэмпа Dusty Dumbbells</span>
+            <span class="work-row__title">Сайт осеннего кэмпа Dusty Dumbbells</span>
             <span class="work-row__scope">СОБЫТИЕ / САЙТ</span>
             <span class="work-row__domain">DUSTYDUMBBELLS</span>
           </a>
@@ -771,7 +792,7 @@
 
       <section class="contact-section" id="contact" data-panel-section="contact" aria-labelledby="contact-title" hidden>
         <div class="section-head">
-          <p>03 / КОНТАКТ</p>
+          <p>03 / СВЯЗАТЬСЯ</p>
           <p>РАБОТА / ЧАСТИЧНАЯ ЗАНЯТОСТЬ / ПРОЕКТЫ</p>
           <p>МОСКВА / УДАЛЁННО</p>
         </div>

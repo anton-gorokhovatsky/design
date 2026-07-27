@@ -866,7 +866,7 @@ const mapItems = [
     href: "https://garagemca.org/",
     kindLabel: "ПРОЕКТ / ГРАФ «ГАРАЖА»",
     previewVideo: "assets/reels/garage-site.mp4?v=20260725-native-reels-1",
-    previewMeta: "ПРОХОД ПО САЙТУ / 00:08",
+    previewMeta: "ГЛАВНАЯ, КАЛЕНДАРЬ И МЕДИА / 00:08",
     x: 58,
     y: 14,
     size: 23,
@@ -881,9 +881,9 @@ const mapItems = [
     description: "Дизайн сайта Дома Наркомфина — от интерактивной модели здания и световых состояний до календаря и цельной цифровой навигации.",
     href: "https://narkomfin.ru/",
     kindLabel: "ПРОЕКТ / ГРАФ «ГАРАЖА»",
-    previewVideo: "assets/reels/narkomfin.mp4?v=20260725-native-reels-1",
+    previewVideo: "assets/reels/narkomfin.mp4?v=20260727-full-frame-2",
     previewOrientation: "landscape",
-    previewMeta: "ПРОХОД ПО САЙТУ / 00:07",
+    previewMeta: "ДИЗАЙН И ВЕБ-РАЗРАБОТКА / 00:08",
     x: 67,
     y: 21,
     size: 25,
@@ -899,7 +899,7 @@ const mapItems = [
     href: "https://garagemca.org/collection/catalogue",
     kindLabel: "ПРОЕКТ / ГРАФ «ГАРАЖА»",
     previewVideo: "assets/reels/garage-collection.mp4?v=20260725-native-reels-1",
-    previewMeta: "ТРИ СТРАНИЦЫ / 00:08",
+    previewMeta: "КАТАЛОГ И ОТКРЫТОЕ ХРАНЕНИЕ / 00:08",
     x: 75,
     y: 19,
     size: 22,
@@ -929,7 +929,7 @@ const mapItems = [
     href: "https://garagemca.org/learn/online-courses",
     kindLabel: "ПРОЕКТ / ГРАФ «ГАРАЖА»",
     previewVideo: "assets/reels/garage-courses.mp4?v=20260725-native-reels-1",
-    previewMeta: "ТРИ СТРАНИЦЫ / 00:07",
+    previewMeta: "КУРСЫ И УЧЕБНЫЕ СЦЕНАРИИ / 00:07",
     x: 80,
     y: 30,
     size: 17,
@@ -959,7 +959,7 @@ const mapItems = [
     href: "https://non-human-animals.garage.digital/index.html",
     kindLabel: "ПРОЕКТ / ГРАФ «ГАРАЖА»",
     previewVideo: "assets/reels/garage-webzine.mp4?v=20260725-native-reels-1",
-    previewMeta: "ТЕМА + ТЕКСТ / 00:08",
+    previewMeta: "ТЕМА, ТЕКСТ И ИНТЕРАКТИВ / 00:08",
     x: 72,
     y: 34,
     size: 15,
@@ -1003,7 +1003,7 @@ const mapItems = [
     href: "https://shirokostup.site/",
     kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
     previewVideo: "assets/reels/shirokostup.mp4?v=20260725-native-reels-1",
-    previewMeta: "ПРОХОД ПО САЙТУ / 00:07",
+    previewMeta: "ПОРТФОЛИО И АРХИВ ПРОЕКТОВ / 00:07",
     x: 82,
     y: 52,
     size: 22,
@@ -1020,7 +1020,7 @@ const mapItems = [
     href: "https://tarski.ru/",
     kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
     previewVideo: "assets/reels/tarski.mp4?v=20260725-native-reels-1",
-    previewMeta: "ПРОХОД ПО САЙТУ / 00:08",
+    previewMeta: "СООБЩЕСТВО И ПРОГРАММА / 00:08",
     x: 78,
     y: 47,
     size: 23,
@@ -1037,7 +1037,7 @@ const mapItems = [
     href: "https://barberherman.ru/",
     kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
     previewVideo: "assets/reels/herman.mp4?v=20260725-native-reels-1",
-    previewMeta: "ПРОХОД ПО САЙТУ / 00:07",
+    previewMeta: "СТАТУС, УСЛУГИ И ЗАПИСЬ / 00:07",
     x: 82,
     y: 58,
     size: 19,
@@ -1047,14 +1047,14 @@ const mapItems = [
     parent: "private-practice",
     kind: "project",
     label: "DUSTY MERCH",
-    mapLabel: "Интернет-магазин мерча бегового клуба Dusty Dumbbells",
+    mapLabel: "Интернет-магазин мерча бегового клуба Dusty\u00a0Dumbbells",
     title: "DUSTY MERCH",
     meta: "МАГАЗИН / САЙТ",
     description: "Небольшой commerce-проект с самостоятельной визуальной системой и быстрым запуском.",
     href: "https://merch.dustydumbbells.com/",
     kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
     previewVideo: "assets/reels/dusty-merch.mp4?v=20260725-native-reels-1",
-    previewMeta: "ПРОХОД ПО САЙТУ / 00:07",
+    previewMeta: "КАТАЛОГ И ОФОРМЛЕНИЕ / 00:07",
     x: 73,
     y: 61,
     size: 17,
@@ -1064,14 +1064,14 @@ const mapItems = [
     parent: "private-practice",
     kind: "project",
     label: "DD CAMP",
-    mapLabel: "Сайт осеннего кэмпа Dusty Dumbbells",
+    mapLabel: "Сайт осеннего кэмпа Dusty\u00a0Dumbbells",
     title: "DUSTY DUMBBELLS CAMP",
     meta: "СОБЫТИЕ / САЙТ",
     description: "Сайт спортивного кемпа: структура программы, атмосфера события и практичная точка входа.",
     href: "https://camp.dustydumbbells.com/",
     kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
     previewVideo: "assets/reels/dusty-camp.mp4?v=20260725-native-reels-1",
-    previewMeta: "ПРОХОД ПО САЙТУ / 00:07",
+    previewMeta: "ПРОГРАММА И АТМОСФЕРА / 00:07",
     x: 85,
     y: 66,
     size: 15,
@@ -1087,8 +1087,8 @@ const mapItems = [
     description: "Небольшой брендовый web-проект, где цифровая форма работает как самостоятельный характер.",
     href: "https://11111.life/",
     kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
-    previewVideo: "assets/reels/11111.mp4?v=20260725-native-reels-1",
-    previewMeta: "ПРОХОД ПО САЙТУ / 00:07",
+    previewVideo: "assets/reels/11111.mp4?v=20260727-safe-header-1",
+    previewMeta: "ИСТОРИЯ, ЦЕЛЬ И МАСШТАБ / 00:08",
     x: 68,
     y: 72,
     size: 14,
@@ -1104,8 +1104,8 @@ const mapItems = [
     description: "Каталожный сайт с ясной продуктовой структурой и визуальным ощущением холодного течения.",
     href: "https://ks.fish/",
     kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
-    previewVideo: "assets/reels/ks-fish.mp4?v=20260725-native-reels-1",
-    previewMeta: "ПРОХОД ПО САЙТУ / 00:07",
+    previewVideo: "assets/reels/ks-fish.mp4?v=20260727-visual-story-1",
+    previewMeta: "ВИТРИНА, ПРОДУКТ И ИСТОРИЯ / 00:08",
     x: 90,
     y: 78,
     size: 13,
@@ -1122,7 +1122,7 @@ const mapItems = [
     href: "https://doronin.store/",
     kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
     previewVideo: "assets/reels/doronin.mp4?v=20260725-native-reels-1",
-    previewMeta: "ПРОХОД ПО САЙТУ / 00:07",
+    previewMeta: "КОЛЛЕКЦИЯ И МЕРЧ / 00:07",
     x: 77,
     y: 81,
     size: 13,
@@ -1133,11 +1133,11 @@ const mapItems = [
     label: "БЕГ",
     title: "БЕГ",
     meta: "ЛИЧНЫЙ ЦЕНТР / ДИСТАНЦИЯ / РИТМ",
-    description: "Личный центр притяжения. Бег собирает ритм, выносливость и внимание — и снова возвращает ощущение движения вперёд.",
+    description: "Бег — личный центр притяжения: он возвращает ритм, собранность и ощущение движения вперёд — на дистанции и вне её.",
     href: "https://www.instagram.com/stories/highlights/18054491965888038/",
     kindLabel: "ЛИЧНОЕ / ЦЕНТР ПРИТЯЖЕНИЯ",
-    x: 58,
-    y: 77,
+    x: 61,
+    y: 75,
     size: 60,
   },
   {
@@ -1147,9 +1147,10 @@ const mapItems = [
     title: "ИСКУССТВО",
     meta: "КУЛЬТУРА / СМОТРЕТЬ ЗАНОВО",
     description: "Не отдельное хобби, а способ смотреть внимательнее и постоянно перенастраивать собственную оптику.",
+    href: "https://garagemca.org/calendar",
     kindLabel: "ЛИЧНОЕ / ИНТЕРЕС",
-    x: 54,
-    y: 84,
+    x: 53,
+    y: 81,
     size: 17,
   },
   {
@@ -1162,7 +1163,7 @@ const mapItems = [
     href: "https://www.sports.ru/tribuna/blogs/vadimlukomski/2249320.html",
     kindLabel: "ЛИЧНОЕ / ИНТЕРЕС",
     x: 43,
-    y: 81,
+    y: 76,
     size: 14,
   },
   {
@@ -1174,7 +1175,7 @@ const mapItems = [
     description: "Способ переключить режим внимания и снова почувствовать скорость, склон и тело.",
     kindLabel: "ЛИЧНОЕ / ИНТЕРЕС",
     x: 34,
-    y: 72,
+    y: 69,
     size: 13,
   },
   {
@@ -1186,8 +1187,8 @@ const mapItems = [
     description: "Постоянный фон, источник ритма и иногда самый быстрый способ изменить состояние.",
     href: "https://open.spotify.com/track/3GVkPk8mqxz0itaAriG1L7?si=233684c3f400482d",
     kindLabel: "ЛИЧНОЕ / ИНТЕРЕС",
-    x: 44,
-    y: 91,
+    x: 41,
+    y: 84,
     size: 12,
   },
   {
@@ -1199,8 +1200,8 @@ const mapItems = [
     description: "Маленький ежедневный ритуал и уважительный кивок агенту Куперу.",
     href: "https://en.wikipedia.org/wiki/Dale_Cooper",
     kindLabel: "ЛИЧНОЕ / ИНТЕРЕС",
-    x: 62,
-    y: 89,
+    x: 58,
+    y: 84,
     size: 10,
   },
   {
@@ -1208,12 +1209,12 @@ const mapItems = [
     kind: "personal",
     label: "ВОЛНА",
     title: "ВОЛНА",
-    meta: "МОРЕ / ГОРИЗОНТ / ЕЩЁ",
-    description: "Море, горизонт и повторяющееся MORE — способ снова почувствовать масштаб и выйти за пределы привычного.",
+    meta: "МОРЕ / ГОРИЗОНТ / МАСШТАБ",
+    description: "Открытый горизонт возвращает чувство масштаба и напоминает: за привычными границами всегда есть продолжение.",
     href: "https://www.instagram.com/stories/highlights/17870996476264206/",
     kindLabel: "ЛИЧНОЕ / ИНТЕРЕС",
-    x: 68,
-    y: 78,
+    x: 70,
+    y: 71,
     size: 12,
   },
   {
@@ -1221,11 +1222,12 @@ const mapItems = [
     kind: "personal",
     label: "ЕДА",
     title: "ЕДА",
-    meta: "ВКУС / ДЕТАЛИ",
-    description: "Суши, пастрами и другие доказательства того, что детали действительно меняют всё.",
+    meta: "ВКУС / МЕСТА / ДЕТАЛИ",
+    description: "От суши до пастрами: вкус — ещё один способ замечать детали и запоминать места.",
+    href: "https://daily.afisha.ru/eating/1771-luchshaya-pastrami-v-moskve/",
     kindLabel: "ЛИЧНОЕ / ИНТЕРЕС",
-    x: 31,
-    y: 84,
+    x: 27,
+    y: 80,
     size: 10,
   },
   {
@@ -1435,6 +1437,7 @@ const mapItems = [
 ];
 
 const mapNodesRoot = document.querySelector("[data-map-nodes]");
+const mapLabelsRoot = document.querySelector("[data-map-labels]");
 const mapSpecksRoot = document.querySelector("[data-map-specks]");
 const mapLinksRoot = document.querySelector("[data-map-links]");
 const mapKind = document.querySelector("[data-map-kind]");
@@ -1452,6 +1455,7 @@ const mapPreviewMeta = document.querySelector("[data-map-preview-meta]");
 const reelItems = mapItems.filter((item) => item.previewVideo);
 const hoverCapable = window.matchMedia("(hover: hover) and (pointer: fine)");
 const mapButtons = new Map();
+const mapLabels = new Map();
 let selectedMapId = null;
 let rovingMapId = "garage";
 let previewHideTimer = 0;
@@ -1757,6 +1761,25 @@ const setInspectorOpen = (isOpen) => {
   });
 };
 
+const clearMapSelection = () => {
+  selectedMapId = null;
+  delete signalField.dataset.selectedKind;
+  delete signalField.dataset.selectedId;
+  setMapAtmosphere(null);
+
+  if (mapInspector) {
+    delete mapInspector.dataset.selectedMapId;
+    delete mapInspector.dataset.mobilePlacement;
+  }
+
+  mapButtons.forEach((button) => {
+    button.classList.remove("is-selected");
+    button.setAttribute("aria-pressed", "false");
+    button.setAttribute("aria-expanded", "false");
+  });
+  setInspectorOpen(false);
+};
+
 const selectMapItem = (id, { reveal = false } = {}) => {
   const item = mapItems.find((candidate) => candidate.id === id);
 
@@ -1872,19 +1895,51 @@ if (mapNodesRoot) {
 
     glyph.className = "map-node__glyph";
     glyph.setAttribute("aria-hidden", "true");
-    label.className = "map-node__label";
+    label.className = `map-node-label map-node-label--${item.kind}`;
+    label.dataset.mapLabelId = item.id;
+    label.dataset.materialSurface = "map-node-label";
+    label.dataset.materialActive = "always";
     label.textContent = typographUiText(visibleMapLabel);
+    label.style.setProperty("--x", `${item.x}%`);
+    label.style.setProperty("--y", `${item.y}%`);
+    label.style.setProperty("--label-offset", `${Math.max(24, item.size) / 2 + 7}px`);
+    label.style.setProperty("--garage-label-offset", `${Math.max(24, item.size) / 2 + 18}px`);
 
-    button.append(glyph, label);
-    button.addEventListener("pointerenter", () => setMapAtmosphere(item));
+    if (item.id === "garage") {
+      label.classList.add("map-node-label--garage");
+    }
+
+    if (item.id === "running") {
+      label.classList.add("map-node-label--running");
+    }
+
+    if (item.id === "private-practice") {
+      label.classList.add("map-node-label--private-practice");
+    }
+
+    if (item.x >= 72) {
+      label.classList.add("map-node-label--west");
+    }
+
+    const showLabel = () => label.classList.add("is-visible");
+    const hideLabel = () => label.classList.remove("is-visible");
+
+    button.append(glyph);
+    mapLabelsRoot?.append(label);
+    button.addEventListener("pointerenter", () => {
+      showLabel();
+      setMapAtmosphere(item);
+    });
     button.addEventListener("pointerleave", () => {
       if (document.activeElement === button) {
         return;
       }
 
+      hideLabel();
       restoreSelectedMapAtmosphere();
     });
     button.addEventListener("click", () => {
+      hideLabel();
       hideMapPreview({ immediate: true });
       selectMapItem(item.id, { reveal: true });
     });
@@ -1908,7 +1963,11 @@ if (mapNodesRoot) {
       event.preventDefault();
       setMapRovingId(nextItem.id, { focus: true });
     });
-    button.addEventListener("focus", () => selectMapItem(item.id));
+    button.addEventListener("focus", () => {
+      showLabel();
+      selectMapItem(item.id);
+    });
+    button.addEventListener("blur", hideLabel);
 
     if (item.previewVideo) {
       button.addEventListener("pointerenter", () => showMapPreview(item));
@@ -1918,6 +1977,7 @@ if (mapNodesRoot) {
     }
 
     mapButtons.set(item.id, button);
+    mapLabels.set(item.id, label);
     mapNodesRoot.append(button);
   });
 }
@@ -1957,48 +2017,56 @@ if (mapLinksRoot) {
             angle: Math.atan2(deltaY, deltaX),
           };
         })
-        .sort((left, right) => left.angle - right.angle);
-      const minimumGap = (parentId === "garage" ? 6 : 7) * (Math.PI / 180);
-      const portAngles = [];
+        .sort((left, right) => (
+          left.item.y - right.item.y || left.item.x - right.item.x
+        ));
+      const portArc = parentId === "garage"
+        ? [6, 68]
+        : [-32, 58];
 
-      measuredChildren.forEach(({ angle }, index) => {
-        portAngles[index] = index === 0
-          ? angle
-          : Math.max(angle, portAngles[index - 1] + minimumGap);
-      });
-
-      const exactMean = measuredChildren
-        .reduce((total, child) => total + child.angle, 0) / measuredChildren.length;
-      const portMean = portAngles
-        .reduce((total, angle) => total + angle, 0) / portAngles.length;
-      const centeringOffset = exactMean - portMean;
-
-      measuredChildren.forEach(({ item, angle }, index) => {
-        const portAngle = portAngles[index] + centeringOffset;
+      measuredChildren.forEach(({ item }, index) => {
+        const portProgress = measuredChildren.length > 1
+          ? index / (measuredChildren.length - 1)
+          : 0.5;
+        const portAngle = (
+          portArc[0] + (portArc[1] - portArc[0]) * portProgress
+        ) * (Math.PI / 180);
         const parentRadius = parent.size / 2 + 3;
         const childRadius = item.size / 2 + 2;
         const path = document.createElementNS(svgNamespace, "path");
-        const sourceX = parent.x
-          + (Math.cos(portAngle) * parentRadius / bounds.width) * 100;
-        const sourceY = parent.y
-          + (Math.sin(portAngle) * parentRadius / bounds.height) * 100;
-        const targetX = item.x
-          - (Math.cos(angle) * childRadius / bounds.width) * 100;
-        const targetY = item.y
-          - (Math.sin(angle) * childRadius / bounds.height) * 100;
-        const distance = Math.hypot(
-          ((targetX - sourceX) / 100) * bounds.width,
-          ((targetY - sourceY) / 100) * bounds.height,
-        );
-        const lead = Math.min(150, Math.max(55, distance * 0.22));
-        const control1X = sourceX
-          + (Math.cos(portAngle) * lead / bounds.width) * 100;
-        const control1Y = sourceY
-          + (Math.sin(portAngle) * lead / bounds.height) * 100;
-        const control2X = targetX
-          - (Math.cos(angle) * lead * 0.28 / bounds.width) * 100;
-        const control2Y = targetY
-          - (Math.sin(angle) * lead * 0.28 / bounds.height) * 100;
+        const parentCenterX = (parent.x / 100) * bounds.width;
+        const parentCenterY = (parent.y / 100) * bounds.height;
+        const childCenterX = (item.x / 100) * bounds.width;
+        const childCenterY = (item.y / 100) * bounds.height;
+        const sourcePixelX = parentCenterX + Math.cos(portAngle) * parentRadius;
+        const sourcePixelY = parentCenterY + Math.sin(portAngle) * parentRadius;
+        const childToSourceX = sourcePixelX - childCenterX;
+        const childToSourceY = sourcePixelY - childCenterY;
+        const childToSourceLength = Math.hypot(childToSourceX, childToSourceY) || 1;
+        const targetPixelX = childCenterX
+          + (childToSourceX / childToSourceLength) * childRadius;
+        const targetPixelY = childCenterY
+          + (childToSourceY / childToSourceLength) * childRadius;
+        const deltaX = targetPixelX - sourcePixelX;
+        const deltaY = targetPixelY - sourcePixelY;
+        const distance = Math.hypot(deltaX, deltaY) || 1;
+        const normalX = -deltaY / distance;
+        const normalY = deltaX / distance;
+        const bend = (portProgress - 0.5) * Math.min(32, distance * 0.075);
+        const control1PixelX = sourcePixelX + deltaX * 0.3 + normalX * bend;
+        const control1PixelY = sourcePixelY + deltaY * 0.3 + normalY * bend;
+        const control2PixelX = sourcePixelX + deltaX * 0.7 + normalX * bend;
+        const control2PixelY = sourcePixelY + deltaY * 0.7 + normalY * bend;
+        const toViewBoxX = (value) => (value / bounds.width) * 100;
+        const toViewBoxY = (value) => (value / bounds.height) * 100;
+        const sourceX = toViewBoxX(sourcePixelX);
+        const sourceY = toViewBoxY(sourcePixelY);
+        const targetX = toViewBoxX(targetPixelX);
+        const targetY = toViewBoxY(targetPixelY);
+        const control1X = toViewBoxX(control1PixelX);
+        const control1Y = toViewBoxY(control1PixelY);
+        const control2X = toViewBoxX(control2PixelX);
+        const control2Y = toViewBoxY(control2PixelY);
 
         path.setAttribute(
           "d",
@@ -2098,9 +2166,16 @@ const setMapFilter = (kind) => {
 
   syncMapNodeAvailability();
   const navigableItems = getNavigableMapItems();
+  const selectedItemIsAvailable = navigableItems.some(
+    (item) => item.id === selectedMapId,
+  );
+
+  if (selectedMapId && !selectedItemIsAvailable) {
+    clearMapSelection();
+  }
 
   if (!navigableItems.some((item) => item.id === rovingMapId) && navigableItems[0]) {
-    selectMapItem(navigableItems[0].id);
+    setMapRovingId(navigableItems[0].id);
   }
 };
 
@@ -2345,8 +2420,11 @@ const contentStackGroups = {
   ].filter(Boolean),
 };
 let contentStackFrame = 0;
+let contentStackOffsets = [];
 
 const clearContentStackState = () => {
+  contentPanelBody?.style.removeProperty("--content-stack-anchor");
+
   Object.values(contentStackGroups).flat().forEach((surface) => {
     surface.classList.remove(
       "is-content-stack-active",
@@ -2358,6 +2436,22 @@ const clearContentStackState = () => {
     surface.style.removeProperty("--content-stack-layer");
     surface.style.removeProperty("--content-stack-clearance");
   });
+};
+
+const measureContentStackOffsets = (surfaces) => {
+  if (!contentPanel || !contentPanelBody) {
+    return [];
+  }
+
+  contentPanel.classList.add("is-measuring-content-stack");
+  const bodyRect = contentPanelBody.getBoundingClientRect();
+  const scrollTop = contentPanelBody.scrollTop;
+  const offsets = surfaces.map((surface) => (
+    surface.getBoundingClientRect().top - bodyRect.top + scrollTop
+  ));
+  contentPanel.classList.remove("is-measuring-content-stack");
+
+  return offsets;
 };
 
 const syncContentStack = () => {
@@ -2374,10 +2468,24 @@ const syncContentStack = () => {
     surface.style.removeProperty("--content-stack-clearance");
   });
 
-  const stackAnchor = contentPanelBody.getBoundingClientRect().top + 14;
-  const activeIndex = Math.max(0, surfaces.findLastIndex((surface) => (
-    surface.getBoundingClientRect().top <= stackAnchor + 1
-  )));
+  if (contentStackOffsets.length !== surfaces.length) {
+    contentStackOffsets = measureContentStackOffsets(surfaces);
+  }
+
+  const stackAnchor = contentPanelBody.scrollTop + 14;
+  let activeIndex = 0;
+
+  for (let index = contentStackOffsets.length - 1; index >= 0; index -= 1) {
+    if (contentStackOffsets[index] <= stackAnchor + 1) {
+      activeIndex = index;
+      break;
+    }
+  }
+
+  contentPanelBody.style.setProperty(
+    "--content-stack-anchor",
+    `${14 + Math.min(activeIndex, 2) * 14}px`,
+  );
 
   surfaces.forEach((surface, index) => {
     const layer = activeIndex - index;
@@ -2420,6 +2528,11 @@ const scheduleContentStackSync = () => {
   contentStackFrame = window.requestAnimationFrame(syncContentStack);
 };
 
+const invalidateContentStack = () => {
+  contentStackOffsets = [];
+  scheduleContentStackSync();
+};
+
 const panelViews = {
   work: {
     index: "01 / ПРОЕКТЫ",
@@ -2430,8 +2543,8 @@ const panelViews = {
     title: "ПОДХОД",
   },
   contact: {
-    index: "03 / КОНТАКТ",
-    title: "КОНТАКТ",
+    index: "03 / СВЯЗАТЬСЯ",
+    title: "СВЯЗАТЬСЯ",
   },
 };
 
@@ -2485,6 +2598,7 @@ const openContentPanel = (view, trigger = null) => {
   }
 
   activePanelView = view;
+  contentStackOffsets = [];
   lastPanelTrigger = trigger instanceof HTMLElement ? trigger : document.activeElement;
   contentPanel?.setAttribute("data-view", view);
   signalField?.setAttribute("data-camera-view", view);
@@ -2504,7 +2618,7 @@ const openContentPanel = (view, trigger = null) => {
   }
 
   hideMapPreview({ immediate: true });
-  setInspectorOpen(false);
+  clearMapSelection();
   setPanelOpen(true);
   window.requestAnimationFrame(() => {
     scheduleContentStackSync();
@@ -2605,8 +2719,17 @@ contentPanelBody?.addEventListener("keydown", (event) => {
 panelClose?.addEventListener("click", () => closeContentPanel());
 panelScrim?.addEventListener("click", () => closeContentPanel());
 contentPanelBody?.addEventListener("scroll", scheduleContentStackSync, { passive: true });
-compactContentStack.addEventListener("change", scheduleContentStackSync);
-window.addEventListener("resize", scheduleContentStackSync, { passive: true });
+
+if (typeof compactContentStack.addEventListener === "function") {
+  compactContentStack.addEventListener("change", invalidateContentStack);
+} else {
+  compactContentStack.addListener(invalidateContentStack);
+}
+
+window.addEventListener("resize", invalidateContentStack, { passive: true });
+window.addEventListener("pageshow", invalidateContentStack, { passive: true });
+window.visualViewport?.addEventListener("resize", invalidateContentStack, { passive: true });
+document.fonts?.ready.then(invalidateContentStack);
 
 contentPanelBody?.addEventListener("focusin", (event) => {
   if (!compactContentStack.matches) {
@@ -2675,7 +2798,7 @@ const commandViews = [
   {
     type: "panel",
     id: "contact",
-    title: "КОНТАКТ",
+    title: "СВЯЗАТЬСЯ",
     meta: "МОСКВА / УДАЛЁННО / ПОЧТА",
     keywords: "контакт почта написать связаться contact email",
   },
@@ -2753,7 +2876,7 @@ const applySearchHighlight = (query) => {
   const navigableItems = getNavigableMapItems();
 
   if (!navigableItems.some((item) => item.id === rovingMapId) && navigableItems[0]) {
-    selectMapItem(navigableItems[0].id);
+    setMapRovingId(navigableItems[0].id);
   }
 };
 

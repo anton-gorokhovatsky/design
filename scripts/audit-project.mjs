@@ -284,6 +284,12 @@ requireContract(
   "reel-meta",
   "Every reel-enabled node needs previewMeta.",
 );
+requireContract(
+  reelReferences.every(({ meta }) => !/ПРОХОД ПО САЙТУ|ТРИ СТРАНИЦЫ|ТЕМА \+ ТЕКСТ/.test(meta)),
+  "reel-meta-specific",
+  "Reel captions must describe the visible content instead of using a generic playback label.",
+  reelReferences.filter(({ meta }) => /ПРОХОД ПО САЙТУ|ТРИ СТРАНИЦЫ|ТЕМА \+ ТЕКСТ/.test(meta)),
+);
 
 const materialDefinitions = [...styleSource.matchAll(/--material-01:\s*([^;]+);/g)]
   .map((match) => match[1].replace(/\s+/g, " ").trim());
@@ -293,6 +299,10 @@ const materialThemeDefinitions = materialDefinitions.filter((value) => (
 const materialAccessibilityDefinitions = materialDefinitions.filter((value) => value === "Canvas");
 const materialUsages = (styleSource.match(/var\(--material-01\)/g) || []).length;
 const requiredMaterialSurfaces = [
+  "axis-north",
+  "axis-east",
+  "axis-south",
+  "axis-west",
   "inspector-close",
   "inspector-kind",
   "inspector-identity",
@@ -302,6 +312,7 @@ const requiredMaterialSurfaces = [
   "mobile-navigation",
   "mobile-search",
   "search-results",
+  "origin-label",
   "mobile-system-dock",
   "desktop-view-console",
   "desktop-display-console",
@@ -344,6 +355,21 @@ const unexpectedMaterialSurfaces = materialSurfaceNames.filter(
 const invalidMaterialModes = materialSurfaceTags.filter(
   ({ mode }) => !["always", "desktop", "mobile"].includes(mode),
 );
+const dynamicMaterialSurfaces = [
+  {
+    name: "map-node-label",
+    assignment: 'label.dataset.materialSurface = "map-node-label";',
+    mode: 'label.dataset.materialActive = "always";',
+  },
+];
+const missingDynamicMaterialSurfaces = dynamicMaterialSurfaces.filter(
+  ({ assignment, mode }) => !scriptSource.includes(assignment) || !scriptSource.includes(mode),
+);
+const materialCascadeMarker = "/* MATERIAL / 01 CASCADE CONTRACT";
+const materialCascadeIndex = styleSource.lastIndexOf(materialCascadeMarker);
+const materialCascadeSource = materialCascadeIndex >= 0
+  ? styleSource.slice(materialCascadeIndex)
+  : "";
 const backdropValues = [
   ...styleSource.matchAll(/(?:-webkit-)?backdrop-filter:\s*([^;]+);/g),
 ].map((match) => match[1].replace(/\s+/g, " ").trim());
@@ -393,6 +419,65 @@ requireContract(
   "material-surface-mode",
   "Every registered material surface needs an always, desktop, or mobile activation mode.",
   invalidMaterialModes,
+);
+requireContract(
+  missingDynamicMaterialSurfaces.length === 0,
+  "material-dynamic-surface-registry",
+  "Runtime-generated interface surfaces must register their shared material family and activation mode.",
+  missingDynamicMaterialSurfaces.map(({ name }) => name),
+);
+requireContract(
+  materialCascadeIndex >= styleSource.length * 0.9
+    && /\[data-material-surface\]\[data-material-active="always"\][\s\S]*?background:\s*var\(--material-01\)/.test(materialCascadeSource)
+    && /\[data-material-surface\]\[data-material-active="desktop"\][\s\S]*?background:\s*var\(--material-01\)/.test(materialCascadeSource)
+    && /\[data-material-surface\]\[data-material-active="mobile"\][\s\S]*?background:\s*var\(--material-01\)/.test(materialCascadeSource)
+    && /box-shadow:\s*none/.test(materialCascadeSource)
+    && /backdrop-filter:\s*blur\(24px\)/.test(materialCascadeSource)
+    && /-webkit-backdrop-filter:\s*blur\(24px\)/.test(materialCascadeSource),
+  "material-cascade-contract",
+  "The final cascade must enforce MATERIAL / 01 for every active registered surface.",
+);
+
+const mapNodeLabelRules = [
+  ...styleSource.matchAll(/(?:^|\n)\.map-node-label\s*\{([^}]*)\}/g),
+].map((match) => match[1]);
+const finalMapNodeLabelRule = [...mapNodeLabelRules]
+  .reverse()
+  .find((rule) => rule.includes("background: var(--material-01)")) ?? "";
+requireContract(
+  /display:\s*inline-flex/.test(finalMapNodeLabelRule)
+    && /align-items:\s*center/.test(finalMapNodeLabelRule)
+    && /padding:\s*6px 9px/.test(finalMapNodeLabelRule)
+    && /background:\s*var\(--material-01\)/.test(finalMapNodeLabelRule)
+    && /backdrop-filter:\s*blur\(24px\)/.test(finalMapNodeLabelRule)
+    && /-webkit-backdrop-filter:\s*blur\(24px\)/.test(finalMapNodeLabelRule),
+  "material-map-label-family",
+  "Map labels need one symmetric, optically centred MATERIAL / 01 construction.",
+);
+requireContract(
+  indexSource.includes('class="map-labels" data-map-labels aria-hidden="true"')
+    && scriptSource.includes('const mapLabelsRoot = document.querySelector("[data-map-labels]");')
+    && scriptSource.includes("button.append(glyph);")
+    && scriptSource.includes("mapLabelsRoot?.append(label);")
+    && !scriptSource.includes("button.append(glyph, label);"),
+  "material-map-label-compositing",
+  "Map labels need a dedicated sibling layer so MATERIAL / 01 can blur the map instead of inheriting each transformed node.",
+);
+
+const originLabelRules = [
+  ...styleSource.matchAll(/(?:^|\n)\.origin-marker__label\s*\{([^}]*)\}/g),
+].map((match) => match[1]);
+const originLabelMaterialRule = originLabelRules.find((rule) => (
+  rule.includes("background: var(--material-01)")
+)) ?? "";
+requireContract(
+  originLabelRules.length >= 1
+    && /background:\s*var\(--material-01\)/.test(originLabelMaterialRule)
+    && /backdrop-filter:\s*blur\(24px\)/.test(originLabelMaterialRule)
+    && /-webkit-backdrop-filter:\s*blur\(24px\)/.test(originLabelMaterialRule)
+    && !originLabelRules.some((rule) => /background:\s*color-mix/.test(rule)),
+  "material-origin-label",
+  "The origin label must use only MATERIAL / 01; historical local backdrops are forbidden.",
 );
 
 const controlConsoleStart = indexSource.indexOf('class="control-console"');
@@ -739,7 +824,10 @@ const report = {
   designSystem: {
     materialDefinitions,
     materialUsages,
-    materialSurfaces: materialSurfaceTags.map(({ name, mode }) => ({ name, mode })),
+    materialSurfaces: [
+      ...materialSurfaceTags.map(({ name, mode }) => ({ name, mode })),
+      ...dynamicMaterialSurfaces.map(({ name }) => ({ name, mode: "always", source: "runtime" })),
+    ],
     backdropInventory,
     rawBezierValues,
     fixedPixelFontSizeDeclarations: fixedPixelFontSizes.length,
