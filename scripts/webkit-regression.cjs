@@ -28,8 +28,14 @@ const attachRuntimeLog = (page, label) => {
     runtimeErrors.push(`${label}: pageerror: ${error.message}`);
   });
   page.on("requestfailed", (request) => {
+    const failure = request.failure();
+    const isIntentionalMediaCancellation = request.resourceType() === "media"
+      && /aborted|cancelled/i.test(failure?.errorText || "");
+    if (isIntentionalMediaCancellation) {
+      return;
+    }
     runtimeErrors.push(
-      `${label}: requestfailed: ${request.url()} — ${request.failure()?.errorText || "unknown"}`,
+      `${label}: requestfailed: ${request.url()} — ${failure?.errorText || "unknown"}`,
     );
   });
 };

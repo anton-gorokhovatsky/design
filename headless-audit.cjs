@@ -27,6 +27,11 @@ const collectRuntimeErrors = (page) => {
   });
   page.on("requestfailed", (request) => {
     const failure = request.failure();
+    const isIntentionalMediaCancellation = request.resourceType() === "media"
+      && failure?.errorText === "net::ERR_ABORTED";
+    if (isIntentionalMediaCancellation) {
+      return;
+    }
     errors.push(`requestfailed: ${request.url()} — ${failure?.errorText || "unknown"}`);
   });
 
