@@ -20,7 +20,7 @@ instead of a conventional résumé timeline.
 
 An unframed point constellation is the visual origin of the coordinate system.
 It samples ten emoji signatures
-(`🍣 🥪 ☕ 📻 🏂 ⚽ 🌊 🖥️ 👋 🏃🏼‍♂️`), redraws them with small mono glyphs,
+(`🍣 🥪 ☕ 📻 🏂 ⚽ 🌊 🖥️ 👋 🏃🏼‍♂️`), redraws them with small glyphs,
 morphs from one silhouette to the next, and slowly rotates as one orbital
 system. Running remains a clean `БЕГ` map node; its figurative image belongs to
 the central constellation rather than to the label. The running light uses the
@@ -62,20 +62,33 @@ logo card.
 - Long-form content remains inside the same coordinate system. Projects,
   approach, and contact appear as groups of soft, dismissible floating
   materials; they never replace the map with a full-height drawer.
-- Contact destinations remain inside their links: the visible interface uses
-  parallel action labels (`НАПИСАТЬ ПИСЬМО`, `НАПИСАТЬ В TELEGRAM`) and does
-  not expose either the email address or Telegram handle as display copy.
+- Contact is one compact material terminal rather than a separate empty
+  screen: a live status, a greeting, one short invitation, and two parallel
+  actions (`ЭЛ. ПОЧТА` and `TELEGRAM`). Destinations remain inside their
+  links, so neither the email address nor the Telegram handle is exposed as
+  display copy. Actions share a row on wide screens and reflow to one column
+  at narrow widths or enlarged text.
 
 ## Instrument interface language
 
 - Retrofuturism is used as interaction logic, not as visual pastiche: the map
   scans a field, controls change observation modes, and conventional lists
   remain available as a secondary route.
+- Spatial depth comes from one observatory camera: the far grid and specks,
+  relationship paths and nodes, and the near origin use restrained,
+  coordinated parallax amplitudes. Opening a content section shifts that same
+  camera rather than adding local perspective frames. Reduced motion freezes
+  the travel without removing content or controls.
 - The map is a data visualization before it is a cosmic image. A node is one
   experience, project, principle, or personal subject; position is semantic
   proximity inside the four fields, size is personal weight, shape is type,
   and a line means a real relationship. Visual properties must never be added
   without a meaning.
+- The idle map has no selected node. Semantic colour appears only in active
+  states: bronze-neutral for institutions, signal blue for projects,
+  dusk-lilac for personal nodes, and sage for principles. Colour reinforces
+  the existing shape, size, label, and accessible name; it never carries the
+  meaning alone.
 - Observation settings (`ВИД`, `ЭКРАН`) stay at the edges of the field.
   Content navigation uses indexed points rather than button bars. These
   controls belong to one instrument-console family: the same material,

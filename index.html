@@ -59,7 +59,11 @@
     <script>
       (() => {
         let savedTheme = null;
-        const isShareCapture = new URLSearchParams(window.location.search).has("og");
+        const urlParams = new URLSearchParams(window.location.search);
+        const isShareCapture = urlParams.has("og");
+        const qaFontScale = urlParams.has("qa")
+          ? Number.parseInt(urlParams.get("font") || "", 10)
+          : 0;
 
         try {
           savedTheme = window.localStorage.getItem("anton-signal-theme");
@@ -77,6 +81,11 @@
 
         if (isShareCapture) {
           document.documentElement.dataset.capture = "og";
+        }
+
+        if ([125, 150, 175, 200].includes(qaFontScale)) {
+          document.documentElement.style.fontSize = `${qaFontScale}%`;
+          document.documentElement.dataset.qaFont = String(qaFontScale);
         }
       })();
     </script>
@@ -188,53 +197,55 @@
             <span>КАРТА / 2009—2026</span>
           </div>
           <p class="share-domain" aria-hidden="true">GOROKHOVATSKY.TECH</p>
-          <div class="map-grid" aria-hidden="true"></div>
-          <svg
-            class="map-depth-grid"
-            data-depth-grid
-            viewBox="0 0 100 100"
-            preserveAspectRatio="none"
-            aria-hidden="true"
-            focusable="false"
-          >
-            <g class="map-depth-grid__sections" data-depth-sections></g>
-            <g class="map-depth-grid__rays" data-depth-rays></g>
-          </svg>
-          <div class="map-axis map-axis--horizontal" aria-hidden="true"></div>
-          <div class="map-axis map-axis--vertical" aria-hidden="true"></div>
+          <div class="map-camera" data-map-camera>
+            <div class="map-grid" aria-hidden="true"></div>
+            <svg
+              class="map-depth-grid"
+              data-depth-grid
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <g class="map-depth-grid__sections" data-depth-sections></g>
+              <g class="map-depth-grid__rays" data-depth-rays></g>
+            </svg>
+            <div class="map-axis map-axis--horizontal" aria-hidden="true"></div>
+            <div class="map-axis map-axis--vertical" aria-hidden="true"></div>
 
-          <p class="map-axis-label map-axis-label--north">С / ИНСТИТУЦИИ</p>
-          <p class="map-axis-label map-axis-label--east">В / ПРОЕКТЫ</p>
-          <p class="map-axis-label map-axis-label--south">Ю / ЛИЧНОЕ</p>
-          <p class="map-axis-label map-axis-label--west">З / ПРИНЦИПЫ</p>
+            <p class="map-axis-label map-axis-label--north">С / ИНСТИТУЦИИ</p>
+            <p class="map-axis-label map-axis-label--east">В / ПРОЕКТЫ</p>
+            <p class="map-axis-label map-axis-label--south">Ю / ЛИЧНОЕ</p>
+            <p class="map-axis-label map-axis-label--west">З / ПРИНЦИПЫ</p>
 
-          <canvas
-            class="signal-constellation"
-            data-signal-constellation
-            role="img"
-            tabindex="0"
-            aria-label="Объёмное поле личной вселенной, морфирующее десять эмодзи-силуэтов, включая бегущего человека. Зажмите и тяните, чтобы вращать его; с клавиатуры используйте стрелки."
-          ></canvas>
+            <canvas
+              class="signal-constellation"
+              data-signal-constellation
+              role="img"
+              tabindex="0"
+              aria-label="Объёмное поле личной вселенной, морфирующее десять эмодзи-силуэтов, включая бегущего человека. Зажмите и тяните, чтобы вращать его; с клавиатуры используйте стрелки."
+            ></canvas>
 
-          <svg
-            class="map-links"
-            data-map-links
-            viewBox="0 0 100 100"
-            preserveAspectRatio="none"
-            aria-hidden="true"
-          ></svg>
-          <div class="map-specks" data-map-specks aria-hidden="true"></div>
-          <div
-            class="map-nodes"
-            data-map-nodes
-            role="group"
-            aria-label="Точки интерактивной карты опыта, проектов и интересов. Используйте стрелки, чтобы перемещаться между точками."
-          ></div>
+            <svg
+              class="map-links"
+              data-map-links
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            ></svg>
+            <div class="map-specks" data-map-specks aria-hidden="true"></div>
+            <div
+              class="map-nodes"
+              data-map-nodes
+              role="group"
+              aria-label="Точки интерактивной карты опыта, проектов и интересов. Используйте стрелки, чтобы перемещаться между точками."
+            ></div>
 
-          <div class="origin-marker" data-signal-core role="img" aria-label="Антон Гороховатский — точка отсчёта">
-            <span class="origin-marker__cross" aria-hidden="true"></span>
-            <span class="origin-marker__label">АГ / НАЧАЛО</span>
-            <span class="signal-pulse" aria-hidden="true"></span>
+            <div class="origin-marker" data-signal-core role="img" aria-label="Антон Гороховатский — точка отсчёта">
+              <span class="origin-marker__cross" aria-hidden="true"></span>
+              <span class="origin-marker__label">АГ / НАЧАЛО</span>
+              <span class="signal-pulse" aria-hidden="true"></span>
+            </div>
           </div>
 
           <aside
@@ -245,6 +256,15 @@
           >
             <div class="map-hover-preview__media">
               <video data-map-preview-video muted loop playsinline preload="metadata"></video>
+            </div>
+            <div
+              class="map-hover-preview__readout"
+              data-material-surface="reel-readout"
+              data-material-active="desktop"
+            >
+              <span class="map-hover-preview__index" data-map-preview-index>01 / 13</span>
+              <strong data-map-preview-title>ПРОЕКТ</strong>
+              <span data-map-preview-meta>ПРОХОД ПО САЙТУ</span>
             </div>
           </aside>
 
@@ -761,29 +781,33 @@
           data-material-surface="contact"
           data-material-active="always"
         >
-          <h2 id="contact-title"><span>Привет!</span></h2>
-          <div class="contact-details">
-            <p>Для предложений, рекомендаций и&nbsp;хороших наводок.</p>
-            <div class="contact-links">
-              <a
-                href="mailto:anton.gorokhovatsky@gmail.com"
-                aria-label="Написать письмо: anton.gorokhovatsky@gmail.com"
-              >
-                <span class="contact-link__index" aria-hidden="true">01</span>
-                <span class="contact-link__channel">ЭЛ. ПОЧТА</span>
-                <span class="contact-link__action">Написать письмо</span>
-              </a>
-              <a
-                href="https://t.me/gorokhovatsky"
-                target="_blank"
-                rel="noreferrer"
-                aria-label="Написать в Telegram: @gorokhovatsky"
-              >
-                <span class="contact-link__index" aria-hidden="true">02</span>
-                <span class="contact-link__channel">TELEGRAM</span>
-                <span class="contact-link__action">Открыть чат</span>
-              </a>
-            </div>
+          <div class="contact-intro">
+            <p class="contact-status">
+              <span class="contact-status__dot" aria-hidden="true"></span>
+              На&nbsp;связи
+            </p>
+            <h2 id="contact-title"><span>Привет!</span></h2>
+            <p class="contact-lede">Для предложений, рекомендаций и&nbsp;хороших наводок.</p>
+          </div>
+          <div class="contact-links">
+            <a
+              href="mailto:anton.gorokhovatsky@gmail.com"
+              aria-label="Написать письмо: anton.gorokhovatsky@gmail.com"
+            >
+              <span class="contact-link__index" aria-hidden="true">01</span>
+              <span class="contact-link__channel">ЭЛ. ПОЧТА</span>
+              <span class="contact-link__action">Написать письмо</span>
+            </a>
+            <a
+              href="https://t.me/gorokhovatsky"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Написать в Telegram: @gorokhovatsky"
+            >
+              <span class="contact-link__index" aria-hidden="true">02</span>
+              <span class="contact-link__channel">TELEGRAM</span>
+              <span class="contact-link__action">Открыть чат</span>
+            </a>
           </div>
         </div>
       </section>

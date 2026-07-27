@@ -128,15 +128,15 @@ const renderPerspectiveDepthGrid = () => {
     return;
   }
 
-  const vanishingPoint = { x: 50, y: 50 };
+  const vanishingPoint = { x: 50, y: 54 };
   const outerFrame = {
-    left: 4,
-    right: 96,
-    top: 3,
-    bottom: 97,
+    left: 2,
+    right: 98,
+    top: 1,
+    bottom: 99,
   };
-  const perspectiveDistance = 1.6;
-  const worldDepths = [0, 0.52, 1.28, 2.55, 4.9, 8.4];
+  const perspectiveDistance = 2.25;
+  const worldDepths = [0, 0.85, 2.1, 4.6, 9.5];
   const projectAtDepth = (coordinate, origin, depth) => {
     // CSS Transforms defines w = 1 - z / d. The tunnel recedes along
     // negative z, so the screen scale after the perspective divide is
@@ -782,6 +782,12 @@ signalField?.addEventListener("pointermove", (event) => {
   signalField.style.setProperty("--core-y", `${y * 9}px`);
   signalField.style.setProperty("--depth-x", `${x * -4}px`);
   signalField.style.setProperty("--depth-y", `${y * -3}px`);
+  signalField.style.setProperty("--layer-far-x", `${x * 2}px`);
+  signalField.style.setProperty("--layer-far-y", `${y * 1.5}px`);
+  signalField.style.setProperty("--layer-mid-x", `${x * 5}px`);
+  signalField.style.setProperty("--layer-mid-y", `${y * 3.75}px`);
+  signalField.style.setProperty("--layer-near-x", `${x * 9}px`);
+  signalField.style.setProperty("--layer-near-y", `${y * 6.75}px`);
 });
 
 signalField?.addEventListener("pointerleave", () => {
@@ -789,6 +795,12 @@ signalField?.addEventListener("pointerleave", () => {
   signalField.style.setProperty("--core-y", "0px");
   signalField.style.setProperty("--depth-x", "0px");
   signalField.style.setProperty("--depth-y", "0px");
+  signalField.style.setProperty("--layer-far-x", "0px");
+  signalField.style.setProperty("--layer-far-y", "0px");
+  signalField.style.setProperty("--layer-mid-x", "0px");
+  signalField.style.setProperty("--layer-mid-y", "0px");
+  signalField.style.setProperty("--layer-near-x", "0px");
+  signalField.style.setProperty("--layer-near-y", "0px");
 });
 
 const principlesSourceHref = "https://app.notion.com/p/digital-web-digital-f68fc13247614ccb9738d9a85acf29b4?source=copy_link#70405c2623e342fb98d027c8634f2207";
@@ -1434,13 +1446,42 @@ const mapInspector = document.querySelector("[data-map-inspector]");
 const inspectorClose = document.querySelector("[data-close-inspector]");
 const mapPreview = document.querySelector("[data-map-preview]");
 const mapPreviewVideo = document.querySelector("[data-map-preview-video]");
+const mapPreviewIndex = document.querySelector("[data-map-preview-index]");
+const mapPreviewTitle = document.querySelector("[data-map-preview-title]");
+const mapPreviewMeta = document.querySelector("[data-map-preview-meta]");
+const reelItems = mapItems.filter((item) => item.previewVideo);
 const hoverCapable = window.matchMedia("(hover: hover) and (pointer: fine)");
 const mapButtons = new Map();
-let selectedMapId = "garage";
+let selectedMapId = null;
 let rovingMapId = "garage";
 let previewHideTimer = 0;
 let previewShowFrame = 0;
 let activePreviewItem = null;
+
+const setMapAtmosphere = (item = null) => {
+  if (!signalField) {
+    return;
+  }
+
+  if (!item) {
+    delete signalField.dataset.focusId;
+    delete signalField.dataset.focusKind;
+    signalField.style.removeProperty("--focus-x");
+    signalField.style.removeProperty("--focus-y");
+    return;
+  }
+
+  signalField.dataset.focusId = item.id;
+  signalField.dataset.focusKind = item.kind;
+  signalField.style.setProperty("--focus-x", `${item.x}%`);
+  signalField.style.setProperty("--focus-y", `${item.y}%`);
+};
+
+const restoreSelectedMapAtmosphere = () => {
+  setMapAtmosphere(
+    mapItems.find((item) => item.id === selectedMapId) || null,
+  );
+};
 
 const syncMapMetaOverflow = () => {
   const track = mapMeta?.querySelector(".map-readout__meta-track");
@@ -1600,12 +1641,26 @@ const showMapPreview = (item) => {
 
   window.clearTimeout(previewHideTimer);
   activePreviewItem = item;
+  mapPreview.style.setProperty("--reel-progress", "0");
 
   mapPreview.classList.add("has-video");
   mapPreview.classList.toggle(
     "is-landscape",
     item.previewOrientation === "landscape",
   );
+
+  if (mapPreviewIndex) {
+    const reelIndex = reelItems.findIndex((candidate) => candidate.id === item.id);
+    mapPreviewIndex.textContent = `${String(reelIndex + 1).padStart(2, "0")} / ${String(reelItems.length).padStart(2, "0")}`;
+  }
+
+  if (mapPreviewTitle) {
+    mapPreviewTitle.textContent = typographUiText(item.mapLabel || item.title);
+  }
+
+  if (mapPreviewMeta) {
+    mapPreviewMeta.textContent = typographUiText(item.previewMeta);
+  }
 
   if (mapPreviewVideo.dataset.previewId !== item.id) {
     mapPreview.classList.remove("is-video-ready");
@@ -1651,13 +1706,23 @@ mapPreviewVideo?.addEventListener("loadedmetadata", () => {
 });
 
 mapPreviewVideo?.addEventListener("timeupdate", () => {
-  if (reducedMotion.matches || !activePreviewItem?.previewDuration) {
+  if (!activePreviewItem) {
     return;
   }
 
   const previewStart = activePreviewItem.previewStart || 0;
+  const previewDuration = activePreviewItem.previewDuration
+    || mapPreviewVideo.duration
+    || 1;
+  const elapsed = Math.max(0, mapPreviewVideo.currentTime - previewStart);
+  const progress = Math.min(1, elapsed / previewDuration);
 
-  if (mapPreviewVideo.currentTime >= previewStart + activePreviewItem.previewDuration) {
+  mapPreview?.style.setProperty("--reel-progress", String(progress));
+
+  if (
+    activePreviewItem.previewDuration
+    && mapPreviewVideo.currentTime >= previewStart + activePreviewItem.previewDuration
+  ) {
     mapPreviewVideo.currentTime = previewStart;
     mapPreviewVideo.play().catch(() => {
       // The preview can remain paused when playback is blocked.
@@ -1700,6 +1765,9 @@ const selectMapItem = (id, { reveal = false } = {}) => {
   }
 
   selectedMapId = id;
+  signalField.dataset.selectedKind = item.kind;
+  signalField.dataset.selectedId = item.id;
+  setMapAtmosphere(item);
 
   if (mapInspector) {
     mapInspector.dataset.selectedMapId = item.id;
@@ -1776,6 +1844,7 @@ if (mapNodesRoot) {
     button.className = `map-node map-node--${item.kind}`;
     button.dataset.mapId = item.id;
     button.dataset.mapKind = item.kind;
+    button.dataset.mapParent = item.parent || "";
     button.style.setProperty("--x", `${item.x}%`);
     button.style.setProperty("--y", `${item.y}%`);
     button.style.setProperty("--size", `${item.size}px`);
@@ -1807,6 +1876,14 @@ if (mapNodesRoot) {
     label.textContent = typographUiText(visibleMapLabel);
 
     button.append(glyph, label);
+    button.addEventListener("pointerenter", () => setMapAtmosphere(item));
+    button.addEventListener("pointerleave", () => {
+      if (document.activeElement === button) {
+        return;
+      }
+
+      restoreSelectedMapAtmosphere();
+    });
     button.addEventListener("click", () => {
       hideMapPreview({ immediate: true });
       selectMapItem(item.id, { reveal: true });
@@ -1996,7 +2073,7 @@ if (mapSpecksRoot) {
   });
 }
 
-selectMapItem("garage");
+setMapRovingId("garage");
 
 if (mapMeta && "ResizeObserver" in window) {
   new ResizeObserver(syncMapMetaOverflow).observe(mapMeta);
@@ -2275,9 +2352,11 @@ const clearContentStackState = () => {
       "is-content-stack-active",
       "is-content-stack-behind",
       "is-content-stack-hidden",
+      "is-content-stack-after",
     );
     surface.style.removeProperty("--content-stack-visibility");
     surface.style.removeProperty("--content-stack-layer");
+    surface.style.removeProperty("--content-stack-clearance");
   });
 };
 
@@ -2290,6 +2369,11 @@ const syncContentStack = () => {
   }
 
   const surfaces = contentStackGroups[activePanelView] || [];
+  surfaces.forEach((surface) => {
+    surface.classList.remove("is-content-stack-after");
+    surface.style.removeProperty("--content-stack-clearance");
+  });
+
   const stackAnchor = contentPanelBody.getBoundingClientRect().top + 14;
   const activeIndex = Math.max(0, surfaces.findLastIndex((surface) => (
     surface.getBoundingClientRect().top <= stackAnchor + 1
@@ -2310,6 +2394,22 @@ const syncContentStack = () => {
       isBehind || isHidden ? "0" : "1",
     );
   });
+
+  const activeSurface = surfaces[activeIndex];
+  const nextSurface = surfaces[activeIndex + 1];
+
+  if (activeSurface && nextSurface) {
+    const activeRect = activeSurface.getBoundingClientRect();
+    const nextRect = nextSurface.getBoundingClientRect();
+    const clearance = Math.max(0, activeRect.bottom + 10 - nextRect.top);
+
+    if (clearance > 0) {
+      surfaces.slice(activeIndex + 1).forEach((surface) => {
+        surface.classList.add("is-content-stack-after");
+        surface.style.setProperty("--content-stack-clearance", `${clearance}px`);
+      });
+    }
+  }
 };
 
 const scheduleContentStackSync = () => {
@@ -2387,6 +2487,7 @@ const openContentPanel = (view, trigger = null) => {
   activePanelView = view;
   lastPanelTrigger = trigger instanceof HTMLElement ? trigger : document.activeElement;
   contentPanel?.setAttribute("data-view", view);
+  signalField?.setAttribute("data-camera-view", view);
   setConstellationNavCurrent(view);
   setConstellationNavOpen(false);
   panelSections.forEach((section) => {
@@ -2420,6 +2521,7 @@ const closeContentPanel = ({ restoreFocus = true } = {}) => {
   clearContentStackState();
   activePanelView = null;
   contentPanel?.removeAttribute("data-view");
+  signalField?.removeAttribute("data-camera-view");
   setConstellationNavCurrent("map");
 
   if (restoreFocus && lastPanelTrigger instanceof HTMLElement) {
@@ -2535,6 +2637,17 @@ constellationNavHome?.addEventListener("click", () => {
 const commandForm = document.querySelector("[data-command-form]");
 const commandInput = document.querySelector("[data-command-input]");
 const commandResults = document.querySelector("[data-command-results]");
+const syncCommandPlaceholder = () => {
+  if (commandInput) {
+    commandInput.placeholder = compactConstellationNav.matches
+      ? "Найти…"
+      : "Найти или\u00a0открыть…";
+  }
+};
+
+compactConstellationNav.addEventListener("change", syncCommandPlaceholder);
+syncCommandPlaceholder();
+
 let currentCommandResults = [];
 let activeCommandIndex = -1;
 

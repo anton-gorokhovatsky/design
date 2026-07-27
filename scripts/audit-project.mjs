@@ -307,6 +307,7 @@ const requiredMaterialSurfaces = [
   "desktop-display-console",
   "panel-heading",
   "panel-close",
+  "reel-readout",
   "work-intro",
   "work-01",
   "work-02",

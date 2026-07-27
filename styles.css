@@ -41,6 +41,10 @@
   --signal-dark: #07122e;
   --pulse: #d8ff47;
   --running-dusk: #a098b0;
+  --tone-company: #887958;
+  --tone-project: #2448ed;
+  --tone-personal: #90869f;
+  --tone-practice: #6e9484;
   --header-height: 52px;
   --gutter: 12px;
   --font-sans: "Golos Text", Arial, Helvetica, sans-serif;
@@ -65,6 +69,10 @@ html[data-theme="dark"] {
   --line-soft: rgba(242, 241, 236, 0.08);
   --signal: #5672ff;
   --signal-dark: #050918;
+  --tone-company: #c0ad79;
+  --tone-project: #6f86ff;
+  --tone-personal: #b4abc3;
+  --tone-practice: #89b5a3;
   color-scheme: dark;
 }
 
@@ -6792,6 +6800,789 @@ html[data-theme="dark"] .map-node--running.is-selected .map-node__glyph {
   }
 }
 
+/* Observatory layer.
+   The map behaves as one optical instrument: a camera moves the complete
+   field, its planes answer the pointer at different amplitudes, and colour
+   appears only when a semantic object becomes relevant. */
+
+.practice-map {
+  --focus-x: 50%;
+  --focus-y: 54%;
+  --map-focus-accent: var(--tone-project);
+  --layer-far-x: 0px;
+  --layer-far-y: 0px;
+  --layer-mid-x: 0px;
+  --layer-mid-y: 0px;
+  --layer-near-x: 0px;
+  --layer-near-y: 0px;
+  perspective: 1100px;
+  perspective-origin: 50% 54%;
+}
+
+.practice-map[data-focus-kind="company"] {
+  --map-focus-accent: var(--tone-company);
+}
+
+.practice-map[data-focus-kind="project"] {
+  --map-focus-accent: var(--tone-project);
+}
+
+.practice-map[data-focus-kind="personal"] {
+  --map-focus-accent: var(--tone-personal);
+}
+
+.practice-map[data-focus-kind="practice"] {
+  --map-focus-accent: var(--tone-practice);
+}
+
+.practice-map::before {
+  background:
+    radial-gradient(
+      circle at var(--focus-x) var(--focus-y),
+      color-mix(in srgb, var(--map-focus-accent) 10%, transparent) 0,
+      transparent 19%
+    ),
+    radial-gradient(
+      ellipse at 50% 54%,
+      color-mix(in srgb, var(--signal) 7%, transparent) 0,
+      transparent 38%
+    ),
+    linear-gradient(90deg, transparent 49.95%, var(--line-soft) 50%, transparent 50.05%),
+    linear-gradient(transparent 49.95%, var(--line-soft) 50%, transparent 50.05%);
+  transition: background-color 320ms var(--motion-shift);
+}
+
+.practice-map::after {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  background:
+    radial-gradient(
+      ellipse at 50% 54%,
+      transparent 42%,
+      color-mix(in srgb, var(--bg) 9%, transparent) 73%,
+      color-mix(in srgb, var(--bg) 34%, transparent) 100%
+    );
+  content: "";
+  pointer-events: none;
+}
+
+html[data-theme="dark"] .practice-map::before {
+  background:
+    radial-gradient(
+      circle at var(--focus-x) var(--focus-y),
+      color-mix(in srgb, var(--map-focus-accent) 14%, transparent) 0,
+      transparent 21%
+    ),
+    radial-gradient(
+      ellipse at 50% 54%,
+      color-mix(in srgb, var(--signal) 12%, transparent) 0,
+      transparent 42%
+    ),
+    linear-gradient(90deg, transparent 49.95%, var(--line-soft) 50%, transparent 50.05%),
+    linear-gradient(transparent 49.95%, var(--line-soft) 50%, transparent 50.05%);
+}
+
+html[data-theme="dark"] .practice-map::after {
+  background:
+    radial-gradient(
+      ellipse at 50% 54%,
+      transparent 35%,
+      rgba(0, 0, 0, 0.12) 70%,
+      rgba(0, 0, 0, 0.42) 100%
+    );
+}
+
+.map-camera {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  transform: translate3d(0, 0, 0) scale(1);
+  transform-origin: 50% 54%;
+  transform-style: preserve-3d;
+  transition: transform 760ms var(--motion-shift);
+  will-change: transform;
+}
+
+.practice-map[data-camera-view="work"] .map-camera {
+  transform: translate3d(-3.5%, -1.5%, 0) scale(1.055);
+}
+
+.practice-map[data-camera-view="approach"] .map-camera {
+  transform: translate3d(1.5%, -0.5%, 0) scale(0.97);
+}
+
+.practice-map[data-camera-view="contact"] .map-camera {
+  transform: translate3d(2.5%, 1.75%, 0) scale(1.035);
+}
+
+.map-grid {
+  transform:
+    translate3d(var(--layer-far-x), var(--layer-far-y), -70px)
+    scale(1.07);
+  transition: transform 900ms var(--motion-shift);
+}
+
+.map-depth-grid {
+  top: 54%;
+  width: min(70%, 980px);
+  height: 88%;
+  color: color-mix(in srgb, var(--signal) 30%, var(--line));
+  opacity: 0.3;
+  transform: translate3d(
+    calc(-50% + var(--depth-x)),
+    calc(-50% + var(--depth-y)),
+    -34px
+  );
+  mask-image: radial-gradient(ellipse at center, #000 0 74%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 0 74%, transparent 100%);
+}
+
+html[data-theme="dark"] .map-depth-grid {
+  color: color-mix(in srgb, var(--signal) 36%, var(--line));
+  opacity: 0.34;
+}
+
+.map-depth-grid :is(path, line) {
+  stroke-width: 0.5;
+}
+
+.map-depth-grid__rays {
+  opacity: 0.22;
+}
+
+.map-specks {
+  transform: translate3d(var(--layer-far-x), var(--layer-far-y), -24px);
+  transition: transform 900ms var(--motion-shift);
+}
+
+.map-links,
+.map-nodes {
+  transform: translate3d(var(--layer-mid-x), var(--layer-mid-y), 12px);
+  transition:
+    opacity 180ms var(--motion-shift),
+    transform 820ms var(--motion-shift);
+}
+
+.signal-constellation {
+  transform:
+    translate3d(
+      calc(var(--core-x) + var(--layer-mid-x)),
+      calc(var(--core-y) + var(--layer-mid-y)),
+      0
+    );
+}
+
+.origin-marker {
+  transform:
+    translate3d(
+      calc(-50% + var(--core-x) + var(--layer-near-x)),
+      calc(-50% + var(--core-y) + var(--layer-near-y)),
+      28px
+    );
+}
+
+.practice-map:has(.map-hover-preview.is-visible) .signal-constellation {
+  transform:
+    translate3d(
+      calc(var(--core-x) + var(--layer-mid-x)),
+      calc(var(--core-y) + var(--layer-mid-y)),
+      0
+    )
+    scale(0.985);
+}
+
+.practice-map[data-focus-id] .map-node {
+  opacity: 0.56;
+}
+
+.practice-map[data-focus-id]
+  .map-node:is(:hover, :focus-visible, .is-selected),
+.practice-map[data-focus-id="garage"] .map-node[data-map-parent="garage"],
+.practice-map[data-focus-id="private-practice"]
+  .map-node[data-map-parent="private-practice"] {
+  filter: saturate(1.06);
+  opacity: 1;
+}
+
+.map-node--company {
+  --node-accent: var(--tone-company);
+}
+
+.map-node--project {
+  --node-accent: var(--tone-project);
+}
+
+.map-node--personal {
+  --node-accent: var(--tone-personal);
+}
+
+.map-node--practice {
+  --node-accent: var(--tone-practice);
+}
+
+.map-node::after {
+  inset: -15px;
+  border: 0;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--node-accent) 25%, transparent) 0 28%,
+    color-mix(in srgb, var(--node-accent) 11%, transparent) 42%,
+    transparent 68%
+  );
+  box-shadow: none;
+  filter: blur(1px);
+  transform: scale(0.78);
+}
+
+.map-node:is(:hover, :focus-visible)::after {
+  opacity: 0.7;
+  transform: scale(0.94);
+}
+
+.map-node.is-selected::after {
+  box-shadow: none;
+  opacity: 1;
+  transform: scale(1.08);
+}
+
+.practice-map:has(.map-inspector.is-open) .map-node.is-selected {
+  --node-scale: 1.15;
+}
+
+.map-node--project.is-selected .map-node__glyph {
+  border-color: var(--node-accent);
+  background: color-mix(in srgb, var(--bg) 86%, var(--node-accent));
+}
+
+.map-node--project.is-selected .map-node__glyph::after {
+  background: var(--node-accent);
+}
+
+.map-node--personal.is-selected .map-node__glyph,
+.map-node--practice.is-selected .map-node__glyph::before,
+.map-node--practice.is-selected .map-node__glyph::after {
+  background: var(--node-accent);
+}
+
+.map-node--company.is-selected .map-node__glyph {
+  border-color: var(--node-accent);
+  filter:
+    saturate(1.08)
+    drop-shadow(0 8px 18px color-mix(in srgb, var(--node-accent) 22%, transparent));
+}
+
+.map-node:focus-visible .map-node__glyph {
+  outline-color: var(--node-accent);
+}
+
+.practice-map:has(
+    .map-node--garage:is(:hover, :focus-visible),
+    .map-inspector.is-open[data-selected-map-id="garage"]
+  )
+  .map-links
+  path.is-garage-link {
+  stroke: color-mix(in srgb, var(--tone-company) 82%, var(--ink));
+}
+
+.practice-map:has(
+    .map-node[data-map-id="private-practice"]:is(:hover, :focus-visible),
+    .map-inspector.is-open[data-selected-map-id="private-practice"]
+  )
+  .map-links
+  path.is-private-practice-link {
+  stroke: color-mix(in srgb, var(--tone-practice) 82%, var(--ink));
+}
+
+html[data-theme="light"] .map-node--company .map-node__glyph {
+  background:
+    radial-gradient(
+      circle at 26% 19%,
+      rgba(255, 255, 255, 0.42) 0,
+      rgba(255, 255, 255, 0.12) 8%,
+      transparent 23%
+    ),
+    radial-gradient(
+      circle at 39% 34%,
+      #5d604f 0,
+      #34372d 24%,
+      #161812 54%,
+      #060704 80%,
+      #010201 100%
+    );
+  box-shadow:
+    inset -8px -11px 17px rgba(0, 0, 0, 0.42),
+    inset 4px 4px 9px rgba(255, 255, 255, 0.075),
+    0 10px 24px rgba(14, 15, 11, 0.18);
+}
+
+html[data-theme="dark"] .map-node--running .map-node__glyph {
+  background:
+    radial-gradient(
+      circle at 25% 18%,
+      rgba(255, 255, 255, 0.5) 0,
+      rgba(255, 255, 255, 0.13) 8%,
+      transparent 23%
+    ),
+    radial-gradient(
+      circle at 39% 33%,
+      #c8c2d1 0,
+      #9a91a7 24%,
+      #5b5465 56%,
+      #2d2933 82%,
+      #121015 100%
+    );
+  box-shadow:
+    inset -10px -14px 21px rgba(8, 7, 10, 0.62),
+    inset 3px 3px 8px rgba(255, 255, 255, 0.09),
+    0 13px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Reels remain unframed content. Their title and timing live in a separate
+   registered MATERIAL / 01 readout, like an observation instrument. */
+
+.map-hover-preview.has-video,
+.map-hover-preview.has-video.is-landscape {
+  --reel-progress: 0;
+  display: grid;
+  width: min(
+    clamp(300px, 34vw, 460px),
+    calc((100svh - 210px) * 0.8)
+  );
+  aspect-ratio: auto;
+  grid-template-rows: auto auto;
+  gap: 10px;
+  padding: 0;
+  overflow: visible;
+  border-radius: 0;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.map-hover-preview.has-video.is-landscape {
+  width: min(
+    clamp(360px, 43vw, 570px),
+    calc((100svh - 220px) * 1.25)
+  );
+}
+
+.map-hover-preview.has-video .map-hover-preview__media {
+  position: relative;
+  height: auto;
+  overflow: hidden;
+  aspect-ratio: 4 / 5;
+  border-radius: clamp(20px, 1.6vw, 28px);
+  background: color-mix(in srgb, var(--bg) 88%, var(--ink));
+  box-shadow: none;
+  corner-shape: squircle;
+}
+
+.map-hover-preview.has-video.is-landscape .map-hover-preview__media {
+  aspect-ratio: 5 / 4;
+}
+
+.map-hover-preview.has-video .map-hover-preview__media video {
+  object-fit: contain;
+  object-position: center top;
+}
+
+.map-hover-preview.has-video .map-hover-preview__media::before {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 0 42%,
+    color-mix(in srgb, var(--signal) 8%, transparent) 49%,
+    transparent 56% 100%
+  );
+  content: "";
+  pointer-events: none;
+  transform: translateX(-110%);
+}
+
+.map-hover-preview.has-video.is-visible.is-video-ready
+  .map-hover-preview__media::before {
+  animation: observation-scan 4.8s var(--motion-shift) infinite;
+}
+
+.map-hover-preview.has-video .map-hover-preview__media::after,
+.map-hover-preview.has-video.is-visible.is-video-ready
+  .map-hover-preview__media::after {
+  height: 1px;
+  animation: none;
+  background: var(--map-focus-accent);
+  transform: scaleX(var(--reel-progress));
+}
+
+.map-hover-preview__readout {
+  display: grid;
+  min-width: 0;
+  grid-template-rows: auto auto;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 4px 12px;
+  padding: 11px 13px 12px;
+  border: 0;
+  border-radius: 18px;
+  background: var(--material-01);
+  box-shadow: none;
+  color: var(--content-ink);
+  corner-shape: var(--corner-card-shape);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.map-hover-preview__readout strong {
+  min-width: 0;
+  overflow: hidden;
+  grid-row: 1;
+  grid-column: 2;
+  font-size: clamp(0.72rem, calc(0.66rem + 0.18vw), 0.86rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.12;
+  text-overflow: ellipsis;
+  text-wrap: balance;
+}
+
+.map-hover-preview__readout > span {
+  color: color-mix(in srgb, currentColor 70%, transparent);
+  font-size: clamp(0.52rem, calc(0.48rem + 0.1vw), 0.62rem);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  letter-spacing: 0.035em;
+  line-height: 1.1;
+}
+
+.map-hover-preview__index {
+  grid-row: 1 / 3;
+  grid-column: 1;
+}
+
+.map-hover-preview__readout > span:last-child {
+  grid-row: 2;
+  grid-column: 2;
+}
+
+@keyframes observation-scan {
+  0%,
+  46% {
+    transform: translateX(-110%);
+  }
+
+  78%,
+  100% {
+    transform: translateX(110%);
+  }
+}
+
+/* Section changes move the map camera and tint only the field beneath the
+   common material. The surfaces themselves keep the exact shared recipe. */
+
+.content-panel::before {
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  background:
+    radial-gradient(
+      circle at var(--panel-glow-x, 50%) var(--panel-glow-y, 50%),
+      color-mix(in srgb, var(--panel-accent, var(--signal)) 9%, transparent) 0,
+      transparent 31%
+    );
+  content: "";
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 420ms var(--motion-enter);
+}
+
+.content-panel.is-open::before {
+  opacity: 1;
+}
+
+.content-panel[data-view="work"] {
+  --panel-accent: var(--tone-project);
+  --panel-glow-x: 67%;
+  --panel-glow-y: 45%;
+}
+
+.content-panel[data-view="approach"] {
+  --panel-accent: var(--tone-practice);
+  --panel-glow-x: 42%;
+  --panel-glow-y: 55%;
+}
+
+.content-panel[data-view="contact"] {
+  --panel-accent: var(--tone-personal);
+  --panel-glow-x: 54%;
+  --panel-glow-y: 48%;
+}
+
+/* Contact is a compact terminal, not a content card. It keeps the common
+   material but uses only the space required by the message and two actions. */
+
+.content-panel .contact-section {
+  min-height: calc(100svh - 170px);
+}
+
+.content-panel .contact-copy {
+  width: min(720px, calc(100vw - 160px));
+  min-height: 0;
+  grid-template: auto / minmax(0, 1.15fr) minmax(250px, 0.85fr);
+  align-items: center;
+  gap: clamp(22px, 3vw, 34px);
+  padding: clamp(22px, 2.7vw, 30px);
+  border-radius: 30px;
+}
+
+.content-panel .contact-copy > div {
+  display: grid;
+  width: auto;
+  min-height: 0;
+  padding: 0;
+  transform: none;
+}
+
+.content-panel .contact-intro {
+  align-content: center;
+  gap: 8px;
+}
+
+.content-panel .contact-copy .contact-status {
+  display: flex;
+  max-width: none;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 4px;
+  color: color-mix(in srgb, currentColor 62%, transparent);
+  font-size: var(--content-type-micro);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.contact-status__dot {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--pulse);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--pulse) 12%, transparent);
+}
+
+.content-panel .contact-copy h2 {
+  font-size: clamp(2.35rem, calc(1.8rem + 1.7vw), 3.65rem);
+  font-weight: 500;
+  letter-spacing: -0.055em;
+  line-height: 0.94;
+}
+
+.content-panel .contact-copy .contact-lede {
+  max-width: 32ch;
+  margin: 2px 0 0;
+  color: color-mix(in srgb, currentColor 72%, transparent);
+  font-size: clamp(0.86rem, calc(0.8rem + 0.18vw), 1rem);
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+  text-wrap: pretty;
+}
+
+.content-panel .contact-links {
+  display: grid;
+  align-self: stretch;
+  border-left: 1px solid var(--line-soft);
+  grid-template-columns: 1fr;
+  gap: 0;
+  padding-left: clamp(18px, 2.4vw, 28px);
+}
+
+.content-panel .contact-copy > .contact-links a {
+  min-height: 64px;
+  grid-template-rows: auto auto;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-content: center;
+  padding: 10px 0;
+}
+
+.content-panel .contact-copy > .contact-links a + a {
+  border-top: 1px solid var(--line-soft);
+}
+
+@media (max-width: 900px) {
+  .content-panel .contact-section {
+    display: grid;
+    width: min(680px, calc(100vw - 32px));
+    min-height: calc(100svh - 164px);
+    place-items: center;
+    padding: 22px 0 44px;
+  }
+
+  .content-panel .contact-copy {
+    width: min(680px, calc(100vw - 32px));
+    min-height: 0;
+  }
+}
+
+@media (max-width: 680px) {
+  .content-panel .contact-section {
+    display: grid;
+    width: calc(100vw - 20px);
+    min-height: calc(100svh - 154px);
+    padding: 16px 0 36px;
+  }
+
+  .content-panel .contact-copy {
+    width: 100%;
+    min-height: 0;
+    grid-template: auto auto / minmax(0, 1fr);
+    gap: 20px;
+    padding: 22px;
+    border-radius: 27px;
+  }
+
+  .content-panel .contact-copy .contact-intro h2 {
+    font-size: clamp(2.5rem, 14cqi, 3.2rem);
+  }
+
+  .content-panel .contact-copy .contact-lede {
+    max-width: 27ch;
+    font-size: 0.9rem;
+  }
+
+  .content-panel .contact-links {
+    border-top: 1px solid var(--line-soft);
+    border-left: 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding-top: 4px;
+    padding-left: 0;
+  }
+
+  .content-panel .contact-copy > .contact-links a {
+    min-height: 58px;
+    padding: 9px 0;
+  }
+
+  .content-panel .contact-copy > .contact-links a + a {
+    border-top: 0;
+    border-left: 1px solid var(--line-soft);
+    padding-left: 14px;
+  }
+}
+
+@media (max-width: 360px) {
+  .content-panel .contact-links {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .content-panel .contact-copy > .contact-links a {
+    grid-template-columns: 18px minmax(0, 1fr);
+    gap: 7px;
+  }
+
+  .content-panel .contact-link__index {
+    font-size: clamp(9px, 0.5rem, 12px);
+    white-space: nowrap;
+  }
+
+  .content-panel .contact-copy > .contact-links a + a {
+    border-top: 1px solid var(--line-soft);
+    border-left: 0;
+    padding-left: 0;
+  }
+
+  .content-panel .contact-link__channel {
+    font-size: 0.82rem;
+  }
+}
+
+@media (max-width: 680px) {
+  .map-axis-label {
+    font-size: clamp(7px, 2vw, 9px);
+  }
+}
+
+.content-panel__body {
+  z-index: 1;
+}
+
+.content-panel .work-intro h2,
+.content-panel .approach-intro h2 {
+  letter-spacing: -0.045em;
+}
+
+.content-panel .work-row__number,
+.content-panel .approach-grid span {
+  color: color-mix(in srgb, currentColor 68%, var(--panel-accent));
+}
+
+.content-panel .work-row:hover .work-row__number,
+.content-panel .work-row:focus-visible .work-row__number {
+  color: var(--panel-accent);
+}
+
+/* The running node lives low in the field, so its readout moves above it
+   instead of covering the active object and erasing the state cue. */
+
+.map-inspector[data-selected-map-id="running"] {
+  top: 112px;
+  bottom: auto;
+}
+
+@media (max-width: 680px) {
+  .map-inspector[data-selected-map-id="running"] {
+    top: 116px;
+    bottom: auto;
+  }
+}
+
+@media (max-width: 680px) {
+  .practice-map::after {
+    background:
+      radial-gradient(
+        ellipse at 50% 54%,
+        transparent 48%,
+        color-mix(in srgb, var(--bg) 26%, transparent) 100%
+      );
+  }
+
+  .map-camera {
+    transition-duration: 520ms;
+  }
+
+  .map-node::after {
+    inset: -14px;
+    border: 0;
+  }
+
+  .map-node.is-selected::after {
+    box-shadow: none;
+    opacity: 1;
+    transform: scale(1.16);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-camera,
+  .map-grid,
+  .map-depth-grid,
+  .map-specks,
+  .map-links,
+  .map-nodes,
+  .signal-constellation,
+  .origin-marker,
+  .content-panel::before {
+    transition: none;
+  }
+
+  .map-hover-preview.has-video.is-visible.is-video-ready
+    .map-hover-preview__media::before {
+    animation: none;
+  }
+}
+
 @media (prefers-contrast: more) {
   :root {
     --muted: #454641;
@@ -6899,6 +7690,7 @@ html[data-theme="dark"] .map-node--running.is-selected .map-node__glyph {
   .map-inspector .overlay-close,
   .content-panel__header > div,
   .content-panel .overlay-close,
+  .map-hover-preview__readout,
   .content-panel .work-intro,
   .content-panel .work-row,
   .content-panel .approach-grid li,
@@ -7017,6 +7809,16 @@ html[data-theme="dark"] .map-node--running.is-selected .map-node__glyph {
     opacity: 0;
     pointer-events: none;
     transform: translateY(-18px) scale(0.95);
+  }
+
+  .content-panel
+    :is(
+      .work-intro,
+      .approach-intro,
+      .work-row,
+      .approach-grid li
+    ).is-content-stack-after {
+    transform: translateY(var(--content-stack-clearance, 0px)) scale(1);
   }
 
   .content-panel
