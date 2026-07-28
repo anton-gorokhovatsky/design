@@ -59,7 +59,6 @@ const materialAudit = async (page) => page.evaluate(() => {
         && Number(style.opacity) > 0
         && rect.width > 0
         && rect.height > 0
-        && !element.classList.contains("is-content-stack-behind")
         && !element.classList.contains("is-content-stack-hidden");
     })
     .map((element) => {
@@ -85,115 +84,320 @@ const materialAudit = async (page) => page.evaluate(() => {
   };
 });
 
-const stackAudit = async (page, panelName) => {
+const readStackState = (page, panelName, expectedScroll, inputMode) => {
+  const selector = panelName === "work"
+    ? ".work-intro, .work-list .work-row"
+    : ".approach-intro, .approach-grid li";
+
+  return page.evaluate(({
+    surfaceSelector,
+    expectedScrollTop,
+    mode,
+  }) => {
+    const body = document.querySelector(".content-panel__body");
+    const bodyRect = body.getBoundingClientRect();
+    const bodyStyle = getComputedStyle(body);
+    const surfaces = Array.from(document.querySelectorAll(surfaceSelector));
+    const geometry = surfaces.map((surface, index) => {
+      const rect = surface.getBoundingClientRect();
+      const style = getComputedStyle(surface);
+      const childOpacities = Array.from(surface.children)
+        .filter((child) => getComputedStyle(child).display !== "none")
+        .map((child) => Number(getComputedStyle(child).opacity));
+      return {
+        index,
+        active: surface.classList.contains("is-content-stack-active"),
+        behind: surface.classList.contains("is-content-stack-behind"),
+        hidden: surface.classList.contains("is-content-stack-hidden"),
+        position: style.position,
+        zIndex: Number(style.zIndex) || 0,
+        childOpacities,
+        clipBottom: Number.parseFloat(
+          style.getPropertyValue("--content-stack-clip-bottom"),
+        ) || 0,
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+        left: rect.left,
+        width: rect.width,
+        height: rect.height,
+      };
+    });
+    const activeIndex = geometry.findIndex((item) => item.active);
+    const active = geometry[activeIndex] || null;
+    const next = geometry[activeIndex + 1] || null;
+    const activeText = active
+      ? surfaces[activeIndex].innerText.trim()
+      : "";
+    const overlap = active && next
+      ? Math.max(0, active.bottom - next.top)
+      : 0;
+    const centerX = Math.round((bodyRect.left + bodyRect.right) / 2);
+    const centerY = Math.round((bodyRect.top + bodyRect.bottom) / 2);
+    const hit = document.elementFromPoint(centerX, centerY);
+    const hitInsideBody = Boolean(hit && body.contains(hit));
+
+    return {
+      inputMode: mode,
+      expectedScroll: expectedScrollTop,
+      actualScroll: body.scrollTop,
+      interaction: {
+        pointerEvents: bodyStyle.pointerEvents,
+        touchAction: bodyStyle.touchAction,
+        hitInsideBody,
+      },
+      body: {
+        top: bodyRect.top,
+        right: bodyRect.right,
+        bottom: bodyRect.bottom,
+        left: bodyRect.left,
+      },
+      activeIndex,
+      activeCount: geometry.filter((item) => item.active).length,
+      behindCount: geometry.filter((item) => item.behind).length,
+      hiddenCount: geometry.filter((item) => item.hidden).length,
+      active,
+      next,
+      activeText,
+      overlap,
+      failures: [
+        ...(geometry.filter((item) => item.active).length !== 1
+          ? ["stack must have exactly one active surface"]
+          : []),
+        ...(geometry.filter((item) => item.behind).length > 2
+          ? ["stack exposes more than two quiet shoulders"]
+          : []),
+        ...(!active || !activeText
+          ? ["active surface is missing or unreadable"]
+          : []),
+        ...(active && (
+          active.top < bodyRect.top + 10
+          || active.left < bodyRect.left - 1
+          || active.right > bodyRect.right + 1
+        )
+          ? ["active surface is clipped outside the scroll viewport"]
+          : []),
+        ...(overlap > 0 && next.zIndex <= active.zIndex
+          ? ["incoming surface is layered below the active surface"]
+          : []),
+        ...(active && active.childOpacities.some((opacity) => opacity < 0.99)
+          ? ["active surface copy is faded or unreadable"]
+          : []),
+        ...(overlap > 0
+          && Math.abs(active.clipBottom - overlap) > 2
+          ? ["active surface clip does not follow the incoming card"]
+          : []),
+        ...(overlap > 0
+          && next.childOpacities.some((opacity) => opacity < 0.99)
+          ? ["incoming surface copy is faded or unreadable"]
+          : []),
+        ...(geometry
+          .filter((item) => item.behind || item.hidden)
+          .some((item) => item.childOpacities.some((opacity) => opacity > 0.01))
+          ? ["quiet or hidden stack layers expose competing copy"]
+          : []),
+        ...(bodyStyle.pointerEvents === "none"
+          ? ["scroll viewport rejects pointer input"]
+          : []),
+        ...(!bodyStyle.touchAction.includes("pan-y")
+          ? ["scroll viewport does not expose native pan-y"]
+          : []),
+        ...(!hitInsideBody
+          ? ["scroll viewport loses the center hit test"]
+          : []),
+      ],
+    };
+  }, {
+    surfaceSelector: selector,
+    expectedScrollTop: expectedScroll,
+    mode: inputMode,
+  });
+};
+
+const stackAudit = async (
+  page,
+  panelName,
+  captureLabel,
+  { nativeWheel = true } = {},
+) => {
   await page.evaluate((name) => {
     document.querySelector(`[data-open-panel="${name}"]`)?.click();
   }, panelName);
   await waitForLayout(page, 400);
 
-  const selector = panelName === "work"
-    ? ".work-intro, .work-list .work-row"
-    : ".approach-intro, .approach-grid li";
   const maxScroll = await page.locator(".content-panel__body").evaluate(
     (element) => Math.max(0, element.scrollHeight - element.clientHeight),
   );
+  const surfaceSelector = panelName === "work"
+    ? ".work-intro, .work-list .work-row"
+    : ".approach-intro, .approach-grid li";
+  const overlapStops = await page.evaluate(({ selector, maximum }) => {
+    const body = document.querySelector(".content-panel__body");
+    const bodyRect = body.getBoundingClientRect();
+    const scrollTop = body.scrollTop;
+    const overlapInset = Math.max(
+      72,
+      Math.min(112, Math.round(body.clientHeight * 0.14)),
+    );
+    return Array.from(document.querySelectorAll(selector))
+      .slice(1)
+      .map((surface) => (
+        surface.getBoundingClientRect().top
+        - bodyRect.top
+        + scrollTop
+        - overlapInset
+      ))
+      .map((stop) => Math.max(0, Math.min(maximum, Math.round(stop))));
+  }, { selector: surfaceSelector, maximum: maxScroll });
   const stops = Array.from(new Set([
     0,
     Math.round(maxScroll * 0.25),
     Math.round(maxScroll * 0.5),
     Math.round(maxScroll * 0.75),
     maxScroll,
-  ]));
+    ...overlapStops,
+  ])).sort((a, b) => a - b);
+  const scrollSequence = [
+    ...stops,
+    ...stops.slice(0, -1).reverse(),
+  ];
   const states = [];
+  let capturedMidOverlap = false;
 
-  for (const scrollTop of stops) {
+  for (const scrollTop of scrollSequence) {
     await page.locator(".content-panel__body").evaluate((element, top) => {
       element.scrollTop = top;
       element.dispatchEvent(new Event("scroll"));
     }, scrollTop);
     await waitForLayout(page);
-    states.push(await page.evaluate(({ surfaceSelector, expectedScroll }) => {
-      const body = document.querySelector(".content-panel__body");
-      const bodyRect = body.getBoundingClientRect();
-      const surfaces = Array.from(document.querySelectorAll(surfaceSelector));
-      const geometry = surfaces.map((surface, index) => {
-        const rect = surface.getBoundingClientRect();
-        return {
-          index,
-          active: surface.classList.contains("is-content-stack-active"),
-          behind: surface.classList.contains("is-content-stack-behind"),
-          hidden: surface.classList.contains("is-content-stack-hidden"),
-          after: surface.classList.contains("is-content-stack-after"),
-          position: getComputedStyle(surface).position,
-          top: rect.top,
-          right: rect.right,
-          bottom: rect.bottom,
-          left: rect.left,
-          width: rect.width,
-          height: rect.height,
-        };
+    const state = await readStackState(
+      page,
+      panelName,
+      scrollTop,
+      "programmatic",
+    );
+    states.push(state);
+    if (!capturedMidOverlap && state.overlap > 0) {
+      capturedMidOverlap = true;
+      await page.screenshot({
+        path: path.join(
+          artifactDir,
+          `${captureLabel}-${panelName}-mid-overlap.png`,
+        ),
+        fullPage: false,
       });
-      const activeIndex = geometry.findIndex((item) => item.active);
-      const active = geometry[activeIndex] || null;
-      const next = geometry[activeIndex + 1] || null;
-      const activeText = active
-        ? surfaces[activeIndex].innerText.trim()
-        : "";
-
-      return {
-        expectedScroll,
-        actualScroll: body.scrollTop,
-        body: {
-          top: bodyRect.top,
-          right: bodyRect.right,
-          bottom: bodyRect.bottom,
-          left: bodyRect.left,
-        },
-        activeIndex,
-        activeCount: geometry.filter((item) => item.active).length,
-        behindCount: geometry.filter((item) => item.behind).length,
-        hiddenCount: geometry.filter((item) => item.hidden).length,
-        active,
-        next,
-        activeText,
-        failures: [
-          ...(geometry.filter((item) => item.active).length !== 1
-            ? ["stack must have exactly one active surface"]
-            : []),
-          ...(geometry.filter((item) => item.behind).length > 2
-            ? ["stack exposes more than two quiet shoulders"]
-            : []),
-          ...(!active || !activeText
-            ? ["active surface is missing or unreadable"]
-            : []),
-          ...(active && (
-            active.top < bodyRect.top + 10
-            || active.left < bodyRect.left - 1
-            || active.right > bodyRect.right + 1
-          )
-            ? ["active surface is clipped outside the scroll viewport"]
-            : []),
-          ...(next && next.top < active.bottom + 7
-            ? ["next surface collides with the active surface"]
-            : []),
-        ],
-      };
-    }, { surfaceSelector: selector, expectedScroll: scrollTop }));
+    }
   }
 
+  const finalProgrammaticState = states.at(-1);
+  if (!capturedMidOverlap && finalProgrammaticState) {
+    finalProgrammaticState.failures.push(
+      "stack sequence never captured a real incoming-card overlap",
+    );
+  }
+  if (
+    finalProgrammaticState
+    && (
+      finalProgrammaticState.actualScroll > 1
+      || finalProgrammaticState.activeIndex !== 0
+      || Math.abs(finalProgrammaticState.active?.clipBottom || 0) > 1
+    )
+  ) {
+    finalProgrammaticState.failures.push(
+      "reverse stack sequence did not fully restore the initial state",
+    );
+  }
+
+  await page.locator(".content-panel__body").evaluate((element) => {
+    element.scrollTop = 0;
+  });
+  await waitForLayout(page, 320);
+  const bodyBox = await page.locator(".content-panel__body").boundingBox();
+  const nativeStates = [];
+
+  if (nativeWheel && bodyBox) {
+    nativeStates.push(
+      await readStackState(page, panelName, 0, "native-wheel"),
+    );
+    await page.mouse.move(
+      bodyBox.x + bodyBox.width / 2,
+      bodyBox.y + Math.min(bodyBox.height - 24, bodyBox.height * 0.62),
+    );
+    for (let index = 0; index < 3; index += 1) {
+      await page.mouse.wheel(0, Math.max(180, Math.round(bodyBox.height * 0.42)));
+      await waitForLayout(page, 300);
+      nativeStates.push(await readStackState(
+        page,
+        panelName,
+        null,
+        "native-wheel",
+      ));
+    }
+    for (let index = 0; index < 2; index += 1) {
+      await page.mouse.wheel(
+        0,
+        -Math.max(180, Math.round(bodyBox.height * 0.42)),
+      );
+      await waitForLayout(page, 300);
+      nativeStates.push(await readStackState(
+        page,
+        panelName,
+        null,
+        "native-wheel-reverse",
+      ));
+    }
+  }
+
+  const maximumNativeScroll = nativeStates.length
+    ? Math.max(...nativeStates.map((state) => state.actualScroll))
+    : 0;
+  const nativeMoved = !nativeWheel
+    || maximumNativeScroll > 0;
+  if (nativeWheel && !nativeMoved && nativeStates.length) {
+    nativeStates.at(-1).failures.push(
+      "native WebKit wheel input did not move the scroll viewport",
+    );
+  }
+  const nativeReturned = !nativeWheel
+    || (
+      nativeStates.length > 1
+      && nativeStates.at(-1).actualScroll < maximumNativeScroll
+    );
+  if (nativeWheel && !nativeReturned && nativeStates.length) {
+    nativeStates.at(-1).failures.push(
+      "reverse WebKit wheel input did not move the scroll viewport upward",
+    );
+  }
+
+  await page.screenshot({
+    path: path.join(artifactDir, `${captureLabel}-${panelName}-stack.png`),
+    fullPage: false,
+  });
   await page.keyboard.press("Escape");
   await waitForLayout(page, 420);
   return {
     panelName,
     maxScroll,
     states,
-    failures: states.flatMap((state) => state.failures.map(
-      (failure) => `${panelName}@${state.actualScroll}: ${failure}`,
+    nativeStates,
+    failures: [...states, ...nativeStates].flatMap((state) => (
+      state.failures.map(
+        (failure) => `${panelName}/${state.inputMode}@${state.actualScroll}: ${failure}`,
+      )
     )),
   };
 };
 
 const routeAudit = async (page, mapId, expectedCount) => {
+  await page.evaluate(() => {
+    document.querySelector(".content-panel.is-open [data-close-panel]")?.click();
+    document.querySelector(".map-inspector.is-open [data-close-inspector]")?.click();
+    document.querySelector(
+      "[data-constellation-nav].is-open [data-constellation-nav-toggle]",
+    )?.click();
+  });
+  await waitForLayout(page, 420);
+
   const hitTest = await page.evaluate((id) => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     const node = document.querySelector(`[data-map-id="${id}"]`);
@@ -259,7 +463,91 @@ const routeAudit = async (page, mapId, expectedCount) => {
     hitTest,
     hover,
     click,
-    failure: hover.failure || click.failure,
+    failure: !hitTest.hitInsideNode || hover.failure || click.failure,
+  };
+};
+
+const relationshipCascadeAudit = async (page) => {
+  await page.evaluate(() => {
+    document.querySelector(".content-panel.is-open [data-close-panel]")?.click();
+    document.querySelector(".map-inspector.is-open [data-close-inspector]")?.click();
+    document.querySelector(
+      "[data-constellation-nav].is-open [data-constellation-nav-toggle]",
+    )?.click();
+    document.querySelector('[data-map-filter="project"]')?.click();
+    document.querySelector('[data-map-id="private-practice"]')?.click();
+  });
+  await waitForLayout(page, 420);
+
+  const filtered = await page.evaluate(() => {
+    const root = document.querySelector("[data-map-links]");
+    const active = Array.from(
+      root?.querySelectorAll("path.is-private-practice-link.is-active-relation") || [],
+    );
+    const hidden = Array.from(root?.querySelectorAll("path.is-filter-hidden") || []);
+    const rootOpacity = Number(getComputedStyle(root).opacity);
+    const minimumActiveOpacity = active.length
+      ? Math.min(...active.map((path) => Number(getComputedStyle(path).opacity)))
+      : 0;
+    const maximumActiveOpacity = active.length
+      ? Math.max(...active.map((path) => Number(getComputedStyle(path).opacity)))
+      : 0;
+    const maximumHiddenOpacity = hidden.length
+      ? Math.max(...hidden.map((path) => Number(getComputedStyle(path).opacity)))
+      : 0;
+
+    return {
+      rootOpacity,
+      activeCount: active.length,
+      hiddenCount: hidden.length,
+      minimumActiveOpacity,
+      maximumActiveOpacity,
+      maximumHiddenOpacity,
+      failure: rootOpacity < 0.99
+        || active.length !== 8
+        || minimumActiveOpacity < 0.15
+        || maximumActiveOpacity > 0.17
+        || maximumHiddenOpacity > 0.01,
+    };
+  });
+
+  await page.evaluate(() => {
+    document.querySelector(".map-inspector.is-open [data-close-inspector]")?.click();
+    document.querySelector('[data-map-filter="all"]')?.click();
+  });
+  const input = page.locator("[data-command-input]");
+  await input.fill("Сайт музея");
+  await input.press("ArrowDown");
+  await waitForLayout(page, 420);
+
+  const search = await page.evaluate(() => {
+    const root = document.querySelector("[data-map-links]");
+    const active = Array.from(root?.querySelectorAll("path.is-active-relation") || []);
+    const rootOpacity = Number(getComputedStyle(root).opacity);
+    const minimumActiveOpacity = active.length
+      ? Math.min(...active.map((path) => Number(getComputedStyle(path).opacity)))
+      : 0;
+
+    return {
+      rootOpacity,
+      relationshipId: root?.dataset.relationshipId || "",
+      activeCount: active.length,
+      minimumActiveOpacity,
+      failure: rootOpacity < 0.99
+        || root?.dataset.relationshipId !== "garage-site"
+        || active.length !== 1
+        || minimumActiveOpacity < 0.99,
+    };
+  });
+
+  await input.fill("");
+  await input.press("Escape");
+  await waitForLayout(page, 220);
+
+  return {
+    filtered,
+    search,
+    failure: filtered.failure || search.failure,
   };
 };
 
@@ -409,7 +697,12 @@ const firstPaintAudit = async (browser, viewport, colorScheme) => {
           ...await firstPaintAudit(browser, viewport, colorScheme),
         });
 
-        const context = await browser.newContext({ viewport, colorScheme });
+        const context = await browser.newContext({
+          viewport,
+          colorScheme,
+          hasTouch: true,
+          isMobile: true,
+        });
         const page = await context.newPage();
         const label = `${viewport.width}x${viewport.height}-${colorScheme}`;
         attachRuntimeLog(page, label);
@@ -418,13 +711,18 @@ const firstPaintAudit = async (browser, viewport, colorScheme) => {
 
         const initialSelectedId = await page.locator("[data-signal-field]")
           .getAttribute("data-selected-id");
-        const workStack = await stackAudit(page, "work");
-        const approachStack = await stackAudit(page, "approach");
+        const workStack = await stackAudit(page, "work", label, {
+          nativeWheel: false,
+        });
+        const approachStack = await stackAudit(page, "approach", label, {
+          nativeWheel: false,
+        });
         const contact = await contactAudit(page, viewport.width);
         const garage = await routeAudit(page, "garage", 9);
         await page.keyboard.press("Escape");
         await waitForLayout(page, 300);
         const privatePractice = await routeAudit(page, "private-practice", 8);
+        const relationshipCascade = await relationshipCascadeAudit(page);
         const material = await materialAudit(page);
 
         await page.screenshot({
@@ -440,9 +738,37 @@ const firstPaintAudit = async (browser, viewport, colorScheme) => {
           contact,
           garage,
           privatePractice,
+          relationshipCascade,
           material,
         });
         await context.close();
+
+        const nativeContext = await browser.newContext({
+          viewport,
+          colorScheme,
+        });
+        const nativePage = await nativeContext.newPage();
+        const nativeLabel = `${label}-native-scroll`;
+        attachRuntimeLog(nativePage, nativeLabel);
+        await nativePage.goto(`${baseUrl}-${nativeLabel}`, {
+          waitUntil: "networkidle",
+        });
+        await waitForLayout(nativePage, 500);
+        const nativeWorkStack = await stackAudit(
+          nativePage,
+          "work",
+          nativeLabel,
+        );
+        const nativeApproachStack = await stackAudit(
+          nativePage,
+          "approach",
+          nativeLabel,
+        );
+        report.viewports.at(-1).nativeScroll = {
+          workStack: nativeWorkStack,
+          approachStack: nativeApproachStack,
+        };
+        await nativeContext.close();
       }
     }
   } finally {
@@ -461,6 +787,8 @@ const firstPaintAudit = async (browser, viewport, colorScheme) => {
         : []),
       ...state.workStack.failures,
       ...state.approachStack.failures,
+      ...state.nativeScroll.workStack.failures,
+      ...state.nativeScroll.approachStack.failures,
       ...(state.contact.failure
         ? [`${state.viewport.width}/${state.colorScheme}: contact geometry failed`]
         : []),
@@ -469,6 +797,9 @@ const firstPaintAudit = async (browser, viewport, colorScheme) => {
         : []),
       ...(state.privatePractice.failure
         ? [`${state.viewport.width}/${state.colorScheme}: private-practice routes failed`]
+        : []),
+      ...(state.relationshipCascade.failure
+        ? [`${state.viewport.width}/${state.colorScheme}: relationship cascade failed`]
         : []),
       ...state.material.failures.map(
         (failure) => `${state.viewport.width}/${state.colorScheme}: material ${failure.surface}`,

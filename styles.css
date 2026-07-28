@@ -730,13 +730,18 @@ html[data-capture="og"] .map-grid {
 }
 
 .map-node-label--garage {
-  top: calc(var(--y) + var(--layer-mid-y) + var(--garage-label-offset));
+  top: calc(var(--y) + var(--layer-mid-y));
   font-weight: 700;
-  transform: translate(-50%, -4px);
+  text-align: right;
+  transform:
+    translate(calc(-100% - var(--garage-label-offset)), -50%)
+    translateX(4px);
 }
 
 .map-node-label--garage.is-visible {
-  transform: translate(-50%, 0);
+  transform:
+    translate(calc(-100% - var(--garage-label-offset)), -50%)
+    translateX(0);
 }
 
 .map-node-label--running {
@@ -4338,8 +4343,8 @@ body.has-content-panel .constellation-nav {
   .content-panel .approach-intro > *,
   .content-panel .work-row > *,
   .content-panel .approach-grid li > * {
-    opacity: var(--content-stack-visibility, 1);
-    transition: opacity 90ms linear;
+    opacity: 1;
+    transition: none;
   }
 
   .content-panel .work-row:focus-visible {
@@ -6371,8 +6376,8 @@ html[data-theme="dark"] .map-node--running.is-selected .map-node__glyph {
   outline-offset: 3px;
 }
 
-/* Career centres reveal their existing relation families as one readable
-   route. Hover, keyboard focus and the disclosed card share one map state. */
+/* A centre reveals its whole relation family; a child reveals its exact
+   route. Pointer, keyboard, click and search all use the same path state. */
 
 .map-links path {
   transition:
@@ -6381,71 +6386,24 @@ html[data-theme="dark"] .map-node--running.is-selected .map-node__glyph {
     stroke-width 220ms var(--motion-shift);
 }
 
-.practice-map:has(
-    .map-node--garage:is(:hover, :focus-visible),
-    .map-node[data-map-id="private-practice"]:is(:hover, :focus-visible),
-    .map-inspector.is-open[data-selected-map-id="garage"],
-    .map-inspector.is-open[data-selected-map-id="private-practice"]
-  )
-  .map-links,
-.practice-map:is(
-    [data-focus-id="garage"],
-    [data-focus-id="private-practice"],
-    [data-selected-id="garage"],
-    [data-selected-id="private-practice"]
-  )
-  .map-links {
+.practice-map .map-links.has-active-relation,
+body:has(.command-dock.is-open) .map-links.has-active-relation {
   opacity: 1;
 }
 
-.practice-map:has(
-    .map-node--garage:is(:hover, :focus-visible),
-    .map-inspector.is-open[data-selected-map-id="garage"]
-  )
-  .map-links
-  path:not(.is-garage-link),
-.practice-map:has(
-    .map-node[data-map-id="private-practice"]:is(:hover, :focus-visible),
-    .map-inspector.is-open[data-selected-map-id="private-practice"]
-  )
-  .map-links
-  path:not(.is-private-practice-link),
-.practice-map:is([data-focus-id="garage"], [data-selected-id="garage"])
-  .map-links
-  path:not(.is-garage-link),
-.practice-map:is(
-    [data-focus-id="private-practice"],
-    [data-selected-id="private-practice"]
-  )
-  .map-links
-  path:not(.is-private-practice-link) {
+.map-links.has-active-relation path:not(.is-active-relation) {
   opacity: 0.14;
 }
 
-.practice-map:has(
-    .map-node--garage:is(:hover, :focus-visible),
-    .map-inspector.is-open[data-selected-map-id="garage"]
-  )
-  .map-links
-  path.is-garage-link,
-.practice-map:has(
-    .map-node[data-map-id="private-practice"]:is(:hover, :focus-visible),
-    .map-inspector.is-open[data-selected-map-id="private-practice"]
-  )
-  .map-links
-  path.is-private-practice-link,
-.practice-map:is([data-focus-id="garage"], [data-selected-id="garage"])
-  .map-links
-  path.is-garage-link,
-.practice-map:is(
-    [data-focus-id="private-practice"],
-    [data-selected-id="private-practice"]
-  )
-  .map-links
-  path.is-private-practice-link {
+.map-links.has-active-relation path.is-active-relation {
   stroke: color-mix(in srgb, var(--signal) 74%, var(--ink));
   stroke-width: 1.4;
   opacity: 1;
+}
+
+.map-links path.is-filter-hidden,
+.map-links.has-active-relation path.is-filter-hidden {
+  opacity: 0;
 }
 
 /* Directional affordances use one geometric construction. Decorative
@@ -7083,6 +7041,10 @@ html[data-theme="dark"] .map-depth-grid {
   --node-accent: var(--tone-practice);
 }
 
+.map-node[data-map-accent="practice"] {
+  --node-accent: var(--tone-practice);
+}
+
 .map-node::after {
   inset: -15px;
   border: 0;
@@ -7138,30 +7100,11 @@ html[data-theme="dark"] .map-depth-grid {
   outline-color: var(--node-accent);
 }
 
-.practice-map:has(
-    .map-node--garage:is(:hover, :focus-visible),
-    .map-inspector.is-open[data-selected-map-id="garage"]
-  )
-  .map-links
-  path.is-garage-link,
-.practice-map:is([data-focus-id="garage"], [data-selected-id="garage"])
-  .map-links
-  path.is-garage-link {
+.map-links path.is-active-relation.is-garage-link {
   stroke: color-mix(in srgb, var(--tone-company) 82%, var(--ink));
 }
 
-.practice-map:has(
-    .map-node[data-map-id="private-practice"]:is(:hover, :focus-visible),
-    .map-inspector.is-open[data-selected-map-id="private-practice"]
-  )
-  .map-links
-  path.is-private-practice-link,
-.practice-map:is(
-    [data-focus-id="private-practice"],
-    [data-selected-id="private-practice"]
-  )
-  .map-links
-  path.is-private-practice-link {
+.map-links path.is-active-relation.is-private-practice-link {
   stroke: color-mix(in srgb, var(--tone-practice) 82%, var(--ink));
 }
 
@@ -7640,6 +7583,47 @@ html[data-theme="dark"] .map-node--running .map-node__glyph {
   }
 }
 
+@media (max-width: 680px) and (max-height: 680px) {
+  .map-camera {
+    bottom: 52px;
+    transform-origin: 50% 50%;
+  }
+
+  .map-axis-label--south {
+    right: calc(50% + 8px);
+    bottom: 24px;
+  }
+}
+
+@media (min-width: 361px) and (max-width: 820px) {
+  .map-axis-label--east {
+    top: calc(50% - 24px);
+  }
+}
+
+@media (max-width: 360px) and (max-height: 680px) {
+  .map-axis-label {
+    display: none;
+  }
+
+  .practice-map .map-node--garage,
+  .practice-map .map-node--garage:is(:hover, :focus-visible, .is-selected),
+  .practice-map:has(.map-inspector.is-open) .map-node--garage.is-selected {
+    --node-scale: 0.6;
+  }
+}
+
+@media (max-width: 680px) {
+  .map-links:is(
+      [data-relationship-id="garage"],
+      [data-relationship-id="private-practice"]
+    )
+    path.is-active-relation {
+    stroke-width: 0.7;
+    opacity: 0.16;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .map-camera,
   .map-grid,
@@ -7827,6 +7811,22 @@ html[data-theme="dark"] .map-node--running .map-node__glyph {
    card, two quiet layers behind it, and no competing text in the pile. */
 
 @media (max-width: 680px) {
+  .content-panel__body {
+    pointer-events: auto;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .content-panel :is(.work-section, .approach-section) {
+    pointer-events: auto;
+  }
+
+  .content-panel .work-list,
+  .content-panel .approach-grid {
+    gap: 12px;
+    row-gap: 12px;
+  }
+
   .content-panel
     :is(
       .work-intro,
@@ -7835,16 +7835,13 @@ html[data-theme="dark"] .map-node--running .map-node__glyph {
       .approach-grid li
     ) {
     --content-stack-layer: 0;
-    --content-stack-visibility: 1;
-    top: var(--content-stack-anchor, 14px);
-    z-index: 30;
+    --content-stack-clip-bottom: 0px;
+    top: var(--content-stack-top, 16px);
+    z-index: calc(20 + var(--content-stack-order, 0));
     clip-path: none;
     isolation: isolate;
-    transform: translateY(0) scale(1);
-    transform-origin: top center;
-    transition:
-      opacity 150ms var(--motion-shift),
-      transform 180ms var(--motion-shift);
+    transform: none;
+    transition: opacity 150ms var(--motion-shift);
   }
 
   .content-panel
@@ -7854,10 +7851,11 @@ html[data-theme="dark"] .map-node--running .map-node__glyph {
       .work-row,
       .approach-grid li
     ).is-content-stack-active {
-    z-index: 40;
+    z-index: calc(20 + var(--content-stack-order, 0));
     opacity: 1;
     pointer-events: auto;
-    transform: translateY(0) scale(1);
+    clip-path: inset(0 0 var(--content-stack-clip-bottom, 0px) 0);
+    transform: none;
   }
 
   .content-panel
@@ -7867,36 +7865,11 @@ html[data-theme="dark"] .map-node--running .map-node__glyph {
       .work-row,
       .approach-grid li
     ).is-content-stack-behind {
-    z-index: calc(40 - var(--content-stack-layer));
+    z-index: calc(10 + var(--content-stack-order, 0));
     opacity: 1;
     pointer-events: none;
-    background: transparent;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    transform:
-      translateY(calc(var(--content-stack-layer) * -14px))
-      scale(calc(1 - var(--content-stack-layer) * 0.022));
-  }
-
-  .content-panel
-    :is(
-      .work-intro,
-      .approach-intro,
-      .work-row,
-      .approach-grid li
-    ).is-content-stack-behind::after {
-    position: absolute;
-    z-index: 0;
-    top: 0;
-    right: 0;
-    left: 0;
-    height: 36px;
-    border-radius: inherit;
-    background: var(--material-01);
-    content: "";
-    pointer-events: none;
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    clip-path: inset(0 0 calc(100% - 18px) 0 round 27px);
+    transform: none;
   }
 
   .content-panel
@@ -7912,17 +7885,7 @@ html[data-theme="dark"] .map-node--running .map-node__glyph {
     background: transparent;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
-    transform: translateY(-18px) scale(0.95);
-  }
-
-  .content-panel
-    :is(
-      .work-intro,
-      .approach-intro,
-      .work-row,
-      .approach-grid li
-    ).is-content-stack-after {
-    transform: translateY(var(--content-stack-clearance, 0px)) scale(1);
+    transform: none;
   }
 
   .content-panel.is-measuring-content-stack
@@ -8005,7 +7968,6 @@ html[data-theme="dark"] .map-node--running .map-node__glyph {
    blur for an active registered interface surface. */
 
 [data-material-surface][data-material-active="always"]:not(
-    .is-content-stack-behind,
     .is-content-stack-hidden
   ),
 .map-node-label[data-material-surface][data-material-active="always"] {
@@ -8034,6 +7996,19 @@ html[data-theme="dark"] .map-node--running .map-node__glyph {
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
   }
+
+  /* Compact maps use direct selection and the inspector. Floating labels
+     and hover reels cannot share a reliable collision-free touch surface. */
+  .map-labels,
+  .map-hover-preview.has-video,
+  .map-hover-preview.has-video.is-landscape {
+    display: none;
+  }
+}
+
+.map-inspector .overlay-close:focus-visible {
+  outline-offset: -4px;
+  transform: none;
 }
 
 @media (forced-colors: active) {

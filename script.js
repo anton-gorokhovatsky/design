@@ -822,6 +822,7 @@ const mapItems = [
   {
     id: "private-practice",
     kind: "project",
+    accentKind: "practice",
     label: "ЧАСТНАЯ ПРАКТИКА",
     title: "ЧАСТНАЯ ПРАКТИКА",
     meta: "СЕЙЧАС / НЕБОЛЬШИЕ ЦИФРОВЫЕ ПРОЕКТЫ",
@@ -1089,7 +1090,7 @@ const mapItems = [
     kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
     previewVideo: "assets/reels/11111.mp4?v=20260727-safe-header-1",
     previewMeta: "ИСТОРИЯ, ЦЕЛЬ И МАСШТАБ / 00:08",
-    x: 68,
+    x: 74,
     y: 72,
     size: 14,
   },
@@ -1104,7 +1105,7 @@ const mapItems = [
     description: "Каталожный сайт с ясной продуктовой структурой и визуальным ощущением холодного течения.",
     href: "https://ks.fish/",
     kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
-    previewVideo: "assets/reels/ks-fish.mp4?v=20260727-visual-story-1",
+    previewVideo: "assets/reels/ks-fish.mp4?v=20260728-native-showreel-1",
     previewMeta: "ВИТРИНА, ПРОДУКТ И ИСТОРИЯ / 00:08",
     x: 90,
     y: 78,
@@ -1213,8 +1214,8 @@ const mapItems = [
     description: "Открытый горизонт возвращает чувство масштаба и напоминает: за привычными границами всегда есть продолжение.",
     href: "https://www.instagram.com/stories/highlights/17870996476264206/",
     kindLabel: "ЛИЧНОЕ / ИНТЕРЕС",
-    x: 70,
-    y: 71,
+    x: 62,
+    y: 65,
     size: 12,
   },
   {
@@ -1454,6 +1455,7 @@ const mapPreviewTitle = document.querySelector("[data-map-preview-title]");
 const mapPreviewMeta = document.querySelector("[data-map-preview-meta]");
 const reelItems = mapItems.filter((item) => item.previewVideo);
 const hoverCapable = window.matchMedia("(hover: hover) and (pointer: fine)");
+const compactMapViewport = window.matchMedia("(max-width: 680px)");
 const mapButtons = new Map();
 const mapLabels = new Map();
 let selectedMapId = null;
@@ -1461,6 +1463,97 @@ let rovingMapId = "garage";
 let previewHideTimer = 0;
 let previewShowFrame = 0;
 let activePreviewItem = null;
+let atmosphereMapId = null;
+let searchRelationshipId = null;
+
+const resolveMapLayout = (item) => {
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  let x = item.x;
+  let y = item.y;
+
+  if (viewportWidth >= 821 && viewportWidth <= 1100) {
+    const tabletOverrides = {
+      ilmix: { x: 19 },
+      "principle-system": { x: 18 },
+      "principle-wings": { y: 43 },
+    };
+    const override = tabletOverrides[item.id];
+
+    x = override?.x ?? x;
+    y = override?.y ?? y;
+  } else if (viewportWidth >= 681 && viewportWidth <= 820) {
+    if (item.id === "ilmix") {
+      y = 33;
+    }
+  } else if (viewportWidth <= 360 && viewportHeight <= 680) {
+    if (item.id === "garage-site") {
+      x = 60.5;
+    }
+  }
+
+  return { x, y };
+};
+
+const applyMapLayout = () => {
+  mapItems.forEach((item) => {
+    const position = resolveMapLayout(item);
+    const button = mapButtons.get(item.id);
+    const label = mapLabels.get(item.id);
+
+    button?.style.setProperty("--x", `${position.x}%`);
+    button?.style.setProperty("--y", `${position.y}%`);
+    label?.style.setProperty("--x", `${position.x}%`);
+    label?.style.setProperty("--y", `${position.y}%`);
+
+    if (item.id === atmosphereMapId && signalField) {
+      signalField.style.setProperty("--focus-x", `${position.x}%`);
+      signalField.style.setProperty("--focus-y", `${position.y}%`);
+    }
+  });
+};
+
+const syncMapRelationships = () => {
+  if (!mapLinksRoot) {
+    return;
+  }
+
+  const relationshipId = searchRelationshipId || atmosphereMapId;
+  const activeKind = signalField?.dataset.activeKind || "all";
+  const paths = Array.from(mapLinksRoot.querySelectorAll("path"));
+  let hasVisibleRelationship = false;
+
+  paths.forEach((path) => {
+    const parentId = path.dataset.parentId;
+    const childId = path.dataset.childId;
+    const parentKind = mapButtons.get(parentId)?.dataset.mapKind;
+    const childKind = mapButtons.get(childId)?.dataset.mapKind;
+    const isFilterVisible = activeKind === "all"
+      || (parentKind === activeKind && childKind === activeKind);
+    const isActive = Boolean(
+      relationshipId
+      && (relationshipId === parentId || relationshipId === childId),
+    );
+    const isVisibleRelationship = isActive && isFilterVisible;
+
+    path.classList.toggle("is-filter-hidden", !isFilterVisible);
+    path.classList.toggle("is-active-relation", isVisibleRelationship);
+    hasVisibleRelationship ||= isVisibleRelationship;
+  });
+
+  mapLinksRoot.classList.toggle("has-active-relation", hasVisibleRelationship);
+
+  if (hasVisibleRelationship) {
+    mapLinksRoot.dataset.relationshipId = relationshipId;
+  } else {
+    delete mapLinksRoot.dataset.relationshipId;
+  }
+};
+
+const setSearchRelationshipPreview = (id = null) => {
+  searchRelationshipId = id;
+  syncMapRelationships();
+};
 
 const setMapAtmosphere = (item = null) => {
   if (!signalField) {
@@ -1468,17 +1561,22 @@ const setMapAtmosphere = (item = null) => {
   }
 
   if (!item) {
+    atmosphereMapId = null;
     delete signalField.dataset.focusId;
     delete signalField.dataset.focusKind;
     signalField.style.removeProperty("--focus-x");
     signalField.style.removeProperty("--focus-y");
+    syncMapRelationships();
     return;
   }
 
+  atmosphereMapId = item.id;
+  const position = resolveMapLayout(item);
   signalField.dataset.focusId = item.id;
-  signalField.dataset.focusKind = item.kind;
-  signalField.style.setProperty("--focus-x", `${item.x}%`);
-  signalField.style.setProperty("--focus-y", `${item.y}%`);
+  signalField.dataset.focusKind = item.accentKind || item.kind;
+  signalField.style.setProperty("--focus-x", `${position.x}%`);
+  signalField.style.setProperty("--focus-y", `${position.y}%`);
+  syncMapRelationships();
 };
 
 const restoreSelectedMapAtmosphere = () => {
@@ -1587,12 +1685,14 @@ const getDirectionalMapItem = (id, key) => {
 
   const isHorizontal = key === "ArrowLeft" || key === "ArrowRight";
   const direction = key === "ArrowLeft" || key === "ArrowUp" ? -1 : 1;
+  const currentPosition = resolveMapLayout(current);
 
   return candidates
     .filter((item) => item.id !== id)
     .map((item) => {
-      const dx = ((item.x - current.x) / 100) * window.innerWidth;
-      const dy = ((item.y - current.y) / 100) * window.innerHeight;
+      const position = resolveMapLayout(item);
+      const dx = ((position.x - currentPosition.x) / 100) * window.innerWidth;
+      const dy = ((position.y - currentPosition.y) / 100) * window.innerHeight;
       const primary = isHorizontal ? dx : dy;
       const cross = isHorizontal ? dy : dx;
 
@@ -1637,6 +1737,7 @@ const showMapPreview = (item) => {
     || !mapPreviewVideo
     || !item.previewVideo
     || !hoverCapable.matches
+    || compactMapViewport.matches
     || mapInspector?.classList.contains("is-open")
   ) {
     hideMapPreview({ immediate: true });
@@ -1793,8 +1894,9 @@ const selectMapItem = (id, { reveal = false } = {}) => {
   setMapAtmosphere(item);
 
   if (mapInspector) {
+    const position = resolveMapLayout(item);
     mapInspector.dataset.selectedMapId = item.id;
-    mapInspector.dataset.mobilePlacement = item.y >= 48 ? "top" : "bottom";
+    mapInspector.dataset.mobilePlacement = position.y >= 48 ? "top" : "bottom";
   }
 
   mapButtons.forEach((button, buttonId) => {
@@ -1867,12 +1969,20 @@ if (mapNodesRoot) {
     button.className = `map-node map-node--${item.kind}`;
     button.dataset.mapId = item.id;
     button.dataset.mapKind = item.kind;
+    button.dataset.mapAccent = item.accentKind || item.kind;
     button.dataset.mapParent = item.parent || "";
-    button.style.setProperty("--x", `${item.x}%`);
-    button.style.setProperty("--y", `${item.y}%`);
+    const position = resolveMapLayout(item);
+    button.style.setProperty("--x", `${position.x}%`);
+    button.style.setProperty("--y", `${position.y}%`);
     button.style.setProperty("--size", `${item.size}px`);
-    const visibleMapLabel = item.mapLabel || item.label;
-    button.setAttribute("aria-label", typographUiText(`${visibleMapLabel}. ${item.meta}`));
+    const accessibleMapLabel = item.mapLabel || item.label;
+    const glyphScale = item.id === "running"
+      ? 0.72
+      : item.kind === "personal"
+        ? 0.48
+        : 1;
+    const glyphDiameter = Math.max(10, item.size * glyphScale);
+    button.setAttribute("aria-label", typographUiText(`${accessibleMapLabel}. ${item.meta}`));
     button.setAttribute("aria-pressed", "false");
     button.setAttribute("aria-expanded", "false");
     button.setAttribute("aria-controls", "map-inspector");
@@ -1899,11 +2009,11 @@ if (mapNodesRoot) {
     label.dataset.mapLabelId = item.id;
     label.dataset.materialSurface = "map-node-label";
     label.dataset.materialActive = "always";
-    label.textContent = typographUiText(visibleMapLabel);
-    label.style.setProperty("--x", `${item.x}%`);
-    label.style.setProperty("--y", `${item.y}%`);
-    label.style.setProperty("--label-offset", `${Math.max(24, item.size) / 2 + 7}px`);
-    label.style.setProperty("--garage-label-offset", `${Math.max(24, item.size) / 2 + 18}px`);
+    label.textContent = typographUiText(item.label);
+    label.style.setProperty("--x", `${position.x}%`);
+    label.style.setProperty("--y", `${position.y}%`);
+    label.style.setProperty("--label-offset", `${glyphDiameter / 2 + 7}px`);
+    label.style.setProperty("--garage-label-offset", `${glyphDiameter / 2 + 18}px`);
 
     if (item.id === "garage") {
       label.classList.add("map-node-label--garage");
@@ -1921,7 +2031,15 @@ if (mapNodesRoot) {
       label.classList.add("map-node-label--west");
     }
 
-    const showLabel = () => label.classList.add("is-visible");
+    const showLabel = () => {
+      mapLabels.forEach((candidate) => {
+        candidate.classList.remove("is-visible");
+      });
+
+      if (!compactMapViewport.matches) {
+        label.classList.add("is-visible");
+      }
+    };
     const hideLabel = () => label.classList.remove("is-visible");
 
     button.append(glyph);
@@ -1936,6 +2054,12 @@ if (mapNodesRoot) {
       }
 
       hideLabel();
+
+      const focusedMapId = document.activeElement?.dataset?.mapId;
+      if (!compactMapViewport.matches && focusedMapId) {
+        mapLabels.get(focusedMapId)?.classList.add("is-visible");
+      }
+
       restoreSelectedMapAtmosphere();
     });
     button.addEventListener("click", () => {
@@ -1980,6 +2104,17 @@ if (mapNodesRoot) {
     mapLabels.set(item.id, label);
     mapNodesRoot.append(button);
   });
+
+  applyMapLayout();
+
+  compactMapViewport.addEventListener("change", (event) => {
+    if (!event.matches) {
+      return;
+    }
+
+    mapLabels.forEach((label) => label.classList.remove("is-visible"));
+    hideMapPreview({ immediate: true });
+  });
 }
 
 if (mapLinksRoot) {
@@ -2004,40 +2139,65 @@ if (mapLinksRoot) {
     }
 
     const linkElements = [];
+    const getNodeGeometry = (item) => {
+      const glyph = mapButtons.get(item.id)?.querySelector(".map-node__glyph");
+      const rect = glyph?.getBoundingClientRect();
+
+      if (!rect?.width || !rect?.height) {
+        const position = resolveMapLayout(item);
+
+        return {
+          centerX: (position.x / 100) * bounds.width,
+          centerY: (position.y / 100) * bounds.height,
+          radius: item.size / 2,
+        };
+      }
+
+      return {
+        centerX: rect.left + rect.width / 2 - bounds.left,
+        centerY: rect.top + rect.height / 2 - bounds.top,
+        radius: Math.max(rect.width, rect.height) / 2,
+      };
+    };
 
     childrenByParent.forEach((children, parentId) => {
       const parent = itemById.get(parentId);
+      const parentGeometry = getNodeGeometry(parent);
       const measuredChildren = children
         .map((item) => {
-          const deltaX = ((item.x - parent.x) / 100) * bounds.width;
-          const deltaY = ((item.y - parent.y) / 100) * bounds.height;
+          const geometry = getNodeGeometry(item);
+          const deltaX = geometry.centerX - parentGeometry.centerX;
+          const deltaY = geometry.centerY - parentGeometry.centerY;
 
           return {
             item,
+            geometry,
             angle: Math.atan2(deltaY, deltaX),
           };
         })
         .sort((left, right) => (
-          left.item.y - right.item.y || left.item.x - right.item.x
+          left.angle - right.angle
+          || left.geometry.centerY - right.geometry.centerY
+          || left.geometry.centerX - right.geometry.centerX
         ));
-      const portArc = parentId === "garage"
-        ? [6, 68]
-        : [-32, 58];
+      const firstAngle = measuredChildren[0]?.angle || 0;
+      const lastAngle = measuredChildren.at(-1)?.angle || firstAngle;
+      const portPadding = (parentId === "garage" ? 3 : 4) * (Math.PI / 180);
+      const portStart = firstAngle - portPadding;
+      const portEnd = lastAngle + portPadding;
 
-      measuredChildren.forEach(({ item }, index) => {
+      measuredChildren.forEach(({ item, geometry }, index) => {
         const portProgress = measuredChildren.length > 1
           ? index / (measuredChildren.length - 1)
           : 0.5;
-        const portAngle = (
-          portArc[0] + (portArc[1] - portArc[0]) * portProgress
-        ) * (Math.PI / 180);
-        const parentRadius = parent.size / 2 + 3;
-        const childRadius = item.size / 2 + 2;
+        const portAngle = portStart + (portEnd - portStart) * portProgress;
+        const parentRadius = parentGeometry.radius + 3;
+        const childRadius = geometry.radius + 2;
         const path = document.createElementNS(svgNamespace, "path");
-        const parentCenterX = (parent.x / 100) * bounds.width;
-        const parentCenterY = (parent.y / 100) * bounds.height;
-        const childCenterX = (item.x / 100) * bounds.width;
-        const childCenterY = (item.y / 100) * bounds.height;
+        const parentCenterX = parentGeometry.centerX;
+        const parentCenterY = parentGeometry.centerY;
+        const childCenterX = geometry.centerX;
+        const childCenterY = geometry.centerY;
         const sourcePixelX = parentCenterX + Math.cos(portAngle) * parentRadius;
         const sourcePixelY = parentCenterY + Math.sin(portAngle) * parentRadius;
         const childToSourceX = sourcePixelX - childCenterX;
@@ -2050,13 +2210,14 @@ if (mapLinksRoot) {
         const deltaX = targetPixelX - sourcePixelX;
         const deltaY = targetPixelY - sourcePixelY;
         const distance = Math.hypot(deltaX, deltaY) || 1;
-        const normalX = -deltaY / distance;
-        const normalY = deltaX / distance;
-        const bend = (portProgress - 0.5) * Math.min(32, distance * 0.075);
-        const control1PixelX = sourcePixelX + deltaX * 0.3 + normalX * bend;
-        const control1PixelY = sourcePixelY + deltaY * 0.3 + normalY * bend;
-        const control2PixelX = sourcePixelX + deltaX * 0.7 + normalX * bend;
-        const control2PixelY = sourcePixelY + deltaY * 0.7 + normalY * bend;
+        const targetDirectionX = deltaX / distance;
+        const targetDirectionY = deltaY / distance;
+        const sourceLead = Math.min(48, Math.max(18, distance * 0.24));
+        const targetLead = Math.min(38, Math.max(14, distance * 0.2));
+        const control1PixelX = sourcePixelX + Math.cos(portAngle) * sourceLead;
+        const control1PixelY = sourcePixelY + Math.sin(portAngle) * sourceLead;
+        const control2PixelX = targetPixelX - targetDirectionX * targetLead;
+        const control2PixelY = targetPixelY - targetDirectionY * targetLead;
         const toViewBoxX = (value) => (value / bounds.width) * 100;
         const toViewBoxY = (value) => (value / bounds.height) * 100;
         const sourceX = toViewBoxX(sourcePixelX);
@@ -2084,20 +2245,37 @@ if (mapLinksRoot) {
           path.classList.add("is-private-practice-link");
         }
 
+        path.dataset.parentId = parentId;
+        path.dataset.childId = item.id;
         linkElements.push(path);
       });
     });
 
     mapLinksRoot.replaceChildren(...linkElements);
+    syncMapRelationships();
   };
 
   let mapLinksResizeFrame = 0;
+  let mapLinksSettleTimer = 0;
   const scheduleMapLinksRender = () => {
     window.cancelAnimationFrame(mapLinksResizeFrame);
-    mapLinksResizeFrame = window.requestAnimationFrame(renderMapLinks);
+    window.clearTimeout(mapLinksSettleTimer);
+    mapLinksResizeFrame = window.requestAnimationFrame(() => {
+      applyMapLayout();
+      renderMapLinks();
+    });
+    mapLinksSettleTimer = window.setTimeout(() => {
+      applyMapLayout();
+      renderMapLinks();
+    }, 940);
   };
 
   renderMapLinks();
+  mapLinksRoot.addEventListener("transitionend", (event) => {
+    if (event.target === mapLinksRoot && event.propertyName === "transform") {
+      renderMapLinks();
+    }
+  });
   window.addEventListener("resize", scheduleMapLinksRender, { passive: true });
 }
 
@@ -2165,6 +2343,7 @@ const setMapFilter = (kind) => {
   });
 
   syncMapNodeAvailability();
+  syncMapRelationships();
   const navigableItems = getNavigableMapItems();
   const selectedItemIsAvailable = navigableItems.some(
     (item) => item.id === selectedMapId,
@@ -2421,20 +2600,19 @@ const contentStackGroups = {
 };
 let contentStackFrame = 0;
 let contentStackOffsets = [];
+let contentStackHeights = [];
 
 const clearContentStackState = () => {
-  contentPanelBody?.style.removeProperty("--content-stack-anchor");
-
   Object.values(contentStackGroups).flat().forEach((surface) => {
     surface.classList.remove(
       "is-content-stack-active",
       "is-content-stack-behind",
       "is-content-stack-hidden",
-      "is-content-stack-after",
     );
-    surface.style.removeProperty("--content-stack-visibility");
+    surface.style.removeProperty("--content-stack-clip-bottom");
     surface.style.removeProperty("--content-stack-layer");
-    surface.style.removeProperty("--content-stack-clearance");
+    surface.style.removeProperty("--content-stack-order");
+    surface.style.removeProperty("--content-stack-top");
   });
 };
 
@@ -2446,12 +2624,17 @@ const measureContentStackOffsets = (surfaces) => {
   contentPanel.classList.add("is-measuring-content-stack");
   const bodyRect = contentPanelBody.getBoundingClientRect();
   const scrollTop = contentPanelBody.scrollTop;
-  const offsets = surfaces.map((surface) => (
-    surface.getBoundingClientRect().top - bodyRect.top + scrollTop
-  ));
+  const measurements = surfaces.map((surface) => {
+    const rect = surface.getBoundingClientRect();
+    return {
+      height: rect.height,
+      offset: rect.top - bodyRect.top + scrollTop,
+    };
+  });
   contentPanel.classList.remove("is-measuring-content-stack");
 
-  return offsets;
+  contentStackHeights = measurements.map(({ height }) => height);
+  return measurements.map(({ offset }) => offset);
 };
 
 const syncContentStack = () => {
@@ -2463,29 +2646,33 @@ const syncContentStack = () => {
   }
 
   const surfaces = contentStackGroups[activePanelView] || [];
-  surfaces.forEach((surface) => {
-    surface.classList.remove("is-content-stack-after");
-    surface.style.removeProperty("--content-stack-clearance");
-  });
 
   if (contentStackOffsets.length !== surfaces.length) {
     contentStackOffsets = measureContentStackOffsets(surfaces);
   }
 
-  const stackAnchor = contentPanelBody.scrollTop + 14;
+  const stackTop = 16;
+  const stackLead = 10;
   let activeIndex = 0;
 
-  for (let index = contentStackOffsets.length - 1; index >= 0; index -= 1) {
-    if (contentStackOffsets[index] <= stackAnchor + 1) {
+  for (let index = 1; index < contentStackOffsets.length; index += 1) {
+    const nextTop = contentStackOffsets[index] - contentPanelBody.scrollTop;
+
+    if (nextTop <= stackTop + stackLead) {
       activeIndex = index;
+    } else {
       break;
     }
   }
 
-  contentPanelBody.style.setProperty(
-    "--content-stack-anchor",
-    `${14 + Math.min(activeIndex, 2) * 14}px`,
-  );
+  const activeHeight = contentStackHeights[activeIndex] || 160;
+  const incomingTop = contentStackOffsets[activeIndex + 1] == null
+    ? Number.POSITIVE_INFINITY
+    : contentStackOffsets[activeIndex + 1] - contentPanelBody.scrollTop;
+  const exposedHeight = Number.isFinite(incomingTop)
+    ? Math.max(0, Math.min(activeHeight, incomingTop - stackTop + 1))
+    : activeHeight;
+  const activeClipBottom = Math.max(0, activeHeight - exposedHeight);
 
   surfaces.forEach((surface, index) => {
     const layer = activeIndex - index;
@@ -2498,26 +2685,15 @@ const syncContentStack = () => {
     surface.classList.toggle("is-content-stack-hidden", isHidden);
     surface.style.setProperty("--content-stack-layer", String(Math.max(0, layer)));
     surface.style.setProperty(
-      "--content-stack-visibility",
-      isBehind || isHidden ? "0" : "1",
+      "--content-stack-clip-bottom",
+      isActive ? `${activeClipBottom.toFixed(2)}px` : "0px",
+    );
+    surface.style.setProperty("--content-stack-order", String(index));
+    surface.style.setProperty(
+      "--content-stack-top",
+      `${isHidden ? 0 : isBehind ? stackTop - Math.min(layer, 2) * 8 : stackTop}px`,
     );
   });
-
-  const activeSurface = surfaces[activeIndex];
-  const nextSurface = surfaces[activeIndex + 1];
-
-  if (activeSurface && nextSurface) {
-    const activeRect = activeSurface.getBoundingClientRect();
-    const nextRect = nextSurface.getBoundingClientRect();
-    const clearance = Math.max(0, activeRect.bottom + 10 - nextRect.top);
-
-    if (clearance > 0) {
-      surfaces.slice(activeIndex + 1).forEach((surface) => {
-        surface.classList.add("is-content-stack-after");
-        surface.style.setProperty("--content-stack-clearance", `${clearance}px`);
-      });
-    }
-  }
 };
 
 const scheduleContentStackSync = () => {
@@ -2530,6 +2706,7 @@ const scheduleContentStackSync = () => {
 
 const invalidateContentStack = () => {
   contentStackOffsets = [];
+  contentStackHeights = [];
   scheduleContentStackSync();
 };
 
@@ -2819,6 +2996,7 @@ const setCommandOpen = (isOpen) => {
   }
 
   if (!isOpen) {
+    setSearchRelationshipPreview(null);
     commandInput?.removeAttribute("aria-activedescendant");
   }
 };
@@ -2828,6 +3006,7 @@ const setActiveCommandResult = (index) => {
 
   if (!currentCommandResults.length || !resultButtons.length) {
     activeCommandIndex = -1;
+    setSearchRelationshipPreview(null);
     commandInput?.removeAttribute("aria-activedescendant");
     return;
   }
@@ -2846,6 +3025,11 @@ const setActiveCommandResult = (index) => {
     commandInput?.setAttribute("aria-activedescendant", activeButton.id);
     activeButton.scrollIntoView({ block: "nearest" });
   }
+
+  const activeResult = currentCommandResults[activeCommandIndex];
+  setSearchRelationshipPreview(
+    activeResult?.type === "node" ? activeResult.id : null,
+  );
 };
 
 const clearSearchHighlight = () => {
@@ -2927,6 +3111,7 @@ const renderCommandResults = (query = "") => {
   commandResults.replaceChildren();
 
   if (!currentCommandResults.length) {
+    setSearchRelationshipPreview(null);
     const empty = document.createElement("p");
     empty.className = "command-results__empty";
     empty.setAttribute("role", "status");
@@ -3038,6 +3223,21 @@ commandInput?.addEventListener("blur", () => {
 
 commandResults?.addEventListener("pointerdown", (event) => {
   event.preventDefault();
+});
+
+commandResults?.addEventListener("pointermove", (event) => {
+  const button = event.target.closest(".command-result");
+
+  if (!button) {
+    return;
+  }
+
+  const resultButtons = Array.from(commandResults.querySelectorAll(".command-result"));
+  const resultIndex = resultButtons.indexOf(button);
+
+  if (resultIndex >= 0 && resultIndex !== activeCommandIndex) {
+    setActiveCommandResult(resultIndex);
+  }
 });
 
 commandResults?.addEventListener("click", (event) => {
