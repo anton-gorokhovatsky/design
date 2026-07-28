@@ -10,7 +10,8 @@ instead of a conventional résumé timeline.
 - East: projects and launches.
 - South: personal interests.
 - West: roles and ways of working.
-- Position communicates semantic proximity, not a quantitative score.
+- Nearby points share a semantic relationship; position is not a quantitative
+  score or a distance from a supposedly objective centre.
 - Point size communicates the personal weight of an experience.
 - Shape distinguishes company, project, personal, and practice nodes.
 - Garage Museum is the map's largest node and a connected project graph: the
@@ -26,16 +27,33 @@ system. Running remains a clean `БЕГ` map node; its figurative image belongs 
 the central constellation rather than to the label. The running light uses the
 `--running-dusk` token sampled from SATISFY's Dusk Space-O™ Singlet.
 `АГ / НАЧАЛО` remains a small coordinate label inside the field, not a separate
-logo card.
+logo card. It is also the explicit start control for the optional observation
+route.
 
 ## Interaction model
 
 - The map is the full-screen default state; the portfolio does not continue as
   a conventional scrolling page.
 - Node selection opens a compact readout assembled around the selected point as
-  the composition's anchor object.
-- A compact `ВИД` selector in the system rail isolates the four
-  semantic fields without moving nodes.
+  the composition's anchor object. Eight anchor points add the evidence fields
+  `ЗАДАЧА / МОЯ РОЛЬ / РЕЗУЛЬТАТ`; numerical claims are included only where
+  they are supported by the source résumé.
+- `СЕАНС НАБЛЮДЕНИЯ` is an optional eight-stop, roughly sixty-second route
+  through the same map and inspector. It never autostarts, never captures
+  focus, and supports previous, pause/resume, next, arrow keys, and Escape.
+- `ПОКАЗАТЬ ХРОНОЛОГИЮ` gives the radar rings a chronological meaning. Only
+  nodes with supported dates enter the year orbits; undated principles remain
+  visibly outside the chronology rather than receiving guessed dates.
+- Map state is addressable: `?point=<id>`,
+  `?filter=company,project`, `?view=time`, and
+  `?route=observation&step=<n>` restore the corresponding context and work with
+  browser Back/Forward.
+- A compact `ВИД` selector can isolate one field or combine any subset of the
+  four semantic fields without moving nodes. `ВСЁ` resets the custom view;
+  `ХРОНОЛОГИЯ` switches the same filtered map to year orbits.
+- The desktop `ЭКРАН` instrument contains the clock, theme, and two meaningful
+  accessibility overrides: less motion and higher contrast. System preferences
+  remain authoritative; manual choices persist locally.
 - The query bar sits above the system rail and uses the functional prompt
   `Найти или открыть…` to search nodes or open content panels.
 - Primary navigation is part of the map rather than a separate header: an
@@ -55,7 +73,10 @@ logo card.
   use `cover`, reshape an existing recording, or merely rewrite a non-square
   SAR. A vertical receiver is reserved for a source proven mobile-native; it
   must never turn a desktop site into a portrait tablet. The reel has no title
-  bar, footer, border, shadow, or decorative loading fallback. Reproduce a
+  bar, footer, border, shadow, or decorative loading fallback. Each reel has a
+  selected `900×600` poster from the same native capture, so its composition
+  appears before video decoding. Rebuild the poster set with
+  `node scripts/capture-reel-posters.mjs`. Reproduce a
   capture with `node scripts/capture-reels.cjs <project-id>` (Node.js,
   Playwright, Chrome, and FFmpeg are required) and run
   `node scripts/check-reels.mjs` after assembling or replacing reels. Set
@@ -82,11 +103,17 @@ logo card.
   coordinated parallax amplitudes. Opening a content section shifts that same
   camera rather than adding local perspective frames. Reduced motion freezes
   the travel without removing content or controls.
+- Theme changes move the same camera across a restrained Earth terminator:
+  horizon, atmosphere, and stellar density transition together. Reduced motion
+  exposes the destination state immediately.
+- The transparent blue favicon is an original ASCII spiral galaxy. Supporting
+  browsers animate its particles through a canvas favicon; reduced-motion and
+  non-scripted contexts keep the static SVG/PNG silhouette.
 - The map is a data visualization before it is a cosmic image. A node is one
-  experience, project, principle, or personal subject; position is semantic
-  proximity inside the four fields, size is personal weight, shape is type,
-  and a line means a real relationship. Visual properties must never be added
-  without a meaning.
+  experience, project, principle, or personal subject; field is experience
+  type, nearby positions mean nearby ideas, size is personal weight, shape is
+  type, and a line means a real relationship. Visual properties must never be
+  added without a meaning.
 - The idle map has no selected node. Semantic colour appears only in active
   states: bronze-neutral for institutions, signal blue for projects,
   dusk-lilac for personal nodes, and sage for principles. Colour reinforces

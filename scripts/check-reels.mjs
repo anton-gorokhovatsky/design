@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(scriptDirectory, "..");
 const reelsDirectory = join(projectRoot, "assets", "reels");
+const postersDirectory = join(projectRoot, "assets", "reel-posters");
 const reelNames = readdirSync(reelsDirectory)
   .filter((name) => name.endsWith(".mp4"))
   .sort();
@@ -39,11 +40,52 @@ const reelSpecs = new Map(
 reelSpecs.get("11111.mp4").sourceViewport = "1350x900";
 
 const expectedReelNames = [...reelSpecs.keys()].sort();
+const posterNames = readdirSync(postersDirectory)
+  .filter((name) => name.endsWith(".jpg"))
+  .sort();
+const expectedPosterNames = expectedReelNames.map((name) => (
+  name.replace(/\.mp4$/i, ".jpg")
+));
 
 if (JSON.stringify(reelNames) !== JSON.stringify(expectedReelNames)) {
   failures.push(
     `master set: expected ${expectedReelNames.join(", ")}; found ${reelNames.join(", ")}`,
   );
+}
+
+if (JSON.stringify(posterNames) !== JSON.stringify(expectedPosterNames)) {
+  failures.push(
+    `posters: expected ${expectedPosterNames.join(", ")}; found ${posterNames.join(", ")}`,
+  );
+}
+
+for (const posterName of posterNames) {
+  try {
+    const probe = JSON.parse(
+      execFileSync(
+        "ffprobe",
+        [
+          "-v",
+          "error",
+          "-select_streams",
+          "v:0",
+          "-show_entries",
+          "stream=width,height",
+          "-of",
+          "json",
+          join(postersDirectory, posterName),
+        ],
+        { encoding: "utf8" },
+      ),
+    );
+    const metadata = probe.streams?.[0];
+
+    if (metadata?.width !== 900 || metadata?.height !== 600) {
+      failures.push(`${posterName}: poster must be 900×600`);
+    }
+  } catch {
+    failures.push(`${posterName}: ffprobe could not read the poster`);
+  }
 }
 
 for (const reelName of reelNames) {
@@ -201,5 +243,5 @@ if (failures.length) {
 }
 
 console.log(
-  `Reel check passed: ${reelNames.length} native desktop captures, square pixels, 13 horizontal 3:2 receivers.`,
+  `Reel check passed: ${reelNames.length} native desktop captures and ${posterNames.length} selected 3:2 posters.`,
 );

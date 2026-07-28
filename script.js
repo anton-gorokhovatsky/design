@@ -35,9 +35,95 @@ const typographUiText = (value = "") => String(value).replace(
 const themeToggle = document.querySelector("[data-theme-toggle]");
 const themeLabel = document.querySelector("[data-theme-label]");
 const themeColor = document.querySelector('meta[name="theme-color"]');
+const motionToggle = document.querySelector("[data-motion-toggle]");
+const contrastToggle = document.querySelector("[data-contrast-toggle]");
 const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
-const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+const systemReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+const systemContrast = window.matchMedia("(prefers-contrast: more)");
 const captureMode = new URLSearchParams(window.location.search).has("og");
+const readPreferenceFlag = (key) => {
+  try {
+    return window.localStorage.getItem(key) === "1";
+  } catch {
+    return false;
+  }
+};
+const writePreferenceFlag = (key, enabled) => {
+  try {
+    if (enabled) {
+      window.localStorage.setItem(key, "1");
+    } else {
+      window.localStorage.removeItem(key);
+    }
+  } catch {
+    // System preferences remain authoritative when storage is unavailable.
+  }
+};
+const createEffectivePreference = ({
+  mediaQuery,
+  storageKey,
+  rootAttribute,
+  toggle,
+  activeLabel,
+  systemLabel,
+}) => {
+  const preference = new EventTarget();
+  let forced = readPreferenceFlag(storageKey);
+
+  Object.defineProperty(preference, "matches", {
+    get: () => mediaQuery.matches || forced,
+  });
+
+  const sync = ({ notify = false } = {}) => {
+    if (preference.matches) {
+      root.dataset[rootAttribute] = "true";
+    } else {
+      delete root.dataset[rootAttribute];
+    }
+
+    toggle?.setAttribute("aria-pressed", String(preference.matches));
+    toggle?.toggleAttribute("disabled", mediaQuery.matches);
+    toggle?.setAttribute(
+      "aria-label",
+      mediaQuery.matches ? systemLabel : activeLabel,
+    );
+
+    if (notify) {
+      preference.dispatchEvent(new Event("change"));
+    }
+  };
+
+  toggle?.addEventListener("click", () => {
+    if (mediaQuery.matches) {
+      return;
+    }
+
+    forced = !forced;
+    writePreferenceFlag(storageKey, forced);
+    sync({ notify: true });
+  });
+
+  mediaQuery.addEventListener?.("change", () => sync({ notify: true }));
+  sync();
+
+  return preference;
+};
+const reducedMotion = createEffectivePreference({
+  mediaQuery: systemReducedMotion,
+  storageKey: "anton-signal-reduced-motion",
+  rootAttribute: "reduceMotion",
+  toggle: motionToggle,
+  activeLabel: "Использовать меньше движения",
+  systemLabel: "Меньше движения включено в настройках системы",
+});
+createEffectivePreference({
+  mediaQuery: systemContrast,
+  storageKey: "anton-signal-high-contrast",
+  rootAttribute: "contrast",
+  toggle: contrastToggle,
+  activeLabel: "Использовать более высокий контраст",
+  systemLabel: "Высокий контраст включён в настройках системы",
+});
 
 const setTheme = (theme, persist = false) => {
   root.dataset.theme = theme;
@@ -635,6 +721,38 @@ document.fonts?.ready.then(() => {
   drawSignalConstellation();
 });
 
+const resetSignalParallax = () => {
+  [
+    "--core-x",
+    "--core-y",
+    "--depth-x",
+    "--depth-y",
+    "--layer-far-x",
+    "--layer-far-y",
+    "--layer-mid-x",
+    "--layer-mid-y",
+    "--layer-near-x",
+    "--layer-near-y",
+  ].forEach((property) => signalField?.style.setProperty(property, "0px"));
+};
+
+reducedMotion.addEventListener?.("change", () => {
+  window.cancelAnimationFrame(signalFrame);
+  signalAngularVelocity.x = 0;
+  signalAngularVelocity.y = 0;
+
+  if (reducedMotion.matches || captureMode) {
+    resetSignalParallax();
+    drawSignalConstellation(0);
+    return;
+  }
+
+  if (!document.hidden) {
+    signalStartedAt = performance.now();
+    signalFrame = window.requestAnimationFrame(renderSignalConstellation);
+  }
+});
+
 window.addEventListener("resize", () => {
   resizeSignalConstellation();
   drawSignalConstellation();
@@ -642,7 +760,7 @@ window.addEventListener("resize", () => {
 
 new MutationObserver(() => drawSignalConstellation()).observe(root, {
   attributes: true,
-  attributeFilter: ["data-theme"],
+  attributeFilter: ["data-theme", "data-contrast"],
 });
 
 const drawSignalAfterInteraction = () => {
@@ -786,6 +904,13 @@ const mapItems = [
     title: "МУЗЕЙ «ГАРАЖ»",
     meta: "ОКТ 2021—МАР 2025 / СТАРШИЙ МЕНЕДЖЕР ВЕБ-РАЗРАБОТКИ",
     description: "Самый важный профессиональный период: здесь сошлись культура, продукт, исследования, дизайн и большая веб-разработка.",
+    evidence: {
+      task: "Развивать цифровые продукты Музея — от исследования до релиза.",
+      role: "Старший менеджер web-разработки: исследования, delivery, подрядчики и бюджеты.",
+      result: "2021—2025: связанный портфель сайтов, архивов, курсов и инклюзивного приложения.",
+    },
+    timeYear: 2023,
+    timeLabel: "2021—2025",
     href: "https://garagemca.org/ru",
     kindLabel: "ИНСТИТУЦИЯ / 2021—2025",
     x: 46,
@@ -800,6 +925,13 @@ const mapItems = [
     title: "ЧАСТНАЯ ПРАКТИКА",
     meta: "СЕЙЧАС / НЕБОЛЬШИЕ ЦИФРОВЫЕ ПРОЕКТЫ",
     description: "Самостоятельная работа с проектами, которым нужно быстро разобраться в задаче, придать форму и дойти до запуска.",
+    evidence: {
+      task: "Быстро придавать цифровую форму небольшим проектам и доводить их до запуска.",
+      role: "Полный цикл: исследование, концепция, прототип, дизайн, сборка, домен и сопровождение.",
+      result: "Самостоятельная линейка сайтов, сервисов и магазинов — от Tarski до Shirokostup и Herman.",
+    },
+    timeYear: 2023,
+    timeLabel: "2020—СЕЙЧАС",
     kindLabel: "ПРАКТИКА / СВЯЗУЮЩИЙ УЗЕЛ",
     x: 61,
     y: 43,
@@ -812,6 +944,8 @@ const mapItems = [
     title: "ЦИФРОВОЕ АГЕНТСТВО «ОПТИМАЛГРУПП»",
     meta: "РАННИЙ ОПЫТ / ЦИФРОВОЕ АГЕНТСТВО",
     description: "Клиентские web-проекты, производство, коммуникация и ранний опыт работы на стыке задач и команд.",
+    timeYear: 2025.5,
+    timeLabel: "2025—2026",
     kindLabel: "КОМПАНИЯ / АГЕНТСТВО",
     x: 24,
     y: 18,
@@ -822,12 +956,14 @@ const mapItems = [
     kind: "company",
     label: "ИЛЬМИКСГРУПП",
     title: "«ИЛЬМИКСГРУПП»",
-    meta: "РАННИЙ ОПЫТ / ЦИФРОВОЕ НАПРАВЛЕНИЕ",
-    description: "Digital-работа внутри фармацевтической компании и опыт развития внутренних web-направлений.",
+    meta: "ПОЧТИ 5 ЛЕТ / ЦИФРОВОЕ НАПРАВЛЕНИЕ",
+    description: "Почти пять лет digital-работы внутри фармацевтической компании: развитие внутренних web-направлений и продуктов, которые позднее исчезли вместе с самостоятельной компанией.",
+    timeYear: 2018.5,
+    timeLabel: "2017—2020",
     kindLabel: "КОМПАНИЯ / ВНУТРЕННЯЯ КОМАНДА",
     x: 16,
     y: 30,
-    size: 24,
+    size: 38,
   },
   {
     id: "garage-site",
@@ -837,6 +973,8 @@ const mapItems = [
     title: "САЙТ МУЗЕЯ «ГАРАЖ»",
     meta: "UX / UI / ДИЗАЙН-ИНЖИНИРИНГ / ВЕБ-МЕНЕДЖМЕНТ",
     description: "Исследование, развитие и ежедневная работа с главным цифровым продуктом Музея и его командой.",
+    timeYear: 2023,
+    timeLabel: "2021—2025",
     href: "https://garagemca.org/",
     kindLabel: "ПРОЕКТ / ГРАФ «ГАРАЖА»",
     previewVideo: "assets/reels/garage-site.mp4?v=20260728-landscape-reels-1",
@@ -854,6 +992,13 @@ const mapItems = [
     title: "ДОМ НАРКОМФИНА",
     meta: "ДИЗАЙН / UX / UI / ЦИФРОВОЙ ОПЫТ",
     description: "Дизайн сайта Дома Наркомфина — от интерактивной модели здания и световых состояний до календаря и цельной цифровой навигации.",
+    evidence: {
+      task: "Собрать цельный цифровой опыт институционального и исследовательского проекта.",
+      role: "Менеджмент, UX/UI-исследование, дизайн-инжиниринг и координация разработки.",
+      result: "MVP за вечер и рабочий день; после полного запуска — 51 420 уникальных посетителей и 67 893 визита за июль—ноябрь 2023.",
+    },
+    timeYear: 2023,
+    timeLabel: "2023",
     href: "https://narkomfin.ru/",
     kindLabel: "ПРОЕКТ / ГРАФ «ГАРАЖА»",
     previewVideo: "assets/reels/narkomfin.mp4?v=20260728-landscape-reels-1",
@@ -871,6 +1016,13 @@ const mapItems = [
     title: "КОЛЛЕКЦИЯ И ОТКРЫТОЕ ХРАНЕНИЕ",
     meta: "2024 / ПРОДУКТ / ИССЛЕДОВАНИЕ / ЗАПУСК",
     description: "Запуск каталога коллекции и открытого хранения: продуктовая логика, исследования, интерфейс и координация реализации.",
+    evidence: {
+      task: "Каталогизировать коллекцию и связать онлайн-каталог с открытым хранением.",
+      role: "Продуктовая логика, исследование, интерфейс и координация реализации.",
+      result: "Запущены каталог, страницы авторов и работ, а также сценарии подготовки к посещению.",
+    },
+    timeYear: 2024,
+    timeLabel: "2024",
     href: "https://garagemca.org/collection/catalogue",
     kindLabel: "ПРОЕКТ / ГРАФ «ГАРАЖА»",
     previewVideo: "assets/reels/garage-collection.mp4?v=20260728-landscape-reels-1",
@@ -919,6 +1071,13 @@ const mapItems = [
     title: "«Я ИДУ В МУЗЕЙ»",
     meta: "ДОСТУПНОСТЬ / МОБИЛЬНЫЙ ПРОДУКТ / ПЕРЕЗАПУСК",
     description: "Перезапуск приложения для людей с ментальными особенностями и их близких: доступность, навигация и понятный маршрут.",
+    evidence: {
+      task: "Сделать подготовку к музею понятной людям с ментальными особенностями и их близким.",
+      role: "IxD/UX/UI-исследование и проектирование маршрутов.",
+      result: "Перезапущены нативные iOS/Android-приложения с материалами о доступности, путеводителями и играми.",
+    },
+    timeYear: 2024,
+    timeLabel: "2024",
     href: "https://apps.apple.com/ru/app/я-иду-в-музей/id1558275984",
     kindLabel: "ПРОЕКТ / ГРАФ «ГАРАЖА»",
     x: 84,
@@ -978,6 +1137,13 @@ const mapItems = [
     title: "SHIROKOSTUP",
     meta: "РЕДАКЦИОННЫЙ ДИЗАЙН / САЙТ / 2026",
     description: "Портфолио куратора и исследовательницы: редакционная структура, спокойный интерфейс и самостоятельный\u00a0запуск.",
+    evidence: {
+      task: "Превратить кураторскую практику и архив в читаемое портфолио.",
+      role: "Редакционная структура, дизайн, разработка и запуск.",
+      result: "Запущен самостоятельный сайт с архивом проектов и устойчивыми активными и архивными состояниями.",
+    },
+    timeYear: 2026,
+    timeLabel: "2026",
     href: "https://shirokostup.site/",
     kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
     previewVideo: "assets/reels/shirokostup.mp4?v=20260728-landscape-reels-1",
@@ -996,6 +1162,13 @@ const mapItems = [
     title: "TARSKI",
     meta: "ЦИФРОВОЙ ПРОДУКТ / САЙТ",
     description: "Цифровой продукт и web-система: продуктовая логика, интерфейс и последовательное развитие.",
+    evidence: {
+      task: "Собрать цифровую среду для социально ориентированного и вовлекающего искусства.",
+      role: "Продуктовая логика, дизайн-система, реализация и доступность.",
+      result: "Запущена адаптивная web-система с программой, сообществом и полноценным мобильным маршрутом.",
+    },
+    timeYear: 2026,
+    timeLabel: "2026",
     href: "https://tarski.ru/",
     kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
     previewVideo: "assets/reels/tarski.mp4?v=20260728-landscape-reels-1",
@@ -1014,6 +1187,13 @@ const mapItems = [
     title: "HERMAN & CO",
     meta: "СЕРВИС / САЙТ",
     description: "Сервисный сайт с живым статусом, ясной записью и одной цельной системой материалов и состояний.",
+    evidence: {
+      task: "Собрать сервисный сайт, который ведёт к записи без лишних шагов.",
+      role: "Сценарий, единая материальная система, дизайн и реализация.",
+      result: "Запущен сайт с живым статусом, ясными услугами и прямой записью.",
+    },
+    timeYear: 2026,
+    timeLabel: "2026",
     href: "https://barberherman.ru/",
     kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
     previewVideo: "assets/reels/herman.mp4?v=20260728-landscape-reels-1",
@@ -1438,6 +1618,19 @@ const mapPreviewVideo = document.querySelector("[data-map-preview-video]");
 const mapPreviewIndex = document.querySelector("[data-map-preview-index]");
 const mapPreviewTitle = document.querySelector("[data-map-preview-title]");
 const mapPreviewMeta = document.querySelector("[data-map-preview-meta]");
+const mapEvidence = document.querySelector("[data-map-evidence]");
+const mapEvidenceTask = document.querySelector("[data-map-evidence-task]");
+const mapEvidenceRole = document.querySelector("[data-map-evidence-role]");
+const mapEvidenceResult = document.querySelector("[data-map-evidence-result]");
+const mapNote = document.querySelector("[data-map-note]");
+const timeToggle = document.querySelector("[data-time-toggle]");
+const observationStart = document.querySelector("[data-start-observation]");
+const observationControls = document.querySelector("[data-observation-controls]");
+const observationProgress = document.querySelector("[data-observation-progress]");
+const observationPrevious = document.querySelector("[data-observation-previous]");
+const observationPause = document.querySelector("[data-observation-pause]");
+const observationNext = document.querySelector("[data-observation-next]");
+const observationStatus = document.querySelector("[data-observation-status]");
 const reelItems = mapItems.filter((item) => item.previewVideo);
 const hoverCapable = window.matchMedia("(hover: hover) and (pointer: fine)");
 const compactMapViewport = window.matchMedia("(max-width: 680px)");
@@ -1450,12 +1643,89 @@ let previewShowFrame = 0;
 let activePreviewItem = null;
 let atmosphereMapId = null;
 let searchRelationshipId = null;
+let timeModeActive = false;
+const mapFilterKinds = ["company", "project", "personal", "practice"];
+let activeMapFilters = new Set(mapFilterKinds);
+let applyingUrlState = false;
+let scheduleMapLinksRender = () => {};
+
+const writeUrlState = (changes, { replace = false } = {}) => {
+  if (applyingUrlState) {
+    return;
+  }
+
+  const url = new URL(window.location.href);
+
+  Object.entries(changes).forEach(([key, value]) => {
+    if (key === "hash") {
+      url.hash = value || "";
+      return;
+    }
+
+    if (value === null || value === undefined || value === "" || value === false) {
+      url.searchParams.delete(key);
+    } else {
+      url.searchParams.set(key, String(value));
+    }
+  });
+
+  const nextUrl = `${url.pathname}${url.search}${url.hash}`;
+  const method = replace ? "replaceState" : "pushState";
+  window.history[method]({ ...window.history.state, ...changes }, "", nextUrl);
+};
+
+const getTimeLayout = (item) => {
+  if (!Number.isFinite(item.timeYear)) {
+    return { x: item.x, y: item.y };
+  }
+
+  const centerX = 50;
+  const centerY = 54;
+  const getSourceAngle = (candidate) => Math.atan2(
+    (candidate.y - centerY) / 34,
+    (candidate.x - centerX) / 44,
+  );
+  const sourceAngle = getSourceAngle(item);
+  const sameYearItems = mapItems
+    .filter((candidate) => candidate.timeYear === item.timeYear)
+    .sort((left, right) => getSourceAngle(left) - getSourceAngle(right));
+  const sameYearIndex = sameYearItems.findIndex((candidate) => candidate.id === item.id);
+  const centeredIndex = sameYearIndex - ((sameYearItems.length - 1) / 2);
+  let radiusX;
+  let radiusY;
+
+  if (item.timeYear >= 2021) {
+    const progress = (2026 - item.timeYear) / 5;
+    radiusX = 14 + progress * 13;
+    radiusY = 11 + progress * 9;
+  } else if (item.timeYear >= 2015) {
+    const progress = (2021 - item.timeYear) / 6;
+    radiusX = 27 + progress * 12;
+    radiusY = 20 + progress * 9;
+  } else {
+    const progress = Math.max(0, Math.min(1, (2015 - item.timeYear) / 6));
+    radiusX = 39 + progress * 13;
+    radiusY = 29 + progress * 9;
+  }
+
+  radiusX += centeredIndex * 0.8;
+  radiusY += centeredIndex * 0.55;
+  const angle = sourceAngle + centeredIndex * 0.32;
+
+  return {
+    x: centerX + Math.cos(angle) * radiusX,
+    y: centerY + Math.sin(angle) * radiusY,
+  };
+};
 
 const resolveMapLayout = (item) => {
   const viewportWidth = window.innerWidth;
-  const viewportHeight = window.innerHeight;
   let x = item.x;
   let y = item.y;
+
+  if (timeModeActive && Number.isFinite(item.timeYear)) {
+    return getTimeLayout(item);
+  }
 
   if (viewportWidth >= 821 && viewportWidth <= 1100) {
     const tabletOverrides = {
@@ -1510,6 +1780,7 @@ const applyMapLayout = () => {
     button?.style.setProperty("--y", `${position.y}%`);
     label?.style.setProperty("--x", `${position.x}%`);
     label?.style.setProperty("--y", `${position.y}%`);
+    label?.classList.toggle("is-time-undated", timeModeActive && !Number.isFinite(item.timeYear));
 
     if (item.id === atmosphereMapId && signalField) {
       signalField.style.setProperty("--focus-x", `${position.x}%`);
@@ -1524,7 +1795,6 @@ const syncMapRelationships = () => {
   }
 
   const relationshipId = searchRelationshipId || atmosphereMapId;
-  const activeKind = signalField?.dataset.activeKind || "all";
   const paths = Array.from(mapLinksRoot.querySelectorAll("path"));
   let hasVisibleRelationship = false;
 
@@ -1533,8 +1803,8 @@ const syncMapRelationships = () => {
     const childId = path.dataset.childId;
     const parentKind = mapButtons.get(parentId)?.dataset.mapKind;
     const childKind = mapButtons.get(childId)?.dataset.mapKind;
-    const isFilterVisible = activeKind === "all"
-      || (parentKind === activeKind && childKind === activeKind);
+    const isFilterVisible = activeMapFilters.has(parentKind)
+      && activeMapFilters.has(childKind);
     const isActive = Boolean(
       relationshipId
       && (relationshipId === parentId || relationshipId === childId),
@@ -1624,20 +1894,19 @@ const setMapMetaText = (value) => {
   window.requestAnimationFrame(syncMapMetaOverflow);
 };
 
-const getNavigableMapItems = () => {
-  const activeKind = document.querySelector("[data-practice-map]")?.dataset.activeKind || "all";
-
-  return mapItems.filter((item) => {
+const getNavigableMapItems = () => (
+  mapItems.filter((item) => {
     const button = mapButtons.get(item.id);
 
     return button
+      && (!timeModeActive || Number.isFinite(item.timeYear))
       && !button.classList.contains("is-search-miss")
-      && (activeKind === "all" || item.kind === activeKind);
-  });
-};
+      && activeMapFilters.has(item.kind);
+  })
+);
 
 const syncMapNodeAvailability = () => {
-  const activeKind = document.querySelector("[data-practice-map]")?.dataset.activeKind || "all";
+  const hasCustomFilters = activeMapFilters.size < mapFilterKinds.length;
 
   mapItems.forEach((item) => {
     const button = mapButtons.get(item.id);
@@ -1646,11 +1915,17 @@ const syncMapNodeAvailability = () => {
       return;
     }
 
-    const isAvailable = !button.classList.contains("is-search-miss")
-      && (activeKind === "all" || item.kind === activeKind);
+    const isAvailable = (!timeModeActive || Number.isFinite(item.timeYear))
+      && !button.classList.contains("is-search-miss")
+      && activeMapFilters.has(item.kind);
 
     button.inert = !isAvailable;
     button.setAttribute("aria-hidden", String(!isAvailable));
+    button.classList.toggle("is-filter-miss", !activeMapFilters.has(item.kind));
+    button.classList.toggle(
+      "is-filter-match",
+      hasCustomFilters && activeMapFilters.has(item.kind),
+    );
   });
 };
 
@@ -1771,6 +2046,18 @@ const showMapPreview = (item) => {
     mapPreviewMeta.textContent = typographUiText(item.previewMeta);
   }
 
+  const posterPath = item.previewPoster
+    || item.previewVideo
+      .split("?")[0]
+      .replace("assets/reels/", "assets/reel-posters/")
+      .replace(/\.mp4$/i, ".jpg");
+
+  if (mapPreviewVideo.dataset.posterId !== item.id) {
+    mapPreviewVideo.dataset.posterId = item.id;
+    mapPreviewVideo.poster = posterPath;
+    mapPreview.classList.add("has-poster");
+  }
+
   if (mapPreviewVideo.dataset.previewId !== item.id) {
     mapPreview.classList.remove("is-video-ready");
     mapPreviewVideo.dataset.previewId = item.id;
@@ -1853,6 +2140,32 @@ reducedMotion.addEventListener?.("change", () => {
   }
 });
 
+const setMapEvidence = (evidence = null) => {
+  const hasEvidence = Boolean(
+    evidence?.task && evidence?.role && evidence?.result,
+  );
+
+  if (mapEvidence) {
+    mapEvidence.hidden = !hasEvidence;
+  }
+
+  if (!hasEvidence) {
+    return;
+  }
+
+  if (mapEvidenceTask) {
+    mapEvidenceTask.textContent = typographUiText(evidence.task);
+  }
+
+  if (mapEvidenceRole) {
+    mapEvidenceRole.textContent = typographUiText(evidence.role);
+  }
+
+  if (mapEvidenceResult) {
+    mapEvidenceResult.textContent = typographUiText(evidence.result);
+  }
+};
+
 const setInspectorOpen = (isOpen) => {
   if (!mapInspector) {
     return;
@@ -1866,7 +2179,8 @@ const setInspectorOpen = (isOpen) => {
   });
 };
 
-const clearMapSelection = () => {
+const clearMapSelection = ({ updateHistory = false } = {}) => {
+  const previousSelectedId = selectedMapId;
   selectedMapId = null;
   delete signalField.dataset.selectedKind;
   delete signalField.dataset.selectedId;
@@ -1883,9 +2197,20 @@ const clearMapSelection = () => {
     button.setAttribute("aria-expanded", "false");
   });
   setInspectorOpen(false);
+
+  if (updateHistory && previousSelectedId) {
+    writeUrlState({ point: null }, { replace: true });
+  }
 };
 
-const selectMapItem = (id, { reveal = false } = {}) => {
+const selectMapItem = (
+  id,
+  {
+    reveal = false,
+    updateHistory = reveal,
+    replaceHistory = false,
+  } = {},
+) => {
   const item = mapItems.find((candidate) => candidate.id === id);
 
   if (!item) {
@@ -1930,6 +2255,8 @@ const selectMapItem = (id, { reveal = false } = {}) => {
     mapDescription.textContent = typographUiText(item.description);
   }
 
+  setMapEvidence(item.evidence);
+
   if (mapLink) {
     const itemHref = item.href || (item.kind === "practice" ? principlesSourceHref : "");
 
@@ -1955,11 +2282,29 @@ const selectMapItem = (id, { reveal = false } = {}) => {
   if (reveal) {
     setInspectorOpen(true);
   }
+
+  if (updateHistory) {
+    writeUrlState(
+      {
+        point: item.id,
+        route: null,
+        step: null,
+      },
+      { replace: replaceHistory },
+    );
+  }
 };
 
 inspectorClose?.addEventListener("click", () => {
-  setInspectorOpen(false);
-  mapButtons.get(selectedMapId)?.focus();
+  if (observationActive) {
+    stopObservation();
+    observationStart?.focus({ preventScroll: true });
+    return;
+  }
+
+  const selectedButton = mapButtons.get(selectedMapId);
+  clearMapSelection({ updateHistory: true });
+  selectedButton?.focus();
 });
 
 if (mapNodesRoot) {
@@ -1975,6 +2320,10 @@ if (mapNodesRoot) {
     button.dataset.mapKind = item.kind;
     button.dataset.mapAccent = item.accentKind || item.kind;
     button.dataset.mapParent = item.parent || "";
+    if (Number.isFinite(item.timeYear)) {
+      button.dataset.timeYear = String(item.timeYear);
+      button.dataset.timeLabel = item.timeLabel || String(item.timeYear);
+    }
     const position = resolveMapLayout(item);
     button.style.setProperty("--x", `${position.x}%`);
     button.style.setProperty("--y", `${position.y}%`);
@@ -2013,6 +2362,10 @@ if (mapNodesRoot) {
     label.dataset.mapLabelId = item.id;
     label.dataset.materialSurface = "map-node-label";
     label.dataset.materialActive = "always";
+    if (Number.isFinite(item.timeYear)) {
+      label.dataset.timeYear = String(item.timeYear);
+      label.dataset.timeLabel = item.timeLabel || String(item.timeYear);
+    }
     label.textContent = typographUiText(item.label);
     label.style.setProperty("--x", `${position.x}%`);
     label.style.setProperty("--y", `${position.y}%`);
@@ -2261,7 +2614,7 @@ if (mapLinksRoot) {
 
   let mapLinksResizeFrame = 0;
   let mapLinksSettleTimer = 0;
-  const scheduleMapLinksRender = () => {
+  scheduleMapLinksRender = () => {
     window.cancelAnimationFrame(mapLinksResizeFrame);
     window.clearTimeout(mapLinksSettleTimer);
     mapLinksResizeFrame = window.requestAnimationFrame(() => {
@@ -2378,19 +2731,77 @@ if (mapMeta && "ResizeObserver" in window) {
 
 const practiceMap = document.querySelector("[data-practice-map]");
 const mapFilterButtons = Array.from(document.querySelectorAll("[data-map-filter]"));
-let activeMapFilter = "all";
 
-const setMapFilter = (kind) => {
-  activeMapFilter = kind;
+const normalizeMapFilters = (filters) => {
+  if (
+    filters === "all"
+    || filters === null
+    || filters === undefined
+    || filters === ""
+  ) {
+    return new Set(mapFilterKinds);
+  }
+
+  const values = filters instanceof Set
+    ? [...filters]
+    : Array.isArray(filters)
+      ? filters
+      : String(filters).split(",");
+  const normalized = values.filter((kind) => mapFilterKinds.includes(kind));
+
+  return new Set(normalized.length ? normalized : mapFilterKinds);
+};
+
+const allMapFiltersActive = () => (
+  activeMapFilters.size === mapFilterKinds.length
+  && mapFilterKinds.every((kind) => activeMapFilters.has(kind))
+);
+
+const serializeMapFilters = () => (
+  allMapFiltersActive()
+    ? null
+    : mapFilterKinds.filter((kind) => activeMapFilters.has(kind)).join(",")
+);
+
+const setMapFilter = (
+  filters,
+  {
+    updateHistory = true,
+    replaceHistory = false,
+  } = {},
+) => {
+  activeMapFilters = normalizeMapFilters(filters);
+  const isAll = allMapFiltersActive();
 
   if (practiceMap) {
-    practiceMap.dataset.activeKind = kind;
+    practiceMap.dataset.activeKind = isAll ? "all" : "custom";
+    practiceMap.dataset.activeKinds = mapFilterKinds
+      .filter((kind) => activeMapFilters.has(kind))
+      .join(",");
   }
 
   mapFilterButtons.forEach((button) => {
-    const isActive = button.dataset.mapFilter === kind;
+    const kind = button.dataset.mapFilter;
+    const isActive = kind === "all"
+      ? isAll
+      : !isAll && activeMapFilters.has(kind);
     button.classList.toggle("is-active", isActive);
     button.setAttribute("aria-pressed", String(isActive));
+  });
+
+  document.querySelectorAll(".map-speck").forEach((speck) => {
+    const kind = mapFilterKinds.find((candidate) => (
+      speck.classList.contains(`map-speck--${candidate}`)
+    ));
+
+    speck.classList.toggle(
+      "is-filter-miss",
+      Boolean(kind && !activeMapFilters.has(kind)),
+    );
+    speck.classList.toggle(
+      "is-filter-match",
+      Boolean(kind && !isAll && activeMapFilters.has(kind)),
+    );
   });
 
   syncMapNodeAvailability();
@@ -2399,20 +2810,445 @@ const setMapFilter = (kind) => {
   const selectedItemIsAvailable = navigableItems.some(
     (item) => item.id === selectedMapId,
   );
+  let clearedSelectedPoint = false;
 
   if (selectedMapId && !selectedItemIsAvailable) {
     clearMapSelection();
+    clearedSelectedPoint = true;
   }
 
   if (!navigableItems.some((item) => item.id === rovingMapId) && navigableItems[0]) {
     setMapRovingId(navigableItems[0].id);
   }
+
+  if (updateHistory) {
+    const changes = {
+      filter: serializeMapFilters(),
+    };
+
+    if (clearedSelectedPoint) {
+      changes.point = null;
+    }
+
+    writeUrlState(
+      changes,
+      { replace: replaceHistory },
+    );
+  }
+};
+
+const toggleMapFilter = (kind) => {
+  if (kind === "all") {
+    setMapFilter("all");
+    return;
+  }
+
+  if (!mapFilterKinds.includes(kind)) {
+    return;
+  }
+
+  const nextFilters = allMapFiltersActive()
+    ? new Set([kind])
+    : new Set(activeMapFilters);
+
+  if (!allMapFiltersActive()) {
+    if (nextFilters.has(kind)) {
+      nextFilters.delete(kind);
+    } else {
+      nextFilters.add(kind);
+    }
+  }
+
+  setMapFilter(nextFilters.size ? nextFilters : "all");
 };
 
 mapFilterButtons.forEach((button) => {
   button.addEventListener("click", () => {
-    setMapFilter(button.dataset.mapFilter || "all");
+    toggleMapFilter(button.dataset.mapFilter || "all");
   });
+});
+
+const setTimeMode = (
+  enabled,
+  {
+    updateHistory = true,
+    replaceHistory = false,
+  } = {},
+) => {
+  const nextEnabled = Boolean(enabled);
+
+  if (nextEnabled === timeModeActive) {
+    if (updateHistory) {
+      writeUrlState(
+        { view: nextEnabled ? "time" : null },
+        { replace: replaceHistory },
+      );
+    }
+    return;
+  }
+
+  hideMapPreview({ immediate: true });
+  clearMapSelection();
+
+  timeModeActive = nextEnabled;
+  signalField?.toggleAttribute("data-time-view", nextEnabled);
+
+  if (signalField) {
+    if (nextEnabled) {
+      signalField.dataset.observationMode = "time";
+    } else {
+      delete signalField.dataset.observationMode;
+    }
+  }
+
+  timeToggle?.setAttribute("aria-pressed", String(nextEnabled));
+  if (timeToggle) {
+    timeToggle.classList.toggle("is-active", nextEnabled);
+    timeToggle.setAttribute(
+      "aria-label",
+      nextEnabled ? "Вернуть смысловую карту" : "Показывать хронологию",
+    );
+  }
+
+  if (mapNote) {
+    mapNote.textContent = nextEnabled
+      ? "КОЛЬЦА — ГОДЫ: БЛИЖЕ К ЦЕНТРУ — НОВЕЕ."
+      : "КООРДИНАТЫ СУБЪЕКТИВНЫ: ПОЛОЖЕНИЕ — СМЫСЛОВАЯ БЛИЗОСТЬ, РАЗМЕР — ЛИЧНЫЙ ВЕС ОПЫТА.";
+  }
+
+  applyMapLayout();
+  syncMapNodeAvailability();
+  scheduleMapLinksRender();
+
+  if (updateHistory) {
+    writeUrlState(
+      {
+        view: nextEnabled ? "time" : null,
+        filter: serializeMapFilters(),
+      },
+      { replace: replaceHistory },
+    );
+  }
+};
+
+timeToggle?.addEventListener("click", () => {
+  setTimeMode(!timeModeActive);
+});
+
+const observationSteps = [
+  {
+    id: "origin",
+    kind: "МАРШРУТ / 01",
+    title: "СЕАНС НАБЛЮДЕНИЯ",
+    meta: "ОКОЛО 60 СЕКУНД / 8 КООРДИНАТ",
+    description: "Короткий маршрут по карте: от моей профессиональной оптики к институциональной работе, частной практике и принципам.",
+    x: 50,
+    y: 54,
+  },
+  { id: "garage", itemId: "garage" },
+  { id: "narkomfin", itemId: "narkomfin" },
+  { id: "private-practice", itemId: "private-practice" },
+  { id: "tarski", itemId: "tarski" },
+  { id: "shirokostup", itemId: "shirokostup" },
+  { id: "principle", itemId: "principle-design-engineering" },
+  {
+    id: "contact",
+    kind: "ФИНАЛ / 08",
+    title: "СВЯЗАТЬСЯ",
+    meta: "МОСКВА / УДАЛЁННО / ПОЧТА",
+    description: "Если вам нужен человек, который соединяет исследование, продукт, дизайн, координацию и реализацию — напишите мне.",
+    href: "mailto:anton@gorokhovatsky.tech",
+    x: 50,
+    y: 54,
+  },
+];
+const observationStepDuration = 7500;
+let observationActive = false;
+let observationPaused = false;
+let observationStepIndex = 0;
+let observationTimer = 0;
+
+const clearObservationTimer = () => {
+  window.clearTimeout(observationTimer);
+  observationTimer = 0;
+};
+
+const setObservationCamera = (step) => {
+  const item = step.itemId
+    ? mapItems.find((candidate) => candidate.id === step.itemId)
+    : null;
+  const position = item ? resolveMapLayout(item) : { x: step.x, y: step.y };
+  const cameraX = Math.max(-5.2, Math.min(5.2, (50 - position.x) * 0.12));
+  const cameraY = Math.max(-3.6, Math.min(3.6, (54 - position.y) * 0.09));
+
+  signalField?.style.setProperty("--observation-camera-x", `${cameraX}%`);
+  signalField?.style.setProperty("--observation-camera-y", `${cameraY}%`);
+};
+
+const renderObservationSyntheticStep = (step) => {
+  selectedMapId = null;
+  setMapAtmosphere(null);
+  mapButtons.forEach((button) => {
+    button.classList.remove("is-selected");
+    button.setAttribute("aria-pressed", "false");
+    button.setAttribute("aria-expanded", "false");
+  });
+
+  if (mapInspector) {
+    mapInspector.dataset.selectedMapId = `observation-${step.id}`;
+    mapInspector.dataset.mobilePlacement = step.id === "contact" ? "top" : "bottom";
+  }
+
+  if (mapKind) {
+    mapKind.textContent = step.kind;
+  }
+
+  if (mapTitle) {
+    mapTitle.textContent = typographUiText(step.title);
+  }
+
+  setMapMetaText(step.meta);
+
+  if (mapDescription) {
+    mapDescription.textContent = typographUiText(step.description);
+  }
+
+  setMapEvidence(null);
+
+  if (mapLink) {
+    if (step.href) {
+      mapLink.hidden = false;
+      mapLink.href = step.href;
+      mapLink.textContent = "НАПИСАТЬ";
+      mapLink.removeAttribute("target");
+      mapLink.removeAttribute("rel");
+    } else {
+      mapLink.hidden = true;
+      mapLink.removeAttribute("href");
+      mapLink.textContent = "";
+    }
+  }
+
+  setInspectorOpen(true);
+};
+
+const updateObservationControls = () => {
+  if (observationProgress) {
+    observationProgress.textContent = `${String(observationStepIndex + 1).padStart(2, "0")} / ${String(observationSteps.length).padStart(2, "0")}`;
+  }
+
+  if (observationPrevious) {
+    observationPrevious.disabled = observationStepIndex === 0;
+  }
+
+  if (observationPause) {
+    observationPause.textContent = observationPaused ? "ПРОДОЛЖИТЬ" : "ПАУЗА";
+    observationPause.setAttribute("aria-pressed", String(observationPaused));
+  }
+
+  if (observationNext) {
+    observationNext.textContent = observationStepIndex === observationSteps.length - 1
+      ? "ЗАВЕРШИТЬ"
+      : "ДАЛЬШЕ";
+  }
+
+  signalField?.style.setProperty(
+    "--observation-route-progress",
+    String((observationStepIndex + 1) / observationSteps.length),
+  );
+};
+
+const scheduleObservationStep = () => {
+  clearObservationTimer();
+
+  if (!observationActive || observationPaused) {
+    return;
+  }
+
+  if (observationStepIndex >= observationSteps.length - 1) {
+    observationPaused = true;
+    updateObservationControls();
+    return;
+  }
+
+  observationTimer = window.setTimeout(() => {
+    observationStepIndex += 1;
+    renderObservationStep(observationStepIndex, { updateHistory: true });
+  }, observationStepDuration);
+};
+
+function renderObservationStep(index, { updateHistory = true } = {}) {
+  if (!observationActive) {
+    return;
+  }
+
+  observationStepIndex = Math.max(
+    0,
+    Math.min(observationSteps.length - 1, Number(index) || 0),
+  );
+  const step = observationSteps[observationStepIndex];
+
+  setObservationCamera(step);
+
+  if (step.itemId) {
+    selectMapItem(step.itemId, {
+      reveal: true,
+      updateHistory: false,
+    });
+  } else {
+    renderObservationSyntheticStep(step);
+  }
+
+  updateObservationControls();
+
+  if (observationStatus) {
+    observationStatus.textContent = `Сеанс наблюдения: шаг ${observationStepIndex + 1} из ${observationSteps.length}. ${step.title || mapItems.find((item) => item.id === step.itemId)?.title || ""}`;
+  }
+
+  if (updateHistory) {
+    writeUrlState(
+      {
+        point: null,
+        route: "observation",
+        step: observationStepIndex + 1,
+        view: null,
+      },
+      { replace: true },
+    );
+  }
+
+  scheduleObservationStep();
+}
+
+const stopObservation = (
+  {
+    updateHistory = true,
+    closeInspector = true,
+  } = {},
+) => {
+  clearObservationTimer();
+  observationActive = false;
+  observationPaused = false;
+  observationControls?.setAttribute("hidden", "");
+  delete signalField?.dataset.observationActive;
+  signalField?.style.removeProperty("--observation-camera-x");
+  signalField?.style.removeProperty("--observation-camera-y");
+  signalField?.style.removeProperty("--observation-route-progress");
+
+  if (closeInspector) {
+    clearMapSelection();
+  }
+
+  if (updateHistory) {
+    writeUrlState(
+      {
+        route: null,
+        step: null,
+        point: closeInspector ? null : selectedMapId,
+      },
+      { replace: true },
+    );
+  }
+};
+
+const startObservation = (
+  {
+    step = 0,
+    autoplay = true,
+    updateHistory = true,
+  } = {},
+) => {
+  if (timeModeActive) {
+    setTimeMode(false, {
+      updateHistory: false,
+      restoreFilter: false,
+    });
+  }
+
+  setMapFilter("all", { updateHistory: false });
+  hideMapPreview({ immediate: true });
+  observationActive = true;
+  observationPaused = !autoplay || reducedMotion.matches;
+  signalField?.setAttribute("data-observation-active", "");
+
+  if (observationControls) {
+    observationControls.hidden = false;
+  }
+
+  if (updateHistory) {
+    writeUrlState(
+      {
+        route: "observation",
+        step: Number(step) + 1,
+        point: null,
+        view: null,
+        filter: null,
+      },
+    );
+  }
+
+  renderObservationStep(step, { updateHistory: true });
+};
+
+observationStart?.addEventListener("click", () => {
+  startObservation();
+});
+
+observationPrevious?.addEventListener("click", () => {
+  observationPaused = true;
+  renderObservationStep(observationStepIndex - 1);
+});
+
+observationPause?.addEventListener("click", () => {
+  observationPaused = !observationPaused;
+  updateObservationControls();
+  scheduleObservationStep();
+});
+
+observationNext?.addEventListener("click", () => {
+  if (observationStepIndex >= observationSteps.length - 1) {
+    stopObservation();
+    return;
+  }
+
+  renderObservationStep(observationStepIndex + 1);
+});
+
+reducedMotion.addEventListener?.("change", () => {
+  if (!reducedMotion.matches || !observationActive || observationPaused) {
+    return;
+  }
+
+  observationPaused = true;
+  clearObservationTimer();
+  updateObservationControls();
+});
+
+document.addEventListener("keydown", (event) => {
+  if (
+    !observationActive
+    || event.defaultPrevented
+    || event.target instanceof HTMLInputElement
+    || event.target instanceof HTMLTextAreaElement
+    || event.target instanceof HTMLSelectElement
+    || event.target?.isContentEditable
+  ) {
+    return;
+  }
+
+  if (event.key === "ArrowLeft" && observationStepIndex > 0) {
+    event.preventDefault();
+    observationPaused = true;
+    renderObservationStep(observationStepIndex - 1);
+  } else if (event.key === "ArrowRight") {
+    event.preventDefault();
+
+    if (observationStepIndex >= observationSteps.length - 1) {
+      stopObservation();
+    } else {
+      renderObservationStep(observationStepIndex + 1);
+    }
+  }
 });
 
 const positionDetachedCommandResults = () => {
@@ -2799,7 +3635,14 @@ const setPanelOpen = (isOpen) => {
   }
 };
 
-const openContentPanel = (view, trigger = null) => {
+const openContentPanel = (
+  view,
+  trigger = null,
+  {
+    updateHistory = true,
+    replaceHistory = false,
+  } = {},
+) => {
   const config = panelViews[view];
 
   if (!config) {
@@ -2829,13 +3672,31 @@ const openContentPanel = (view, trigger = null) => {
   hideMapPreview({ immediate: true });
   clearMapSelection();
   setPanelOpen(true);
+
+  if (updateHistory) {
+    writeUrlState(
+      {
+        point: null,
+        route: null,
+        step: null,
+        hash: `#${view}`,
+      },
+      { replace: replaceHistory },
+    );
+  }
+
   window.requestAnimationFrame(() => {
     scheduleContentStackSync();
     panelClose?.focus();
   });
 };
 
-const closeContentPanel = ({ restoreFocus = true } = {}) => {
+const closeContentPanel = (
+  {
+    restoreFocus = true,
+    updateHistory = true,
+  } = {},
+) => {
   if (!activePanelView) {
     return;
   }
@@ -2846,6 +3707,10 @@ const closeContentPanel = ({ restoreFocus = true } = {}) => {
   contentPanel?.removeAttribute("data-view");
   signalField?.removeAttribute("data-camera-view");
   setConstellationNavCurrent("map");
+
+  if (updateHistory) {
+    writeUrlState({ hash: null }, { replace: true });
+  }
 
   if (restoreFocus && lastPanelTrigger instanceof HTMLElement) {
     const triggerIsInCompactNavigation = compactConstellationNav.matches
@@ -3005,6 +3870,20 @@ const normalizeSearch = (value) => value
   .trim();
 
 const commandViews = [
+  {
+    type: "action",
+    id: "observation",
+    title: "СЕАНС НАБЛЮДЕНИЯ",
+    meta: "ОКОЛО 60 СЕКУНД / 8 КООРДИНАТ",
+    keywords: "сеанс наблюдение маршрут обзор экскурсия 60 секунд",
+  },
+  {
+    type: "action",
+    id: "time",
+    title: "ВРЕМЯ / 2009—2026",
+    meta: "ХРОНОЛОГИЯ ОПЫТА НА ОРБИТАХ",
+    keywords: "время годы хронология таймлайн орбиты",
+  },
   {
     type: "panel",
     id: "work",
@@ -3215,8 +4094,12 @@ const runCommandResult = (result) => {
     }
 
     clearSearchHighlight();
-  } else {
+  } else if (result.type === "panel") {
     openContentPanel(result.id, commandInput);
+  } else if (result.id === "observation") {
+    startObservation();
+  } else if (result.id === "time") {
+    setTimeMode(true);
   }
 
   setCommandOpen(false);
@@ -3316,14 +4199,17 @@ document.addEventListener("keydown", (event) => {
 
   if (activePreviewItem || mapPreview?.classList.contains("is-visible")) {
     hideMapPreview({ immediate: true });
+  } else if (observationActive) {
+    stopObservation();
   } else if (isConstellationNavOpen) {
     setConstellationNavOpen(false);
     constellationNavToggle?.focus();
   } else if (activePanelView) {
     closeContentPanel();
   } else if (mapInspector?.classList.contains("is-open")) {
-    setInspectorOpen(false);
-    mapButtons.get(selectedMapId)?.focus();
+    const selectedButton = mapButtons.get(selectedMapId);
+    clearMapSelection({ updateHistory: true });
+    selectedButton?.focus();
   } else {
     setCommandOpen(false);
     setCommandStatus("");
@@ -3332,9 +4218,97 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
-if (["#work", "#approach", "#contact"].includes(window.location.hash)) {
-  openContentPanel(window.location.hash.slice(1));
-}
+const applyUrlState = () => {
+  applyingUrlState = true;
+
+  try {
+    const url = new URL(window.location.href);
+    const panelView = url.hash.slice(1);
+    const route = url.searchParams.get("route");
+    const pointId = url.searchParams.get("point");
+    const requestedFilters = normalizeMapFilters(url.searchParams.get("filter"));
+    const requestedTimeMode = url.searchParams.get("view") === "time";
+
+    if (["work", "approach", "contact"].includes(panelView)) {
+      if (observationActive) {
+        stopObservation({
+          updateHistory: false,
+          closeInspector: true,
+        });
+      }
+
+      if (timeModeActive) {
+        setTimeMode(false, {
+          updateHistory: false,
+          restoreFilter: false,
+        });
+      }
+
+      openContentPanel(panelView, null, {
+        updateHistory: false,
+      });
+      return;
+    }
+
+    if (activePanelView) {
+      closeContentPanel({
+        restoreFocus: false,
+        updateHistory: false,
+      });
+    }
+
+    if (route === "observation") {
+      const requestedStep = Math.max(
+        0,
+        Math.min(
+          observationSteps.length - 1,
+          Number.parseInt(url.searchParams.get("step") || "1", 10) - 1,
+        ),
+      );
+
+      startObservation({
+        step: requestedStep,
+        autoplay: false,
+        updateHistory: false,
+      });
+      return;
+    }
+
+    if (observationActive) {
+      stopObservation({
+        updateHistory: false,
+        closeInspector: true,
+      });
+    }
+
+    setTimeMode(requestedTimeMode, {
+      updateHistory: false,
+      restoreFilter: false,
+    });
+
+    const point = mapItems.find((item) => item.id === pointId);
+    const pointMatchesFilter = !point
+      || requestedFilters.has(point.kind);
+    setMapFilter(
+      !pointMatchesFilter ? "all" : requestedFilters,
+      { updateHistory: false },
+    );
+
+    if (point && (!requestedTimeMode || Number.isFinite(point.timeYear))) {
+      selectMapItem(point.id, {
+        reveal: true,
+        updateHistory: false,
+      });
+    } else {
+      clearMapSelection();
+    }
+  } finally {
+    applyingUrlState = false;
+  }
+};
+
+window.addEventListener("popstate", applyUrlState);
+applyUrlState();
 
 const siteFavicon = document.querySelector("#site-favicon");
 const faviconCanvas = document.createElement("canvas");
@@ -3345,22 +4319,43 @@ let faviconFrameTimer = 0;
 faviconCanvas.width = 64;
 faviconCanvas.height = 64;
 
-const getFaviconArcPoint = (progress) => {
-  const inverse = 1 - progress;
+const getFaviconSpiralPoint = (progress, arm = 0, drift = 0) => {
+  const angle = -0.72 + progress * Math.PI * 2.18 + arm * Math.PI + drift;
+  const radius = 3.2 + progress * 22.5;
+  const x = Math.cos(angle) * radius;
+  const y = Math.sin(angle) * radius * 0.58;
+  const tilt = -11 * Math.PI / 180;
+
   return {
-    x: (
-      (inverse ** 3 * 4)
-      + (3 * inverse ** 2 * progress * 16)
-      + (3 * inverse * progress ** 2 * 44)
-      + (progress ** 3 * 61)
-    ),
-    y: (
-      (inverse ** 3 * 48)
-      + (3 * inverse ** 2 * progress * 24)
-      + (3 * inverse * progress ** 2 * 17)
-      + (progress ** 3 * 31)
-    ),
+    x: 32 + x * Math.cos(tilt) - y * Math.sin(tilt),
+    y: 32 + x * Math.sin(tilt) + y * Math.cos(tilt),
   };
+};
+
+const drawFaviconParticle = (point, size, cross = false, alpha = 1) => {
+  faviconContext.save();
+  faviconContext.fillStyle = "#315dff";
+  faviconContext.strokeStyle = "#315dff";
+  faviconContext.globalAlpha = alpha;
+
+  if (cross) {
+    faviconContext.lineWidth = Math.max(1.4, size * 0.34);
+    faviconContext.beginPath();
+    faviconContext.moveTo(point.x - size / 2, point.y);
+    faviconContext.lineTo(point.x + size / 2, point.y);
+    faviconContext.moveTo(point.x, point.y - size / 2);
+    faviconContext.lineTo(point.x, point.y + size / 2);
+    faviconContext.stroke();
+  } else {
+    faviconContext.fillRect(
+      Math.round(point.x - size / 2),
+      Math.round(point.y - size / 2),
+      size,
+      size,
+    );
+  }
+
+  faviconContext.restore();
 };
 
 const drawFaviconFrame = (frameIndex = 0) => {
@@ -3368,71 +4363,62 @@ const drawFaviconFrame = (frameIndex = 0) => {
     return;
   }
 
-  const phase = (frameIndex % 48) / 48;
+  const phase = (frameIndex % 72) / 72;
   const pulse = Math.sin(phase * Math.PI * 2);
+  const drift = pulse * 0.055;
   faviconContext.clearRect(0, 0, 64, 64);
 
-  faviconContext.save();
-  faviconContext.beginPath();
-  faviconContext.moveTo(4, 48);
-  faviconContext.bezierCurveTo(16, 24, 44, 17, 61, 31);
-  faviconContext.lineCap = "square";
-  faviconContext.lineWidth = 2.6;
-  faviconContext.strokeStyle = "#315dff";
-  faviconContext.globalAlpha = 0.34;
-  faviconContext.stroke();
-  faviconContext.restore();
+  [0, 1].forEach((arm) => {
+    faviconContext.save();
+    faviconContext.beginPath();
 
-  faviconContext.save();
-  faviconContext.beginPath();
-  faviconContext.moveTo(7, 40);
-  faviconContext.bezierCurveTo(20, 23, 43, 19, 58, 29);
-  faviconContext.setLineDash([2, 5]);
-  faviconContext.lineCap = "square";
-  faviconContext.lineWidth = 2.4;
-  faviconContext.strokeStyle = "#315dff";
-  faviconContext.globalAlpha = 0.48;
-  faviconContext.stroke();
-  faviconContext.restore();
+    for (let index = 0; index <= 44; index += 1) {
+      const point = getFaviconSpiralPoint(index / 44, arm, drift);
 
-  [
-    { lag: 0, size: 9, alpha: 1 },
-    { lag: 0.065, size: 6, alpha: 0.58 },
-    { lag: 0.13, size: 4, alpha: 0.3 },
-  ].forEach(({ lag, size, alpha }) => {
-    const progress = (phase - lag + 1) % 1;
-    const point = getFaviconArcPoint(progress);
-    faviconContext.fillStyle = "#315dff";
-    faviconContext.globalAlpha = alpha;
-    faviconContext.fillRect(point.x - size / 2, point.y - size / 2, size, size);
+      if (index === 0) {
+        faviconContext.moveTo(point.x, point.y);
+      } else {
+        faviconContext.lineTo(point.x, point.y);
+      }
+    }
+
+    faviconContext.setLineDash(arm ? [1, 5] : [2, 4]);
+    faviconContext.lineDashOffset = phase * (arm ? 16 : -18);
+    faviconContext.lineCap = "square";
+    faviconContext.lineWidth = arm ? 2.4 : 3.8;
+    faviconContext.strokeStyle = "#315dff";
+    faviconContext.globalAlpha = arm ? 0.36 : 0.54;
+    faviconContext.stroke();
+    faviconContext.restore();
   });
 
-  faviconContext.fillStyle = "#315dff";
-  faviconContext.globalAlpha = 0.18 + ((pulse + 1) * 0.03);
-  faviconContext.beginPath();
-  faviconContext.arc(34, 21, 6.5, 0, Math.PI * 2);
-  faviconContext.fill();
+  const particles = [
+    [0.2, 0, 4, false],
+    [0.31, 1, 5, true],
+    [0.42, 0, 4, false],
+    [0.53, 1, 4, false],
+    [0.64, 0, 6, true],
+    [0.74, 1, 4, false],
+    [0.84, 0, 5, false],
+    [0.93, 1, 5, true],
+  ];
 
-  faviconContext.globalAlpha = 1;
-  faviconContext.beginPath();
-  faviconContext.arc(34, 21, 3.15 + pulse * 0.72, 0, Math.PI * 2);
-  faviconContext.fill();
+  particles.forEach(([baseProgress, arm, size, cross], index) => {
+    const travel = Math.sin(phase * Math.PI * 2 + index * 0.8) * 0.012;
+    const point = getFaviconSpiralPoint(
+      Math.max(0.08, Math.min(0.98, baseProgress + travel)),
+      arm,
+      drift,
+    );
+    const alpha = 0.56 + (Math.sin(phase * Math.PI * 2 + index * 1.17) + 1) * 0.22;
+    drawFaviconParticle(point, size, cross, alpha);
+  });
 
-  faviconContext.strokeStyle = "#315dff";
-  faviconContext.lineCap = "square";
-  faviconContext.lineWidth = 3;
-  faviconContext.beginPath();
-  faviconContext.moveTo(26, 21);
-  faviconContext.lineTo(42, 21);
-  faviconContext.moveTo(34, 13);
-  faviconContext.lineTo(34, 29);
-  faviconContext.stroke();
-
-  faviconContext.globalAlpha = 0.62 + pulse * 0.18;
-  faviconContext.fillRect(12, 32, 4, 4);
-  faviconContext.globalAlpha = 0.62 - pulse * 0.18;
-  faviconContext.fillRect(52, 27, 4, 4);
-  faviconContext.globalAlpha = 1;
+  drawFaviconParticle({ x: 31, y: 31 }, 7, true, 1);
+  drawFaviconParticle({ x: 34.5, y: 34 }, 5, false, 0.9);
+  drawFaviconParticle({ x: 29, y: 35 }, 3, false, 0.72);
+  drawFaviconParticle({ x: 8, y: 20 }, 2, false, 0.42 + pulse * 0.12);
+  drawFaviconParticle({ x: 55, y: 32 }, 2, false, 0.42 - pulse * 0.12);
 
   siteFavicon.href = faviconCanvas.toDataURL("image/png");
 };
@@ -3459,9 +4445,9 @@ const syncFaviconMotion = () => {
 
   drawFaviconFrame(faviconFrameIndex);
   const frameStep = document.hidden ? 3 : 1;
-  const frameInterval = document.hidden ? 240 : 80;
+  const frameInterval = document.hidden ? 360 : 120;
   faviconFrameTimer = window.setInterval(() => {
-    faviconFrameIndex = (faviconFrameIndex + frameStep) % 48;
+    faviconFrameIndex = (faviconFrameIndex + frameStep) % 72;
     drawFaviconFrame(faviconFrameIndex);
   }, frameInterval);
 };

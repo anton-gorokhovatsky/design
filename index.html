@@ -14,14 +14,14 @@
     <link
       id="site-favicon"
       rel="icon"
-      href="assets/favicon.png?v=20260728-milkyway-orbit-canvas-1"
+      href="assets/favicon.png?v=20260728-ascii-galaxy-1"
       type="image/png"
       sizes="64x64"
     >
     <link
       rel="apple-touch-icon"
       sizes="180x180"
-      href="assets/apple-touch-icon.png?v=20260728-milkyway-orbit-canvas-1"
+      href="assets/apple-touch-icon.png?v=20260728-ascii-galaxy-1"
     >
     <meta property="og:type" content="website">
     <meta property="og:locale" content="ru_RU">
@@ -123,8 +123,31 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=20260728-company-emphasis-1">
-    <script src="script.js?v=20260728-accessibility-observatory-1" defer></script>
+    <link rel="stylesheet" href="styles.css?v=20260728-observatory-final-1">
+    <script src="script.js?v=20260728-observatory-final-1" defer></script>
+    <!-- Yandex.Metrika counter -->
+    <script>
+      (function(m,e,t,r,i,k,a){
+        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+        m[i].l=1*new Date();
+        for (var j = 0; j < document.scripts.length; j++) {
+          if (document.scripts[j].src === r) { return; }
+        }
+        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+      })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=111107350', 'ym');
+
+      ym(111107350, 'init', {
+        ssr:true,
+        webvisor:true,
+        clickmap:true,
+        ecommerce:"dataLayer",
+        referrer:document.referrer,
+        url:location.href,
+        accurateTrackBounce:true,
+        trackLinks:true
+      });
+    </script>
+    <!-- /Yandex.Metrika counter -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -183,6 +206,15 @@
     </script>
   </head>
   <body>
+    <noscript>
+      <div>
+        <img
+          src="https://mc.yandex.ru/watch/111107350"
+          style="position:absolute; left:-9999px;"
+          alt=""
+        >
+      </div>
+    </noscript>
     <a class="skip-link" href="#map">К интерактивной карте</a>
     <button class="skip-link skip-link--secondary" type="button" data-open-panel="work">
       Открыть недавние проекты
@@ -192,7 +224,6 @@
       <p class="brand">
         <span lang="en">ANTON GOROKHOVATSKY © 2026</span>
       </p>
-
     </header>
 
     <main>
@@ -205,10 +236,12 @@
       >
         <p class="visually-hidden" id="map-guide">
           Пространственная карта разделена на четыре поля: институции сверху,
-          проекты справа, личное снизу и принципы слева. Расстояние от центра
-          показывает смысловую близость, размер точки — личный вес опыта,
-          форма — тип объекта. Перемещайтесь между точками стрелками или
-          воспользуйтесь фильтрами и поиском.
+          проекты справа, личное снизу и принципы слева. Чем ближе точки друг
+          к другу, тем ближе их смысловая связь; размер точки показывает личный
+          вес опыта, форма — тип объекта. Перемещайтесь между точками стрелками или
+          воспользуйтесь фильтрами и поиском. Кнопка «АГ / НАЧАЛО» запускает
+          необязательный последовательный сеанс наблюдения; режим «Время»
+          перестраивает датированные точки по годовым орбитам.
         </p>
         <div class="practice-map" data-practice-map data-signal-field>
           <div class="share-heading" aria-hidden="true">
@@ -218,8 +251,12 @@
           <p class="share-domain" aria-hidden="true">GOROKHOVATSKY.TECH</p>
           <div class="map-camera" data-map-camera>
             <div class="orbital-horizon" aria-hidden="true"></div>
+            <div class="orbital-terminator" aria-hidden="true"></div>
             <div class="orbital-radar" aria-hidden="true">
-              <i></i><i></i><i></i><i></i>
+              <i><span>2026</span></i>
+              <i><span>2021</span></i>
+              <i><span>2015</span></i>
+              <i><span>2009</span></i>
             </div>
             <div class="map-grid" aria-hidden="true"></div>
             <svg
@@ -287,11 +324,14 @@
 
           <div class="map-labels" data-map-labels aria-hidden="true"></div>
 
-          <span
+          <button
+            type="button"
             class="origin-marker__label"
+            data-start-observation
             data-material-surface="origin-label"
             data-material-active="always"
-          >АГ / НАЧАЛО</span>
+            aria-label="Начать сеанс наблюдения длительностью около 60 секунд"
+          >АГ / НАЧАЛО</button>
 
           <aside
             class="map-hover-preview"
@@ -354,15 +394,52 @@
             <h2 id="map-inspector-title" data-map-title>МУЗЕЙ «ГАРАЖ»</h2>
             <p data-map-meta>ОКТ 2021—МАР 2025 / СТАРШИЙ МЕНЕДЖЕР ВЕБ-РАЗРАБОТКИ</p>
           </div>
-          <p
+          <div
             class="map-readout__description"
-            data-map-description
             data-material-surface="inspector-description"
             data-material-active="always"
           >
-            Самый важный профессиональный период: здесь сошлись культура, продукт,
-            исследования, дизайн и большая веб-разработка.
-          </p>
+            <p data-map-description>
+              Самый важный профессиональный период: здесь сошлись культура, продукт,
+              исследования, дизайн и большая веб-разработка.
+            </p>
+            <dl class="map-evidence" data-map-evidence hidden>
+              <div>
+                <dt>ЗАДАЧА</dt>
+                <dd data-map-evidence-task></dd>
+              </div>
+              <div>
+                <dt>МОЯ РОЛЬ</dt>
+                <dd data-map-evidence-role></dd>
+              </div>
+              <div>
+                <dt>РЕЗУЛЬТАТ</dt>
+                <dd data-map-evidence-result></dd>
+              </div>
+            </dl>
+          </div>
+          <div
+            class="observation-controls"
+            data-observation-controls
+            data-material-surface="inspector-observation"
+            data-material-active="always"
+            role="group"
+            aria-label="Управление сеансом наблюдения"
+            hidden
+          >
+            <span data-observation-progress>01 / 08</span>
+            <div>
+              <button type="button" data-observation-previous>НАЗАД</button>
+              <button type="button" data-observation-pause>ПАУЗА</button>
+              <button type="button" data-observation-next>ДАЛЬШЕ</button>
+            </div>
+          </div>
+          <p
+            class="visually-hidden"
+            data-observation-status
+            role="status"
+            aria-live="polite"
+          ></p>
           <a
             class="map-readout__link"
             data-map-link
@@ -373,10 +450,6 @@
             rel="noreferrer"
           >ОТКРЫТЬ</a>
         </aside>
-
-        <p class="map-note">
-          КООРДИНАТЫ СУБЪЕКТИВНЫ: ПОЛОЖЕНИЕ = СМЫСЛОВАЯ БЛИЗОСТЬ, РАЗМЕР = ЛИЧНЫЙ ВЕС ОПЫТА.
-        </p>
 
         <div
           class="control-console"
@@ -538,7 +611,7 @@
               class="map-control is-active"
               type="button"
               data-map-filter="all"
-              aria-label="Показать все точки"
+              aria-label="Сбросить фильтры и показать все точки"
               aria-pressed="true"
             >
               <span class="map-control__symbol map-control__symbol--all" aria-hidden="true"></span>
@@ -548,7 +621,7 @@
               class="map-control"
               type="button"
               data-map-filter="company"
-              aria-label="Показать компании"
+              aria-label="Показывать компании"
               aria-pressed="false"
             >
               <span class="map-control__symbol map-control__symbol--company" aria-hidden="true"></span>
@@ -558,7 +631,7 @@
               class="map-control"
               type="button"
               data-map-filter="project"
-              aria-label="Показать проекты"
+              aria-label="Показывать проекты"
               aria-pressed="false"
             >
               <span class="map-control__symbol map-control__symbol--project" aria-hidden="true"></span>
@@ -568,7 +641,7 @@
               class="map-control"
               type="button"
               data-map-filter="personal"
-              aria-label="Показать личное"
+              aria-label="Показывать личное"
               aria-pressed="false"
             >
               <span class="map-control__symbol map-control__symbol--personal" aria-hidden="true"></span>
@@ -578,11 +651,21 @@
               class="map-control"
               type="button"
               data-map-filter="practice"
-              aria-label="Показать принципы"
+              aria-label="Показывать принципы"
               aria-pressed="false"
             >
               <span class="map-control__symbol map-control__symbol--practice" aria-hidden="true"></span>
               <span>ПРИНЦИПЫ</span>
+            </button>
+            <button
+              class="map-control map-control--time"
+              type="button"
+              data-time-toggle
+              aria-label="Показывать хронологию"
+              aria-pressed="false"
+            >
+              <span class="map-control__symbol map-control__symbol--time" aria-hidden="true"></span>
+              <span>ХРОНОЛОГИЯ</span>
             </button>
           </nav>
 
@@ -609,6 +692,32 @@
             <button class="theme-toggle" type="button" data-theme-toggle aria-label="Включить тёмную тему">
               <span data-theme-label>СВЕТЛАЯ</span>
             </button>
+            <div class="display-control__service">
+              <div
+                class="display-control__accessibility"
+                role="group"
+                aria-label="Настройки цифровой доступности"
+              >
+                <span class="visually-hidden">ДОСТУПНОСТЬ</span>
+                <button
+                  type="button"
+                  data-motion-toggle
+                  aria-pressed="false"
+                >
+                  ДВИЖЕНИЕ −
+                </button>
+                <button
+                  type="button"
+                  data-contrast-toggle
+                  aria-pressed="false"
+                >
+                  КОНТРАСТ +
+                </button>
+              </div>
+              <p data-map-note>
+                КООРДИНАТЫ СУБЪЕКТИВНЫ: ПОЛОЖЕНИЕ — СМЫСЛОВАЯ БЛИЗОСТЬ, РАЗМЕР — ЛИЧНЫЙ ВЕС ОПЫТА.
+              </p>
+            </div>
           </div>
         </div>
       </section>

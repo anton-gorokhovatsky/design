@@ -17,6 +17,14 @@ const waitForLayout = async (page, milliseconds = 220) => {
   }));
 };
 
+const isolateThirdPartyTelemetry = async (page) => {
+  await page.route("https://mc.yandex.ru/**", (route) => route.fulfill({
+    status: 200,
+    contentType: "application/javascript",
+    body: "",
+  }));
+};
+
 const runtimeErrors = [];
 const attachRuntimeLog = (page, label) => {
   page.on("console", (message) => {
@@ -694,6 +702,7 @@ const contactAudit = async (page, width) => {
 const firstPaintAudit = async (browser, viewport, colorScheme) => {
   const context = await browser.newContext({ viewport, colorScheme });
   const page = await context.newPage();
+  await isolateThirdPartyTelemetry(page);
   attachRuntimeLog(page, `first-paint-${viewport.width}-${colorScheme}`);
   await page.addInitScript(() => {
     window.__materialPaintSamples = [];
@@ -829,6 +838,7 @@ const projectGlyphAudit = async (page) => page.evaluate(() => {
           isMobile: true,
         });
         const page = await context.newPage();
+        await isolateThirdPartyTelemetry(page);
         const label = `${viewport.width}x${viewport.height}-${colorScheme}`;
         attachRuntimeLog(page, label);
         await page.goto(`${baseUrl}-${label}`, { waitUntil: "networkidle" });
@@ -877,6 +887,7 @@ const projectGlyphAudit = async (page) => page.evaluate(() => {
           colorScheme,
         });
         const nativePage = await nativeContext.newPage();
+        await isolateThirdPartyTelemetry(nativePage);
         const nativeLabel = `${label}-native-scroll`;
         attachRuntimeLog(nativePage, nativeLabel);
         await nativePage.goto(`${baseUrl}-${nativeLabel}`, {
