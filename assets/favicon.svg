@@ -1,57 +1,48 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <style>
-    .core {
-      fill: none;
-      stroke: #315dff;
-      stroke-linecap: square;
-      stroke-linejoin: bevel;
-      stroke-width: 4.6;
-    }
-
     .signal {
       transform-box: fill-box;
       transform-origin: center;
-      animation: signal-phase 6.4s ease-in-out infinite;
+      animation: signal 4.8s steps(2, jump-none) infinite;
     }
 
-    .phase-2 {
+    .signal--2 {
       animation-delay: -1.6s;
     }
 
-    .phase-3 {
+    .signal--3 {
       animation-delay: -3.2s;
     }
 
-    .phase-4 {
-      animation-delay: -4.8s;
+    .micro {
+      display: none;
     }
 
-    @keyframes signal-phase {
+    @keyframes signal {
       0%,
-      18%,
+      28%,
       100% {
         opacity: 1;
         transform: scale(1);
       }
 
-      48% {
-        opacity: 0.28;
-        transform: scale(0.72);
-      }
-
-      72% {
-        opacity: 0.76;
-        transform: scale(1);
+      54% {
+        opacity: 0.24;
+        transform: scale(0.66);
       }
     }
 
     @media (max-width: 20px) {
-      .detail {
+      .matrix {
         display: none;
       }
 
-      .core {
-        stroke-width: 5.4;
+      .micro {
+        display: block;
+      }
+
+      .detail {
+        display: none;
       }
     }
 
@@ -64,26 +55,43 @@
     }
   </style>
 
-  <!-- The stable monogram is always present, including the 16 px tab icon. -->
-  <g class="core">
-    <path d="M5.5 56 18 8 30.5 56M9.8 39h16.4"/>
-    <path d="M37.5 56V8H59"/>
+  <!-- At 16 px a filled optical cut replaces the matrix gaps. -->
+  <g class="micro" fill="#315dff">
+    <path fill-rule="evenodd" d="
+      M2 56 15 8h10l13 48h-9l-3-12H14l-3 12H2Zm14-20h8l-4-17-4 17Z
+    "/>
+    <path d="M39 8h23v9H48v39h-9V8Z"/>
   </g>
 
-  <!-- ASCII-like signal marks enrich, but never replace, the core silhouette. -->
+  <!-- A compact 4×7 ASCII matrix keeps both letters legible at 16 px. -->
+  <g class="matrix" fill="#315dff">
+    <!-- А -->
+    <path d="
+      M10 11h5v5h-5z M16 11h5v5h-5z
+      M4 17h5v5H4z M22 17h5v5h-5z
+      M4 23h5v5H4z M22 23h5v5h-5z
+      M4 29h5v5H4z M10 29h5v5h-5z M16 29h5v5h-5z M22 29h5v5h-5z
+      M4 35h5v5H4z M22 35h5v5h-5z
+      M4 41h5v5H4z M22 41h5v5h-5z
+      M4 47h5v5H4z M22 47h5v5h-5z
+    "/>
+
+    <!-- Г -->
+    <path d="
+      M34 11h5v5h-5z M40 11h5v5h-5z M46 11h5v5h-5z M52 11h5v5h-5z
+      M34 17h5v5h-5z
+      M34 23h5v5h-5z
+      M34 29h5v5h-5z
+      M34 35h5v5h-5z
+      M34 41h5v5h-5z
+      M34 47h5v5h-5z
+    "/>
+  </g>
+
+  <!-- Detached map signals appear only when the renderer has enough pixels. -->
   <g class="detail" fill="#87a0ff">
-    <circle class="signal phase-2" cx="18" cy="8" r="2.4"/>
-    <circle class="signal phase-4" cx="9.8" cy="39" r="2"/>
-    <circle class="signal phase-3" cx="30.5" cy="56" r="2.2"/>
-    <circle class="signal phase-2" cx="48.5" cy="8" r="2"/>
-    <circle class="signal phase-4" cx="37.5" cy="32" r="2.2"/>
-  </g>
-
-  <g class="detail signal" fill="none" stroke="#315dff" stroke-linecap="square" stroke-width="2">
-    <path d="M3.5 25h6M6.5 22v6"/>
-    <path d="M22 24h6M25 21v6"/>
-    <path d="m34.5 17 5 5m0-5-5 5"/>
-    <path d="M52 8h6M55 5v6"/>
-    <path d="m35 47 5 5m0-5-5 5"/>
+    <circle class="signal" cx="29.5" cy="8" r="2"/>
+    <circle class="signal signal--2" cx="58.5" cy="27" r="1.75"/>
+    <circle class="signal signal--3" cx="29.5" cy="55" r="1.75"/>
   </g>
 </svg>

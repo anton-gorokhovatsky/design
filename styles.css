@@ -480,11 +480,9 @@ html[data-capture="og"] .map-grid {
   outline: none;
 }
 
-.signal-constellation.is-pointer-focused:focus-visible {
-  outline: none;
-}
-
-.practice-map:has(.signal-constellation:focus-visible) .origin-marker {
+html[data-focus-modality="keyboard"]
+  .practice-map:has(.signal-constellation:focus-visible)
+  .origin-marker {
   border-radius: 50%;
   outline: 2px solid var(--signal);
   outline-offset: 5px;
@@ -548,9 +546,9 @@ html[data-capture="og"] .map-grid {
 }
 
 .map-labels {
-  z-index: 6;
+  z-index: auto;
   pointer-events: none;
-  transform: translateZ(24px);
+  transform: none;
 }
 
 .map-speck {
@@ -4793,6 +4791,12 @@ body.has-content-panel .system-dock {
 }
 
 .control-console .command-dock:focus-within {
+  outline: none;
+}
+
+html[data-focus-modality="keyboard"]
+  .control-console
+  .command-dock:focus-within {
   outline: 2px solid var(--signal);
   outline-offset: -2px;
   border-radius: 0 24px 24px 0;
@@ -4818,7 +4822,9 @@ body.has-content-panel .system-dock {
   transform: translateY(-50%);
 }
 
-.control-console .command-dock:focus-within::before {
+html[data-focus-modality="keyboard"]
+  .control-console
+  .command-dock:focus-within::before {
   background: var(--signal);
 }
 
@@ -7296,12 +7302,12 @@ html[data-theme="dark"] .map-node--running .map-node__glyph {
 }
 
 .content-panel .contact-copy {
-  width: min(720px, calc(100vw - 160px));
+  width: min(640px, calc(100vw - 160px));
   min-height: 0;
-  grid-template: auto / minmax(0, 1.15fr) minmax(250px, 0.85fr);
+  grid-template: auto / minmax(0, 1fr) minmax(210px, 0.72fr);
   align-items: center;
-  gap: clamp(22px, 3vw, 34px);
-  padding: clamp(22px, 2.7vw, 30px);
+  gap: clamp(28px, 4vw, 44px);
+  padding: clamp(24px, 3vw, 32px);
   border-radius: 30px;
 }
 
@@ -7309,13 +7315,17 @@ html[data-theme="dark"] .map-node--running .map-node__glyph {
   display: grid;
   width: auto;
   min-height: 0;
+  grid-template-rows: none;
+  align-content: normal;
+  gap: 0;
   padding: 0;
   transform: none;
 }
 
 .content-panel .contact-intro {
+  grid-template-rows: repeat(3, auto);
   align-content: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .content-panel .contact-copy .contact-status {
@@ -7361,10 +7371,12 @@ html[data-theme="dark"] .map-node--running .map-node__glyph {
 
 .content-panel .contact-links {
   display: grid;
-  align-self: stretch;
+  align-self: center;
   border-left: 1px solid var(--line-soft);
+  grid-template-rows: repeat(2, auto);
   grid-template-columns: 1fr;
-  gap: 0;
+  align-content: center;
+  gap: 8px;
   padding-left: clamp(18px, 2.4vw, 28px);
 }
 
@@ -7377,7 +7389,7 @@ html[data-theme="dark"] .map-node--running .map-node__glyph {
 }
 
 .content-panel .contact-copy > .contact-links a + a {
-  border: 0;
+  border-top: 1px solid var(--line-soft);
 }
 
 @media (max-width: 900px) {
@@ -7424,6 +7436,7 @@ html[data-theme="dark"] .map-node--running .map-node__glyph {
   .content-panel .contact-links {
     border-top: 1px solid var(--line-soft);
     border-left: 0;
+    grid-template-rows: auto;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     column-gap: 16px;
     padding-top: 4px;
@@ -7444,6 +7457,7 @@ html[data-theme="dark"] .map-node--running .map-node__glyph {
 
 @media (max-width: 360px) {
   .content-panel .contact-links {
+    grid-template-rows: repeat(2, auto);
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -7953,6 +7967,10 @@ html[data-theme="dark"] .map-node--running .map-node__glyph {
     transform: none;
   }
 
+  .control-console .command-dock input {
+    font-size: 16px;
+  }
+
   /* Compact maps use direct selection and the inspector. Floating labels
      and hover reels cannot share a reliable collision-free touch surface. */
   .map-labels,
@@ -7965,6 +7983,22 @@ html[data-theme="dark"] .map-node--running .map-node__glyph {
 .map-inspector .overlay-close:focus-visible {
   outline-offset: -4px;
   transform: none;
+}
+
+/* Pointer and touch already identify the target spatially. Keep the focus
+   affordance for keyboard navigation without leaving tap/click afterimages. */
+html[data-focus-modality="pointer"] :focus-visible,
+html[data-focus-modality="pointer"] :focus-visible::before,
+html[data-focus-modality="pointer"] :focus-visible::after,
+html[data-focus-modality="pointer"]
+  :focus-visible
+  :is(
+    .constellation-nav__cluster,
+    .constellation-nav__shape,
+    .map-control__symbol,
+    .map-node__glyph
+  ) {
+  outline: none !important;
 }
 
 @media (forced-colors: active) {

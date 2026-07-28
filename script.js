@@ -1,4 +1,24 @@
 const root = document.documentElement;
+const setFocusModality = (modality) => {
+  root.dataset.focusModality = modality;
+};
+
+setFocusModality("pointer");
+
+window.addEventListener("pointerdown", () => {
+  setFocusModality("pointer");
+}, { capture: true, passive: true });
+
+window.addEventListener("touchstart", () => {
+  setFocusModality("pointer");
+}, { capture: true, passive: true });
+
+window.addEventListener("keydown", (event) => {
+  if (event.key === "Tab") {
+    setFocusModality("keyboard");
+  }
+}, { capture: true });
+
 const shortRussianUiWords = [
   "а", "без", "в", "во", "для", "до", "за", "и", "из", "или",
   "к", "ко", "на", "над", "не", "ни", "но", "о", "об", "от",
@@ -650,8 +670,7 @@ signalConstellation?.addEventListener("pointerdown", (event) => {
   signalAngularVelocity.x = 0;
   signalAngularVelocity.y = 0;
   signalLastFrameAt = now;
-  signalConstellation.classList.add("is-dragging", "is-pointer-focused");
-  signalConstellation.focus({ preventScroll: true });
+  signalConstellation.classList.add("is-dragging");
 
   try {
     signalConstellation.setPointerCapture(event.pointerId);
@@ -724,8 +743,6 @@ signalConstellation?.addEventListener("pointercancel", (event) => finishSignalDr
 signalConstellation?.addEventListener("lostpointercapture", (event) => finishSignalDrag(event));
 
 signalConstellation?.addEventListener("keydown", (event) => {
-  signalConstellation.classList.remove("is-pointer-focused");
-
   if (captureMode) {
     return;
   }
@@ -763,10 +780,6 @@ signalConstellation?.addEventListener("keydown", (event) => {
   signalLastFrameAt = performance.now();
   signalReleasedAt = signalLastFrameAt;
   drawSignalConstellation(signalLastFrameAt);
-});
-
-signalConstellation?.addEventListener("blur", () => {
-  signalConstellation.classList.remove("is-pointer-focused");
 });
 
 signalField?.addEventListener("pointermove", (event) => {
