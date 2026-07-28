@@ -866,7 +866,8 @@ const mapItems = [
     description: "Исследование, развитие и ежедневная работа с главным цифровым продуктом Музея и его командой.",
     href: "https://garagemca.org/",
     kindLabel: "ПРОЕКТ / ГРАФ «ГАРАЖА»",
-    previewVideo: "assets/reels/garage-site.mp4?v=20260725-native-reels-1",
+    previewVideo: "assets/reels/garage-site.mp4?v=20260728-landscape-reels-1",
+    previewOrientation: "landscape",
     previewMeta: "ГЛАВНАЯ, КАЛЕНДАРЬ И МЕДИА / 00:08",
     x: 58,
     y: 14,
@@ -882,7 +883,7 @@ const mapItems = [
     description: "Дизайн сайта Дома Наркомфина — от интерактивной модели здания и световых состояний до календаря и цельной цифровой навигации.",
     href: "https://narkomfin.ru/",
     kindLabel: "ПРОЕКТ / ГРАФ «ГАРАЖА»",
-    previewVideo: "assets/reels/narkomfin.mp4?v=20260727-full-frame-2",
+    previewVideo: "assets/reels/narkomfin.mp4?v=20260728-landscape-reels-1",
     previewOrientation: "landscape",
     previewMeta: "ДИЗАЙН И ВЕБ-РАЗРАБОТКА / 00:08",
     x: 67,
@@ -899,7 +900,8 @@ const mapItems = [
     description: "Запуск каталога коллекции и открытого хранения: продуктовая логика, исследования, интерфейс и координация реализации.",
     href: "https://garagemca.org/collection/catalogue",
     kindLabel: "ПРОЕКТ / ГРАФ «ГАРАЖА»",
-    previewVideo: "assets/reels/garage-collection.mp4?v=20260725-native-reels-1",
+    previewVideo: "assets/reels/garage-collection.mp4?v=20260728-landscape-reels-1",
+    previewOrientation: "landscape",
     previewMeta: "КАТАЛОГ И ОТКРЫТОЕ ХРАНЕНИЕ / 00:08",
     x: 75,
     y: 19,
@@ -929,7 +931,8 @@ const mapItems = [
     description: "Бесплатные образовательные продукты: запуск курсов, улучшение сценариев и работа с партнёрами.",
     href: "https://garagemca.org/learn/online-courses",
     kindLabel: "ПРОЕКТ / ГРАФ «ГАРАЖА»",
-    previewVideo: "assets/reels/garage-courses.mp4?v=20260725-native-reels-1",
+    previewVideo: "assets/reels/garage-courses.mp4?v=20260728-landscape-reels-1",
+    previewOrientation: "landscape",
     previewMeta: "КУРСЫ И УЧЕБНЫЕ СЦЕНАРИИ / 00:07",
     x: 80,
     y: 30,
@@ -959,7 +962,8 @@ const mapItems = [
     description: "Небольшой исследовательский web-зин, собранный руками как самостоятельная цифровая форма.",
     href: "https://non-human-animals.garage.digital/index.html",
     kindLabel: "ПРОЕКТ / ГРАФ «ГАРАЖА»",
-    previewVideo: "assets/reels/garage-webzine.mp4?v=20260725-native-reels-1",
+    previewVideo: "assets/reels/garage-webzine.mp4?v=20260728-landscape-reels-1",
+    previewOrientation: "landscape",
     previewMeta: "ТЕМА, ТЕКСТ И ИНТЕРАКТИВ / 00:08",
     x: 72,
     y: 34,
@@ -989,7 +993,7 @@ const mapItems = [
     href: "https://endowment.garagemca.org/ru/",
     kindLabel: "ПРОЕКТ / ГРАФ «ГАРАЖА»",
     x: 53,
-    y: 23,
+    y: 26,
     size: 12,
   },
   {
@@ -1003,7 +1007,8 @@ const mapItems = [
     description: "Портфолио куратора и исследовательницы: редакционная структура, спокойный интерфейс и самостоятельный\u00a0запуск.",
     href: "https://shirokostup.site/",
     kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
-    previewVideo: "assets/reels/shirokostup.mp4?v=20260725-native-reels-1",
+    previewVideo: "assets/reels/shirokostup.mp4?v=20260728-landscape-reels-1",
+    previewOrientation: "landscape",
     previewMeta: "ПОРТФОЛИО И АРХИВ ПРОЕКТОВ / 00:07",
     x: 82,
     y: 52,
@@ -1020,7 +1025,8 @@ const mapItems = [
     description: "Цифровой продукт и web-система: продуктовая логика, интерфейс и последовательное развитие.",
     href: "https://tarski.ru/",
     kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
-    previewVideo: "assets/reels/tarski.mp4?v=20260725-native-reels-1",
+    previewVideo: "assets/reels/tarski.mp4?v=20260728-landscape-reels-1",
+    previewOrientation: "landscape",
     previewMeta: "СООБЩЕСТВО И ПРОГРАММА / 00:08",
     x: 78,
     y: 47,
@@ -1037,7 +1043,8 @@ const mapItems = [
     description: "Сервисный сайт с живым статусом, ясной записью и одной цельной системой материалов и состояний.",
     href: "https://barberherman.ru/",
     kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
-    previewVideo: "assets/reels/herman.mp4?v=20260725-native-reels-1",
+    previewVideo: "assets/reels/herman.mp4?v=20260728-landscape-reels-1",
+    previewOrientation: "landscape",
     previewMeta: "СТАТУС, УСЛУГИ И ЗАПИСЬ / 00:07",
     x: 82,
     y: 58,
@@ -1054,7 +1061,8 @@ const mapItems = [
     description: "Небольшой commerce-проект с самостоятельной визуальной системой и быстрым запуском.",
     href: "https://merch.dustydumbbells.com/",
     kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
-    previewVideo: "assets/reels/dusty-merch.mp4?v=20260725-native-reels-1",
+    previewVideo: "assets/reels/dusty-merch.mp4?v=20260728-landscape-reels-1",
+    previewOrientation: "landscape",
     previewMeta: "КАТАЛОГ И ОФОРМЛЕНИЕ / 00:07",
     x: 73,
     y: 61,
@@ -1071,7 +1079,8 @@ const mapItems = [
     description: "Сайт спортивного кемпа: структура программы, атмосфера события и практичная точка входа.",
     href: "https://camp.dustydumbbells.com/",
     kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
-    previewVideo: "assets/reels/dusty-camp.mp4?v=20260725-native-reels-1",
+    previewVideo: "assets/reels/dusty-camp.mp4?v=20260728-landscape-reels-1",
+    previewOrientation: "landscape",
     previewMeta: "ПРОГРАММА И АТМОСФЕРА / 00:07",
     x: 85,
     y: 66,
@@ -1088,7 +1097,8 @@ const mapItems = [
     description: "Небольшой брендовый web-проект, где цифровая форма работает как самостоятельный характер.",
     href: "https://11111.life/",
     kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
-    previewVideo: "assets/reels/11111.mp4?v=20260727-safe-header-1",
+    previewVideo: "assets/reels/11111.mp4?v=20260728-landscape-reels-1",
+    previewOrientation: "landscape",
     previewMeta: "ИСТОРИЯ, ЦЕЛЬ И МАСШТАБ / 00:08",
     x: 74,
     y: 72,
@@ -1105,7 +1115,8 @@ const mapItems = [
     description: "Каталожный сайт с ясной продуктовой структурой и визуальным ощущением холодного течения.",
     href: "https://ks.fish/",
     kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
-    previewVideo: "assets/reels/ks-fish.mp4?v=20260728-native-showreel-1",
+    previewVideo: "assets/reels/ks-fish.mp4?v=20260728-landscape-reels-1",
+    previewOrientation: "landscape",
     previewMeta: "ВИТРИНА, ПРОДУКТ И ИСТОРИЯ / 00:08",
     x: 90,
     y: 78,
@@ -1122,7 +1133,8 @@ const mapItems = [
     description: "Цифровой магазин с компактной, собранной и понятной системой взаимодействия.",
     href: "https://doronin.store/",
     kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
-    previewVideo: "assets/reels/doronin.mp4?v=20260725-native-reels-1",
+    previewVideo: "assets/reels/doronin.mp4?v=20260728-landscape-reels-1",
+    previewOrientation: "landscape",
     previewMeta: "КОЛЛЕКЦИЯ И МЕРЧ / 00:07",
     x: 77,
     y: 81,
@@ -2317,6 +2329,53 @@ if (mapSpecksRoot) {
       mapSpecksRoot.append(speck);
     }
   });
+
+  let speckClearanceFrame = 0;
+
+  const syncMapSpeckClearance = () => {
+    const glyphs = Array.from(
+      mapNodesRoot?.querySelectorAll(".map-node__glyph") || [],
+    ).map((glyph) => {
+      const bounds = glyph.getBoundingClientRect();
+
+      return {
+        x: bounds.left + bounds.width / 2,
+        y: bounds.top + bounds.height / 2,
+        radius: Math.max(bounds.width, bounds.height) / 2,
+      };
+    });
+
+    mapSpecksRoot.querySelectorAll(".map-speck").forEach((speck) => {
+      const bounds = speck.getBoundingClientRect();
+      const x = bounds.left + bounds.width / 2;
+      const y = bounds.top + bounds.height / 2;
+      const radius = Math.max(bounds.width, bounds.height) / 2;
+      const isNodeAdjacent = glyphs.some((glyph) => (
+        Math.hypot(glyph.x - x, glyph.y - y)
+        < glyph.radius + radius + 10
+      ));
+
+      speck.classList.toggle("is-node-adjacent", isNodeAdjacent);
+    });
+  };
+
+  const scheduleMapSpeckClearance = () => {
+    window.cancelAnimationFrame(speckClearanceFrame);
+    speckClearanceFrame = window.requestAnimationFrame(syncMapSpeckClearance);
+  };
+
+  scheduleMapSpeckClearance();
+  window.addEventListener("resize", scheduleMapSpeckClearance, {
+    passive: true,
+  });
+  mapNodesRoot?.addEventListener("transitionend", (event) => {
+    if (
+      event.target instanceof Element
+      && event.target.matches(".map-node, .map-node__glyph")
+    ) {
+      scheduleMapSpeckClearance();
+    }
+  });
 }
 
 setMapRovingId("garage");
@@ -2600,7 +2659,6 @@ const contentStackGroups = {
 };
 let contentStackFrame = 0;
 let contentStackOffsets = [];
-let contentStackHeights = [];
 
 const clearContentStackState = () => {
   Object.values(contentStackGroups).flat().forEach((surface) => {
@@ -2609,10 +2667,7 @@ const clearContentStackState = () => {
       "is-content-stack-behind",
       "is-content-stack-hidden",
     );
-    surface.style.removeProperty("--content-stack-clip-bottom");
-    surface.style.removeProperty("--content-stack-layer");
     surface.style.removeProperty("--content-stack-order");
-    surface.style.removeProperty("--content-stack-top");
   });
 };
 
@@ -2633,7 +2688,6 @@ const measureContentStackOffsets = (surfaces) => {
   });
   contentPanel.classList.remove("is-measuring-content-stack");
 
-  contentStackHeights = measurements.map(({ height }) => height);
   return measurements.map(({ offset }) => offset);
 };
 
@@ -2651,28 +2705,21 @@ const syncContentStack = () => {
     contentStackOffsets = measureContentStackOffsets(surfaces);
   }
 
-  const stackTop = 16;
   const stackLead = 10;
   let activeIndex = 0;
 
   for (let index = 1; index < contentStackOffsets.length; index += 1) {
     const nextTop = contentStackOffsets[index] - contentPanelBody.scrollTop;
+    const nextStackTop = Number.parseFloat(
+      getComputedStyle(surfaces[index]).getPropertyValue("--content-stack-top"),
+    ) || 8;
 
-    if (nextTop <= stackTop + stackLead) {
+    if (nextTop <= nextStackTop + stackLead) {
       activeIndex = index;
     } else {
       break;
     }
   }
-
-  const activeHeight = contentStackHeights[activeIndex] || 160;
-  const incomingTop = contentStackOffsets[activeIndex + 1] == null
-    ? Number.POSITIVE_INFINITY
-    : contentStackOffsets[activeIndex + 1] - contentPanelBody.scrollTop;
-  const exposedHeight = Number.isFinite(incomingTop)
-    ? Math.max(0, Math.min(activeHeight, incomingTop - stackTop + 1))
-    : activeHeight;
-  const activeClipBottom = Math.max(0, activeHeight - exposedHeight);
 
   surfaces.forEach((surface, index) => {
     const layer = activeIndex - index;
@@ -2683,16 +2730,7 @@ const syncContentStack = () => {
     surface.classList.toggle("is-content-stack-active", isActive);
     surface.classList.toggle("is-content-stack-behind", isBehind);
     surface.classList.toggle("is-content-stack-hidden", isHidden);
-    surface.style.setProperty("--content-stack-layer", String(Math.max(0, layer)));
-    surface.style.setProperty(
-      "--content-stack-clip-bottom",
-      isActive ? `${activeClipBottom.toFixed(2)}px` : "0px",
-    );
     surface.style.setProperty("--content-stack-order", String(index));
-    surface.style.setProperty(
-      "--content-stack-top",
-      `${isHidden ? 0 : isBehind ? stackTop - Math.min(layer, 2) * 8 : stackTop}px`,
-    );
   });
 };
 
@@ -2706,7 +2744,6 @@ const scheduleContentStackSync = () => {
 
 const invalidateContentStack = () => {
   contentStackOffsets = [];
-  contentStackHeights = [];
   scheduleContentStackSync();
 };
 

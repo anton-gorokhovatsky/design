@@ -10,7 +10,7 @@ const reelNames = readdirSync(reelsDirectory)
   .filter((name) => name.endsWith(".mp4"))
   .sort();
 const failures = [];
-const verticalReels = [
+const landscapeReels = [
   "11111.mp4",
   "doronin.mp4",
   "dusty-camp.mp4",
@@ -21,29 +21,22 @@ const verticalReels = [
   "garage-webzine.mp4",
   "herman.mp4",
   "ks-fish.mp4",
+  "narkomfin.mp4",
   "shirokostup.mp4",
   "tarski.mp4",
 ];
-const reelSpecs = new Map([
-  ...verticalReels.map((name) => [
+const reelSpecs = new Map(
+  landscapeReels.map((name) => [
     name,
-    {
-      width: 600,
-      height: 750,
-      displayAspect: "4:5",
-      sourceViewport: "1200x1500",
-    },
-  ]),
-  [
-    "narkomfin.mp4",
     {
       width: 900,
       height: 600,
       displayAspect: "3:2",
       sourceViewport: "1200x800",
     },
-  ],
-]);
+  ]),
+);
+reelSpecs.get("11111.mp4").sourceViewport = "1350x900";
 
 const expectedReelNames = [...reelSpecs.keys()].sort();
 
@@ -129,6 +122,15 @@ for (const reelName of reelNames) {
 }
 
 const styles = readFileSync(join(projectRoot, "styles.css"), "utf8");
+const scriptSource = readFileSync(join(projectRoot, "script.js"), "utf8");
+const landscapeConfigurationCount = (
+  scriptSource.match(/previewOrientation:\s*"landscape"/g) ?? []
+).length;
+const landscapeReferenceCount = (
+  scriptSource.match(
+    /previewVideo:\s*"assets\/reels\/[^"]+\.mp4\?v=20260728-landscape-reels-1"/g,
+  ) ?? []
+).length;
 const videoRules = [
   ...styles.matchAll(/(?:\.map-hover-preview(?:\.has-video)?\s+)?\.map-hover-preview__media video\s*\{([^}]*)\}/g),
 ].map((match) => match[1]).join("\n");
@@ -153,6 +155,18 @@ if (!/object-position:\s*center top/.test(videoRules)) {
   failures.push("receiver: site reels must remain top-aligned");
 }
 
+if (landscapeConfigurationCount !== expectedReelNames.length) {
+  failures.push(
+    `configuration: expected ${expectedReelNames.length} landscape receivers; found ${landscapeConfigurationCount}`,
+  );
+}
+
+if (landscapeReferenceCount !== expectedReelNames.length) {
+  failures.push(
+    `configuration: expected ${expectedReelNames.length} current landscape reel references; found ${landscapeReferenceCount}`,
+  );
+}
+
 if (
   !/overflow:\s*hidden/.test(viewerRule)
   || !/border-radius:\s*clamp/.test(viewerRule)
@@ -167,7 +181,7 @@ if (
 }
 
 if (!/aspect-ratio:\s*3\s*\/\s*2/.test(landscapeViewerRule)) {
-  failures.push("receiver: the House of Narkomfin exception must remain horizontal 3:2");
+  failures.push("receiver: desktop-site reels must remain horizontal 3:2");
 }
 
 if (
@@ -187,5 +201,5 @@ if (failures.length) {
 }
 
 console.log(
-  `Reel check passed: ${reelNames.length} native captures, square pixels, 4:5 material receiver, 3:2 Narkomfin exception.`,
+  `Reel check passed: ${reelNames.length} native desktop captures, square pixels, 13 horizontal 3:2 receivers.`,
 );

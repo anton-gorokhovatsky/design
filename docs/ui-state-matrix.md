@@ -360,3 +360,26 @@ names и 31 их использование.
 | WebKit | `390×844` и `320×568`, light/dark; stack forward/reverse, overlap/clip, filter/search routes | `0` failures и runtime errors. Filter/search каскад совпадает с Chromium: скрытые Garage-маршруты остаются opacity `0`, единственный search-маршрут — opacity `1` |
 | Safari gesture | Настоящий Safari, Projects/light, `390×844`; Computer Use scroll вниз и обратно по доступному scroll-container | Первый жест сдвинул содержимое на `200 CSS px` при неподвижном intro; обратный жест восстановил исходную AX-геометрию. Sticky-стек, header и close остались стабильны, без bleed, щелей, потери материала и скачка ширины |
 | Полный gate | Статический audit, 13 reels, Chromium `40` состояний, WebKit `4` состояния, forced-colors, reduced-motion | `0` errors/warnings, material mismatches, missing surfaces/themes, typography hangs, widows, reflow overflow и route failures; все `46` map nodes видимы в forced-colors |
+
+## Корректирующая приёмка 2026-07-28 — отзыв прежнего PASS
+
+Предыдущий production-PASS этого дня отозван после реальных пользовательских
+кадров: он ошибочно подменял часть визуальной приёмки computed-метриками.
+Ниже зафиксирован только новый проход после исправления причин, а не повтор
+прежнего отчёта.
+
+| Семейство | Реальные состояния | Результат |
+|---|---|---|
+| `АГ / НАЧАЛО` | Chromium и WebKit, `320×568` и `393×852`, light; крупные 1:1-кропы | Плашка вынесена из 3D-compositing root `.map-camera` в прямой слой `.practice-map`; в обоих движках видны поле и оси под `rgba(..., 0.5)` + `blur(24px)`, без рамки и тени. Центр плашки отличается от горизонтальной оси на `0.5 px` |
+| Мобильная карта | `320×568`, `336×600`, `360×640`, `375×667`, `375×812`, `390×844`, `412×915`, `430×932`; light/dark — 16 кадров | `0` crops, overflow и UI-overlaps. Desktop-header и секторные подписи скрыты; origin остаётся видимым; минимальный зазор node–speck — `10 px` |
+| Физика стопок | Projects/approach, `320`, `390`, `430`; light/dark; intro→1 и 1→2 вперёд/назад — 84 кадра | Карточки сохраняют целую округлую форму, фиксированную sticky-плоскость и высоту. Lens/triangle отсутствуют; ошибка плоскости и forward/reverse delta — `0 px` |
+| WebKit-контракты | `390×844` и `320×568`, light/dark; programmatic + native-scroll, вперёд/назад | `4` состояния, `0 failures`: нет runtime-перезаписи высоты/плоскости, clipping и возвратного скачка геометрии; первый кадр origin во всех темах сразу имеет общий material token |
+| Карта и пути | Desktop/mobile, light/dark, hover/focus/readout | Labels находятся на плоскости `translateZ(24px)`, routes — `12px`: material-плашка честно перекрывает путь. Центрическая виньетка удалена; отдельные radial bands больше не рисуются поверх поля |
+| Шоурилы | Все 13 источников; Chromium/WebKit `1440×900` и `1024×768`, light/dark; 104 hover/focus-взаимодействия | Все desktop-сайты пересняты и принимаются как `900×600` / `3:2`, SAR `1:1`, без сжатия, портретного «планшета», внутренних полей и синей диагональной sweep-полосы |
+| Нижние панели | Reel/readout/search в desktop-состояниях | Receiver резервирует вертикальное место под readout и search; material-поверхности больше не сливаются |
+| Favicon | Реальные `16`, `32`, `64 px`, светлый/тёмный фон, transparent | Стабильный синий монограммный core `АГ` читается на `16 px`; ASCII-сигналы дополняют `32/64 px`, анимация отключается при `prefers-reduced-motion` |
+
+Статический gate после структурной правки: `node --check script.js`,
+`audit-project --strict`, `check-reels.mjs`, `check-project.mjs` — PASS;
+`46` точек, `17` связей, `17` принципов, `13` горизонтальных шоурилов,
+`37` использований `MATERIAL / 01`, `0` errors и `0` warnings.

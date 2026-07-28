@@ -112,10 +112,13 @@ const readStackState = (page, panelName, expectedScroll, inputMode) => {
         position: style.position,
         zIndex: Number(style.zIndex) || 0,
         childOpacities,
-        clipBottom: Number.parseFloat(
-          style.getPropertyValue("--content-stack-clip-bottom"),
+        stackTop: Number.parseFloat(
+          style.getPropertyValue("--content-stack-top"),
         ) || 0,
+        inlineStackTop: surface.style.getPropertyValue("--content-stack-top"),
+        clipPath: style.clipPath,
         top: rect.top,
+        topOffset: rect.top - bodyRect.top,
         right: rect.right,
         bottom: rect.bottom,
         left: rect.left,
@@ -156,6 +159,7 @@ const readStackState = (page, panelName, expectedScroll, inputMode) => {
       activeCount: geometry.filter((item) => item.active).length,
       behindCount: geometry.filter((item) => item.behind).length,
       hiddenCount: geometry.filter((item) => item.hidden).length,
+      geometry,
       active,
       next,
       activeText,
@@ -171,7 +175,7 @@ const readStackState = (page, panelName, expectedScroll, inputMode) => {
           ? ["active surface is missing or unreadable"]
           : []),
         ...(active && (
-          active.top < bodyRect.top + 10
+          active.topOffset < active.stackTop - 2
           || active.left < bodyRect.left - 1
           || active.right > bodyRect.right + 1
         )
@@ -183,9 +187,11 @@ const readStackState = (page, panelName, expectedScroll, inputMode) => {
         ...(active && active.childOpacities.some((opacity) => opacity < 0.99)
           ? ["active surface copy is faded or unreadable"]
           : []),
-        ...(overlap > 0
-          && Math.abs(active.clipBottom - overlap) > 2
-          ? ["active surface clip does not follow the incoming card"]
+        ...(geometry.some((item) => item.clipPath !== "none")
+          ? ["stack surfaces must remain complete shapes without clipping"]
+          : []),
+        ...(geometry.some((item) => item.inlineStackTop)
+          ? ["runtime rewrites a stack surface plane"]
           : []),
         ...(overlap > 0
           && next.childOpacities.some((opacity) => opacity < 0.99)
@@ -300,12 +306,72 @@ const stackAudit = async (
     && (
       finalProgrammaticState.actualScroll > 1
       || finalProgrammaticState.activeIndex !== 0
-      || Math.abs(finalProgrammaticState.active?.clipBottom || 0) > 1
     )
   ) {
     finalProgrammaticState.failures.push(
       "reverse stack sequence did not fully restore the initial state",
     );
+  }
+
+  const physicalInvariantFailures = [];
+  const forwardStates = states.slice(0, stops.length);
+  const reverseStates = states.slice(stops.length);
+  const surfaceCount = forwardStates[0]?.geometry.length || 0;
+
+  for (let surfaceIndex = 0; surfaceIndex < surfaceCount; surfaceIndex += 1) {
+    const samples = states.map((state) => state.geometry[surfaceIndex]);
+    const heightSpread = Math.max(...samples.map((item) => item.height))
+      - Math.min(...samples.map((item) => item.height));
+    const planeSpread = Math.max(...samples.map((item) => item.stackTop))
+      - Math.min(...samples.map((item) => item.stackTop));
+
+    if (heightSpread > 1) {
+      physicalInvariantFailures.push(
+        `surface ${surfaceIndex} changes height while other cards arrive`,
+      );
+    }
+    if (planeSpread > 0.1) {
+      physicalInvariantFailures.push(
+        `surface ${surfaceIndex} changes its fixed stack plane`,
+      );
+    }
+
+    for (let index = 1; index < forwardStates.length; index += 1) {
+      const previous = forwardStates[index - 1].geometry[surfaceIndex];
+      const current = forwardStates[index].geometry[surfaceIndex];
+      if (current.topOffset > previous.topOffset + 1) {
+        physicalInvariantFailures.push(
+          `surface ${surfaceIndex} rises again during forward travel`,
+        );
+        break;
+      }
+      if (current.topOffset < current.stackTop - 2) {
+        physicalInvariantFailures.push(
+          `surface ${surfaceIndex} crosses above its fixed stack plane`,
+        );
+        break;
+      }
+    }
+
+    for (const reverseState of reverseStates) {
+      const matchingForward = forwardStates.find(
+        (state) => state.expectedScroll === reverseState.expectedScroll,
+      );
+      if (!matchingForward) {
+        continue;
+      }
+      const forward = matchingForward.geometry[surfaceIndex];
+      const reverse = reverseState.geometry[surfaceIndex];
+      if (
+        Math.abs(forward.topOffset - reverse.topOffset) > 1
+        || Math.abs(forward.height - reverse.height) > 1
+      ) {
+        physicalInvariantFailures.push(
+          `surface ${surfaceIndex} does not return to the same geometry`,
+        );
+        break;
+      }
+    }
   }
 
   await page.locator(".content-panel__body").evaluate((element) => {
@@ -380,11 +446,17 @@ const stackAudit = async (
     maxScroll,
     states,
     nativeStates,
-    failures: [...states, ...nativeStates].flatMap((state) => (
-      state.failures.map(
-        (failure) => `${panelName}/${state.inputMode}@${state.actualScroll}: ${failure}`,
-      )
-    )),
+    physicalInvariantFailures,
+    failures: [
+      ...physicalInvariantFailures.map(
+        (failure) => `${panelName}/physical-invariant: ${failure}`,
+      ),
+      ...[...states, ...nativeStates].flatMap((state) => (
+        state.failures.map(
+          (failure) => `${panelName}/${state.inputMode}@${state.actualScroll}: ${failure}`,
+        )
+      )),
+    ],
   };
 };
 

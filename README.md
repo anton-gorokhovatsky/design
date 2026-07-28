@@ -43,20 +43,23 @@ logo card.
   with one icon column, one label column, and equal hit areas on narrow
   screens.
 - Hovering or focusing an eligible project node temporarily turns the central
-  origin into a media receiver. Every reel is a muted seven-to-ten-second
+  origin into a media receiver. Every reel is a muted seven-to-eight-second
   walkthrough of characteristic live states: full-page scrolls, meaningful
   inner routes, theme changes, or distinctive interface controls. Nodes without
   recorded media do not open an empty or decorative media receiver.
-- A site reel is a window, not a crop: all 13 videos use square pixels and are
-  captured directly in the receiver's display ratio. Twelve recordings are
-  `600×750` / `4:5`; the single content-led exception is the House of
-  Narkomfin at `900×600` / `3:2`, captured at `1200×800` to match the site's horizontal architectural
-  layout. The receiver uses the same `MATERIAL / 01`, while the native video
-  fills its silhouette without stretching, artificial padding, or empty
-  fields. Never use `cover`, reshape an existing recording, or merely rewrite
-  a non-square SAR. The reel has no title bar, footer, border, shadow, or
-  decorative loading fallback. Run
-  `node scripts/check-reels.mjs` after assembling or replacing reels.
+- A site reel is a window, not a crop: all 13 current sources are desktop
+  websites, so each uses square pixels and is captured from a `1200×800`
+  viewport into a `900×600` / `3:2` master and matching landscape receiver.
+  The receiver uses the same `MATERIAL / 01`, while the native video fills its
+  silhouette without stretching, artificial padding, or empty fields. Never
+  use `cover`, reshape an existing recording, or merely rewrite a non-square
+  SAR. A vertical receiver is reserved for a source proven mobile-native; it
+  must never turn a desktop site into a portrait tablet. The reel has no title
+  bar, footer, border, shadow, or decorative loading fallback. Reproduce a
+  capture with `node scripts/capture-reels.cjs <project-id>` (Node.js,
+  Playwright, Chrome, and FFmpeg are required) and run
+  `node scripts/check-reels.mjs` after assembling or replacing reels. Set
+  `PORTFOLIO_CAPTURE_BROWSER` when Chrome is outside its default macOS path.
 - Touch devices keep the direct node-to-inspector interaction and do not render
   hover-only media.
 - Long-form content remains inside the same coordinate system. Projects,

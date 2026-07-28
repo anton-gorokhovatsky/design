@@ -1,8 +1,89 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="15" fill="#11120f"/>
-  <circle cx="32" cy="32" r="19" fill="none" stroke="#315dff" stroke-width="4"/>
-  <circle cx="32" cy="32" r="10" fill="none" stroke="#f4f5f0" stroke-width="3"/>
-  <path d="M32 13A19 19 0 0 1 50.5 36.3" fill="none" stroke="#87a0ff" stroke-linecap="round" stroke-width="2"/>
-  <circle cx="45.5" cy="45.5" r="5.5" fill="#d8ff47"/>
-  <circle cx="32" cy="32" r="3.5" fill="#f4f5f0"/>
+  <style>
+    .core {
+      fill: none;
+      stroke: #315dff;
+      stroke-linecap: square;
+      stroke-linejoin: bevel;
+      stroke-width: 4.6;
+    }
+
+    .signal {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: signal-phase 6.4s ease-in-out infinite;
+    }
+
+    .phase-2 {
+      animation-delay: -1.6s;
+    }
+
+    .phase-3 {
+      animation-delay: -3.2s;
+    }
+
+    .phase-4 {
+      animation-delay: -4.8s;
+    }
+
+    @keyframes signal-phase {
+      0%,
+      18%,
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      48% {
+        opacity: 0.28;
+        transform: scale(0.72);
+      }
+
+      72% {
+        opacity: 0.76;
+        transform: scale(1);
+      }
+    }
+
+    @media (max-width: 20px) {
+      .detail {
+        display: none;
+      }
+
+      .core {
+        stroke-width: 5.4;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .signal {
+        animation: none;
+        opacity: 1;
+        transform: none;
+      }
+    }
+  </style>
+
+  <!-- The stable monogram is always present, including the 16 px tab icon. -->
+  <g class="core">
+    <path d="M5.5 56 18 8 30.5 56M9.8 39h16.4"/>
+    <path d="M37.5 56V8H59"/>
+  </g>
+
+  <!-- ASCII-like signal marks enrich, but never replace, the core silhouette. -->
+  <g class="detail" fill="#87a0ff">
+    <circle class="signal phase-2" cx="18" cy="8" r="2.4"/>
+    <circle class="signal phase-4" cx="9.8" cy="39" r="2"/>
+    <circle class="signal phase-3" cx="30.5" cy="56" r="2.2"/>
+    <circle class="signal phase-2" cx="48.5" cy="8" r="2"/>
+    <circle class="signal phase-4" cx="37.5" cy="32" r="2.2"/>
+  </g>
+
+  <g class="detail signal" fill="none" stroke="#315dff" stroke-linecap="square" stroke-width="2">
+    <path d="M3.5 25h6M6.5 22v6"/>
+    <path d="M22 24h6M25 21v6"/>
+    <path d="m34.5 17 5 5m0-5-5 5"/>
+    <path d="M52 8h6M55 5v6"/>
+    <path d="m35 47 5 5m0-5-5 5"/>
+  </g>
 </svg>
