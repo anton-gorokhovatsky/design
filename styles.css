@@ -7304,7 +7304,7 @@ html[data-theme="dark"] .map-node--running .map-node__glyph {
 .content-panel .contact-copy {
   width: min(720px, calc(100vw - 160px));
   min-height: 0;
-  grid-template: auto / minmax(0, 1.08fr) minmax(260px, 0.92fr);
+  grid-template: auto / calc(50% + 2.5vw) minmax(0, 1fr);
   align-items: stretch;
   gap: 0;
   padding: 0;
