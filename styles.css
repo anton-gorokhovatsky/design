@@ -2410,8 +2410,8 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
   top: 50%;
   left: 50%;
   display: grid;
-  width: 112px;
-  height: 112px;
+  width: 104px;
+  height: 104px;
   place-items: center;
   pointer-events: none;
   transform: translate(calc(-50% + var(--core-x)), calc(-50% + var(--core-y)));
@@ -2428,31 +2428,51 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 }
 
 .origin-marker__cross {
-  inset: 0;
+  top: 50%;
+  left: 50%;
+  width: 72px;
+  height: 72px;
+  color: color-mix(in srgb, var(--signal) 54%, transparent);
+  background:
+    linear-gradient(
+      90deg,
+      currentColor 0 13px,
+      transparent 13px calc(100% - 13px),
+      currentColor calc(100% - 13px)
+    )
+    center / 100% 1.5px no-repeat,
+    linear-gradient(
+      currentColor 0 13px,
+      transparent 13px calc(100% - 13px),
+      currentColor calc(100% - 13px)
+    )
+    center / 1.5px 100% no-repeat;
+  transform: translate(-50%, -50%);
 }
 
 .origin-marker__cross::before {
-  top: 50%;
-  right: 0;
-  left: 0;
-  height: 1px;
-  background: color-mix(in srgb, var(--ink) 28%, transparent);
+  inset: 17px;
+  border: 1px solid color-mix(in srgb, var(--signal) 24%, transparent);
+  border-radius: 50%;
 }
 
 .origin-marker__cross::after {
-  top: 0;
-  bottom: 0;
+  top: 50%;
   left: 50%;
-  width: 1px;
-  background: color-mix(in srgb, var(--ink) 28%, transparent);
+  width: 5px;
+  height: 5px;
+  border: 1px solid color-mix(in srgb, var(--signal) 68%, transparent);
+  border-radius: 50%;
+  background: var(--material-01);
+  transform: translate(-50%, -50%);
 }
 
 .origin-marker__label {
   position: absolute;
   z-index: 7;
-  top: calc(50% + var(--core-y) + var(--layer-near-y));
-  left: calc(50% + var(--core-x) + var(--layer-near-x));
-  padding: 4px 6px;
+  top: calc(50% + var(--core-y));
+  left: calc(50% + var(--core-x));
+  padding: 5px 7px;
   border: 0;
   border-radius: 12px;
   background: var(--material-01);
@@ -2463,14 +2483,16 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   font-family: var(--font-sans);
-  font-size: 7px;
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: 0.015em;
   line-height: 1;
 }
 
 .origin-marker .signal-pulse {
   position: absolute;
-  right: 4px;
-  bottom: 4px;
+  right: 24px;
+  bottom: 24px;
 }
 
 .map-hover-preview {
@@ -2654,14 +2676,23 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
     height: 84px;
   }
 
+  .origin-marker__cross {
+    width: 58px;
+    height: 58px;
+  }
+
+  .origin-marker__cross::before {
+    inset: 14px;
+  }
+
   .origin-marker__label {
     padding: 3px 4px;
     font-size: 8px;
   }
 
   .origin-marker .signal-pulse {
-    right: 0;
-    bottom: 0;
+    right: 17px;
+    bottom: 17px;
   }
 
   .map-hover-preview {
@@ -6991,7 +7022,7 @@ html[data-theme="dark"] .map-depth-grid {
     translate3d(
       calc(-50% + var(--core-x) + var(--layer-near-x)),
       calc(-50% + var(--core-y) + var(--layer-near-y)),
-      28px
+      0
     );
 }
 

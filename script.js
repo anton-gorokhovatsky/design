@@ -3345,7 +3345,119 @@ if (["#work", "#approach", "#contact"].includes(window.location.hash)) {
   openContentPanel(window.location.hash.slice(1));
 }
 
+const siteFavicon = document.querySelector("#site-favicon");
+const faviconCanvas = document.createElement("canvas");
+const faviconContext = faviconCanvas.getContext("2d");
+let faviconFrameIndex = 0;
+let faviconFrameTimer = 0;
+
+faviconCanvas.width = 64;
+faviconCanvas.height = 64;
+
+const drawFaviconStream = (context, offset, width, alpha, reverse = false) => {
+  context.save();
+  context.beginPath();
+  context.moveTo(4, 48);
+  context.bezierCurveTo(16, 24, 44, 17, 61, 31);
+  context.setLineDash(reverse ? [2, 5] : [8, 4]);
+  context.lineDashOffset = reverse ? offset * 0.78 : -offset;
+  context.lineCap = "square";
+  context.lineWidth = width;
+  context.strokeStyle = "#315dff";
+  context.globalAlpha = alpha;
+  context.stroke();
+  context.restore();
+};
+
+const drawFaviconFrame = (frameIndex = 0) => {
+  if (!siteFavicon || !faviconContext) {
+    return;
+  }
+
+  const phase = (frameIndex % 90) / 90;
+  const pulse = Math.sin(phase * Math.PI * 2);
+  faviconContext.clearRect(0, 0, 64, 64);
+
+  faviconContext.save();
+  faviconContext.beginPath();
+  faviconContext.moveTo(4, 48);
+  faviconContext.bezierCurveTo(16, 24, 44, 17, 61, 31);
+  faviconContext.lineCap = "square";
+  faviconContext.lineWidth = 2.6;
+  faviconContext.strokeStyle = "#315dff";
+  faviconContext.globalAlpha = 0.34;
+  faviconContext.stroke();
+  faviconContext.restore();
+
+  drawFaviconStream(faviconContext, phase * 21, 4.8, 0.96);
+  drawFaviconStream(faviconContext, phase * 21, 2.6, 0.54, true);
+
+  faviconContext.fillStyle = "#315dff";
+  faviconContext.globalAlpha = 0.18 + ((pulse + 1) * 0.03);
+  faviconContext.beginPath();
+  faviconContext.arc(34, 21, 6.5, 0, Math.PI * 2);
+  faviconContext.fill();
+
+  faviconContext.globalAlpha = 1;
+  faviconContext.beginPath();
+  faviconContext.arc(34, 21, 3.15 + pulse * 0.24, 0, Math.PI * 2);
+  faviconContext.fill();
+
+  faviconContext.strokeStyle = "#315dff";
+  faviconContext.lineCap = "square";
+  faviconContext.lineWidth = 3;
+  faviconContext.beginPath();
+  faviconContext.moveTo(26, 21);
+  faviconContext.lineTo(42, 21);
+  faviconContext.moveTo(34, 13);
+  faviconContext.lineTo(34, 29);
+  faviconContext.stroke();
+
+  faviconContext.globalAlpha = 0.62 + pulse * 0.18;
+  faviconContext.fillRect(12, 32, 4, 4);
+  faviconContext.globalAlpha = 0.62 - pulse * 0.18;
+  faviconContext.fillRect(52, 27, 4, 4);
+  faviconContext.globalAlpha = 1;
+
+  siteFavicon.href = faviconCanvas.toDataURL("image/png");
+};
+
+const stopFaviconMotion = () => {
+  window.clearInterval(faviconFrameTimer);
+  faviconFrameTimer = 0;
+};
+
+const syncFaviconMotion = () => {
+  stopFaviconMotion();
+
+  if (
+    !siteFavicon
+    || !faviconContext
+    || reducedMotion.matches
+    || document.hidden
+    || captureMode
+  ) {
+    if (reducedMotion.matches || captureMode) {
+      drawFaviconFrame(0);
+    }
+    return;
+  }
+
+  drawFaviconFrame(faviconFrameIndex);
+  faviconFrameTimer = window.setInterval(() => {
+    faviconFrameIndex = (faviconFrameIndex + 1) % 90;
+    drawFaviconFrame(faviconFrameIndex);
+  }, 80);
+};
+
+if (siteFavicon && faviconContext) {
+  syncFaviconMotion();
+  reducedMotion.addEventListener?.("change", syncFaviconMotion);
+}
+
 document.addEventListener("visibilitychange", () => {
+  syncFaviconMotion();
+
   if (document.hidden) {
     window.cancelAnimationFrame(signalFrame);
     mapPreviewVideo?.pause();
