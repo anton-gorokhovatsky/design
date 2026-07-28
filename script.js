@@ -3458,7 +3458,6 @@ const syncFaviconMotion = () => {
     !siteFavicon
     || !faviconContext
     || reducedMotion.matches
-    || document.hidden
     || captureMode
   ) {
     if (reducedMotion.matches || captureMode) {
@@ -3468,10 +3467,12 @@ const syncFaviconMotion = () => {
   }
 
   drawFaviconFrame(faviconFrameIndex);
+  const frameStep = document.hidden ? 3 : 1;
+  const frameInterval = document.hidden ? 240 : 80;
   faviconFrameTimer = window.setInterval(() => {
-    faviconFrameIndex = (faviconFrameIndex + 1) % 48;
+    faviconFrameIndex = (faviconFrameIndex + frameStep) % 48;
     drawFaviconFrame(faviconFrameIndex);
-  }, 80);
+  }, frameInterval);
 };
 
 if (siteFavicon && faviconContext) {
