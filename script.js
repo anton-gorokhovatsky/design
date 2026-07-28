@@ -3354,19 +3354,22 @@ let faviconFrameTimer = 0;
 faviconCanvas.width = 64;
 faviconCanvas.height = 64;
 
-const drawFaviconStream = (context, offset, width, alpha, reverse = false) => {
-  context.save();
-  context.beginPath();
-  context.moveTo(4, 48);
-  context.bezierCurveTo(16, 24, 44, 17, 61, 31);
-  context.setLineDash(reverse ? [2, 5] : [8, 4]);
-  context.lineDashOffset = reverse ? offset * 0.78 : -offset;
-  context.lineCap = "square";
-  context.lineWidth = width;
-  context.strokeStyle = "#315dff";
-  context.globalAlpha = alpha;
-  context.stroke();
-  context.restore();
+const getFaviconArcPoint = (progress) => {
+  const inverse = 1 - progress;
+  return {
+    x: (
+      (inverse ** 3 * 4)
+      + (3 * inverse ** 2 * progress * 16)
+      + (3 * inverse * progress ** 2 * 44)
+      + (progress ** 3 * 61)
+    ),
+    y: (
+      (inverse ** 3 * 48)
+      + (3 * inverse ** 2 * progress * 24)
+      + (3 * inverse * progress ** 2 * 17)
+      + (progress ** 3 * 31)
+    ),
+  };
 };
 
 const drawFaviconFrame = (frameIndex = 0) => {
@@ -3374,7 +3377,7 @@ const drawFaviconFrame = (frameIndex = 0) => {
     return;
   }
 
-  const phase = (frameIndex % 90) / 90;
+  const phase = (frameIndex % 48) / 48;
   const pulse = Math.sin(phase * Math.PI * 2);
   faviconContext.clearRect(0, 0, 64, 64);
 
@@ -3389,8 +3392,29 @@ const drawFaviconFrame = (frameIndex = 0) => {
   faviconContext.stroke();
   faviconContext.restore();
 
-  drawFaviconStream(faviconContext, phase * 21, 4.8, 0.96);
-  drawFaviconStream(faviconContext, phase * 21, 2.6, 0.54, true);
+  faviconContext.save();
+  faviconContext.beginPath();
+  faviconContext.moveTo(7, 40);
+  faviconContext.bezierCurveTo(20, 23, 43, 19, 58, 29);
+  faviconContext.setLineDash([2, 5]);
+  faviconContext.lineCap = "square";
+  faviconContext.lineWidth = 2.4;
+  faviconContext.strokeStyle = "#315dff";
+  faviconContext.globalAlpha = 0.48;
+  faviconContext.stroke();
+  faviconContext.restore();
+
+  [
+    { lag: 0, size: 9, alpha: 1 },
+    { lag: 0.065, size: 6, alpha: 0.58 },
+    { lag: 0.13, size: 4, alpha: 0.3 },
+  ].forEach(({ lag, size, alpha }) => {
+    const progress = (phase - lag + 1) % 1;
+    const point = getFaviconArcPoint(progress);
+    faviconContext.fillStyle = "#315dff";
+    faviconContext.globalAlpha = alpha;
+    faviconContext.fillRect(point.x - size / 2, point.y - size / 2, size, size);
+  });
 
   faviconContext.fillStyle = "#315dff";
   faviconContext.globalAlpha = 0.18 + ((pulse + 1) * 0.03);
@@ -3400,7 +3424,7 @@ const drawFaviconFrame = (frameIndex = 0) => {
 
   faviconContext.globalAlpha = 1;
   faviconContext.beginPath();
-  faviconContext.arc(34, 21, 3.15 + pulse * 0.24, 0, Math.PI * 2);
+  faviconContext.arc(34, 21, 3.15 + pulse * 0.72, 0, Math.PI * 2);
   faviconContext.fill();
 
   faviconContext.strokeStyle = "#315dff";
@@ -3445,7 +3469,7 @@ const syncFaviconMotion = () => {
 
   drawFaviconFrame(faviconFrameIndex);
   faviconFrameTimer = window.setInterval(() => {
-    faviconFrameIndex = (faviconFrameIndex + 1) % 90;
+    faviconFrameIndex = (faviconFrameIndex + 1) % 48;
     drawFaviconFrame(faviconFrameIndex);
   }, 80);
 };
