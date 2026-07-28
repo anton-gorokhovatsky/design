@@ -312,6 +312,7 @@ const requiredMaterialSurfaces = [
   "mobile-navigation",
   "mobile-search",
   "search-results",
+  "search-status",
   "origin-label",
   "mobile-system-dock",
   "desktop-view-console",
@@ -665,10 +666,17 @@ requireContract(
   "skip-links",
   "Both primary skip routes must remain available.",
 );
+const signalCanvasTag = indexSource.match(
+  /<canvas[\s\S]*?data-signal-constellation[\s\S]*?>/m,
+)?.[0] || "";
 requireContract(
-  /<canvas[\s\S]*?role="img"[\s\S]*?tabindex="0"[\s\S]*?aria-label=/m.test(indexSource),
+  signalCanvasTag.includes('aria-hidden="true"')
+    && !signalCanvasTag.includes("tabindex=")
+    && !signalCanvasTag.includes("role=")
+    && indexSource.includes('id="map-guide"')
+    && indexSource.includes('aria-describedby="map-guide"'),
   "canvas-accessibility",
-  "The signal canvas needs role=img, keyboard focus, and a text alternative.",
+  "The atmospheric signal canvas must stay decorative while the map exposes one reusable spatial guide.",
 );
 const navigationIndices = [
   ...indexSource.matchAll(/data-nav-index="(\d{2})"/g),

@@ -742,46 +742,6 @@ signalConstellation?.addEventListener("pointerup", (event) => finishSignalDrag(e
 signalConstellation?.addEventListener("pointercancel", (event) => finishSignalDrag(event, false));
 signalConstellation?.addEventListener("lostpointercapture", (event) => finishSignalDrag(event));
 
-signalConstellation?.addEventListener("keydown", (event) => {
-  if (captureMode) {
-    return;
-  }
-
-  const step = event.shiftKey ? 0.24 : 0.12;
-  let handled = true;
-
-  switch (event.key) {
-    case "ArrowLeft":
-      signalRotation.y -= step;
-      break;
-    case "ArrowRight":
-      signalRotation.y += step;
-      break;
-    case "ArrowUp":
-      signalRotation.x -= step;
-      break;
-    case "ArrowDown":
-      signalRotation.x += step;
-      break;
-    case "Home":
-      Object.assign(signalRotation, signalInitialRotation);
-      break;
-    default:
-      handled = false;
-  }
-
-  if (!handled) {
-    return;
-  }
-
-  event.preventDefault();
-  signalAngularVelocity.x = 0;
-  signalAngularVelocity.y = 0;
-  signalLastFrameAt = performance.now();
-  signalReleasedAt = signalLastFrameAt;
-  drawSignalConstellation(signalLastFrameAt);
-});
-
 signalField?.addEventListener("pointermove", (event) => {
   if (reducedMotion.matches || signalDrag.active) {
     return;
@@ -843,7 +803,7 @@ const mapItems = [
     kindLabel: "ПРАКТИКА / СВЯЗУЮЩИЙ УЗЕЛ",
     x: 61,
     y: 43,
-    size: 34,
+    size: 38,
   },
   {
     id: "optimal",
@@ -1511,10 +1471,30 @@ const resolveMapLayout = (item) => {
     if (item.id === "ilmix") {
       y = 33;
     }
-  } else if (viewportWidth <= 360 && viewportHeight <= 680) {
+  } else if (viewportWidth <= 680) {
     if (item.id === "garage-site") {
-      x = 60.5;
+      x = viewportWidth <= 360 ? 63 : 60;
     }
+  }
+
+  if (viewportWidth <= 360) {
+    const compactOverrides = {
+      "garage-archives": { x: 62, y: 29 },
+      eleven: { x: 78, y: 71 },
+      art: { x: 49, y: 83 },
+      "principle-autonomy": { x: 23.5, y: 38 },
+      "principle-system": { x: 15 },
+      "principle-goal": { y: 46 },
+      "principle-communicate": { x: 26, y: 53 },
+      "principle-tools": { y: 59 },
+      "principle-design-engineering": { x: 26 },
+      "principle-experiment": { x: 18 },
+      "principle-language": { x: 23 },
+    };
+    const override = compactOverrides[item.id];
+
+    x = override?.x ?? x;
+    y = override?.y ?? y;
   }
 
   return { x, y };
@@ -1638,9 +1618,8 @@ const setMapMetaText = (value) => {
 
   track.className = "map-readout__meta-track";
   track.textContent = text;
-  track.setAttribute("aria-hidden", "true");
   mapMeta.classList.remove("is-marquee");
-  mapMeta.setAttribute("aria-label", text);
+  mapMeta.removeAttribute("aria-label");
   mapMeta.replaceChildren(track);
   window.requestAnimationFrame(syncMapMetaOverflow);
 };
@@ -2439,6 +2418,7 @@ mapFilterButtons.forEach((button) => {
 const positionDetachedCommandResults = () => {
   const dock = document.querySelector("[data-command-form]");
   const results = document.querySelector("[data-command-results]");
+  const status = document.querySelector("[data-command-status]");
 
   if (!dock || !results) {
     return;
@@ -2447,12 +2427,14 @@ const positionDetachedCommandResults = () => {
   const bounds = dock.getBoundingClientRect();
   const gap = window.matchMedia("(max-width: 680px)").matches ? 8 : 19;
 
-  results.style.setProperty("--command-results-left", `${bounds.left.toFixed(2)}px`);
-  results.style.setProperty("--command-results-width", `${bounds.width.toFixed(2)}px`);
-  results.style.setProperty(
-    "--command-results-bottom",
-    `${(window.innerHeight - bounds.top + gap).toFixed(2)}px`,
-  );
+  [results, status].filter(Boolean).forEach((element) => {
+    element.style.setProperty("--command-results-left", `${bounds.left.toFixed(2)}px`);
+    element.style.setProperty("--command-results-width", `${bounds.width.toFixed(2)}px`);
+    element.style.setProperty(
+      "--command-results-bottom",
+      `${(window.innerHeight - bounds.top + gap).toFixed(2)}px`,
+    );
+  });
 };
 
 const floatingConsoleModules = Array.from(document.querySelectorAll("[data-floating-console]"));
@@ -2987,6 +2969,7 @@ constellationNavHome?.addEventListener("click", () => {
 const commandForm = document.querySelector("[data-command-form]");
 const commandInput = document.querySelector("[data-command-input]");
 const commandResults = document.querySelector("[data-command-results]");
+const commandStatus = document.querySelector("[data-command-status]");
 const syncCommandPlaceholder = () => {
   if (commandInput) {
     commandInput.placeholder = compactConstellationNav.matches
@@ -3000,6 +2983,20 @@ syncCommandPlaceholder();
 
 let currentCommandResults = [];
 let activeCommandIndex = -1;
+
+const setCommandStatus = (message = "") => {
+  if (!commandStatus) {
+    return;
+  }
+
+  commandStatus.textContent = message;
+  commandStatus.hidden = !message;
+  commandStatus.classList.toggle("is-open", Boolean(message));
+
+  if (message) {
+    positionDetachedCommandResults();
+  }
+};
 
 const normalizeSearch = (value) => value
   .toLocaleLowerCase("ru")
@@ -3033,6 +3030,7 @@ const commandViews = [
 
 const setCommandOpen = (isOpen) => {
   if (isOpen) {
+    setCommandStatus("");
     positionDetachedCommandResults();
   }
 
@@ -3159,15 +3157,12 @@ const renderCommandResults = (query = "") => {
   activeCommandIndex = -1;
   commandInput?.removeAttribute("aria-activedescendant");
   commandResults.replaceChildren();
+  setCommandStatus("");
 
   if (!currentCommandResults.length) {
     setSearchRelationshipPreview(null);
-    const empty = document.createElement("p");
-    empty.className = "command-results__empty";
-    empty.setAttribute("role", "status");
-    empty.textContent = "Ничего не\u00a0нашлось — попробуйте другое слово";
-    commandResults.append(empty);
-    setCommandOpen(true);
+    setCommandOpen(false);
+    setCommandStatus("Ничего не\u00a0нашлось — попробуйте другое слово");
     return;
   }
 
@@ -3268,7 +3263,10 @@ commandInput?.addEventListener("keydown", (event) => {
 });
 
 commandInput?.addEventListener("blur", () => {
-  window.setTimeout(() => setCommandOpen(false), 120);
+  window.setTimeout(() => {
+    setCommandOpen(false);
+    setCommandStatus("");
+  }, 120);
 });
 
 commandResults?.addEventListener("pointerdown", (event) => {
@@ -3312,21 +3310,13 @@ commandForm?.addEventListener("submit", (event) => {
 });
 
 document.addEventListener("keydown", (event) => {
-  if (
-    event.key === "/"
-    && document.activeElement !== commandInput
-    && !["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement?.tagName)
-  ) {
-    event.preventDefault();
-    commandInput?.focus();
-    return;
-  }
-
   if (event.key !== "Escape") {
     return;
   }
 
-  if (isConstellationNavOpen) {
+  if (activePreviewItem || mapPreview?.classList.contains("is-visible")) {
+    hideMapPreview({ immediate: true });
+  } else if (isConstellationNavOpen) {
     setConstellationNavOpen(false);
     constellationNavToggle?.focus();
   } else if (activePanelView) {
@@ -3336,6 +3326,7 @@ document.addEventListener("keydown", (event) => {
     mapButtons.get(selectedMapId)?.focus();
   } else {
     setCommandOpen(false);
+    setCommandStatus("");
     commandInput?.blur();
     clearSearchHighlight();
   }

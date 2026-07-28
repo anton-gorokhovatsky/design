@@ -125,17 +125,22 @@ button {
   background: var(--ink);
   color: var(--bg);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 0.75rem;
   transform: translateY(-160%);
-  transition: transform 180ms var(--ease-out);
+  transition: none;
 }
 
 .skip-link--secondary {
-  left: 150px;
+  left: 8px;
 }
 
 .skip-link:focus {
   transform: translateY(0);
+}
+
+.map-hero:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: -3px;
 }
 
 .site-header {
@@ -474,18 +479,6 @@ html[data-capture="og"] .map-grid {
 
 .signal-constellation.is-dragging {
   cursor: grabbing;
-}
-
-.signal-constellation:focus-visible {
-  outline: none;
-}
-
-html[data-focus-modality="keyboard"]
-  .practice-map:has(.signal-constellation:focus-visible)
-  .origin-marker {
-  border-radius: 50%;
-  outline: 2px solid var(--signal);
-  outline-offset: 5px;
 }
 
 .signal-pulse {
@@ -1767,16 +1760,6 @@ main {
   color: var(--signal);
   font-family: var(--font-sans);
   font-size: 0.625rem;
-}
-
-.command-results__empty {
-  margin: 0;
-  padding: 18px 12px;
-  color: var(--content-ink);
-  font-family: var(--font-sans);
-  font-size: clamp(0.7rem, calc(0.66rem + 0.12vw), 0.78rem);
-  line-height: 1.3;
-  text-wrap: balance;
 }
 
 .overlay-close {
@@ -4920,6 +4903,27 @@ html[data-focus-modality="keyboard"]
   width: var(--command-results-width, calc(100vw - 16px));
 }
 
+.command-status {
+  position: fixed;
+  z-index: 65;
+  right: auto;
+  bottom: var(--command-results-bottom, 72px);
+  left: var(--command-results-left, 8px);
+  width: var(--command-results-width, calc(100vw - 16px));
+  margin: 0;
+  padding: 18px 20px;
+  border: 0;
+  border-radius: 22px;
+  background: var(--material-01);
+  color: var(--content-ink);
+  font-size: var(--content-type-small);
+  line-height: 1.3;
+  text-wrap: balance;
+  box-shadow: none;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
 .command-results.is-open {
   opacity: 1;
   pointer-events: auto;
@@ -7827,6 +7831,301 @@ html[data-theme="dark"] .map-node--running .map-node__glyph {
   }
 }
 
+/* Accessibility and orbital-observatory pass.
+   The horizon gives the field a physical lower plane; the radar rings explain
+   distance from the origin without adding another moving or interactive layer. */
+
+:root {
+  --content-ink: #4d4d48;
+  --content-muted: #5f5f59;
+  --content-type-micro: clamp(0.72rem, calc(0.68rem + 0.12vw), 0.82rem);
+  --content-type-small: clamp(0.78rem, calc(0.72rem + 0.2vw), 0.92rem);
+}
+
+html[data-theme="dark"] {
+  --content-ink: #d0d0c9;
+  --content-muted: #b8b8b1;
+}
+
+.orbital-horizon {
+  position: absolute;
+  z-index: -3;
+  right: -12%;
+  bottom: -31%;
+  left: -12%;
+  height: 47%;
+  overflow: hidden;
+  border-top: 1px solid color-mix(in srgb, var(--signal) 16%, transparent);
+  border-radius: 50% 50% 0 0 / 22% 22% 0 0;
+  background:
+    radial-gradient(
+      ellipse at 22% 6%,
+      color-mix(in srgb, var(--signal) 8%, transparent) 0 2%,
+      transparent 20%
+    ),
+    radial-gradient(
+      ellipse at 74% 2%,
+      color-mix(in srgb, var(--tone-personal) 8%, transparent) 0 2%,
+      transparent 24%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--signal) 8%, var(--bg)) 0,
+      color-mix(in srgb, var(--signal) 4%, var(--bg)) 38%,
+      var(--bg) 100%
+    );
+  box-shadow:
+    0 -1px 0 color-mix(in srgb, var(--signal) 12%, transparent),
+    0 -22px 54px color-mix(in srgb, var(--signal) 11%, transparent);
+  opacity: 0.64;
+  pointer-events: none;
+}
+
+html[data-theme="dark"] .orbital-horizon {
+  border-top-color: color-mix(in srgb, var(--signal) 18%, transparent);
+  background:
+    radial-gradient(
+      ellipse at 22% 6%,
+      color-mix(in srgb, var(--signal) 9%, transparent) 0 2%,
+      transparent 20%
+    ),
+    radial-gradient(
+      ellipse at 74% 2%,
+      color-mix(in srgb, var(--tone-personal) 8%, transparent) 0 2%,
+      transparent 24%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--signal-dark) 22%, var(--bg)) 0,
+      color-mix(in srgb, var(--signal) 4%, var(--bg)) 42%,
+      var(--bg) 100%
+    );
+  box-shadow:
+    0 -1px 0 color-mix(in srgb, var(--signal) 12%, transparent),
+    0 -18px 52px color-mix(in srgb, var(--signal) 9%, transparent);
+  opacity: 0.68;
+}
+
+.orbital-radar {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transform:
+    translate3d(var(--layer-far-x), var(--layer-far-y), -42px)
+    scale(1.035);
+  transition: transform 900ms var(--motion-shift);
+  mask-image: linear-gradient(transparent 2%, #000 18% 68%, transparent 78%);
+  -webkit-mask-image: linear-gradient(transparent 2%, #000 18% 68%, transparent 78%);
+}
+
+.orbital-radar i {
+  position: absolute;
+  top: 54%;
+  left: 50%;
+  border: 1px solid color-mix(in srgb, var(--line) 54%, transparent);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: border-color 260ms var(--motion-shift);
+}
+
+.orbital-radar i:nth-child(1) {
+  width: 22%;
+  height: 16%;
+  opacity: 0.86;
+}
+
+.orbital-radar i:nth-child(2) {
+  width: 42%;
+  height: 31%;
+  opacity: 0.68;
+}
+
+.orbital-radar i:nth-child(3) {
+  width: 64%;
+  height: 48%;
+  opacity: 0.5;
+}
+
+.orbital-radar i:nth-child(4) {
+  width: 88%;
+  height: 68%;
+  opacity: 0.32;
+}
+
+.practice-map[data-focus-id] .orbital-radar i {
+  border-color: color-mix(in srgb, var(--map-focus-accent) 17%, transparent);
+}
+
+.map-node {
+  width: max(var(--size), 24px);
+  height: max(var(--size), 24px);
+}
+
+.map-node[data-map-id="private-practice"] .map-node__glyph {
+  border-width: 1.5px;
+  border-color: color-mix(in srgb, var(--node-accent) 56%, var(--ink));
+  background: color-mix(in srgb, var(--bg) 94%, var(--node-accent));
+  box-shadow:
+    inset 0 0 0 4px color-mix(in srgb, var(--node-accent) 7%, transparent),
+    0 6px 14px color-mix(in srgb, var(--node-accent) 12%, transparent);
+}
+
+.map-node[data-map-id="private-practice"] .map-node__glyph::before {
+  position: absolute;
+  inset: 21%;
+  border: 1px solid color-mix(in srgb, var(--node-accent) 38%, transparent);
+  border-radius: 50%;
+  content: "";
+}
+
+.map-node[data-map-id="private-practice"] .map-node__glyph::after {
+  width: 17%;
+  height: 17%;
+  background: color-mix(in srgb, var(--node-accent) 74%, var(--ink));
+}
+
+.map-node[data-map-id="private-practice"].is-selected .map-node__glyph {
+  border-color: var(--node-accent);
+  background: color-mix(in srgb, var(--bg) 89%, var(--node-accent));
+  box-shadow:
+    inset 0 0 0 4px color-mix(in srgb, var(--node-accent) 11%, transparent),
+    0 7px 18px color-mix(in srgb, var(--node-accent) 18%, transparent);
+}
+
+.map-node[data-map-id="private-practice"].is-selected .map-node__glyph::before {
+  border-color: color-mix(in srgb, var(--node-accent) 54%, transparent);
+}
+
+.map-node[data-map-id="private-practice"].is-selected .map-node__glyph::after {
+  background: var(--node-accent);
+}
+
+.origin-marker__label,
+.map-axis-label {
+  color: var(--content-ink);
+  font-size: clamp(0.68rem, calc(0.64rem + 0.12vw), 0.78rem);
+}
+
+.map-node-label {
+  color: var(--content-ink);
+  font-size: clamp(0.72rem, calc(0.68rem + 0.16vw), 0.86rem);
+}
+
+.control-console .constellation-nav__item::after {
+  color: var(--content-muted);
+  font-size: clamp(0.58rem, calc(0.54rem + 0.1vw), 0.66rem);
+}
+
+.content-panel .contact-copy .contact-status,
+.content-panel .contact-copy .contact-lede,
+.content-panel .contact-link__index,
+.content-panel .contact-link__action,
+.map-hover-preview__readout > span {
+  color: var(--content-muted);
+}
+
+.map-hover-preview__readout > span {
+  font-size: var(--content-type-micro);
+}
+
+.content-panel .contact-copy > .contact-links a::after {
+  width: 12px;
+  height: 12px;
+  border-top: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
+  background: linear-gradient(
+    135deg,
+    transparent 43%,
+    currentColor 44% 52%,
+    transparent 53%
+  );
+  color: var(--content-muted);
+  content: "";
+  transform: none;
+}
+
+.content-panel .contact-copy > .contact-links a:is(:hover, :focus-visible)::after {
+  transform: translate(2px, -2px);
+}
+
+@media (max-width: 680px) {
+  .orbital-horizon {
+    right: -24%;
+    bottom: -26%;
+    left: -24%;
+    height: 41%;
+    border-radius: 50% 50% 0 0 / 18% 18% 0 0;
+  }
+
+  .orbital-radar i:nth-child(1) {
+    width: 38%;
+    height: 16%;
+  }
+
+  .orbital-radar i:nth-child(2) {
+    width: 68%;
+    height: 32%;
+  }
+
+  .orbital-radar i:nth-child(3) {
+    width: 98%;
+    height: 50%;
+  }
+
+  .orbital-radar i:nth-child(4) {
+    width: 132%;
+    height: 72%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orbital-radar,
+  .orbital-radar i {
+    transition: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --content-ink: #20211e;
+    --content-muted: #343530;
+  }
+
+  html[data-theme="dark"] {
+    --content-ink: #f2f1ec;
+    --content-muted: #dfded8;
+  }
+}
+
+@media (forced-colors: active) {
+  :root,
+  html[data-theme="dark"] {
+    --content-ink: CanvasText;
+    --content-muted: CanvasText;
+  }
+
+  .orbital-horizon,
+  .orbital-radar {
+    display: none;
+  }
+
+  .map-node[data-map-id="private-practice"] .map-node__glyph {
+    border-color: CanvasText;
+    background: Canvas;
+    box-shadow: none;
+  }
+
+  .map-node[data-map-id="private-practice"] .map-node__glyph::before {
+    border-color: CanvasText;
+  }
+
+  .map-node[data-map-id="private-practice"] .map-node__glyph::after {
+    background: CanvasText;
+  }
+}
+
 /* Compact content behaves like a grouped notification stack: one readable
    card, two quiet layers behind it, and no competing text in the pile. */
 
@@ -8028,7 +8327,7 @@ html[data-theme="dark"] .map-node--running .map-node__glyph {
   }
 
   .control-console .command-dock input {
-    font-size: 16px;
+    font-size: max(1rem, 16px);
   }
 
   /* Compact maps use direct selection and the inspector. Floating labels
@@ -8068,5 +8367,10 @@ html[data-focus-modality="pointer"]
     box-shadow: none;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
+  }
+
+  .constellation-nav__cluster i {
+    forced-color-adjust: none;
+    background: CanvasText;
   }
 }

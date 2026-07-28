@@ -189,14 +189,27 @@
     </button>
 
     <header class="site-header">
-      <p class="brand" aria-label="Антон Гороховатский">
-        <span>ANTON GOROKHOVATSKY © 2026</span>
+      <p class="brand">
+        <span lang="en">ANTON GOROKHOVATSKY © 2026</span>
       </p>
 
     </header>
 
     <main>
-      <section class="map-hero" id="map" aria-labelledby="map-title">
+      <section
+        class="map-hero"
+        id="map"
+        aria-labelledby="map-title"
+        aria-describedby="map-guide"
+        tabindex="-1"
+      >
+        <p class="visually-hidden" id="map-guide">
+          Пространственная карта разделена на четыре поля: институции сверху,
+          проекты справа, личное снизу и принципы слева. Расстояние от центра
+          показывает смысловую близость, размер точки — личный вес опыта,
+          форма — тип объекта. Перемещайтесь между точками стрелками или
+          воспользуйтесь фильтрами и поиском.
+        </p>
         <div class="practice-map" data-practice-map data-signal-field>
           <div class="share-heading" aria-hidden="true">
             <strong>АНТОН ГОРОХОВАТСКИЙ</strong>
@@ -204,6 +217,10 @@
           </div>
           <p class="share-domain" aria-hidden="true">GOROKHOVATSKY.TECH</p>
           <div class="map-camera" data-map-camera>
+            <div class="orbital-horizon" aria-hidden="true"></div>
+            <div class="orbital-radar" aria-hidden="true">
+              <i></i><i></i><i></i><i></i>
+            </div>
             <div class="map-grid" aria-hidden="true"></div>
             <svg
               class="map-depth-grid"
@@ -222,9 +239,7 @@
             <canvas
               class="signal-constellation"
               data-signal-constellation
-              role="img"
-              tabindex="0"
-              aria-label="Объёмное поле личной вселенной, морфирующее десять эмодзи-силуэтов, включая бегущего человека. Зажмите и тяните, чтобы вращать его; с клавиатуры используйте стрелки."
+              aria-hidden="true"
             ></canvas>
 
             <svg
@@ -239,10 +254,11 @@
               class="map-nodes"
               data-map-nodes
               role="group"
+              aria-describedby="map-guide"
               aria-label="Точки интерактивной карты опыта, проектов и интересов. Используйте стрелки, чтобы перемещаться между точками."
             ></div>
 
-            <div class="origin-marker" data-signal-core role="img" aria-label="АГ — начало координат карты опыта">
+            <div class="origin-marker" data-signal-core aria-hidden="true">
               <span class="origin-marker__cross" aria-hidden="true"></span>
               <span class="signal-pulse" aria-hidden="true"></span>
             </div>
@@ -297,11 +313,11 @@
             </div>
           </aside>
 
-          <div class="map-legend" aria-label="Легенда карты">
-            <span><i class="legend-mark legend-mark--company" aria-hidden="true"></i>КОМПАНИЯ</span>
-            <span><i class="legend-mark legend-mark--project" aria-hidden="true"></i>ПРОЕКТ</span>
-            <span><i class="legend-mark legend-mark--personal" aria-hidden="true"></i>ЛИЧНОЕ</span>
-            <span><i class="legend-mark legend-mark--practice" aria-hidden="true"></i>ПРИНЦИПЫ</span>
+          <div class="map-legend" role="list" aria-label="Легенда карты">
+            <span role="listitem"><i class="legend-mark legend-mark--company" aria-hidden="true"></i>КОМПАНИЯ</span>
+            <span role="listitem"><i class="legend-mark legend-mark--project" aria-hidden="true"></i>ПРОЕКТ</span>
+            <span role="listitem"><i class="legend-mark legend-mark--personal" aria-hidden="true"></i>ЛИЧНОЕ</span>
+            <span role="listitem"><i class="legend-mark legend-mark--practice" aria-hidden="true"></i>ПРИНЦИПЫ</span>
           </div>
 
         </div>
@@ -367,6 +383,7 @@
           data-floating-console="navigation"
           data-material-surface="desktop-console"
           data-material-active="desktop"
+          role="group"
           aria-label="Навигация и&nbsp;поиск"
         >
           <nav
@@ -491,11 +508,22 @@
           aria-hidden="true"
           inert
         ></div>
+        <p
+          class="command-status"
+          id="command-status"
+          data-command-status
+          data-material-surface="search-status"
+          data-material-active="always"
+          role="status"
+          aria-live="polite"
+          hidden
+        ></p>
 
         <div
           class="system-dock"
           data-material-surface="mobile-system-dock"
           data-material-active="mobile"
+          role="group"
           aria-label="Режимы карты и&nbsp;экрана"
         >
           <nav
@@ -586,7 +614,7 @@
       </section>
 
       <div class="panel-scrim" data-panel-scrim aria-hidden="true"></div>
-      <aside
+      <div
         id="content-panel"
         class="content-panel"
         data-content-panel
@@ -618,6 +646,7 @@
         <div
           class="content-panel__body"
           tabindex="0"
+          role="region"
           aria-label="Содержимое раздела — прокрутка"
         >
       <section class="work-section" id="work" data-panel-section="work" aria-labelledby="work-title">
@@ -841,7 +870,7 @@
         </div>
       </section>
         </div>
-      </aside>
+      </div>
     </main>
 
     <footer class="site-footer">
