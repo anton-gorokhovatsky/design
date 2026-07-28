@@ -639,7 +639,7 @@ html[data-capture="og"] .map-grid {
 .map-node--project .map-node__glyph {
   border: 1.5px solid var(--ink);
   border-radius: 50%;
-  background: var(--bg);
+  background: transparent;
 }
 
 .map-node--project .map-node__glyph::after {
@@ -7995,6 +7995,18 @@ html[data-theme="dark"] .map-node--running .map-node__glyph {
     box-shadow: none;
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
+  }
+
+  /* Keep the search row on the material's true centerline. The 48px controls
+     must not be offset by additional block padding or desktop optical nudges. */
+  .control-console .command-dock {
+    align-items: center;
+    padding-block: 0;
+  }
+
+  .control-console .command-dock__mark,
+  .control-console .command-dock__submit {
+    transform: none;
   }
 
   /* Compact maps use direct selection and the inspector. Floating labels

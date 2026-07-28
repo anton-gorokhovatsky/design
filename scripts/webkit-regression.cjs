@@ -675,6 +675,59 @@ const firstPaintAudit = async (browser, viewport, colorScheme) => {
   return result;
 };
 
+const commandDockAxisAudit = async (page) => page.evaluate(() => {
+  const centerY = (selector) => {
+    const rect = document.querySelector(selector)?.getBoundingClientRect();
+    return rect ? rect.top + rect.height / 2 : null;
+  };
+  const centers = {
+    dock: centerY(".control-console .command-dock"),
+    mark: centerY(".control-console .command-dock__mark"),
+    input: centerY(".control-console .command-dock input"),
+    submit: centerY(".control-console .command-dock__submit"),
+    submitMark: centerY(".command-dock__submit-mark"),
+  };
+  const missing = Object.entries(centers)
+    .filter(([, value]) => value === null)
+    .map(([name]) => name);
+  const deltas = Object.fromEntries(
+    Object.entries(centers)
+      .filter(([name, value]) => name !== "dock" && value !== null)
+      .map(([name, value]) => [name, value - centers.dock]),
+  );
+  const maxDelta = Math.max(
+    0,
+    ...Object.values(deltas).map((value) => Math.abs(value)),
+  );
+  return {
+    centers,
+    deltas,
+    maxDelta,
+    missing,
+    failure: missing.length > 0 || maxDelta > 0.5,
+  };
+});
+
+const projectGlyphAudit = async (page) => page.evaluate(() => {
+  const glyphs = [...document.querySelectorAll(
+    ".map-node--project .map-node__glyph",
+  )].map((glyph) => {
+    const node = glyph.closest(".map-node");
+    return {
+      id: node?.dataset.mapId || "",
+      background: getComputedStyle(glyph).backgroundColor,
+    };
+  });
+  const opaque = glyphs.filter(
+    ({ background }) => background !== "rgba(0, 0, 0, 0)",
+  );
+  return {
+    count: glyphs.length,
+    opaque,
+    failure: glyphs.length === 0 || opaque.length > 0,
+  };
+});
+
 (async () => {
   await fs.mkdir(artifactDir, { recursive: true });
   const browser = await webkit.launch({ headless: true });
@@ -711,6 +764,8 @@ const firstPaintAudit = async (browser, viewport, colorScheme) => {
 
         const initialSelectedId = await page.locator("[data-signal-field]")
           .getAttribute("data-selected-id");
+        const commandDockAxis = await commandDockAxisAudit(page);
+        const projectGlyphs = await projectGlyphAudit(page);
         const workStack = await stackAudit(page, "work", label, {
           nativeWheel: false,
         });
@@ -733,6 +788,8 @@ const firstPaintAudit = async (browser, viewport, colorScheme) => {
           viewport,
           colorScheme,
           initialSelectedId: initialSelectedId || "",
+          commandDockAxis,
+          projectGlyphs,
           workStack,
           approachStack,
           contact,
@@ -784,6 +841,18 @@ const firstPaintAudit = async (browser, viewport, colorScheme) => {
     ...report.viewports.flatMap((state) => [
       ...(state.initialSelectedId
         ? [`${state.viewport.width}/${state.colorScheme}: initial map selection is not empty`]
+        : []),
+      ...(state.commandDockAxis.failure
+        ? [
+          `${state.viewport.width}/${state.colorScheme}: command dock axis `
+            + `max delta ${state.commandDockAxis.maxDelta}`,
+        ]
+        : []),
+      ...(state.projectGlyphs.failure
+        ? [
+          `${state.viewport.width}/${state.colorScheme}: idle project glyphs `
+            + `opaque ${state.projectGlyphs.opaque.map(({ id }) => id).join(",")}`,
+        ]
         : []),
       ...state.workStack.failures,
       ...state.approachStack.failures,
