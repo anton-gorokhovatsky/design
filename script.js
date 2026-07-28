@@ -4321,9 +4321,9 @@ faviconCanvas.height = 64;
 
 const getFaviconSpiralPoint = (progress, arm = 0, drift = 0) => {
   const angle = -0.72 + progress * Math.PI * 2.18 + arm * Math.PI + drift;
-  const radius = 3.2 + progress * 22.5;
+  const radius = 3.4 + progress * 26;
   const x = Math.cos(angle) * radius;
-  const y = Math.sin(angle) * radius * 0.58;
+  const y = Math.sin(angle) * radius * 0.86;
   const tilt = -11 * Math.PI / 180;
 
   return {
@@ -4382,25 +4382,25 @@ const drawFaviconFrame = (frameIndex = 0) => {
       }
     }
 
-    faviconContext.setLineDash(arm ? [1, 5] : [2, 4]);
+    faviconContext.setLineDash(arm ? [2.2, 3.2] : [3.4, 2.6]);
     faviconContext.lineDashOffset = phase * (arm ? 16 : -18);
     faviconContext.lineCap = "square";
-    faviconContext.lineWidth = arm ? 2.4 : 3.8;
+    faviconContext.lineWidth = arm ? 3.4 : 5;
     faviconContext.strokeStyle = "#315dff";
-    faviconContext.globalAlpha = arm ? 0.36 : 0.54;
+    faviconContext.globalAlpha = arm ? 0.58 : 0.82;
     faviconContext.stroke();
     faviconContext.restore();
   });
 
   const particles = [
-    [0.2, 0, 4, false],
-    [0.31, 1, 5, true],
-    [0.42, 0, 4, false],
-    [0.53, 1, 4, false],
-    [0.64, 0, 6, true],
-    [0.74, 1, 4, false],
-    [0.84, 0, 5, false],
-    [0.93, 1, 5, true],
+    [0.2, 0, 5, false],
+    [0.31, 1, 6, true],
+    [0.42, 0, 5, false],
+    [0.53, 1, 5, false],
+    [0.64, 0, 7, true],
+    [0.74, 1, 5, false],
+    [0.84, 0, 6, false],
+    [0.93, 1, 6, true],
   ];
 
   particles.forEach(([baseProgress, arm, size, cross], index) => {
@@ -4414,11 +4414,11 @@ const drawFaviconFrame = (frameIndex = 0) => {
     drawFaviconParticle(point, size, cross, alpha);
   });
 
-  drawFaviconParticle({ x: 31, y: 31 }, 7, true, 1);
-  drawFaviconParticle({ x: 34.5, y: 34 }, 5, false, 0.9);
-  drawFaviconParticle({ x: 29, y: 35 }, 3, false, 0.72);
-  drawFaviconParticle({ x: 8, y: 20 }, 2, false, 0.42 + pulse * 0.12);
-  drawFaviconParticle({ x: 55, y: 32 }, 2, false, 0.42 - pulse * 0.12);
+  drawFaviconParticle({ x: 31, y: 31 }, 9, true, 1);
+  drawFaviconParticle({ x: 34.5, y: 34 }, 7, false, 0.94);
+  drawFaviconParticle({ x: 29, y: 35 }, 4, false, 0.76);
+  drawFaviconParticle({ x: 5, y: 19 }, 3, false, 0.48 + pulse * 0.12);
+  drawFaviconParticle({ x: 59, y: 33 }, 3, false, 0.48 - pulse * 0.12);
 
   siteFavicon.href = faviconCanvas.toDataURL("image/png");
 };
