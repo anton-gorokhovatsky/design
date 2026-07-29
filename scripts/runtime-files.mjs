@@ -1,0 +1,15 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
+export const runtimeFiles = [
+  "js/preferences.js",
+  "js/signal-field.js",
+  "js/map-data.js",
+  "js/map-engine.js",
+  "js/panels.js",
+  "js/favicon.js",
+];
+
+export const readRuntimeSource = (projectRoot) => runtimeFiles
+  .map((path) => readFileSync(join(projectRoot, path), "utf8"))
+  .join("\n");

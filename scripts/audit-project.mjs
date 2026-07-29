@@ -8,6 +8,7 @@ import {
 import { dirname, join, relative, resolve } from "node:path";
 import { runInNewContext } from "node:vm";
 import { fileURLToPath } from "node:url";
+import { readRuntimeSource, runtimeFiles } from "./runtime-files.mjs";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(scriptDirectory, "..");
@@ -16,7 +17,8 @@ const strictMode = process.argv.includes("--strict");
 
 const readProjectFile = (path) => readFileSync(join(projectRoot, path), "utf8");
 const indexSource = readProjectFile("index.html");
-const scriptSource = readProjectFile("script.js");
+const scriptSource = readRuntimeSource(projectRoot);
+const mapDataSource = readProjectFile("js/map-data.js");
 const styleSource = readProjectFile("styles.css");
 const cname = readProjectFile("CNAME").trim();
 const stateMatrixPath = join(projectRoot, "docs", "ui-state-matrix.md");
@@ -49,13 +51,13 @@ const warnContract = (condition, code, message, details = undefined) => {
 
 const extractMapItems = () => {
   const declaration = "const mapItems = ";
-  const start = scriptSource.indexOf(declaration);
-  const endMarker = "\n];\n\nconst mapNodesRoot";
+  const start = mapDataSource.indexOf(declaration);
+  const endMarker = "\n];";
 
   requireContract(
     start !== -1,
     "map-data-missing",
-    "Could not find the mapItems declaration in script.js.",
+    "Could not find the mapItems declaration in js/map-data.js.",
   );
 
   if (start === -1) {
@@ -63,7 +65,7 @@ const extractMapItems = () => {
   }
 
   const literalStart = start + declaration.length;
-  const markerIndex = scriptSource.indexOf(endMarker, literalStart);
+  const markerIndex = mapDataSource.lastIndexOf(endMarker);
 
   requireContract(
     markerIndex !== -1,
@@ -75,7 +77,7 @@ const extractMapItems = () => {
     return [];
   }
 
-  const literal = scriptSource.slice(literalStart, markerIndex + 2);
+  const literal = mapDataSource.slice(literalStart, markerIndex + 2);
 
   try {
     return runInNewContext(
@@ -841,6 +843,9 @@ const report = {
     rawBezierValues,
     fixedPixelFontSizeDeclarations: fixedPixelFontSizes.length,
     pureViewportFontSizes,
+  },
+  runtime: {
+    files: runtimeFiles,
   },
   accessibility: {
     stateMatrix: relative(projectRoot, stateMatrixPath),

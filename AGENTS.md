@@ -308,7 +308,7 @@ navigation и видимый keyboard focus. Для точечной задач�
 ## 8. Проверка и публикация
 
 - Минимальные локальные проверки для изменения кода:
-  `node --check script.js`, `git diff --check`, отсутствие ошибок в browser
+  `node scripts/check-project.mjs`, `git diff --check`, отсутствие ошибок в browser
   console. Для изменений видео также обязателен `node scripts/check-reels.mjs`.
 - `node scripts/audit-project.mjs` создаёт детерминированный структурный отчёт
   по модели карты, surface/motion/type contracts, accessibility hooks,

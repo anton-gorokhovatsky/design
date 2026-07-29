@@ -2,7 +2,7 @@
 
 Этот документ — небольшой статический workbench для vanilla HTML/CSS/JS-сайта.
 Он фиксирует состояния, которые иначе остаются скрытыми в условных ветках
-`script.js` и поздних слоях `styles.css`.
+шести runtime-слоёв `js/` и поздних слоях `styles.css`.
 
 Storybook для проекта не нужен: компонентов немного, сборщика нет, а источник
 истины — реальная полноэкранная композиция. Нужны воспроизводимые состояния и
@@ -379,8 +379,8 @@ names и 31 их использование.
 | Нижние панели | Reel/readout/search в desktop-состояниях | Receiver резервирует вертикальное место под readout и search; material-поверхности больше не сливаются |
 | Favicon | Реальные `16`, `32`, `64 px`, светлый/тёмный фон, transparent | Стабильный синий монограммный core `АГ` читается на `16 px`; ASCII-сигналы дополняют `32/64 px`, анимация отключается при `prefers-reduced-motion` |
 
-Статический gate после структурной правки: `node --check script.js`,
-`audit-project --strict`, `check-reels.mjs`, `check-project.mjs` — PASS;
+Статический gate после структурной правки: `node scripts/check-project.mjs`,
+`audit-project --strict`, `check-reels.mjs`, `git diff --check` — PASS;
 `46` точек, `17` связей, `17` принципов, `13` горизонтальных шоурилов,
 `37` использований `MATERIAL / 01`, `0` errors и `0` warnings.
 
@@ -406,3 +406,33 @@ names и 31 их использование.
 | Основной маршрут | Desktop light/dark, 1:1-кроп нижней панели | Карта, проекты, подход, связь и резюме используют общий штрих `1.25 px`. «Связаться» больше не обозначается абстрактной точкой: две стороны соединены видимым мостом; «проекты» повторяют семантику ядра в контуре |
 | Favicon | Dynamic canvas `64 px`, реальный downsample `16 px`, два разнесённых animation-frame; прозрачный фон | Млечный путь получил единую ось `−14°`: правая сторона мягко приподнята, но знак не выглядит падающим. Две проверенные frame-суммы различаются, поэтому движение сохранено; PNG и Apple Touch fallback пересобраны из той же геометрии |
 | Runtime | `node --check`, `audit-project --strict`, `check-project`, `git diff --check` | `0` errors и `0` warnings; `46` точек, `17` связей, `17` принципов, `13` шоурилов; cache key CSS/JS и favicon обновлён единым локальным проходом |
+
+## Корректирующий проход 2026-07-29 — читаемость favicon в 16 px
+
+Предыдущая приёмка favicon отозвана после production-кадра: наклон изменился,
+но знак занимал слишком малую часть стандартной области вкладки и визуально
+почти не отличался.
+
+| Семейство | Реальные состояния | Результат |
+|---|---|---|
+| Favicon | Static fallback `64 px`, честный downsample `16×16 px`, прозрачный фон; live canvas в локальном Chromium | Две цельные спиральные руки занимают примерно `14×14 px`; центр и отрицательное пространство сохраняются после downsample. Знак больше не рассыпается на тонкие штрихи и остаётся узнаваемой галактикой |
+| Motion | Два canvas-кадра с интервалом `500 ms`; normal и `prefers-reduced-motion` contract | Data URL между normal-кадрами меняется; reduced-motion продолжает получать один статичный кадр. Частота обновления снижена с `120` до `240 ms`, полный цикл сохранён — меньше PNG-кодирований без визуального ускорения |
+| Assets | `favicon.svg`, `favicon.png 64×64`, `apple-touch-icon.png 180×180` | Статический SVG, PNG fallback и Apple Touch используют одну геометрию и cache key `20260729-galaxy-mark-3` |
+| Runtime | `node --check`, `audit-project --strict`, `check-project`, `git diff --check`; local Chromium `991×843` | `0` errors/warnings, browser console clean, horizontal overflow `0`; `46` точек, `17` связей, `17` принципов и `13` шоурилов сохранены |
+
+## Production-проход 2026-07-29 — runtime, CSS и визуальные контракты
+
+Набор реальных кадров воспроизводится командой
+`PORTFOLIO_UI_ARTIFACT_DIR=<directory> node scripts/check-project.mjs`.
+В принятом проходе сохранено 28 полноразмерных кадров и 1:1-кропов.
+
+| Семейство | Реальные состояния | Результат |
+|---|---|---|
+| Runtime | Шесть ordered classic/deferred слоёв; syntax каждого файла; локальный Chromium | Монолит из `4568` строк разделён на preferences, signal field, map data, map engine, panels и favicon без bundler/runtime dependency. На matched-render пустой карты pixel delta после разделения — `0`; загружены все `46` точек |
+| CSS | Matched `1440×900` render до/после; structural cascade gate | Удалены `134` буквально повторяющиеся декларации; `51` фиксированный `font-size` переведён в эквивалентный `rem`. Pixel delta — `0`; осталось `0` exact duplicates, `0` fixed-px type и один допустимый blur-рецепт |
+| Asset graph | Полный граф ссылок HTML/CSS/runtime/README и вычисляемые reel-posters | Удалены семь никогда не использовавшихся legacy preview-файлов (около `2 MiB`). В production-графе `35` файлов / `30.0 MiB`, missing и orphan assets — `0` |
+| Viewport/theme | `1440×900`, `1024×768`, `390×844`, `320×568`; light/dark | Все consoles, mobile camera, search и dock остаются в полезном viewport; horizontal overflow и пересечения нижних controls — `0`. Намеренный верхний mobile overscan ограничен `64 px` и не режет интерактивные точки |
+| Reflow и системные настройки | Эквивалент desktop zoom `200%`; reduced motion, higher contrast, forced colors | Reflow не создаёт горизонтального overflow. Favicon стабилен при reduced motion. Forced-colors кадр выявил и исправил нечитаемый skip-link: теперь `CanvasText` на `Canvas`, реальный `Tab` открывает видимый focus target |
+| Интерактивные состояния | Garage selected/inspector, Tarski reel, search results, keyboard focus, mobile navigation и contact | Inspector синхронизирует `aria-pressed`/`aria-expanded`; reel сохраняет нативные `3:2`, `contain`, top alignment и отдельный material-readout; пять mobile routes одновременно видимы и имеют единый hit-area `40 px` |
+| MATERIAL / 01 | Все видимые зарегистрированные surfaces во всей матрице; отдельные 1:1-кропы view/display/search/reel/inspector/mobile | Computed fill соответствует theme token, `blur(24px)`, border `0`, shadow `none`; material failures и вложенные активные surfaces — `0` |
+| Release gate | `audit-project`, CSS, assets, UI contracts, 13 reels, syntax, whitespace | `0` errors/warnings; `46` точек, `17` связей, `17` принципов, `13` reel masters и `13` posters сохранены |

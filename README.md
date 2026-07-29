@@ -201,7 +201,8 @@ instead of adding Storybook:
 - `node scripts/audit-project.mjs --json` returns the same report as structured
   JSON for comparison or external tooling.
 - `node scripts/check-project.mjs` runs JavaScript syntax, project contracts,
-  reel validation, and `git diff --check`.
+  CSS-cascade and asset-graph checks, reel validation, browser visual
+  contracts, and `git diff --check`.
 - `docs/ui-state-matrix.md` is the visual state catalog used for matched
   desktop, tablet, mobile, theme, zoom, contrast, and reduced-motion renders.
 

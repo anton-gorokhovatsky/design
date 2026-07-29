@@ -157,9 +157,9 @@ button {
 }
 
 .brand {
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 600;
-  line-height: 1;
+
 }
 
 .brand {
@@ -219,7 +219,7 @@ button {
   grid-template-columns: 1fr 1fr 1fr;
   align-items: center;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 0.5625rem;
 }
 
 .map-meta h1,
@@ -244,7 +244,7 @@ button {
   display: inline-block;
   width: 7px;
   height: 7px;
-  margin-right: 4px;
+
   border-radius: 50%;
   background: #76b487;
   vertical-align: -1px;
@@ -425,9 +425,9 @@ html[data-capture="og"] .map-grid {
   background: var(--material-01);
   box-shadow: none;
   corner-shape: var(--corner-card-shape);
-  font-family: var(--font-sans);
-  font-size: 8px;
-  line-height: 1;
+
+  font-size: 0.5rem;
+
   pointer-events: none;
   white-space: nowrap;
   backdrop-filter: blur(24px);
@@ -460,7 +460,7 @@ html[data-capture="og"] .map-grid {
 
 .signal-constellation {
   position: absolute;
-  z-index: 4;
+
   inset: 0;
   width: 100%;
   height: 100%;
@@ -631,7 +631,7 @@ html[data-capture="og"] .map-grid {
 }
 
 .map-node--company .map-node__glyph {
-  border-radius: 50%;
+
   background: var(--ink);
 }
 
@@ -780,7 +780,7 @@ html[data-capture="og"] .map-grid {
   padding: 5px 6px;
   background: var(--bg);
   font-family: var(--font-mono);
-  font-size: 7px;
+  font-size: 0.4375rem;
 }
 
 .map-legend span {
@@ -848,7 +848,7 @@ html[data-capture="og"] .map-grid {
 .map-readout__identity p,
 .map-readout__link {
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: 0.5rem;
   line-height: 1.45;
 }
 
@@ -862,7 +862,7 @@ html[data-capture="og"] .map-grid {
 
 .map-readout__description {
   max-width: 520px;
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.34;
 }
 
@@ -881,7 +881,7 @@ html[data-capture="og"] .map-grid {
   margin: 8px 0 0;
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 7px;
+  font-size: 0.4375rem;
   line-height: 1.3;
 }
 
@@ -924,7 +924,7 @@ html[data-capture="og"] .map-grid {
 .approach-intro p {
   max-width: 440px;
   margin: 0;
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.35;
 }
 
@@ -949,7 +949,7 @@ html[data-capture="og"] .map-grid {
 .work-row__scope,
 .work-row__domain {
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: 0.5rem;
 }
 
 .work-row__title {
@@ -991,7 +991,7 @@ html[data-capture="og"] .map-grid {
 
 .approach-grid span {
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: 0.5rem;
 }
 
 .approach-grid h3 {
@@ -1004,7 +1004,7 @@ html[data-capture="og"] .map-grid {
 .approach-grid p {
   max-width: 270px;
   margin: 0;
-  font-size: 12px;
+  font-size: 0.75rem;
   line-height: 1.4;
 }
 
@@ -1033,7 +1033,7 @@ html[data-capture="og"] .map-grid {
 .contact-copy > div {
   padding-bottom: 6px;
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: 0.5rem;
   line-height: 1.45;
 }
 
@@ -1055,7 +1055,7 @@ html[data-capture="og"] .map-grid {
   padding: 0 var(--gutter);
   border-top: 1px solid var(--line);
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: 0.5rem;
 }
 
 .site-footer p {
@@ -1143,7 +1143,7 @@ html[data-capture="og"] .map-grid {
   }
 
   .brand {
-    font-size: 9px;
+    font-size: 0.5625rem;
   }
 
   .brand {
@@ -1154,7 +1154,7 @@ html[data-capture="og"] .map-grid {
   .section-head {
     min-height: 37px;
     grid-template-columns: 1fr 1fr;
-    font-size: 8px;
+    font-size: 0.5rem;
   }
 
   .map-meta p:nth-child(2),
@@ -1182,7 +1182,7 @@ html[data-capture="og"] .map-grid {
 
   .map-axis-label {
     padding: 3px 4px;
-    font-size: 6px;
+    font-size: 0.375rem;
   }
 
   .map-axis-label--north {
@@ -1223,7 +1223,7 @@ html[data-capture="og"] .map-grid {
   .map-node-label {
     display: none;
     max-width: 90px;
-    font-size: 8px;
+    font-size: 0.5rem;
   }
 
   .map-node-label.is-visible {
@@ -1237,7 +1237,7 @@ html[data-capture="og"] .map-grid {
     grid-template-columns: auto auto;
     gap: 4px 8px;
     padding: 4px;
-    font-size: 5px;
+    font-size: 0.3125rem;
   }
 
   .legend-mark {
@@ -1267,7 +1267,7 @@ html[data-capture="og"] .map-grid {
   .map-readout__description {
     grid-row: auto;
     grid-column: 1;
-    font-size: 12px;
+    font-size: 0.75rem;
   }
 
   .map-readout__link {
@@ -1277,7 +1277,7 @@ html[data-capture="og"] .map-grid {
   }
 
   .map-note {
-    font-size: 6px;
+    font-size: 0.375rem;
   }
 
   .work-section,
@@ -1304,7 +1304,7 @@ html[data-capture="og"] .map-grid {
 
   .work-intro p,
   .approach-intro p {
-    font-size: 12px;
+    font-size: 0.75rem;
   }
 
   .work-row {
@@ -1359,12 +1359,12 @@ html[data-capture="og"] .map-grid {
   }
 
   .contact-copy > div {
-    font-size: 7px;
+    font-size: 0.4375rem;
   }
 
   .site-footer {
     grid-template-columns: 1fr auto;
-    font-size: 7px;
+    font-size: 0.4375rem;
   }
 
   .site-footer p:nth-child(2) {
@@ -1428,7 +1428,7 @@ main {
 }
 
 .site-header {
-  position: fixed;
+
   z-index: 80;
   top: 12px;
   right: 12px;
@@ -1454,7 +1454,7 @@ main {
   position: fixed;
   z-index: 18;
   top: 66px;
-  right: 16px;
+
   left: 16px;
   min-height: 20px;
   pointer-events: none;
@@ -1535,7 +1535,7 @@ main {
   color: var(--muted);
   cursor: pointer;
   font-family: var(--font-mono);
-  font-size: 7px;
+  font-size: 0.4375rem;
   text-align: left;
   transition:
     border-color 220ms var(--ease-out),
@@ -1547,7 +1547,7 @@ main {
 .map-control:hover,
 .map-control:focus-visible,
 .map-control.is-active {
-  border-color: var(--line);
+
   background: color-mix(in srgb, var(--bg) 88%, transparent);
   color: var(--ink);
   outline: none;
@@ -1563,7 +1563,7 @@ main {
   width: 18px;
   height: 18px;
   place-items: center;
-  font-size: 15px;
+  font-size: 0.9375rem;
 }
 
 .map-control__symbol--company {
@@ -1615,7 +1615,7 @@ main {
   left: 50%;
   display: grid;
   width: min(590px, calc(100vw - 280px));
-  min-height: 54px;
+
   grid-template-columns: 26px 1fr 42px;
   align-items: center;
   gap: 4px;
@@ -1642,9 +1642,9 @@ main {
 }
 
 .command-dock__mark {
-  color: var(--muted);
+
   font-family: var(--font-mono);
-  font-size: 22px;
+  font-size: 1.375rem;
 }
 
 .command-dock input {
@@ -1655,7 +1655,7 @@ main {
   background: transparent;
   color: var(--ink);
   font-family: var(--font-sans);
-  font-size: 17px;
+  font-size: 1.0625rem;
 }
 
 .command-dock input::placeholder {
@@ -1677,7 +1677,7 @@ main {
   color: var(--ink);
   cursor: pointer;
   place-items: center;
-  font-size: 24px;
+  font-size: 1.5rem;
   transition:
     background-color 200ms var(--ease-out),
     color 200ms var(--ease-out),
@@ -1689,7 +1689,7 @@ main {
   background: var(--signal);
   color: #fff;
   outline: none;
-  transform: translateX(2px);
+
 }
 
 .command-results {
@@ -1715,8 +1715,8 @@ main {
 }
 
 .command-results.is-open {
-  opacity: 1;
-  pointer-events: auto;
+
+
   transform: translateY(0) scale(1);
 }
 
@@ -1774,7 +1774,7 @@ main {
   background: color-mix(in srgb, var(--bg) 68%, transparent);
   color: var(--ink);
   cursor: pointer;
-  font-size: 25px;
+  font-size: 1.5625rem;
   line-height: 1;
   place-items: center;
   transition:
@@ -1828,13 +1828,13 @@ main {
 }
 
 .map-inspector .map-readout__kind {
-  grid-row: 1;
+
   grid-column: 1;
   align-self: center;
 }
 
 .map-inspector .map-readout__identity {
-  grid-column: 1 / -1;
+
 }
 
 .map-inspector .map-readout__identity h2 {
@@ -1850,7 +1850,7 @@ main {
   max-height: min(38vh, 340px);
   padding-right: 8px;
   overflow-y: auto;
-  font-size: 12px;
+  font-size: 0.75rem;
   scrollbar-width: thin;
 }
 
@@ -1880,8 +1880,8 @@ main {
 }
 
 .content-panel {
-  position: fixed;
-  z-index: 86;
+
+
   top: 12px;
   right: 12px;
   bottom: 12px;
@@ -1894,8 +1894,8 @@ main {
   corner-shape: var(--corner-card-shape);
   background: color-mix(in srgb, var(--bg) 94%, transparent);
   box-shadow: 0 32px 110px color-mix(in srgb, var(--ink) 23%, transparent);
-  opacity: 0;
-  pointer-events: none;
+
+
   transform: translateX(calc(100% + 28px)) scale(0.99);
   transform-origin: right center;
   transition:
@@ -1904,7 +1904,7 @@ main {
 }
 
 .content-panel.is-open {
-  opacity: 1;
+
   pointer-events: auto;
   transform: translateX(0) scale(1);
 }
@@ -1933,7 +1933,7 @@ main {
   margin-bottom: 9px;
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 7px;
+  font-size: 0.4375rem;
 }
 
 .content-panel__header h2 {
@@ -1945,10 +1945,10 @@ main {
 }
 
 .content-panel__body {
-  min-height: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
-  overscroll-behavior: contain;
+
+
+
+
 }
 
 .content-panel .work-section,
@@ -1956,12 +1956,12 @@ main {
 .content-panel .contact-section {
   min-height: 100%;
   padding: 28px 14px 48px;
-  border: 0;
-  background: transparent;
+
+
 }
 
 .content-panel .section-head {
-  display: none;
+
 }
 
 .content-panel .work-intro,
@@ -1977,7 +1977,7 @@ main {
   max-width: 650px;
   font-family: var(--font-serif);
   font-size: clamp(42px, 6vw, 72px);
-  font-weight: 500;
+
   letter-spacing: -0.035em;
 }
 
@@ -1992,7 +1992,7 @@ main {
 }
 
 .content-panel .work-row__scope {
-  display: none;
+
 }
 
 .content-panel .work-row__title {
@@ -2000,7 +2000,7 @@ main {
 }
 
 .content-panel .approach-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+
 }
 
 .content-panel .approach-grid li {
@@ -2008,7 +2008,7 @@ main {
 }
 
 .content-panel .contact-copy {
-  grid-template-columns: 1fr;
+
   align-items: start;
   gap: 70px;
 }
@@ -2040,10 +2040,10 @@ main {
 
 @media (max-width: 680px) {
   .site-header {
-    top: 8px;
-    right: 8px;
-    left: 8px;
-    min-height: 40px;
+
+
+
+
     padding: 0 9px;
   }
 
@@ -2097,13 +2097,13 @@ main {
     right: 8px;
     bottom: 8px;
     left: 8px;
-    width: auto;
+
     min-height: 54px;
-    transform: none;
+
   }
 
   .command-dock input {
-    font-size: 15px;
+    font-size: 0.9375rem;
   }
 
   .command-result {
@@ -2116,10 +2116,10 @@ main {
   }
 
   .map-inspector {
-    right: 8px;
+
     bottom: 116px;
-    left: 8px;
-    width: auto;
+
+
     max-height: 48svh;
     overflow: auto;
     padding: 13px;
@@ -2155,7 +2155,7 @@ main {
   }
 
   .content-panel__header h2 {
-    font-size: 27px;
+    font-size: 1.6875rem;
   }
 
   .content-panel .work-section,
@@ -2207,7 +2207,7 @@ main {
   grid-template-columns: max-content 1fr max-content;
   align-items: stretch;
   gap: 8px;
-  padding: 0;
+
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -2281,7 +2281,7 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
   min-height: 54px;
   grid-template-columns: 42px 1fr 46px;
   gap: 0;
-  padding: 0;
+
   overflow: visible;
   border-radius: var(--corner-panel);
   corner-shape: initial;
@@ -2289,7 +2289,7 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 
 .command-dock__mark {
   display: grid;
-  height: 100%;
+
   border-right: 1px solid var(--line);
   place-items: center;
 }
@@ -2300,12 +2300,12 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 
 .command-dock__submit {
   width: 46px;
-  height: 100%;
+
   min-height: 52px;
   border-left: 1px solid var(--line);
   border-radius: 0;
   corner-shape: initial;
-  background: transparent;
+
 }
 
 .command-results {
@@ -2340,13 +2340,13 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 
 @media (max-width: 680px) {
   .site-header {
-    min-height: 40px;
-    grid-template-columns: 1fr auto;
+
+
     gap: 5px;
   }
 
   .brand {
-    min-height: 40px;
+
     padding: 0 8px;
   }
 
@@ -2466,7 +2466,7 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   font-family: var(--font-sans);
-  font-size: 8px;
+  font-size: 0.5rem;
   font-weight: 500;
   letter-spacing: 0.015em;
   line-height: 1;
@@ -2581,25 +2581,25 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 .system-dock .map-controls::before,
 .display-control::before {
   display: flex;
-  align-items: center;
+
   padding: 0 9px;
   border-right: 1px solid var(--line);
   color: var(--muted);
   content: attr(data-context);
   font-family: var(--font-mono);
-  font-size: 5px;
-  letter-spacing: 0.08em;
+  font-size: 0.3125rem;
+
   white-space: nowrap;
 }
 
 .system-dock .map-control {
   min-height: 44px;
   grid-template-columns: 17px auto;
-  gap: 6px;
+
   padding: 0 9px;
   border-right: 1px solid var(--line);
   border-bottom: 0;
-  box-shadow: none;
+
 }
 
 .system-dock .map-control:last-child {
@@ -2626,7 +2626,7 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
   min-width: 64px;
   height: 100%;
   padding: 0 12px;
-  background: transparent;
+
   cursor: pointer;
 }
 
@@ -2670,7 +2670,7 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 
   .origin-marker__label {
     padding: 3px 4px;
-    font-size: 8px;
+    font-size: 0.5rem;
   }
 
   .origin-marker .signal-pulse {
@@ -2683,18 +2683,18 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
   }
 
   .system-dock {
-    right: 8px;
-    bottom: 8px;
-    left: 8px;
+
+
+
     height: 40px;
     gap: 5px;
   }
 
   .system-dock .map-controls {
     position: static;
-    width: auto;
+
     height: 40px;
-    flex: 1 1 auto;
+
   }
 
   .system-dock .map-controls::before,
@@ -2704,9 +2704,9 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 
   .system-dock .map-control {
     min-height: 38px;
-    flex: 1 1 20%;
-    grid-template-columns: 1fr;
-    padding: 0;
+
+
+
   }
 
   .display-control {
@@ -2716,11 +2716,11 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
   .display-control .theme-toggle {
     min-width: 58px;
     padding: 0 8px;
-    font-size: 8px;
+    font-size: 0.5rem;
   }
 
   .command-dock {
-    bottom: 60px;
+
   }
 
   .map-inspector {
@@ -2738,13 +2738,13 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 
 .site-header {
   top: 16px;
-  right: 16px;
+
   left: 16px;
   min-height: 40px;
   grid-template-columns: 1fr auto;
   align-items: center;
   gap: 28px;
-  pointer-events: none;
+
 }
 
 .site-header > * {
@@ -2753,13 +2753,13 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 
 .brand {
   min-height: 40px;
-  padding: 0;
+
   border: 0;
   background: transparent;
   color: var(--ink);
   font-family: var(--font-sans);
   font-size: clamp(10px, 0.62vw, 12px);
-  font-weight: 500;
+
   letter-spacing: 0.015em;
 }
 
@@ -2862,7 +2862,7 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
   height: 100%;
   border: 0;
   color: var(--muted);
-  font-size: 18px;
+  font-size: 1.125rem;
 }
 
 .command-dock input {
@@ -2883,7 +2883,7 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
   border: 0;
   background: transparent;
   color: var(--muted);
-  font-size: 22px;
+  font-size: 1.375rem;
 }
 
 .command-dock__submit:hover,
@@ -2894,9 +2894,9 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 }
 
 .system-dock {
-  right: 16px;
+
   bottom: 14px;
-  left: 16px;
+
   height: 40px;
   align-items: center;
   gap: 32px;
@@ -2905,7 +2905,7 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 .system-dock .map-controls {
   height: 40px;
   gap: 18px;
-  overflow: visible;
+
   border: 0;
   background: transparent;
 }
@@ -2914,9 +2914,9 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 .display-control::before {
   height: 100%;
   padding: 0 7px 0 0;
-  border: 0;
+
   color: color-mix(in srgb, var(--ink) 38%, transparent);
-  font-size: 7px;
+  font-size: 0.4375rem;
 }
 
 .system-dock .map-control {
@@ -2925,9 +2925,9 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
   grid-template-columns: 12px auto;
   gap: 6px;
   padding: 0;
-  border: 0;
-  background: transparent;
-  box-shadow: none;
+
+
+
   color: color-mix(in srgb, var(--ink) 50%, transparent);
   font-size: clamp(8px, 0.5vw, 10px);
 }
@@ -2940,9 +2940,9 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 .system-dock .map-control:focus-visible,
 .system-dock .map-control.is-active {
   border: 0;
-  background: transparent;
+
   box-shadow: none;
-  color: var(--ink);
+
 }
 
 .system-dock .map-control::after {
@@ -2966,9 +2966,9 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 .system-dock .map-control__symbol {
   width: 12px;
   height: 12px;
-  margin: 0;
+
   color: currentColor;
-  font-size: 12px;
+  font-size: 0.75rem;
   opacity: 0.48;
   transition:
     color 180ms var(--ease-out),
@@ -3010,7 +3010,7 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 .display-control {
   height: 40px;
   align-items: center;
-  overflow: visible;
+
   border: 0;
   background: transparent;
 }
@@ -3018,11 +3018,11 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 .display-control .theme-toggle {
   display: inline-flex;
   min-width: auto;
-  height: 40px;
-  align-items: center;
+
+
   gap: 7px;
   padding: 0;
-  background: transparent;
+
   color: var(--muted);
   font-family: var(--font-mono);
   font-size: clamp(8px, 0.5vw, 10px);
@@ -3033,7 +3033,7 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
   display: block;
   color: var(--signal);
   content: "◐";
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1;
 }
 
@@ -3087,7 +3087,7 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
     width: 100%;
     height: auto;
     padding: 0 0 10px;
-    font-size: 8px;
+    font-size: 0.5rem;
   }
 
   .system-dock .map-control {
@@ -3159,7 +3159,7 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
   }
 
   .map-axis-label--north {
-    top: 62px;
+
   }
 
   .map-axis-label--east {
@@ -3171,22 +3171,22 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
   }
 
   .system-dock {
-    right: 8px;
-    bottom: 8px;
-    left: 8px;
+
+
+
     height: 44px;
     gap: 8px;
   }
 
   .system-dock .map-controls {
     height: 44px;
-    gap: 0;
+
   }
 
   .system-dock .map-control {
     min-height: 44px;
-    grid-template-columns: 1fr;
-    padding: 0;
+
+
   }
 
   .display-control {
@@ -3210,7 +3210,7 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
   }
 
   .command-dock input {
-    font-size: 14px;
+    font-size: 0.875rem;
   }
 
   .command-dock__submit {
@@ -3275,7 +3275,7 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
   left: 50%;
   color: color-mix(in srgb, var(--ink) 34%, transparent);
   content: attr(data-nav-index);
-  font-size: 6px;
+  font-size: 0.375rem;
   letter-spacing: 0.08em;
   line-height: 1;
   transform: translateX(-50%);
@@ -3327,7 +3327,7 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
   padding: 3px 5px;
   background: color-mix(in srgb, var(--bg) 78%, transparent);
   color: var(--ink);
-  font-size: 8px;
+  font-size: 0.5rem;
   font-weight: 500;
   letter-spacing: 0.04em;
   line-height: 1;
@@ -3579,7 +3579,7 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
     height: var(--nav-size);
     margin: 0;
     background: color-mix(in srgb, var(--bg) 78%, transparent);
-    font-size: 16px;
+    font-size: 1rem;
   }
 
   .constellation-nav__item[data-nav-view="work"] .constellation-nav__shape {
@@ -3601,7 +3601,7 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
     left: 50%;
     padding: 0;
     background: transparent;
-    font-size: 8px;
+    font-size: 0.5rem;
     opacity: 1;
     transform: translateX(-50%);
   }
@@ -3766,7 +3766,7 @@ html[data-theme="dark"] {
   box-shadow: none;
   color: var(--content-ink);
   font-family: var(--content-font);
-  font-size: 20px;
+  font-size: 1.25rem;
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
 }
@@ -4056,7 +4056,7 @@ html[data-theme="dark"] {
   min-height: clamp(420px, 56vh, 520px);
   grid-template-rows: auto minmax(0, 1fr);
   grid-template-columns: 1fr;
-  align-items: stretch;
+
   gap: clamp(30px, 4vw, 48px);
   padding: clamp(32px, 4vw, 52px);
   border-radius: 40px;
@@ -4080,7 +4080,7 @@ html[data-theme="dark"] {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   font-family: var(--content-font);
-  font-size: clamp(1rem, calc(0.92rem + 0.24vw), 1.2rem);
+
   font-weight: 400;
   letter-spacing: -0.02em;
   line-height: 1.2;
@@ -4093,14 +4093,14 @@ html[data-theme="dark"] {
 }
 
 .content-panel .contact-copy > div {
-  display: grid;
+
   width: 100%;
-  min-height: 0;
+
   grid-template-rows: minmax(0, 1fr) auto;
   align-content: stretch;
   justify-self: stretch;
   gap: clamp(34px, 4vw, 52px);
-  padding: 0;
+
   border-radius: 0;
   background: transparent;
   box-shadow: none;
@@ -4249,7 +4249,7 @@ body.has-content-panel .constellation-nav {
 
   .content-panel .contact-copy {
     display: grid;
-    width: min(680px, calc(100vw - 32px));
+
     min-height: min(520px, calc(100svh - 164px));
     grid-template-columns: 1fr;
     gap: 28px;
@@ -4481,14 +4481,14 @@ body.has-content-panel .constellation-nav {
   }
 
   .content-panel .contact-copy {
-    width: 100%;
+
   }
 
   .content-panel .contact-copy h2 {
     min-height: 0;
     padding: 0;
     border-radius: 0;
-    font-size: 1rem;
+
   }
 
   .content-panel .contact-copy > div {
@@ -4587,15 +4587,15 @@ body.has-content-panel .constellation-nav {
 
 .map-hover-preview.has-video .map-hover-preview__media {
   border-radius: 23px;
-  box-shadow: none;
+
 }
 
 .map-inspector {
   padding: 20px;
-  border: 0;
+
   border-radius: 34px;
   background: var(--material-01);
-  box-shadow: none;
+
 }
 
 .map-inspector .map-readout__identity h2 {
@@ -4740,7 +4740,7 @@ body.has-content-panel .system-dock {
   align-self: start;
   justify-self: center;
   color: color-mix(in srgb, var(--content-ink) 42%, transparent);
-  font-size: 7px;
+  font-size: 0.4375rem;
   line-height: 1;
   transform: none;
 }
@@ -5049,13 +5049,13 @@ body:has(.command-dock.is-open) .origin-marker__label {
 .system-dock .map-control__symbol--practice::before,
 .system-dock .map-control__symbol--practice::after {
   position: absolute;
-  top: 50%;
-  left: 50%;
+
+
   width: 10px;
   height: 1px;
-  background: currentColor;
+
   content: "";
-  transform: translate(-50%, -50%);
+
 }
 
 .system-dock .map-control__symbol--practice::after {
@@ -5290,14 +5290,14 @@ body:has(.command-dock.is-open) .origin-marker__label {
     right: 8px;
     bottom: auto;
     left: auto;
-    width: 42px;
-    height: 42px;
+
+
   }
 
   .control-console .constellation-nav__toggle {
-    border: 0;
+
     background: var(--material-01);
-    box-shadow: none;
+
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
   }
@@ -5339,9 +5339,9 @@ body:has(.command-dock.is-open) .origin-marker__label {
     right: 8px;
     bottom: 8px;
     left: 8px;
-    height: 48px;
+
     align-items: stretch;
-    padding: 4px;
+
     border: 0;
     border-radius: 22px;
     background: var(--material-01);
@@ -5357,7 +5357,7 @@ body:has(.command-dock.is-open) .origin-marker__label {
     height: 38px;
     flex: 1 1 auto;
     flex-direction: row;
-    gap: 0;
+
     padding: 0;
     border: 0;
     border-radius: 0;
@@ -5420,7 +5420,7 @@ body:has(.command-dock.is-open) .origin-marker__label {
   }
 
   .content-panel .contact-copy h2 {
-    font-size: 1rem;
+
   }
 
   .content-panel .work-row__domain {
@@ -5815,11 +5815,11 @@ body:has(.command-dock.is-open) .origin-marker__label {
 
   .control-console .constellation-nav__orbit {
     top: 46px;
-    right: 0;
+
     display: grid;
     width: min(172px, calc(100vw - 16px));
     height: auto;
-    grid-template-columns: minmax(0, 1fr);
+
     gap: 0;
     padding: 6px;
     overflow: hidden;
@@ -5841,7 +5841,7 @@ body:has(.command-dock.is-open) .origin-marker__label {
   }
 
   .control-console .constellation-nav__orbit::before {
-    display: none;
+
   }
 
   .control-console .constellation-nav__cluster::before,
@@ -5890,7 +5890,7 @@ body:has(.command-dock.is-open) .origin-marker__label {
     grid-template-columns: 26px minmax(0, 1fr);
     align-items: center;
     gap: 7px;
-    padding: 0 8px;
+
     border-radius: 14px;
     opacity: 1;
     place-items: initial;
@@ -5915,18 +5915,18 @@ body:has(.command-dock.is-open) .origin-marker__label {
     height: var(--nav-size);
     justify-self: center;
     margin: 0;
-    border: 0;
+
     border-radius: 50%;
     background: color-mix(in srgb, var(--content-ink) 5%, transparent);
-    font-size: 12px;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
+    font-size: 0.75rem;
+
+
   }
 
   .control-console .constellation-nav__item.is-current .constellation-nav__shape {
-    background: transparent;
+
     box-shadow: inset 0 0 0 1.5px var(--signal);
-    color: var(--signal);
+
   }
 
   .control-console .constellation-nav__item:hover .constellation-nav__shape {
@@ -5964,11 +5964,11 @@ body:has(.command-dock.is-open) .origin-marker__label {
   }
 
   .system-dock {
-    display: grid;
+
     height: 48px;
     grid-template-columns: minmax(0, 5fr) minmax(0, 1fr);
-    align-items: center;
-    gap: 0;
+
+
     padding: 4px;
   }
 
@@ -5997,7 +5997,7 @@ body:has(.command-dock.is-open) .origin-marker__label {
   }
 
   .system-dock .map-control::after {
-    display: none;
+
   }
 
   .system-dock .map-control:hover .map-control__symbol,
@@ -6115,17 +6115,17 @@ body:has(.command-dock.is-open) .origin-marker__label {
   min-width: 0;
   min-height: 0;
   margin: 0;
-  overflow: hidden;
+
   aspect-ratio: auto;
   border: 0;
   border-radius: inherit;
   background: transparent;
-  box-shadow: none;
-  corner-shape: squircle;
+
+
 }
 
 .map-hover-preview.has-video .map-hover-preview__media video {
-  object-position: center top;
+
   border-radius: 0;
 }
 
@@ -6200,14 +6200,14 @@ body:has(.command-dock.is-open) .origin-marker__label {
 
 .map-node:is(:hover, :focus-visible)::after {
   opacity: 0.42;
-  transform: scale(0.94);
+
 }
 
 .map-node.is-selected::after {
   box-shadow:
     0 0 0 6px color-mix(in srgb, var(--node-accent) 18%, transparent),
     0 0 30px color-mix(in srgb, var(--node-accent) 34%, transparent);
-  opacity: 1;
+
   transform: scale(1);
 }
 
@@ -7489,7 +7489,7 @@ html[data-theme="dark"] .map-node--running .map-node__glyph {
 }
 
 .content-panel .contact-copy > .contact-links a:is(:hover, :focus-visible)::after {
-  transform: translate(2px, -2px);
+
 }
 
 .content-panel .contact-copy > .contact-links a + a {
@@ -7713,14 +7713,14 @@ html[data-theme="dark"] .map-node--running .map-node__glyph {
 @media (prefers-contrast: more) {
   :root {
     --muted: #454641;
-    --content-ink: #20211e;
+
     --line: rgba(16, 17, 15, 0.36);
     --line-soft: rgba(16, 17, 15, 0.2);
   }
 
   html[data-theme="dark"] {
     --muted: #d8d8d2;
-    --content-ink: #f2f1ec;
+
     --line: rgba(242, 241, 236, 0.42);
     --line-soft: rgba(242, 241, 236, 0.24);
   }
@@ -7794,7 +7794,7 @@ html[data-theme="dark"] .map-node--running .map-node__glyph {
     --surface: Canvas;
     --ink: CanvasText;
     --muted: CanvasText;
-    --content-ink: CanvasText;
+
     --material-01: Canvas;
     --line: CanvasText;
     --line-soft: CanvasText;
@@ -8784,6 +8784,13 @@ html[data-focus-modality="pointer"]
 }
 
 @media (forced-colors: active) {
+  .skip-link {
+    border: 1px solid CanvasText;
+    background: Canvas;
+    color: CanvasText;
+    forced-color-adjust: none;
+  }
+
   [data-material-surface] {
     border: 1px solid CanvasText;
     background: Canvas;
@@ -8798,7 +8805,7 @@ html[data-focus-modality="pointer"]
   }
 }
 
-/* Mobile framing follows the real upper edge of the lower console (script.js
+/* Mobile framing follows the real upper edge of the lower console (panels.js
    supplies exact values after Safari resolves its visible viewport). These
    values are stable first-paint fallbacks for a tall portrait phone. */
 @media (max-width: 680px) {

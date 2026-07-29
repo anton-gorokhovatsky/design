@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process";
 import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { readRuntimeSource } from "./runtime-files.mjs";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(scriptDirectory, "..");
@@ -164,7 +165,7 @@ for (const reelName of reelNames) {
 }
 
 const styles = readFileSync(join(projectRoot, "styles.css"), "utf8");
-const scriptSource = readFileSync(join(projectRoot, "script.js"), "utf8");
+const scriptSource = readRuntimeSource(projectRoot);
 const landscapeConfigurationCount = (
   scriptSource.match(/previewOrientation:\s*"landscape"/g) ?? []
 ).length;
@@ -176,14 +177,16 @@ const landscapeReferenceCount = (
 const videoRules = [
   ...styles.matchAll(/(?:\.map-hover-preview(?:\.has-video)?\s+)?\.map-hover-preview__media video\s*\{([^}]*)\}/g),
 ].map((match) => match[1]).join("\n");
-const finalViewerMarker = "/* A reel is a source-faithful window";
+const finalViewerMarker = "/* Reels remain unframed content.";
 const finalViewerSource = styles.slice(styles.lastIndexOf(finalViewerMarker));
-const viewerRule = finalViewerSource.match(/\.map-hover-preview\.has-video\s*\{([^}]*)\}/)?.[1] ?? "";
-const landscapeViewerRule = finalViewerSource.match(
-  /\.map-hover-preview\.has-video\.is-landscape\s*\{([^}]*)\}/,
+const viewerRule = finalViewerSource.match(
+  /\.map-hover-preview\.has-video,\s*\.map-hover-preview\.has-video\.is-landscape\s*\{([^}]*)\}/,
 )?.[1] ?? "";
 const mediaRule = finalViewerSource.match(
   /\.map-hover-preview\.has-video\s+\.map-hover-preview__media\s*\{([^}]*)\}/,
+)?.[1] ?? "";
+const landscapeMediaRule = finalViewerSource.match(
+  /\.map-hover-preview\.has-video\.is-landscape\s+\.map-hover-preview__media\s*\{([^}]*)\}/,
 )?.[1] ?? "";
 const finalVideoRule = finalViewerSource.match(
   /\.map-hover-preview\.has-video\s+\.map-hover-preview__media video\s*\{([^}]*)\}/,
@@ -210,30 +213,34 @@ if (landscapeReferenceCount !== expectedReelNames.length) {
 }
 
 if (
-  !/overflow:\s*hidden/.test(viewerRule)
-  || !/border-radius:\s*clamp/.test(viewerRule)
-  || !/background:\s*var\(--material-01\)/.test(viewerRule)
-  || !/aspect-ratio:\s*4\s*\/\s*5/.test(viewerRule)
-  || !/border:\s*0/.test(viewerRule)
-  || !/box-shadow:\s*none/.test(viewerRule)
+  !/display:\s*grid/.test(viewerRule)
+  || !/overflow:\s*visible/.test(viewerRule)
+  || !/border-radius:\s*0/.test(viewerRule)
+  || !/background:\s*transparent/.test(viewerRule)
+  || !/backdrop-filter:\s*none/.test(viewerRule)
 ) {
   failures.push(
-    "receiver: the default 4:5 viewer must use the rounded MATERIAL / 01 silhouette without border or shadow",
+    "receiver: the outer viewer must remain an unframed content group",
   );
 }
 
-if (!/aspect-ratio:\s*3\s*\/\s*2/.test(landscapeViewerRule)) {
+if (!/aspect-ratio:\s*3\s*\/\s*2/.test(landscapeMediaRule)) {
   failures.push("receiver: desktop-site reels must remain horizontal 3:2");
 }
 
 if (
   !/overflow:\s*hidden/.test(mediaRule)
-  || !/border-radius:\s*inherit/.test(mediaRule)
+  || !/border-radius:\s*clamp/.test(mediaRule)
+  || !/box-shadow:\s*none/.test(mediaRule)
 ) {
-  failures.push("receiver: the media wrapper must inherit the stable silhouette");
+  failures.push("receiver: the media wrapper must own the stable clipping silhouette");
 }
 
-if (!/border-radius:\s*0/.test(finalVideoRule)) {
+if (
+  !/object-fit:\s*contain/.test(finalVideoRule)
+  || !/object-position:\s*center top/.test(finalVideoRule)
+  || !/border-radius:\s*0/.test(videoRules)
+) {
   failures.push("receiver: the video itself must not receive a clipping radius");
 }
 

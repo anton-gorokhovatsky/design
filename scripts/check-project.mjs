@@ -3,25 +3,53 @@
 import { spawnSync } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { runtimeFiles } from "./runtime-files.mjs";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(scriptDirectory, "..");
+const contractScripts = [
+  "scripts/audit-project.mjs",
+  "scripts/check-assets.mjs",
+  "scripts/check-css-cascade.mjs",
+  "scripts/check-reels.mjs",
+  "scripts/check-ui-contracts.mjs",
+];
 
 const steps = [
-  {
-    label: "Main JavaScript syntax",
+  ...runtimeFiles.map((path) => ({
+    label: `Runtime syntax: ${path}`,
     command: process.execPath,
-    args: ["--check", "script.js"],
-  },
+    args: ["--check", path],
+  })),
   {
-    label: "Audit script syntax",
+    label: "Runtime manifest syntax",
     command: process.execPath,
-    args: ["--check", "scripts/audit-project.mjs"],
+    args: ["--check", "scripts/runtime-files.mjs"],
   },
+  ...contractScripts.map((path) => ({
+    label: `Contract syntax: ${path}`,
+    command: process.execPath,
+    args: ["--check", path],
+  })),
   {
     label: "Project contracts",
     command: process.execPath,
     args: ["scripts/audit-project.mjs"],
+  },
+  {
+    label: "CSS cascade contracts",
+    command: process.execPath,
+    args: ["scripts/check-css-cascade.mjs"],
+  },
+  {
+    label: "Asset graph contracts",
+    command: process.execPath,
+    args: ["scripts/check-assets.mjs"],
+  },
+  {
+    label: "Real-browser UI contracts",
+    command: process.execPath,
+    args: ["scripts/check-ui-contracts.mjs"],
   },
   {
     label: "Reel contracts",
