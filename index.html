@@ -123,38 +123,16 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=20260729-runtime-cleanup-1">
+    <link rel="stylesheet" href="styles.css?v=20260729-trust-gates-1">
     <!-- Classic deferred layers intentionally share one global lexical scope.
          Their order is the runtime dependency graph; see js/README.md. -->
-    <script src="js/preferences.js?v=20260729-runtime-cleanup-1" defer></script>
-    <script src="js/signal-field.js?v=20260729-runtime-cleanup-1" defer></script>
-    <script src="js/map-data.js?v=20260729-runtime-cleanup-1" defer></script>
-    <script src="js/map-engine.js?v=20260729-runtime-cleanup-1" defer></script>
-    <script src="js/panels.js?v=20260729-runtime-cleanup-1" defer></script>
-    <script src="js/favicon.js?v=20260729-runtime-cleanup-1" defer></script>
-    <!-- Yandex.Metrika counter -->
-    <script>
-      (function(m,e,t,r,i,k,a){
-        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
-        m[i].l=1*new Date();
-        for (var j = 0; j < document.scripts.length; j++) {
-          if (document.scripts[j].src === r) { return; }
-        }
-        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
-      })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=111107350', 'ym');
-
-      ym(111107350, 'init', {
-        ssr:true,
-        webvisor:true,
-        clickmap:true,
-        ecommerce:"dataLayer",
-        referrer:document.referrer,
-        url:location.href,
-        accurateTrackBounce:true,
-        trackLinks:true
-      });
-    </script>
-    <!-- /Yandex.Metrika counter -->
+    <script src="js/preferences.js?v=20260729-trust-gates-1" defer></script>
+    <script src="js/analytics.js?v=20260729-trust-gates-1" defer></script>
+    <script src="js/signal-field.js?v=20260729-trust-gates-1" defer></script>
+    <script src="js/map-data.js?v=20260729-trust-gates-1" defer></script>
+    <script src="js/map-engine.js?v=20260729-trust-gates-1" defer></script>
+    <script src="js/panels.js?v=20260729-trust-gates-1" defer></script>
+    <script src="js/favicon.js?v=20260729-trust-gates-1" defer></script>
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -214,13 +192,34 @@
   </head>
   <body>
     <noscript>
-      <div>
-        <img
-          src="https://mc.yandex.ru/watch/111107350"
-          style="position:absolute; left:-9999px;"
-          alt=""
-        >
-      </div>
+      <style>
+        body > :not(noscript) { display: none !important; }
+      </style>
+      <main class="no-script-fallback">
+        <div class="no-script-fallback__inner">
+          <p>АНТОН ГОРОХОВАТСКИЙ / МОСКВА</p>
+          <h1>ЦИФРОВЫЕ ПРОДУКТЫ, ДИЗАЙН И&nbsp;WEB‑РЕАЛИЗАЦИЯ</h1>
+          <p class="no-script-fallback__lede">
+            Интерактивная карта требует JavaScript, но&nbsp;основные работы
+            и&nbsp;контакты доступны здесь без него.
+          </p>
+          <nav aria-label="Избранные проекты">
+            <a href="https://shirokostup.site/">Ольга Широкоступ</a>
+            <a href="https://tarski.ru/">Tarski</a>
+            <a href="https://barberherman.ru/">Herman &amp;&nbsp;Co</a>
+            <a href="https://merch.dustydumbbells.com/">Dusty Dumbbells Merch</a>
+            <a href="https://11111.life/">«11 111»</a>
+            <a href="https://ks.fish/">Рыбная лавка капитана Селёдкина</a>
+          </nav>
+          <div class="no-script-fallback__contacts">
+            <a href="https://gorokhovatsky.notion.site/digital-web-digital-f68fc13247614ccb9738d9a85acf29b4?pvs=74">
+              Резюме
+            </a>
+            <a href="mailto:anton.gorokhovatsky@gmail.com">Эл. почта</a>
+            <a href="https://t.me/gorokhovatsky">Telegram</a>
+          </div>
+        </div>
+      </main>
     </noscript>
     <a class="skip-link" href="#map">К интерактивной карте</a>
     <button class="skip-link skip-link--secondary" type="button" data-open-panel="work">
@@ -561,6 +560,7 @@
             <span class="command-dock__mark" aria-hidden="true">⌕</span>
             <input
               id="map-command"
+              class="ym-disable-keys"
               data-command-input
               type="search"
               placeholder="Найти или&nbsp;открыть…"
@@ -719,6 +719,13 @@
                   aria-pressed="false"
                 >
                   КОНТРАСТ +
+                </button>
+                <button
+                  type="button"
+                  data-analytics-settings
+                  aria-pressed="false"
+                >
+                  АНАЛИТИКА
                 </button>
               </div>
               <p data-map-note>
@@ -988,6 +995,39 @@
         </div>
       </div>
     </main>
+
+    <section
+      class="analytics-consent"
+      data-analytics-consent
+      data-material-surface="analytics-consent"
+      data-material-active="always"
+      role="region"
+      aria-labelledby="analytics-consent-title"
+      aria-describedby="analytics-consent-copy"
+      hidden
+      inert
+    >
+      <p class="analytics-consent__eyebrow">АНАЛИТИКА / ПО&nbsp;ВЫБОРУ</p>
+      <h2 id="analytics-consent-title">ПОМОЧЬ УЛУЧШАТЬ КАРТУ?</h2>
+      <p id="analytics-consent-copy">
+        Метрика помогает понять, как используют карту. Она включает cookie
+        и&nbsp;Вебвизор; поиск не&nbsp;записывается. Без согласия сайт работает
+        как обычно.
+      </p>
+      <a
+        class="analytics-consent__details"
+        href="https://yandex.ru/support/metrica/ru/general/cookie-usage"
+        target="_blank"
+        rel="noreferrer"
+      >
+        Как Метрика использует данные
+      </a>
+      <div class="analytics-consent__actions">
+        <button type="button" data-analytics-allow>РАЗРЕШИТЬ</button>
+        <button type="button" data-analytics-deny>БЕЗ АНАЛИТИКИ</button>
+      </div>
+      <p class="visually-hidden" data-analytics-status role="status" aria-live="polite"></p>
+    </section>
 
     <footer class="site-footer">
       <p>ANTON GOROKHOVATSKY © 2026</p>

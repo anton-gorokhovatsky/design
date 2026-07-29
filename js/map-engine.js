@@ -1,4 +1,4 @@
-// Runtime layer 4/6: spatial map, relations, filters, and observation route.
+// Runtime layer 5/7: spatial map, relations, filters, and observation route.
 const mapNodesRoot = document.querySelector("[data-map-nodes]");
 const mapLabelsRoot = document.querySelector("[data-map-labels]");
 const mapSpecksRoot = document.querySelector("[data-map-specks]");

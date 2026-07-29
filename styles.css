@@ -9205,3 +9205,218 @@ html[data-contrast="true"] :focus-visible {
 html[data-contrast="true"] .map-node__glyph {
   filter: contrast(1.18);
 }
+
+/* Consent belongs to the observatory instrument family. It never blocks the
+   map, takes focus on arrival, or starts telemetry before a clear choice. */
+.analytics-consent {
+  position: fixed;
+  right: max(18px, env(safe-area-inset-right));
+  bottom: max(18px, env(safe-area-inset-bottom));
+  z-index: 90;
+  box-sizing: border-box;
+  width: min(370px, calc(100vw - 36px));
+  padding: 22px;
+  border: 0;
+  border-radius: 28px;
+  background: var(--material-01);
+  box-shadow: none;
+  color: var(--content-ink);
+  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px);
+}
+
+.analytics-consent[hidden] {
+  display: none;
+}
+
+.analytics-consent__eyebrow,
+.analytics-consent h2,
+.analytics-consent > p {
+  margin: 0;
+}
+
+.analytics-consent__eyebrow {
+  color: var(--content-muted);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.analytics-consent h2 {
+  margin-top: 18px;
+  font-size: clamp(1.15rem, calc(1rem + 0.5vw), 1.45rem);
+  font-weight: 600;
+  line-height: 1.05;
+}
+
+.analytics-consent #analytics-consent-copy {
+  margin-top: 12px;
+  color: var(--content-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  text-wrap: pretty;
+}
+
+.analytics-consent__details {
+  display: inline-block;
+  margin-top: 10px;
+  color: var(--content-muted);
+  font-size: 0.72rem;
+  text-underline-offset: 3px;
+}
+
+.analytics-consent__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.analytics-consent__actions button {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--content-ink);
+  font: 600 0.68rem/1 var(--font-sans);
+  letter-spacing: 0.055em;
+}
+
+.analytics-consent__actions [data-analytics-allow] {
+  border-color: var(--signal);
+  background: var(--signal);
+  color: #fff;
+}
+
+.analytics-consent__actions button:is(:hover, :focus-visible) {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+
+.no-script-fallback {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  box-sizing: border-box;
+  overflow: auto;
+  padding:
+    max(28px, env(safe-area-inset-top))
+    max(22px, env(safe-area-inset-right))
+    max(28px, env(safe-area-inset-bottom))
+    max(22px, env(safe-area-inset-left));
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+.no-script-fallback__inner {
+  width: min(920px, 100%);
+  margin: 0 auto;
+}
+
+.no-script-fallback__inner > p:first-child {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.no-script-fallback h1 {
+  max-width: 14ch;
+  margin: clamp(48px, 12vh, 120px) 0 24px;
+  font-size: clamp(2.4rem, 8vw, 6.6rem);
+  font-weight: 600;
+  letter-spacing: -0.05em;
+  line-height: 0.9;
+}
+
+.no-script-fallback__lede {
+  max-width: 48ch;
+  margin: 0;
+  color: var(--muted);
+  font-size: clamp(1rem, 2vw, 1.3rem);
+  line-height: 1.45;
+}
+
+.no-script-fallback nav {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: clamp(48px, 10vh, 96px);
+  border-top: 1px solid var(--line);
+}
+
+.no-script-fallback nav a,
+.no-script-fallback__contacts a {
+  min-height: 56px;
+  border-bottom: 1px solid var(--line);
+  color: inherit;
+  text-decoration: none;
+}
+
+.no-script-fallback nav a {
+  display: flex;
+  align-items: center;
+  padding-right: 18px;
+}
+
+.no-script-fallback nav a:nth-child(odd) {
+  border-right: 1px solid var(--line);
+}
+
+.no-script-fallback nav a:nth-child(even) {
+  padding-left: 18px;
+}
+
+.no-script-fallback__contacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22px;
+  margin-top: 34px;
+}
+
+.no-script-fallback__contacts a {
+  display: inline-flex;
+  align-items: center;
+  border-bottom-color: var(--signal);
+}
+
+@media (max-width: 680px) {
+  .analytics-consent {
+    top: max(70px, calc(env(safe-area-inset-top) + 56px));
+    right: max(14px, env(safe-area-inset-right));
+    bottom: auto;
+    left: max(14px, env(safe-area-inset-left));
+    width: auto;
+    padding: 18px;
+    border-radius: 24px;
+  }
+
+  .analytics-consent h2 {
+    margin-top: 14px;
+  }
+
+  .analytics-consent #analytics-consent-copy {
+    font-size: 0.76rem;
+  }
+
+  .no-script-fallback nav {
+    grid-template-columns: 1fr;
+  }
+
+  .no-script-fallback nav a:nth-child(n) {
+    padding-right: 0;
+    padding-left: 0;
+    border-right: 0;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .no-script-fallback {
+    --bg: #11120f;
+    --ink: #f2f1ec;
+    --muted: #989b91;
+    --line: rgba(242, 241, 236, 0.18);
+  }
+}

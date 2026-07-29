@@ -10,9 +10,11 @@ const projectRoot = resolve(scriptDirectory, "..");
 const contractScripts = [
   "scripts/audit-project.mjs",
   "scripts/check-assets.mjs",
+  "scripts/check-performance-budget.mjs",
   "scripts/check-css-cascade.mjs",
   "scripts/check-reels.mjs",
   "scripts/check-ui-contracts.mjs",
+  "scripts/webkit-regression.cjs",
 ];
 
 const steps = [
@@ -47,9 +49,19 @@ const steps = [
     args: ["scripts/check-assets.mjs"],
   },
   {
+    label: "Performance budget",
+    command: process.execPath,
+    args: ["scripts/check-performance-budget.mjs"],
+  },
+  {
     label: "Real-browser UI contracts",
     command: process.execPath,
     args: ["scripts/check-ui-contracts.mjs"],
+  },
+  {
+    label: "WebKit UI contracts",
+    command: process.execPath,
+    args: ["scripts/webkit-regression.cjs"],
   },
   {
     label: "Reel contracts",

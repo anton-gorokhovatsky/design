@@ -3,6 +3,7 @@ import { join } from "node:path";
 
 export const runtimeFiles = [
   "js/preferences.js",
+  "js/analytics.js",
   "js/signal-field.js",
   "js/map-data.js",
   "js/map-engine.js",

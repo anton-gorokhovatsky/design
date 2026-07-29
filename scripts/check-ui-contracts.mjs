@@ -11,6 +11,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { createServer } from "node:http";
+import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { dirname, extname, join, normalize, resolve, sep } from "node:path";
 import { spawn } from "node:child_process";
@@ -19,12 +20,14 @@ import { fileURLToPath } from "node:url";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(scriptDirectory, "..");
+const require = createRequire(import.meta.url);
 const artifactDirectory = process.env.PORTFOLIO_UI_ARTIFACT_DIR
   ? resolve(process.env.PORTFOLIO_UI_ARTIFACT_DIR)
   : "";
 const failures = [];
 const browserErrors = [];
 const serverErrors = [];
+const observedNetworkRequests = [];
 
 const fail = (message, details = undefined) => {
   failures.push(details === undefined ? message : `${message}: ${JSON.stringify(details)}`);
@@ -81,8 +84,17 @@ const startStaticServer = async () => {
 };
 
 const findChrome = () => {
+  let playwrightChromium = "";
+
+  try {
+    playwrightChromium = require("playwright").chromium.executablePath();
+  } catch {
+    playwrightChromium = "";
+  }
+
   const candidates = [
     process.env.CHROME_BIN,
+    playwrightChromium,
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
     "/Applications/Chromium.app/Contents/MacOS/Chromium",
     "/usr/bin/google-chrome",
@@ -666,6 +678,9 @@ const auditBrowser = async (client, origin) => {
       params.args?.map((argument) => argument.value ?? argument.description).join(" "),
     );
   });
+  client.on("Network.requestWillBeSent", ({ request }) => {
+    observedNetworkRequests.push(request.url);
+  });
 
   const scenarios = [
     { label: "desktop-light", width: 1440, height: 900, mobile: false, theme: "light" },
@@ -1015,6 +1030,163 @@ const auditBrowser = async (client, origin) => {
   if (!reducedFirst.startsWith("data:image/png") || reducedFirst !== reducedSecond) {
     fail("Reduced-motion favicon must stay on one stable frame.");
   }
+
+  await client.send("Emulation.setEmulatedMedia", {
+    media: "screen",
+    features: [
+      { name: "prefers-reduced-motion", value: "no-preference" },
+      { name: "prefers-color-scheme", value: "light" },
+    ],
+  });
+  await evaluate(
+    client,
+    "localStorage.removeItem('anton-signal-analytics'); true",
+  );
+  await client.send("Emulation.setScriptExecutionDisabled", { value: true });
+  {
+    const loaded = client.waitFor("Page.loadEventFired");
+    await client.send("Page.navigate", { url: `${origin}/?qa=no-script` });
+    await loaded;
+    await delay(120);
+  }
+  await client.send("Emulation.setScriptExecutionDisabled", { value: false });
+  const noScriptContract = await evaluate(client, `(() => {
+    const fallback = document.querySelector(".no-script-fallback");
+    const fallbackStyle = fallback ? getComputedStyle(fallback) : null;
+    const normalMain = Array.from(document.querySelectorAll("body > main"))
+      .find((element) => !element.classList.contains("no-script-fallback"));
+    return {
+      visible: fallbackStyle?.display !== "none",
+      linkCount: fallback?.querySelectorAll("a").length || 0,
+      normalMainDisplay: normalMain ? getComputedStyle(normalMain).display : "",
+      trackerPixels: document.querySelectorAll('img[src*="mc.yandex.ru"]').length,
+      visibleMainCount: Array.from(document.querySelectorAll("main")).filter((element) => (
+        getComputedStyle(element).display !== "none"
+      )).length,
+    };
+  })()`);
+  if (
+    !noScriptContract.visible
+    || noScriptContract.linkCount < 9
+    || noScriptContract.normalMainDisplay !== "none"
+    || noScriptContract.trackerPixels !== 0
+    || noScriptContract.visibleMainCount !== 1
+  ) {
+    fail("no-script: selected work and contacts are not a self-contained fallback.", noScriptContract);
+  }
+  await saveScreenshot(client, "desktop-no-script");
+  await saveElementScreenshot(client, "crop-desktop-no-script", ".no-script-fallback");
+
+  await navigate(client, `${origin}/?qa=privacy&analytics-consent=show`);
+  const analyticsRequestsBeforeChoice = observedNetworkRequests.filter((url) => (
+    url.startsWith("https://mc.yandex.ru/")
+  ));
+  const analyticsConsentState = await evaluate(client, geometryExpression);
+  const analyticsConsentContract = await evaluate(client, `(() => {
+    const consent = document.querySelector("[data-analytics-consent]");
+    const input = document.querySelector("[data-command-input]");
+    const active = document.activeElement;
+    const videos = Array.from(document.querySelectorAll("video"));
+    return {
+      visible: !consent?.hidden && consent?.classList.contains("is-open"),
+      inert: consent?.inert,
+      focusInside: Boolean(active && consent?.contains(active)),
+      searchPrivate: input?.classList.contains("ym-disable-keys"),
+      trackerScripts: Array.from(document.scripts).filter((script) => (
+        script.src.includes("mc.yandex.ru")
+      )).length,
+      preference: localStorage.getItem("anton-signal-analytics"),
+      videoSources: videos.filter((video) => video.getAttribute("src")).length,
+      loadedVideoResources: performance.getEntriesByType("resource").filter((entry) => (
+        entry.name.includes(".mp4")
+      )).length,
+    };
+  })()`);
+  if (
+    !analyticsConsentContract.visible
+    || analyticsConsentContract.inert
+    || analyticsConsentContract.focusInside
+    || !analyticsConsentContract.searchPrivate
+    || analyticsConsentContract.trackerScripts !== 0
+    || analyticsConsentContract.preference !== null
+    || analyticsConsentContract.videoSources !== 0
+    || analyticsConsentContract.loadedVideoResources !== 0
+    || analyticsRequestsBeforeChoice.length !== 0
+  ) {
+    fail("privacy: analytics or heavy media started before an explicit choice.", {
+      ...analyticsConsentContract,
+      analyticsRequestsBeforeChoice,
+    });
+  }
+  if (analyticsConsentState.materialFailures.length > 0) {
+    fail("privacy: consent lost MATERIAL / 01.", analyticsConsentState.materialFailures);
+  }
+  await saveScreenshot(client, "desktop-analytics-consent");
+  await saveElementScreenshot(client, "crop-desktop-analytics-consent", ".analytics-consent");
+
+  await evaluate(client, "document.querySelector('[data-analytics-deny]')?.click(); true");
+  const deniedContract = await evaluate(client, `(() => ({
+    hidden: document.querySelector("[data-analytics-consent]")?.hidden,
+    preference: localStorage.getItem("anton-signal-analytics"),
+    disabled: window.disableYaCounter111107350,
+    trackerScripts: Array.from(document.scripts).filter((script) => (
+      script.src.includes("mc.yandex.ru")
+    )).length,
+  }))()`);
+  if (
+    !deniedContract.hidden
+    || deniedContract.preference !== "denied"
+    || deniedContract.disabled !== true
+    || deniedContract.trackerScripts !== 0
+  ) {
+    fail("privacy: declining analytics does not persist a tracker-free state.", deniedContract);
+  }
+
+  await evaluate(client, "document.querySelector('[data-analytics-settings]')?.click(); true");
+  await delay(40);
+  const reopenedContract = await evaluate(client, `(() => ({
+    visible: !document.querySelector("[data-analytics-consent]")?.hidden,
+    focused: document.activeElement?.hasAttribute("data-analytics-allow"),
+  }))()`);
+  if (!reopenedContract.visible || !reopenedContract.focused) {
+    fail("privacy: the saved choice cannot be reopened with deliberate focus.", reopenedContract);
+  }
+  await evaluate(client, "document.querySelector('[data-analytics-deny]')?.click(); true");
+  await evaluate(
+    client,
+    "localStorage.removeItem('anton-signal-analytics'); true",
+  );
+  await navigate(client, `${origin}/?qa=privacy-allow&analytics-consent=show`);
+  const analyticsRequestBaseline = observedNetworkRequests.length;
+  await evaluate(client, "document.querySelector('[data-analytics-allow]')?.click(); true");
+  await delay(80);
+  const allowedContract = await evaluate(client, `(() => ({
+    hidden: document.querySelector("[data-analytics-consent]")?.hidden,
+    preference: localStorage.getItem("anton-signal-analytics"),
+    disabled: window.disableYaCounter111107350,
+    trackerScripts: Array.from(document.scripts).filter((script) => (
+      script.src.includes("mc.yandex.ru/metrika/tag.js")
+    )).length,
+    queuedInit: Array.isArray(window.ym?.a) && window.ym.a.some((entry) => (
+      entry?.[0] === 111107350 && entry?.[1] === "init"
+    )),
+  }))()`);
+  const analyticsRequestsAfterAllow = observedNetworkRequests
+    .slice(analyticsRequestBaseline)
+    .filter((url) => url.startsWith("https://mc.yandex.ru/"));
+  if (
+    !allowedContract.hidden
+    || allowedContract.preference !== "allowed"
+    || allowedContract.disabled !== false
+    || allowedContract.trackerScripts !== 1
+    || !allowedContract.queuedInit
+    || analyticsRequestsAfterAllow.length === 0
+  ) {
+    fail("privacy: explicit opt-in does not initialize the counter exactly once.", {
+      ...allowedContract,
+      analyticsRequestsAfterAllow,
+    });
+  }
 };
 
 let staticServer;
@@ -1062,5 +1234,6 @@ if (failures.length > 0) {
 console.log(
   "UI contracts passed: favicon, full viewport/theme matrix, 200% reflow, "
   + "panels, search, reel, mobile navigation/content, MATERIAL / 01, focus, "
-  + "contrast, forced colors, and reduced motion.",
+  + "contrast, forced colors, reduced motion, privacy consent, no-JS, and "
+  + "deferred media.",
 );

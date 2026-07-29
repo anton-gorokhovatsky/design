@@ -1,4 +1,4 @@
-// Runtime layer 5/6: movable consoles, content panels, search, and URL state.
+// Runtime layer 6/7: movable consoles, content panels, search, and URL state.
 const positionDetachedCommandResults = () => {
   const dock = document.querySelector("[data-command-form]");
   const results = document.querySelector("[data-command-results]");
@@ -705,6 +705,13 @@ const commandViews = [
     keywords: "время годы хронология таймлайн орбиты",
   },
   {
+    type: "action",
+    id: "analytics",
+    title: "НАСТРОЙКИ АНАЛИТИКИ",
+    meta: "ЯНДЕКС МЕТРИКА / ТОЛЬКО ПО СОГЛАСИЮ",
+    keywords: "аналитика приватность privacy метрика вебвизор cookie настройки",
+  },
+  {
     type: "panel",
     id: "work",
     title: "НЕДАВНИЕ ПРОЕКТЫ",
@@ -920,6 +927,8 @@ const runCommandResult = (result) => {
     startObservation();
   } else if (result.id === "time") {
     setTimeMode(true);
+  } else if (result.id === "analytics") {
+    openAnalyticsConsent();
   }
 
   setCommandOpen(false);

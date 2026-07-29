@@ -1,4 +1,4 @@
-// Runtime layer 1/6: shared preferences, typography, theme, and clock.
+// Runtime layer 1/7: shared preferences, typography, theme, and clock.
 const root = document.documentElement;
 const setFocusModality = (modality) => {
   root.dataset.focusModality = modality;

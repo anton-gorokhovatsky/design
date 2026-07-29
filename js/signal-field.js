@@ -1,4 +1,4 @@
-// Runtime layer 2/6: decorative signal field and depth-grid renderer.
+// Runtime layer 3/7: decorative signal field and depth-grid renderer.
 const asciiCharacters = " .·:+*#%@";
 const createSignal = (columns, rows, phase = 0, seed = 0) => {
   const output = [];

@@ -14,6 +14,10 @@ instead of a conventional résumé timeline.
   score or a distance from a supposedly objective centre.
 - Point size communicates the personal weight of an experience.
 - Shape distinguishes company, project, personal, and practice nodes.
+- The Ilmix evidence readout is transcribed from the source
+  [résumé](https://gorokhovatsky.notion.site/digital-web-digital-f68fc13247614ccb9738d9a85acf29b4?pvs=74):
+  role/dates and the 2020 oncology.help audience and bounce-rate comparison.
+  No lost product screenshots or unverified outcomes are reconstructed.
 - Garage Museum is the map's largest node and a connected project graph: the
   Museum site, Narkomfin, Collection and Open Storage, archives, online courses,
   the inclusive museum app, the research webzine, the endowment, and support for
@@ -35,7 +39,7 @@ route.
 - The map is the full-screen default state; the portfolio does not continue as
   a conventional scrolling page.
 - Node selection opens a compact readout assembled around the selected point as
-  the composition's anchor object. Eight anchor points add the evidence fields
+  the composition's anchor object. Nine anchor points add the evidence fields
   `ЗАДАЧА / МОЯ РОЛЬ / РЕЗУЛЬТАТ`; numerical claims are included only where
   they are supported by the source résumé.
 - `СЕАНС НАБЛЮДЕНИЯ` is an optional eight-stop, roughly sixty-second route
@@ -54,6 +58,11 @@ route.
 - The desktop `ЭКРАН` instrument contains the clock, theme, and two meaningful
   accessibility overrides: less motion and higher contrast. System preferences
   remain authoritative; manual choices persist locally.
+- Yandex Metrica and Webvisor are delayed until an explicit opt-in. The choice
+  is reversible from `ЭКРАН` or search, the search field is excluded from
+  Webvisor key capture, and declining analytics does not alter the site.
+- With JavaScript unavailable, a focused fallback still exposes selected work,
+  the résumé, email, and Telegram instead of leaving a dead canvas.
 - The query bar sits above the system rail and uses the functional prompt
   `Найти или открыть…` to search nodes or open content panels.
 - Primary navigation is part of the map rather than a separate header: an
@@ -202,7 +211,14 @@ instead of adding Storybook:
   JSON for comparison or external tooling.
 - `node scripts/check-project.mjs` runs JavaScript syntax, project contracts,
   CSS-cascade and asset-graph checks, reel validation, browser visual
-  contracts, and `git diff --check`.
+  contracts in Chromium and WebKit, and `git diff --check`.
+- `node scripts/check-performance-budget.mjs` keeps CSS, runtime, preloaded
+  fonts, and their combined first-party source under explicit budgets and
+  forbids eager video. Architecture/font changes need measured evidence beyond
+  this guardrail; line count alone is not a reason to rewrite working layers.
+- `pnpm install --frozen-lockfile && pnpm check` reproduces that full gate with
+  the pinned Playwright version. `.github/workflows/quality.yml` runs the same
+  command and retains browser frames as CI artifacts.
 - `docs/ui-state-matrix.md` is the visual state catalog used for matched
   desktop, tablet, mobile, theme, zoom, contrast, and reduced-motion renders.
 

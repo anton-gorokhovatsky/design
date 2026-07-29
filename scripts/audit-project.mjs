@@ -338,6 +338,7 @@ const requiredMaterialSurfaces = [
   "approach-03",
   "approach-04",
   "contact",
+  "analytics-consent",
 ];
 const materialSurfaceTags = [
   ...indexSource.matchAll(/<[^>]*\sdata-material-surface="([^"]+)"[^>]*>/gs),
@@ -722,6 +723,34 @@ requireContract(
   "reduced-motion",
   "The stylesheet must honor reduced motion.",
 );
+requireContract(
+  runtimeFiles.includes("js/analytics.js")
+    && indexSource.includes("data-analytics-consent")
+    && indexSource.includes("data-analytics-allow")
+    && indexSource.includes("data-analytics-deny")
+    && indexSource.includes('class="ym-disable-keys"')
+    && !indexSource.includes("mc.yandex.ru/watch/")
+    && !indexSource.includes("metrika/tag.js?id=")
+    && scriptSource.includes('analyticsPreference === "allowed"')
+    && scriptSource.includes("loadYandexAnalytics()"),
+  "analytics-consent",
+  "Analytics must load only after an explicit choice, keep search private, and expose a reversible setting.",
+);
+requireContract(
+  indexSource.includes('class="no-script-fallback"')
+    && indexSource.includes('aria-label="Избранные проекты"')
+    && indexSource.includes("mailto:anton.gorokhovatsky@gmail.com")
+    && indexSource.includes("body > :not(noscript)"),
+  "no-script-fallback",
+  "The no-JavaScript path must expose selected work and contact routes without a tracking pixel.",
+);
+requireContract(
+  scriptSource.includes("if (document.hidden)")
+    && scriptSource.includes('root.dataset.faviconMotion = "paused"')
+    && scriptSource.includes('root.dataset.faviconMotion = "running"'),
+  "favicon-hidden-lifecycle",
+  "The animated favicon must stop scheduling frames while the document is hidden.",
+);
 warnContract(
   styleSource.includes("@media (forced-colors: active)"),
   "forced-colors",
@@ -762,6 +791,9 @@ const requiredStates = [
   "reduced-motion",
   "forced-colors",
   "text-zoom",
+  "analytics-consent",
+  "no-script",
+  "favicon-hidden",
 ];
 requireContract(
   existsSync(stateMatrixPath),

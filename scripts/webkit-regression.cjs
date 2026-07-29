@@ -1,14 +1,64 @@
 const { webkit } = require("playwright");
 const fs = require("node:fs/promises");
+const fsSync = require("node:fs");
+const http = require("node:http");
+const os = require("node:os");
 const path = require("node:path");
 
-const baseUrl = process.env.PORTFOLIO_AUDIT_URL
-  || "http://127.0.0.1:4198/?qa=webkit-regression";
+let baseUrl = process.env.PORTFOLIO_AUDIT_URL || "";
 const artifactDir = process.env.PORTFOLIO_AUDIT_DIR
-  || path.resolve(
-    __dirname,
-    "../../.portfolio-audit-artifacts/content-system-fix/webkit",
-  );
+  || path.join(os.tmpdir(), "portfolio-webkit-contracts");
+const projectRoot = path.resolve(__dirname, "..");
+const mimeTypes = {
+  ".css": "text/css; charset=utf-8",
+  ".html": "text/html; charset=utf-8",
+  ".jpg": "image/jpeg",
+  ".js": "text/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".mp4": "video/mp4",
+  ".png": "image/png",
+  ".svg": "image/svg+xml; charset=utf-8",
+  ".woff2": "font/woff2",
+};
+
+const startStaticServer = async () => {
+  const server = http.createServer((request, response) => {
+    const pathname = decodeURIComponent(
+      new URL(request.url || "/", "http://127.0.0.1").pathname,
+    );
+    const relativePath = pathname === "/" ? "index.html" : pathname.slice(1);
+    const absolutePath = path.resolve(projectRoot, path.normalize(relativePath));
+    const isInsideRoot = absolutePath === projectRoot
+      || absolutePath.startsWith(`${projectRoot}${path.sep}`);
+
+    if (
+      !isInsideRoot
+      || !fsSync.existsSync(absolutePath)
+      || !fsSync.statSync(absolutePath).isFile()
+    ) {
+      response.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
+      response.end("Not found");
+      return;
+    }
+
+    response.writeHead(200, {
+      "cache-control": "no-store",
+      "content-type": mimeTypes[path.extname(absolutePath)]
+        || "application/octet-stream",
+    });
+    fsSync.createReadStream(absolutePath).pipe(response);
+  });
+
+  await new Promise((resolveListen, rejectListen) => {
+    server.once("error", rejectListen);
+    server.listen(0, "127.0.0.1", resolveListen);
+  });
+
+  return {
+    server,
+    origin: `http://127.0.0.1:${server.address().port}`,
+  };
+};
 
 const waitForLayout = async (page, milliseconds = 220) => {
   await page.waitForTimeout(milliseconds);
@@ -17,12 +67,12 @@ const waitForLayout = async (page, milliseconds = 220) => {
   }));
 };
 
+const telemetryRequests = [];
 const isolateThirdPartyTelemetry = async (page) => {
-  await page.route("https://mc.yandex.ru/**", (route) => route.fulfill({
-    status: 200,
-    contentType: "application/javascript",
-    body: "",
-  }));
+  await page.route("https://mc.yandex.ru/**", (route) => {
+    telemetryRequests.push(route.request().url());
+    return route.abort();
+  });
 };
 
 const runtimeErrors = [];
@@ -809,13 +859,83 @@ const projectGlyphAudit = async (page) => page.evaluate(() => {
   };
 });
 
+const analyticsConsentAudit = async (page, viewport, label) => {
+  await page.goto(
+    `${baseUrl}-analytics-${label}&analytics-consent=show`,
+    { waitUntil: "networkidle" },
+  );
+  await waitForLayout(page, 180);
+  const result = await page.evaluate(() => {
+    const consent = document.querySelector("[data-analytics-consent]");
+    const rect = consent?.getBoundingClientRect();
+    const input = document.querySelector("[data-command-input]");
+    return {
+      visible: Boolean(consent && !consent.hidden && consent.classList.contains("is-open")),
+      inert: consent?.inert ?? true,
+      focusInside: Boolean(consent?.contains(document.activeElement)),
+      searchPrivate: input?.classList.contains("ym-disable-keys") ?? false,
+      trackerScripts: Array.from(document.scripts).filter((script) => (
+        script.src.includes("mc.yandex.ru")
+      )).length,
+      preference: localStorage.getItem("anton-signal-analytics"),
+      rect: rect ? {
+        left: rect.left,
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+        width: rect.width,
+        height: rect.height,
+      } : null,
+    };
+  });
+  const material = await materialAudit(page);
+  const materialFailures = material.failures.filter(({ surface }) => (
+    surface === "analytics-consent"
+  ));
+  const rect = result.rect;
+  const withinViewport = rect
+    && rect.left >= -0.5
+    && rect.top >= -0.5
+    && rect.right <= viewport.width + 0.5
+    && rect.bottom <= viewport.height + 0.5;
+
+  await page.screenshot({
+    path: path.join(artifactDir, `${label}-analytics-consent.png`),
+    fullPage: false,
+  });
+
+  return {
+    ...result,
+    materialFailures,
+    withinViewport,
+    failure: !result.visible
+      || result.inert
+      || result.focusInside
+      || !result.searchPrivate
+      || result.trackerScripts !== 0
+      || result.preference !== null
+      || !withinViewport
+      || materialFailures.length > 0,
+  };
+};
+
 (async () => {
   await fs.mkdir(artifactDir, { recursive: true });
-  const browser = await webkit.launch({ headless: true });
+  let localServer;
+  let browser;
+
+  if (!baseUrl) {
+    localServer = await startStaticServer();
+    baseUrl = `${localServer.origin}/?qa=webkit-regression`;
+  }
+
+  browser = await webkit.launch({ headless: true });
   const report = {
     schemaVersion: 1,
     firstPaint: [],
     viewports: [],
+    noScript: null,
+    telemetryRequests,
     runtimeErrors,
   };
 
@@ -866,6 +986,11 @@ const projectGlyphAudit = async (page) => page.evaluate(() => {
           path: path.join(artifactDir, `${label}-final.png`),
           fullPage: false,
         });
+        const analyticsConsent = await analyticsConsentAudit(
+          page,
+          viewport,
+          label,
+        );
         report.viewports.push({
           viewport,
           colorScheme,
@@ -879,6 +1004,7 @@ const projectGlyphAudit = async (page) => page.evaluate(() => {
           privatePractice,
           relationshipCascade,
           material,
+          analyticsConsent,
         });
         await context.close();
 
@@ -911,8 +1037,35 @@ const projectGlyphAudit = async (page) => page.evaluate(() => {
         await nativeContext.close();
       }
     }
+
+    const noScriptContext = await browser.newContext({
+      viewport: { width: 390, height: 844 },
+      colorScheme: "dark",
+      javaScriptEnabled: false,
+    });
+    const noScriptPage = await noScriptContext.newPage();
+    await isolateThirdPartyTelemetry(noScriptPage);
+    await noScriptPage.goto(`${baseUrl}-no-script`, {
+      waitUntil: "networkidle",
+    });
+    const noScriptFallback = noScriptPage.locator(".no-script-fallback");
+    const noScriptNormalMain = noScriptPage.locator("body > main:not(.no-script-fallback)");
+    report.noScript = {
+      visible: await noScriptFallback.isVisible(),
+      linkCount: await noScriptFallback.locator("a").count(),
+      normalMainVisible: await noScriptNormalMain.isVisible(),
+      trackerPixels: await noScriptPage.locator('img[src*="mc.yandex.ru"]').count(),
+    };
+    await noScriptPage.screenshot({
+      path: path.join(artifactDir, "390x844-dark-no-script.png"),
+      fullPage: false,
+    });
+    await noScriptContext.close();
   } finally {
-    await browser.close();
+    await browser?.close();
+    if (localServer?.server) {
+      await new Promise((resolveClose) => localServer.server.close(resolveClose));
+    }
   }
 
   const failures = [
@@ -953,10 +1106,22 @@ const projectGlyphAudit = async (page) => page.evaluate(() => {
       ...(state.relationshipCascade.failure
         ? [`${state.viewport.width}/${state.colorScheme}: relationship cascade failed`]
         : []),
+      ...(state.analyticsConsent.failure
+        ? [`${state.viewport.width}/${state.colorScheme}: analytics consent failed`]
+        : []),
       ...state.material.failures.map(
         (failure) => `${state.viewport.width}/${state.colorScheme}: material ${failure.surface}`,
       ),
     ]),
+    ...(!report.noScript?.visible
+      || report.noScript?.linkCount < 9
+      || report.noScript?.normalMainVisible
+      || report.noScript?.trackerPixels !== 0
+      ? ["390/dark: no-script fallback failed"]
+      : []),
+    ...(report.telemetryRequests.length > 0
+      ? [`pre-consent telemetry requests: ${report.telemetryRequests.join(", ")}`]
+      : []),
   ];
   report.failures = failures;
 

@@ -1,4 +1,4 @@
-// Runtime layer 6/6: dynamic favicon and visibility lifecycle.
+// Runtime layer 7/7: dynamic favicon and visibility lifecycle.
 const siteFavicon = document.querySelector("#site-favicon");
 const faviconCanvas = document.createElement("canvas");
 const faviconContext = faviconCanvas.getContext("2d");
@@ -147,16 +147,22 @@ const syncFaviconMotion = () => {
     if (reducedMotion.matches || captureMode) {
       drawFaviconFrame(0);
     }
+    root.dataset.faviconMotion = "paused";
     return;
   }
 
-  drawFaviconFrame(faviconFrameIndex);
-  const frameStep = document.hidden ? 2 : 1;
-  const frameInterval = document.hidden ? 480 : 240;
-  faviconFrameTimer = window.setInterval(() => {
-    faviconFrameIndex = (faviconFrameIndex + frameStep) % faviconFrameCount;
+  if (document.hidden) {
     drawFaviconFrame(faviconFrameIndex);
-  }, frameInterval);
+    root.dataset.faviconMotion = "paused";
+    return;
+  }
+
+  root.dataset.faviconMotion = "running";
+  drawFaviconFrame(faviconFrameIndex);
+  faviconFrameTimer = window.setInterval(() => {
+    faviconFrameIndex = (faviconFrameIndex + 1) % faviconFrameCount;
+    drawFaviconFrame(faviconFrameIndex);
+  }, 240);
 };
 
 if (siteFavicon && faviconContext) {

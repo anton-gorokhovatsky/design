@@ -1,4 +1,4 @@
-// Runtime layer 3/6: deterministic portfolio map data.
+// Runtime layer 4/7: deterministic portfolio map data.
 const principlesSourceHref = "https://app.notion.com/p/digital-web-digital-f68fc13247614ccb9738d9a85acf29b4?source=copy_link#70405c2623e342fb98d027c8634f2207";
 
 const mapItems = [
@@ -63,6 +63,11 @@ const mapItems = [
     title: "«ИЛЬМИКСГРУПП»",
     meta: "ПОЧТИ 5 ЛЕТ / ЦИФРОВОЕ НАПРАВЛЕНИЕ",
     description: "Почти пять лет digital-работы внутри фармацевтической компании: развитие внутренних web-направлений и продуктов, которые позднее исчезли вместе с самостоятельной компанией.",
+    evidence: {
+      task: "Развивать цифровые продукты фармацевтической компании: от онкологического медиа до внутренних сервисов.",
+      role: "Digital producer, март 2017—ноябрь 2020: продукт, контент, визуальные концепции и реализация.",
+      result: "После перезапуска oncology.help уникальные посетители выросли с 19 905 в марте до 48 835 в ноябре 2020; отказы снизились с 23,8% до 15,2%.",
+    },
     timeYear: 2018.5,
     timeLabel: "2017—2020",
     kindLabel: "КОМПАНИЯ / ВНУТРЕННЯЯ КОМАНДА",
