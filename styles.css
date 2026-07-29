@@ -6481,7 +6481,7 @@ body:has(.command-dock.is-open) .map-links.has-active-relation {
   box-sizing: border-box;
   width: 11px;
   height: 14px;
-  border: 1px solid currentColor;
+  border: 1.25px solid currentColor;
   border-radius: 2px;
   content: "";
 }
@@ -6491,7 +6491,7 @@ body:has(.command-dock.is-open) .map-links.has-active-relation {
   top: 50%;
   left: 50%;
   width: 6px;
-  height: 1px;
+  height: 1.25px;
   background: currentColor;
   box-shadow: 0 3px 0 currentColor;
   content: "";
@@ -6509,7 +6509,7 @@ body:has(.command-dock.is-open) .map-links.has-active-relation {
   top: 50%;
   left: 50%;
   box-sizing: border-box;
-  border: 1px solid currentColor;
+  border: 1.25px solid currentColor;
   border-radius: 50%;
   content: "";
   transform: translate(-50%, -50%);
@@ -6532,37 +6532,59 @@ body:has(.command-dock.is-open) .map-links.has-active-relation {
 }
 
 .constellation-nav__item[data-nav-view="work"] .constellation-nav__shape::before,
+.constellation-nav__item[data-nav-view="work"] .constellation-nav__shape::after,
 .constellation-nav__item[data-nav-view="contact"] .constellation-nav__shape::before,
+.constellation-nav__item[data-nav-view="contact"] .constellation-nav__shape::after,
 .constellation-nav__item[data-nav-view="approach"] .constellation-nav__shape::before,
 .constellation-nav__item[data-nav-view="approach"] .constellation-nav__shape::after {
   position: absolute;
   top: 50%;
   left: 50%;
-  background: currentColor;
+  box-sizing: border-box;
   content: "";
   transform: translate(-50%, -50%);
 }
 
 .constellation-nav__item[data-nav-view="work"] .constellation-nav__shape::before {
-  width: 7px;
-  height: 7px;
+  width: 14px;
+  height: 14px;
+  border: 1.25px solid currentColor;
   border-radius: 50%;
+  background: transparent;
 }
 
-.constellation-nav__item[data-nav-view="contact"] .constellation-nav__shape::before {
+.constellation-nav__item[data-nav-view="work"] .constellation-nav__shape::after {
   width: 4px;
   height: 4px;
   border-radius: 50%;
+  background: currentColor;
+}
+
+.constellation-nav__item[data-nav-view="contact"] .constellation-nav__shape::before {
+  width: 12px;
+  height: 1.25px;
+  background: currentColor;
+}
+
+.constellation-nav__item[data-nav-view="contact"] .constellation-nav__shape::after {
+  left: calc(50% - 6px);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 12px 0 0 currentColor;
 }
 
 .constellation-nav__item[data-nav-view="approach"] .constellation-nav__shape::before {
   width: 13px;
-  height: 1px;
+  height: 1.25px;
+  background: currentColor;
 }
 
 .constellation-nav__item[data-nav-view="approach"] .constellation-nav__shape::after {
-  width: 1px;
+  width: 1.25px;
   height: 13px;
+  background: currentColor;
 }
 
 .command-dock__submit-mark {
@@ -8831,34 +8853,162 @@ html[data-focus-modality="pointer"]
   opacity: 0.74;
 }
 
-.map-control__symbol--time {
+.system-dock
+  .map-control__symbol:where(
+    .map-control__symbol--all,
+    .map-control__symbol--company,
+    .map-control__symbol--project,
+    .map-control__symbol--personal,
+    .map-control__symbol--practice,
+    .map-control__symbol--time
+  ) {
   position: relative;
   box-sizing: border-box;
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
+  margin: 0;
   border: 0;
   border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  transform: none;
 }
 
-.map-control__symbol--time::before {
+.system-dock
+  .map-control__symbol:where(
+    .map-control__symbol--all,
+    .map-control__symbol--company,
+    .map-control__symbol--project,
+    .map-control__symbol--personal,
+    .map-control__symbol--practice,
+    .map-control__symbol--time
+  )::before,
+.system-dock
+  .map-control__symbol:where(
+    .map-control__symbol--all,
+    .map-control__symbol--company,
+    .map-control__symbol--project,
+    .map-control__symbol--personal,
+    .map-control__symbol--practice,
+    .map-control__symbol--time
+  )::after {
   position: absolute;
-  inset: 2px 0 1px;
   box-sizing: border-box;
-  border: 1px solid currentColor;
-  border-radius: 50%;
+  inset: auto;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
   content: "";
-  transform: rotate(-12deg);
+  transform: none;
 }
 
-.map-control__symbol--time::after {
-  position: absolute;
+.system-dock .map-control__symbol--all::before,
+.system-dock .map-control__symbol--all::after {
+  border: 1.25px solid currentColor;
+  border-radius: 50%;
+}
+
+.system-dock .map-control__symbol--all::before {
+  inset: 0;
+}
+
+.system-dock .map-control__symbol--all::after {
+  inset: 3px;
+}
+
+.system-dock .map-control__symbol--company::before {
+  top: 1px;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  transform: translateX(-50%);
+}
+
+.system-dock .map-control__symbol--company::after {
+  bottom: 1px;
+  left: 1px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 9px 0 0 currentColor;
+}
+
+.system-dock .map-control__symbol--project::before {
+  inset: 0;
+  border: 1.25px solid currentColor;
+  border-radius: 50%;
+}
+
+.system-dock .map-control__symbol--project::after {
+  top: 50%;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  transform: translate(-50%, -50%);
+}
+
+.system-dock .map-control__symbol--personal::before {
   top: 4px;
-  right: -1px;
+  left: 2px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.system-dock .map-control__symbol--personal::after {
+  top: 1px;
+  right: 1px;
   width: 3px;
   height: 3px;
   border-radius: 50%;
   background: currentColor;
-  content: "";
+}
+
+.system-dock .map-control__symbol--practice::before,
+.system-dock .map-control__symbol--practice::after {
+  top: 50%;
+  left: 50%;
+  background: currentColor;
+  transform: translate(-50%, -50%);
+}
+
+.system-dock .map-control__symbol--practice::before {
+  width: 12px;
+  height: 1.25px;
+}
+
+.system-dock .map-control__symbol--practice::after {
+  width: 1.25px;
+  height: 12px;
+}
+
+.system-dock .map-control__symbol--time {
+  width: 15px;
+  height: 11px;
+  border: 1.25px solid currentColor;
+  border-radius: 50%;
+  transform: rotate(-16deg);
+}
+
+.system-dock .map-control__symbol--time::before {
+  inset: 2px 3px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+}
+
+.system-dock .map-control__symbol--time::after {
+  top: -1px;
+  right: 1px;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: currentColor;
 }
 
 /* The screen readout is one compact service instrument. The author signature

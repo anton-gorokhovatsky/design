@@ -4395,21 +4395,32 @@ const faviconCanvas = document.createElement("canvas");
 const faviconContext = faviconCanvas.getContext("2d");
 let faviconFrameIndex = 0;
 let faviconFrameTimer = 0;
+const faviconAxisTilt = -14 * Math.PI / 180;
 
 faviconCanvas.width = 64;
 faviconCanvas.height = 64;
+
+const tiltFaviconPoint = ({ x, y }) => {
+  const offsetX = x - 32;
+  const offsetY = y - 32;
+
+  return {
+    x: 32
+      + offsetX * Math.cos(faviconAxisTilt)
+      - offsetY * Math.sin(faviconAxisTilt),
+    y: 32
+      + offsetX * Math.sin(faviconAxisTilt)
+      + offsetY * Math.cos(faviconAxisTilt),
+  };
+};
 
 const getFaviconSpiralPoint = (progress, arm = 0, drift = 0) => {
   const angle = -0.72 + progress * Math.PI * 2.18 + arm * Math.PI + drift;
   const radius = 3.4 + progress * 26;
   const x = Math.cos(angle) * radius;
   const y = Math.sin(angle) * radius * 0.86;
-  const tilt = -11 * Math.PI / 180;
 
-  return {
-    x: 32 + x * Math.cos(tilt) - y * Math.sin(tilt),
-    y: 32 + x * Math.sin(tilt) + y * Math.cos(tilt),
-  };
+  return tiltFaviconPoint({ x: 32 + x, y: 32 + y });
 };
 
 const drawFaviconParticle = (point, size, cross = false, alpha = 1) => {
@@ -4494,11 +4505,21 @@ const drawFaviconFrame = (frameIndex = 0) => {
     drawFaviconParticle(point, size, cross, alpha);
   });
 
-  drawFaviconParticle({ x: 31, y: 31 }, 9, true, 1);
-  drawFaviconParticle({ x: 34.5, y: 34 }, 7, false, 0.94);
-  drawFaviconParticle({ x: 29, y: 35 }, 4, false, 0.76);
-  drawFaviconParticle({ x: 5, y: 19 }, 3, false, 0.48 + pulse * 0.12);
-  drawFaviconParticle({ x: 59, y: 33 }, 3, false, 0.48 - pulse * 0.12);
+  drawFaviconParticle(tiltFaviconPoint({ x: 31, y: 31 }), 9, true, 1);
+  drawFaviconParticle(tiltFaviconPoint({ x: 34.5, y: 34 }), 7, false, 0.94);
+  drawFaviconParticle(tiltFaviconPoint({ x: 29, y: 35 }), 4, false, 0.76);
+  drawFaviconParticle(
+    tiltFaviconPoint({ x: 5, y: 19 }),
+    3,
+    false,
+    0.48 + pulse * 0.12,
+  );
+  drawFaviconParticle(
+    tiltFaviconPoint({ x: 59, y: 33 }),
+    3,
+    false,
+    0.48 - pulse * 0.12,
+  );
 
   siteFavicon.href = faviconCanvas.toDataURL("image/png");
 };

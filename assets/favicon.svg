@@ -39,8 +39,8 @@
     }
 
     @keyframes drift {
-      from { transform: rotate(-13deg) translate(-.35px, .25px); }
-      to { transform: rotate(-9deg) translate(.35px, -.25px); }
+      from { transform: rotate(-16deg) translate(-.35px, .25px); }
+      to { transform: rotate(-12deg) translate(.35px, -.25px); }
     }
 
     @keyframes flow {
@@ -62,7 +62,7 @@
   </style>
 
   <g transform="translate(32 32) scale(1.16 1.48) translate(-32 -32)">
-    <g class="galaxy" transform="rotate(-11 32 32)">
+    <g class="galaxy" transform="rotate(-14 32 32)">
       <path class="arm" d="M31 31C38 24 48 27 51 34C54 41 48 49 39 50"/>
       <path class="arm" d="M33 33C26 40 16 38 13 31C10 24 16 16 25 15"/>
       <path class="arm arm--quiet" d="M30 29C25 24 18 24 14 28"/>
