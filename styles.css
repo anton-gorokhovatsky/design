@@ -8385,34 +8385,34 @@ html[data-theme="dark"] .orbital-horizon {
 }
 
 html[data-theme="light"] .orbital-horizon {
-  border-top-color: color-mix(in srgb, var(--signal) 24%, var(--line));
+  border-top-color: color-mix(in srgb, var(--signal) 10%, var(--line));
   background:
     radial-gradient(
       ellipse at 22% 6%,
-      color-mix(in srgb, var(--signal) 4%, transparent) 0 2%,
+      color-mix(in srgb, var(--signal) 2%, transparent) 0 2%,
       transparent 22%
     ),
     radial-gradient(
       ellipse at 74% 2%,
-      color-mix(in srgb, var(--tone-personal) 4%, transparent) 0 2%,
+      color-mix(in srgb, var(--tone-personal) 2%, transparent) 0 2%,
       transparent 26%
     ),
     linear-gradient(
       180deg,
-      color-mix(in srgb, #fff 46%, var(--surface)) 0,
-      color-mix(in srgb, var(--bg) 58%, var(--surface)) 44%,
-      color-mix(in srgb, var(--ink) 2%, var(--surface)) 100%
+      color-mix(in srgb, var(--surface) 5%, transparent) 0,
+      color-mix(in srgb, var(--surface) 24%, transparent) 52%,
+      color-mix(in srgb, var(--surface) 46%, transparent) 100%
     );
   box-shadow:
-    0 -1px 0 color-mix(in srgb, var(--signal) 17%, transparent),
-    0 -20px 52px color-mix(in srgb, var(--ink) 4%, transparent);
-  opacity: 0.78;
+    0 -1px 0 color-mix(in srgb, var(--signal) 7%, transparent);
+  opacity: 0.58;
 }
 
 html[data-theme="light"] .orbital-horizon::before,
 html[data-theme="light"] .orbital-horizon::after {
   position: absolute;
   inset: 0;
+  display: none;
   content: "";
   pointer-events: none;
 }
@@ -8993,6 +8993,11 @@ html[data-focus-modality="pointer"]
       0 -1px 0 color-mix(in srgb, var(--signal) 12%, transparent),
       0 -14px 40px color-mix(in srgb, var(--ink) 2%, transparent);
     opacity: 0.72;
+  }
+
+  html[data-theme="light"] .orbital-horizon::before,
+  html[data-theme="light"] .orbital-horizon::after {
+    display: block;
   }
 }
 
