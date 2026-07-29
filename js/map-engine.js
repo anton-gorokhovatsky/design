@@ -857,6 +857,10 @@ if (mapNodesRoot) {
     button.addEventListener("click", () => {
       hideLabel();
       hideMapPreview({ immediate: true });
+      trackPortfolioEvent("point_open", {
+        point_id: item.id,
+        source: "map",
+      });
       selectMapItem(item.id, { reveal: true });
     });
     button.addEventListener("keydown", (event) => {
@@ -1300,6 +1304,9 @@ const toggleMapFilter = (kind) => {
 mapFilterButtons.forEach((button) => {
   button.addEventListener("click", () => {
     toggleMapFilter(button.dataset.mapFilter || "all");
+    trackPortfolioEvent("map_filter_change", {
+      filters: serializeMapFilters() || "all",
+    });
   });
 });
 
@@ -1368,6 +1375,9 @@ const setTimeMode = (
 
 timeToggle?.addEventListener("click", () => {
   setTimeMode(!timeModeActive);
+  trackPortfolioEvent("chronology_toggle", {
+    state: timeModeActive ? "enabled" : "disabled",
+  });
 });
 
 const observationSteps = [
@@ -1591,6 +1601,7 @@ const startObservation = (
     step = 0,
     autoplay = true,
     updateHistory = true,
+    source = "direct",
   } = {},
 ) => {
   if (timeModeActive) {
@@ -1611,6 +1622,7 @@ const startObservation = (
   }
 
   if (updateHistory) {
+    trackPortfolioEvent("observation_start", { source });
     writeUrlState(
       {
         route: "observation",
@@ -1642,6 +1654,7 @@ observationPause?.addEventListener("click", () => {
 
 observationNext?.addEventListener("click", () => {
   if (observationStepIndex >= observationSteps.length - 1) {
+    trackPortfolioEvent("observation_complete", { source: "route" });
     stopObservation();
     return;
   }

@@ -61,6 +61,10 @@ route.
 - Yandex Metrica and Webvisor are delayed until an explicit opt-in. The choice
   is reversible from `ЭКРАН` or search, the search field is excluded from
   Webvisor key capture, and declining analytics does not alter the site.
+  After consent, a small allowlist of goal events measures successful
+  navigation — point opens, filters, chronology, the observation route,
+  content panels, and contact actions. Search text, contact addresses, and
+  free-form values are never sent as goal parameters.
 - With JavaScript unavailable, a focused fallback still exposes selected work,
   the résumé, email, and Telegram instead of leaving a dead canvas.
 - The query bar sits above the system rail and uses the functional prompt
@@ -212,6 +216,11 @@ instead of adding Storybook:
 - `node scripts/check-project.mjs` runs JavaScript syntax, project contracts,
   CSS-cascade and asset-graph checks, reel validation, browser visual
   contracts in Chromium and WebKit, and `git diff --check`.
+- The WebKit gate also completes one assistive-technology route at `390×844`:
+  it reads the live accessibility tree, enters through the visible skip link,
+  moves between map points with arrows, opens and closes a point with
+  `Enter`/`Escape`, verifies dialog focus trap/return, reduced motion, and
+  reflow without horizontal overflow.
 - `node scripts/check-performance-budget.mjs` keeps CSS, runtime, preloaded
   fonts, and their combined first-party source under explicit budgets and
   forbids eager video. Architecture/font changes need measured evidence beyond
@@ -238,6 +247,12 @@ computed styles, runtime state coverage, and matched before/after renders.
 
 The site uses static HTML, CSS, and JavaScript and publishes from the
 repository's `gh-pages` branch.
+
+`pnpm release -- --message "…" --file <path> …` is the single production
+lane. It verifies the real Git push credential path, runs the Chromium and
+WebKit contracts in parallel, stages only the explicit file list, publishes
+the same commit to `main` and `gh-pages`, and waits until the public domain
+serves byte-identical runtime assets.
 
 Golos Text font files are self-hosted under the SIL Open Font License 1.1; the
 license is included at `assets/fonts/OFL-GolosText.txt`.

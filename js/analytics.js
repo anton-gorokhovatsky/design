@@ -10,6 +10,16 @@ const analyticsStatus = document.querySelector("[data-analytics-status]");
 const analyticsQuery = new URLSearchParams(window.location.search);
 const analyticsQaSuppressed = analyticsQuery.has("qa")
   && analyticsQuery.get("analytics-consent") !== "show";
+const analyticsGoalParameters = new Map([
+  ["point_open", new Set(["point_id", "source"])],
+  ["map_filter_change", new Set(["filters"])],
+  ["chronology_toggle", new Set(["state"])],
+  ["observation_start", new Set(["source"])],
+  ["observation_complete", new Set(["source"])],
+  ["search_success", new Set(["result_id", "result_type"])],
+  ["panel_open", new Set(["panel_id", "source"])],
+  ["contact_open", new Set(["channel"])],
+]);
 let analyticsPreference = null;
 let analyticsLoaded = false;
 
@@ -104,6 +114,38 @@ const loadYandexAnalytics = () => {
   });
 };
 
+const normalizeAnalyticsValue = (value) => String(value)
+  .toLocaleLowerCase("en")
+  .replace(/[^a-z0-9_+,-]+/g, "-")
+  .slice(0, 64);
+
+const trackPortfolioEvent = (goal, parameters = {}) => {
+  const allowedParameters = analyticsGoalParameters.get(goal);
+
+  if (
+    analyticsPreference !== "allowed"
+    || !analyticsLoaded
+    || typeof window.ym !== "function"
+    || !allowedParameters
+  ) {
+    return false;
+  }
+
+  const safeParameters = Object.fromEntries(
+    Object.entries(parameters)
+      .filter(([key, value]) => (
+        allowedParameters.has(key)
+        && value !== null
+        && value !== undefined
+        && value !== ""
+      ))
+      .map(([key, value]) => [key, normalizeAnalyticsValue(value)]),
+  );
+
+  window.ym(analyticsCounterId, "reachGoal", goal, safeParameters);
+  return true;
+};
+
 analyticsAllow?.addEventListener("click", () => {
   writeAnalyticsPreference("allowed");
   syncAnalyticsPreferenceUi();
@@ -133,6 +175,20 @@ analyticsDeny?.addEventListener("click", () => {
 
 analyticsSettings?.addEventListener("click", () => {
   openAnalyticsConsent();
+});
+
+document.addEventListener("click", (event) => {
+  const link = event.target instanceof Element
+    ? event.target.closest(".contact-links a")
+    : null;
+
+  if (!link) {
+    return;
+  }
+
+  trackPortfolioEvent("contact_open", {
+    channel: link.href.startsWith("mailto:") ? "email" : "telegram",
+  });
 });
 
 window[analyticsDisableKey] = analyticsPreference !== "allowed";

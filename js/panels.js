@@ -425,6 +425,10 @@ const openContentPanel = (
   setPanelOpen(true);
 
   if (updateHistory) {
+    trackPortfolioEvent("panel_open", {
+      panel_id: view,
+      source: "navigation",
+    });
     writeUrlState(
       {
         point: null,
@@ -946,8 +950,14 @@ const runCommandResult = (result) => {
     return;
   }
 
+  const hadSearchQuery = Boolean(normalizeSearch(commandInput?.value || ""));
+
   if (result.type === "node") {
     setMapFilter("all");
+    trackPortfolioEvent("point_open", {
+      point_id: result.id,
+      source: "search",
+    });
     selectMapItem(result.id, { reveal: true });
     window.requestAnimationFrame(() => inspectorClose?.focus());
 
@@ -959,11 +969,18 @@ const runCommandResult = (result) => {
   } else if (result.type === "panel") {
     openContentPanel(result.id, commandInput);
   } else if (result.id === "observation") {
-    startObservation();
+    startObservation({ source: "search" });
   } else if (result.id === "time") {
     setTimeMode(true);
   } else if (result.id === "analytics") {
     openAnalyticsConsent();
+  }
+
+  if (hadSearchQuery) {
+    trackPortfolioEvent("search_success", {
+      result_id: result.id,
+      result_type: result.type,
+    });
   }
 
   setCommandOpen(false);

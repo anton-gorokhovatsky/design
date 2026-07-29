@@ -919,6 +919,196 @@ const analyticsConsentAudit = async (page, viewport, label) => {
   };
 };
 
+const accessibilityAcceptanceAudit = async (browser) => {
+  const viewport = { width: 390, height: 844 };
+  const context = await browser.newContext({
+    viewport,
+    colorScheme: "dark",
+    reducedMotion: "reduce",
+  });
+  const page = await context.newPage();
+  await isolateThirdPartyTelemetry(page);
+  attachRuntimeLog(page, "accessibility-acceptance");
+  await page.goto(`${baseUrl}-accessibility-acceptance`, {
+    waitUntil: "networkidle",
+  });
+  await page.evaluate(() => document.fonts?.ready);
+  await waitForLayout(page, 420);
+
+  const failures = [];
+  const mainSnapshot = await page.locator("main").ariaSnapshot();
+  const mapSnapshot = await page.locator("[data-map-nodes]").ariaSnapshot();
+
+  if (
+    !mainSnapshot.includes("Интерактивная карта опыта")
+    || !mapSnapshot.includes("МУЗЕЙ")
+    || !mapSnapshot.includes("Используйте стрелки")
+  ) {
+    failures.push("the primary map is incomplete in the WebKit accessibility tree");
+  }
+
+  await page.locator(".skip-link").first().focus();
+  const skipLink = await page.evaluate(() => {
+    const target = document.activeElement;
+    const rect = target?.getBoundingClientRect();
+    const style = target ? getComputedStyle(target) : null;
+    return {
+      className: target?.className || "",
+      focused: Boolean(target?.matches?.(".skip-link")),
+      visible: Boolean(
+        style
+        && style.visibility !== "hidden"
+        && style.display !== "none"
+        && Number.parseFloat(style.opacity) > 0
+      ),
+      withinViewport: Boolean(
+        rect
+        && rect.left >= -0.5
+        && rect.top >= -0.5
+        && rect.right <= innerWidth + 0.5
+        && rect.bottom <= innerHeight + 0.5
+      ),
+    };
+  });
+
+  if (
+    !skipLink.className.includes("skip-link")
+    || !skipLink.focused
+    || !skipLink.visible
+    || !skipLink.withinViewport
+  ) {
+    failures.push("the primary skip link cannot be focused and revealed");
+  }
+
+  const garage = page.locator('[data-map-id="garage"]');
+  await garage.focus();
+  const initialMapId = await page.evaluate(() => (
+    document.activeElement?.dataset?.mapId || ""
+  ));
+  await page.keyboard.press("ArrowRight");
+  const directionalMapId = await page.evaluate(() => (
+    document.activeElement?.dataset?.mapId || ""
+  ));
+
+  if (!initialMapId || !directionalMapId || initialMapId === directionalMapId) {
+    failures.push("arrow navigation does not move between map points");
+  }
+
+  await page.keyboard.press("Enter");
+  await waitForLayout(page, 220);
+  const inspectorOpen = await page.evaluate(() => {
+    const active = document.activeElement;
+    const inspector = document.querySelector("[data-map-inspector]");
+    return {
+      activeMapId: active?.dataset?.mapId || "",
+      expanded: active?.getAttribute?.("aria-expanded"),
+      pressed: active?.getAttribute?.("aria-pressed"),
+      hidden: inspector?.getAttribute("aria-hidden"),
+      inert: Boolean(inspector?.inert),
+    };
+  });
+  const inspectorSnapshot = await page.locator("[data-map-inspector]").ariaSnapshot();
+
+  if (
+    inspectorOpen.activeMapId !== directionalMapId
+    || inspectorOpen.expanded !== "true"
+    || inspectorOpen.pressed !== "true"
+    || inspectorOpen.hidden !== "false"
+    || inspectorOpen.inert
+    || !inspectorSnapshot.includes("Закрыть карточку")
+  ) {
+    failures.push("Enter does not expose the selected point and its inspector");
+  }
+
+  await page.keyboard.press("Escape");
+  await page.keyboard.press("Escape");
+  await waitForLayout(page, 180);
+  const inspectorClosed = await page.evaluate((mapId) => ({
+    focusReturned: document.activeElement?.dataset?.mapId === mapId,
+    hidden: document.querySelector("[data-map-inspector]")?.getAttribute("aria-hidden"),
+    inert: Boolean(document.querySelector("[data-map-inspector]")?.inert),
+  }), directionalMapId);
+
+  if (
+    !inspectorClosed.focusReturned
+    || inspectorClosed.hidden !== "true"
+    || !inspectorClosed.inert
+  ) {
+    failures.push("Escape does not close the inspector and return map focus");
+  }
+
+  const panelTrigger = page.locator(".skip-link--secondary");
+  await panelTrigger.focus();
+  await page.keyboard.press("Enter");
+  await waitForLayout(page, 220);
+  const dialogSnapshot = await page.locator("[data-content-panel]").ariaSnapshot();
+  const panelOpen = await page.evaluate(() => {
+    const panel = document.querySelector("[data-content-panel]");
+    return {
+      activeIsClose: document.activeElement?.matches?.("[data-close-panel]") || false,
+      hidden: panel?.getAttribute("aria-hidden"),
+      inert: Boolean(panel?.inert),
+      role: panel?.getAttribute("role"),
+    };
+  });
+
+  await page.keyboard.press("Shift+Tab");
+  const trappedInside = await page.evaluate(() => (
+    document.querySelector("[data-content-panel]")?.contains(document.activeElement)
+  ));
+  await page.keyboard.press("Escape");
+  await waitForLayout(page, 180);
+  const panelClosed = await page.evaluate(() => ({
+    focusReturned: document.activeElement?.matches?.(".skip-link--secondary") || false,
+    hidden: document.querySelector("[data-content-panel]")?.getAttribute("aria-hidden"),
+    inert: Boolean(document.querySelector("[data-content-panel]")?.inert),
+  }));
+
+  if (
+    panelOpen.role !== "dialog"
+    || panelOpen.hidden !== "false"
+    || panelOpen.inert
+    || !panelOpen.activeIsClose
+    || !trappedInside
+    || !dialogSnapshot.includes("ПРОЕКТЫ")
+    || !panelClosed.focusReturned
+    || panelClosed.hidden !== "true"
+    || !panelClosed.inert
+  ) {
+    failures.push("the projects dialog loses its name, focus trap, or focus return");
+  }
+
+  const environment = await page.evaluate(() => ({
+    horizontalOverflow:
+      document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    reducedMotion: matchMedia("(prefers-reduced-motion: reduce)").matches,
+  }));
+
+  if (environment.horizontalOverflow !== 0) {
+    failures.push("the 390px accessibility route creates horizontal overflow");
+  }
+  if (!environment.reducedMotion) {
+    failures.push("WebKit does not expose the requested reduced-motion state");
+  }
+
+  await page.screenshot({
+    path: path.join(artifactDir, "390x844-dark-accessibility-acceptance.png"),
+    fullPage: false,
+  });
+  await context.close();
+
+  return {
+    dialogSnapshotPresent: dialogSnapshot.includes("ПРОЕКТЫ"),
+    environment,
+    failures,
+    inspectorSnapshotPresent: inspectorSnapshot.includes("Закрыть карточку"),
+    mapSnapshotPresent: mapSnapshot.includes("МУЗЕЙ"),
+    panelClosed,
+    panelOpen,
+    skipLink,
+  };
+};
+
 (async () => {
   await fs.mkdir(artifactDir, { recursive: true });
   let localServer;
@@ -932,6 +1122,7 @@ const analyticsConsentAudit = async (page, viewport, label) => {
   browser = await webkit.launch({ headless: true });
   const report = {
     schemaVersion: 1,
+    accessibility: null,
     firstPaint: [],
     viewports: [],
     noScript: null,
@@ -1047,6 +1238,8 @@ const analyticsConsentAudit = async (page, viewport, label) => {
       }
     }
 
+    report.accessibility = await accessibilityAcceptanceAudit(browser);
+
     const noScriptContext = await browser.newContext({
       viewport: { width: 390, height: 844 },
       colorScheme: "dark",
@@ -1079,6 +1272,9 @@ const analyticsConsentAudit = async (page, viewport, label) => {
 
   const failures = [
     ...report.runtimeErrors,
+    ...(report.accessibility?.failures || []).map(
+      (failure) => `accessibility acceptance: ${failure}`,
+    ),
     ...report.firstPaint.flatMap((state) => state.failures.map(
       (failure) => `first-paint ${state.viewport.width}/${state.colorScheme}: `
         + `${failure.surface} ${failure.background} ${failure.backdrop}`,

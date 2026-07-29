@@ -1286,6 +1286,89 @@ const auditBrowser = async (client, origin) => {
       analyticsRequestsAfterAllow,
     });
   }
+
+  const goalContract = await evaluate(client, `(() => {
+    const preventContactNavigation = (event) => {
+      if (event.target.closest?.(".contact-links a")) {
+        event.preventDefault();
+      }
+    };
+    document.addEventListener("click", preventContactNavigation, true);
+
+    document.querySelector('[data-map-filter="company"]')?.click();
+    document.querySelector("[data-time-toggle]")?.click();
+    document.querySelector('[data-map-id="garage"]')?.click();
+
+    const input = document.querySelector("[data-command-input]");
+    input?.focus();
+    if (input) {
+      input.value = "последовательное";
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    document.querySelector('[data-result-id="tarski"]')?.click();
+
+    document.querySelector("[data-start-observation]")?.click();
+    const next = document.querySelector("[data-observation-next]");
+    for (let index = 0; index < 8; index += 1) {
+      next?.click();
+    }
+
+    document.querySelector('[data-open-panel="contact"]')?.click();
+    document.querySelector('.contact-links a[href^="mailto:"]')?.click();
+    document.removeEventListener("click", preventContactNavigation, true);
+
+    const goals = (window.ym?.a || [])
+      .filter((entry) => entry?.[0] === 111107350 && entry?.[1] === "reachGoal")
+      .map((entry) => ({
+        name: entry[2],
+        parameters: entry[3] || {},
+      }));
+    return {
+      goals,
+      names: goals.map(({ name }) => name),
+      parameterKeys: [...new Set(goals.flatMap(({ parameters }) => (
+        Object.keys(parameters)
+      )))],
+      leakedValues: goals.flatMap(({ parameters }) => Object.values(parameters))
+        .filter((value) => /последовательное|anton|@|gmail|telegram\\.me/i.test(String(value))),
+    };
+  })()`);
+  const requiredGoals = [
+    "point_open",
+    "map_filter_change",
+    "chronology_toggle",
+    "observation_start",
+    "observation_complete",
+    "search_success",
+    "panel_open",
+    "contact_open",
+  ];
+  const missingGoals = requiredGoals.filter((goal) => (
+    !goalContract.names.includes(goal)
+  ));
+  const unexpectedParameterKeys = goalContract.parameterKeys.filter((key) => (
+    ![
+      "channel",
+      "filters",
+      "panel_id",
+      "point_id",
+      "result_id",
+      "result_type",
+      "source",
+      "state",
+    ].includes(key)
+  ));
+  if (
+    missingGoals.length > 0
+    || unexpectedParameterKeys.length > 0
+    || goalContract.leakedValues.length > 0
+  ) {
+    fail("privacy: consented navigation goals are incomplete or leak free-form data.", {
+      ...goalContract,
+      missingGoals,
+      unexpectedParameterKeys,
+    });
+  }
 };
 
 let staticServer;
