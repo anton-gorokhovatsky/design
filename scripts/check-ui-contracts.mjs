@@ -176,16 +176,37 @@ class CdpClient {
   }
 }
 
-const waitForDevToolsPort = async (profileDirectory) => {
-  const portFile = join(profileDirectory, "DevToolsActivePort");
+const reserveLocalPort = async () => {
+  const server = createServer();
+  await new Promise((resolveListen, rejectListen) => {
+    server.once("error", rejectListen);
+    server.listen(0, "127.0.0.1", resolveListen);
+  });
+  const port = server.address().port;
+  await new Promise((resolveClose) => server.close(resolveClose));
+  return port;
+};
+
+const waitForDevTools = async (port, child, getStderr) => {
   for (let attempt = 0; attempt < 250; attempt += 1) {
-    if (existsSync(portFile)) {
-      const [port] = readFileSync(portFile, "utf8").trim().split(/\s+/);
-      if (port) return Number(port);
+    if (child.exitCode !== null || child.signalCode !== null) {
+      const diagnostic = getStderr().trim().split("\n").slice(-8).join("\n");
+      throw new Error(
+        diagnostic
+          ? `Chrome exited before DevTools became ready.\n${diagnostic}`
+          : "Chrome exited before DevTools became ready.",
+      );
+    }
+
+    try {
+      const response = await fetch(`http://127.0.0.1:${port}/json/version`);
+      if (response.ok) return;
+    } catch {
+      // Chrome is still starting.
     }
     await delay(20);
   }
-  throw new Error("Chrome did not expose a DevTools port.");
+  throw new Error("Chrome did not expose its DevTools endpoint.");
 };
 
 const launchChrome = async () => {
@@ -195,6 +216,7 @@ const launchChrome = async () => {
   }
 
   const profileDirectory = mkdtempSync(join(tmpdir(), "portfolio-ui-contracts-"));
+  const port = await reserveLocalPort();
   const child = spawn(executable, [
     "--headless=new",
     "--disable-background-networking",
@@ -207,19 +229,25 @@ const launchChrome = async () => {
     "--no-sandbox",
     "--no-default-browser-check",
     "--no-first-run",
-    "--remote-debugging-port=0",
+    "--remote-debugging-address=127.0.0.1",
+    `--remote-debugging-port=${port}`,
     `--user-data-dir=${profileDirectory}`,
     "about:blank",
   ], {
     stdio: ["ignore", "ignore", "pipe"],
   });
   let chromeStderr = "";
+  let chromeSpawnError = null;
   child.stderr.on("data", (chunk) => {
     chromeStderr += String(chunk);
   });
+  child.once("error", (error) => {
+    chromeSpawnError = error;
+  });
 
   try {
-    const port = await waitForDevToolsPort(profileDirectory);
+    await waitForDevTools(port, child, () => chromeStderr);
+    if (chromeSpawnError) throw chromeSpawnError;
     const response = await fetch(
       `http://127.0.0.1:${port}/json/new?${encodeURIComponent("about:blank")}`,
       { method: "PUT" },

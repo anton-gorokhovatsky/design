@@ -255,9 +255,9 @@ const measureContentStackOffsets = (surfaces) => {
     return [];
   }
 
+  const scrollTop = contentPanelBody.scrollTop;
   contentPanel.classList.add("is-measuring-content-stack");
   const bodyRect = contentPanelBody.getBoundingClientRect();
-  const scrollTop = contentPanelBody.scrollTop;
   const measurements = surfaces.map((surface) => {
     const rect = surface.getBoundingClientRect();
     return {
@@ -266,6 +266,9 @@ const measureContentStackOffsets = (surfaces) => {
     };
   });
   contentPanel.classList.remove("is-measuring-content-stack");
+  if (Math.abs(contentPanelBody.scrollTop - scrollTop) > 0.5) {
+    contentPanelBody.scrollTo({ top: scrollTop, behavior: "auto" });
+  }
 
   return measurements.map(({ offset }) => offset);
 };

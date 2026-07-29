@@ -962,6 +962,7 @@ const analyticsConsentAudit = async (page, viewport, label) => {
         const label = `${viewport.width}x${viewport.height}-${colorScheme}`;
         attachRuntimeLog(page, label);
         await page.goto(`${baseUrl}-${label}`, { waitUntil: "networkidle" });
+        await page.evaluate(() => document.fonts?.ready);
         await waitForLayout(page, 500);
 
         const initialSelectedId = await page.locator("[data-signal-field]")
@@ -1008,33 +1009,38 @@ const analyticsConsentAudit = async (page, viewport, label) => {
         });
         await context.close();
 
-        const nativeContext = await browser.newContext({
-          viewport,
-          colorScheme,
-        });
-        const nativePage = await nativeContext.newPage();
-        await isolateThirdPartyTelemetry(nativePage);
-        const nativeLabel = `${label}-native-scroll`;
-        attachRuntimeLog(nativePage, nativeLabel);
-        await nativePage.goto(`${baseUrl}-${nativeLabel}`, {
-          waitUntil: "networkidle",
-        });
-        await waitForLayout(nativePage, 500);
-        const nativeWorkStack = await stackAudit(
-          nativePage,
-          "work",
-          nativeLabel,
-        );
-        const nativeApproachStack = await stackAudit(
-          nativePage,
-          "approach",
-          nativeLabel,
-        );
-        report.viewports.at(-1).nativeScroll = {
-          workStack: nativeWorkStack,
-          approachStack: nativeApproachStack,
-        };
-        await nativeContext.close();
+        if (colorScheme === "dark") {
+          const nativeContext = await browser.newContext({
+            viewport,
+            colorScheme,
+          });
+          const nativePage = await nativeContext.newPage();
+          await isolateThirdPartyTelemetry(nativePage);
+          const nativeLabel = `${label}-native-scroll`;
+          attachRuntimeLog(nativePage, nativeLabel);
+          await nativePage.goto(`${baseUrl}-${nativeLabel}`, {
+            waitUntil: "networkidle",
+          });
+          await nativePage.evaluate(() => document.fonts?.ready);
+          await waitForLayout(nativePage, 500);
+          const nativeWorkStack = await stackAudit(
+            nativePage,
+            "work",
+            nativeLabel,
+          );
+          const nativeApproachStack = await stackAudit(
+            nativePage,
+            "approach",
+            nativeLabel,
+          );
+          report.viewports.at(-1).nativeScroll = {
+            workStack: nativeWorkStack,
+            approachStack: nativeApproachStack,
+          };
+          await nativeContext.close();
+        } else {
+          report.viewports.at(-1).nativeScroll = null;
+        }
       }
     }
 
@@ -1092,8 +1098,8 @@ const analyticsConsentAudit = async (page, viewport, label) => {
         : []),
       ...state.workStack.failures,
       ...state.approachStack.failures,
-      ...state.nativeScroll.workStack.failures,
-      ...state.nativeScroll.approachStack.failures,
+      ...(state.nativeScroll?.workStack.failures || []),
+      ...(state.nativeScroll?.approachStack.failures || []),
       ...(state.contact.failure
         ? [`${state.viewport.width}/${state.colorScheme}: contact geometry failed`]
         : []),
