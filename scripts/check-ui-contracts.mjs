@@ -4,17 +4,13 @@ import {
   createReadStream,
   existsSync,
   mkdirSync,
-  mkdtempSync,
   readFileSync,
-  rmSync,
   statSync,
   writeFileSync,
 } from "node:fs";
 import { createServer } from "node:http";
 import { createRequire } from "node:module";
-import { tmpdir } from "node:os";
 import { dirname, extname, join, normalize, resolve, sep } from "node:path";
-import { spawn } from "node:child_process";
 import { inflateSync } from "node:zlib";
 import { fileURLToPath } from "node:url";
 
@@ -83,78 +79,18 @@ const startStaticServer = async () => {
   };
 };
 
-const findChrome = () => {
-  let playwrightChromium = "";
-
-  try {
-    playwrightChromium = require("playwright").chromium.executablePath();
-  } catch {
-    playwrightChromium = "";
-  }
-
-  const candidates = [
-    process.env.CHROME_BIN,
-    playwrightChromium,
-    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-    "/Applications/Chromium.app/Contents/MacOS/Chromium",
-    "/usr/bin/google-chrome",
-    "/usr/bin/google-chrome-stable",
-    "/usr/bin/chromium",
-    "/usr/bin/chromium-browser",
-  ].filter(Boolean);
-
-  return candidates.find((path) => existsSync(path)) || "";
-};
-
 class CdpClient {
-  constructor(url) {
-    this.socket = new WebSocket(url);
-    this.nextId = 1;
-    this.pending = new Map();
-    this.listeners = new Map();
-    this.opened = new Promise((resolveOpen, rejectOpen) => {
-      this.socket.addEventListener("open", resolveOpen, { once: true });
-      this.socket.addEventListener("error", rejectOpen, { once: true });
-    });
-    this.socket.addEventListener("message", (event) => {
-      const message = JSON.parse(String(event.data));
-      if (message.id) {
-        const pending = this.pending.get(message.id);
-        if (!pending) return;
-        this.pending.delete(message.id);
-        if (message.error) pending.reject(new Error(message.error.message));
-        else pending.resolve(message.result);
-        return;
-      }
-
-      for (const listener of this.listeners.get(message.method) || []) {
-        listener(message.params);
-      }
-    });
-    this.socket.addEventListener("close", () => {
-      for (const pending of this.pending.values()) {
-        pending.reject(new Error("Chrome DevTools connection closed."));
-      }
-      this.pending.clear();
-    });
+  constructor(session) {
+    this.session = session;
   }
 
-  async send(method, params = {}) {
-    await this.opened;
-    const id = this.nextId;
-    this.nextId += 1;
-    const result = new Promise((resolveResult, rejectResult) => {
-      this.pending.set(id, { resolve: resolveResult, reject: rejectResult });
-    });
-    this.socket.send(JSON.stringify({ id, method, params }));
-    return result;
+  send(method, params = {}) {
+    return this.session.send(method, params);
   }
 
   on(method, listener) {
-    const listeners = this.listeners.get(method) || new Set();
-    listeners.add(listener);
-    this.listeners.set(method, listeners);
-    return () => listeners.delete(listener);
+    this.session.on(method, listener);
+    return () => this.session.off(method, listener);
   }
 
   waitFor(method, timeout = 10000) {
@@ -171,104 +107,36 @@ class CdpClient {
     });
   }
 
-  close() {
-    this.socket.close();
+  async close() {
+    await this.session.detach();
   }
 }
 
-const reserveLocalPort = async () => {
-  const server = createServer();
-  await new Promise((resolveListen, rejectListen) => {
-    server.once("error", rejectListen);
-    server.listen(0, "127.0.0.1", resolveListen);
-  });
-  const port = server.address().port;
-  await new Promise((resolveClose) => server.close(resolveClose));
-  return port;
-};
-
-const waitForDevTools = async (port, child, getStderr) => {
-  for (let attempt = 0; attempt < 250; attempt += 1) {
-    if (child.exitCode !== null || child.signalCode !== null) {
-      const diagnostic = getStderr().trim().split("\n").slice(-8).join("\n");
-      throw new Error(
-        diagnostic
-          ? `Chrome exited before DevTools became ready.\n${diagnostic}`
-          : "Chrome exited before DevTools became ready.",
-      );
-    }
-
-    try {
-      const response = await fetch(`http://127.0.0.1:${port}/json/version`);
-      if (response.ok) return;
-    } catch {
-      // Chrome is still starting.
-    }
-    await delay(20);
-  }
-  throw new Error("Chrome did not expose its DevTools endpoint.");
-};
-
 const launchChrome = async () => {
-  const executable = findChrome();
-  if (!executable) {
-    throw new Error("Chrome/Chromium is required; set CHROME_BIN when it is not installed normally.");
-  }
-
-  const profileDirectory = mkdtempSync(join(tmpdir(), "portfolio-ui-contracts-"));
-  const port = await reserveLocalPort();
-  const child = spawn(executable, [
-    "--headless=new",
-    "--disable-background-networking",
-    "--disable-component-update",
-    "--disable-default-apps",
-    "--disable-dev-shm-usage",
-    "--disable-extensions",
-    "--force-color-profile=srgb",
-    "--mute-audio",
-    "--no-sandbox",
-    "--no-default-browser-check",
-    "--no-first-run",
-    "--remote-debugging-address=127.0.0.1",
-    `--remote-debugging-port=${port}`,
-    `--user-data-dir=${profileDirectory}`,
-    "about:blank",
-  ], {
-    stdio: ["ignore", "ignore", "pipe"],
+  const { chromium } = require("playwright");
+  const browser = await chromium.launch({
+    headless: true,
+    args: [
+      "--disable-background-networking",
+      "--disable-component-update",
+      "--disable-default-apps",
+      "--disable-dev-shm-usage",
+      "--disable-extensions",
+      "--force-color-profile=srgb",
+      "--mute-audio",
+      "--no-sandbox",
+      "--no-default-browser-check",
+      "--no-first-run",
+    ],
   });
-  let chromeStderr = "";
-  let chromeSpawnError = null;
-  child.stderr.on("data", (chunk) => {
-    chromeStderr += String(chunk);
-  });
-  child.once("error", (error) => {
-    chromeSpawnError = error;
-  });
-
-  try {
-    await waitForDevTools(port, child, () => chromeStderr);
-    if (chromeSpawnError) throw chromeSpawnError;
-    const response = await fetch(
-      `http://127.0.0.1:${port}/json/new?${encodeURIComponent("about:blank")}`,
-      { method: "PUT" },
-    );
-    if (!response.ok) throw new Error(`Could not create Chrome target (${response.status}).`);
-    const target = await response.json();
-    return {
-      child,
-      client: new CdpClient(target.webSocketDebuggerUrl),
-      profileDirectory,
-      chromeStderr: () => chromeStderr,
-    };
-  } catch (error) {
-    child.kill("SIGTERM");
-    rmSync(profileDirectory, { recursive: true, force: true });
-    const diagnostic = chromeStderr.trim().split("\n").slice(-8).join("\n");
-    throw new Error(
-      diagnostic ? `${error.message}\n${diagnostic}` : error.message,
-      { cause: error },
-    );
-  }
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  const session = await context.newCDPSession(page);
+  return {
+    browser,
+    context,
+    client: new CdpClient(session),
+  };
 };
 
 const decodeRgbaPng = (path) => {
@@ -549,7 +417,7 @@ const navigate = async (client, url) => {
   await client.send("Page.navigate", { url });
   await loaded;
   await evaluate(client, "document.fonts.ready.then(() => true)", true);
-  await delay(120);
+  await delay(360);
 };
 
 const pressTab = async (client, { shift = false } = {}) => {
@@ -811,7 +679,7 @@ const auditBrowser = async (client, origin) => {
     input.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText" }));
     return true;
   })()`);
-  await delay(80);
+  await delay(220);
   const searchState = await evaluate(client, geometryExpression);
   const searchContract = await evaluate(client, `(() => ({
     expanded: document.querySelector("[data-command-input]")?.getAttribute("aria-expanded"),
@@ -1234,20 +1102,9 @@ try {
 } catch (error) {
   fail(error instanceof Error ? error.message : String(error));
 } finally {
-  chrome?.client.close();
-  if (chrome?.child && !chrome.child.killed) {
-    chrome.child.kill("SIGTERM");
-    await Promise.race([
-      new Promise((resolveExit) => chrome.child.once("exit", resolveExit)),
-      delay(1200),
-    ]);
-    if (chrome.child.exitCode === null && chrome.child.signalCode === null) {
-      chrome.child.kill("SIGKILL");
-    }
-  }
-  if (chrome?.profileDirectory) {
-    rmSync(chrome.profileDirectory, { recursive: true, force: true });
-  }
+  await chrome?.client.close();
+  await chrome?.context.close();
+  await chrome?.browser.close();
   if (staticServer?.server) {
     await new Promise((resolveClose) => staticServer.server.close(resolveClose));
   }
@@ -1259,9 +1116,6 @@ if (browserErrors.length > 0) fail("Browser runtime errors.", browserErrors);
 if (failures.length > 0) {
   console.error("UI contracts failed:");
   for (const failure of failures) console.error(`- ${failure}`);
-  if (chrome?.chromeStderr()) {
-    console.error(chrome.chromeStderr().split("\n").slice(-8).join("\n"));
-  }
   process.exit(1);
 }
 

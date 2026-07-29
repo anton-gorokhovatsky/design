@@ -1041,6 +1041,9 @@ const analyticsConsentAudit = async (page, viewport, label) => {
         } else {
           report.viewports.at(-1).nativeScroll = null;
         }
+
+        await browser.close();
+        browser = await webkit.launch({ headless: true });
       }
     }
 
