@@ -690,6 +690,54 @@ const auditBrowser = async (client, origin) => {
   }
 
   if (focusedScenarioLabel) {
+    await navigate(client, `${origin}/?qa=ui-contracts-favicon-visible-motion`);
+    const visibleMotion = await evaluate(client, `(() => new Promise((resolve) => {
+      const link = document.querySelector("#site-favicon");
+      const readPixels = (href) => new Promise((imageResolve) => {
+        const image = new Image();
+        image.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = 64;
+          canvas.height = 64;
+          const context = canvas.getContext("2d");
+          context.drawImage(image, 0, 0, 64, 64);
+          imageResolve(context.getImageData(0, 0, 64, 64).data);
+        };
+        image.src = href;
+      });
+      const firstHref = link?.href || "";
+
+      window.setTimeout(async () => {
+        const secondHref = link?.href || "";
+        const [first, second] = await Promise.all([
+          readPixels(firstHref),
+          readPixels(secondHref),
+        ]);
+        let changedPixels = 0;
+
+        for (let offset = 0; offset < first.length; offset += 4) {
+          const delta = Math.abs(first[offset] - second[offset])
+            + Math.abs(first[offset + 1] - second[offset + 1])
+            + Math.abs(first[offset + 2] - second[offset + 2])
+            + Math.abs(first[offset + 3] - second[offset + 3]);
+          if (delta > 24) changedPixels += 1;
+        }
+
+        resolve({
+          dataUrl: firstHref.startsWith("data:image/png"),
+          advanced: firstHref !== secondHref,
+          changedPixels,
+        });
+      }, 480);
+    }))()`, true);
+
+    if (
+      !visibleMotion.dataUrl
+      || !visibleMotion.advanced
+      || visibleMotion.changedPixels < 80
+    ) {
+      fail("Dynamic favicon motion is not visually perceptible.", visibleMotion);
+    }
     return;
   }
 

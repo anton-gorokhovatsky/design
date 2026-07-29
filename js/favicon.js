@@ -4,7 +4,7 @@ const faviconCanvas = document.createElement("canvas");
 const faviconContext = faviconCanvas.getContext("2d");
 let faviconFrameIndex = 0;
 let faviconFrameTimer = 0;
-const faviconFrameCount = 36;
+const faviconFrameCount = 32;
 
 faviconCanvas.width = 64;
 faviconCanvas.height = 64;
@@ -93,60 +93,44 @@ const drawFaviconFrame = (frameIndex = 0) => {
   drawFaviconArc({
     dash: [],
     offset: 0,
-    width: 2.1,
-    alpha: 0.62,
+    width: 1.6,
+    alpha: 0.46,
   });
   drawFaviconArc({
-    dash: [3.2, 2.6],
-    offset: phase * -26,
-    width: 3.8,
-    alpha: 1,
+    dash: [3.2, 3],
+    offset: phase * -18,
+    width: 3.4,
+    alpha: 0.98,
   });
   drawFaviconArc({
-    dash: [1.2, 4.2],
+    dash: [1.2, 4.6],
     offset: phase * 14,
-    width: 2,
-    alpha: 0.72,
+    width: 1.8,
+    alpha: 0.58,
   });
 
   const particles = [
-    [0.1, 4, false],
-    [0.2, 7, true],
-    [0.31, 4, false],
-    [0.43, 6, true],
+    [0.14, 3, false],
+    [0.27, 6, true],
+    [0.4, 4, false],
     [0.56, 8, true],
-    [0.68, 6, true],
-    [0.79, 4, false],
-    [0.9, 5, true],
-    [0.97, 4, false],
+    [0.7, 6, true],
+    [0.82, 4, false],
+    [0.92, 3, false],
   ];
 
   particles.forEach(([baseProgress, size, cross], index) => {
-    const travel = Math.sin(phase * Math.PI * 2 + index * 0.82) * 0.012;
+    const travel = Math.sin(phase * Math.PI * 2 + index * 0.82) * 0.016;
     const point = getFaviconArcPoint(
       Math.max(0.05, Math.min(0.98, baseProgress + travel)),
     );
-    const alpha = 0.72
-      + (Math.sin(phase * Math.PI * 2 + index * 1.16) + 1) * 0.14;
+    const alpha = 0.58
+      + (Math.sin(phase * Math.PI * 2 + index * 1.16) + 1) * 0.2;
     drawFaviconParticle(point, size, cross, alpha);
   });
 
-  const beaconProgress = (phase * 1.08) % 1;
-  [
-    { lag: 0.065, size: 3, alpha: 0.34 },
-    { lag: 0.038, size: 4, alpha: 0.56 },
-    { lag: 0, size: 7, alpha: 1, cross: true },
-  ].forEach(({ lag, size, alpha, cross = false }) => {
-    drawFaviconParticle(
-      getFaviconArcPoint((beaconProgress - lag + 1) % 1),
-      size,
-      cross,
-      alpha,
-    );
-  });
-
-  drawFaviconParticle({ x: 6, y: 59 }, 3, false, 0.62 + pulse * 0.08);
-  drawFaviconParticle({ x: 58, y: 41 }, 3, false, 0.62 - pulse * 0.08);
+  drawFaviconParticle({ x: 6, y: 59 }, 3, false, 0.5 + pulse * 0.1);
+  drawFaviconParticle({ x: 58, y: 41 }, 3, false, 0.5 - pulse * 0.1);
 
   siteFavicon.href = faviconCanvas.toDataURL("image/png");
 };
@@ -183,7 +167,7 @@ const syncFaviconMotion = () => {
   faviconFrameTimer = window.setInterval(() => {
     faviconFrameIndex = (faviconFrameIndex + 1) % faviconFrameCount;
     drawFaviconFrame(faviconFrameIndex);
-  }, 160);
+  }, 120);
 };
 
 if (siteFavicon && faviconContext) {
