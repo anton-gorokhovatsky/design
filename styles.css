@@ -6729,7 +6729,7 @@ body:has(.command-dock.is-open) .map-links.has-active-relation {
   .control-console .constellation-nav__item,
   .control-console .constellation-nav__item[data-nav-view] {
     --nav-size: 26px;
-    height: 38px;
+    height: 40px;
     grid-template-columns: 30px minmax(0, 1fr);
     gap: 8px;
     padding: 0 8px;
@@ -6792,7 +6792,7 @@ body:has(.command-dock.is-open) .map-links.has-active-relation {
 
   .control-console .constellation-nav.is-open {
     width: min(196px, calc(100vw - 16px));
-    height: 244px;
+    height: 254px;
     border-radius: 24px;
   }
 
@@ -6811,10 +6811,10 @@ body:has(.command-dock.is-open) .map-links.has-active-relation {
   }
 
   .control-console .constellation-nav.is-open .constellation-nav__toggle {
-    top: 4px;
-    right: 4px;
-    width: 36px;
-    height: 36px;
+    top: 2px;
+    right: 2px;
+    width: 40px;
+    height: 40px;
     border-radius: 11px;
   }
 
@@ -8776,24 +8776,26 @@ html[data-focus-modality="pointer"]
   }
 }
 
-/* On tall phones the fixed controls occupy a real instrument zone rather
-   than floating over the final rows of the map. The camera gives that zone
-   back to the interface and uses the otherwise quiet upper field, while
-   compact/landscape phones keep their already accepted geometry. */
+/* Mobile framing follows the real upper edge of the lower console (script.js
+   supplies exact values after Safari resolves its visible viewport). These
+   values are stable first-paint fallbacks for a tall portrait phone. */
 @media (max-width: 680px) {
   :root {
     --mobile-console-bottom: max(8px, env(safe-area-inset-bottom));
-    --mobile-map-reserve: clamp(0px, calc((100svh - 680px) * 0.55), 112px);
-    --mobile-map-center-shift: clamp(0px, calc((100svh - 680px) * 0.275), 56px);
+    --mobile-map-reserve: 126px;
+    --mobile-map-top: -18px;
+    --mobile-map-center-y: calc(50svh - 72px);
+    --mobile-time-scale: 1.18;
   }
 
   .map-camera {
+    top: var(--mobile-map-top);
     bottom: var(--mobile-map-reserve);
   }
 
   .origin-marker__label {
     top: calc(
-      50% - var(--mobile-map-center-shift) + var(--core-y) + var(--layer-near-y)
+      var(--mobile-map-center-y) + var(--core-y) + var(--layer-near-y)
     );
   }
 
@@ -9000,7 +9002,7 @@ html[data-focus-modality="pointer"]
 
 @media (max-width: 680px) {
   .practice-map[data-time-view] .map-camera {
-    transform: translate3d(0, -1.25%, 0) scale(1.085);
+    transform: translate3d(0, -0.75%, 0) scale(var(--mobile-time-scale));
   }
 }
 

@@ -1674,6 +1674,12 @@ const writeUrlState = (changes, { replace = false } = {}) => {
   window.history[method]({ ...window.history.state, ...changes }, "", nextUrl);
 };
 
+const compactTimeAngleOffsets = {
+  optimal: -0.55,
+  "garage-app": 0.45,
+  narkomfin: 0.18,
+};
+
 const getTimeLayout = (item) => {
   if (!Number.isFinite(item.timeYear)) {
     return { x: item.x, y: item.y };
@@ -1710,7 +1716,9 @@ const getTimeLayout = (item) => {
 
   radiusX += centeredIndex * 0.8;
   radiusY += centeredIndex * 0.55;
-  const angle = sourceAngle + centeredIndex * 0.32;
+  const angle = sourceAngle
+    + centeredIndex * 0.32
+    + (window.innerWidth <= 680 ? compactTimeAngleOffsets[item.id] || 0 : 0);
 
   return {
     x: centerX + Math.cos(angle) * radiusX,
@@ -3835,6 +3843,70 @@ const commandForm = document.querySelector("[data-command-form]");
 const commandInput = document.querySelector("[data-command-input]");
 const commandResults = document.querySelector("[data-command-results]");
 const commandStatus = document.querySelector("[data-command-status]");
+const compactMapFrame = window.matchMedia("(max-width: 680px)");
+let mobileMapFrame = 0;
+const syncMobileMapFrame = () => {
+  window.cancelAnimationFrame(mobileMapFrame);
+  mobileMapFrame = window.requestAnimationFrame(() => {
+    if (!signalField || !commandForm) {
+      return;
+    }
+
+    if (!compactMapFrame.matches) {
+      [
+        "--mobile-map-reserve",
+        "--mobile-map-top",
+        "--mobile-map-center-y",
+        "--mobile-time-scale",
+      ].forEach((property) => signalField.style.removeProperty(property));
+      return;
+    }
+
+    const mapBounds = signalField.getBoundingClientRect();
+    const searchBounds = commandForm.getBoundingClientRect();
+
+    if (!mapBounds.height || !searchBounds.height) {
+      return;
+    }
+
+    /* The lower controls define the actual edge of the usable map. On short
+       screens a small part of the optical field may continue behind the
+       material, but interactive content stays in the clear stage above it. */
+    const shortScreenPressure = Math.max(
+      0,
+      Math.min(1, (700 - mapBounds.height) / 132),
+    );
+    const controlClearance = Math.max(0, mapBounds.bottom - searchBounds.top);
+    const stageGap = 14;
+    const lowerOverscan = 26 * shortScreenPressure;
+    const cameraTop = -(18 + 10 * shortScreenPressure);
+    const cameraReserve = Math.max(
+      52,
+      controlClearance + stageGap - lowerOverscan,
+    );
+    const cameraCenter = cameraTop
+      + (mapBounds.height - cameraReserve - cameraTop) / 2;
+    const timeScale = 1.18 - 0.04 * shortScreenPressure;
+
+    signalField.style.setProperty(
+      "--mobile-map-reserve",
+      `${cameraReserve.toFixed(2)}px`,
+    );
+    signalField.style.setProperty(
+      "--mobile-map-top",
+      `${cameraTop.toFixed(2)}px`,
+    );
+    signalField.style.setProperty(
+      "--mobile-map-center-y",
+      `${cameraCenter.toFixed(2)}px`,
+    );
+    signalField.style.setProperty(
+      "--mobile-time-scale",
+      timeScale.toFixed(3),
+    );
+    scheduleMapLinksRender();
+  });
+};
 const syncCommandPlaceholder = () => {
   if (commandInput) {
     commandInput.placeholder = compactConstellationNav.matches
@@ -3845,6 +3917,14 @@ const syncCommandPlaceholder = () => {
 
 compactConstellationNav.addEventListener("change", syncCommandPlaceholder);
 syncCommandPlaceholder();
+compactMapFrame.addEventListener?.("change", syncMobileMapFrame);
+window.addEventListener("resize", syncMobileMapFrame, { passive: true });
+window.addEventListener("pageshow", syncMobileMapFrame, { passive: true });
+window.visualViewport?.addEventListener("resize", syncMobileMapFrame, {
+  passive: true,
+});
+document.fonts?.ready.then(syncMobileMapFrame);
+syncMobileMapFrame();
 
 let currentCommandResults = [];
 let activeCommandIndex = -1;
@@ -3880,8 +3960,8 @@ const commandViews = [
   {
     type: "action",
     id: "time",
-    title: "ВРЕМЯ / 2009—2026",
-    meta: "ХРОНОЛОГИЯ ОПЫТА НА ОРБИТАХ",
+    title: "ХРОНОЛОГИЯ",
+    meta: "ОПЫТ / 2009—2026 / ГОДОВЫЕ ОРБИТЫ",
     keywords: "время годы хронология таймлайн орбиты",
   },
   {
