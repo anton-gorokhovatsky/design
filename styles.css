@@ -6952,26 +6952,36 @@ html[data-theme="light"] .practice-map::before {
   background:
     radial-gradient(
       circle at var(--focus-x) var(--focus-y),
-      color-mix(in srgb, var(--map-focus-accent) 15%, transparent) 0,
-      transparent 23%
+      color-mix(in srgb, var(--map-focus-accent) 10%, transparent) 0,
+      transparent 21%
+    ),
+    radial-gradient(
+      ellipse at 50% 51%,
+      transparent 42%,
+      color-mix(in srgb, var(--ink) 3%, transparent) 100%
     ),
     radial-gradient(
       ellipse at 50% 53%,
-      color-mix(in srgb, var(--signal) 16%, transparent) 0,
-      transparent 43%
+      color-mix(in srgb, var(--signal) 7%, transparent) 0,
+      transparent 39%
     ),
     radial-gradient(
       ellipse at 49% 82%,
-      color-mix(in srgb, var(--tone-personal) 13%, transparent) 0,
-      transparent 52%
+      color-mix(in srgb, var(--tone-personal) 6%, transparent) 0,
+      transparent 46%
+    ),
+    radial-gradient(
+      ellipse at 50% 106%,
+      color-mix(in srgb, var(--ink) 3%, transparent) 0,
+      transparent 58%
     ),
     linear-gradient(90deg, transparent 49.95%, var(--line-soft) 50%, transparent 50.05%),
     linear-gradient(transparent 49.95%, var(--line-soft) 50%, transparent 50.05%),
     linear-gradient(
       180deg,
-      color-mix(in srgb, #fff 28%, var(--bg)) 0,
-      var(--bg) 43%,
-      color-mix(in srgb, var(--signal) 5%, var(--surface)) 100%
+      color-mix(in srgb, #fff 34%, var(--bg)) 0,
+      var(--bg) 48%,
+      color-mix(in srgb, var(--ink) 2%, var(--surface)) 100%
     );
 }
 
@@ -7042,12 +7052,16 @@ html[data-theme="dark"] .map-depth-grid {
 }
 
 html[data-theme="light"] .map-grid {
-  opacity: 0.72;
+  opacity: 0.76;
 }
 
 html[data-theme="light"] .map-depth-grid {
-  color: color-mix(in srgb, var(--signal) 44%, var(--line));
-  opacity: 0.46;
+  color: color-mix(in srgb, var(--ink) 16%, var(--line));
+  opacity: 0.38;
+}
+
+html[data-theme="light"] .orbital-radar i {
+  border-color: color-mix(in srgb, var(--ink) 16%, transparent);
 }
 
 .map-depth-grid :is(path, line) {
@@ -8208,7 +8222,7 @@ html[data-theme="dark"] .orbital-terminator {
 }
 
 html[data-theme="light"] .signal-constellation {
-  opacity: 0.96;
+  opacity: 0.82;
 }
 
 html[data-theme="dark"] .signal-constellation {
@@ -8371,28 +8385,69 @@ html[data-theme="dark"] .orbital-horizon {
 }
 
 html[data-theme="light"] .orbital-horizon {
-  border-top-color: color-mix(in srgb, var(--signal) 27%, transparent);
+  border-top-color: color-mix(in srgb, var(--signal) 24%, var(--line));
   background:
     radial-gradient(
       ellipse at 22% 6%,
-      color-mix(in srgb, var(--signal) 14%, transparent) 0 2%,
-      transparent 20%
+      color-mix(in srgb, var(--signal) 4%, transparent) 0 2%,
+      transparent 22%
     ),
     radial-gradient(
       ellipse at 74% 2%,
-      color-mix(in srgb, var(--tone-personal) 14%, transparent) 0 2%,
-      transparent 24%
+      color-mix(in srgb, var(--tone-personal) 4%, transparent) 0 2%,
+      transparent 26%
     ),
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--signal) 15%, var(--bg)) 0,
-      color-mix(in srgb, var(--tone-personal) 8%, var(--bg)) 42%,
-      var(--bg) 100%
+      color-mix(in srgb, #fff 46%, var(--surface)) 0,
+      color-mix(in srgb, var(--bg) 58%, var(--surface)) 44%,
+      color-mix(in srgb, var(--ink) 2%, var(--surface)) 100%
     );
   box-shadow:
-    0 -1px 0 color-mix(in srgb, var(--signal) 20%, transparent),
-    0 -28px 68px color-mix(in srgb, var(--signal) 17%, transparent);
-  opacity: 0.82;
+    0 -1px 0 color-mix(in srgb, var(--signal) 17%, transparent),
+    0 -20px 52px color-mix(in srgb, var(--ink) 4%, transparent);
+  opacity: 0.78;
+}
+
+html[data-theme="light"] .orbital-horizon::before,
+html[data-theme="light"] .orbital-horizon::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+}
+
+html[data-theme="light"] .orbital-horizon::before {
+  background:
+    repeating-radial-gradient(
+      ellipse 82% 34% at 50% -5%,
+      transparent 0 35px,
+      color-mix(in srgb, var(--ink) 11%, transparent) 36px 37px,
+      transparent 38px 70px
+    ),
+    repeating-conic-gradient(
+      from 81deg at 50% -8%,
+      transparent 0 8.8deg,
+      color-mix(in srgb, var(--ink) 8%, transparent) 9deg 9.18deg,
+      transparent 9.35deg 18deg
+    );
+  opacity: 0.68;
+  mask-image: linear-gradient(#000 0, rgba(0, 0, 0, 0.58) 48%, transparent 94%);
+  -webkit-mask-image: linear-gradient(#000 0, rgba(0, 0, 0, 0.58) 48%, transparent 94%);
+}
+
+html[data-theme="light"] .orbital-horizon::after {
+  background:
+    radial-gradient(circle at 14% 24%, color-mix(in srgb, var(--ink) 28%, transparent) 0 1px, transparent 1.7px),
+    radial-gradient(circle at 27% 41%, color-mix(in srgb, var(--ink) 22%, transparent) 0 1px, transparent 1.8px),
+    radial-gradient(circle at 39% 18%, color-mix(in srgb, var(--signal) 24%, transparent) 0 1px, transparent 1.8px),
+    radial-gradient(circle at 54% 34%, color-mix(in srgb, var(--ink) 24%, transparent) 0 1px, transparent 1.8px),
+    radial-gradient(circle at 66% 16%, color-mix(in srgb, var(--tone-personal) 24%, transparent) 0 1px, transparent 1.8px),
+    radial-gradient(circle at 78% 43%, color-mix(in srgb, var(--ink) 22%, transparent) 0 1px, transparent 1.8px),
+    radial-gradient(circle at 88% 25%, color-mix(in srgb, var(--signal) 20%, transparent) 0 1px, transparent 1.8px);
+  opacity: 0.72;
+  mask-image: linear-gradient(#000 0, rgba(0, 0, 0, 0.5) 54%, transparent 90%);
+  -webkit-mask-image: linear-gradient(#000 0, rgba(0, 0, 0, 0.5) 54%, transparent 90%);
 }
 
 .orbital-radar {
@@ -8913,6 +8968,31 @@ html[data-focus-modality="pointer"]
         100% - var(--mobile-horizon-top) + var(--mobile-map-reserve) + 48px
       )
     );
+  }
+
+  html[data-theme="light"] .orbital-horizon {
+    border-top-color: color-mix(in srgb, var(--signal) 18%, var(--line));
+    background:
+      radial-gradient(
+        ellipse at 24% 4%,
+        color-mix(in srgb, var(--signal) 3%, transparent) 0 2%,
+        transparent 24%
+      ),
+      radial-gradient(
+        ellipse at 76% 2%,
+        color-mix(in srgb, var(--tone-personal) 3%, transparent) 0 2%,
+        transparent 28%
+      ),
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--surface) 18%, transparent) 0,
+        color-mix(in srgb, var(--surface) 54%, transparent) 42%,
+        color-mix(in srgb, var(--surface) 88%, transparent) 100%
+      );
+    box-shadow:
+      0 -1px 0 color-mix(in srgb, var(--signal) 12%, transparent),
+      0 -14px 40px color-mix(in srgb, var(--ink) 2%, transparent);
+    opacity: 0.72;
   }
 }
 
