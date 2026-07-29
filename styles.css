@@ -6599,7 +6599,7 @@ body:has(.command-dock.is-open) .map-links.has-active-relation {
   display: none;
 }
 
-.constellation-nav__strand {
+.constellation-nav__carabiner {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -6607,11 +6607,11 @@ body:has(.command-dock.is-open) .map-links.has-active-relation {
   height: 18px;
   overflow: visible;
   color: inherit;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) rotate(-14deg);
   transform-origin: center;
 }
 
-.constellation-nav__strand path {
+.constellation-nav__carabiner path {
   fill: none;
   stroke: currentColor;
   stroke-linecap: round;
@@ -6620,8 +6620,36 @@ body:has(.command-dock.is-open) .map-links.has-active-relation {
   vector-effect: non-scaling-stroke;
 }
 
-.constellation-nav__strand circle {
-  fill: currentColor;
+.constellation-nav__carabiner-gate {
+  transform-box: view-box;
+  transform-origin: 13.8px 15px;
+  transform: rotate(22deg);
+  transition: transform 220ms var(--motion-shift);
+}
+
+.constellation-nav__carabiner-sleeves {
+  stroke-width: 1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .constellation-nav__item[data-nav-view="contact"]:hover
+    .constellation-nav__carabiner-gate {
+    transform: none;
+  }
+}
+
+.constellation-nav__item[data-nav-view="contact"]:focus-visible
+    .constellation-nav__carabiner-gate,
+.constellation-nav__item[data-nav-view="contact"].is-current
+  .constellation-nav__carabiner-gate {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .constellation-nav__carabiner-gate {
+    transform: none;
+    transition: none;
+  }
 }
 
 .constellation-nav__item[data-nav-view="approach"] .constellation-nav__shape::before {

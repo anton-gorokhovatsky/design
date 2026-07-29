@@ -550,14 +550,21 @@
               >
                 <span class="constellation-nav__shape" aria-hidden="true">
                   <svg
-                    class="constellation-nav__strand"
+                    class="constellation-nav__carabiner"
                     viewBox="0 0 20 20"
                     focusable="false"
                   >
                     <path
-                      d="M17 5.4C12.7 5.2 10.7 6.9 10 9.2C9.2 11.8 6.7 13.4 4.5 12.3C2.3 11.2 2.5 8.2 4.7 7.1C7 5.9 9.5 7.2 10 9.2"
+                      class="constellation-nav__carabiner-body"
+                      d="M14.6 3.8C12.1 2.2 8.4 2.3 5.6 4.3C3.1 6.1 2.3 9.5 3.5 12.4C4.8 15.5 8.2 17.2 11.3 16.4C12.3 16.2 13.1 15.7 13.8 15"
                     ></path>
-                    <circle cx="17" cy="5.4" r="1.25"></circle>
+                    <g class="constellation-nav__carabiner-gate">
+                      <path d="M13.8 15L14.6 3.8"></path>
+                      <path
+                        class="constellation-nav__carabiner-sleeves"
+                        d="M12.8 13.7L14.8 13.85M13.5 5.1L15.5 5.25"
+                      ></path>
+                    </g>
                   </svg>
                 </span>
                 <span class="constellation-nav__label">СВЯЗАТЬСЯ</span>
