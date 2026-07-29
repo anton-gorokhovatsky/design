@@ -4,7 +4,7 @@ const faviconCanvas = document.createElement("canvas");
 const faviconContext = faviconCanvas.getContext("2d");
 let faviconFrameIndex = 0;
 let faviconFrameTimer = 0;
-const faviconFrameCount = 48;
+const faviconFrameCount = 36;
 
 faviconCanvas.width = 64;
 faviconCanvas.height = 64;
@@ -98,7 +98,7 @@ const drawFaviconFrame = (frameIndex = 0) => {
   });
   drawFaviconArc({
     dash: [3.2, 2.6],
-    offset: phase * -18,
+    offset: phase * -26,
     width: 3.8,
     alpha: 1,
   });
@@ -129,6 +129,20 @@ const drawFaviconFrame = (frameIndex = 0) => {
     const alpha = 0.72
       + (Math.sin(phase * Math.PI * 2 + index * 1.16) + 1) * 0.14;
     drawFaviconParticle(point, size, cross, alpha);
+  });
+
+  const beaconProgress = (phase * 1.08) % 1;
+  [
+    { lag: 0.065, size: 3, alpha: 0.34 },
+    { lag: 0.038, size: 4, alpha: 0.56 },
+    { lag: 0, size: 7, alpha: 1, cross: true },
+  ].forEach(({ lag, size, alpha, cross = false }) => {
+    drawFaviconParticle(
+      getFaviconArcPoint((beaconProgress - lag + 1) % 1),
+      size,
+      cross,
+      alpha,
+    );
   });
 
   drawFaviconParticle({ x: 6, y: 59 }, 3, false, 0.62 + pulse * 0.08);
@@ -169,7 +183,7 @@ const syncFaviconMotion = () => {
   faviconFrameTimer = window.setInterval(() => {
     faviconFrameIndex = (faviconFrameIndex + 1) % faviconFrameCount;
     drawFaviconFrame(faviconFrameIndex);
-  }, 240);
+  }, 160);
 };
 
 if (siteFavicon && faviconContext) {

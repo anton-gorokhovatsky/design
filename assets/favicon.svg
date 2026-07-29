@@ -38,6 +38,11 @@
     .particle--2 { animation-delay: -1.4s; }
     .particle--3 { animation-delay: -2.8s; }
 
+    .beacon {
+      fill: #315dff;
+      filter: drop-shadow(0 0 1px #315dff);
+    }
+
     @keyframes flow {
       to { stroke-dashoffset: -18; }
     }
@@ -72,4 +77,11 @@
   <path class="particle particle--2" d="M51 23h6M54 20v6" fill="none" stroke-width="2.2"/>
   <rect class="particle particle--3" x="4" y="57" width="3" height="3"/>
   <rect class="particle particle--2" x="57" y="40" width="3" height="3"/>
+  <circle class="beacon" r="3.5">
+    <animateMotion
+      dur="5.8s"
+      repeatCount="indefinite"
+      path="M3 56C15 17 43 7 61 35"
+    />
+  </circle>
 </svg>

@@ -335,6 +335,7 @@ const geometryExpression = String.raw`(() => {
     mobileNavigation: ".constellation-nav__orbit",
     mapCamera: ".map-camera",
     horizon: ".orbital-horizon",
+    garageNode: '[data-map-id="garage"] .map-node__glyph',
     inspector: ".map-inspector",
     reel: ".map-hover-preview",
     reelMedia: ".map-hover-preview__media",
@@ -512,6 +513,13 @@ const auditGeometry = (label, state) => {
         });
       }
     }
+    if (!visible.garageNode) {
+      fail(`${label}: primary company sphere is not visible.`);
+    } else if (geometry.garageNode.top < 6) {
+      fail(`${label}: primary company sphere is clipped at the top edge.`, {
+        top: geometry.garageNode.top,
+      });
+    }
     if (overlaps(geometry.search, geometry.systemDock, 1)) {
       fail(`${label}: mobile search and system dock overlap.`);
     }
@@ -614,6 +622,15 @@ const auditBrowser = async (client, origin) => {
       height: 700,
       screenWidth: 393,
       screenHeight: 852,
+      mobile: true,
+      theme: "light",
+    },
+    {
+      label: "mobile-390-safari-compact-light",
+      width: 390,
+      height: 664,
+      screenWidth: 390,
+      screenHeight: 844,
       mobile: true,
       theme: "light",
     },

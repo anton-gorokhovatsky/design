@@ -179,8 +179,27 @@ const resolveMapLayout = (item) => {
     const safeMobileYScale = Number.isFinite(mobileYScale)
       ? Math.max(1, Math.min(1.16, mobileYScale))
       : 1;
+    const mobileMapTop = Number.parseFloat(
+      signalField?.style.getPropertyValue("--mobile-map-top") || "-18",
+    );
+    const mobileMapReserve = Number.parseFloat(
+      signalField?.style.getPropertyValue("--mobile-map-reserve") || "126",
+    );
+    const cameraHeight = Math.max(
+      1,
+      (signalField?.clientHeight || window.innerHeight)
+        - mobileMapReserve
+        - mobileMapTop,
+    );
+    const glyphRadius = (Number.isFinite(item.size) ? item.size : 24) * 0.44;
+    const safeTopY = (
+      (glyphRadius + 8 - mobileMapTop) / cameraHeight
+    ) * 100;
 
-    y = Math.max(4, Math.min(94, 50 + (y - 50) * safeMobileYScale));
+    y = Math.max(
+      safeTopY,
+      Math.min(94, 50 + (y - 50) * safeMobileYScale),
+    );
   }
 
   return { x, y };
