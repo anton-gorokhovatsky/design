@@ -7989,6 +7989,17 @@ html[data-theme="dark"] .map-node--running .map-node__glyph {
   overscroll-behavior: contain;
 }
 
+.map-inspector:has(.map-evidence:not([hidden])) .map-readout__description {
+  max-height: min(46vh, 350px);
+}
+
+@media (min-width: 681px) and (min-height: 621px) {
+  .map-inspector:has(.map-evidence:not([hidden])) .map-readout__description {
+    max-height: none;
+    overflow: visible;
+  }
+}
+
 .map-inspector .map-readout__description > p {
   margin: 0;
 }
@@ -7997,7 +8008,7 @@ html[data-theme="dark"] .map-node--running .map-node__glyph {
   display: grid;
   gap: 9px;
   margin: 13px 0 0;
-  padding: 12px 0 0;
+  padding: 12px 0 14px;
   border-top: 1px solid var(--line-soft);
 }
 
@@ -8241,7 +8252,7 @@ html[data-theme="dark"] .signal-constellation {
   .map-evidence {
     gap: 8px;
     margin-top: 11px;
-    padding-top: 10px;
+    padding: 10px 0 10px;
   }
 
   .map-evidence > div {
@@ -9189,6 +9200,10 @@ html[data-focus-modality="pointer"]
 }
 
 @media (min-width: 901px) {
+  .map-inspector {
+    right: 248px;
+  }
+
   .display-control {
     width: 216px;
     min-height: 0;

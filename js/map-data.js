@@ -191,7 +191,7 @@ const mapItems = [
     href: "https://apps.apple.com/ru/app/я-иду-в-музей/id1558275984",
     kindLabel: "ПРОЕКТ / ГРАФ «ГАРАЖА»",
     x: 84,
-    y: 36,
+    y: 46,
     size: 17,
   },
   {

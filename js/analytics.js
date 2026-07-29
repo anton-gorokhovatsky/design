@@ -64,7 +64,7 @@ const openAnalyticsConsent = ({ focus = true } = {}) => {
   analyticsConsent.classList.add("is-open");
 
   if (focus) {
-    window.requestAnimationFrame(() => analyticsAllow?.focus());
+    analyticsAllow?.focus({ preventScroll: true });
   }
 };
 

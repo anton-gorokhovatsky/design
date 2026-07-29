@@ -11,7 +11,7 @@ bundler, or runtime dependency:
 4. `map-data.js` — deterministic portfolio data.
 5. `map-engine.js` — map geometry, relations, filters, and observation route.
 6. `panels.js` — movable consoles, content panels, search, and URL state.
-7. `favicon.js` — dynamic favicon and visibility lifecycle.
+7. `favicon.js` — animated source-faithful variant 01 favicon and visibility lifecycle.
 
 Later layers may consume names declared by earlier layers. Moving a declaration
 between files therefore requires running `node scripts/check-project.mjs` and

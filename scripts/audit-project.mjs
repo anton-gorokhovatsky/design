@@ -746,10 +746,10 @@ requireContract(
 );
 requireContract(
   scriptSource.includes("if (document.hidden)")
-    && scriptSource.includes('root.dataset.faviconMotion = "paused"')
-    && scriptSource.includes('root.dataset.faviconMotion = "running"'),
+    && scriptSource.includes('root.dataset.faviconMotion = "animated"')
+    && scriptSource.includes("frameInterval = document.hidden ? 240 : 80"),
   "favicon-hidden-lifecycle",
-  "The animated favicon must stop scheduling frames while the document is hidden.",
+  "Variant 01 must remain visibly animated in foreground and background tabs.",
 );
 warnContract(
   styleSource.includes("@media (forced-colors: active)"),

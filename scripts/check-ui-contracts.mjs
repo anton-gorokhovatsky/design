@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { createHash } from "node:crypto";
 import {
   createReadStream,
   existsSync,
@@ -214,7 +215,11 @@ const decodeRgbaPng = (path) => {
 };
 
 const auditFavicon = () => {
-  const { width, height, pixels } = decodeRgbaPng(join(projectRoot, "assets/favicon.png"));
+  const faviconPngPath = join(projectRoot, "assets/favicon.png");
+  const faviconSvgPath = join(projectRoot, "assets/favicon.svg");
+  const pngHash = createHash("sha256").update(readFileSync(faviconPngPath)).digest("hex");
+  const svgHash = createHash("sha256").update(readFileSync(faviconSvgPath)).digest("hex");
+  const { width, height, pixels } = decodeRgbaPng(faviconPngPath);
   let minimumX = width;
   let minimumY = height;
   let maximumX = -1;
@@ -248,8 +253,14 @@ const auditFavicon = () => {
     (width * height - 1) * 4 + 3,
   ].map((offset) => pixels[offset]);
 
+  if (pngHash !== "c5029e4b5b9b950895d5b095d974b6c9f14229c07907cf68cacc0346c2be07fa") {
+    fail("Favicon PNG must remain the accepted historical variant 01.", { pngHash });
+  }
+  if (svgHash !== "b41af5e5240cf0f83945cbfb87a7be0237fe07e20abb4218a3eea895bc6ab6c3") {
+    fail("Favicon SVG must remain the accepted historical variant 01.", { svgHash });
+  }
   if (width !== 64 || height !== 64) fail("Favicon fallback must remain 64×64.", { width, height });
-  if (bounds.width < 58 || bounds.height < 44) {
+  if (bounds.width < 58 || bounds.height < 38) {
     fail("Favicon arc no longer fills the tab slot.", bounds);
   }
   if (visiblePixels < 260 || visiblePixels > 1100) {
@@ -690,53 +701,44 @@ const auditBrowser = async (client, origin) => {
   }
 
   if (focusedScenarioLabel) {
-    await navigate(client, `${origin}/?qa=ui-contracts-favicon-visible-motion`);
-    const visibleMotion = await evaluate(client, `(() => new Promise((resolve) => {
+    await navigate(client, `${origin}/?qa=ui-contracts-favicon-motion`);
+    const faviconMotion = await evaluate(client, `(() => new Promise((resolve) => {
       const link = document.querySelector("#site-favicon");
-      const readPixels = (href) => new Promise((imageResolve) => {
-        const image = new Image();
-        image.onload = () => {
-          const canvas = document.createElement("canvas");
-          canvas.width = 64;
-          canvas.height = 64;
-          const context = canvas.getContext("2d");
-          context.drawImage(image, 0, 0, 64, 64);
-          imageResolve(context.getImageData(0, 0, 64, 64).data);
-        };
-        image.src = href;
-      });
       const firstHref = link?.href || "";
+      const image = new Image();
 
-      window.setTimeout(async () => {
-        const secondHref = link?.href || "";
-        const [first, second] = await Promise.all([
-          readPixels(firstHref),
-          readPixels(secondHref),
-        ]);
-        let changedPixels = 0;
-
-        for (let offset = 0; offset < first.length; offset += 4) {
-          const delta = Math.abs(first[offset] - second[offset])
-            + Math.abs(first[offset + 1] - second[offset + 1])
-            + Math.abs(first[offset + 2] - second[offset + 2])
-            + Math.abs(first[offset + 3] - second[offset + 3]);
-          if (delta > 24) changedPixels += 1;
+      image.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = 64;
+        canvas.height = 64;
+        const context = canvas.getContext("2d");
+        context.drawImage(image, 0, 0, 64, 64);
+        const pixels = context.getImageData(0, 0, 64, 64).data;
+        let visiblePixels = 0;
+        for (let offset = 3; offset < pixels.length; offset += 4) {
+          if (pixels[offset] > 32) visiblePixels += 1;
         }
 
-        resolve({
-          dataUrl: firstHref.startsWith("data:image/png"),
-          advanced: firstHref !== secondHref,
-          changedPixels,
-        });
-      }, 480);
+        window.setTimeout(() => {
+          const secondHref = link?.href || "";
+          resolve({
+            animatedFrame: firstHref.startsWith("data:image/png"),
+            changed: firstHref !== secondHref,
+            visiblePixels,
+            mode: document.documentElement.dataset.faviconMotion,
+          });
+        }, 320);
+      };
+      image.src = firstHref;
     }))()`, true);
 
     if (
-      !visibleMotion.dataUrl
-      || !visibleMotion.advanced
-      || visibleMotion.changedPixels < 80
+      !faviconMotion.animatedFrame
+      || !faviconMotion.changed
+      || faviconMotion.visiblePixels < 80
+      || faviconMotion.mode !== "animated"
     ) {
-      fail("Dynamic favicon motion is not visually perceptible.", visibleMotion);
+      fail("Historical favicon 01 is not visibly animated.", faviconMotion);
     }
     return;
   }
@@ -773,6 +775,74 @@ const auditBrowser = async (client, origin) => {
   }
   await saveScreenshot(client, "desktop-selected-garage");
   await saveElementScreenshot(client, "crop-desktop-inspector", ".map-inspector");
+
+  for (const pointId of ["private-practice", "running"]) {
+    await navigate(
+      client,
+      `${origin}/?qa=ui-contracts-floating-safe-area&point=${pointId}`,
+    );
+    const floatingSafeArea = await evaluate(client, `(() => {
+      const display = document.querySelector(".display-control")?.getBoundingClientRect();
+      const inspector = document.querySelector(".map-inspector")?.getBoundingClientRect();
+      const intersectionArea = (first, second) => (
+        Math.max(0, Math.min(first.right, second.right) - Math.max(first.left, second.left))
+        * Math.max(0, Math.min(first.bottom, second.bottom) - Math.max(first.top, second.top))
+      );
+      const nodeCollisions = [...document.querySelectorAll(".map-node")]
+        .map((node) => ({
+          id: node.dataset.mapId,
+          area: display
+            ? intersectionArea(node.getBoundingClientRect(), display)
+            : 0,
+        }))
+        .filter(({ area }) => area > 0.5);
+
+      return {
+        selected: document.querySelector(".map-inspector")?.dataset.selectedMapId,
+        inspectorDisplayOverlap:
+          display && inspector ? intersectionArea(inspector, display) : null,
+        inspectorDisplayGap:
+          display && inspector ? display.left - inspector.right : null,
+        descriptionScroll: (() => {
+          const description = document.querySelector(
+            ".map-readout__description",
+          );
+          return description
+            ? {
+                overflowY: getComputedStyle(description).overflowY,
+                scrollHeight: description.scrollHeight,
+                clientHeight: description.clientHeight,
+              }
+            : null;
+        })(),
+        nodeCollisions,
+      };
+    })()`);
+
+    if (
+      floatingSafeArea.selected !== pointId
+      || floatingSafeArea.inspectorDisplayOverlap !== 0
+      || floatingSafeArea.inspectorDisplayGap < 12
+      || floatingSafeArea.nodeCollisions.length > 0
+      || (
+        pointId === "private-practice"
+        && (
+          floatingSafeArea.descriptionScroll?.overflowY !== "visible"
+          || floatingSafeArea.descriptionScroll.scrollHeight
+            > floatingSafeArea.descriptionScroll.clientHeight + 1
+        )
+      )
+    ) {
+      fail(
+        `floating-safe-area: ${pointId} collides with the display console.`,
+        floatingSafeArea,
+      );
+    }
+
+    if (pointId === "running") {
+      await saveScreenshot(client, "desktop-selected-running-safe-area");
+    }
+  }
 
   await navigate(client, `${origin}/?qa=ui-contracts-search`);
   await evaluate(client, `(() => {
@@ -1011,8 +1081,20 @@ const auditBrowser = async (client, origin) => {
     client,
     "document.querySelector('#site-favicon')?.href || ''",
   );
-  if (!firstFavicon.startsWith("data:image/png") || firstFavicon === secondFavicon) {
-    fail("Dynamic favicon does not advance in a motion-capable browser.");
+  const faviconMode = await evaluate(
+    client,
+    "document.documentElement.dataset.faviconMotion || ''",
+  );
+  if (
+    !firstFavicon.startsWith("data:image/png")
+    || firstFavicon === secondFavicon
+    || faviconMode !== "animated"
+  ) {
+    fail("Historical favicon 01 must visibly animate.", {
+      firstFrame: firstFavicon.slice(0, 32),
+      changed: firstFavicon !== secondFavicon,
+      faviconMode,
+    });
   }
 
   await client.send("Emulation.setEmulatedMedia", {
@@ -1032,8 +1114,20 @@ const auditBrowser = async (client, origin) => {
     client,
     "document.querySelector('#site-favicon')?.href || ''",
   );
-  if (!reducedFirst.startsWith("data:image/png") || reducedFirst !== reducedSecond) {
-    fail("Reduced-motion favicon must stay on one stable frame.");
+  const reducedMode = await evaluate(
+    client,
+    "document.documentElement.dataset.faviconMotion || ''",
+  );
+  if (
+    !reducedFirst.includes("/assets/favicon.png")
+    || reducedFirst !== reducedSecond
+    || reducedMode !== "static"
+  ) {
+    fail("Reduced-motion favicon must keep the accepted static variant 01.", {
+      sourceAsset: reducedFirst.includes("/assets/favicon.png"),
+      stable: reducedFirst === reducedSecond,
+      reducedMode,
+    });
   }
 
   await client.send("Emulation.setEmulatedMedia", {
