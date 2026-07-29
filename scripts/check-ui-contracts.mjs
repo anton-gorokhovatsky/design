@@ -200,9 +200,11 @@ const launchChrome = async () => {
     "--disable-background-networking",
     "--disable-component-update",
     "--disable-default-apps",
+    "--disable-dev-shm-usage",
     "--disable-extensions",
     "--force-color-profile=srgb",
     "--mute-audio",
+    "--no-sandbox",
     "--no-default-browser-check",
     "--no-first-run",
     "--remote-debugging-port=0",
@@ -233,7 +235,11 @@ const launchChrome = async () => {
   } catch (error) {
     child.kill("SIGTERM");
     rmSync(profileDirectory, { recursive: true, force: true });
-    throw error;
+    const diagnostic = chromeStderr.trim().split("\n").slice(-8).join("\n");
+    throw new Error(
+      diagnostic ? `${error.message}\n${diagnostic}` : error.message,
+      { cause: error },
+    );
   }
 };
 

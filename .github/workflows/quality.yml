@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - gh-pages
   pull_request:
 
 permissions:
@@ -28,6 +27,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps chromium webkit
+      - run: sudo apt-get install -y ffmpeg
       - run: pnpm check
       - if: always()
         uses: actions/upload-artifact@v4
