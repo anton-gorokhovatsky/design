@@ -4,33 +4,55 @@ const faviconCanvas = document.createElement("canvas");
 const faviconContext = faviconCanvas.getContext("2d");
 let faviconFrameIndex = 0;
 let faviconFrameTimer = 0;
-const faviconFrameCount = 36;
-const faviconAxisTilt = -18 * Math.PI / 180;
+const faviconFrameCount = 48;
 
 faviconCanvas.width = 64;
 faviconCanvas.height = 64;
 
-const tiltFaviconPoint = ({ x, y }) => {
-  const offsetX = x - 32;
-  const offsetY = y - 32;
+const faviconArc = {
+  start: { x: 3, y: 56 },
+  controlA: { x: 15, y: 17 },
+  controlB: { x: 43, y: 7 },
+  end: { x: 61, y: 35 },
+};
 
+const getFaviconArcPoint = (progress) => {
+  const inverse = 1 - progress;
   return {
-    x: 32
-      + offsetX * Math.cos(faviconAxisTilt)
-      - offsetY * Math.sin(faviconAxisTilt),
-    y: 32
-      + offsetX * Math.sin(faviconAxisTilt)
-      + offsetY * Math.cos(faviconAxisTilt),
+    x:
+      inverse ** 3 * faviconArc.start.x
+      + 3 * inverse ** 2 * progress * faviconArc.controlA.x
+      + 3 * inverse * progress ** 2 * faviconArc.controlB.x
+      + progress ** 3 * faviconArc.end.x,
+    y:
+      inverse ** 3 * faviconArc.start.y
+      + 3 * inverse ** 2 * progress * faviconArc.controlA.y
+      + 3 * inverse * progress ** 2 * faviconArc.controlB.y
+      + progress ** 3 * faviconArc.end.y,
   };
 };
 
-const getFaviconSpiralPoint = (progress, arm = 0, drift = 0) => {
-  const angle = -0.7 + progress * Math.PI * 2 * 0.86 + arm * Math.PI + drift;
-  const radius = 2 + progress * 29;
-  const x = Math.cos(angle) * radius;
-  const y = Math.sin(angle) * radius * 0.86;
-
-  return tiltFaviconPoint({ x: 32 + x, y: 32 + y });
+const drawFaviconArc = ({ dash, offset, width, alpha }) => {
+  faviconContext.save();
+  faviconContext.beginPath();
+  faviconContext.moveTo(faviconArc.start.x, faviconArc.start.y);
+  faviconContext.bezierCurveTo(
+    faviconArc.controlA.x,
+    faviconArc.controlA.y,
+    faviconArc.controlB.x,
+    faviconArc.controlB.y,
+    faviconArc.end.x,
+    faviconArc.end.y,
+  );
+  faviconContext.setLineDash(dash);
+  faviconContext.lineDashOffset = offset;
+  faviconContext.lineCap = "square";
+  faviconContext.lineJoin = "bevel";
+  faviconContext.lineWidth = width;
+  faviconContext.strokeStyle = "#315dff";
+  faviconContext.globalAlpha = alpha;
+  faviconContext.stroke();
+  faviconContext.restore();
 };
 
 const drawFaviconParticle = (point, size, cross = false, alpha = 1) => {
@@ -66,66 +88,49 @@ const drawFaviconFrame = (frameIndex = 0) => {
 
   const phase = (frameIndex % faviconFrameCount) / faviconFrameCount;
   const pulse = Math.sin(phase * Math.PI * 2);
-  const drift = pulse * 0.055;
   faviconContext.clearRect(0, 0, 64, 64);
 
-  [0, 1].forEach((arm) => {
-    faviconContext.save();
-    faviconContext.beginPath();
-
-    for (let index = 0; index <= 44; index += 1) {
-      const point = getFaviconSpiralPoint(index / 44, arm, drift);
-
-      if (index === 0) {
-        faviconContext.moveTo(point.x, point.y);
-      } else {
-        faviconContext.lineTo(point.x, point.y);
-      }
-    }
-
-    faviconContext.lineCap = "square";
-    faviconContext.lineJoin = "bevel";
-    faviconContext.lineWidth = arm ? 4.2 : 4.8;
-    faviconContext.strokeStyle = "#315dff";
-    faviconContext.globalAlpha = arm ? 0.9 : 1;
-    faviconContext.stroke();
-    faviconContext.restore();
+  drawFaviconArc({
+    dash: [],
+    offset: 0,
+    width: 1.6,
+    alpha: 0.46,
+  });
+  drawFaviconArc({
+    dash: [3.2, 3],
+    offset: phase * -18,
+    width: 3.4,
+    alpha: 0.98,
+  });
+  drawFaviconArc({
+    dash: [1.2, 4.6],
+    offset: phase * 14,
+    width: 1.8,
+    alpha: 0.58,
   });
 
   const particles = [
-    [0.25, 0, 4, false],
-    [0.42, 1, 4, false],
-    [0.62, 0, 5, false],
-    [0.8, 1, 4, false],
-    [0.96, 0, 4, false],
+    [0.14, 3, false],
+    [0.27, 6, true],
+    [0.4, 4, false],
+    [0.56, 8, true],
+    [0.7, 6, true],
+    [0.82, 4, false],
+    [0.92, 3, false],
   ];
 
-  particles.forEach(([baseProgress, arm, size, cross], index) => {
-    const travel = Math.sin(phase * Math.PI * 2 + index * 0.8) * 0.012;
-    const point = getFaviconSpiralPoint(
-      Math.max(0.08, Math.min(0.98, baseProgress + travel)),
-      arm,
-      drift,
+  particles.forEach(([baseProgress, size, cross], index) => {
+    const travel = Math.sin(phase * Math.PI * 2 + index * 0.82) * 0.016;
+    const point = getFaviconArcPoint(
+      Math.max(0.05, Math.min(0.98, baseProgress + travel)),
     );
-    const alpha = 0.56 + (Math.sin(phase * Math.PI * 2 + index * 1.17) + 1) * 0.22;
+    const alpha = 0.58
+      + (Math.sin(phase * Math.PI * 2 + index * 1.16) + 1) * 0.2;
     drawFaviconParticle(point, size, cross, alpha);
   });
 
-  drawFaviconParticle(tiltFaviconPoint({ x: 32, y: 32 }), 6, false, 1);
-  drawFaviconParticle(
-    tiltFaviconPoint({ x: 4, y: 13 }),
-    3,
-    false,
-    0.48 + pulse * 0.12,
-  );
-  drawFaviconParticle(
-    tiltFaviconPoint({ x: 58, y: 46 }),
-    3,
-    false,
-    0.48 - pulse * 0.12,
-  );
-  drawFaviconParticle(tiltFaviconPoint({ x: 54, y: 7 }), 4, false, 0.72);
-  drawFaviconParticle(tiltFaviconPoint({ x: 11, y: 52 }), 3, false, 0.62);
+  drawFaviconParticle({ x: 6, y: 59 }, 3, false, 0.5 + pulse * 0.1);
+  drawFaviconParticle({ x: 58, y: 41 }, 3, false, 0.5 - pulse * 0.1);
 
   siteFavicon.href = faviconCanvas.toDataURL("image/png");
 };

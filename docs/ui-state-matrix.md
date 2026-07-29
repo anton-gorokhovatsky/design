@@ -439,3 +439,13 @@ names и 31 их использование.
 | Интерактивные состояния | Garage selected/inspector, Tarski reel, search results, keyboard focus, mobile navigation и contact | Inspector синхронизирует `aria-pressed`/`aria-expanded`; reel сохраняет нативные `3:2`, `contain`, top alignment и отдельный material-readout; пять mobile routes одновременно видимы и имеют единый hit-area `40 px` |
 | MATERIAL / 01 | Все видимые зарегистрированные surfaces во всей матрице; отдельные 1:1-кропы view/display/search/reel/inspector/mobile | Computed fill соответствует theme token, `blur(24px)`, border `0`, shadow `none`; material failures и вложенные активные surfaces — `0` |
 | Release gate | `audit-project`, CSS, assets, UI contracts, 13 reels, syntax, whitespace | `0` errors/warnings; `46` точек, `17` связей, `17` принципов, `13` reel masters и `13` posters сохранены |
+
+## Локальный проход 2026-07-29 — глубина светлой темы и дуговой favicon
+
+| Семейство | Реальные состояния | Результат |
+|---|---|---|
+| Светлое поле | `1440×900` и `390×844`, empty map; matched dark regression | Фон стал на четыре RGB-шага глубже, линии и дальняя сетка получили чуть больший вес, центральная signal-атмосфера и нижняя lilac-плоскость читаются как разные планы. `MATERIAL / 01` не менялся: панели сохранили fill `0.5`, `blur(24px)`, border `0`, shadow `none` |
+| Responsive и системные режимы | Полная Chromium-матрица `1440×900`, `1024×768`, `390×844`, `320×568`, light/dark; `200%` reflow, forced colors, reduced motion | Horizontal overflow, material failures и contrast/focus regressions — `0`. Тёмная тема осталась визуально и вычислительно неизменной |
+| Favicon | Честный downsample `16`, `32`, `64`, `104 px` на светлом и тёмном фоне; transparent PNG; live canvas normal/reduced motion | Возвращена выбранная дуговая версия `01`: знак занимает почти всю ширину и около трёх четвертей высоты tab-slot. На `16 px` остаётся ясная арка, на больших размерах проявляются движущаяся ASCII-пыль и три крестообразных сигнала |
+| Контент | Desktop/mobile, `private-practice` и `point=shirokostup` | Частная практика описана через реальные самостоятельные продукты; заголовок проекта исправлен на «САЙТ ОЛЬГИ ШИРОКОСТУП». Текст и двухстрочный mobile-заголовок помещаются без overflow |
+| Полный gate | `node scripts/check-project.mjs`, Chromium UI contracts, WebKit `390×844`/`320×568` light/dark, 13 reels, syntax, whitespace | `0` errors/warnings; WebKit — `4` состояния и `0 failures`; `46` точек, `17` связей, `17` принципов и `13` шоурилов сохранены |

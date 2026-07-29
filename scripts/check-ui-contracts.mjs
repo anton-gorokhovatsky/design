@@ -248,8 +248,8 @@ const auditFavicon = () => {
   ].map((offset) => pixels[offset]);
 
   if (width !== 64 || height !== 64) fail("Favicon fallback must remain 64×64.", { width, height });
-  if (bounds.width < 58 || bounds.height < 54) fail("Favicon mark no longer fills the tab slot.", bounds);
-  if (visiblePixels < 700 || visiblePixels > 1800) {
+  if (bounds.width < 58 || bounds.height < 44) fail("Favicon arc no longer fills the tab slot.", bounds);
+  if (visiblePixels < 180 || visiblePixels > 900) {
     fail("Favicon visual weight left its accepted range.", { visiblePixels });
   }
   if (bluePixels / visiblePixels < 0.95) fail("Favicon is no longer a predominantly blue signal.");

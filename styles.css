@@ -31,12 +31,12 @@
 }
 
 :root {
-  --bg: #f2f1ec;
-  --surface: #ebeae4;
+  --bg: #eeede7;
+  --surface: #e7e6df;
   --ink: #10110f;
-  --muted: #787a73;
-  --line: rgba(16, 17, 15, 0.16);
-  --line-soft: rgba(16, 17, 15, 0.075);
+  --muted: #70726c;
+  --line: rgba(16, 17, 15, 0.19);
+  --line-soft: rgba(16, 17, 15, 0.09);
   --signal: #2448ed;
   --signal-dark: #07122e;
   --pulse: #d8ff47;
@@ -6930,13 +6930,18 @@ body:has(.command-dock.is-open) .map-links.has-active-relation {
   background:
     radial-gradient(
       circle at var(--focus-x) var(--focus-y),
-      color-mix(in srgb, var(--map-focus-accent) 10%, transparent) 0,
-      transparent 19%
+      color-mix(in srgb, var(--map-focus-accent) 12%, transparent) 0,
+      transparent 22%
     ),
     radial-gradient(
       ellipse at 50% 54%,
-      color-mix(in srgb, var(--signal) 7%, transparent) 0,
-      transparent 38%
+      color-mix(in srgb, var(--signal) 10%, transparent) 0,
+      transparent 42%
+    ),
+    radial-gradient(
+      ellipse at 48% 91%,
+      color-mix(in srgb, var(--tone-personal) 7%, transparent) 0,
+      transparent 48%
     ),
     linear-gradient(90deg, transparent 49.95%, var(--line-soft) 50%, transparent 50.05%),
     linear-gradient(transparent 49.95%, var(--line-soft) 50%, transparent 50.05%);
@@ -6993,8 +6998,8 @@ html[data-theme="dark"] .practice-map::before {
   top: 54%;
   width: min(70%, 980px);
   height: 88%;
-  color: color-mix(in srgb, var(--signal) 30%, var(--line));
-  opacity: 0.3;
+  color: color-mix(in srgb, var(--signal) 36%, var(--line));
+  opacity: 0.36;
   transform: translate3d(
     calc(-50% + var(--depth-x)),
     calc(-50% + var(--depth-y)),
@@ -8167,7 +8172,7 @@ html[data-theme="dark"] .orbital-terminator {
 }
 
 html[data-theme="light"] .signal-constellation {
-  opacity: 0.88;
+  opacity: 0.96;
 }
 
 html[data-theme="dark"] .signal-constellation {
@@ -8278,29 +8283,29 @@ html[data-theme="dark"] {
   left: -12%;
   height: 47%;
   overflow: hidden;
-  border-top: 1px solid color-mix(in srgb, var(--signal) 16%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--signal) 20%, transparent);
   border-radius: 50% 50% 0 0 / 22% 22% 0 0;
   background:
     radial-gradient(
       ellipse at 22% 6%,
-      color-mix(in srgb, var(--signal) 8%, transparent) 0 2%,
+      color-mix(in srgb, var(--signal) 11%, transparent) 0 2%,
       transparent 20%
     ),
     radial-gradient(
       ellipse at 74% 2%,
-      color-mix(in srgb, var(--tone-personal) 8%, transparent) 0 2%,
+      color-mix(in srgb, var(--tone-personal) 10%, transparent) 0 2%,
       transparent 24%
     ),
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--signal) 8%, var(--bg)) 0,
-      color-mix(in srgb, var(--signal) 4%, var(--bg)) 38%,
+      color-mix(in srgb, var(--signal) 11%, var(--bg)) 0,
+      color-mix(in srgb, var(--signal) 6%, var(--bg)) 38%,
       var(--bg) 100%
     );
   box-shadow:
-    0 -1px 0 color-mix(in srgb, var(--signal) 12%, transparent),
-    0 -22px 54px color-mix(in srgb, var(--signal) 11%, transparent);
-  opacity: 0.64;
+    0 -1px 0 color-mix(in srgb, var(--signal) 15%, transparent),
+    0 -22px 58px color-mix(in srgb, var(--signal) 14%, transparent);
+  opacity: 0.72;
   pointer-events: none;
 }
 

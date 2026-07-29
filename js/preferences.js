@@ -136,7 +136,7 @@ const setTheme = (theme, persist = false) => {
     themeLabel.textContent = isDark ? "ТЁМНАЯ" : "СВЕТЛАЯ";
   }
 
-  themeColor?.setAttribute("content", isDark ? "#11120f" : "#f2f1ec");
+  themeColor?.setAttribute("content", isDark ? "#11120f" : "#eeede7");
 
   if (persist) {
     try {
