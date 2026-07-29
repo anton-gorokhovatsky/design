@@ -600,6 +600,8 @@ const syncMobileMapFrame = () => {
         "--mobile-map-reserve",
         "--mobile-map-top",
         "--mobile-map-center-y",
+        "--mobile-map-y-scale",
+        "--mobile-horizon-top",
         "--mobile-time-scale",
       ].forEach((property) => signalField.style.removeProperty(property));
       return;
@@ -629,6 +631,28 @@ const syncMobileMapFrame = () => {
     );
     const cameraCenter = cameraTop
       + (mapBounds.height - cameraReserve - cameraTop) / 2;
+    const usableStageHeight = Math.max(
+      0,
+      searchBounds.top - mapBounds.top - stageGap,
+    );
+    const stageAspect = usableStageHeight / Math.max(1, mapBounds.width);
+    const viewportTallProgress = Math.max(
+      0,
+      Math.min(1, (stageAspect - 1.35) / 0.45),
+    );
+    const screenAspect = window.screen.height > window.screen.width
+      ? window.screen.height / Math.max(1, window.screen.width)
+      : 1;
+    const screenTallProgress = Math.max(
+      0,
+      Math.min(1, (screenAspect - 1.78) / 0.34),
+    );
+    const tallStageProgress = Math.max(
+      viewportTallProgress,
+      screenTallProgress,
+    );
+    const mapYScale = 1 + 0.16 * tallStageProgress;
+    const horizonTop = 85 + 8 * tallStageProgress;
     const timeScale = 1.18 - 0.04 * shortScreenPressure;
 
     signalField.style.setProperty(
@@ -642,6 +666,14 @@ const syncMobileMapFrame = () => {
     signalField.style.setProperty(
       "--mobile-map-center-y",
       `${cameraCenter.toFixed(2)}px`,
+    );
+    signalField.style.setProperty(
+      "--mobile-map-y-scale",
+      mapYScale.toFixed(3),
+    );
+    signalField.style.setProperty(
+      "--mobile-horizon-top",
+      `${horizonTop.toFixed(2)}%`,
     );
     signalField.style.setProperty(
       "--mobile-time-scale",

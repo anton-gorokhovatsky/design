@@ -172,6 +172,17 @@ const resolveMapLayout = (item) => {
     y = override?.y ?? y;
   }
 
+  if (viewportWidth <= 680) {
+    const mobileYScale = Number.parseFloat(
+      signalField?.style.getPropertyValue("--mobile-map-y-scale") || "1",
+    );
+    const safeMobileYScale = Number.isFinite(mobileYScale)
+      ? Math.max(1, Math.min(1.16, mobileYScale))
+      : 1;
+
+    y = Math.max(4, Math.min(94, 50 + (y - 50) * safeMobileYScale));
+  }
+
   return { x, y };
 };
 

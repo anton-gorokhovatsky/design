@@ -6948,6 +6948,33 @@ body:has(.command-dock.is-open) .map-links.has-active-relation {
   transition: background-color 320ms var(--motion-shift);
 }
 
+html[data-theme="light"] .practice-map::before {
+  background:
+    radial-gradient(
+      circle at var(--focus-x) var(--focus-y),
+      color-mix(in srgb, var(--map-focus-accent) 15%, transparent) 0,
+      transparent 23%
+    ),
+    radial-gradient(
+      ellipse at 50% 53%,
+      color-mix(in srgb, var(--signal) 16%, transparent) 0,
+      transparent 43%
+    ),
+    radial-gradient(
+      ellipse at 49% 82%,
+      color-mix(in srgb, var(--tone-personal) 13%, transparent) 0,
+      transparent 52%
+    ),
+    linear-gradient(90deg, transparent 49.95%, var(--line-soft) 50%, transparent 50.05%),
+    linear-gradient(transparent 49.95%, var(--line-soft) 50%, transparent 50.05%),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, #fff 28%, var(--bg)) 0,
+      var(--bg) 43%,
+      color-mix(in srgb, var(--signal) 5%, var(--surface)) 100%
+    );
+}
+
 html[data-theme="dark"] .practice-map::before {
   background:
     radial-gradient(
@@ -7012,6 +7039,15 @@ html[data-theme="dark"] .practice-map::before {
 html[data-theme="dark"] .map-depth-grid {
   color: color-mix(in srgb, var(--signal) 36%, var(--line));
   opacity: 0.34;
+}
+
+html[data-theme="light"] .map-grid {
+  opacity: 0.72;
+}
+
+html[data-theme="light"] .map-depth-grid {
+  color: color-mix(in srgb, var(--signal) 44%, var(--line));
+  opacity: 0.46;
 }
 
 .map-depth-grid :is(path, line) {
@@ -8334,6 +8370,31 @@ html[data-theme="dark"] .orbital-horizon {
   opacity: 0.68;
 }
 
+html[data-theme="light"] .orbital-horizon {
+  border-top-color: color-mix(in srgb, var(--signal) 27%, transparent);
+  background:
+    radial-gradient(
+      ellipse at 22% 6%,
+      color-mix(in srgb, var(--signal) 14%, transparent) 0 2%,
+      transparent 20%
+    ),
+    radial-gradient(
+      ellipse at 74% 2%,
+      color-mix(in srgb, var(--tone-personal) 14%, transparent) 0 2%,
+      transparent 24%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--signal) 15%, var(--bg)) 0,
+      color-mix(in srgb, var(--tone-personal) 8%, var(--bg)) 42%,
+      var(--bg) 100%
+    );
+  box-shadow:
+    0 -1px 0 color-mix(in srgb, var(--signal) 20%, transparent),
+    0 -28px 68px color-mix(in srgb, var(--signal) 17%, transparent);
+  opacity: 0.82;
+}
+
 .orbital-radar {
   position: absolute;
   z-index: 0;
@@ -8819,6 +8880,8 @@ html[data-focus-modality="pointer"]
     --mobile-map-reserve: 126px;
     --mobile-map-top: -18px;
     --mobile-map-center-y: calc(50svh - 72px);
+    --mobile-map-y-scale: 1;
+    --mobile-horizon-top: 85%;
     --mobile-time-scale: 1.18;
   }
 
@@ -8839,6 +8902,17 @@ html[data-focus-modality="pointer"]
 
   .system-dock {
     bottom: var(--mobile-console-bottom);
+  }
+
+  .orbital-horizon {
+    top: var(--mobile-horizon-top);
+    bottom: auto;
+    height: max(
+      180px,
+      calc(
+        100% - var(--mobile-horizon-top) + var(--mobile-map-reserve) + 48px
+      )
+    );
   }
 }
 

@@ -10,7 +10,8 @@
   "scripts": {
     "check": "node scripts/check-project.mjs",
     "check:chromium": "node scripts/check-ui-contracts.mjs",
-    "check:webkit": "node scripts/webkit-regression.cjs"
+    "check:webkit": "node scripts/webkit-regression.cjs",
+    "render:favicon": "node scripts/render-favicon.mjs"
   },
   "devDependencies": {
     "playwright": "1.61.1"

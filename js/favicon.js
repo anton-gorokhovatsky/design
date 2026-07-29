@@ -93,44 +93,46 @@ const drawFaviconFrame = (frameIndex = 0) => {
   drawFaviconArc({
     dash: [],
     offset: 0,
-    width: 1.6,
-    alpha: 0.46,
+    width: 2.1,
+    alpha: 0.62,
   });
   drawFaviconArc({
-    dash: [3.2, 3],
+    dash: [3.2, 2.6],
     offset: phase * -18,
-    width: 3.4,
-    alpha: 0.98,
+    width: 3.8,
+    alpha: 1,
   });
   drawFaviconArc({
-    dash: [1.2, 4.6],
+    dash: [1.2, 4.2],
     offset: phase * 14,
-    width: 1.8,
-    alpha: 0.58,
+    width: 2,
+    alpha: 0.72,
   });
 
   const particles = [
-    [0.14, 3, false],
-    [0.27, 6, true],
-    [0.4, 4, false],
+    [0.1, 4, false],
+    [0.2, 7, true],
+    [0.31, 4, false],
+    [0.43, 6, true],
     [0.56, 8, true],
-    [0.7, 6, true],
-    [0.82, 4, false],
-    [0.92, 3, false],
+    [0.68, 6, true],
+    [0.79, 4, false],
+    [0.9, 5, true],
+    [0.97, 4, false],
   ];
 
   particles.forEach(([baseProgress, size, cross], index) => {
-    const travel = Math.sin(phase * Math.PI * 2 + index * 0.82) * 0.016;
+    const travel = Math.sin(phase * Math.PI * 2 + index * 0.82) * 0.012;
     const point = getFaviconArcPoint(
       Math.max(0.05, Math.min(0.98, baseProgress + travel)),
     );
-    const alpha = 0.58
-      + (Math.sin(phase * Math.PI * 2 + index * 1.16) + 1) * 0.2;
+    const alpha = 0.72
+      + (Math.sin(phase * Math.PI * 2 + index * 1.16) + 1) * 0.14;
     drawFaviconParticle(point, size, cross, alpha);
   });
 
-  drawFaviconParticle({ x: 6, y: 59 }, 3, false, 0.5 + pulse * 0.1);
-  drawFaviconParticle({ x: 58, y: 41 }, 3, false, 0.5 - pulse * 0.1);
+  drawFaviconParticle({ x: 6, y: 59 }, 3, false, 0.62 + pulse * 0.08);
+  drawFaviconParticle({ x: 58, y: 41 }, 3, false, 0.62 - pulse * 0.08);
 
   siteFavicon.href = faviconCanvas.toDataURL("image/png");
 };

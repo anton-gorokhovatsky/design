@@ -20,6 +20,7 @@ const require = createRequire(import.meta.url);
 const artifactDirectory = process.env.PORTFOLIO_UI_ARTIFACT_DIR
   ? resolve(process.env.PORTFOLIO_UI_ARTIFACT_DIR)
   : "";
+const focusedScenarioLabel = process.env.PORTFOLIO_UI_SCENARIO?.trim() || "";
 const failures = [];
 const browserErrors = [];
 const serverErrors = [];
@@ -248,8 +249,10 @@ const auditFavicon = () => {
   ].map((offset) => pixels[offset]);
 
   if (width !== 64 || height !== 64) fail("Favicon fallback must remain 64×64.", { width, height });
-  if (bounds.width < 58 || bounds.height < 44) fail("Favicon arc no longer fills the tab slot.", bounds);
-  if (visiblePixels < 180 || visiblePixels > 900) {
+  if (bounds.width < 58 || bounds.height < 44) {
+    fail("Favicon arc no longer fills the tab slot.", bounds);
+  }
+  if (visiblePixels < 260 || visiblePixels > 1100) {
     fail("Favicon visual weight left its accepted range.", { visiblePixels });
   }
   if (bluePixels / visiblePixels < 0.95) fail("Favicon is no longer a predominantly blue signal.");
@@ -331,6 +334,7 @@ const geometryExpression = String.raw`(() => {
     mobileMenu: ".constellation-nav__toggle",
     mobileNavigation: ".constellation-nav__orbit",
     mapCamera: ".map-camera",
+    horizon: ".orbital-horizon",
     inspector: ".map-inspector",
     reel: ".map-hover-preview",
     reelMedia: ".map-hover-preview__media",
@@ -495,6 +499,19 @@ const auditGeometry = (label, state) => {
     ) {
       fail(`${label}: mapCamera does not fill the useful mobile stage.`, geometry.mapCamera);
     }
+    if (!visible.horizon) {
+      fail(`${label}: orbital horizon is not visible.`);
+    } else if (geometry.search) {
+      const horizonToControls = geometry.search.top - geometry.horizon.top;
+      const maximumHorizonGap = Math.max(72, viewport.height * 0.085);
+
+      if (horizonToControls < 18 || horizonToControls > maximumHorizonGap) {
+        fail(`${label}: lower map stage leaves an empty band above the controls.`, {
+          horizonToControls,
+          maximumHorizonGap,
+        });
+      }
+    }
     if (overlaps(geometry.search, geometry.systemDock, 1)) {
       fail(`${label}: mobile search and system dock overlap.`);
     }
@@ -584,13 +601,22 @@ const auditBrowser = async (client, origin) => {
     observedNetworkRequests.push(request.url);
   });
 
-  const scenarios = [
+  const scenarioCatalog = [
     { label: "desktop-light", width: 1440, height: 900, mobile: false, theme: "light" },
     { label: "desktop-dark", width: 1440, height: 900, mobile: false, theme: "dark" },
     { label: "tablet-light", width: 1024, height: 768, mobile: false, theme: "light" },
     { label: "tablet-dark", width: 1024, height: 768, mobile: false, theme: "dark" },
     { label: "mobile-390-light", width: 390, height: 844, mobile: true, theme: "light" },
     { label: "mobile-390-dark", width: 390, height: 844, mobile: true, theme: "dark" },
+    {
+      label: "mobile-393-safari-light",
+      width: 393,
+      height: 700,
+      screenWidth: 393,
+      screenHeight: 852,
+      mobile: true,
+      theme: "light",
+    },
     { label: "mobile-320-light", width: 320, height: 568, mobile: true, theme: "light" },
     { label: "mobile-320-dark", width: 320, height: 568, mobile: true, theme: "dark" },
     {
@@ -620,6 +646,14 @@ const auditBrowser = async (client, origin) => {
       contrast: "more",
     },
   ];
+  const scenarios = focusedScenarioLabel
+    ? scenarioCatalog.filter((scenario) => scenario.label === focusedScenarioLabel)
+    : scenarioCatalog;
+
+  if (focusedScenarioLabel && scenarios.length === 0) {
+    fail(`Unknown focused UI scenario: ${focusedScenarioLabel}`);
+    return;
+  }
 
   for (const scenario of scenarios) {
     await setViewport(client, scenario);
@@ -636,6 +670,10 @@ const auditBrowser = async (client, origin) => {
       await saveElementScreenshot(client, "crop-mobile-search-dark", ".command-dock");
       await saveElementScreenshot(client, "crop-mobile-dock-dark", ".system-dock");
     }
+  }
+
+  if (focusedScenarioLabel) {
+    return;
   }
 
   await setViewport(client, {
@@ -1119,9 +1157,13 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log(
-  "UI contracts passed: favicon, full viewport/theme matrix, 200% reflow, "
-  + "panels, search, reel, mobile navigation/content, MATERIAL / 01, focus, "
-  + "contrast, forced colors, reduced motion, privacy consent, no-JS, and "
-  + "deferred media.",
-);
+if (focusedScenarioLabel) {
+  console.log(`UI contract passed: ${focusedScenarioLabel}.`);
+} else {
+  console.log(
+    "UI contracts passed: favicon, full viewport/theme matrix, 200% reflow, "
+    + "panels, search, reel, mobile navigation/content, MATERIAL / 01, focus, "
+    + "contrast, forced colors, reduced motion, privacy consent, no-JS, and "
+    + "deferred media.",
+  );
+}
