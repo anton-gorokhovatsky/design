@@ -3,11 +3,12 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Антон Гороховатский — дизайн-инженер</title>
+    <title>Антон Гороховатский — дизайн и digital-продукты</title>
     <meta
       name="description"
-      content="Интерактивная карта опыта, проектов и интересов дизайн-инженера Антона Гороховатского."
+      content="Интерактивное портфолио дизайн-инженера и руководителя web-проектов: продукты и сайты для культуры, сервисов и независимых команд."
     >
+    <meta name="author" content="Антон Гороховатский">
     <meta name="theme-color" content="#eeede7">
     <meta name="color-scheme" content="light dark">
     <meta name="robots" content="index, follow, max-image-preview:large">
@@ -26,45 +27,51 @@
     <meta property="og:type" content="website">
     <meta property="og:locale" content="ru_RU">
     <meta property="og:site_name" content="gorokhovatsky.tech">
-    <meta property="og:title" content="Антон Гороховатский — дизайн-инженер">
+    <meta
+      property="og:title"
+      content="Антон Гороховатский — дизайн и digital-продукты"
+    >
     <meta
       property="og:description"
-      content="Интерактивная карта опыта, проектов и интересов дизайн-инженера Антона Гороховатского."
+      content="Интерактивное портфолио дизайн-инженера и руководителя web-проектов: продукты и сайты для культуры, сервисов и независимых команд."
     >
     <meta property="og:url" content="https://gorokhovatsky.tech/">
     <meta
       property="og:image"
-      content="https://gorokhovatsky.tech/assets/og-signal.jpg?v=20260727-final-system-1"
+      content="https://gorokhovatsky.tech/assets/og-signal.jpg?v=20260729-share-card-1"
     >
     <meta
       property="og:image:secure_url"
-      content="https://gorokhovatsky.tech/assets/og-signal.jpg?v=20260727-final-system-1"
+      content="https://gorokhovatsky.tech/assets/og-signal.jpg?v=20260729-share-card-1"
     >
     <meta property="og:image:type" content="image/jpeg">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta
       property="og:image:alt"
-      content="Тёмная пространственная карта опыта, проектов и интересов дизайн-инженера Антона Гороховатского: Музей «Гараж», текущие проекты, рабочие принципы и личный центр — бег."
+      content="Тёмная пространственная карта опыта Антона Гороховатского с орбитами, проектными узлами и сигнальным центром."
     >
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Антон Гороховатский — дизайн-инженер">
+    <meta
+      name="twitter:title"
+      content="Антон Гороховатский — дизайн и digital-продукты"
+    >
     <meta
       name="twitter:description"
-      content="Интерактивная карта опыта, проектов и интересов дизайн-инженера Антона Гороховатского."
+      content="Интерактивное портфолио дизайн-инженера и руководителя web-проектов: продукты и сайты для культуры, сервисов и независимых команд."
     >
     <meta
       name="twitter:image"
-      content="https://gorokhovatsky.tech/assets/og-signal.jpg?v=20260727-final-system-1"
+      content="https://gorokhovatsky.tech/assets/og-signal.jpg?v=20260729-share-card-1"
     >
     <meta
       name="twitter:image:alt"
-      content="Тёмная пространственная карта опыта, проектов и интересов дизайн-инженера Антона Гороховатского: Музей «Гараж», текущие проекты, рабочие принципы и личный центр — бег."
+      content="Тёмная пространственная карта опыта Антона Гороховатского с орбитами, проектными узлами и сигнальным центром."
     >
     <link rel="canonical" href="https://gorokhovatsky.tech/">
     <script>
       (() => {
-        let savedTheme = null;
+        let savedThemeMode = null;
         const urlParams = new URLSearchParams(window.location.search);
         const isShareCapture = urlParams.has("og");
         const qaFontScale = urlParams.has("qa")
@@ -72,18 +79,22 @@
           : 0;
 
         try {
-          savedTheme = window.localStorage.getItem("anton-signal-theme");
+          savedThemeMode = window.localStorage.getItem("anton-signal-theme");
         } catch {
-          savedTheme = null;
+          savedThemeMode = null;
         }
 
-        const theme = isShareCapture
+        const themeMode = isShareCapture
           ? "dark"
-          : savedTheme === "light" || savedTheme === "dark"
-            ? savedTheme
-            : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+          : savedThemeMode === "light" || savedThemeMode === "dark"
+            ? savedThemeMode
+            : "system";
+        const theme = themeMode === "system"
+          ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+          : themeMode;
 
         document.documentElement.dataset.theme = theme;
+        document.documentElement.dataset.themeMode = themeMode;
 
         if (isShareCapture) {
           document.documentElement.dataset.capture = "og";
@@ -123,10 +134,10 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=20260729-inspector-spacing-1">
+    <link rel="stylesheet" href="styles.css?v=20260729-share-metadata-1">
     <!-- Classic deferred layers intentionally share one global lexical scope.
          Their order is the runtime dependency graph; see js/README.md. -->
-    <script src="js/preferences.js?v=20260729-mobile-fill-1" defer></script>
+    <script src="js/preferences.js?v=20260729-system-theme-1" defer></script>
     <script src="js/analytics.js?v=20260729-consented-goals-1" defer></script>
     <script src="js/signal-field.js?v=20260729-mobile-fill-1" defer></script>
     <script src="js/map-data.js?v=20260729-panel-collision-1" defer></script>
@@ -145,16 +156,20 @@
             "url": "https://gorokhovatsky.tech/",
             "email": "mailto:anton.gorokhovatsky@gmail.com",
             "jobTitle": "Менеджер digital-продуктов, руководитель web-проектов и дизайн-инженер",
+            "image": {
+              "@id": "https://gorokhovatsky.tech/#share-image"
+            },
             "sameAs": [
-              "https://t.me/gorokhovatsky"
+              "https://t.me/gorokhovatsky",
+              "https://github.com/anton-gorokhovatsky"
             ]
           },
           {
             "@type": "WebSite",
             "@id": "https://gorokhovatsky.tech/#website",
             "url": "https://gorokhovatsky.tech/",
-            "name": "Антон Гороховатский — дизайн-инженер",
-            "description": "Интерактивная карта опыта, проектов и интересов дизайн-инженера Антона Гороховатского.",
+            "name": "Антон Гороховатский — дизайн и digital-продукты",
+            "description": "Интерактивное портфолио дизайн-инженера и руководителя web-проектов: продукты и сайты для культуры, сервисов и независимых команд.",
             "inLanguage": "ru-RU",
             "author": {
               "@id": "https://gorokhovatsky.tech/#person"
@@ -164,7 +179,8 @@
             "@type": "ProfilePage",
             "@id": "https://gorokhovatsky.tech/#page",
             "url": "https://gorokhovatsky.tech/",
-            "name": "Антон Гороховатский — дизайн-инженер",
+            "name": "Антон Гороховатский — дизайн и digital-продукты",
+            "description": "Интерактивное портфолио дизайн-инженера и руководителя web-проектов: продукты и сайты для культуры, сервисов и независимых команд.",
             "isPartOf": {
               "@id": "https://gorokhovatsky.tech/#website"
             },
@@ -179,12 +195,12 @@
           {
             "@type": "ImageObject",
             "@id": "https://gorokhovatsky.tech/#share-image",
-            "url": "https://gorokhovatsky.tech/assets/og-signal.jpg?v=20260727-final-system-1",
-            "contentUrl": "https://gorokhovatsky.tech/assets/og-signal.jpg?v=20260727-final-system-1",
+            "url": "https://gorokhovatsky.tech/assets/og-signal.jpg?v=20260729-share-card-1",
+            "contentUrl": "https://gorokhovatsky.tech/assets/og-signal.jpg?v=20260729-share-card-1",
             "encodingFormat": "image/jpeg",
             "width": 1200,
             "height": 630,
-            "caption": "Пространственная карта опыта, проектов и интересов дизайн-инженера Антона Гороховатского с профессиональным центром «Гараж» и личным центром — бегом."
+            "caption": "Тёмная пространственная карта опыта Антона Гороховатского с орбитами, проектными узлами и сигнальным центром."
           }
         ]
       }
@@ -251,8 +267,11 @@
         </p>
         <div class="practice-map" data-practice-map data-signal-field>
           <div class="share-heading" aria-hidden="true">
+            <span class="share-heading__eyebrow">ПОРТФОЛИО / МОСКВА</span>
             <strong>АНТОН ГОРОХОВАТСКИЙ</strong>
-            <span>ДИЗАЙН-ИНЖЕНЕР / 2009—2026</span>
+            <span class="share-heading__role">
+              ДИЗАЙН-ИНЖЕНЕР / DIGITAL-ПРОДУКТЫ / WEB
+            </span>
           </div>
           <p class="share-domain" aria-hidden="true">GOROKHOVATSKY.TECH</p>
           <div class="map-camera" data-map-camera>
@@ -529,7 +548,18 @@
                 data-nav-index="04"
                 data-open-panel="contact"
               >
-                <span class="constellation-nav__shape" aria-hidden="true"></span>
+                <span class="constellation-nav__shape" aria-hidden="true">
+                  <svg
+                    class="constellation-nav__strand"
+                    viewBox="0 0 20 20"
+                    focusable="false"
+                  >
+                    <path
+                      d="M17 5.4C12.7 5.2 10.7 6.9 10 9.2C9.2 11.8 6.7 13.4 4.5 12.3C2.3 11.2 2.5 8.2 4.7 7.1C7 5.9 9.5 7.2 10 9.2"
+                    ></path>
+                    <circle cx="17" cy="5.4" r="1.25"></circle>
+                  </svg>
+                </span>
                 <span class="constellation-nav__label">СВЯЗАТЬСЯ</span>
               </button>
               <a
@@ -696,8 +726,13 @@
                 <span class="display-control__value">МСК <span data-clock>--:--</span></span>
               </p>
             </div>
-            <button class="theme-toggle" type="button" data-theme-toggle aria-label="Включить тёмную тему">
-              <span data-theme-label>СВЕТЛАЯ</span>
+            <button
+              class="theme-toggle"
+              type="button"
+              data-theme-toggle
+              aria-label="Режим темы: системный"
+            >
+              <span data-theme-label>СИСТЕМА</span>
             </button>
             <div class="display-control__service">
               <div

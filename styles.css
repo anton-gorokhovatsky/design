@@ -326,6 +326,16 @@ button {
   display: none;
 }
 
+html[data-capture="og"],
+html[data-capture="og"] body,
+html[data-capture="og"] .map-hero {
+  width: 1200px;
+  min-width: 1200px;
+  height: 630px;
+  min-height: 630px;
+  overflow: hidden;
+}
+
 html[data-capture="og"] :is(
   .control-console,
   .system-dock,
@@ -343,10 +353,11 @@ html[data-capture="og"] :is(
 html[data-capture="og"] .share-heading {
   position: absolute;
   z-index: 22;
-  top: 34px;
-  left: 40px;
+  top: 38px;
+  left: 42px;
   display: grid;
-  gap: 7px;
+  gap: 8px;
+  max-width: 480px;
   color: var(--ink);
   font-family: var(--font-sans);
   line-height: 1;
@@ -354,17 +365,37 @@ html[data-capture="og"] .share-heading {
 }
 
 html[data-capture="og"] .share-heading strong {
-  font-size: 1.35rem;
+  font-size: 2rem;
   font-weight: 700;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.035em;
 }
 
-html[data-capture="og"] .share-heading span,
+html[data-capture="og"] .share-heading__eyebrow,
+html[data-capture="og"] .share-heading__role,
 html[data-capture="og"] .share-domain {
   color: color-mix(in srgb, var(--content-ink) 64%, transparent);
-  font-size: 0.66rem;
+  font-size: 0.68rem;
   font-weight: 500;
   letter-spacing: 0.08em;
+}
+
+html[data-capture="og"] .share-heading__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  order: -1;
+  font-size: 0.58rem;
+  letter-spacing: 0.11em;
+}
+
+html[data-capture="og"] .share-heading__eyebrow::before {
+  width: 5px;
+  height: 5px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--signal);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--signal) 72%, transparent);
+  content: "";
 }
 
 html[data-capture="og"] .share-domain {
@@ -6561,18 +6592,36 @@ body:has(.command-dock.is-open) .map-links.has-active-relation {
 }
 
 .constellation-nav__item[data-nav-view="contact"] .constellation-nav__shape::before {
-  width: 12px;
-  height: 1.25px;
-  background: currentColor;
+  display: none;
 }
 
 .constellation-nav__item[data-nav-view="contact"] .constellation-nav__shape::after {
-  left: calc(50% - 6px);
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: currentColor;
-  box-shadow: 12px 0 0 currentColor;
+  display: none;
+}
+
+.constellation-nav__strand {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 18px;
+  height: 18px;
+  overflow: visible;
+  color: inherit;
+  transform: translate(-50%, -50%);
+  transform-origin: center;
+}
+
+.constellation-nav__strand path {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.25;
+  vector-effect: non-scaling-stroke;
+}
+
+.constellation-nav__strand circle {
+  fill: currentColor;
 }
 
 .constellation-nav__item[data-nav-view="approach"] .constellation-nav__shape::before {

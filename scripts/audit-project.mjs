@@ -700,7 +700,7 @@ requireContract(
 requireContract(
   indexSource.includes('data-context="ВИД"')
     && indexSource.includes('data-context="ЭКРАН"')
-    && indexSource.includes("<span data-theme-label>СВЕТЛАЯ</span>")
+    && indexSource.includes("<span data-theme-label>СИСТЕМА</span>")
     && indexSource.includes('<span class="constellation-nav__heading" aria-hidden="true">РАЗДЕЛЫ</span>')
     && !/data-context="(?:VIEW|DISPLAY)"/.test(indexSource),
   "interface-localization",
@@ -751,6 +751,14 @@ requireContract(
   "favicon-hidden-lifecycle",
   "Variant 01 must remain visibly animated in foreground and background tabs.",
 );
+requireContract(
+  indexSource.includes("document.documentElement.dataset.themeMode = themeMode")
+    && scriptSource.includes('themeMode === "system"')
+    && scriptSource.includes('window.localStorage.removeItem("anton-signal-theme")')
+    && scriptSource.includes('systemTheme.addEventListener?.("change"'),
+  "system-theme-mode",
+  "Theme controls must offer a reversible system mode and react to operating-system changes.",
+);
 warnContract(
   styleSource.includes("@media (forced-colors: active)"),
   "forced-colors",
@@ -770,11 +778,68 @@ requireContract(
 );
 const canonical = indexSource.match(/<link rel="canonical" href="([^"]+)">/)?.[1] || "";
 const ogUrl = indexSource.match(/<meta property="og:url" content="([^"]+)">/)?.[1] || "";
+const documentTitle = indexSource.match(/<title>([^<]+)<\/title>/)?.[1] || "";
+const metaDescription = indexSource.match(
+  /<meta\s+name="description"\s+content="([^"]+)"/,
+)?.[1] || "";
+const ogTitle = indexSource.match(
+  /<meta\s+property="og:title"\s+content="([^"]+)"/,
+)?.[1] || "";
+const ogDescription = indexSource.match(
+  /<meta\s+property="og:description"\s+content="([^"]+)"/,
+)?.[1] || "";
+const ogImage = indexSource.match(
+  /<meta\s+property="og:image"\s+content="([^"]+)"/,
+)?.[1] || "";
+const ogImageAlt = indexSource.match(
+  /<meta\s+property="og:image:alt"\s+content="([^"]+)"/,
+)?.[1] || "";
+const twitterTitle = indexSource.match(
+  /<meta\s+name="twitter:title"\s+content="([^"]+)"/,
+)?.[1] || "";
+const twitterDescription = indexSource.match(
+  /<meta\s+name="twitter:description"\s+content="([^"]+)"/,
+)?.[1] || "";
+const twitterImage = indexSource.match(
+  /<meta\s+name="twitter:image"\s+content="([^"]+)"/,
+)?.[1] || "";
 warnContract(
   canonical === "https://gorokhovatsky.tech/" && ogUrl === canonical,
   "metadata-domain",
   "Canonical and Open Graph URL still need the planned production-domain pass.",
   { canonical, ogUrl },
+);
+requireContract(
+  documentTitle.length > 0
+    && documentTitle === ogTitle
+    && documentTitle === twitterTitle,
+  "metadata-title-coherence",
+  "Document, Open Graph, and Twitter titles must remain identical.",
+  { documentTitle, ogTitle, twitterTitle },
+);
+requireContract(
+  metaDescription.length >= 110
+    && metaDescription.length <= 180
+    && metaDescription === ogDescription
+    && metaDescription === twitterDescription,
+  "metadata-description-coherence",
+  "The primary, Open Graph, and Twitter descriptions must share one useful summary.",
+  {
+    length: metaDescription.length,
+    metaDescription,
+    ogDescription,
+    twitterDescription,
+  },
+);
+requireContract(
+  ogImage === twitterImage
+    && /^https:\/\/gorokhovatsky\.tech\/assets\/og-signal\.jpg\?v=/.test(ogImage)
+    && ogImageAlt.length >= 60
+    && indexSource.includes('<meta property="og:image:width" content="1200">')
+    && indexSource.includes('<meta property="og:image:height" content="630">'),
+  "metadata-share-image",
+  "The 1200×630 share image, its cache key, and its meaningful text alternative must stay coherent.",
+  { ogImage, twitterImage, ogImageAlt },
 );
 
 const requiredStates = [

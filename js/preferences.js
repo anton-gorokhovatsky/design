@@ -126,44 +126,82 @@ createEffectivePreference({
   systemLabel: "Высокий контраст включён в настройках системы",
 });
 
-const setTheme = (theme, persist = false) => {
-  root.dataset.theme = theme;
-  const isDark = theme === "dark";
+const readThemeMode = () => {
+  try {
+    const storedMode = window.localStorage.getItem("anton-signal-theme");
+    return storedMode === "light" || storedMode === "dark"
+      ? storedMode
+      : "system";
+  } catch {
+    return "system";
+  }
+};
+let themeMode = captureMode
+  ? "dark"
+  : root.dataset.themeMode || readThemeMode();
+const getEffectiveTheme = (mode) => (
+  mode === "system"
+    ? (systemTheme.matches ? "dark" : "light")
+    : mode
+);
+const getNextThemeMode = () => {
+  if (themeMode === "system") {
+    return systemTheme.matches ? "light" : "dark";
+  }
 
-  themeToggle?.setAttribute("aria-label", isDark ? "Включить светлую тему" : "Включить тёмную тему");
+  const systemValue = systemTheme.matches ? "dark" : "light";
+  return themeMode === systemValue ? "system" : systemValue;
+};
+const setThemeMode = (mode, persist = false) => {
+  themeMode = mode === "light" || mode === "dark" ? mode : "system";
+  const theme = getEffectiveTheme(themeMode);
+  root.dataset.theme = theme;
+  root.dataset.themeMode = themeMode;
+  const isDark = theme === "dark";
+  const nextMode = getNextThemeMode();
+  const modeLabel = themeMode === "system"
+    ? "СИСТЕМА"
+    : isDark ? "ТЁМНАЯ" : "СВЕТЛАЯ";
+  const currentModeLabel = themeMode === "system"
+    ? `системный, сейчас ${isDark ? "тёмная" : "светлая"}`
+    : isDark ? "тёмный" : "светлый";
+  const nextModeLabel = nextMode === "system"
+    ? "системный"
+    : nextMode === "dark" ? "тёмный" : "светлый";
+
+  themeToggle?.setAttribute(
+    "aria-label",
+    `Режим темы: ${currentModeLabel}. Переключить на ${nextModeLabel}`,
+  );
 
   if (themeLabel) {
-    themeLabel.textContent = isDark ? "ТЁМНАЯ" : "СВЕТЛАЯ";
+    themeLabel.textContent = modeLabel;
   }
 
   themeColor?.setAttribute("content", isDark ? "#11120f" : "#eeede7");
 
   if (persist) {
     try {
-      window.localStorage.setItem("anton-signal-theme", theme);
+      if (themeMode === "system") {
+        window.localStorage.removeItem("anton-signal-theme");
+      } else {
+        window.localStorage.setItem("anton-signal-theme", themeMode);
+      }
     } catch {
       // The interface remains usable when storage is blocked.
     }
   }
 };
 
-setTheme(root.dataset.theme || (systemTheme.matches ? "dark" : "light"));
+setThemeMode(themeMode);
 
 themeToggle?.addEventListener("click", () => {
-  setTheme(root.dataset.theme === "dark" ? "light" : "dark", true);
+  setThemeMode(getNextThemeMode(), true);
 });
 
-systemTheme.addEventListener?.("change", (event) => {
-  let savedTheme = null;
-
-  try {
-    savedTheme = window.localStorage.getItem("anton-signal-theme");
-  } catch {
-    savedTheme = null;
-  }
-
-  if (!savedTheme) {
-    setTheme(event.matches ? "dark" : "light");
+systemTheme.addEventListener?.("change", () => {
+  if (themeMode === "system") {
+    setThemeMode("system");
   }
 });
 
