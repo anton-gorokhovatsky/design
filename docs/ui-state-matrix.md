@@ -51,12 +51,13 @@
 | `search-keyboard` | `390×430`, `ArrowUp`, `Escape` | Скроллится список, не страница; dock/nav скрываются и возвращаются |
 | `panel-work` | Открыть `ПРОЕКТЫ` | Intro и восемь карточек; роль видна; mobile stack не обрезает текст |
 | `panel-approach` | Открыть `ПОДХОД` | Четыре операции, читаемый sticky-stack и обычная прокрутка |
-| `panel-contact` | Открыть `СВЯЗАТЬСЯ` | Два контакта, PDF и Notion; без открытых адресов и overflow |
+| `panel-contact` | Открыть `СВЯЗАТЬСЯ` | Два контакта и один маршрут резюме в Notion; без открытых адресов и overflow |
 | `mobile-nav-open` | Открыть mobile navigation | Пять равных строк, hit-area `40px`, aria-current и Escape/focus return |
+| `mobile-authorship-compact` | `390×430`, карта без выбранной точки | Имя и роль не пересекаются с узлом «Гаража»; роль занимает одну строку |
 | `analytics-consent` | Открыть через `ЭКРАН`, поиск или `?analytics-consent=show` | До opt-in нет Метрики; allow/deny сохраняются; consent не появляется сам на первом визите |
-| `resume-pdf` | Открыть `assets/anton-gorokhovatsky-resume.pdf` | Две A4-страницы, selectable text, рабочие ссылки, нет clipping |
+| `resume-notion` | Открыть маршрут `РЕЗЮМЕ / NOTION` | Внешняя ссылка имеет понятное доступное имя и ведёт на актуальную хронологию |
 | `share-route` | Открыть три `/work/<id>/` | Собственные title/description/canonical/OG `1200×630`, затем корректный `?point=<id>#map` |
-| `no-script` | Отключить JavaScript | Автор, назначение, шесть работ, PDF/Notion и контакты доступны без tracking pixel |
+| `no-script` | Отключить JavaScript | Автор, назначение, шесть работ, Notion-резюме и контакты доступны без tracking pixel |
 | `keyboard-focus` | Tab/Shift+Tab/Enter/Space/Arrows/Escape | Видимый focus, порядок, focus trap/return |
 | `text-zoom` | 200% zoom и ширина 320 CSS px | Текст не обрезан, обычный контент не требует горизонтального скролла |
 | `reduced-motion` | `prefers-reduced-motion: reduce` | Нет морфинга/перемещения; функции и конечные состояния сохранены |
@@ -86,7 +87,7 @@
 - focus trap/return;
 - декоративные specks, canvas и ASCII скрыты;
 - вся существенная информация доступна без hover/video;
-- PDF и Notion имеют различимые доступные имена.
+- Notion-резюме имеет различимое доступное имя во всех трёх публичных маршрутах.
 
 ## Условия готовности
 
@@ -102,7 +103,8 @@
 
 ## Текущий локальный проход
 
-Правки 2026-07-30 прошли полный локальный Chromium/WebKit, PDF/metadata и
-reel-gate. Это не production-PASS: физический Safari не проверялся, публикация
-не выполнена. Датированные доказательства записаны в
+Hotfix мобильного авторства и возврат Notion-резюме прошли полный локальный
+Chromium/WebKit и общий release-gate. Это не production-PASS до публикации и
+контрольного публичного рендера; физический Safari отдельно не проверялся.
+Датированные доказательства записаны в
 [`acceptance-history.md`](./acceptance-history.md).

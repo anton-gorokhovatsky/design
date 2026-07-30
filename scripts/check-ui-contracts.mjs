@@ -20,12 +20,14 @@ const {
   mobileMetricViewport,
   mobileSearchViewport,
   openMobileSearchExpression,
+  readCompactAuthorshipExpression,
   readMobileContactResumeExpression,
   readMobileMetricGroupsExpression,
   readMobileSearchArrowExpression,
   readMobileSearchFocusedExpression,
   readMobileSearchRestoredExpression,
   startStaticServer,
+  validateCompactAuthorship,
   validateMobileContactResume,
   validateMobileMetricGroups,
   validateMobileSearchContract,
@@ -470,7 +472,7 @@ const auditGeometry = (label, state) => {
       geometry.mapCamera.left < -2
       || geometry.mapCamera.right > viewport.width + 2
       || geometry.mapCamera.top < -64
-      || geometry.mapCamera.top > 2
+      || geometry.mapCamera.top > 38
       || geometry.mapCamera.bottom > viewport.height
       || geometry.mapCamera.height < viewport.height * 0.72
     ) {
@@ -963,6 +965,14 @@ const auditBrowser = async (client, origin) => {
     screenHeight: mobileSearchViewport.screenHeight,
   });
   await navigate(client, `${origin}/?qa=ui-contracts-mobile-search#map`);
+  const compactAuthorship = await evaluate(
+    client,
+    readCompactAuthorshipExpression,
+  );
+  for (const failure of validateCompactAuthorship(compactAuthorship)) {
+    fail(`mobile-authorship: ${failure.message}.`, failure.details);
+  }
+  await saveScreenshot(client, "mobile-compact-authorship");
   await evaluate(client, openMobileSearchExpression);
   await delay(140);
   const mobileSearchFocused = await evaluate(

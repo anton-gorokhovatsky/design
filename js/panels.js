@@ -767,7 +767,13 @@ const syncMobileMapFrame = () => {
     const controlClearance = Math.max(0, mapBounds.bottom - searchBounds.top);
     const stageGap = 14;
     const lowerOverscan = 26 * shortScreenPressure;
-    const cameraTop = -(18 + 10 * shortScreenPressure);
+    /* Keep the largest northern node below the quiet authorship coordinate
+       when Safari exposes a compact visual viewport. */
+    const compactHeightProgress = Math.max(
+      0,
+      Math.min(1, (844 - mapBounds.height) / 414),
+    );
+    const cameraTop = -18 + 56 * compactHeightProgress;
     const cameraReserve = Math.max(
       52,
       controlClearance + stageGap - lowerOverscan,

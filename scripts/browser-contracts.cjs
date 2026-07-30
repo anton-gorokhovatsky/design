@@ -77,6 +77,52 @@ const mobileMetricViewport = {
   height: 844,
 };
 
+const readCompactAuthorshipExpression = `(() => {
+  const rect = (element) => {
+    const bounds = element?.getBoundingClientRect();
+    return bounds ? {
+      top: bounds.top,
+      right: bounds.right,
+      bottom: bounds.bottom,
+      left: bounds.left,
+      width: bounds.width,
+      height: bounds.height,
+    } : null;
+  };
+  const brand = document.querySelector(".brand");
+  const role = document.querySelector(".brand__role");
+  const garage = document.querySelector(
+    '[data-map-id="garage"] .map-node__glyph',
+  );
+  const brandBounds = rect(brand);
+  const garageBounds = rect(garage);
+  const range = role ? document.createRange() : null;
+  range?.selectNodeContents(role);
+  const roleLines = range
+    ? new Set(
+      Array.from(range.getClientRects()).map((bounds) => Math.round(bounds.top)),
+    ).size
+    : 0;
+  const sharesHorizontalSpace = Boolean(
+    brandBounds
+    && garageBounds
+    && brandBounds.right > garageBounds.left
+    && brandBounds.left < garageBounds.right
+  );
+  const clearance = brandBounds && garageBounds
+    ? garageBounds.top - brandBounds.bottom
+    : null;
+  return {
+    brand: brandBounds,
+    garage: garageBounds,
+    roleLines,
+    sharesHorizontalSpace,
+    clearance,
+    overflowX: document.documentElement.scrollWidth
+      - document.documentElement.clientWidth,
+  };
+})()`;
+
 const compactAcceptanceScenarios = [
   { label: "mobile-390-light", width: 390, height: 844, mobile: true, theme: "light" },
   { label: "mobile-390-dark", width: 390, height: 844, mobile: true, theme: "dark" },
@@ -288,6 +334,7 @@ const readMobileContactResumeExpression = `(() => {
     links: links.map((link) => {
       const rect = link.getBoundingClientRect();
       return {
+        href: link.href,
         text: link.textContent.replace(/\\s+/g, " ").trim(),
         lines: textLines(link),
         width: rect.width,
@@ -351,11 +398,33 @@ const validateMobileSearchContract = ({
   return failures;
 };
 
+const validateCompactAuthorship = (authorship) => {
+  if (
+    authorship.brand
+    && authorship.garage
+    && authorship.roleLines === 1
+    && authorship.overflowX === 0
+    && (
+      !authorship.sharesHorizontalSpace
+      || authorship.clearance >= 8
+    )
+  ) {
+    return [];
+  }
+
+  return [{
+    id: "compact-authorship-clearance",
+    message: "compact authorship overlaps the Garage node or wraps its role",
+    details: authorship,
+  }];
+};
+
 const validateMobileContactResume = (resume) => {
   if (
     resume.visible
     && resume.horizontalOverflow <= 1
-    && resume.links.length === 2
+    && resume.links.length === 1
+    && resume.links[0].href.startsWith("https://gorokhovatsky.notion.site/")
     && resume.links.every((link) => (
       link.lines === 1
       && link.width <= resume.containerWidth + 1
@@ -366,7 +435,7 @@ const validateMobileContactResume = (resume) => {
 
   return [{
     id: "contact-resume-wrap",
-    message: "mobile resume links collapse into narrow character columns",
+    message: "mobile Notion resume route is missing or wraps incorrectly",
     details: resume,
   }];
 };
@@ -394,6 +463,7 @@ module.exports = {
   mobileMetricViewport,
   mobileSearchViewport,
   openMobileSearchExpression,
+  readCompactAuthorshipExpression,
   readMobileContactResumeExpression,
   readMobileMetricGroupsExpression,
   readMobileSearchArrowExpression,
@@ -401,6 +471,7 @@ module.exports = {
   readMobileSearchRestoredExpression,
   startStaticServer,
   staticAssetMimeTypes,
+  validateCompactAuthorship,
   validateMobileContactResume,
   validateMobileMetricGroups,
   validateMobileSearchContract,

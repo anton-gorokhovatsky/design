@@ -6,12 +6,14 @@ const {
   mobileMetricViewport,
   mobileSearchViewport,
   openMobileSearchExpression,
+  readCompactAuthorshipExpression,
   readMobileContactResumeExpression,
   readMobileMetricGroupsExpression,
   readMobileSearchArrowExpression,
   readMobileSearchFocusedExpression,
   readMobileSearchRestoredExpression,
   startStaticServer,
+  validateCompactAuthorship,
   validateMobileContactResume,
   validateMobileMetricGroups,
   validateMobileSearchContract,
@@ -827,6 +829,11 @@ const mobileSearchViewportAudit = async (browser) => {
     waitUntil: "networkidle",
   });
   await page.evaluate(() => document.fonts?.ready);
+  const authorship = await page.evaluate(readCompactAuthorshipExpression);
+  await page.screenshot({
+    path: path.join(artifactDir, "390x430-dark-mobile-authorship.png"),
+    fullPage: false,
+  });
   await page.evaluate(openMobileSearchExpression);
   await waitForLayout(page, 160);
 
@@ -852,6 +859,7 @@ const mobileSearchViewportAudit = async (browser) => {
   await waitForLayout(page, 180);
   const metricGroups = await page.evaluate(readMobileMetricGroupsExpression);
   const failures = [
+    ...validateCompactAuthorship(authorship),
     ...validateMobileSearchContract({ arrow, focused, restored }),
     ...validateMobileMetricGroups(metricGroups),
   ].map((failure) => failure.message);
@@ -863,6 +871,7 @@ const mobileSearchViewportAudit = async (browser) => {
 
   return {
     arrow,
+    authorship,
     failure: failures.length > 0,
     failures,
     focused,

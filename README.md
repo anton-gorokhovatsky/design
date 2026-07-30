@@ -146,17 +146,19 @@ route.
 
 ## Recruiter and share routes
 
-- `assets/anton-gorokhovatsky-resume.pdf` is the compact, text-based two-page
-  resume; the long-form Notion chronology remains linked from the contact panel.
-  Rebuild the PDF with `python3 scripts/build-resume-pdf.py` in an environment
-  with ReportLab.
+- The public resume route points to the long-form Notion chronology from
+  navigation, contact, and no-script fallback.
+- `assets/anton-gorokhovatsky-resume.pdf` remains an unlinked draft for a
+  separate editorial pass. Rebuild it with `python3 scripts/build-resume-pdf.py`
+  in an environment with ReportLab; do not expose it in the interface until it
+  is accepted explicitly.
 - `/work/garage/`, `/work/narkomfin/`, and `/work/tarski/` expose stable,
   project-specific metadata and redirect visitors into the corresponding map
   state. Their `1200×630` previews are reproduced with
   `node scripts/capture-share-images.mjs`.
 - `node scripts/check-publication-assets.mjs` keeps the three canonical/OG
-  routes, their image geometry, the sitemap, and the two-page linked PDF in
-  one reproducible contract.
+  routes, their image geometry, the sitemap, and the draft PDF integrity in one
+  reproducible contract.
 - Arial/Helvetica remain system fallbacks only. The constellation positions
   each glyph independently on the canvas, so its geometry does not require a
   monospace font.

@@ -178,7 +178,7 @@ if (
   || linkCount < 5
 ) {
   failures.push(
-    "assets/anton-gorokhovatsky-resume.pdf: expected two text pages and five links",
+    "assets/anton-gorokhovatsky-resume.pdf: expected an intact two-page draft with five links",
   );
 }
 
@@ -190,5 +190,5 @@ if (failures.length > 0) {
 
 console.log(
   `Publication assets passed: ${shareRoutes.length} share routes at 1200×630, `
-    + `two-page PDF with ${linkCount} links.`,
+    + `unlinked two-page PDF draft with ${linkCount} links.`,
 );

@@ -8850,7 +8850,7 @@ body:has(.practice-map[data-observation-active]) .site-header {
   }
 
   .brand__role {
-    max-width: 30ch;
+    max-width: none;
     font-size: 0.5rem;
     line-height: 1.2;
   }
@@ -8919,7 +8919,7 @@ html[data-focus-modality="pointer"]
   :root {
     --mobile-console-bottom: max(8px, env(safe-area-inset-bottom));
     --mobile-map-reserve: 126px;
-    --mobile-map-top: -18px;
+    --mobile-map-top: clamp(-18px, calc(96.2px - 13.53svh), 38px);
     --mobile-map-center-y: calc(50svh - 72px);
     --mobile-map-y-scale: 1;
     --mobile-horizon-top: 85%;
