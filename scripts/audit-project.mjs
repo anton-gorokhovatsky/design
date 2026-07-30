@@ -449,15 +449,25 @@ const mapNodeLabelRules = [
 const finalMapNodeLabelRule = [...mapNodeLabelRules]
   .reverse()
   .find((rule) => rule.includes("background: var(--material-01)")) ?? "";
+const sharedMapLabelGeometryRule = (
+  styleSource.match(
+    /(?:^|\n)\.map-node-label,\s*\n\.origin-marker__label\s*\{([^}]*)\}/,
+  )?.[1] ?? ""
+);
 requireContract(
   /display:\s*inline-flex/.test(finalMapNodeLabelRule)
     && /align-items:\s*center/.test(finalMapNodeLabelRule)
-    && /padding:\s*6px 9px/.test(finalMapNodeLabelRule)
     && /background:\s*var\(--material-01\)/.test(finalMapNodeLabelRule)
     && /backdrop-filter:\s*blur\(24px\)/.test(finalMapNodeLabelRule)
-    && /-webkit-backdrop-filter:\s*blur\(24px\)/.test(finalMapNodeLabelRule),
+    && /-webkit-backdrop-filter:\s*blur\(24px\)/.test(finalMapNodeLabelRule)
+    && /min-height:\s*28px/.test(sharedMapLabelGeometryRule)
+    && /padding:\s*6px 9px/.test(sharedMapLabelGeometryRule)
+    && /border-radius:\s*12px/.test(sharedMapLabelGeometryRule)
+    && /corner-shape:\s*var\(--corner-card-shape\)/.test(
+      sharedMapLabelGeometryRule,
+    ),
   "material-map-label-family",
-  "Map labels need one symmetric, optically centred MATERIAL / 01 construction.",
+  "Map and origin labels need one symmetric, optically centred MATERIAL / 01 construction.",
 );
 requireContract(
   indexSource.includes('class="map-labels" data-map-labels aria-hidden="true"')

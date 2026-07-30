@@ -472,7 +472,7 @@ const auditGeometry = (label, state) => {
       geometry.mapCamera.left < -2
       || geometry.mapCamera.right > viewport.width + 2
       || geometry.mapCamera.top < -64
-      || geometry.mapCamera.top > 38
+      || geometry.mapCamera.top > 2
       || geometry.mapCamera.bottom > viewport.height
       || geometry.mapCamera.height < viewport.height * 0.72
     ) {

@@ -78,46 +78,19 @@ const mobileMetricViewport = {
 };
 
 const readCompactAuthorshipExpression = `(() => {
-  const rect = (element) => {
-    const bounds = element?.getBoundingClientRect();
-    return bounds ? {
-      top: bounds.top,
-      right: bounds.right,
-      bottom: bounds.bottom,
-      left: bounds.left,
-      width: bounds.width,
-      height: bounds.height,
-    } : null;
-  };
-  const brand = document.querySelector(".brand");
-  const role = document.querySelector(".brand__role");
-  const garage = document.querySelector(
-    '[data-map-id="garage"] .map-node__glyph',
-  );
-  const brandBounds = rect(brand);
-  const garageBounds = rect(garage);
-  const range = role ? document.createRange() : null;
-  range?.selectNodeContents(role);
-  const roleLines = range
-    ? new Set(
-      Array.from(range.getClientRects()).map((bounds) => Math.round(bounds.top)),
-    ).size
-    : 0;
-  const sharesHorizontalSpace = Boolean(
-    brandBounds
-    && garageBounds
-    && brandBounds.right > garageBounds.left
-    && brandBounds.left < garageBounds.right
-  );
-  const clearance = brandBounds && garageBounds
-    ? garageBounds.top - brandBounds.bottom
-    : null;
+  const header = document.querySelector(".site-header");
+  const bounds = header?.getBoundingClientRect();
+  const style = header ? getComputedStyle(header) : null;
   return {
-    brand: brandBounds,
-    garage: garageBounds,
-    roleLines,
-    sharesHorizontalSpace,
-    clearance,
+    display: style?.display || "",
+    visibility: style?.visibility || "",
+    width: bounds?.width || 0,
+    height: bounds?.height || 0,
+    hidden: !header
+      || style?.display === "none"
+      || style?.visibility === "hidden"
+      || !bounds?.width
+      || !bounds?.height,
     overflowX: document.documentElement.scrollWidth
       - document.documentElement.clientWidth,
   };
@@ -400,21 +373,15 @@ const validateMobileSearchContract = ({
 
 const validateCompactAuthorship = (authorship) => {
   if (
-    authorship.brand
-    && authorship.garage
-    && authorship.roleLines === 1
+    authorship.hidden
     && authorship.overflowX === 0
-    && (
-      !authorship.sharesHorizontalSpace
-      || authorship.clearance >= 8
-    )
   ) {
     return [];
   }
 
   return [{
-    id: "compact-authorship-clearance",
-    message: "compact authorship overlaps the Garage node or wraps its role",
+    id: "compact-authorship-hidden",
+    message: "compact authorship remains visible or causes horizontal overflow",
     details: authorship,
   }];
 };
