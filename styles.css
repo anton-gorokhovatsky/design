@@ -446,21 +446,27 @@ html[data-capture="og"] .map-grid {
   width: 1px;
 }
 
+.map-axis-label,
+.origin-marker__label {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 12px;
+  corner-shape: var(--corner-card-shape);
+  line-height: 1;
+  white-space: nowrap;
+}
+
 .map-axis-label {
   position: absolute;
   z-index: 8;
-  margin: 0;
-  padding: 5px 8px;
-  border: 0;
-  border-radius: 12px;
   background: var(--material-01);
   box-shadow: none;
-  corner-shape: var(--corner-card-shape);
 
   font-size: 0.5rem;
 
   pointer-events: none;
-  white-space: nowrap;
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
 }
@@ -719,16 +725,6 @@ html[data-capture="og"] .map-grid {
     0 16px 36px color-mix(in srgb, var(--signal) 24%, transparent);
 }
 
-.map-node-label,
-.origin-marker__label {
-  box-sizing: border-box;
-  min-height: 28px;
-  padding: 6px 9px;
-  border: 0;
-  border-radius: 12px;
-  corner-shape: var(--corner-card-shape);
-}
-
 .map-node-label {
   position: absolute;
   z-index: 2;
@@ -737,8 +733,12 @@ html[data-capture="og"] .map-grid {
   display: inline-flex;
   width: max-content;
   max-width: min(230px, 34vw);
+  min-height: 28px;
   align-items: center;
   justify-content: center;
+  padding: 6px 9px;
+  border: 0;
+  border-radius: 12px;
   background: var(--material-01);
   box-shadow: none;
   color: var(--ink);
@@ -749,6 +749,7 @@ html[data-capture="og"] .map-grid {
   opacity: 0;
   pointer-events: none;
   text-wrap: balance;
+  corner-shape: var(--corner-card-shape);
   transform: translate(var(--label-offset), -50%) translateX(-4px);
   transition:
     top 820ms var(--motion-shift),
@@ -2324,7 +2325,6 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
   font-size: 0.5rem;
   font-weight: 500;
   letter-spacing: 0.015em;
-  line-height: 1;
 }
 
 .origin-marker .signal-pulse {
@@ -2650,13 +2650,11 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 }
 
 .map-axis-label {
-  padding: 4px 6px;
   background: var(--bg);
   color: var(--content-ink);
   font-family: var(--font-sans);
   font-size: clamp(0.625rem, calc(0.58rem + 0.12vw), 0.7rem);
   letter-spacing: 0.045em;
-  line-height: 1;
 }
 
 .map-axis-label--north {
@@ -7785,7 +7783,6 @@ html[data-theme="dark"] .map-node--running .map-node__glyph {
    family. */
 
 .origin-marker__label {
-  min-height: 28px;
   appearance: none;
   color: var(--content-ink);
   cursor: pointer;

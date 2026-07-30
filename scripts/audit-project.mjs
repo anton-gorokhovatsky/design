@@ -449,25 +449,15 @@ const mapNodeLabelRules = [
 const finalMapNodeLabelRule = [...mapNodeLabelRules]
   .reverse()
   .find((rule) => rule.includes("background: var(--material-01)")) ?? "";
-const sharedMapLabelGeometryRule = (
-  styleSource.match(
-    /(?:^|\n)\.map-node-label,\s*\n\.origin-marker__label\s*\{([^}]*)\}/,
-  )?.[1] ?? ""
-);
 requireContract(
   /display:\s*inline-flex/.test(finalMapNodeLabelRule)
     && /align-items:\s*center/.test(finalMapNodeLabelRule)
+    && /padding:\s*6px 9px/.test(finalMapNodeLabelRule)
     && /background:\s*var\(--material-01\)/.test(finalMapNodeLabelRule)
     && /backdrop-filter:\s*blur\(24px\)/.test(finalMapNodeLabelRule)
-    && /-webkit-backdrop-filter:\s*blur\(24px\)/.test(finalMapNodeLabelRule)
-    && /min-height:\s*28px/.test(sharedMapLabelGeometryRule)
-    && /padding:\s*6px 9px/.test(sharedMapLabelGeometryRule)
-    && /border-radius:\s*12px/.test(sharedMapLabelGeometryRule)
-    && /corner-shape:\s*var\(--corner-card-shape\)/.test(
-      sharedMapLabelGeometryRule,
-    ),
+    && /-webkit-backdrop-filter:\s*blur\(24px\)/.test(finalMapNodeLabelRule),
   "material-map-label-family",
-  "Map and origin labels need one symmetric, optically centred MATERIAL / 01 construction.",
+  "Map labels need one symmetric, optically centred MATERIAL / 01 construction.",
 );
 requireContract(
   indexSource.includes('class="map-labels" data-map-labels aria-hidden="true"')
@@ -485,6 +475,11 @@ const originLabelRules = [
 const originLabelMaterialRule = originLabelRules.find((rule) => (
   rule.includes("background: var(--material-01)")
 )) ?? "";
+const coordinateLabelGeometryRule = (
+  styleSource.match(
+    /(?:^|\n)\.map-axis-label,\s*\n\.origin-marker__label\s*\{([^}]*)\}/,
+  )?.[1] ?? ""
+);
 requireContract(
   originLabelRules.length >= 1
     && /background:\s*var\(--material-01\)/.test(originLabelMaterialRule)
@@ -493,6 +488,19 @@ requireContract(
     && !originLabelRules.some((rule) => /background:\s*color-mix/.test(rule)),
   "material-origin-label",
   "The origin label must use only MATERIAL / 01; historical local backdrops are forbidden.",
+);
+requireContract(
+  /padding:\s*4px 6px/.test(coordinateLabelGeometryRule)
+    && /margin:\s*0/.test(coordinateLabelGeometryRule)
+    && /border:\s*0/.test(coordinateLabelGeometryRule)
+    && /border-radius:\s*12px/.test(coordinateLabelGeometryRule)
+    && /corner-shape:\s*var\(--corner-card-shape\)/.test(
+      coordinateLabelGeometryRule,
+    )
+    && /line-height:\s*1/.test(coordinateLabelGeometryRule)
+    && !originLabelRules.some((rule) => /min-height:/.test(rule)),
+  "coordinate-label-geometry",
+  "The observation route must keep the same small coordinate silhouette as the axis labels.",
 );
 
 const controlConsoleStart = indexSource.indexOf('class="control-console"');
