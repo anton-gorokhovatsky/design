@@ -20,6 +20,7 @@ const {
   mobileMetricViewport,
   mobileSearchViewport,
   openMobileSearchExpression,
+  readAnnotationHierarchyExpression,
   readCompactAuthorshipExpression,
   readMobileContactResumeExpression,
   readMobileMetricGroupsExpression,
@@ -27,6 +28,7 @@ const {
   readMobileSearchFocusedExpression,
   readMobileSearchRestoredExpression,
   startStaticServer,
+  validateAnnotationHierarchy,
   validateCompactAuthorship,
   validateMobileContactResume,
   validateMobileMetricGroups,
@@ -602,6 +604,16 @@ const auditBrowser = async (client, origin) => {
     const state = await evaluate(client, geometryExpression);
     auditGeometry(scenario.label, state);
     await saveScreenshot(client, scenario.label);
+    if (scenario.label === "desktop-light") {
+      const annotationHierarchy = await evaluate(
+        client,
+        readAnnotationHierarchyExpression,
+      );
+      for (const failure of validateAnnotationHierarchy(annotationHierarchy)) {
+        fail(`annotation-hierarchy: ${failure.message}`, failure.details);
+      }
+      await saveScreenshot(client, "desktop-annotation-hierarchy");
+    }
     if (scenario.label === "desktop-dark") {
       await saveElementScreenshot(client, "crop-desktop-view-dark", ".map-controls");
       await saveElementScreenshot(client, "crop-desktop-display-dark", ".display-control");
@@ -1326,16 +1338,19 @@ const auditBrowser = async (client, origin) => {
         .filter((value) => /последовательное|anton|@|gmail|telegram\\.me/i.test(String(value))),
     };
   })()`);
-  const requiredGoals = [
+  const decisionGoals = [
     "point_open",
+    "search_success",
+    "panel_open",
+    "observation_complete",
+  ];
+  const supportingGoals = [
     "map_filter_change",
     "chronology_toggle",
     "observation_start",
-    "observation_complete",
-    "search_success",
-    "panel_open",
     "contact_open",
   ];
+  const requiredGoals = [...decisionGoals, ...supportingGoals];
   const missingGoals = requiredGoals.filter((goal) => (
     !goalContract.names.includes(goal)
   ));
@@ -1358,6 +1373,7 @@ const auditBrowser = async (client, origin) => {
   ) {
     fail("privacy: consented navigation goals are incomplete or leak free-form data.", {
       ...goalContract,
+      decisionGoals,
       missingGoals,
       unexpectedParameterKeys,
     });
@@ -1401,7 +1417,7 @@ if (focusedScenarioLabel) {
   console.log(
     "UI contracts passed: favicon, full viewport/theme matrix, 200% reflow, "
     + "panels, search, reel, mobile navigation/content, MATERIAL / 01, focus, "
-    + "contrast, forced colors, reduced motion, privacy consent, no-JS, and "
-    + "deferred media.",
+    + "annotation hierarchy, contrast, forced colors, reduced motion, privacy "
+    + "consent, no-JS, and deferred media.",
   );
 }

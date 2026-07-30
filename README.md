@@ -64,7 +64,9 @@ route.
   After consent, a small allowlist of goal events measures successful
   navigation — point opens, filters, chronology, the observation route,
   content panels, and contact actions. Search text, contact addresses, and
-  free-form values are never sent as goal parameters.
+  free-form values are never sent as goal parameters. The four signals used
+  for product decisions and the deliberately conservative reading gate are
+  documented in [`docs/analytics-decision-signals.md`](docs/analytics-decision-signals.md).
 - With JavaScript unavailable, a focused fallback still exposes selected work,
   the résumé, email, and Telegram instead of leaving a dead canvas.
 - The query bar sits above the system rail and uses the functional prompt
@@ -152,11 +154,13 @@ route.
   separate editorial pass. Rebuild it with `python3 scripts/build-resume-pdf.py`
   in an environment with ReportLab; do not expose it in the interface until it
   is accepted explicitly.
-- `/work/garage/`, `/work/narkomfin/`, and `/work/tarski/` expose stable,
-  project-specific metadata and redirect visitors into the corresponding map
-  state. Their `1200×630` previews are reproduced with
-  `node scripts/capture-share-images.mjs`.
-- `node scripts/check-publication-assets.mjs` keeps the three canonical/OG
+- `/work/garage/`, `/work/narkomfin/`, `/work/tarski/`, `/work/doronin/`,
+  `/work/eleven/`, and `/work/shirokostup/` expose stable, project-specific
+  metadata and redirect visitors into the corresponding map state. Their
+  `1200×630` previews are reproduced with
+  `node scripts/capture-share-images.mjs`; pass route IDs to refresh only
+  selected images.
+- `node scripts/check-publication-assets.mjs` keeps the six canonical/OG
   routes, their image geometry, the sitemap, and the draft PDF integrity in one
   reproducible contract.
 - Arial/Helvetica remain system fallbacks only. The constellation positions

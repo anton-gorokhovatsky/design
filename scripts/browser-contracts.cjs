@@ -96,6 +96,46 @@ const readCompactAuthorshipExpression = `(() => {
   };
 })()`;
 
+const readAnnotationHierarchyExpression = `(() => {
+  const readBox = (element) => {
+    const bounds = element?.getBoundingClientRect();
+    const style = element ? getComputedStyle(element) : null;
+    const properties = style ? {
+      borderBottomWidth: style.borderBottomWidth,
+      borderLeftWidth: style.borderLeftWidth,
+      borderRadius: style.borderRadius,
+      borderRightWidth: style.borderRightWidth,
+      borderTopWidth: style.borderTopWidth,
+      boxSizing: style.boxSizing,
+      fontSize: style.fontSize,
+      lineHeight: style.lineHeight,
+      marginBottom: style.marginBottom,
+      marginLeft: style.marginLeft,
+      marginRight: style.marginRight,
+      marginTop: style.marginTop,
+      paddingBottom: style.paddingBottom,
+      paddingLeft: style.paddingLeft,
+      paddingRight: style.paddingRight,
+      paddingTop: style.paddingTop,
+    } : null;
+
+    return {
+      exists: Boolean(element),
+      height: bounds?.height || 0,
+      properties,
+      width: bounds?.width || 0,
+    };
+  };
+
+  return {
+    axes: Array.from(document.querySelectorAll(".map-axis-label")).map(readBox),
+    garage: readBox(document.querySelector(".map-node-label--garage")),
+    overflowX: document.documentElement.scrollWidth
+      - document.documentElement.clientWidth,
+    route: readBox(document.querySelector(".origin-marker__label")),
+  };
+})()`;
+
 const compactAcceptanceScenarios = [
   { label: "mobile-390-light", width: 390, height: 844, mobile: true, theme: "light" },
   { label: "mobile-390-dark", width: 390, height: 844, mobile: true, theme: "dark" },
@@ -386,6 +426,67 @@ const validateCompactAuthorship = (authorship) => {
   }];
 };
 
+const validateAnnotationHierarchy = (hierarchy) => {
+  const route = hierarchy.route;
+  const garage = hierarchy.garage;
+  const axes = hierarchy.axes || [];
+  const sharedProperties = [
+    "borderBottomWidth",
+    "borderLeftWidth",
+    "borderRadius",
+    "borderRightWidth",
+    "borderTopWidth",
+    "boxSizing",
+    "fontSize",
+    "lineHeight",
+    "marginBottom",
+    "marginLeft",
+    "marginRight",
+    "marginTop",
+    "paddingBottom",
+    "paddingLeft",
+    "paddingRight",
+    "paddingTop",
+  ];
+  const approximatelyEqual = (first, second, tolerance = 0.5) => (
+    Math.abs(first - second) <= tolerance
+  );
+  const matchesRoute = (axis) => (
+    axis.exists
+    && approximatelyEqual(axis.height, route.height)
+    && sharedProperties.every((property) => (
+      axis.properties?.[property] === route.properties?.[property]
+    ))
+  );
+  const routeMatchesAxes = (
+    route.exists
+    && axes.length === 4
+    && axes.every(matchesRoute)
+  );
+  const garageIsLarger = (
+    garage.exists
+    && garage.height >= route.height + 6
+    && Number.parseFloat(garage.properties?.paddingTop || "0")
+      > Number.parseFloat(route.properties?.paddingTop || "0")
+    && Number.parseFloat(garage.properties?.paddingRight || "0")
+      > Number.parseFloat(route.properties?.paddingRight || "0")
+  );
+
+  if (
+    routeMatchesAxes
+    && garageIsLarger
+    && hierarchy.overflowX === 0
+  ) {
+    return [];
+  }
+
+  return [{
+    id: "annotation-hierarchy",
+    message: "route and axis labels diverge, or Garage loses its larger object-label hierarchy",
+    details: hierarchy,
+  }];
+};
+
 const validateMobileContactResume = (resume) => {
   if (
     resume.visible
@@ -430,6 +531,7 @@ module.exports = {
   mobileMetricViewport,
   mobileSearchViewport,
   openMobileSearchExpression,
+  readAnnotationHierarchyExpression,
   readCompactAuthorshipExpression,
   readMobileContactResumeExpression,
   readMobileMetricGroupsExpression,
@@ -438,6 +540,7 @@ module.exports = {
   readMobileSearchRestoredExpression,
   startStaticServer,
   staticAssetMimeTypes,
+  validateAnnotationHierarchy,
   validateCompactAuthorship,
   validateMobileContactResume,
   validateMobileMetricGroups,

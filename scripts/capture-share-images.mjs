@@ -16,7 +16,23 @@ const sharePoints = [
   { id: "garage", output: "garage.jpg" },
   { id: "narkomfin", output: "narkomfin.jpg" },
   { id: "tarski", output: "tarski.jpg" },
+  { id: "doronin", output: "doronin.jpg" },
+  { id: "eleven", output: "eleven.jpg" },
+  { id: "shirokostup", output: "shirokostup.jpg" },
 ];
+const requestedIds = process.argv.slice(2);
+const selectedPoints = requestedIds.length === 0
+  ? sharePoints
+  : requestedIds.map((id) => {
+    const point = sharePoints.find((candidate) => candidate.id === id);
+    if (!point) {
+      throw new Error(
+        `Unknown share point "${id}". Expected one of: `
+          + sharePoints.map(({ id: availableId }) => availableId).join(", "),
+      );
+    }
+    return point;
+  });
 
 const { origin, server } = await startStaticServer({ projectRoot });
 mkdirSync(outputDirectory, { recursive: true });
@@ -45,7 +61,7 @@ try {
   });
   const page = await context.newPage();
 
-  for (const point of sharePoints) {
+  for (const point of selectedPoints) {
     await page.goto(`${origin}/?og=1&point=${point.id}`, {
       waitUntil: "domcontentloaded",
     });

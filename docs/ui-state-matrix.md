@@ -55,8 +55,9 @@
 | `mobile-nav-open` | Открыть mobile navigation | Пять равных строк, hit-area `40px`, aria-current и Escape/focus return |
 | `mobile-authorship-compact` | Любая ширина `≤680px`, карта без выбранной точки | Тихая desktop-подпись авторства скрыта; карта сохраняет исходное кадрирование |
 | `analytics-consent` | Открыть через `ЭКРАН`, поиск или `?analytics-consent=show` | До opt-in нет Метрики; allow/deny сохраняются; consent не появляется сам на первом визите |
+| `analytics-decision-signals` | После opt-in открыть точку, выбрать результат поиска, открыть панель и завершить маршрут | Есть `point_open`, `search_success`, `panel_open`, `observation_complete`; только allowlisted параметры, без поискового текста и свободных значений |
 | `resume-notion` | Открыть маршрут `РЕЗЮМЕ / NOTION` | Внешняя ссылка имеет понятное доступное имя и ведёт на актуальную хронологию |
-| `share-route` | Открыть три `/work/<id>/` | Собственные title/description/canonical/OG `1200×630`, затем корректный `?point=<id>#map` |
+| `share-route` | Открыть шесть `/work/<id>/` | Собственные title/description/canonical/OG `1200×630`, затем корректный `?point=<id>#map` |
 | `no-script` | Отключить JavaScript | Автор, назначение, шесть работ, Notion-резюме и контакты доступны без tracking pixel |
 | `keyboard-focus` | Tab/Shift+Tab/Enter/Space/Arrows/Escape | Видимый focus, порядок, focus trap/return |
 | `text-zoom` | 200% zoom и ширина 320 CSS px | Текст не обрезан, обычный контент не требует горизонтального скролла |

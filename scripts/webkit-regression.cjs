@@ -6,6 +6,7 @@ const {
   mobileMetricViewport,
   mobileSearchViewport,
   openMobileSearchExpression,
+  readAnnotationHierarchyExpression,
   readCompactAuthorshipExpression,
   readMobileContactResumeExpression,
   readMobileMetricGroupsExpression,
@@ -13,6 +14,7 @@ const {
   readMobileSearchFocusedExpression,
   readMobileSearchRestoredExpression,
   startStaticServer,
+  validateAnnotationHierarchy,
   validateCompactAuthorship,
   validateMobileContactResume,
   validateMobileMetricGroups,
@@ -37,6 +39,32 @@ const isolateThirdPartyTelemetry = async (page) => {
     telemetryRequests.push(route.request().url());
     return route.abort();
   });
+};
+
+const annotationHierarchyAudit = async (browser) => {
+  const context = await browser.newContext({
+    viewport: { width: 1440, height: 900 },
+    colorScheme: "light",
+  });
+  const page = await context.newPage();
+  await isolateThirdPartyTelemetry(page);
+  attachRuntimeLog(page, "1440x900-light-annotation-hierarchy");
+  await page.goto(`${baseUrl}-annotation-hierarchy`, {
+    waitUntil: "networkidle",
+  });
+  await page.evaluate(() => document.fonts?.ready);
+  await waitForLayout(page, 500);
+  const state = await page.evaluate(readAnnotationHierarchyExpression);
+  await page.screenshot({
+    path: path.join(artifactDir, "1440x900-light-annotation-hierarchy.png"),
+    fullPage: false,
+  });
+  await context.close();
+
+  return {
+    failures: validateAnnotationHierarchy(state),
+    state,
+  };
 };
 
 const runtimeErrors = [];
@@ -1164,6 +1192,7 @@ const accessibilityAcceptanceAudit = async (browser) => {
   const report = {
     schemaVersion: 1,
     accessibility: null,
+    annotationHierarchy: null,
     firstPaint: [],
     viewports: [],
     mobileSearch: null,
@@ -1279,6 +1308,7 @@ const accessibilityAcceptanceAudit = async (browser) => {
       browser = await webkit.launch({ headless: true });
     }
 
+    report.annotationHierarchy = await annotationHierarchyAudit(browser);
     report.mobileSearch = await mobileSearchViewportAudit(browser);
     report.accessibility = await accessibilityAcceptanceAudit(browser);
 
@@ -1314,6 +1344,9 @@ const accessibilityAcceptanceAudit = async (browser) => {
 
   const failures = [
     ...report.runtimeErrors,
+    ...(report.annotationHierarchy?.failures || []).map(
+      (failure) => `annotation hierarchy: ${failure.message}`,
+    ),
     ...(report.accessibility?.failures || []).map(
       (failure) => `accessibility acceptance: ${failure}`,
     ),

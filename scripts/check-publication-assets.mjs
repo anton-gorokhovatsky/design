@@ -24,6 +24,21 @@ const shareRoutes = [
     titleFragment: "Tarski",
     imageAltFragment: "Tarski",
   },
+  {
+    id: "doronin",
+    titleFragment: "DORONIN",
+    imageAltFragment: "DORONIN",
+  },
+  {
+    id: "eleven",
+    titleFragment: "11 111",
+    imageAltFragment: "11 111",
+  },
+  {
+    id: "shirokostup",
+    titleFragment: "Ольга Широкоступ",
+    imageAltFragment: "Широкоступ",
+  },
 ];
 
 const readText = (path) => readFileSync(join(projectRoot, path), "utf8");
