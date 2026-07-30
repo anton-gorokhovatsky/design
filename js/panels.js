@@ -1,4 +1,64 @@
-// Runtime layer 6/7: movable consoles, content panels, search, and URL state.
+// Runtime module 6/7: movable consoles, content panels, search, and URL state.
+import {
+  openAnalyticsConsent,
+  trackPortfolioEvent,
+} from "./analytics.js";
+import { mapItems } from "./map-data.js";
+import {
+  activePreviewItem,
+  clearMapSelection,
+  getNavigableMapItems,
+  hideMapPreview,
+  inspectorClose,
+  mapButtons,
+  mapInspector,
+  mapPreview,
+  normalizeMapFilters,
+  observationActive,
+  observationSteps,
+  requestMapLinksRender,
+  rovingMapId,
+  selectedMapId,
+  selectMapItem,
+  setApplyingUrlState,
+  setInspectorOpen,
+  setMapFilter,
+  setMapRovingId,
+  setSearchRelationshipPreview,
+  setTimeMode,
+  startObservation,
+  stopObservation,
+  syncMapNodeAvailability,
+  timeModeActive,
+  writeUrlState,
+} from "./map-engine.js";
+import {
+  reducedMotion,
+  typographUiText,
+} from "./preferences.js";
+import { signalField } from "./signal-field.js";
+
+const compactCommandViewport = window.matchMedia("(max-width: 680px)");
+const commandViewportProperties = [
+  "--command-focus-left",
+  "--command-focus-top",
+  "--command-focus-width",
+];
+const clearCommandViewportPosition = () => {
+  commandViewportProperties.forEach((property) => {
+    document.documentElement.style.removeProperty(property);
+  });
+};
+const getCommandVisualViewport = () => {
+  const viewport = window.visualViewport;
+
+  return {
+    height: viewport?.height || window.innerHeight,
+    left: viewport?.offsetLeft || 0,
+    top: viewport?.offsetTop || 0,
+    width: viewport?.width || window.innerWidth,
+  };
+};
 const positionDetachedCommandResults = () => {
   const dock = document.querySelector("[data-command-form]");
   const results = document.querySelector("[data-command-results]");
@@ -9,17 +69,81 @@ const positionDetachedCommandResults = () => {
   }
 
   const bounds = dock.getBoundingClientRect();
-  const gap = window.matchMedia("(max-width: 680px)").matches ? 8 : 19;
+  const gap = compactCommandViewport.matches ? 8 : 19;
+  const inputFocused = dock.contains(document.activeElement);
+  const usesFocusedMobileLayout = compactCommandViewport.matches && inputFocused;
+  let left = bounds.left;
+  let width = bounds.width;
+  let bottom = window.innerHeight - bounds.top + gap;
+  let maximumHeight = Math.min(390, window.innerHeight * 0.54);
+
+  if (usesFocusedMobileLayout) {
+    const viewport = getCommandVisualViewport();
+    const edgeGap = 8;
+    const dockTop = Math.max(
+      viewport.top + edgeGap,
+      viewport.top + viewport.height - bounds.height - edgeGap,
+    );
+
+    left = viewport.left + edgeGap;
+    width = Math.max(0, viewport.width - edgeGap * 2);
+    bottom = window.innerHeight - dockTop + gap;
+    maximumHeight = Math.max(
+      88,
+      Math.min(390, dockTop - viewport.top - gap - edgeGap),
+    );
+    document.documentElement.style.setProperty(
+      "--command-focus-left",
+      `${left.toFixed(2)}px`,
+    );
+    document.documentElement.style.setProperty(
+      "--command-focus-top",
+      `${dockTop.toFixed(2)}px`,
+    );
+    document.documentElement.style.setProperty(
+      "--command-focus-width",
+      `${width.toFixed(2)}px`,
+    );
+  } else {
+    clearCommandViewportPosition();
+  }
 
   [results, status].filter(Boolean).forEach((element) => {
-    element.style.setProperty("--command-results-left", `${bounds.left.toFixed(2)}px`);
-    element.style.setProperty("--command-results-width", `${bounds.width.toFixed(2)}px`);
+    element.style.setProperty("--command-results-left", `${left.toFixed(2)}px`);
+    element.style.setProperty("--command-results-width", `${width.toFixed(2)}px`);
     element.style.setProperty(
       "--command-results-bottom",
-      `${(window.innerHeight - bounds.top + gap).toFixed(2)}px`,
+      `${bottom.toFixed(2)}px`,
+    );
+    element.style.setProperty(
+      "--command-results-max-height",
+      `${maximumHeight.toFixed(2)}px`,
     );
   });
 };
+let commandPositionFrame = 0;
+const scheduleDetachedCommandResultsPosition = () => {
+  window.cancelAnimationFrame(commandPositionFrame);
+  commandPositionFrame = window.requestAnimationFrame(
+    positionDetachedCommandResults,
+  );
+};
+
+window.visualViewport?.addEventListener(
+  "resize",
+  scheduleDetachedCommandResultsPosition,
+  { passive: true },
+);
+window.visualViewport?.addEventListener(
+  "scroll",
+  scheduleDetachedCommandResultsPosition,
+  { passive: true },
+);
+window.addEventListener(
+  "resize",
+  scheduleDetachedCommandResultsPosition,
+  { passive: true },
+);
 
 const floatingConsoleModules = Array.from(document.querySelectorAll("[data-floating-console]"));
 const floatingConsoleMedia = window.matchMedia(
@@ -590,6 +714,21 @@ const commandForm = document.querySelector("[data-command-form]");
 const commandInput = document.querySelector("[data-command-input]");
 const commandResults = document.querySelector("[data-command-results]");
 const commandStatus = document.querySelector("[data-command-status]");
+const syncCommandFocusViewport = () => {
+  const usesFocusedMobileLayout = compactCommandViewport.matches
+    && document.activeElement === commandInput;
+
+  document.body.classList.toggle(
+    "has-command-focus",
+    usesFocusedMobileLayout,
+  );
+
+  if (!usesFocusedMobileLayout) {
+    clearCommandViewportPosition();
+  }
+
+  scheduleDetachedCommandResultsPosition();
+};
 const compactMapFrame = window.matchMedia("(max-width: 680px)");
 let mobileMapFrame = 0;
 const syncMobileMapFrame = () => {
@@ -683,7 +822,7 @@ const syncMobileMapFrame = () => {
       "--mobile-time-scale",
       timeScale.toFixed(3),
     );
-    scheduleMapLinksRender();
+    requestMapLinksRender();
   });
 };
 const syncCommandPlaceholder = () => {
@@ -696,6 +835,7 @@ const syncCommandPlaceholder = () => {
 
 compactConstellationNav.addEventListener("change", syncCommandPlaceholder);
 syncCommandPlaceholder();
+compactCommandViewport.addEventListener?.("change", syncCommandFocusViewport);
 compactMapFrame.addEventListener?.("change", syncMobileMapFrame);
 window.addEventListener("resize", syncMobileMapFrame, { passive: true });
 window.addEventListener("pageshow", syncMobileMapFrame, { passive: true });
@@ -814,9 +954,18 @@ const setActiveCommandResult = (index) => {
 
   const activeButton = resultButtons[activeCommandIndex];
 
-  if (activeButton) {
+  if (activeButton && commandResults) {
     commandInput?.setAttribute("aria-activedescendant", activeButton.id);
-    activeButton.scrollIntoView({ block: "nearest" });
+    const buttonTop = activeButton.offsetTop;
+    const buttonBottom = buttonTop + activeButton.offsetHeight;
+    const visibleTop = commandResults.scrollTop;
+    const visibleBottom = visibleTop + commandResults.clientHeight;
+
+    if (buttonTop < visibleTop) {
+      commandResults.scrollTop = buttonTop;
+    } else if (buttonBottom > visibleBottom) {
+      commandResults.scrollTop = buttonBottom - commandResults.clientHeight;
+    }
   }
 
   const activeResult = currentCommandResults[activeCommandIndex];
@@ -988,6 +1137,7 @@ const runCommandResult = (result) => {
 };
 
 commandInput?.addEventListener("focus", () => {
+  syncCommandFocusViewport();
   hideMapPreview({ immediate: true });
   setInspectorOpen(false);
   renderCommandResults(commandInput.value);
@@ -1030,6 +1180,7 @@ commandInput?.addEventListener("blur", () => {
   window.setTimeout(() => {
     setCommandOpen(false);
     setCommandStatus("");
+    syncCommandFocusViewport();
   }, 120);
 });
 
@@ -1078,7 +1229,15 @@ document.addEventListener("keydown", (event) => {
     return;
   }
 
-  if (activePreviewItem || mapPreview?.classList.contains("is-visible")) {
+  if (
+    document.activeElement === commandInput
+    || commandForm?.classList.contains("is-open")
+  ) {
+    setCommandOpen(false);
+    setCommandStatus("");
+    commandInput?.blur();
+    clearSearchHighlight();
+  } else if (activePreviewItem || mapPreview?.classList.contains("is-visible")) {
     hideMapPreview({ immediate: true });
   } else if (observationActive) {
     stopObservation();
@@ -1100,7 +1259,7 @@ document.addEventListener("keydown", (event) => {
 });
 
 const applyUrlState = () => {
-  applyingUrlState = true;
+  setApplyingUrlState(true);
 
   try {
     const url = new URL(window.location.href);
@@ -1184,7 +1343,7 @@ const applyUrlState = () => {
       clearMapSelection();
     }
   } finally {
-    applyingUrlState = false;
+    setApplyingUrlState(false);
   }
 };
 

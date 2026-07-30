@@ -1,4 +1,10 @@
-// Runtime layer 3/7: decorative signal field and depth-grid renderer.
+// Runtime module 3/7: decorative signal field and depth-grid renderer.
+import {
+  captureMode,
+  reducedMotion,
+  root,
+} from "./preferences.js";
+
 const asciiCharacters = " .·:+*#%@";
 const createSignal = (columns, rows, phase = 0, seed = 0) => {
   const output = [];
@@ -511,6 +517,27 @@ const renderSignalConstellation = (time = performance.now()) => {
   }
 };
 
+const pauseSignalConstellation = () => {
+  window.cancelAnimationFrame(signalFrame);
+  signalFrame = 0;
+};
+
+const resumeSignalConstellation = () => {
+  if (
+    !signalConstellation
+    || document.hidden
+    || reducedMotion.matches
+    || captureMode
+  ) {
+    return;
+  }
+
+  pauseSignalConstellation();
+  signalStartedAt = performance.now();
+  signalLastFrameAt = signalStartedAt;
+  signalFrame = window.requestAnimationFrame(renderSignalConstellation);
+};
+
 const initializeSignalConstellation = () => {
   if (!signalConstellation) {
     return;
@@ -547,7 +574,7 @@ const resetSignalParallax = () => {
 };
 
 reducedMotion.addEventListener?.("change", () => {
-  window.cancelAnimationFrame(signalFrame);
+  pauseSignalConstellation();
   signalAngularVelocity.x = 0;
   signalAngularVelocity.y = 0;
 
@@ -558,8 +585,7 @@ reducedMotion.addEventListener?.("change", () => {
   }
 
   if (!document.hidden) {
-    signalStartedAt = performance.now();
-    signalFrame = window.requestAnimationFrame(renderSignalConstellation);
+    resumeSignalConstellation();
   }
 });
 
@@ -703,3 +729,10 @@ signalField?.addEventListener("pointerleave", () => {
   signalField.style.setProperty("--layer-near-x", "0px");
   signalField.style.setProperty("--layer-near-y", "0px");
 });
+
+export {
+  pauseSignalConstellation,
+  resumeSignalConstellation,
+  signalField,
+  svgNamespace,
+};

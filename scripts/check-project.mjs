@@ -9,6 +9,8 @@ const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(scriptDirectory, "..");
 const contractScripts = [
   "scripts/audit-project.mjs",
+  "scripts/browser-contracts.cjs",
+  "scripts/cache-versions.mjs",
   "scripts/check-assets.mjs",
   "scripts/check-performance-budget.mjs",
   "scripts/check-css-cascade.mjs",
@@ -37,6 +39,11 @@ const syntaxSteps = [
 ];
 
 const contractSteps = [
+  {
+    label: "Cache-busting contract",
+    command: process.execPath,
+    args: ["scripts/cache-versions.mjs", "--check"],
+  },
   {
     label: "Project contracts",
     command: process.execPath,

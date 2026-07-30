@@ -5,6 +5,10 @@ import { spawn } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  syncRuntimeAssetVersions,
+  verifyRuntimeAssetVersions,
+} from "./cache-versions.mjs";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(scriptDirectory, "..");
@@ -113,17 +117,22 @@ const sha256 = (value) => createHash("sha256").update(value).digest("hex");
 
 const getLocalRuntimeAssets = () => {
   const html = readFileSync(resolve(projectRoot, "index.html"), "utf8");
-  const assetPaths = [...html.matchAll(
-    /(?:src|href)=["']((?:js|assets)\/[^"'?#]+)(?:\?[^"']*)?["']/g,
+  const assetReferences = [...html.matchAll(
+    /(?:src|href)=["']((?:styles\.css|(?:js|assets)\/[^"'?#]+)(?:\?[^"']*)?)["']/g,
   )].map((match) => match[1]);
 
   return {
     html,
     htmlHash: sha256(html),
-    assets: [...new Set(assetPaths)]
-      .filter((path) => existsSync(resolve(projectRoot, path)))
-      .map((path) => ({
+    assets: [...new Set(assetReferences)]
+      .map((reference) => ({
+        reference,
+        path: reference.split(/[?#]/, 1)[0],
+      }))
+      .filter(({ path }) => existsSync(resolve(projectRoot, path)))
+      .map(({ path, reference }) => ({
         path,
+        reference,
         hash: sha256(readFileSync(resolve(projectRoot, path))),
       })),
   };
@@ -149,7 +158,6 @@ const fetchWithTimeout = async (url, timeout = 12000) => {
 const verifyPublicRelease = async (publicUrl, commit, localRuntime) => {
   const deadline = Date.now() + 240000;
   const releaseUrl = new URL(publicUrl);
-  releaseUrl.searchParams.set("release", commit.slice(0, 12));
   let lastDifference = "production HTML is not available yet";
 
   console.log(`\n→ Waiting for Pages at ${releaseUrl}`);
@@ -162,9 +170,9 @@ const verifyPublicRelease = async (publicUrl, commit, localRuntime) => {
       } else {
         const publicHtml = await response.text();
         const publicHtmlHash = sha256(publicHtml);
-        const localRuntimeReferences = localRuntime.assets.map(({ path }) => path);
-        const missingReferences = localRuntimeReferences.filter((path) => (
-          !publicHtml.includes(path)
+        const localRuntimeReferences = localRuntime.assets.map(({ reference }) => reference);
+        const missingReferences = localRuntimeReferences.filter((reference) => (
+          !publicHtml.includes(reference)
         ));
 
         if (publicHtmlHash !== localRuntime.htmlHash) {
@@ -175,8 +183,7 @@ const verifyPublicRelease = async (publicUrl, commit, localRuntime) => {
           const mismatchedAssets = [];
 
           for (const asset of localRuntime.assets) {
-            const assetUrl = new URL(asset.path, releaseUrl);
-            assetUrl.searchParams.set("release", commit.slice(0, 12));
+            const assetUrl = new URL(asset.reference, releaseUrl);
             const assetResponse = await fetchWithTimeout(assetUrl);
             const bytes = Buffer.from(await assetResponse.arrayBuffer());
 
@@ -247,7 +254,56 @@ if (branch !== "main") {
   fail(`current branch is "${branch || "(detached)"}", expected "main".`);
 }
 
-const statusLines = await readGitLines(["status", "--porcelain=v1", "--untracked-files=all"]);
+const initialStatusLines = await readGitLines([
+  "status",
+  "--porcelain=v1",
+  "--untracked-files=all",
+]);
+const initialChangedPaths = initialStatusLines.map(normalizeStatusPath);
+const initialUnexpectedPaths = initialChangedPaths.filter(
+  (path) => !options.files.includes(path),
+);
+const initialMissingPaths = options.files.filter((path) => (
+  path !== "index.html" && !initialChangedPaths.includes(path)
+));
+const initialForbiddenPaths = initialChangedPaths.filter((path) => (
+  forbiddenReleasePaths.some((prefix) => path === prefix || path.startsWith(prefix))
+));
+
+if (initialUnexpectedPaths.length > 0) {
+  fail(
+    `working tree has changes outside the release scope: `
+    + `${initialUnexpectedPaths.join(", ")}.`,
+  );
+}
+if (initialMissingPaths.length > 0) {
+  fail(`release files are not changed: ${initialMissingPaths.join(", ")}.`);
+}
+if (initialForbiddenPaths.length > 0) {
+  fail(`QA artifacts cannot be released: ${initialForbiddenPaths.join(", ")}.`);
+}
+
+let cacheUpdate;
+
+try {
+  cacheUpdate = syncRuntimeAssetVersions(projectRoot);
+} catch (error) {
+  fail(
+    "could not update CSS/JS content hashes: "
+    + (error instanceof Error ? error.message : String(error)),
+  );
+}
+
+if (cacheUpdate.changed && !options.files.includes(cacheUpdate.indexPath)) {
+  options.files.push(cacheUpdate.indexPath);
+  console.log(`\n✓ Added automatic cache manifest update: ${cacheUpdate.indexPath}.`);
+}
+
+const statusLines = await readGitLines([
+  "status",
+  "--porcelain=v1",
+  "--untracked-files=all",
+]);
 const changedPaths = statusLines.map(normalizeStatusPath);
 const unexpectedPaths = changedPaths.filter((path) => !options.files.includes(path));
 const missingPaths = options.files.filter((path) => !changedPaths.includes(path));
@@ -277,6 +333,8 @@ try {
   await run(process.execPath, ["scripts/check-project.mjs"], {
     label: "Run the parallel production gate",
   });
+  verifyRuntimeAssetVersions(projectRoot);
+  console.log("\n✓ CSS/JS references match their current content hashes.");
   await run("git", ["add", "--", ...options.files], {
     label: "Stage the approved release scope",
   });

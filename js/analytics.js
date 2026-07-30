@@ -1,4 +1,9 @@
-// Runtime layer 2/7: explicit analytics consent and delayed counter loading.
+// Runtime module 2/7: explicit analytics consent and delayed counter loading.
+import {
+  captureMode,
+  root,
+} from "./preferences.js";
+
 const analyticsCounterId = 111107350;
 const analyticsPreferenceKey = "anton-signal-analytics";
 const analyticsDisableKey = `disableYaCounter${analyticsCounterId}`;
@@ -199,3 +204,8 @@ if (analyticsPreference === "allowed") {
 } else if (!analyticsPreference && !captureMode && !analyticsQaSuppressed) {
   window.requestAnimationFrame(() => openAnalyticsConsent({ focus: false }));
 }
+
+export {
+  openAnalyticsConsent,
+  trackPortfolioEvent,
+};

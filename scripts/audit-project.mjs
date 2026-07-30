@@ -724,6 +724,16 @@ requireContract(
   "The stylesheet must honor reduced motion.",
 );
 requireContract(
+  runtimeFiles.every((path) => (
+    indexSource.includes(`<script type="module" src="${path}?v=`)
+  ))
+    && indexSource.includes('<script type="importmap" data-runtime-import-map>')
+    && scriptSource.includes('from "./preferences.js"')
+    && scriptSource.includes("export {"),
+  "native-es-modules",
+  "Runtime files must load as native modules with explicit imports, exports, and versioned URLs.",
+);
+requireContract(
   runtimeFiles.includes("js/analytics.js")
     && indexSource.includes("data-analytics-consent")
     && indexSource.includes("data-analytics-allow")
@@ -735,6 +745,12 @@ requireContract(
     && scriptSource.includes("loadYandexAnalytics()"),
   "analytics-consent",
   "Analytics must load only after an explicit choice, keep search private, and expose a reversible setting.",
+);
+requireContract(
+  mapDataSource.includes("51\\u00a0420")
+    && mapDataSource.includes("67\\u00a0893"),
+  "nonbreaking-metrics",
+  "Thousands-separated project metrics must remain indivisible at mobile line breaks.",
 );
 requireContract(
   indexSource.includes('class="no-script-fallback"')

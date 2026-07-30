@@ -249,10 +249,13 @@ The site uses static HTML, CSS, and JavaScript and publishes from the
 repository's `gh-pages` branch.
 
 `pnpm release -- --message "…" --file <path> …` is the single production
-lane. It verifies the real Git push credential path, runs the Chromium and
-WebKit contracts in parallel, stages only the explicit file list, publishes
-the same commit to `main` and `gh-pages`, and waits until the public domain
-serves byte-identical runtime assets.
+lane. Before validation it derives SHA-256 cache keys for the stylesheet and
+all seven native modules, updates the managed import map, and automatically
+adds that `index.html` change to the release scope. It then verifies the real
+Git push credential path, runs the Chromium and WebKit contracts in parallel,
+stages only the approved files, publishes the same commit to `main` and
+`gh-pages`, and waits until the public domain serves the exact versioned URLs
+and byte-identical runtime assets.
 
 Golos Text font files are self-hosted under the SIL Open Font License 1.1; the
 license is included at `assets/fonts/OFL-GolosText.txt`.

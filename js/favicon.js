@@ -1,4 +1,15 @@
-// Runtime layer 7/7: animated variant 01 favicon and visibility lifecycle.
+// Runtime module 7/7: animated variant 01 favicon and visibility lifecycle.
+import { pauseMapPreviewPlayback } from "./map-engine.js";
+import {
+  captureMode,
+  reducedMotion,
+  root,
+} from "./preferences.js";
+import {
+  pauseSignalConstellation,
+  resumeSignalConstellation,
+} from "./signal-field.js";
+
 const siteFavicon = document.querySelector("#site-favicon");
 const faviconCanvas = document.createElement("canvas");
 const faviconContext = faviconCanvas.getContext("2d");
@@ -137,10 +148,9 @@ document.addEventListener("visibilitychange", () => {
   syncFaviconMotion();
 
   if (document.hidden) {
-    window.cancelAnimationFrame(signalFrame);
-    mapPreviewVideo?.pause();
-  } else if (!reducedMotion.matches && !captureMode) {
-    signalStartedAt = performance.now();
-    signalFrame = window.requestAnimationFrame(renderSignalConstellation);
+    pauseSignalConstellation();
+    pauseMapPreviewPlayback();
+  } else {
+    resumeSignalConstellation();
   }
 });

@@ -134,16 +134,30 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=20260729-contact-carabiner-1">
-    <!-- Classic deferred layers intentionally share one global lexical scope.
-         Their order is the runtime dependency graph; see js/README.md. -->
-    <script src="js/preferences.js?v=20260729-system-theme-1" defer></script>
-    <script src="js/analytics.js?v=20260729-consented-goals-1" defer></script>
-    <script src="js/signal-field.js?v=20260729-mobile-fill-1" defer></script>
-    <script src="js/map-data.js?v=20260729-panel-collision-1" defer></script>
-    <script src="js/map-engine.js?v=20260729-mobile-safe-top-1" defer></script>
-    <script src="js/panels.js?v=20260729-mobile-fill-1" defer></script>
-    <script src="js/favicon.js?v=20260729-arc-01-exact-motion-1" defer></script>
+    <link rel="stylesheet" href="styles.css?v=68b4000697ba">
+    <!-- runtime-import-map:start -->
+    <script type="importmap" data-runtime-import-map>
+      {
+        "imports": {
+          "./js/preferences.js": "./js/preferences.js?v=77f862a63d22",
+          "./js/analytics.js": "./js/analytics.js?v=b7ba948c99ea",
+          "./js/signal-field.js": "./js/signal-field.js?v=50bb6509089d",
+          "./js/map-data.js": "./js/map-data.js?v=428038e4072a",
+          "./js/map-engine.js": "./js/map-engine.js?v=495caef84ae0",
+          "./js/panels.js": "./js/panels.js?v=e94206f02c59",
+          "./js/favicon.js": "./js/favicon.js?v=515506b106d3"
+        }
+      }
+    </script>
+    <!-- runtime-import-map:end -->
+    <!-- Native modules keep their dependencies explicit; see js/README.md. -->
+    <script type="module" src="js/preferences.js?v=77f862a63d22"></script>
+    <script type="module" src="js/analytics.js?v=b7ba948c99ea"></script>
+    <script type="module" src="js/signal-field.js?v=50bb6509089d"></script>
+    <script type="module" src="js/map-data.js?v=428038e4072a"></script>
+    <script type="module" src="js/map-engine.js?v=495caef84ae0"></script>
+    <script type="module" src="js/panels.js?v=e94206f02c59"></script>
+    <script type="module" src="js/favicon.js?v=515506b106d3"></script>
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -602,6 +616,7 @@
               type="search"
               placeholder="Найти или&nbsp;открыть…"
               autocomplete="off"
+              enterkeyhint="search"
               role="combobox"
               aria-autocomplete="list"
               aria-haspopup="listbox"

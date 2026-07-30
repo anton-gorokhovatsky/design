@@ -1,4 +1,4 @@
-// Runtime layer 4/7: deterministic portfolio map data.
+// Runtime module 4/7: deterministic portfolio map data.
 const principlesSourceHref = "https://app.notion.com/p/digital-web-digital-f68fc13247614ccb9738d9a85acf29b4?source=copy_link#70405c2623e342fb98d027c8634f2207";
 
 const mapItems = [
@@ -105,7 +105,7 @@ const mapItems = [
     evidence: {
       task: "Собрать цельный цифровой опыт институционального и исследовательского проекта.",
       role: "Менеджмент, UX/UI-исследование, дизайн-инжиниринг и координация разработки.",
-      result: "MVP за вечер и рабочий день; после полного запуска — 51 420 уникальных посетителей и 67 893 визита за июль—ноябрь 2023.",
+      result: "MVP за вечер и рабочий день; после полного запуска — 51\u00a0420 уникальных посетителей и 67\u00a0893 визита за июль—ноябрь 2023.",
     },
     timeYear: 2023,
     timeLabel: "2023",
@@ -711,3 +711,8 @@ const mapItems = [
     size: 14,
   },
 ];
+
+export {
+  mapItems,
+  principlesSourceHref,
+};

@@ -4,6 +4,17 @@ const fsSync = require("node:fs");
 const http = require("node:http");
 const os = require("node:os");
 const path = require("node:path");
+const {
+  mobileMetricViewport,
+  mobileSearchViewport,
+  openMobileSearchExpression,
+  readMobileMetricGroupsExpression,
+  readMobileSearchArrowExpression,
+  readMobileSearchFocusedExpression,
+  readMobileSearchRestoredExpression,
+  validateMobileMetricGroups,
+  validateMobileSearchContract,
+} = require("./browser-contracts.cjs");
 
 let baseUrl = process.env.PORTFOLIO_AUDIT_URL || "";
 const artifactDir = process.env.PORTFOLIO_AUDIT_DIR
@@ -839,6 +850,71 @@ const commandDockAxisAudit = async (page) => page.evaluate(() => {
   };
 });
 
+const mobileSearchViewportAudit = async (browser) => {
+  const context = await browser.newContext({
+    viewport: {
+      width: mobileSearchViewport.width,
+      height: mobileSearchViewport.height,
+    },
+    colorScheme: "dark",
+    hasTouch: true,
+    isMobile: true,
+    screen: {
+      width: mobileSearchViewport.screenWidth,
+      height: mobileSearchViewport.screenHeight,
+    },
+  });
+  const page = await context.newPage();
+  await isolateThirdPartyTelemetry(page);
+  attachRuntimeLog(page, "390x430-dark-mobile-search");
+  await page.goto(`${baseUrl}-mobile-search#map`, {
+    waitUntil: "networkidle",
+  });
+  await page.evaluate(() => document.fonts?.ready);
+  await page.evaluate(openMobileSearchExpression);
+  await waitForLayout(page, 160);
+
+  const focused = await page.evaluate(readMobileSearchFocusedExpression);
+
+  await page.screenshot({
+    path: path.join(artifactDir, "390x430-dark-mobile-search.png"),
+    fullPage: false,
+  });
+  await page.keyboard.press("ArrowUp");
+  const arrow = await page.evaluate(readMobileSearchArrowExpression);
+
+  await page.keyboard.press("Escape");
+  await waitForLayout(page, 140);
+  const restored = await page.evaluate(readMobileSearchRestoredExpression);
+
+  await page.setViewportSize(mobileMetricViewport);
+  await page.goto(
+    `${baseUrl}-narkomfin-number&point=narkomfin#map`,
+    { waitUntil: "networkidle" },
+  );
+  await page.evaluate(() => document.fonts?.ready);
+  await waitForLayout(page, 180);
+  const metricGroups = await page.evaluate(readMobileMetricGroupsExpression);
+  const failures = [
+    ...validateMobileSearchContract({ arrow, focused, restored }),
+    ...validateMobileMetricGroups(metricGroups),
+  ].map((failure) => failure.message);
+  await page.screenshot({
+    path: path.join(artifactDir, "390x844-dark-narkomfin-number.png"),
+    fullPage: false,
+  });
+  await context.close();
+
+  return {
+    arrow,
+    failure: failures.length > 0,
+    failures,
+    focused,
+    metricGroups,
+    restored,
+  };
+};
+
 const projectGlyphAudit = async (page) => page.evaluate(() => {
   const glyphs = [...document.querySelectorAll(
     ".map-node--project .map-node__glyph",
@@ -1125,6 +1201,7 @@ const accessibilityAcceptanceAudit = async (browser) => {
     accessibility: null,
     firstPaint: [],
     viewports: [],
+    mobileSearch: null,
     noScript: null,
     telemetryRequests,
     runtimeErrors,
@@ -1238,6 +1315,7 @@ const accessibilityAcceptanceAudit = async (browser) => {
       }
     }
 
+    report.mobileSearch = await mobileSearchViewportAudit(browser);
     report.accessibility = await accessibilityAcceptanceAudit(browser);
 
     const noScriptContext = await browser.newContext({
@@ -1274,6 +1352,9 @@ const accessibilityAcceptanceAudit = async (browser) => {
     ...report.runtimeErrors,
     ...(report.accessibility?.failures || []).map(
       (failure) => `accessibility acceptance: ${failure}`,
+    ),
+    ...(report.mobileSearch?.failures || []).map(
+      (failure) => `mobile search: ${failure}`,
     ),
     ...report.firstPaint.flatMap((state) => state.failures.map(
       (failure) => `first-paint ${state.viewport.width}/${state.colorScheme}: `

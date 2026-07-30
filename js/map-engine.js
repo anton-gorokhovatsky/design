@@ -1,4 +1,18 @@
-// Runtime layer 5/7: spatial map, relations, filters, and observation route.
+// Runtime module 5/7: spatial map, relations, filters, and observation route.
+import { trackPortfolioEvent } from "./analytics.js";
+import {
+  mapItems,
+  principlesSourceHref,
+} from "./map-data.js";
+import {
+  reducedMotion,
+  typographUiText,
+} from "./preferences.js";
+import {
+  signalField,
+  svgNamespace,
+} from "./signal-field.js";
+
 const mapNodesRoot = document.querySelector("[data-map-nodes]");
 const mapLabelsRoot = document.querySelector("[data-map-labels]");
 const mapSpecksRoot = document.querySelector("[data-map-specks]");
@@ -1698,3 +1712,45 @@ document.addEventListener("keydown", (event) => {
     }
   }
 });
+
+const pauseMapPreviewPlayback = () => {
+  mapPreviewVideo?.pause();
+};
+
+const requestMapLinksRender = () => {
+  scheduleMapLinksRender();
+};
+
+const setApplyingUrlState = (isApplying) => {
+  applyingUrlState = Boolean(isApplying);
+};
+
+export {
+  activePreviewItem,
+  clearMapSelection,
+  getNavigableMapItems,
+  hideMapPreview,
+  inspectorClose,
+  mapButtons,
+  mapInspector,
+  mapPreview,
+  normalizeMapFilters,
+  observationActive,
+  observationSteps,
+  pauseMapPreviewPlayback,
+  requestMapLinksRender,
+  rovingMapId,
+  selectedMapId,
+  selectMapItem,
+  setApplyingUrlState,
+  setInspectorOpen,
+  setMapFilter,
+  setMapRovingId,
+  setSearchRelationshipPreview,
+  setTimeMode,
+  startObservation,
+  stopObservation,
+  syncMapNodeAvailability,
+  timeModeActive,
+  writeUrlState,
+};

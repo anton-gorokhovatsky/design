@@ -2,12 +2,15 @@
   "name": "anton-gorokhovatsky-portfolio",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "Static spatial portfolio and its reproducible quality gates.",
   "engines": {
     "node": ">=20"
   },
   "packageManager": "pnpm@11.9.0",
   "scripts": {
+    "cache": "node scripts/cache-versions.mjs --write",
+    "cache:check": "node scripts/cache-versions.mjs --check",
     "check": "node scripts/check-project.mjs",
     "check:chromium": "node scripts/check-ui-contracts.mjs",
     "check:webkit": "node scripts/webkit-regression.cjs",

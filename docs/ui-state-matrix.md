@@ -2,7 +2,7 @@
 
 Этот документ — небольшой статический workbench для vanilla HTML/CSS/JS-сайта.
 Он фиксирует состояния, которые иначе остаются скрытыми в условных ветках
-семи runtime-слоёв `js/` и поздних слоях `styles.css`.
+семи runtime-модулей `js/` и поздних слоях `styles.css`.
 
 Storybook для проекта не нужен: компонентов немного, сборщика нет, а источник
 истины — реальная полноэкранная композиция. Нужны воспроизводимые состояния и
@@ -449,3 +449,12 @@ names и 31 их использование.
 | Favicon | Честный downsample `16`, `32`, `64`, `104 px` на светлом и тёмном фоне; transparent PNG; live canvas normal/reduced motion | Возвращена выбранная дуговая версия `01`: знак занимает почти всю ширину и около трёх четвертей высоты tab-slot. На `16 px` остаётся ясная арка, на больших размерах проявляются движущаяся ASCII-пыль и три крестообразных сигнала |
 | Контент | Desktop/mobile, `private-practice` и `point=shirokostup` | Частная практика описана через реальные самостоятельные продукты; заголовок проекта исправлен на «САЙТ ОЛЬГИ ШИРОКОСТУП». Текст и двухстрочный mobile-заголовок помещаются без overflow |
 | Полный gate | `node scripts/check-project.mjs`, Chromium UI contracts, WebKit `390×844`/`320×568` light/dark, 13 reels, syntax, whitespace | `0` errors/warnings; WebKit — `4` состояния и `0 failures`; `46` точек, `17` связей, `17` принципов и `13` шоурилов сохранены |
+
+## Локальный проход 2026-07-30 — модули, cache keys и мобильный поиск
+
+| Семейство | Реальные состояния | Результат |
+|---|---|---|
+| Runtime и cache-busting | Семь `type="module"` URL в локальном Chromium; import map; `cache-versions --check`; полный Chromium/WebKit gate | Общая browser lexical scope удалена: зависимости оформлены явными `import`/`export`. `styles.css` и каждый модуль получают собственный 12-символьный SHA-256 key; release синхронизирует `index.html` до commit. Публичная проверка больше не добавляет отдельный `?release=` и обязана получить те же versioned URL |
+| Поиск над клавиатурой | WebKit `390×430`, dark, пустой запрос, `ArrowUp`, `Escape`; артефакт `390x430-dark-mobile-search.png` | Строка остаётся внизу доступного visual viewport, семь результатов — строго над ней; nav и system dock временно скрыты. Список имеет реальный внутренний scroll, но keyboard navigation меняет только его (`scrollTop 34`), а не страницу (`window.scrollY 0`). Escape закрывает список, снимает focus и возвращает обе панели. Это воспроизводимая keyboard-sized модель; финальный production-релиз всё равно требует одного контроля на физическом iOS Safari |
+| Метрики Наркомфина | WebKit `390×844`, dark, `point=narkomfin`; артефакт `390x844-dark-narkomfin-number.png` | В исходном тексте стоят NBSP внутри `51 420` и `67 893`. Browser Range подтверждает одну строку внутри каждой числовой группы; перенос между `67` и `893` невозможен, horizontal overflow — `0` |
+| Полный gate | `node scripts/check-project.mjs`, Chromium UI contracts, WebKit `390×844`/`320×568` light/dark + `390×430` search, 13 reels, syntax, whitespace | `0` errors/warnings; WebKit — `4` базовых viewport/theme состояния и `0 failures`; новые search/metric contracts зелёные; `46` точек, `17` связей, `17` принципов и `13` шоурилов сохранены |

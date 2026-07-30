@@ -331,6 +331,12 @@ navigation и видимый keyboard focus. Для точечной задач�
   перед релизом — по всей матрице.
 - Визуальные и accessibility-проверки дополняют тесты, а не заменяются ими.
 - Перед git-записью проверить точный scope и не включать посторонние файлы.
+- Cache keys для `styles.css` и всех runtime-модулей выводятся только из
+  SHA-256 содержимого через `scripts/cache-versions.mjs`; не редактировать
+  `?v=` и управляемую import map вручную. `scripts/release.mjs` синхронизирует
+  их до gate и commit, автоматически включает изменённый `index.html` в scope,
+  а production-проверка запрашивает эти же versioned URL без отдельного
+  `?release=` обхода.
 - После явного одобрения релиза проверить GitHub authentication и текущий Pages
   source, затем опубликовать согласованный commit в `main` и `gh-pages`.
 - Успешный push не равен релизу. Дождаться Pages deployment и проверить

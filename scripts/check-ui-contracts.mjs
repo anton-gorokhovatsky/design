@@ -18,6 +18,18 @@ import { fileURLToPath } from "node:url";
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(scriptDirectory, "..");
 const require = createRequire(import.meta.url);
+const {
+  dispatchMobileSearchKeyExpression,
+  mobileMetricViewport,
+  mobileSearchViewport,
+  openMobileSearchExpression,
+  readMobileMetricGroupsExpression,
+  readMobileSearchArrowExpression,
+  readMobileSearchFocusedExpression,
+  readMobileSearchRestoredExpression,
+  validateMobileMetricGroups,
+  validateMobileSearchContract,
+} = require("./browser-contracts.cjs");
 const artifactDirectory = process.env.PORTFOLIO_UI_ARTIFACT_DIR
   ? resolve(process.env.PORTFOLIO_UI_ARTIFACT_DIR)
   : "";
@@ -1042,6 +1054,71 @@ const auditBrowser = async (client, origin) => {
   }
   await saveScreenshot(client, "mobile-navigation-dark");
   await saveElementScreenshot(client, "crop-mobile-navigation-dark", ".constellation-nav");
+
+  await setViewport(client, {
+    width: mobileSearchViewport.width,
+    height: mobileSearchViewport.height,
+    mobile: true,
+    theme: "dark",
+    screenWidth: mobileSearchViewport.screenWidth,
+    screenHeight: mobileSearchViewport.screenHeight,
+  });
+  await navigate(client, `${origin}/?qa=ui-contracts-mobile-search#map`);
+  await evaluate(client, openMobileSearchExpression);
+  await delay(140);
+  const mobileSearchFocused = await evaluate(
+    client,
+    readMobileSearchFocusedExpression,
+  );
+  await saveScreenshot(client, "mobile-search-keyboard-shell");
+  await saveElementScreenshot(
+    client,
+    "crop-mobile-search-keyboard-results",
+    ".command-results",
+  );
+
+  await evaluate(client, dispatchMobileSearchKeyExpression("ArrowUp"));
+  const mobileSearchArrow = await evaluate(
+    client,
+    readMobileSearchArrowExpression,
+  );
+  await evaluate(client, dispatchMobileSearchKeyExpression("Escape"));
+  await delay(140);
+  const mobileSearchRestored = await evaluate(
+    client,
+    readMobileSearchRestoredExpression,
+  );
+  for (const failure of validateMobileSearchContract({
+    arrow: mobileSearchArrow,
+    focused: mobileSearchFocused,
+    restored: mobileSearchRestored,
+  })) {
+    fail(`mobile-search: ${failure.message}.`, failure.details);
+  }
+
+  await setViewport(client, {
+    width: mobileMetricViewport.width,
+    height: mobileMetricViewport.height,
+    mobile: true,
+    theme: "dark",
+  });
+  await navigate(
+    client,
+    `${origin}/?qa=ui-contracts-narkomfin-number&point=narkomfin#map`,
+  );
+  const mobileMetricGroups = await evaluate(
+    client,
+    readMobileMetricGroupsExpression,
+  );
+  for (const failure of validateMobileMetricGroups(mobileMetricGroups)) {
+    fail(`mobile-narkomfin: ${failure.message}.`, failure.details);
+  }
+  await saveScreenshot(client, "mobile-narkomfin-number");
+  await saveElementScreenshot(
+    client,
+    "crop-mobile-narkomfin-number",
+    "[data-map-evidence-result]",
+  );
 
   await setViewport(client, {
     width: 390,

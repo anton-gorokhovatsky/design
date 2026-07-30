@@ -1,4 +1,4 @@
-// Runtime layer 1/7: shared preferences, typography, theme, and clock.
+// Runtime module 1/7: shared preferences, typography, theme, and clock.
 const root = document.documentElement;
 const setFocusModality = (modality) => {
   root.dataset.focusModality = modality;
@@ -227,3 +227,10 @@ if (captureMode) {
   updateClock();
   window.setInterval(updateClock, 30000);
 }
+
+export {
+  captureMode,
+  reducedMotion,
+  root,
+  typographUiText,
+};

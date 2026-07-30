@@ -1728,7 +1728,7 @@ main {
   right: 0;
   bottom: calc(100% + 8px);
   left: 0;
-  max-height: min(390px, 54svh);
+  max-height: min(390px, var(--command-results-max-height, 54svh));
   padding: 5px;
   overflow: auto;
   border: 1px solid var(--line);
@@ -9041,6 +9041,26 @@ html[data-focus-modality="pointer"]
 
   .control-console .command-dock {
     bottom: calc(var(--mobile-console-bottom) + 56px);
+  }
+
+  body.has-command-focus .control-console .command-dock {
+    top: var(--command-focus-top, auto);
+    right: auto;
+    bottom: auto;
+    left: var(--command-focus-left, 8px);
+    width: var(--command-focus-width, calc(100vw - 16px));
+  }
+
+  body.has-command-focus .control-console .constellation-nav,
+  body.has-command-focus .system-dock {
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  body.has-command-focus .command-results {
+    overscroll-behavior: contain;
+    scroll-padding-block: 7px;
   }
 
   .system-dock {
