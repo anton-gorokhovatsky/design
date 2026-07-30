@@ -8,6 +8,10 @@ const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(scriptDirectory, "..");
 const stylePath = join(projectRoot, "styles.css");
 const fixMode = process.argv.includes("--fix-identical");
+const reportOverridden = process.argv.includes("--report-overridden");
+const overriddenRangeArgument = process.argv.find((argument) => (
+  argument.startsWith("--fix-overridden-range=")
+));
 let source = readFileSync(stylePath, "utf8");
 
 const skipQuotedOrComment = (text, index) => {
@@ -214,6 +218,7 @@ parseRules(0, source.length);
 
 const lastDeclaration = new Map();
 const redundantRanges = [];
+const overriddenRanges = [];
 
 for (const rule of rules) {
   for (const declaration of rule.declarations) {
@@ -231,10 +236,62 @@ for (const rule of rules) {
         selector: rule.selector,
         context: rule.context,
       });
+    } else if (previous) {
+      overriddenRanges.push({
+        ...previous,
+        selector: rule.selector,
+        context: rule.context,
+        replacement: declaration,
+      });
     }
 
     lastDeclaration.set(key, declaration);
   }
+}
+
+if (reportOverridden) {
+  for (const range of overriddenRanges) {
+    const line = source.slice(0, range.start).split("\n").length;
+    const replacementLine = source
+      .slice(0, range.replacement.start)
+      .split("\n").length;
+    const scope = range.context ? `${range.context} → ` : "";
+    console.log(
+      `styles.css:${line} → ${replacementLine} ${scope}${range.selector} { `
+        + `${range.property}: ${range.value} → ${range.replacement.value}; }`,
+    );
+  }
+  console.log(`${overriddenRanges.length} overridden declarations.`);
+  process.exit(0);
+}
+
+if (overriddenRangeArgument) {
+  const value = overriddenRangeArgument.split("=", 2)[1] || "";
+  const [firstLine, lastLine] = value.split(":").map(Number);
+  if (
+    !Number.isInteger(firstLine)
+    || !Number.isInteger(lastLine)
+    || firstLine < 1
+    || lastLine < firstLine
+  ) {
+    throw new Error(
+      "--fix-overridden-range expects inclusive positive lines, for example 1450:2325.",
+    );
+  }
+
+  const selectedRanges = overriddenRanges.filter((range) => {
+    const line = source.slice(0, range.start).split("\n").length;
+    return line >= firstLine && line <= lastLine;
+  });
+  for (const range of selectedRanges.sort((left, right) => right.start - left.start)) {
+    source = source.slice(0, range.start) + source.slice(range.end);
+  }
+  writeFileSync(stylePath, source);
+  console.log(
+    `Removed ${selectedRanges.length} unconditionally overridden declarations `
+      + `from original lines ${firstLine}–${lastLine}.`,
+  );
+  process.exit(0);
 }
 
 if (fixMode && redundantRanges.length > 0) {
@@ -266,6 +323,14 @@ if (unexpectedBackdropValues.length > 0) {
 
 if (failures.length > 0) {
   for (const failure of failures) console.error(`- ${failure}`);
+  for (const range of redundantRanges) {
+    const line = source.slice(0, range.start).split("\n").length;
+    const scope = range.context ? `${range.context} → ` : "";
+    console.error(
+      `  styles.css:${line} ${scope}${range.selector} { `
+        + `${range.property}: ${range.value}; }`,
+    );
+  }
   process.exit(1);
 }
 

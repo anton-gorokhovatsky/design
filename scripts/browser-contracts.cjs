@@ -1,5 +1,70 @@
 "use strict";
 
+const fs = require("node:fs");
+const http = require("node:http");
+const path = require("node:path");
+
+const staticAssetMimeTypes = {
+  ".css": "text/css; charset=utf-8",
+  ".html": "text/html; charset=utf-8",
+  ".jpg": "image/jpeg",
+  ".js": "text/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".mp4": "video/mp4",
+  ".pdf": "application/pdf",
+  ".png": "image/png",
+  ".svg": "image/svg+xml; charset=utf-8",
+  ".woff2": "font/woff2",
+  ".xml": "application/xml; charset=utf-8",
+};
+
+const startStaticServer = async ({
+  projectRoot,
+  onNotFound = () => {},
+} = {}) => {
+  if (!projectRoot) {
+    throw new Error("startStaticServer requires projectRoot.");
+  }
+
+  const server = http.createServer((request, response) => {
+    const pathname = decodeURIComponent(
+      new URL(request.url || "/", "http://127.0.0.1").pathname,
+    );
+    const relativePath = pathname === "/" ? "index.html" : pathname.slice(1);
+    const absolutePath = path.resolve(projectRoot, path.normalize(relativePath));
+    const isInsideRoot = absolutePath === projectRoot
+      || absolutePath.startsWith(`${projectRoot}${path.sep}`);
+
+    if (
+      !isInsideRoot
+      || !fs.existsSync(absolutePath)
+      || !fs.statSync(absolutePath).isFile()
+    ) {
+      onNotFound(pathname);
+      response.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
+      response.end("Not found");
+      return;
+    }
+
+    response.writeHead(200, {
+      "cache-control": "no-store",
+      "content-type": staticAssetMimeTypes[path.extname(absolutePath)]
+        || "application/octet-stream",
+    });
+    fs.createReadStream(absolutePath).pipe(response);
+  });
+
+  await new Promise((resolveListen, rejectListen) => {
+    server.once("error", rejectListen);
+    server.listen(0, "127.0.0.1", resolveListen);
+  });
+
+  return {
+    server,
+    origin: `http://127.0.0.1:${server.address().port}`,
+  };
+};
+
 const mobileSearchViewport = {
   width: 390,
   height: 430,
@@ -11,6 +76,75 @@ const mobileMetricViewport = {
   width: 390,
   height: 844,
 };
+
+const compactAcceptanceScenarios = [
+  { label: "mobile-390-light", width: 390, height: 844, mobile: true, theme: "light" },
+  { label: "mobile-390-dark", width: 390, height: 844, mobile: true, theme: "dark" },
+  { label: "mobile-320-light", width: 320, height: 568, mobile: true, theme: "light" },
+  { label: "mobile-320-dark", width: 320, height: 568, mobile: true, theme: "dark" },
+];
+
+const chromiumScenarioCatalog = [
+  { label: "desktop-light", width: 1440, height: 900, mobile: false, theme: "light" },
+  { label: "desktop-dark", width: 1440, height: 900, mobile: false, theme: "dark" },
+  { label: "tablet-light", width: 1024, height: 768, mobile: false, theme: "light" },
+  { label: "tablet-dark", width: 1024, height: 768, mobile: false, theme: "dark" },
+  ...compactAcceptanceScenarios.slice(0, 2),
+  {
+    label: "mobile-393-safari-light",
+    width: 393,
+    height: 700,
+    screenWidth: 393,
+    screenHeight: 852,
+    mobile: true,
+    theme: "light",
+  },
+  {
+    label: "mobile-390-safari-compact-light",
+    width: 390,
+    height: 664,
+    screenWidth: 390,
+    screenHeight: 844,
+    mobile: true,
+    theme: "light",
+  },
+  ...compactAcceptanceScenarios.slice(2),
+  {
+    label: "zoom-200-light",
+    width: 720,
+    height: 450,
+    screenWidth: 1440,
+    screenHeight: 900,
+    deviceScaleFactor: 2,
+    mobile: false,
+    theme: "light",
+  },
+  {
+    label: "desktop-reduced-motion",
+    width: 1440,
+    height: 900,
+    mobile: false,
+    theme: "dark",
+    reducedMotion: "reduce",
+  },
+  {
+    label: "desktop-high-contrast",
+    width: 1440,
+    height: 900,
+    mobile: false,
+    theme: "dark",
+    contrast: "more",
+  },
+];
+
+const webkitCompactScenarios = compactAcceptanceScenarios.map((scenario) => ({
+  label: `${scenario.width}x${scenario.height}-${scenario.theme}`,
+  viewport: {
+    width: scenario.width,
+    height: scenario.height,
+  },
+  colorScheme: scenario.theme,
+}));
 
 const openMobileSearchExpression = `(() => {
   const input = document.querySelector("[data-command-input]");
@@ -129,6 +263,39 @@ const readMobileMetricGroupsExpression = `(() => {
   };
 })()`;
 
+const readMobileContactResumeExpression = `(() => {
+  const container = document.querySelector(".contact-resume");
+  const links = Array.from(container?.querySelectorAll("a") || []);
+  const bounds = container?.getBoundingClientRect();
+  const textLines = (element) => {
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    const rects = Array.from(range.getClientRects())
+      .filter((rect) => rect.width > 1 && rect.height > 1);
+    return new Set(rects.map((rect) => Math.round(rect.top))).size;
+  };
+  return {
+    visible: Boolean(
+      container
+      && getComputedStyle(container).visibility !== "hidden"
+      && bounds?.width
+      && bounds?.height
+    ),
+    containerWidth: bounds?.width || 0,
+    horizontalOverflow: container
+      ? container.scrollWidth - container.clientWidth
+      : 0,
+    links: links.map((link) => {
+      const rect = link.getBoundingClientRect();
+      return {
+        text: link.textContent.replace(/\\s+/g, " ").trim(),
+        lines: textLines(link),
+        width: rect.width,
+      };
+    }),
+  };
+})()`;
+
 const validateMobileSearchContract = ({
   arrow,
   focused,
@@ -184,6 +351,26 @@ const validateMobileSearchContract = ({
   return failures;
 };
 
+const validateMobileContactResume = (resume) => {
+  if (
+    resume.visible
+    && resume.horizontalOverflow <= 1
+    && resume.links.length === 2
+    && resume.links.every((link) => (
+      link.lines === 1
+      && link.width <= resume.containerWidth + 1
+    ))
+  ) {
+    return [];
+  }
+
+  return [{
+    id: "contact-resume-wrap",
+    message: "mobile resume links collapse into narrow character columns",
+    details: resume,
+  }];
+};
+
 const validateMobileMetricGroups = (metricGroups) => {
   if (
     metricGroups.has51
@@ -202,14 +389,20 @@ const validateMobileMetricGroups = (metricGroups) => {
 };
 
 module.exports = {
+  chromiumScenarioCatalog,
   dispatchMobileSearchKeyExpression,
   mobileMetricViewport,
   mobileSearchViewport,
   openMobileSearchExpression,
+  readMobileContactResumeExpression,
   readMobileMetricGroupsExpression,
   readMobileSearchArrowExpression,
   readMobileSearchFocusedExpression,
   readMobileSearchRestoredExpression,
+  startStaticServer,
+  staticAssetMimeTypes,
+  validateMobileContactResume,
   validateMobileMetricGroups,
   validateMobileSearchContract,
+  webkitCompactScenarios,
 };

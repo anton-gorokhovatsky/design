@@ -2,16 +2,12 @@
 
 import { createHash } from "node:crypto";
 import {
-  createReadStream,
-  existsSync,
   mkdirSync,
   readFileSync,
-  statSync,
   writeFileSync,
 } from "node:fs";
-import { createServer } from "node:http";
 import { createRequire } from "node:module";
-import { dirname, extname, join, normalize, resolve, sep } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { inflateSync } from "node:zlib";
 import { fileURLToPath } from "node:url";
 
@@ -19,14 +15,18 @@ const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(scriptDirectory, "..");
 const require = createRequire(import.meta.url);
 const {
+  chromiumScenarioCatalog,
   dispatchMobileSearchKeyExpression,
   mobileMetricViewport,
   mobileSearchViewport,
   openMobileSearchExpression,
+  readMobileContactResumeExpression,
   readMobileMetricGroupsExpression,
   readMobileSearchArrowExpression,
   readMobileSearchFocusedExpression,
   readMobileSearchRestoredExpression,
+  startStaticServer,
+  validateMobileContactResume,
   validateMobileMetricGroups,
   validateMobileSearchContract,
 } = require("./browser-contracts.cjs");
@@ -45,53 +45,6 @@ const fail = (message, details = undefined) => {
 const delay = (milliseconds) => new Promise((resolveDelay) => {
   setTimeout(resolveDelay, milliseconds);
 });
-
-const mimeTypes = {
-  ".css": "text/css; charset=utf-8",
-  ".html": "text/html; charset=utf-8",
-  ".jpg": "image/jpeg",
-  ".js": "text/javascript; charset=utf-8",
-  ".json": "application/json; charset=utf-8",
-  ".mp4": "video/mp4",
-  ".png": "image/png",
-  ".svg": "image/svg+xml; charset=utf-8",
-  ".woff2": "font/woff2",
-};
-
-const startStaticServer = async () => {
-  const server = createServer((request, response) => {
-    const pathname = decodeURIComponent(
-      new URL(request.url || "/", "http://127.0.0.1").pathname,
-    );
-    const relativePath = pathname === "/" ? "index.html" : pathname.slice(1);
-    const absolutePath = resolve(projectRoot, normalize(relativePath));
-    const isInsideRoot = absolutePath === projectRoot
-      || absolutePath.startsWith(`${projectRoot}${sep}`);
-
-    if (!isInsideRoot || !existsSync(absolutePath) || !statSync(absolutePath).isFile()) {
-      serverErrors.push(`404 ${pathname}`);
-      response.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
-      response.end("Not found");
-      return;
-    }
-
-    response.writeHead(200, {
-      "cache-control": "no-store",
-      "content-type": mimeTypes[extname(absolutePath)] || "application/octet-stream",
-    });
-    createReadStream(absolutePath).pipe(response);
-  });
-
-  await new Promise((resolveListen, rejectListen) => {
-    server.once("error", rejectListen);
-    server.listen(0, "127.0.0.1", resolveListen);
-  });
-
-  return {
-    server,
-    origin: `http://127.0.0.1:${server.address().port}`,
-  };
-};
 
 class CdpClient {
   constructor(session) {
@@ -632,63 +585,9 @@ const auditBrowser = async (client, origin) => {
     observedNetworkRequests.push(request.url);
   });
 
-  const scenarioCatalog = [
-    { label: "desktop-light", width: 1440, height: 900, mobile: false, theme: "light" },
-    { label: "desktop-dark", width: 1440, height: 900, mobile: false, theme: "dark" },
-    { label: "tablet-light", width: 1024, height: 768, mobile: false, theme: "light" },
-    { label: "tablet-dark", width: 1024, height: 768, mobile: false, theme: "dark" },
-    { label: "mobile-390-light", width: 390, height: 844, mobile: true, theme: "light" },
-    { label: "mobile-390-dark", width: 390, height: 844, mobile: true, theme: "dark" },
-    {
-      label: "mobile-393-safari-light",
-      width: 393,
-      height: 700,
-      screenWidth: 393,
-      screenHeight: 852,
-      mobile: true,
-      theme: "light",
-    },
-    {
-      label: "mobile-390-safari-compact-light",
-      width: 390,
-      height: 664,
-      screenWidth: 390,
-      screenHeight: 844,
-      mobile: true,
-      theme: "light",
-    },
-    { label: "mobile-320-light", width: 320, height: 568, mobile: true, theme: "light" },
-    { label: "mobile-320-dark", width: 320, height: 568, mobile: true, theme: "dark" },
-    {
-      label: "zoom-200-light",
-      width: 720,
-      height: 450,
-      screenWidth: 1440,
-      screenHeight: 900,
-      deviceScaleFactor: 2,
-      mobile: false,
-      theme: "light",
-    },
-    {
-      label: "desktop-reduced-motion",
-      width: 1440,
-      height: 900,
-      mobile: false,
-      theme: "dark",
-      reducedMotion: "reduce",
-    },
-    {
-      label: "desktop-high-contrast",
-      width: 1440,
-      height: 900,
-      mobile: false,
-      theme: "dark",
-      contrast: "more",
-    },
-  ];
   const scenarios = focusedScenarioLabel
-    ? scenarioCatalog.filter((scenario) => scenario.label === focusedScenarioLabel)
-    : scenarioCatalog;
+    ? chromiumScenarioCatalog.filter((scenario) => scenario.label === focusedScenarioLabel)
+    : chromiumScenarioCatalog;
 
   if (focusedScenarioLabel && scenarios.length === 0) {
     fail(`Unknown focused UI scenario: ${focusedScenarioLabel}`);
@@ -1140,6 +1039,13 @@ const auditBrowser = async (client, origin) => {
   if (mobilePanel.materialFailures.length > 0) {
     fail("mobile-panel: MATERIAL / 01 mismatch.", mobilePanel.materialFailures);
   }
+  const mobileContactResume = await evaluate(
+    client,
+    readMobileContactResumeExpression,
+  );
+  for (const failure of validateMobileContactResume(mobileContactResume)) {
+    fail(`mobile-panel: ${failure.message}.`, failure.details);
+  }
   await saveScreenshot(client, "mobile-panel-contact");
 
   await setViewport(client, {
@@ -1453,7 +1359,10 @@ let chrome;
 
 try {
   auditFavicon();
-  staticServer = await startStaticServer();
+  staticServer = await startStaticServer({
+    projectRoot,
+    onNotFound: (pathname) => serverErrors.push(`404 ${pathname}`),
+  });
   chrome = await launchChrome();
   await auditBrowser(chrome.client, staticServer.origin);
 } catch (error) {

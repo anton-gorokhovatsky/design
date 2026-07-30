@@ -14,6 +14,8 @@ const contractScripts = [
   "scripts/check-assets.mjs",
   "scripts/check-performance-budget.mjs",
   "scripts/check-css-cascade.mjs",
+  "scripts/check-publication-assets.mjs",
+  "scripts/check-reel-preview.mjs",
   "scripts/check-reels.mjs",
   "scripts/release.mjs",
   "scripts/check-ui-contracts.mjs",
@@ -65,6 +67,11 @@ const contractSteps = [
     args: ["scripts/check-performance-budget.mjs"],
   },
   {
+    label: "Publication assets",
+    command: process.execPath,
+    args: ["scripts/check-publication-assets.mjs"],
+  },
+  {
     label: "Real-browser UI contracts",
     command: process.execPath,
     args: ["scripts/check-ui-contracts.mjs"],
@@ -78,6 +85,11 @@ const contractSteps = [
     label: "Reel contracts",
     command: process.execPath,
     args: ["scripts/check-reels.mjs"],
+  },
+  {
+    label: "11 111 reel preview",
+    command: process.execPath,
+    args: ["scripts/check-reel-preview.mjs"],
   },
   {
     label: "Git whitespace",

@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -169,11 +170,17 @@ const scriptSource = readRuntimeSource(projectRoot);
 const landscapeConfigurationCount = (
   scriptSource.match(/previewOrientation:\s*"landscape"/g) ?? []
 ).length;
-const landscapeReferenceCount = (
-  scriptSource.match(
-    /previewVideo:\s*"assets\/reels\/[^"]+\.mp4\?v=20260728-landscape-reels-1"/g,
-  ) ?? []
-).length;
+const landscapeReferences = [
+  ...scriptSource.matchAll(
+    /previewVideo:\s*"assets\/reels\/([^"]+\.mp4)\?v=([a-f0-9]{12})"/g,
+  ),
+].map((match) => ({
+  name: match[1],
+  version: match[2],
+}));
+const landscapeReferenceNames = landscapeReferences
+  .map(({ name }) => name)
+  .sort();
 const videoRules = [
   ...styles.matchAll(/(?:\.map-hover-preview(?:\.has-video)?\s+)?\.map-hover-preview__media video\s*\{([^}]*)\}/g),
 ].map((match) => match[1]).join("\n");
@@ -206,10 +213,28 @@ if (landscapeConfigurationCount !== expectedReelNames.length) {
   );
 }
 
-if (landscapeReferenceCount !== expectedReelNames.length) {
+if (
+  landscapeReferences.length !== expectedReelNames.length
+  || JSON.stringify(landscapeReferenceNames) !== JSON.stringify(expectedReelNames)
+) {
   failures.push(
-    `configuration: expected ${expectedReelNames.length} current landscape reel references; found ${landscapeReferenceCount}`,
+    `configuration: expected ${expectedReelNames.length} content-versioned `
+      + `landscape reel references; found ${landscapeReferences.length}`,
   );
+}
+
+for (const reference of landscapeReferences) {
+  const expectedVersion = createHash("sha256")
+    .update(readFileSync(join(reelsDirectory, reference.name)))
+    .digest("hex")
+    .slice(0, 12);
+
+  if (reference.version !== expectedVersion) {
+    failures.push(
+      `${reference.name}: cache key ${reference.version} does not match `
+        + `content hash ${expectedVersion}`,
+    );
+  }
 }
 
 if (

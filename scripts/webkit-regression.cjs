@@ -1,76 +1,27 @@
 const { webkit } = require("playwright");
 const fs = require("node:fs/promises");
-const fsSync = require("node:fs");
-const http = require("node:http");
 const os = require("node:os");
 const path = require("node:path");
 const {
   mobileMetricViewport,
   mobileSearchViewport,
   openMobileSearchExpression,
+  readMobileContactResumeExpression,
   readMobileMetricGroupsExpression,
   readMobileSearchArrowExpression,
   readMobileSearchFocusedExpression,
   readMobileSearchRestoredExpression,
+  startStaticServer,
+  validateMobileContactResume,
   validateMobileMetricGroups,
   validateMobileSearchContract,
+  webkitCompactScenarios,
 } = require("./browser-contracts.cjs");
 
 let baseUrl = process.env.PORTFOLIO_AUDIT_URL || "";
 const artifactDir = process.env.PORTFOLIO_AUDIT_DIR
   || path.join(os.tmpdir(), "portfolio-webkit-contracts");
 const projectRoot = path.resolve(__dirname, "..");
-const mimeTypes = {
-  ".css": "text/css; charset=utf-8",
-  ".html": "text/html; charset=utf-8",
-  ".jpg": "image/jpeg",
-  ".js": "text/javascript; charset=utf-8",
-  ".json": "application/json; charset=utf-8",
-  ".mp4": "video/mp4",
-  ".png": "image/png",
-  ".svg": "image/svg+xml; charset=utf-8",
-  ".woff2": "font/woff2",
-};
-
-const startStaticServer = async () => {
-  const server = http.createServer((request, response) => {
-    const pathname = decodeURIComponent(
-      new URL(request.url || "/", "http://127.0.0.1").pathname,
-    );
-    const relativePath = pathname === "/" ? "index.html" : pathname.slice(1);
-    const absolutePath = path.resolve(projectRoot, path.normalize(relativePath));
-    const isInsideRoot = absolutePath === projectRoot
-      || absolutePath.startsWith(`${projectRoot}${path.sep}`);
-
-    if (
-      !isInsideRoot
-      || !fsSync.existsSync(absolutePath)
-      || !fsSync.statSync(absolutePath).isFile()
-    ) {
-      response.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
-      response.end("Not found");
-      return;
-    }
-
-    response.writeHead(200, {
-      "cache-control": "no-store",
-      "content-type": mimeTypes[path.extname(absolutePath)]
-        || "application/octet-stream",
-    });
-    fsSync.createReadStream(absolutePath).pipe(response);
-  });
-
-  await new Promise((resolveListen, rejectListen) => {
-    server.once("error", rejectListen);
-    server.listen(0, "127.0.0.1", resolveListen);
-  });
-
-  return {
-    server,
-    origin: `http://127.0.0.1:${server.address().port}`,
-  };
-};
-
 const waitForLayout = async (page, milliseconds = 220) => {
   await page.waitForTimeout(milliseconds);
   await page.evaluate(() => new Promise((resolve) => {
@@ -755,6 +706,11 @@ const contactAudit = async (page, width) => {
         ) > document.documentElement.clientWidth + 1,
     };
   }, width);
+  const resume = await page.evaluate(readMobileContactResumeExpression);
+  const resumeFailures = validateMobileContactResume(resume);
+  state.resume = resume;
+  state.resumeFailures = resumeFailures;
+  state.failure = state.failure || resumeFailures.length > 0;
   await page.keyboard.press("Escape");
   await waitForLayout(page, 420);
   return state;
@@ -1191,7 +1147,7 @@ const accessibilityAcceptanceAudit = async (browser) => {
   let browser;
 
   if (!baseUrl) {
-    localServer = await startStaticServer();
+    localServer = await startStaticServer({ projectRoot });
     baseUrl = `${localServer.origin}/?qa=webkit-regression`;
   }
 
@@ -1208,111 +1164,110 @@ const accessibilityAcceptanceAudit = async (browser) => {
   };
 
   try {
-    for (const viewport of [
-      { width: 390, height: 844 },
-      { width: 320, height: 568 },
-    ]) {
-      for (const colorScheme of ["light", "dark"]) {
-        report.firstPaint.push({
+    for (const scenario of webkitCompactScenarios) {
+      const {
+        viewport,
+        colorScheme,
+        label,
+      } = scenario;
+      report.firstPaint.push({
+        viewport,
+        colorScheme,
+        ...await firstPaintAudit(browser, viewport, colorScheme),
+      });
+
+      const context = await browser.newContext({
+        viewport,
+        colorScheme,
+        hasTouch: true,
+        isMobile: true,
+      });
+      const page = await context.newPage();
+      await isolateThirdPartyTelemetry(page);
+      attachRuntimeLog(page, label);
+      await page.goto(`${baseUrl}-${label}`, { waitUntil: "networkidle" });
+      await page.evaluate(() => document.fonts?.ready);
+      await waitForLayout(page, 500);
+
+      const initialSelectedId = await page.locator("[data-signal-field]")
+        .getAttribute("data-selected-id");
+      const commandDockAxis = await commandDockAxisAudit(page);
+      const projectGlyphs = await projectGlyphAudit(page);
+      const workStack = await stackAudit(page, "work", label, {
+        nativeWheel: false,
+      });
+      const approachStack = await stackAudit(page, "approach", label, {
+        nativeWheel: false,
+      });
+      const contact = await contactAudit(page, viewport.width);
+      const garage = await routeAudit(page, "garage", 9);
+      await page.keyboard.press("Escape");
+      await waitForLayout(page, 300);
+      const privatePractice = await routeAudit(page, "private-practice", 8);
+      const relationshipCascade = await relationshipCascadeAudit(page);
+      const material = await materialAudit(page);
+
+      await page.screenshot({
+        path: path.join(artifactDir, `${label}-final.png`),
+        fullPage: false,
+      });
+      const analyticsConsent = await analyticsConsentAudit(
+        page,
+        viewport,
+        label,
+      );
+      report.viewports.push({
+        viewport,
+        colorScheme,
+        initialSelectedId: initialSelectedId || "",
+        commandDockAxis,
+        projectGlyphs,
+        workStack,
+        approachStack,
+        contact,
+        garage,
+        privatePractice,
+        relationshipCascade,
+        material,
+        analyticsConsent,
+      });
+      await context.close();
+
+      if (colorScheme === "dark") {
+        const nativeContext = await browser.newContext({
           viewport,
           colorScheme,
-          ...await firstPaintAudit(browser, viewport, colorScheme),
         });
-
-        const context = await browser.newContext({
-          viewport,
-          colorScheme,
-          hasTouch: true,
-          isMobile: true,
+        const nativePage = await nativeContext.newPage();
+        await isolateThirdPartyTelemetry(nativePage);
+        const nativeLabel = `${label}-native-scroll`;
+        attachRuntimeLog(nativePage, nativeLabel);
+        await nativePage.goto(`${baseUrl}-${nativeLabel}`, {
+          waitUntil: "networkidle",
         });
-        const page = await context.newPage();
-        await isolateThirdPartyTelemetry(page);
-        const label = `${viewport.width}x${viewport.height}-${colorScheme}`;
-        attachRuntimeLog(page, label);
-        await page.goto(`${baseUrl}-${label}`, { waitUntil: "networkidle" });
-        await page.evaluate(() => document.fonts?.ready);
-        await waitForLayout(page, 500);
-
-        const initialSelectedId = await page.locator("[data-signal-field]")
-          .getAttribute("data-selected-id");
-        const commandDockAxis = await commandDockAxisAudit(page);
-        const projectGlyphs = await projectGlyphAudit(page);
-        const workStack = await stackAudit(page, "work", label, {
-          nativeWheel: false,
-        });
-        const approachStack = await stackAudit(page, "approach", label, {
-          nativeWheel: false,
-        });
-        const contact = await contactAudit(page, viewport.width);
-        const garage = await routeAudit(page, "garage", 9);
-        await page.keyboard.press("Escape");
-        await waitForLayout(page, 300);
-        const privatePractice = await routeAudit(page, "private-practice", 8);
-        const relationshipCascade = await relationshipCascadeAudit(page);
-        const material = await materialAudit(page);
-
-        await page.screenshot({
-          path: path.join(artifactDir, `${label}-final.png`),
-          fullPage: false,
-        });
-        const analyticsConsent = await analyticsConsentAudit(
-          page,
-          viewport,
-          label,
+        await nativePage.evaluate(() => document.fonts?.ready);
+        await waitForLayout(nativePage, 500);
+        const nativeWorkStack = await stackAudit(
+          nativePage,
+          "work",
+          nativeLabel,
         );
-        report.viewports.push({
-          viewport,
-          colorScheme,
-          initialSelectedId: initialSelectedId || "",
-          commandDockAxis,
-          projectGlyphs,
-          workStack,
-          approachStack,
-          contact,
-          garage,
-          privatePractice,
-          relationshipCascade,
-          material,
-          analyticsConsent,
-        });
-        await context.close();
-
-        if (colorScheme === "dark") {
-          const nativeContext = await browser.newContext({
-            viewport,
-            colorScheme,
-          });
-          const nativePage = await nativeContext.newPage();
-          await isolateThirdPartyTelemetry(nativePage);
-          const nativeLabel = `${label}-native-scroll`;
-          attachRuntimeLog(nativePage, nativeLabel);
-          await nativePage.goto(`${baseUrl}-${nativeLabel}`, {
-            waitUntil: "networkidle",
-          });
-          await nativePage.evaluate(() => document.fonts?.ready);
-          await waitForLayout(nativePage, 500);
-          const nativeWorkStack = await stackAudit(
-            nativePage,
-            "work",
-            nativeLabel,
-          );
-          const nativeApproachStack = await stackAudit(
-            nativePage,
-            "approach",
-            nativeLabel,
-          );
-          report.viewports.at(-1).nativeScroll = {
-            workStack: nativeWorkStack,
-            approachStack: nativeApproachStack,
-          };
-          await nativeContext.close();
-        } else {
-          report.viewports.at(-1).nativeScroll = null;
-        }
-
-        await browser.close();
-        browser = await webkit.launch({ headless: true });
+        const nativeApproachStack = await stackAudit(
+          nativePage,
+          "approach",
+          nativeLabel,
+        );
+        report.viewports.at(-1).nativeScroll = {
+          workStack: nativeWorkStack,
+          approachStack: nativeApproachStack,
+        };
+        await nativeContext.close();
+      } else {
+        report.viewports.at(-1).nativeScroll = null;
       }
+
+      await browser.close();
+      browser = await webkit.launch({ headless: true });
     }
 
     report.mobileSearch = await mobileSearchViewportAudit(browser);

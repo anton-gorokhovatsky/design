@@ -120,29 +120,15 @@
       type="font/woff2"
       crossorigin
     >
-    <link
-      rel="preload"
-      href="assets/fonts/GolosText-SemiBold.woff2"
-      as="font"
-      type="font/woff2"
-      crossorigin
-    >
-    <link
-      rel="preload"
-      href="assets/fonts/GolosText-Bold.woff2"
-      as="font"
-      type="font/woff2"
-      crossorigin
-    >
-    <link rel="stylesheet" href="styles.css?v=68b4000697ba">
+    <link rel="stylesheet" href="styles.css?v=9822b77acd50">
     <!-- runtime-import-map:start -->
     <script type="importmap" data-runtime-import-map>
       {
         "imports": {
           "./js/preferences.js": "./js/preferences.js?v=77f862a63d22",
-          "./js/analytics.js": "./js/analytics.js?v=b7ba948c99ea",
+          "./js/analytics.js": "./js/analytics.js?v=843d35ceb18d",
           "./js/signal-field.js": "./js/signal-field.js?v=50bb6509089d",
-          "./js/map-data.js": "./js/map-data.js?v=428038e4072a",
+          "./js/map-data.js": "./js/map-data.js?v=93d1e55c49c4",
           "./js/map-engine.js": "./js/map-engine.js?v=495caef84ae0",
           "./js/panels.js": "./js/panels.js?v=e94206f02c59",
           "./js/favicon.js": "./js/favicon.js?v=515506b106d3"
@@ -152,9 +138,9 @@
     <!-- runtime-import-map:end -->
     <!-- Native modules keep their dependencies explicit; see js/README.md. -->
     <script type="module" src="js/preferences.js?v=77f862a63d22"></script>
-    <script type="module" src="js/analytics.js?v=b7ba948c99ea"></script>
+    <script type="module" src="js/analytics.js?v=843d35ceb18d"></script>
     <script type="module" src="js/signal-field.js?v=50bb6509089d"></script>
-    <script type="module" src="js/map-data.js?v=428038e4072a"></script>
+    <script type="module" src="js/map-data.js?v=93d1e55c49c4"></script>
     <script type="module" src="js/map-engine.js?v=495caef84ae0"></script>
     <script type="module" src="js/panels.js?v=e94206f02c59"></script>
     <script type="module" src="js/favicon.js?v=515506b106d3"></script>
@@ -242,8 +228,11 @@
             <a href="https://ks.fish/">Рыбная лавка капитана Селёдкина</a>
           </nav>
           <div class="no-script-fallback__contacts">
+            <a href="assets/anton-gorokhovatsky-resume.pdf">
+              Резюме PDF
+            </a>
             <a href="https://gorokhovatsky.notion.site/digital-web-digital-f68fc13247614ccb9738d9a85acf29b4?pvs=74">
-              Резюме
+              Полное резюме в Notion
             </a>
             <a href="mailto:anton.gorokhovatsky@gmail.com">Эл. почта</a>
             <a href="https://t.me/gorokhovatsky">Telegram</a>
@@ -258,7 +247,8 @@
 
     <header class="site-header">
       <p class="brand">
-        <span lang="en">ANTON GOROKHOVATSKY © 2026</span>
+        <span class="brand__name">АНТОН ГОРОХОВАТСКИЙ © 2026</span>
+        <span class="brand__role">ДИЗАЙН-ИНЖЕНЕР / DIGITAL / WEB</span>
       </p>
     </header>
 
@@ -275,7 +265,7 @@
           проекты справа, личное снизу и принципы слева. Чем ближе точки друг
           к другу, тем ближе их смысловая связь; размер точки показывает личный
           вес опыта, форма — тип объекта. Перемещайтесь между точками стрелками или
-          воспользуйтесь фильтрами и поиском. Кнопка «АГ / НАЧАЛО» запускает
+          воспользуйтесь фильтрами и поиском. Кнопка «МАРШРУТ / 60 СЕК» запускает
           необязательный последовательный сеанс наблюдения; режим «Время»
           перестраивает датированные точки по годовым орбитам.
         </p>
@@ -370,7 +360,7 @@
             data-material-surface="origin-label"
             data-material-active="always"
             aria-label="Начать сеанс наблюдения длительностью около 60 секунд"
-          >АГ / НАЧАЛО</button>
+          >МАРШРУТ / 60 СЕК</button>
 
           <aside
             class="map-hover-preview"
@@ -587,15 +577,15 @@
                 class="constellation-nav__item"
                 data-nav-view="cv"
                 data-nav-index="05"
-                href="https://gorokhovatsky.notion.site/digital-web-digital-f68fc13247614ccb9738d9a85acf29b4?pvs=74"
+                href="assets/anton-gorokhovatsky-resume.pdf"
                 target="_blank"
-                rel="noreferrer"
+                aria-label="Открыть резюме Антона Гороховатского в PDF"
               >
                 <span
                   class="constellation-nav__shape constellation-nav__shape--external"
                   aria-hidden="true"
                 ></span>
-                <span class="constellation-nav__label">РЕЗЮМЕ</span>
+                <span class="constellation-nav__label">РЕЗЮМЕ PDF</span>
               </a>
             </div>
           </nav>
@@ -859,7 +849,7 @@
           >
             <span class="work-row__number">01</span>
             <span class="work-row__title">Сайт независимого куратора и&nbsp;исследователя Ольги&nbsp;Широкоступ</span>
-            <span class="work-row__scope">РЕДАКЦИЯ / САЙТ</span>
+            <span class="work-row__scope">РОЛЬ / СТРУКТУРА, РЕДАКЦИЯ, UX/UI, КОД</span>
             <span class="work-row__domain">SHIROKOSTUP.SITE</span>
           </a>
 
@@ -873,7 +863,7 @@
           >
             <span class="work-row__number">02</span>
             <span class="work-row__title">Сайт среды изучения и&nbsp;поддержки социально ориентированного и&nbsp;вовлекающего искусства Tarski</span>
-            <span class="work-row__scope">ЦИФРОВОЙ ПРОДУКТ / САЙТ</span>
+            <span class="work-row__scope">РОЛЬ / СТРАТЕГИЯ, UX/UI, ДОСТУПНОСТЬ, КОД</span>
             <span class="work-row__domain">TARSKI.RU</span>
           </a>
 
@@ -887,7 +877,7 @@
           >
             <span class="work-row__number">03</span>
             <span class="work-row__title">Сайт стилиста и&nbsp;эксперта по&nbsp;уходу Германа Винокурова</span>
-            <span class="work-row__scope">СЕРВИС / САЙТ</span>
+            <span class="work-row__scope">РОЛЬ / СТРАТЕГИЯ, UX/UI, КОД</span>
             <span class="work-row__domain">BARBERHERMAN.RU</span>
           </a>
 
@@ -1026,6 +1016,19 @@
             </p>
             <h2 id="contact-title"><span>Привет!</span></h2>
             <p class="contact-lede">Для предложений, рекомендаций и&nbsp;хороших наводок.</p>
+            <p class="contact-resume">
+              <a href="assets/anton-gorokhovatsky-resume.pdf" target="_blank">
+                Резюме PDF
+              </a>
+              <span aria-hidden="true">/</span>
+              <a
+                href="https://gorokhovatsky.notion.site/digital-web-digital-f68fc13247614ccb9738d9a85acf29b4?pvs=74"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Полная версия в&nbsp;Notion
+              </a>
+            </p>
           </div>
           <div class="contact-links">
             <a

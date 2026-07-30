@@ -3,4 +3,11 @@ node_modules/
 dist/
 .env
 outputs/
-work/
+.qa-artifacts/
+.portfolio-audit-artifacts/
+.reel-capture/
+artifacts/
+coverage/
+playwright-report/
+test-results/
+tmp/

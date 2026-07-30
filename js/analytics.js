@@ -13,8 +13,7 @@ const analyticsDeny = document.querySelector("[data-analytics-deny]");
 const analyticsSettings = document.querySelector("[data-analytics-settings]");
 const analyticsStatus = document.querySelector("[data-analytics-status]");
 const analyticsQuery = new URLSearchParams(window.location.search);
-const analyticsQaSuppressed = analyticsQuery.has("qa")
-  && analyticsQuery.get("analytics-consent") !== "show";
+const analyticsConsentRequested = analyticsQuery.get("analytics-consent") === "show";
 const analyticsGoalParameters = new Map([
   ["point_open", new Set(["point_id", "source"])],
   ["map_filter_change", new Set(["filters"])],
@@ -201,7 +200,7 @@ syncAnalyticsPreferenceUi();
 
 if (analyticsPreference === "allowed") {
   loadYandexAnalytics();
-} else if (!analyticsPreference && !captureMode && !analyticsQaSuppressed) {
+} else if (!analyticsPreference && !captureMode && analyticsConsentRequested) {
   window.requestAnimationFrame(() => openAnalyticsConsent({ focus: false }));
 }
 

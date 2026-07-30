@@ -13,7 +13,11 @@
     "cache:check": "node scripts/cache-versions.mjs --check",
     "check": "node scripts/check-project.mjs",
     "check:chromium": "node scripts/check-ui-contracts.mjs",
+    "check:publication": "node scripts/check-publication-assets.mjs",
+    "check:reel": "node scripts/check-reel-preview.mjs",
     "check:webkit": "node scripts/webkit-regression.cjs",
+    "build:resume": "python3 scripts/build-resume-pdf.py",
+    "capture:share": "node scripts/capture-share-images.mjs",
     "render:favicon": "node scripts/render-favicon.mjs",
     "release": "node scripts/release.mjs"
   },

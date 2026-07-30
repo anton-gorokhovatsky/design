@@ -30,7 +30,7 @@ morphs from one silhouette to the next, and slowly rotates as one orbital
 system. Running remains a clean `БЕГ` map node; its figurative image belongs to
 the central constellation rather than to the label. The running light uses the
 `--running-dusk` token sampled from SATISFY's Dusk Space-O™ Singlet.
-`АГ / НАЧАЛО` remains a small coordinate label inside the field, not a separate
+`МАРШРУТ / 60 СЕК` remains a small coordinate label inside the field, not a separate
 logo card. It is also the explicit start control for the optional observation
 route.
 
@@ -143,7 +143,21 @@ route.
   Crisp strokes remain reserved for active controls and focus.
 - Self-hosted Golos Text carries every textual interface, content layer, and
   the central point constellation in weights 400/500/600/700.
-  Arial/Helvetica remain system fallbacks only. The constellation positions
+
+## Recruiter and share routes
+
+- `assets/anton-gorokhovatsky-resume.pdf` is the compact, text-based two-page
+  resume; the long-form Notion chronology remains linked from the contact panel.
+  Rebuild the PDF with `python3 scripts/build-resume-pdf.py` in an environment
+  with ReportLab.
+- `/work/garage/`, `/work/narkomfin/`, and `/work/tarski/` expose stable,
+  project-specific metadata and redirect visitors into the corresponding map
+  state. Their `1200×630` previews are reproduced with
+  `node scripts/capture-share-images.mjs`.
+- `node scripts/check-publication-assets.mjs` keeps the three canonical/OG
+  routes, their image geometry, the sitemap, and the two-page linked PDF in
+  one reproducible contract.
+- Arial/Helvetica remain system fallbacks only. The constellation positions
   each glyph independently on the canvas, so its geometry does not require a
   monospace font.
 - A visual review includes an explicit optical-alignment pass at desktop,
@@ -214,8 +228,14 @@ instead of adding Storybook:
 - `node scripts/audit-project.mjs --json` returns the same report as structured
   JSON for comparison or external tooling.
 - `node scripts/check-project.mjs` runs JavaScript syntax, project contracts,
-  CSS-cascade and asset-graph checks, reel validation, browser visual
-  contracts in Chromium and WebKit, and `git diff --check`.
+  CSS-cascade, asset-graph and publication checks, reel validation, browser
+  visual contracts in Chromium and WebKit, and `git diff --check`.
+- `scripts/browser-contracts.cjs` owns shared scenarios, mobile expressions,
+  validators, MIME types, and the local static server. Chromium, WebKit, share
+  capture, and focused reel checks keep only their browser-specific drivers.
+- `node scripts/check-reel-preview.mjs` is the focused `11 111` receiver check:
+  it hovers the mapped project, verifies the current 900×600 video/poster and
+  readout, and writes a full frame plus a 1:1 receiver crop.
 - The WebKit gate also completes one assistive-technology route at `390×844`:
   it reads the live accessibility tree, enters through the visible skip link,
   moves between map points with arrows, opens and closes a point with
@@ -225,11 +245,17 @@ instead of adding Storybook:
   fonts, and their combined first-party source under explicit budgets and
   forbids eager video. Architecture/font changes need measured evidence beyond
   this guardrail; line count alone is not a reason to rewrite working layers.
+- `node scripts/check-css-cascade.mjs --report-overridden` inventories earlier
+  declarations that the same selector/media unconditionally replaces later.
+  A bounded `--fix-overridden-range=<first>:<last>` is allowed only as one
+  historical-layer cleanup followed by matched renders and the full gate.
 - `pnpm install --frozen-lockfile && pnpm check` reproduces that full gate with
   the pinned Playwright version. `.github/workflows/quality.yml` runs the same
   command and retains browser frames as CI artifacts.
 - `docs/ui-state-matrix.md` is the visual state catalog used for matched
   desktop, tablet, mobile, theme, zoom, contrast, and reduced-motion renders.
+  Dated runs and revoked acceptances live separately in
+  `docs/acceptance-history.md`.
 
 Static cleanup candidates are never deletion instructions. Confirm them with
 computed styles, runtime state coverage, and matched before/after renders.

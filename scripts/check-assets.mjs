@@ -21,11 +21,18 @@ const walkFiles = (directory) => readdirSync(directory, { withFileTypes: true })
     return entry.isDirectory() ? walkFiles(path) : [path];
   });
 
+const sharePagesRoot = join(projectRoot, "work");
+const sharePageSources = existsSync(sharePagesRoot)
+  ? walkFiles(sharePagesRoot)
+    .filter((path) => path.endsWith(".html"))
+    .map((path) => readFileSync(path, "utf8"))
+  : [];
 const source = [
   readProjectFile("index.html"),
   readProjectFile("styles.css"),
   readRuntimeSource(projectRoot),
   readProjectFile("README.md"),
+  ...sharePageSources,
 ].join("\n");
 const assetFiles = walkFiles(assetsRoot)
   .map((path) => relative(projectRoot, path).replaceAll("\\", "/"))
