@@ -20,11 +20,12 @@ const expected = {
   mapId: "eleven",
   index: "11 / 13",
   titleFragments: ["11 111", "Виктора Доронина"],
-  meta: "ИСТОРИЯ, ЦЕЛЬ И МАСШТАБ / 00:08",
+  meta: "ИСТОРИЯ, ЦЕЛЬ И МАСШТАБ / 00:12",
   videoPath: "/assets/reels/11111.mp4",
   posterPath: "/assets/reel-posters/11111.jpg",
   width: 900,
   height: 600,
+  duration: { min: 11.5, max: 12.1 },
 };
 const failures = [];
 const runtimeErrors = [];
@@ -128,7 +129,8 @@ try {
 
   const videoUrl = new URL(report.currentSrc);
   const posterUrl = new URL(report.poster);
-  const durationFits = report.duration >= 7.5 && report.duration <= 8.2;
+  const durationFits = report.duration >= expected.duration.min
+    && report.duration <= expected.duration.max;
 
   if (!report.visible || !report.videoReady || report.ariaHidden !== "true") {
     failures.push("the decorative hover receiver is not visibly video-ready");

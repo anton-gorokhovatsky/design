@@ -53,6 +53,8 @@ const projects = {
   "11111": {
     url: "https://11111.life/",
     sourceViewport: { width: 1350, height: 900 },
+    outputDuration: 11.8,
+    finalHold: 2400,
   },
   "ks-fish": {
     url: "https://ks.fish/",
@@ -82,6 +84,43 @@ const smoothScroll = async (page, duration = 6500) => {
     const start = scrollRoot.scrollTop;
     const maximum = Math.max(0, scrollRoot.scrollHeight - innerHeight);
     const target = Math.min(maximum, Math.max(innerHeight * 1.4, maximum * 0.82));
+    const startedAt = Date.now();
+
+    await new Promise((resolve) => {
+      const frame = () => {
+        const elapsed = Date.now() - startedAt;
+        const progress = Math.min(1, elapsed / scrollDuration);
+        const eased = 0.5 - Math.cos(progress * Math.PI) / 2;
+        scrollRoot.scrollTop = start + (target - start) * eased;
+
+        if (progress < 1) {
+          requestAnimationFrame(frame);
+        } else {
+          resolve();
+        }
+      };
+
+      requestAnimationFrame(frame);
+    });
+  }, duration);
+};
+
+const slowScrollThroughPartners = async (page, duration = 5200) => {
+  await page.evaluate(async (scrollDuration) => {
+    const partners = document.querySelector("#partners");
+
+    if (!partners) {
+      throw new Error("The 11 111 partner chapter is missing");
+    }
+
+    const scrollRoot = document.scrollingElement || document.documentElement;
+    const start = scrollRoot.scrollTop;
+    const maximum = Math.max(0, scrollRoot.scrollHeight - innerHeight);
+    const sectionEnd = partners.offsetTop + partners.offsetHeight;
+    const target = Math.min(
+      maximum,
+      Math.max(start, sectionEnd - innerHeight * 0.85),
+    );
     const startedAt = Date.now();
 
     await new Promise((resolve) => {
@@ -139,6 +178,32 @@ const runCaptureMotion = async (page, id, source) => {
     return;
   }
 
+  if (id === "11111") {
+    const menuToggle = page.locator('details > summary[aria-label="Меню"]');
+
+    if (await menuToggle.count() !== 1) {
+      throw new Error("The 11 111 menu toggle must be unique");
+    }
+
+    await page.waitForTimeout(1200);
+    await menuToggle.click();
+    await page.waitForTimeout(2600);
+
+    const partnerLink = page.getByRole("link", {
+      name: "07 Партнёрам",
+      exact: true,
+    });
+
+    if (await partnerLink.count() !== 1) {
+      throw new Error("The 11 111 partner-menu link must be unique");
+    }
+
+    await partnerLink.click();
+    await page.waitForTimeout(1000);
+    await slowScrollThroughPartners(page);
+    return;
+  }
+
   await Promise.all([
     smoothScroll(page),
     keepOverlaysDismissed(page, source.dismissSelectors),
@@ -167,8 +232,8 @@ const runCaptureMotion = async (page, id, source) => {
       size: sourceViewport,
     },
   });
-  const recordingStartedAt = Date.now();
   const page = await context.newPage();
+  const recordingStartedAt = Date.now();
   const video = page.video();
 
   await page.goto(project.url, {
@@ -199,7 +264,7 @@ const runCaptureMotion = async (page, id, source) => {
   );
 
   await runCaptureMotion(page, projectId, project);
-  await page.waitForTimeout(1800);
+  await page.waitForTimeout(project.finalHold || 1800);
 
   const rawPath = await video.path();
   await context.close();
@@ -224,7 +289,7 @@ const runCaptureMotion = async (page, id, source) => {
       "-i",
       rawDestination,
       "-t",
-      "7.8",
+      String(project.outputDuration || 7.8),
       "-vf",
       `setpts=PTS-STARTPTS,fps=30,scale=${desktopVideo.width}:${desktopVideo.height}:flags=lanczos,setsar=1`,
       "-c:v",
@@ -255,6 +320,7 @@ const runCaptureMotion = async (page, id, source) => {
       usefulStart,
       viewport: sourceViewport,
       video: desktopVideo,
+      duration: project.outputDuration || 7.8,
     }),
   );
 })().catch((error) => {

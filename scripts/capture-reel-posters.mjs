@@ -8,7 +8,7 @@ const projectRoot = resolve(scriptDirectory, "..");
 const reelsDirectory = join(projectRoot, "assets", "reels");
 const postersDirectory = join(projectRoot, "assets", "reel-posters");
 const selectedFrames = new Map([
-  ["11111", 1.35],
+  ["11111", 0.75],
   ["doronin", 1.35],
   ["dusty-camp", 1.45],
   ["dusty-merch", 1.35],
@@ -28,7 +28,17 @@ mkdirSync(postersDirectory, { recursive: true });
 const reelPaths = readdirSync(reelsDirectory)
   .filter((name) => name.endsWith(".mp4"))
   .sort()
+  .filter((name) => (
+    process.argv.length <= 2
+    || process.argv.slice(2).includes(basename(name, ".mp4"))
+  ))
   .map((name) => join(reelsDirectory, name));
+
+if (reelPaths.length === 0) {
+  throw new Error(
+    `No matching reels for: ${process.argv.slice(2).join(", ") || "(none)"}`,
+  );
+}
 
 for (const reelPath of reelPaths) {
   const id = basename(reelPath, ".mp4");
@@ -60,4 +70,4 @@ for (const reelPath of reelPaths) {
   console.log(`${id}: ${timestamp.toFixed(2)}s`);
 }
 
-console.log(`Created ${reelPaths.length} posters in ${postersDirectory}`);
+console.log(`Created ${reelPaths.length} poster(s) in ${postersDirectory}`);

@@ -76,10 +76,13 @@ route.
   with one icon column, one label column, and equal hit areas on narrow
   screens.
 - Hovering or focusing an eligible project node temporarily turns the central
-  origin into a media receiver. Every reel is a muted seven-to-eight-second
-  walkthrough of characteristic live states: full-page scrolls, meaningful
-  inner routes, theme changes, or distinctive interface controls. Nodes without
-  recorded media do not open an empty or decorative media receiver.
+  origin into a media receiver. Most reels are muted seven-to-eight-second
+  walkthroughs of characteristic live states: full-page scrolls, meaningful
+  inner routes, theme changes, or distinctive interface controls. A longer
+  editorial pass is allowed when a real interaction needs legible dwell time;
+  the current `11 111` reel uses twelve seconds for its hero, menu and partner
+  chapter. Nodes without recorded media do not open an empty or decorative
+  media receiver.
 - A site reel is a window, not a crop: all 13 current sources are desktop
   websites, so each uses square pixels and is captured from a `1200×800`
   viewport into a `900×600` / `3:2` master and matching landscape receiver.

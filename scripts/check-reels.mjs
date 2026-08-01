@@ -36,10 +36,12 @@ const reelSpecs = new Map(
       height: 600,
       displayAspect: "3:2",
       sourceViewport: "1200x800",
+      duration: { min: 7.5, max: 8.1 },
     },
   ]),
 );
 reelSpecs.get("11111.mp4").sourceViewport = "1350x900";
+reelSpecs.get("11111.mp4").duration = { min: 11.5, max: 12.1 };
 
 const expectedReelNames = [...reelSpecs.keys()].sort();
 const posterNames = readdirSync(postersDirectory)
@@ -148,8 +150,15 @@ for (const reelName of reelNames) {
     );
   }
 
-  if (!Number.isFinite(duration) || duration < 7.5 || duration > 8.1) {
-    failures.push(`${reelName}: duration must stay between 7.5 and 8.1 seconds`);
+  if (
+    !Number.isFinite(duration)
+    || duration < spec.duration.min
+    || duration > spec.duration.max
+  ) {
+    failures.push(
+      `${reelName}: duration must stay between ${spec.duration.min} `
+        + `and ${spec.duration.max} seconds`,
+    );
   }
 
   const fitComment = formatMetadata?.tags?.comment ?? "";
