@@ -72,6 +72,12 @@ const mobileSearchViewport = {
   screenHeight: 844,
 };
 
+const mobileSafariSplitViewport = {
+  width: 390,
+  height: 844,
+  visibleHeight: 430,
+};
+
 const mobileMetricViewport = {
   width: 390,
   height: 844,
@@ -216,6 +222,33 @@ const openMobileSearchExpression = `(() => {
     }));
   }
   return true;
+})()`;
+
+const emulateMobileSafariSplitViewportExpression = `(() => {
+  const visibleHeight = ${mobileSafariSplitViewport.visibleHeight};
+  const fakeVisualViewport = {
+    height: visibleHeight,
+    offsetLeft: 0,
+    offsetTop: 0,
+    scale: 1,
+    width: ${mobileSafariSplitViewport.width},
+  };
+
+  Object.defineProperty(window, "innerHeight", {
+    configurable: true,
+    value: visibleHeight,
+  });
+  Object.defineProperty(window, "visualViewport", {
+    configurable: true,
+    value: fakeVisualViewport,
+  });
+  window.dispatchEvent(new Event("resize"));
+
+  return {
+    cssViewportHeight: document.documentElement.clientHeight,
+    innerHeight: window.innerHeight,
+    visualViewportHeight: window.visualViewport.height,
+  };
 })()`;
 
 const readMobileSearchFocusedExpression = `(() => {
@@ -411,6 +444,31 @@ const validateMobileSearchContract = ({
   return failures;
 };
 
+const validateMobileSafariSplitSearchContract = ({ emulation, focused }) => {
+  if (
+    emulation.cssViewportHeight === mobileSafariSplitViewport.height
+    && emulation.innerHeight === mobileSafariSplitViewport.visibleHeight
+    && emulation.visualViewportHeight === mobileSafariSplitViewport.visibleHeight
+    && focused.focused
+    && focused.bodyHasFocus
+    && focused.expanded === "true"
+    && focused.count === 7
+    && focused.geometryFits
+    && focused.pageScrollY === 0
+    && focused.overflowX === 0
+    && focused.systemDockVisibility === "hidden"
+    && focused.navigationVisibility === "hidden"
+  ) {
+    return [];
+  }
+
+  return [{
+    id: "safari-split-viewport",
+    message: "search results do not stay above the dock in Safari's split viewport",
+    details: { emulation, focused },
+  }];
+};
+
 const validateCompactAuthorship = (authorship) => {
   if (
     authorship.hidden
@@ -528,7 +586,9 @@ const validateMobileMetricGroups = (metricGroups) => {
 module.exports = {
   chromiumScenarioCatalog,
   dispatchMobileSearchKeyExpression,
+  emulateMobileSafariSplitViewportExpression,
   mobileMetricViewport,
+  mobileSafariSplitViewport,
   mobileSearchViewport,
   openMobileSearchExpression,
   readAnnotationHierarchyExpression,
@@ -544,6 +604,7 @@ module.exports = {
   validateCompactAuthorship,
   validateMobileContactResume,
   validateMobileMetricGroups,
+  validateMobileSafariSplitSearchContract,
   validateMobileSearchContract,
   webkitCompactScenarios,
 };

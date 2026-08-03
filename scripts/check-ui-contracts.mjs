@@ -17,7 +17,9 @@ const require = createRequire(import.meta.url);
 const {
   chromiumScenarioCatalog,
   dispatchMobileSearchKeyExpression,
+  emulateMobileSafariSplitViewportExpression,
   mobileMetricViewport,
+  mobileSafariSplitViewport,
   mobileSearchViewport,
   openMobileSearchExpression,
   readAnnotationHierarchyExpression,
@@ -32,6 +34,7 @@ const {
   validateCompactAuthorship,
   validateMobileContactResume,
   validateMobileMetricGroups,
+  validateMobileSafariSplitSearchContract,
   validateMobileSearchContract,
 } = require("./browser-contracts.cjs");
 const artifactDirectory = process.env.PORTFOLIO_UI_ARTIFACT_DIR
@@ -1013,6 +1016,36 @@ const auditBrowser = async (client, origin) => {
     arrow: mobileSearchArrow,
     focused: mobileSearchFocused,
     restored: mobileSearchRestored,
+  })) {
+    fail(`mobile-search: ${failure.message}.`, failure.details);
+  }
+
+  await setViewport(client, {
+    width: mobileSafariSplitViewport.width,
+    height: mobileSafariSplitViewport.height,
+    mobile: true,
+    theme: "dark",
+    screenWidth: mobileSafariSplitViewport.width,
+    screenHeight: mobileSafariSplitViewport.height,
+  });
+  await navigate(
+    client,
+    `${origin}/?qa=ui-contracts-mobile-search-safari-split#map`,
+  );
+  const mobileSafariSplitEmulation = await evaluate(
+    client,
+    emulateMobileSafariSplitViewportExpression,
+  );
+  await evaluate(client, openMobileSearchExpression);
+  await delay(140);
+  const mobileSafariSplitFocused = await evaluate(
+    client,
+    readMobileSearchFocusedExpression,
+  );
+  await saveScreenshot(client, "mobile-search-safari-split-shell");
+  for (const failure of validateMobileSafariSplitSearchContract({
+    emulation: mobileSafariSplitEmulation,
+    focused: mobileSafariSplitFocused,
   })) {
     fail(`mobile-search: ${failure.message}.`, failure.details);
   }

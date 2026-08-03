@@ -8953,6 +8953,12 @@ html[data-focus-modality="pointer"]
     pointer-events: none;
   }
 
+  body.has-command-focus .command-results,
+  body.has-command-focus .command-status {
+    top: var(--command-results-top, 8px);
+    bottom: auto;
+  }
+
   body.has-command-focus .command-results {
     overscroll-behavior: contain;
     scroll-padding-block: 7px;

@@ -76,6 +76,9 @@ const positionDetachedCommandResults = () => {
   let width = bounds.width;
   let bottom = window.innerHeight - bounds.top + gap;
   let maximumHeight = Math.min(390, window.innerHeight * 0.54);
+  let focusedViewport = null;
+  let focusedDockTop = 0;
+  let focusedEdgeGap = 0;
 
   if (usesFocusedMobileLayout) {
     const viewport = getCommandVisualViewport();
@@ -88,6 +91,9 @@ const positionDetachedCommandResults = () => {
     left = viewport.left + edgeGap;
     width = Math.max(0, viewport.width - edgeGap * 2);
     bottom = window.innerHeight - dockTop + gap;
+    focusedViewport = viewport;
+    focusedDockTop = dockTop;
+    focusedEdgeGap = edgeGap;
     maximumHeight = Math.max(
       88,
       Math.min(390, dockTop - viewport.top - gap - edgeGap),
@@ -119,6 +125,27 @@ const positionDetachedCommandResults = () => {
       "--command-results-max-height",
       `${maximumHeight.toFixed(2)}px`,
     );
+
+    if (focusedViewport) {
+      const elementHeight = Math.min(
+        maximumHeight,
+        Math.max(
+          element.scrollHeight,
+          element.getBoundingClientRect().height,
+        ),
+      );
+      const top = Math.max(
+        focusedViewport.top + focusedEdgeGap,
+        focusedDockTop - gap - elementHeight,
+      );
+
+      element.style.setProperty(
+        "--command-results-top",
+        `${top.toFixed(2)}px`,
+      );
+    } else {
+      element.style.removeProperty("--command-results-top");
+    }
   });
 };
 let commandPositionFrame = 0;
