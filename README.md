@@ -39,7 +39,7 @@ route.
 - The map is the full-screen default state; the portfolio does not continue as
   a conventional scrolling page.
 - Node selection opens a compact readout assembled around the selected point as
-  the composition's anchor object. Nine anchor points add the evidence fields
+  the composition's anchor object. Eleven anchor points add the evidence fields
   `ЗАДАЧА / МОЯ РОЛЬ / РЕЗУЛЬТАТ`; numerical claims are included only where
   they are supported by the source résumé.
 - `СЕАНС НАБЛЮДЕНИЯ` is an optional eight-stop, roughly sixty-second route
@@ -278,7 +278,7 @@ computed styles, runtime state coverage, and matched before/after renders.
 - [Dusty Dumbbells Camp](https://camp.dustydumbbells.com/)
 - [11 111](https://11111.life/)
 - [KS Fish](https://ks.fish/)
-- [Doronin](https://doronin.store/)
+- [Доронин в деле](https://doronin.store/)
 
 The site uses static HTML, CSS, and JavaScript and publishes from the
 repository's `gh-pages` branch.

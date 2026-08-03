@@ -194,7 +194,7 @@
 - Не показывать пустые превью, декоративные заглушки и ссылки без осмысленного
   назначения.
 - Сохранить мастер-набор из 13 шоурилов: Shirokostup, Tarski, Herman,
-  Dusty Merch, Dusty Camp, 11 111, Doronin, KS Fish, Наркомфин, Garage Site,
+  Dusty Merch, Dusty Camp, 11 111, «Доронин в деле», KS Fish, Наркомфин, Garage Site,
   Collection / Open Storage, Courses и Webzine.
 - Все 13 шоурилов записываются заново в нативной геометрии их receiver и с
   квадратным пикселем. Обычно проход занимает 7–8 секунд; более длинное

@@ -26,8 +26,8 @@ const shareRoutes = [
   },
   {
     id: "doronin",
-    titleFragment: "DORONIN",
-    imageAltFragment: "DORONIN",
+    titleFragment: "Доронин в деле",
+    imageAltFragment: "Доронин в деле",
   },
   {
     id: "eleven",
