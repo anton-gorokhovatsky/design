@@ -84,6 +84,9 @@ route.
   chapter. Tarski uses 12.4 seconds for its light editorial route, a real theme
   switch, the dark artist network, and an artist dossier; its secondary loops
   keep one light editorial chapter and one dark network/dossier chapter.
+  Narkomfin uses 13.2 seconds to make the live 3D building legible across its
+  initial, roof, cafe, and bookshop cameras before a real night-theme switch;
+  its secondary loops separate the day camera route from the night roof view.
   Nodes without recorded media do not open an empty or decorative
   media receiver.
 - A site reel is a window, not a crop: all 13 current sources are desktop

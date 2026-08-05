@@ -8,25 +8,58 @@ import { fileURLToPath } from "node:url";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(scriptDirectory, "..");
+const reelId = process.argv[2] || "eleven";
+const expectedById = new Map([
+  ["eleven", {
+    mapId: "eleven",
+    artifactId: "11111",
+    index: "11 / 13",
+    titleFragments: ["11 111", "Виктора Доронина"],
+    meta: "ИСТОРИЯ, ЦЕЛЬ И МАСШТАБ / 00:12",
+    videoPath: "/assets/reels/11111.mp4",
+    posterPath: "/assets/reel-posters/11111.jpg",
+    chapterPaths: [
+      "/assets/reel-chapters/11111-01.mp4",
+      "/assets/reel-chapters/11111-02.mp4",
+    ],
+    width: 900,
+    height: 600,
+    duration: { min: 11.5, max: 12.1 },
+  }],
+  ["narkomfin", {
+    mapId: "narkomfin",
+    artifactId: "narkomfin",
+    index: "02 / 13",
+    titleFragments: ["ДОМ НАРКОМФИНА"],
+    meta: "МОДЕЛЬ, РАЗДЕЛЫ И ТЕМЫ / 00:13",
+    videoPath: "/assets/reels/narkomfin.mp4",
+    posterPath: "/assets/reel-posters/narkomfin.jpg",
+    chapterPaths: [
+      "/assets/reel-chapters/narkomfin-01.mp4",
+      "/assets/reel-chapters/narkomfin-02.mp4",
+    ],
+    width: 900,
+    height: 600,
+    duration: { min: 12.9, max: 13.5 },
+  }],
+]);
+const expected = expectedById.get(reelId);
+
+if (!expected) {
+  throw new Error(
+    `Unknown reel preview contract "${reelId}". `
+      + `Expected one of: ${[...expectedById.keys()].join(", ")}.`,
+  );
+}
+
 const artifactDirectory = resolve(
   process.env.PORTFOLIO_REEL_QA_ARTIFACT_DIR
-    || join(os.tmpdir(), "portfolio-reel-preview-11111"),
+    || join(os.tmpdir(), `portfolio-reel-preview-${expected.artifactId}`),
 );
 const require = createRequire(import.meta.url);
 const { chromium } = require("playwright");
 const { startStaticServer } = require("./browser-contracts.cjs");
 
-const expected = {
-  mapId: "eleven",
-  index: "11 / 13",
-  titleFragments: ["11 111", "Виктора Доронина"],
-  meta: "ИСТОРИЯ, ЦЕЛЬ И МАСШТАБ / 00:12",
-  videoPath: "/assets/reels/11111.mp4",
-  posterPath: "/assets/reel-posters/11111.jpg",
-  width: 900,
-  height: 600,
-  duration: { min: 11.5, max: 12.1 },
-};
 const failures = [];
 const runtimeErrors = [];
 const normalizeText = (value) => value.replace(/\u00a0/g, " ").trim();
@@ -81,7 +114,7 @@ try {
     }
   });
 
-  await page.goto(`${origin}/?qa=reel-preview-11111`, {
+  await page.goto(`${origin}/?reel=mosaic&preview=${expected.mapId}`, {
     waitUntil: "networkidle",
   });
   await page.evaluate(() => document.fonts?.ready);
@@ -94,6 +127,10 @@ try {
     document.querySelector(".map-hover-preview")
       ?.classList.contains("is-video-ready")
   ), null, { timeout: 15000 });
+  await page.waitForFunction(() => (
+    document.querySelector(".map-hover-preview")
+      ?.classList.contains("is-mosaic-ready")
+  ), null, { timeout: 15000 });
   await page.waitForTimeout(350);
 
   report = await page.evaluate(() => {
@@ -102,6 +139,9 @@ try {
     const video = media?.querySelector("video");
     const bounds = media?.getBoundingClientRect();
     const videoStyle = video ? getComputedStyle(video) : null;
+    const chapterVideos = [...preview.querySelectorAll(
+      ".map-hover-preview__mosaic-video",
+    )];
 
     return {
       visible: preview?.classList.contains("is-visible") || false,
@@ -124,6 +164,19 @@ try {
       videoWidth: video?.videoWidth || 0,
       videoHeight: video?.videoHeight || 0,
       duration: video?.duration || 0,
+      mosaicActive: preview?.classList.contains("has-reel-mosaic") || false,
+      mosaicReady: preview?.classList.contains("is-mosaic-ready") || false,
+      chapters: chapterVideos.map((chapterVideo) => {
+        const style = getComputedStyle(chapterVideo);
+
+        return {
+          currentSrc: chapterVideo.currentSrc || "",
+          videoWidth: chapterVideo.videoWidth || 0,
+          videoHeight: chapterVideo.videoHeight || 0,
+          objectFit: style.objectFit,
+          objectPosition: style.objectPosition,
+        };
+      }),
     };
   });
 
@@ -140,13 +193,15 @@ try {
     || !expected.titleFragments.every((fragment) => report.title.includes(fragment))
     || normalizeText(report.meta) !== expected.meta
   ) {
-    failures.push("the 11 111 readout identity changed");
+    failures.push(`the ${expected.artifactId} readout identity changed`);
   }
   if (
     videoUrl.pathname !== expected.videoPath
     || posterUrl.pathname !== expected.posterPath
   ) {
-    failures.push("the 11 111 receiver points to the wrong video or poster");
+    failures.push(
+      `the ${expected.artifactId} receiver points to the wrong video or poster`,
+    );
   }
   if (
     report.videoWidth !== expected.width
@@ -156,16 +211,39 @@ try {
     || report.objectPosition !== "50% 0%"
     || !durationFits
   ) {
-    failures.push("the 11 111 receiver lost its native 3:2 reel geometry");
+    failures.push(
+      `the ${expected.artifactId} receiver lost its native 3:2 reel geometry`,
+    );
+  }
+
+  const chapterPaths = report.chapters.map(({ currentSrc }) => (
+    new URL(currentSrc).pathname
+  ));
+  const chapterGeometryFits = report.chapters.every((chapter) => (
+    chapter.videoWidth === 450
+    && chapter.videoHeight === 300
+    && chapter.objectFit === "contain"
+    && chapter.objectPosition === "50% 0%"
+  ));
+
+  if (
+    !report.mosaicActive
+    || !report.mosaicReady
+    || chapterPaths.join("|") !== expected.chapterPaths.join("|")
+    || !chapterGeometryFits
+  ) {
+    failures.push(
+      `the ${expected.artifactId} mosaic lost its two native 3:2 chapters`,
+    );
   }
   failures.push(...runtimeErrors);
 
   await page.screenshot({
-    path: join(artifactDirectory, "11111-hover-full.png"),
+    path: join(artifactDirectory, `${expected.artifactId}-hover-full.png`),
     fullPage: false,
   });
   await page.locator(".map-hover-preview").screenshot({
-    path: join(artifactDirectory, "11111-hover-preview.png"),
+    path: join(artifactDirectory, `${expected.artifactId}-hover-preview.png`),
   });
   await context.close();
 } finally {
@@ -174,18 +252,18 @@ try {
 }
 
 writeFileSync(
-  join(artifactDirectory, "11111-hover-report.json"),
+  join(artifactDirectory, `${expected.artifactId}-hover-report.json`),
   `${JSON.stringify({ failures, report }, null, 2)}\n`,
 );
 
 if (failures.length > 0) {
-  console.error("11 111 reel preview contract failed:");
+  console.error(`${expected.artifactId} reel preview contract failed:`);
   failures.forEach((failure) => console.error(`- ${failure}`));
   process.exit(1);
 }
 
 console.log(
-  `11 111 reel preview passed: ${report.videoWidth}×${report.videoHeight}, `
+  `${expected.artifactId} reel preview passed: ${report.videoWidth}×${report.videoHeight}, `
     + `${report.duration.toFixed(2)}s, ${expected.index}; `
     + `artifacts ${artifactDirectory}`,
 );

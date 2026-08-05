@@ -18,7 +18,7 @@ const selectedFrames = new Map([
   ["garage-webzine", 1.45],
   ["herman", 1.35],
   ["ks-fish", 1.45],
-  ["narkomfin", 4.9],
+  ["narkomfin", 0.75],
   ["shirokostup", 1.35],
   ["tarski", 1.45],
 ]);

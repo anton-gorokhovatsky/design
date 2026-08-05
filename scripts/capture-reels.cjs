@@ -33,6 +33,9 @@ const projects = {
   },
   narkomfin: {
     url: "https://narkomfin.ru/",
+    dismissSelectors: ['button[aria-label="Закрыть виджет"]'],
+    outputDuration: 13.2,
+    finalHold: 1200,
   },
   shirokostup: {
     url: "https://shirokostup.site/",
@@ -223,6 +226,61 @@ const runTarskiCaptureMotion = async (page) => {
   await page.waitForTimeout(1800);
 };
 
+const prepareNarkomfinCapture = async (page) => {
+  const modelCanvas = page.locator('[class*="Model_container"] canvas').first();
+  await modelCanvas.waitFor({ state: "visible", timeout: 20000 });
+
+  const switchToLight = page.getByRole("button", {
+    name: "Сменить тему на светлую",
+    exact: true,
+  });
+
+  if (await switchToLight.count() === 1) {
+    await switchToLight.click();
+    await page.waitForTimeout(1300);
+  }
+};
+
+const clickNarkomfinRoute = async (page, name, hold) => {
+  const route = page.getByRole("link", { name, exact: true });
+
+  if (await route.count() !== 1) {
+    throw new Error(`The Narkomfin route must be unique: ${name}`);
+  }
+
+  await route.click();
+  await page.waitForTimeout(hold);
+};
+
+const runNarkomfinCaptureMotion = async (page) => {
+  await page.waitForTimeout(550);
+  await page.mouse.move(930, 210);
+  await page.mouse.move(680, 540, { steps: 36 });
+  await page.waitForTimeout(750);
+
+  await clickNarkomfinRoute(page, "О проекте", 2400);
+  await clickNarkomfinRoute(page, "Кафе", 2400);
+  await clickNarkomfinRoute(page, "Книжный", 2400);
+
+  const themeToggle = page.locator(
+    'footer button[aria-label^="Сменить тему"]',
+  );
+
+  if (await themeToggle.count() !== 1) {
+    throw new Error("The Narkomfin theme toggle must be unique");
+  }
+
+  const themeAction = await themeToggle.getAttribute("aria-label");
+
+  if (!themeAction?.includes("темную")) {
+    throw new Error(`Expected the Narkomfin dark-theme action; found ${themeAction}`);
+  }
+
+  await themeToggle.click();
+  await page.waitForTimeout(1500);
+  await clickNarkomfinRoute(page, "О проекте", 2000);
+};
+
 const dismissVisibleOverlays = async (page, selectors = []) => {
   for (const selector of selectors) {
     const controls = page.locator(selector);
@@ -248,14 +306,7 @@ const keepOverlaysDismissed = async (page, selectors = [], duration = 7600) => {
 
 const runCaptureMotion = async (page, id, source) => {
   if (id === "narkomfin") {
-    await page.waitForTimeout(2200);
-    await page.goto("https://narkomfin.ru/calendar?sync=true", {
-      waitUntil: "domcontentloaded",
-      timeout: 12000,
-    });
-    await page.waitForLoadState("networkidle", { timeout: 9000 }).catch(() => {});
-    await page.evaluate(() => document.fonts?.ready).catch(() => {});
-    await page.waitForTimeout(4500);
+    await runNarkomfinCaptureMotion(page);
     return;
   }
 
@@ -338,6 +389,11 @@ const runCaptureMotion = async (page, id, source) => {
   await page.waitForTimeout(1000);
   await dismissVisibleOverlays(page, project.dismissSelectors);
   await page.keyboard.press("Escape").catch(() => {});
+
+  if (projectId === "narkomfin") {
+    await prepareNarkomfinCapture(page);
+  }
+
   await page.addStyleTag({
     content: [
       "html { scroll-behavior: auto !important; }",

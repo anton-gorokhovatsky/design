@@ -8,8 +8,8 @@ const reelChapterSources = new Map([
       "assets/reel-chapters/garage-site-02.mp4?v=a185b6d535dc",
   ]],
   ["narkomfin", [
-      "assets/reel-chapters/narkomfin-01.mp4?v=c1ffbee67df3",
-      "assets/reel-chapters/narkomfin-02.mp4?v=c579c62be170",
+      "assets/reel-chapters/narkomfin-01.mp4?v=8a8b8eba97b7",
+      "assets/reel-chapters/narkomfin-02.mp4?v=b0a3640e9a1e",
   ]],
   ["collection", [
       "assets/reel-chapters/garage-collection-01.mp4?v=c458378b08fa",
@@ -168,9 +168,10 @@ const mapItems = [
     timeLabel: "2023",
     href: "https://narkomfin.ru/",
     kindLabel: "ПРОЕКТ / ГРАФ «ГАРАЖА»",
-    previewVideo: "assets/reels/narkomfin.mp4?v=a6b66391c864",
+    previewVideo: "assets/reels/narkomfin.mp4?v=b03bf2a31888",
+    previewPoster: "assets/reel-posters/narkomfin.jpg?v=a612d43dea12",
     previewOrientation: "landscape",
-    previewMeta: "ДИЗАЙН И ВЕБ-РАЗРАБОТКА / 00:08",
+    previewMeta: "МОДЕЛЬ, РАЗДЕЛЫ И ТЕМЫ / 00:13",
     x: 67,
     y: 21,
     size: 25,

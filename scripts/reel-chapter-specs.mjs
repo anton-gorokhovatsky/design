@@ -16,8 +16,8 @@ export const reelChapterSpecs = [
     itemId: "narkomfin",
     master: "narkomfin.mp4",
     chapters: [
-      { label: "day", start: 0.2, duration: 3.6 },
-      { label: "night", start: 4, duration: 3.5 },
+      { label: "day-camera-routes", start: 0.2, duration: 7.4 },
+      { label: "night-roof", start: 8.6, duration: 4.4 },
     ],
   },
   {
