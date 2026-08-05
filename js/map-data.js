@@ -1,6 +1,63 @@
 // Runtime module 4/7: deterministic portfolio map data.
 const principlesSourceHref = "https://app.notion.com/p/digital-web-digital-f68fc13247614ccb9738d9a85acf29b4?source=copy_link#70405c2623e342fb98d027c8634f2207";
 
+// reel-chapter-manifest:start
+const reelChapterSources = new Map([
+  ["garage-site", [
+      "assets/reel-chapters/garage-site-01.mp4?v=d231d9f246e7",
+      "assets/reel-chapters/garage-site-02.mp4?v=a185b6d535dc",
+  ]],
+  ["narkomfin", [
+      "assets/reel-chapters/narkomfin-01.mp4?v=c1ffbee67df3",
+      "assets/reel-chapters/narkomfin-02.mp4?v=c579c62be170",
+  ]],
+  ["collection", [
+      "assets/reel-chapters/garage-collection-01.mp4?v=c458378b08fa",
+      "assets/reel-chapters/garage-collection-02.mp4?v=13b73239ecf4",
+  ]],
+  ["garage-courses", [
+      "assets/reel-chapters/garage-courses-01.mp4?v=685692edbaeb",
+      "assets/reel-chapters/garage-courses-02.mp4?v=295cc2a59b38",
+  ]],
+  ["garage-webzine", [
+      "assets/reel-chapters/garage-webzine-01.mp4?v=d57814f18c52",
+      "assets/reel-chapters/garage-webzine-02.mp4?v=76cb40d2d8f8",
+  ]],
+  ["shirokostup", [
+      "assets/reel-chapters/shirokostup-01.mp4?v=c779b5c14191",
+      "assets/reel-chapters/shirokostup-02.mp4?v=ad92c9478d0f",
+  ]],
+  ["tarski", [
+      "assets/reel-chapters/tarski-01.mp4?v=9991bad25583",
+      "assets/reel-chapters/tarski-02.mp4?v=ba7327082282",
+  ]],
+  ["herman", [
+      "assets/reel-chapters/herman-01.mp4?v=d7e102ed53ff",
+      "assets/reel-chapters/herman-02.mp4?v=64ebbffa148c",
+  ]],
+  ["dusty", [
+      "assets/reel-chapters/dusty-merch-01.mp4?v=7219d4df4177",
+      "assets/reel-chapters/dusty-merch-02.mp4?v=fb7fc0b2ed31",
+  ]],
+  ["dd-camp", [
+      "assets/reel-chapters/dusty-camp-01.mp4?v=8a8b672a45a0",
+      "assets/reel-chapters/dusty-camp-02.mp4?v=0fec39e9dd30",
+  ]],
+  ["eleven", [
+      "assets/reel-chapters/11111-01.mp4?v=1fbe0a45a894",
+      "assets/reel-chapters/11111-02.mp4?v=dc70b183f7bc",
+  ]],
+  ["ks-fish", [
+      "assets/reel-chapters/ks-fish-01.mp4?v=556fd200a8ab",
+      "assets/reel-chapters/ks-fish-02.mp4?v=b208d435b423",
+  ]],
+  ["doronin", [
+      "assets/reel-chapters/doronin-01.mp4?v=dbdbce0d7ac3",
+      "assets/reel-chapters/doronin-02.mp4?v=cd75b564305b",
+  ]],
+]);
+// reel-chapter-manifest:end
+
 const mapItems = [
   {
     id: "garage",
@@ -281,9 +338,9 @@ const mapItems = [
     timeLabel: "2026",
     href: "https://tarski.ru/",
     kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
-    previewVideo: "assets/reels/tarski.mp4?v=7c7f78ed54e4",
+    previewVideo: "assets/reels/tarski.mp4?v=8c70e36007eb",
     previewOrientation: "landscape",
-    previewMeta: "СООБЩЕСТВО И ПРОГРАММА / 00:08",
+    previewMeta: "СООБЩЕСТВО И ПРОГРАММА / 00:12",
     x: 78,
     y: 47,
     size: 23,
@@ -726,4 +783,5 @@ const mapItems = [
 export {
   mapItems,
   principlesSourceHref,
+  reelChapterSources,
 };

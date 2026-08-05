@@ -7239,6 +7239,109 @@ html[data-theme="dark"] .map-node--running .map-node__glyph {
   grid-column: 2;
 }
 
+/* Reel mosaic: one complete narrative stays dominant while two
+   source-faithful chapters loop independently at their native playback rate. */
+
+.map-hover-preview[data-reel-layout="mosaic"].has-reel-mosaic {
+  width: min(
+    clamp(540px, 56vw, 760px),
+    calc((100svh - 250px) * 1.62)
+  );
+}
+
+.map-hover-preview.has-reel-mosaic .map-hover-preview__media {
+  overflow: visible;
+  aspect-ratio: 16 / 10;
+  border-radius: 0;
+  background: transparent;
+  isolation: isolate;
+}
+
+.map-hover-preview.has-reel-mosaic
+  .map-hover-preview__media
+  > .map-hover-preview__mosaic-main {
+  position: absolute;
+  z-index: 2;
+  top: 11%;
+  left: 18%;
+  width: 64%;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  border-radius: clamp(18px, 1.5vw, 25px);
+  background: color-mix(in srgb, var(--bg) 88%, var(--ink));
+}
+
+.map-hover-preview.has-reel-mosaic
+  .map-hover-preview__mosaic-main
+  > [data-map-preview-video] {
+  border-radius: 0;
+}
+
+.map-hover-preview__mosaic {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  display: none;
+  pointer-events: none;
+}
+
+.map-hover-preview.has-reel-mosaic .map-hover-preview__mosaic {
+  display: block;
+}
+
+.map-hover-preview__mosaic-slot {
+  position: absolute;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  border-radius: clamp(13px, 1.1vw, 19px);
+  background: color-mix(in srgb, var(--bg) 88%, var(--ink));
+  opacity: 0;
+  transition: opacity 220ms var(--motion-enter);
+}
+
+.map-hover-preview.has-video.has-reel-mosaic
+  .map-hover-preview__mosaic-slot--context {
+  z-index: 1;
+  top: 0;
+  left: 0;
+  width: 35%;
+}
+
+.map-hover-preview.has-video.has-reel-mosaic
+  .map-hover-preview__mosaic-slot--detail {
+  z-index: 3;
+  right: 0;
+  bottom: 0;
+  width: 40%;
+}
+
+.map-hover-preview.has-video.has-reel-mosaic
+  .map-hover-preview__mosaic-video {
+  border-radius: 0;
+  opacity: 1 !important;
+  object-fit: contain;
+  object-position: center top;
+}
+
+.map-hover-preview.has-reel-mosaic.is-mosaic-ready
+  .map-hover-preview__mosaic-slot {
+  opacity: 0.94;
+}
+
+.map-hover-preview.has-reel-mosaic.is-mosaic-ready
+  .map-hover-preview__mosaic-slot--detail {
+  opacity: 1;
+}
+
+.map-hover-preview.has-reel-mosaic .map-hover-preview__media::after {
+  display: none;
+}
+
+.map-hover-preview.has-reel-mosaic .map-hover-preview__readout {
+  width: 64%;
+  justify-self: center;
+}
+
 /* Section changes move the map camera and tint only the field beneath the
    common material. The surfaces themselves keep the exact shared recipe. */
 

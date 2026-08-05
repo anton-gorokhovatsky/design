@@ -39,6 +39,8 @@ const projects = {
   },
   tarski: {
     url: "https://tarski.ru/",
+    outputDuration: 12.4,
+    finalHold: 2200,
   },
   herman: {
     url: "https://barberherman.ru/",
@@ -142,6 +144,85 @@ const slowScrollThroughPartners = async (page, duration = 5200) => {
   }, duration);
 };
 
+const smoothScrollTo = async (
+  page,
+  selector,
+  duration,
+  viewportOffset = 0.12,
+) => {
+  await page.evaluate(async ({ targetSelector, scrollDuration, targetOffset }) => {
+    const targetElement = document.querySelector(targetSelector);
+
+    if (!targetElement) {
+      throw new Error(`Capture target is missing: ${targetSelector}`);
+    }
+
+    const scrollRoot = document.scrollingElement || document.documentElement;
+    const start = scrollRoot.scrollTop;
+    const maximum = Math.max(0, scrollRoot.scrollHeight - innerHeight);
+    const targetRect = targetElement.getBoundingClientRect();
+    const target = Math.min(
+      maximum,
+      Math.max(0, start + targetRect.top - innerHeight * targetOffset),
+    );
+    const startedAt = Date.now();
+
+    await new Promise((resolve) => {
+      const frame = () => {
+        const elapsed = Date.now() - startedAt;
+        const progress = Math.min(1, elapsed / scrollDuration);
+        const eased = 0.5 - Math.cos(progress * Math.PI) / 2;
+        scrollRoot.scrollTop = start + (target - start) * eased;
+
+        if (progress < 1) {
+          requestAnimationFrame(frame);
+        } else {
+          resolve();
+        }
+      };
+
+      requestAnimationFrame(frame);
+    });
+  }, {
+    targetSelector: selector,
+    scrollDuration: duration,
+    targetOffset: viewportOffset,
+  });
+};
+
+const runTarskiCaptureMotion = async (page) => {
+  await page.waitForTimeout(1400);
+  await smoothScrollTo(
+    page,
+    '[data-i18n-block="focus"]',
+    2600,
+    0.14,
+  );
+  await page.waitForTimeout(700);
+
+  const themeToggle = page.locator('.main-nav [data-theme-toggle]').first();
+
+  if (await themeToggle.count() !== 1) {
+    throw new Error("The Tarski desktop theme toggle must be unique");
+  }
+
+  await themeToggle.press("Enter");
+  await page.waitForTimeout(900);
+  await smoothScrollTo(page, "#artists", 2300, 0.06);
+  await page.waitForTimeout(700);
+
+  const artistLink = page.locator(
+    '#artists-cloud [data-artist-key="anastasia"]',
+  );
+
+  if (await artistLink.count() !== 1) {
+    throw new Error("The Tarski artist link must be unique");
+  }
+
+  await artistLink.press("Enter");
+  await page.waitForTimeout(1800);
+};
+
 const dismissVisibleOverlays = async (page, selectors = []) => {
   for (const selector of selectors) {
     const controls = page.locator(selector);
@@ -204,6 +285,11 @@ const runCaptureMotion = async (page, id, source) => {
     return;
   }
 
+  if (id === "tarski") {
+    await runTarskiCaptureMotion(page);
+    return;
+  }
+
   await Promise.all([
     smoothScroll(page),
     keepOverlaysDismissed(page, source.dismissSelectors),
@@ -232,6 +318,13 @@ const runCaptureMotion = async (page, id, source) => {
       size: sourceViewport,
     },
   });
+
+  if (projectId === "tarski") {
+    await context.addInitScript(() => {
+      window.localStorage.setItem("tarski-theme", "light");
+    });
+  }
+
   const page = await context.newPage();
   const recordingStartedAt = Date.now();
   const video = page.video();

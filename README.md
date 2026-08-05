@@ -81,7 +81,10 @@ route.
   inner routes, theme changes, or distinctive interface controls. A longer
   editorial pass is allowed when a real interaction needs legible dwell time;
   the current `11 111` reel uses twelve seconds for its hero, menu and partner
-  chapter. Nodes without recorded media do not open an empty or decorative
+  chapter. Tarski uses 12.4 seconds for its light editorial route, a real theme
+  switch, the dark artist network, and an artist dossier; its secondary loops
+  keep one light editorial chapter and one dark network/dossier chapter.
+  Nodes without recorded media do not open an empty or decorative
   media receiver.
 - A site reel is a window, not a crop: all 13 current sources are desktop
   websites, so each uses square pixels and is captured from a `1200×800`
@@ -99,6 +102,17 @@ route.
   Playwright, Chrome, and FFmpeg are required) and run
   `node scripts/check-reels.mjs` after assembling or replacing reels. Set
   `PORTFOLIO_CAPTURE_BROWSER` when Chrome is outside its default macOS path.
+- Desktop hover and keyboard-focus previews keep the complete master dominant
+  and add exactly two independently looping chapters selected for that
+  project's own editorial rhythm. Chapters never change `playbackRate`:
+  perceived tempo comes from their source-faithful ranges and different loop
+  lengths. They are reproducible 450×300 H.264 derivatives of the 3:2 masters,
+  not replacement reels. Use `?reel=mosaic&preview=<project-id>` to hold a
+  chosen preview open for review, or `?reel=single` to inspect the master-only
+  fallback. Regenerate every chapter with
+  `node scripts/capture-reel-chapters.mjs`, or one pair with
+  `node scripts/capture-reel-chapters.mjs <project-id>`; the command also
+  refreshes all 26 content hashes in the managed `map-data.js` manifest.
 - Touch devices keep the direct node-to-inspector interaction and do not render
   hover-only media.
 - Long-form content remains inside the same coordinate system. Projects,

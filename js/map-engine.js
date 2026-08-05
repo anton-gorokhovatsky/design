@@ -3,6 +3,7 @@ import { trackPortfolioEvent } from "./analytics.js";
 import {
   mapItems,
   principlesSourceHref,
+  reelChapterSources,
 } from "./map-data.js";
 import {
   reducedMotion,
@@ -26,6 +27,7 @@ const mapInspector = document.querySelector("[data-map-inspector]");
 const inspectorClose = document.querySelector("[data-close-inspector]");
 const mapPreview = document.querySelector("[data-map-preview]");
 const mapPreviewVideo = document.querySelector("[data-map-preview-video]");
+const mapPreviewMedia = mapPreview?.querySelector(".map-hover-preview__media");
 const mapPreviewIndex = document.querySelector("[data-map-preview-index]");
 const mapPreviewTitle = document.querySelector("[data-map-preview-title]");
 const mapPreviewMeta = document.querySelector("[data-map-preview-meta]");
@@ -45,6 +47,16 @@ const observationStatus = document.querySelector("[data-observation-status]");
 const reelItems = mapItems.filter((item) => item.previewVideo);
 const hoverCapable = window.matchMedia("(hover: hover) and (pointer: fine)");
 const compactMapViewport = window.matchMedia("(max-width: 680px)");
+const reelMosaicQuery = new URLSearchParams(window.location.search);
+const reelMosaicMode = reelMosaicQuery.get("reel");
+const reelMosaicEnabled = reelMosaicMode !== "single";
+const reelMosaicReviewActive = ["mosaic", "eleven-mosaic"]
+  .includes(reelMosaicMode) || reelMosaicQuery.has("preview");
+const reelMosaicInitialId = reelMosaicMode === "eleven-mosaic"
+  ? "eleven"
+  : reelMosaicQuery.get("preview") || "eleven";
+const reelMosaicSlots = ["context", "detail"];
+const reelMosaicVideos = [];
 const mapButtons = new Map();
 const mapLabels = new Map();
 let selectedMapId = null;
@@ -440,6 +452,107 @@ const getDirectionalMapItem = (id, key) => {
     .sort((a, b) => a.score - b.score)[0]?.item || null;
 };
 
+if (
+  reelMosaicEnabled
+  && mapPreview
+  && mapPreviewMedia
+  && mapPreviewVideo
+) {
+  const mainFrame = document.createElement("div");
+  const mosaic = document.createElement("div");
+
+  mainFrame.className = "map-hover-preview__mosaic-main";
+  mosaic.className = "map-hover-preview__mosaic";
+  mosaic.setAttribute("aria-hidden", "true");
+  mapPreview.dataset.reelLayout = "mosaic";
+  mapPreviewMedia.insertBefore(mainFrame, mapPreviewVideo);
+  mainFrame.append(mapPreviewVideo);
+
+  reelMosaicSlots.forEach((slot) => {
+    const slotFrame = document.createElement("div");
+    const video = document.createElement("video");
+
+    slotFrame.className = `map-hover-preview__mosaic-slot map-hover-preview__mosaic-slot--${slot}`;
+    video.className = `map-hover-preview__mosaic-video map-hover-preview__mosaic-video--${slot}`;
+    video.muted = true;
+    video.playsInline = true;
+    video.preload = "auto";
+    video.loop = true;
+    video.tabIndex = -1;
+
+    video.addEventListener("canplay", () => {
+      video.dataset.ready = "true";
+
+      if (
+        mapPreview.classList.contains("has-reel-mosaic")
+        && reelMosaicVideos.every(
+          (candidate) => candidate.dataset.ready === "true",
+        )
+      ) {
+        mapPreview.classList.add("is-mosaic-ready");
+      }
+    });
+
+    reelMosaicVideos.push(video);
+    slotFrame.append(video);
+    mosaic.append(slotFrame);
+  });
+
+  mapPreviewMedia.append(mosaic);
+}
+
+const pauseReelMosaic = () => {
+  reelMosaicVideos.forEach((video) => video.pause());
+};
+
+const showReelMosaic = (item, posterPath) => {
+  const chapterSources = reelChapterSources.get(item.id) ?? [];
+  const mosaicActive = reelMosaicEnabled
+    && hoverCapable.matches
+    && !compactMapViewport.matches
+    && chapterSources.length === reelMosaicVideos.length;
+  const sourceChanged = reelMosaicVideos.some(
+    (video) => video.dataset.previewId !== item.id,
+  );
+
+  mapPreview?.classList.toggle("has-reel-mosaic", mosaicActive);
+
+  if (!mosaicActive) {
+    mapPreview?.classList.remove("is-mosaic-ready");
+    pauseReelMosaic();
+    return;
+  }
+
+  if (sourceChanged) {
+    mapPreview?.classList.remove("is-mosaic-ready");
+  }
+
+  reelMosaicVideos.forEach((video, index) => {
+    const chapterSource = chapterSources[index];
+
+    if (
+      video.dataset.previewId !== item.id
+      || video.dataset.chapterSource !== chapterSource
+    ) {
+      delete video.dataset.ready;
+      video.dataset.previewId = item.id;
+      video.dataset.chapterSource = chapterSource;
+      video.poster = posterPath;
+      video.src = chapterSource;
+    } else if (video.readyState >= 1) {
+      video.currentTime = 0;
+    }
+
+    if (reducedMotion.matches) {
+      video.pause();
+    } else {
+      video.play().catch(() => {
+        // A segment can remain paused when autoplay is blocked.
+      });
+    }
+  });
+};
+
 const hideMapPreview = ({ immediate = false } = {}) => {
   window.clearTimeout(previewHideTimer);
   window.cancelAnimationFrame(previewShowFrame);
@@ -449,6 +562,7 @@ const hideMapPreview = ({ immediate = false } = {}) => {
     mapPreview?.classList.remove("is-visible");
     mapPreview?.setAttribute("aria-hidden", "true");
     mapPreviewVideo?.pause();
+    pauseReelMosaic();
     activePreviewItem = null;
   };
 
@@ -500,6 +614,8 @@ const showMapPreview = (item) => {
       .split("?")[0]
       .replace("assets/reels/", "assets/reel-posters/")
       .replace(/\.mp4$/i, ".jpg");
+
+  showReelMosaic(item, posterPath);
 
   if (mapPreviewVideo.dataset.posterId !== item.id) {
     mapPreviewVideo.dataset.posterId = item.id;
@@ -582,9 +698,15 @@ reducedMotion.addEventListener?.("change", () => {
 
   if (reducedMotion.matches) {
     mapPreviewVideo.pause();
+    pauseReelMosaic();
   } else if (mapPreview?.classList.contains("is-visible")) {
     mapPreviewVideo.play().catch(() => {
       // The preview can remain paused when autoplay is blocked.
+    });
+    reelMosaicVideos.forEach((video) => {
+      video.play().catch(() => {
+        // A segment can remain paused when autoplay is blocked.
+      });
     });
   }
 });
@@ -925,6 +1047,20 @@ if (mapNodesRoot) {
     mapLabels.forEach((label) => label.classList.remove("is-visible"));
     hideMapPreview({ immediate: true });
   });
+}
+
+if (
+  reelMosaicReviewActive
+  && hoverCapable.matches
+  && !compactMapViewport.matches
+) {
+  const initialMosaicItem = mapItems.find(
+    (item) => item.id === reelMosaicInitialId && reelChapterSources.has(item.id),
+  ) ?? mapItems.find((item) => item.id === "eleven");
+
+  if (initialMosaicItem) {
+    window.requestAnimationFrame(() => showMapPreview(initialMosaicItem));
+  }
 }
 
 if (mapLinksRoot) {
@@ -1715,6 +1851,7 @@ document.addEventListener("keydown", (event) => {
 
 const pauseMapPreviewPlayback = () => {
   mapPreviewVideo?.pause();
+  pauseReelMosaic();
 };
 
 const requestMapLinksRender = () => {

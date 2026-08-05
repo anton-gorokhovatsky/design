@@ -3,12 +3,18 @@ import { createHash } from "node:crypto";
 import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  getReelChapterFileName,
+  reelChapterFrame,
+  reelChapterSpecs,
+} from "./reel-chapter-specs.mjs";
 import { readRuntimeSource } from "./runtime-files.mjs";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(scriptDirectory, "..");
 const reelsDirectory = join(projectRoot, "assets", "reels");
 const postersDirectory = join(projectRoot, "assets", "reel-posters");
+const chaptersDirectory = join(projectRoot, "assets", "reel-chapters");
 const reelNames = readdirSync(reelsDirectory)
   .filter((name) => name.endsWith(".mp4"))
   .sort();
@@ -42,6 +48,7 @@ const reelSpecs = new Map(
 );
 reelSpecs.get("11111.mp4").sourceViewport = "1350x900";
 reelSpecs.get("11111.mp4").duration = { min: 11.5, max: 12.1 };
+reelSpecs.get("tarski.mp4").duration = { min: 12.1, max: 12.7 };
 
 const expectedReelNames = [...reelSpecs.keys()].sort();
 const posterNames = readdirSync(postersDirectory)
@@ -50,6 +57,16 @@ const posterNames = readdirSync(postersDirectory)
 const expectedPosterNames = expectedReelNames.map((name) => (
   name.replace(/\.mp4$/i, ".jpg")
 ));
+const chapterNames = readdirSync(chaptersDirectory)
+  .filter((name) => name.endsWith(".mp4"))
+  .sort();
+const chapterSpecsByName = new Map(reelChapterSpecs.flatMap((spec) => (
+  spec.chapters.map((chapter, chapterIndex) => [
+    getReelChapterFileName(spec, chapterIndex),
+    { chapter, spec },
+  ])
+)));
+const expectedChapterNames = [...chapterSpecsByName.keys()].sort();
 
 if (JSON.stringify(reelNames) !== JSON.stringify(expectedReelNames)) {
   failures.push(
@@ -60,6 +77,12 @@ if (JSON.stringify(reelNames) !== JSON.stringify(expectedReelNames)) {
 if (JSON.stringify(posterNames) !== JSON.stringify(expectedPosterNames)) {
   failures.push(
     `posters: expected ${expectedPosterNames.join(", ")}; found ${posterNames.join(", ")}`,
+  );
+}
+
+if (JSON.stringify(chapterNames) !== JSON.stringify(expectedChapterNames)) {
+  failures.push(
+    `chapters: expected ${expectedChapterNames.join(", ")}; found ${chapterNames.join(", ")}`,
   );
 }
 
@@ -174,6 +197,94 @@ for (const reelName of reelNames) {
   }
 }
 
+for (const chapterName of chapterNames) {
+  const chapterPath = join(chaptersDirectory, chapterName);
+  const expected = chapterSpecsByName.get(chapterName);
+  let metadata;
+  let formatMetadata;
+
+  if (!expected) {
+    continue;
+  }
+
+  try {
+    const probe = JSON.parse(
+      execFileSync(
+        "ffprobe",
+        [
+          "-v",
+          "error",
+          "-select_streams",
+          "v:0",
+          "-show_entries",
+          "stream=codec_name,pix_fmt,width,height,sample_aspect_ratio,display_aspect_ratio,duration:format_tags=comment",
+          "-of",
+          "json",
+          chapterPath,
+        ],
+        { encoding: "utf8" },
+      ),
+    );
+    metadata = probe.streams?.[0];
+    formatMetadata = probe.format;
+  } catch {
+    failures.push(`${chapterName}: ffprobe could not read the chapter`);
+    continue;
+  }
+
+  if (!metadata) {
+    failures.push(`${chapterName}: no video stream`);
+    continue;
+  }
+
+  const duration = Number(metadata.duration);
+  const expectedEnd = expected.chapter.start + expected.chapter.duration;
+  const fitComment = formatMetadata?.tags?.comment ?? "";
+
+  if (
+    metadata.width !== reelChapterFrame.width
+    || metadata.height !== reelChapterFrame.height
+  ) {
+    failures.push(
+      `${chapterName}: coded size must be ${reelChapterFrame.width}×${reelChapterFrame.height}`,
+    );
+  }
+
+  if (
+    metadata.sample_aspect_ratio !== "1:1"
+    || metadata.display_aspect_ratio !== "3:2"
+  ) {
+    failures.push(`${chapterName}: chapter geometry must remain square-pixel 3:2`);
+  }
+
+  if (
+    metadata.codec_name !== "h264"
+    || !["yuv420p", "yuvj420p"].includes(metadata.pix_fmt)
+  ) {
+    failures.push(`${chapterName}: chapter must remain H.264 4:2:0`);
+  }
+
+  if (
+    !Number.isFinite(duration)
+    || Math.abs(duration - expected.chapter.duration) > 0.12
+  ) {
+    failures.push(
+      `${chapterName}: duration must stay near ${expected.chapter.duration.toFixed(1)} seconds`,
+    );
+  }
+
+  if (
+    !fitComment.includes("source-fit=native-chapter")
+    || !fitComment.includes(`source-master=${expected.spec.master}`)
+    || !fitComment.includes(
+      `source-range=${expected.chapter.start.toFixed(1)}-${expectedEnd.toFixed(1)}`,
+    )
+    || !fitComment.includes("source-dar=3:2")
+  ) {
+    failures.push(`${chapterName}: metadata must identify its curated master range`);
+  }
+}
+
 const styles = readFileSync(join(projectRoot, "styles.css"), "utf8");
 const scriptSource = readRuntimeSource(projectRoot);
 const landscapeConfigurationCount = (
@@ -187,6 +298,17 @@ const landscapeReferences = [
   name: match[1],
   version: match[2],
 }));
+const chapterReferences = [
+  ...scriptSource.matchAll(
+    /assets\/reel-chapters\/([^"?]+\.mp4)\?v=([a-f0-9]{12})/g,
+  ),
+].map((match) => ({
+  name: match[1],
+  version: match[2],
+}));
+const chapterReferenceNames = chapterReferences
+  .map(({ name }) => name)
+  .sort();
 const landscapeReferenceNames = landscapeReferences
   .map(({ name }) => name)
   .sort();
@@ -206,6 +328,24 @@ const landscapeMediaRule = finalViewerSource.match(
 )?.[1] ?? "";
 const finalVideoRule = finalViewerSource.match(
   /\.map-hover-preview\.has-video\s+\.map-hover-preview__media video\s*\{([^}]*)\}/,
+)?.[1] ?? "";
+
+if (
+  !scriptSource.includes('const reelMosaicEnabled = reelMosaicMode !== "single";')
+  || !scriptSource.includes('mapPreview.dataset.reelLayout = "mosaic";')
+) {
+  failures.push(
+    "receiver: the reel mosaic must be the default desktop layout with an explicit single-reel fallback",
+  );
+}
+const mosaicMainRule = styles.match(
+  /> \.map-hover-preview__mosaic-main\s*\{([^}]*)\}/,
+)?.[1] ?? "";
+const mosaicSlotRule = styles.match(
+  /\.map-hover-preview__mosaic-slot\s*\{([^}]*)\}/,
+)?.[1] ?? "";
+const mosaicVideoRule = styles.match(
+  /\.map-hover-preview\.has-video\.has-reel-mosaic\s+\.map-hover-preview__mosaic-video\s*\{([^}]*)\}/,
 )?.[1] ?? "";
 
 if (!/object-fit:\s*contain/.test(videoRules)) {
@@ -235,6 +375,30 @@ if (
 for (const reference of landscapeReferences) {
   const expectedVersion = createHash("sha256")
     .update(readFileSync(join(reelsDirectory, reference.name)))
+    .digest("hex")
+    .slice(0, 12);
+
+  if (reference.version !== expectedVersion) {
+    failures.push(
+      `${reference.name}: cache key ${reference.version} does not match `
+        + `content hash ${expectedVersion}`,
+    );
+  }
+}
+
+if (
+  chapterReferences.length !== expectedChapterNames.length
+  || JSON.stringify(chapterReferenceNames) !== JSON.stringify(expectedChapterNames)
+) {
+  failures.push(
+    `configuration: expected ${expectedChapterNames.length} content-versioned `
+      + `reel chapter references; found ${chapterReferences.length}`,
+  );
+}
+
+for (const reference of chapterReferences) {
+  const expectedVersion = createHash("sha256")
+    .update(readFileSync(join(chaptersDirectory, reference.name)))
     .digest("hex")
     .slice(0, 12);
 
@@ -278,11 +442,30 @@ if (
   failures.push("receiver: the video itself must not receive a clipping radius");
 }
 
+if (
+  !/position:\s*absolute/.test(mosaicMainRule)
+  || !/overflow:\s*hidden/.test(mosaicMainRule)
+  || !/aspect-ratio:\s*3\s*\/\s*2/.test(mosaicMainRule)
+  || !/border-radius:\s*clamp/.test(mosaicMainRule)
+  || !/overflow:\s*hidden/.test(mosaicSlotRule)
+  || !/aspect-ratio:\s*3\s*\/\s*2/.test(mosaicSlotRule)
+  || !/border-radius:\s*clamp/.test(mosaicSlotRule)
+  || !/object-fit:\s*contain/.test(mosaicVideoRule)
+  || !/object-position:\s*center top/.test(mosaicVideoRule)
+  || !/border-radius:\s*0/.test(mosaicVideoRule)
+) {
+  failures.push(
+    "receiver: mosaic wrappers must own 3:2 clipping while videos remain source-faithful",
+  );
+}
+
 if (failures.length) {
   console.error(`Reel check failed:\n- ${failures.join("\n- ")}`);
   process.exit(1);
 }
 
 console.log(
-  `Reel check passed: ${reelNames.length} native desktop captures and ${posterNames.length} selected 3:2 posters.`,
+  `Reel check passed: ${reelNames.length} native desktop captures, `
+    + `${posterNames.length} selected 3:2 posters, and `
+    + `${chapterNames.length} curated reel chapters.`,
 );
