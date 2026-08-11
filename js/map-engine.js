@@ -828,7 +828,8 @@ const selectMapItem = (
     if (itemHref) {
       mapLink.hidden = false;
       mapLink.href = itemHref;
-      mapLink.textContent = item.kind === "practice" ? "ИСХОДНИК В\u00a0NOTION" : "ОТКРЫТЬ";
+      mapLink.textContent = item.linkLabel
+        || (item.kind === "practice" ? "ИСХОДНИК В\u00a0NOTION" : "ОТКРЫТЬ");
       mapLink.classList.remove("is-disabled");
       mapLink.removeAttribute("aria-disabled");
       mapLink.target = "_blank";

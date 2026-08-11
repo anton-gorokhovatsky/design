@@ -1094,6 +1094,33 @@ const auditBrowser = async (client, origin) => {
   await saveScreenshot(client, "desktop-ilmix-copy");
   await saveElementScreenshot(client, "crop-desktop-ilmix-copy", ".map-inspector");
 
+  await navigate(client, `${origin}/?qa=ui-contracts-food-forks&point=food#map`);
+  const foodForks = await evaluate(client, `(() => {
+    const link = document.querySelector("[data-map-link]");
+    return {
+      description: (document.querySelector("[data-map-description]")?.textContent || "")
+        .replace(/\\s+/g, " ")
+        .trim(),
+      meta: document.querySelector("[data-map-meta]")?.textContent || "",
+      linkHidden: link?.hidden,
+      linkLabel: link?.textContent || "",
+      linkHref: link?.href || "",
+    };
+  })()`);
+  if (
+    !foodForks.description.includes("заметить человека")
+    || !foodForks.description.includes("внимание → ремесло → неожиданность → эмоция")
+    || foodForks.description.includes("Чикаго")
+    || foodForks.meta !== "ВКУС / СЕРВИС / ДЕТАЛИ"
+    || foodForks.linkHidden
+    || foodForks.linkLabel !== "СМОТРЕТЬ ФРАГМЕНТ"
+    || !foodForks.linkHref.includes("/the-bear/video-extras/video/64beaaa830c49e0001e758d8")
+  ) {
+    fail("food-forks: the accepted service reference or official scene link regressed.", foodForks);
+  }
+  await saveScreenshot(client, "desktop-food-forks");
+  await saveElementScreenshot(client, "crop-desktop-food-forks", ".map-inspector");
+
   await navigate(client, `${origin}/?qa=ui-contracts-filter-hover&filter=personal#map`);
   await evaluate(client, `(() => {
     document.querySelector('[data-map-id="wave"]')

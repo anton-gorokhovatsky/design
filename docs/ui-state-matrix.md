@@ -41,6 +41,7 @@
 | `map-idle` | Чистая загрузка без выбора | Имя и роль читаются как тихое авторство на desktop; consent скрыт; карта и оси не конфликтуют; `МАРШРУТ / 60 СЕК` повторяет границы `.map-axis-label`, не объектных подписей |
 | `garage-selected` | `?point=garage` | Один selected state, inspector в viewport, ссылка/close и возврат focus |
 | `running-selected` | Активировать `БЕГ` | Dusk-токен, южное положение, доступный readout и отсутствие перекрытия |
+| `food-forks` | `?point=food#map` | Текст связывает еду с сервисом и вниманием к человеку; ссылка ведёт на официальный фрагмент `Forks`, без упоминания Чикаго и без стороннего autoplay-медиа |
 | `project-selected` | Выбрать независимый проект | Контракт выдерживает разные title/meta/description |
 | `project-reel` | Hover/focus проекта на desktop | Receiver `3:2`, `contain`, отдельный material-readout, без chrome и crop |
 | `filter-*` | Переключить пять фильтров | Типы не смещаются, выбранная точка и реальные связи сохраняются |
@@ -74,6 +75,7 @@
 | `console-display` | Панель и analytics action | Общий ритм, material, focus, состояние privacy |
 | `console-command` | Nav + поиск | Оси знаков, input, submit и keyboard results |
 | `map-annotations` | Оси, origin, Garage, running | Линии под material-подписями, отступы и оптические центры |
+| `map-inspector` | Garage, Ilmix, `ЕДА`, длинный принцип | Иерархия kind/title/meta/body/action, переносы, material и оптический ритм коротких и длинных карточек |
 | `content-work` | Intro, короткая и длинная карточки | Number/title/role/domain, переносы и material |
 | `content-approach` | Intro + четыре карточки | Meta/title/body, sticky layers и целые формы |
 | `content-contact` | Полная карточка | Два действия, resume links и reflow |

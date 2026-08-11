@@ -612,3 +612,11 @@ names и 31 их использование.
 | Навигация и метаданные | Mobile `390×844` `#work`; шесть `/work/<id>/`; share `1200×630` | «Недавние проекты» переименованы в «Избранные» в панели, поиске и no-script маршруте. Primary, Open Graph и Twitter descriptions синхронизированы; шесть JPEG пересняты с ролью «ДИЗАЙН-ИНЖЕНЕР / ПРОДУКТ / ВЕБ» |
 | Переносы и оптика | Chromium `1280×720` Garage; mobile `390×844` Garage, Tarski, длинный принцип «Быстро найти подход» и «Избранные проекты» | Horizontal overflow — `0`; инспекторы и заголовки не обрезаны. В трёх evidence-строках подпись оптически ниже начала основного текста на `3 px` desktop и примерно `2 px` mobile, как в принятом общем контракте |
 | Контракты | `audit-project`, assets, CSS/performance/publication, Chromium UI, WebKit, 13 masters / 26 chapters, cache и whitespace | Audit: `0` errors / `0` warnings; assets: `68` файлов / `38.7 MiB`; CSS: `199.3 KiB`; Chromium UI после обновления поискового запроса — PASS; WebKit — `4` viewport/theme states, `0` failures; шоурилы — PASS |
+
+## Локальный проход 2026-08-11 — «Медведь»: сервис вместо пересказа
+
+| Семейство | Реальные состояния | Результат |
+|---|---|---|
+| Текст `ЕДА` | Chromium `1280×720`, light, `?point=food#map`; полный кадр и крупный inspector | Убраны Чикаго и декларативное «люблю сериал». Личный интерес сформулирован через сервис: заметить человека, сделать для него больше ожидаемого и связать внимание, ремесло, неожиданность и эмоцию |
+| Ссылка | Та же карточка, pointer и accessibility tree | Действие `СМОТРЕТЬ ФРАГМЕНТ` ведёт на официальный ролик FX `Richie Steps Up at the Michelin Star Restaurant` из `Forks`. Случайный внешний GIF и сторонний autoplay в карточку не добавлены |
+| Контракт | Новый `food-forks` сценарий в Chromium; полный WebKit gate | Проверяются принятый текст, отсутствие «Чикаго», мета `ВКУС / СЕРВИС / ДЕТАЛИ`, подпись и точный URL действия. Chromium UI — PASS; WebKit — `4` viewport/theme states, `0 failures`; horizontal overflow и browser errors — `0` |
