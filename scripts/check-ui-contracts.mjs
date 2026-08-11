@@ -1073,6 +1073,10 @@ const auditBrowser = async (client, origin) => {
       roleHidden: role?.closest("div")?.hidden,
       result: result?.textContent || "",
       resultHidden: result?.closest("div")?.hidden,
+      resultDisplay: result?.closest("div")
+        ? getComputedStyle(result.closest("div")).display
+        : "",
+      meta: document.querySelector("[data-map-meta]")?.textContent || "",
     };
   })()`);
   if (
@@ -1081,7 +1085,9 @@ const auditBrowser = async (client, origin) => {
     || ilmixCopy.taskHidden
     || ilmixCopy.roleHidden
     || !ilmixCopy.resultHidden
+    || ilmixCopy.resultDisplay !== "none"
     || ilmixCopy.result
+    || !ilmixCopy.meta.startsWith("5 ЛЕТ")
   ) {
     fail("ilmix-copy: the accepted hh copy or partial evidence rows regressed.", ilmixCopy);
   }

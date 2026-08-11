@@ -7966,6 +7966,7 @@ html[data-theme="dark"] .map-node--running .map-node__glyph {
 }
 
 .map-evidence[hidden],
+.map-evidence > div[hidden],
 .observation-controls[hidden] {
   display: none;
 }
