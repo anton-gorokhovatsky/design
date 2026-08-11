@@ -87,6 +87,11 @@ route.
   Narkomfin uses 13.2 seconds to make the live 3D building legible across its
   initial, roof, cafe, and bookshop cameras before a real night-theme switch;
   its secondary loops separate the day camera route from the night roof view.
+  Garage Webzine uses 12.4 seconds for its light cover and contents, a real
+  article route, and the same article in the site's dark theme. Shirokostup
+  uses 12.8 seconds for a calm light hero, the complete Index, its real dark
+  appearance state, and one measured move into Selected work. Their chapter
+  pairs keep those light and dark editorial states independently readable.
   Nodes without recorded media do not open an empty or decorative
   media receiver.
 - A site reel is a window, not a crop: all 13 current sources are desktop

@@ -30,6 +30,8 @@ const projects = {
   },
   "garage-webzine": {
     url: "https://non-human-animals.garage.digital/index.html",
+    outputDuration: 12.4,
+    finalHold: 1400,
   },
   narkomfin: {
     url: "https://narkomfin.ru/",
@@ -39,6 +41,8 @@ const projects = {
   },
   shirokostup: {
     url: "https://shirokostup.site/",
+    outputDuration: 12.8,
+    finalHold: 1800,
   },
   tarski: {
     url: "https://tarski.ru/",
@@ -193,6 +197,191 @@ const smoothScrollTo = async (
   });
 };
 
+const smoothScrollToLocator = async (
+  locator,
+  duration,
+  viewportOffset = 0.12,
+) => {
+  await locator.evaluate(async (targetElement, { scrollDuration, targetOffset }) => {
+    const scrollRoot = document.scrollingElement || document.documentElement;
+    const start = scrollRoot.scrollTop;
+    const maximum = Math.max(0, scrollRoot.scrollHeight - innerHeight);
+    const targetRect = targetElement.getBoundingClientRect();
+    const target = Math.min(
+      maximum,
+      Math.max(0, start + targetRect.top - innerHeight * targetOffset),
+    );
+    const startedAt = Date.now();
+
+    await new Promise((resolve) => {
+      const frame = () => {
+        const elapsed = Date.now() - startedAt;
+        const progress = Math.min(1, elapsed / scrollDuration);
+        const eased = 0.5 - Math.cos(progress * Math.PI) / 2;
+        scrollRoot.scrollTop = start + (target - start) * eased;
+
+        if (progress < 1) {
+          requestAnimationFrame(frame);
+        } else {
+          resolve();
+        }
+      };
+
+      requestAnimationFrame(frame);
+    });
+  }, {
+    scrollDuration: duration,
+    targetOffset: viewportOffset,
+  });
+};
+
+const smoothScrollBy = async (page, distance, duration) => {
+  await page.evaluate(async ({ scrollDistance, scrollDuration }) => {
+    const scrollRoot = document.scrollingElement || document.documentElement;
+    const start = scrollRoot.scrollTop;
+    const maximum = Math.max(0, scrollRoot.scrollHeight - innerHeight);
+    const target = Math.min(maximum, Math.max(0, start + scrollDistance));
+    const startedAt = Date.now();
+
+    await new Promise((resolve) => {
+      const frame = () => {
+        const elapsed = Date.now() - startedAt;
+        const progress = Math.min(1, elapsed / scrollDuration);
+        const eased = 0.5 - Math.cos(progress * Math.PI) / 2;
+        scrollRoot.scrollTop = start + (target - start) * eased;
+
+        if (progress < 1) {
+          requestAnimationFrame(frame);
+        } else {
+          resolve();
+        }
+      };
+
+      requestAnimationFrame(frame);
+    });
+  }, {
+    scrollDistance: distance,
+    scrollDuration: duration,
+  });
+};
+
+const applyCaptureStyles = async (page) => {
+  await page.addStyleTag({
+    content: [
+      "html { scroll-behavior: auto !important; }",
+      "* { caret-color: transparent !important; }",
+      "::-webkit-scrollbar { width: 0 !important; height: 0 !important; }",
+    ].join("\n"),
+  }).catch(() => {});
+};
+
+const activateControlWithoutScrolling = async (locator, label) => {
+  if (await locator.count() !== 1) {
+    throw new Error(`${label} must be unique`);
+  }
+
+  await locator.evaluate((control) => control.click());
+};
+
+const prepareGarageWebzineCapture = async (page) => {
+  await activateControlWithoutScrolling(
+    page.locator("#light-theme"),
+    "The Garage Webzine light-theme control",
+  );
+  await page.waitForTimeout(500);
+
+  const theme = await page.locator("body").getAttribute("class");
+  if (!theme?.includes("light-theme")) {
+    throw new Error(`Expected the Garage Webzine light theme; found ${theme}`);
+  }
+};
+
+const runGarageWebzineCaptureMotion = async (page) => {
+  await page.waitForTimeout(1500);
+
+  const contentsHeading = page.getByText("Оглавление", { exact: true }).first();
+  if (await contentsHeading.count() !== 1) {
+    throw new Error("The Garage Webzine contents heading is missing");
+  }
+
+  await smoothScrollToLocator(contentsHeading, 2400, 0.08);
+  await page.waitForTimeout(800);
+
+  const articleLink = page.getByRole("link", {
+    name: "Донна Харауэй и теория собаки",
+    exact: true,
+  }).first();
+  if (await articleLink.count() !== 1) {
+    throw new Error("The Garage Webzine Donna Haraway article link is missing");
+  }
+
+  await articleLink.click();
+  await page.waitForLoadState("domcontentloaded", { timeout: 15000 });
+  await page.evaluate(() => document.fonts?.ready).catch(() => {});
+  await applyCaptureStyles(page);
+  await page.waitForTimeout(1000);
+
+  await activateControlWithoutScrolling(
+    page.locator("#dark-theme"),
+    "The Garage Webzine dark-theme control",
+  );
+  await page.waitForTimeout(500);
+
+  const theme = await page.locator("body").getAttribute("class");
+  if (!theme?.includes("dark-theme")) {
+    throw new Error(`Expected the Garage Webzine dark theme; found ${theme}`);
+  }
+
+  await page.waitForTimeout(2000);
+  await smoothScrollBy(page, 480, 2000);
+  await page.waitForTimeout(600);
+};
+
+const prepareShirokostupCapture = async (page) => {
+  await activateControlWithoutScrolling(
+    page.locator('button[title="Use light theme"]'),
+    "The Shirokostup light-theme control",
+  );
+  await page.waitForTimeout(600);
+
+  const theme = await page.locator("html").getAttribute("data-theme");
+  if (theme !== "light") {
+    throw new Error(`Expected the Shirokostup light theme; found ${theme}`);
+  }
+};
+
+const runShirokostupCaptureMotion = async (page) => {
+  await page.waitForTimeout(1800);
+
+  const indexButton = page.getByRole("button", { name: "Index", exact: true });
+  if (await indexButton.count() !== 1) {
+    throw new Error("The Shirokostup Index button must be unique");
+  }
+
+  await indexButton.click();
+  await page.waitForTimeout(2200);
+
+  const darkTheme = page.getByRole("button", { name: "Dark", exact: true });
+  if (await darkTheme.count() !== 1) {
+    throw new Error("The Shirokostup dark-theme control must be unique");
+  }
+
+  await darkTheme.click();
+  await page.waitForTimeout(2400);
+
+  const selectedWork = page.getByRole("link", {
+    name: "02 Selected work",
+    exact: true,
+  });
+  if (await selectedWork.count() !== 1) {
+    throw new Error("The Shirokostup Selected work link must be unique");
+  }
+
+  await selectedWork.click();
+  await page.waitForTimeout(2200);
+  await smoothScrollBy(page, 440, 2200);
+};
+
 const runTarskiCaptureMotion = async (page) => {
   await page.waitForTimeout(1400);
   await smoothScrollTo(
@@ -305,6 +494,11 @@ const keepOverlaysDismissed = async (page, selectors = [], duration = 7600) => {
 };
 
 const runCaptureMotion = async (page, id, source) => {
+  if (id === "garage-webzine") {
+    await runGarageWebzineCaptureMotion(page);
+    return;
+  }
+
   if (id === "narkomfin") {
     await runNarkomfinCaptureMotion(page);
     return;
@@ -338,6 +532,11 @@ const runCaptureMotion = async (page, id, source) => {
 
   if (id === "tarski") {
     await runTarskiCaptureMotion(page);
+    return;
+  }
+
+  if (id === "shirokostup") {
+    await runShirokostupCaptureMotion(page);
     return;
   }
 
@@ -394,13 +593,15 @@ const runCaptureMotion = async (page, id, source) => {
     await prepareNarkomfinCapture(page);
   }
 
-  await page.addStyleTag({
-    content: [
-      "html { scroll-behavior: auto !important; }",
-      "* { caret-color: transparent !important; }",
-      "::-webkit-scrollbar { width: 0 !important; height: 0 !important; }",
-    ].join("\n"),
-  }).catch(() => {});
+  if (projectId === "garage-webzine") {
+    await prepareGarageWebzineCapture(page);
+  }
+
+  if (projectId === "shirokostup") {
+    await prepareShirokostupCapture(page);
+  }
+
+  await applyCaptureStyles(page);
   await page.evaluate(() => {
     const root = document.scrollingElement || document.documentElement;
     root.scrollTop = 0;

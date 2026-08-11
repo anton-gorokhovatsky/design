@@ -40,16 +40,16 @@ export const reelChapterSpecs = [
     itemId: "garage-webzine",
     master: "garage-webzine.mp4",
     chapters: [
-      { label: "cover", start: 0.1, duration: 2.5 },
-      { label: "reading", start: 2.7, duration: 4.8 },
+      { label: "light-cover-contents", start: 0.1, duration: 4.6 },
+      { label: "dark-article", start: 6.1, duration: 6.1 },
     ],
   },
   {
     itemId: "shirokostup",
     master: "shirokostup.mp4",
     chapters: [
-      { label: "intro-projects", start: 0.1, duration: 4 },
-      { label: "archive-reading", start: 3.2, duration: 4.3 },
+      { label: "light-home-index", start: 0.1, duration: 4.1 },
+      { label: "dark-index-work", start: 4.6, duration: 7.9 },
     ],
   },
   {

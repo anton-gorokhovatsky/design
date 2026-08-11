@@ -97,6 +97,16 @@ const contractSteps = [
     args: ["scripts/check-reel-preview.mjs", "narkomfin"],
   },
   {
+    label: "Garage Webzine reel preview",
+    command: process.execPath,
+    args: ["scripts/check-reel-preview.mjs", "garage-webzine"],
+  },
+  {
+    label: "Shirokostup reel preview",
+    command: process.execPath,
+    args: ["scripts/check-reel-preview.mjs", "shirokostup"],
+  },
+  {
     label: "Git whitespace",
     command: "git",
     args: ["diff", "--check"],

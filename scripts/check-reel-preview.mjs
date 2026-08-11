@@ -42,6 +42,38 @@ const expectedById = new Map([
     height: 600,
     duration: { min: 12.9, max: 13.5 },
   }],
+  ["garage-webzine", {
+    mapId: "garage-webzine",
+    artifactId: "garage-webzine",
+    index: "05 / 13",
+    titleFragments: ["НЕЧЕЛОВЕЧЕСКИЕ ЖИВОТНЫЕ", "ТЕХНИКА"],
+    meta: "ГЛАВНАЯ, ТЕКСТ И ТЁМНАЯ ТЕМА / 00:12",
+    videoPath: "/assets/reels/garage-webzine.mp4",
+    posterPath: "/assets/reel-posters/garage-webzine.jpg",
+    chapterPaths: [
+      "/assets/reel-chapters/garage-webzine-01.mp4",
+      "/assets/reel-chapters/garage-webzine-02.mp4",
+    ],
+    width: 900,
+    height: 600,
+    duration: { min: 12.1, max: 12.7 },
+  }],
+  ["shirokostup", {
+    mapId: "shirokostup",
+    artifactId: "shirokostup",
+    index: "06 / 13",
+    titleFragments: ["Сайт независимого куратора", "Ольги Широкоступ"],
+    meta: "ГЛАВНАЯ, МЕНЮ И ТЁМНАЯ ТЕМА / 00:13",
+    videoPath: "/assets/reels/shirokostup.mp4",
+    posterPath: "/assets/reel-posters/shirokostup.jpg",
+    chapterPaths: [
+      "/assets/reel-chapters/shirokostup-01.mp4",
+      "/assets/reel-chapters/shirokostup-02.mp4",
+    ],
+    width: 900,
+    height: 600,
+    duration: { min: 12.5, max: 13.1 },
+  }],
 ]);
 const expected = expectedById.get(reelId);
 
