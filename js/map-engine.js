@@ -712,29 +712,23 @@ reducedMotion.addEventListener?.("change", () => {
 });
 
 const setMapEvidence = (evidence = null) => {
-  const hasEvidence = Boolean(
-    evidence?.task && evidence?.role && evidence?.result,
-  );
+  const entries = [
+    [mapEvidenceTask, evidence?.task],
+    [mapEvidenceRole, evidence?.role],
+    [mapEvidenceResult, evidence?.result],
+  ];
+  const hasEvidence = entries.some(([, value]) => Boolean(value));
 
   if (mapEvidence) {
     mapEvidence.hidden = !hasEvidence;
   }
 
-  if (!hasEvidence) {
-    return;
-  }
-
-  if (mapEvidenceTask) {
-    mapEvidenceTask.textContent = typographUiText(evidence.task);
-  }
-
-  if (mapEvidenceRole) {
-    mapEvidenceRole.textContent = typographUiText(evidence.role);
-  }
-
-  if (mapEvidenceResult) {
-    mapEvidenceResult.textContent = typographUiText(evidence.result);
-  }
+  entries.forEach(([element, value]) => {
+    if (!element) return;
+    const row = element.closest("div");
+    if (row) row.hidden = !value;
+    element.textContent = value ? typographUiText(value) : "";
+  });
 };
 
 const setInspectorOpen = (isOpen) => {

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { createHash } from "node:crypto";
 import {
   existsSync,
   readFileSync,
@@ -229,6 +230,21 @@ requireContract(
   "principle-count",
   "The map must keep exactly 17 principle nodes.",
   { actual: kindCounts.practice },
+);
+const authorialPrincipleDigest = createHash("sha256")
+  .update(
+    mapItems
+      .filter((item) => item.kind === "practice")
+      .map((item) => item.description)
+      .join("\n"),
+  )
+  .digest("hex");
+requireContract(
+  authorialPrincipleDigest
+    === "3c86e5b032fd926f86179d5f2bc9898b4e2d571cf3cd9f0f7420ea79b71da687",
+  "principle-authorial-copy",
+  "Principle descriptions are authorial source text and must stay verbatim; only headings and labels may be edited without an approved source-copy update.",
+  { actual: authorialPrincipleDigest },
 );
 requireContract(
   missingProjectMapLabels.length === 0,

@@ -1051,6 +1051,135 @@ const auditBrowser = async (client, origin) => {
   }
 
   await setViewport(client, {
+    width: 1280,
+    height: 720,
+    mobile: false,
+    theme: "light",
+  });
+  await navigate(client, `${origin}/?qa=ui-contracts-ilmix-copy&point=ilmix#map`);
+  const ilmixCopy = await evaluate(client, `(() => {
+    const evidence = document.querySelector("[data-map-evidence]");
+    const task = document.querySelector("[data-map-evidence-task]");
+    const role = document.querySelector("[data-map-evidence-role]");
+    const result = document.querySelector("[data-map-evidence-result]");
+    return {
+      description: (document.querySelector("[data-map-description]")?.textContent || "")
+        .replace(/\\s+/g, " ")
+        .trim(),
+      evidenceHidden: evidence?.hidden,
+      task: task?.textContent || "",
+      taskHidden: task?.closest("div")?.hidden,
+      role: role?.textContent || "",
+      roleHidden: role?.closest("div")?.hidden,
+      result: result?.textContent || "",
+      resultHidden: result?.closest("div")?.hidden,
+    };
+  })()`);
+  if (
+    !ilmixCopy.description.includes("Запускал и развивал digital-продукты")
+    || ilmixCopy.evidenceHidden
+    || ilmixCopy.taskHidden
+    || ilmixCopy.roleHidden
+    || !ilmixCopy.resultHidden
+    || ilmixCopy.result
+  ) {
+    fail("ilmix-copy: the accepted hh copy or partial evidence rows regressed.", ilmixCopy);
+  }
+  await saveScreenshot(client, "desktop-ilmix-copy");
+  await saveElementScreenshot(client, "crop-desktop-ilmix-copy", ".map-inspector");
+
+  await navigate(client, `${origin}/?qa=ui-contracts-filter-hover&filter=personal#map`);
+  await evaluate(client, `(() => {
+    document.querySelector('[data-map-id="wave"]')
+      ?.dispatchEvent(new PointerEvent("pointerenter"));
+    return true;
+  })()`);
+  await delay(80);
+  const filterHover = await evaluate(client, `(() => {
+    const map = document.querySelector("[data-practice-map]");
+    const wave = document.querySelector('[data-map-id="wave"]');
+    const garage = document.querySelector('[data-map-id="garage"]');
+    return {
+      activeKinds: map?.dataset.activeKinds,
+      focusId: map?.dataset.focusId,
+      waveOpacity: Number.parseFloat(getComputedStyle(wave).opacity),
+      garageOpacity: Number.parseFloat(getComputedStyle(garage).opacity),
+      garageMiss: garage?.classList.contains("is-filter-miss"),
+      garageHidden: garage?.getAttribute("aria-hidden"),
+    };
+  })()`);
+  if (
+    filterHover.activeKinds !== "personal"
+    || filterHover.focusId !== "wave"
+    || filterHover.waveOpacity < 0.95
+    || !filterHover.garageMiss
+    || filterHover.garageHidden !== "true"
+    || filterHover.garageOpacity > 0.1
+  ) {
+    fail("filter-hover: hover visually overrides the active category filter.", filterHover);
+  }
+  await saveScreenshot(client, "desktop-filter-hover-personal");
+
+  await setViewport(client, {
+    width: mobileMetricViewport.width,
+    height: mobileMetricViewport.height,
+    mobile: true,
+    theme: "light",
+  });
+  await navigate(
+    client,
+    `${origin}/?qa=ui-contracts-principle-verbatim&point=principle-data-intuition#map`,
+  );
+  const principleVerbatim = await evaluate(client, `(() => {
+    const inspector = document.querySelector("[data-map-inspector]");
+    const descriptionShell = document.querySelector(".map-readout__description");
+    const description = document.querySelector("[data-map-description]")?.textContent || "";
+    const link = document.querySelector("[data-map-link]");
+    const bounds = inspector?.getBoundingClientRect();
+    return {
+      startsWithSource: description.startsWith("C одной стороны считаю"),
+      endsWithSource: description.endsWith("которые возникают в душе от хорошей идеи."),
+      descriptionLength: description.length,
+      scrollHeight: descriptionShell?.scrollHeight,
+      clientHeight: descriptionShell?.clientHeight,
+      overflowY: descriptionShell ? getComputedStyle(descriptionShell).overflowY : "",
+      linkText: link?.textContent || "",
+      linkHidden: link?.hidden,
+      inspector: bounds ? {
+        top: bounds.top,
+        right: bounds.right,
+        bottom: bounds.bottom,
+        left: bounds.left,
+      } : null,
+      viewport: { width: innerWidth, height: innerHeight },
+      overflowX: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    };
+  })()`);
+  if (
+    !principleVerbatim.startsWithSource
+    || !principleVerbatim.endsWithSource
+    || principleVerbatim.descriptionLength < 900
+    || principleVerbatim.scrollHeight <= principleVerbatim.clientHeight
+    || principleVerbatim.overflowY !== "auto"
+    || principleVerbatim.linkHidden
+    || !principleVerbatim.linkText.includes("NOTION")
+    || !principleVerbatim.inspector
+    || principleVerbatim.inspector.top < -2
+    || principleVerbatim.inspector.left < -2
+    || principleVerbatim.inspector.right > principleVerbatim.viewport.width + 2
+    || principleVerbatim.inspector.bottom > principleVerbatim.viewport.height + 2
+    || principleVerbatim.overflowX !== 0
+  ) {
+    fail("principle-copy: verbatim long-form copy is clipped or leaves the mobile viewport.", principleVerbatim);
+  }
+  await saveScreenshot(client, "mobile-principle-verbatim");
+  await saveElementScreenshot(
+    client,
+    "crop-mobile-principle-verbatim",
+    ".map-inspector",
+  );
+
+  await setViewport(client, {
     width: mobileMetricViewport.width,
     height: mobileMetricViewport.height,
     mobile: true,

@@ -6967,15 +6967,16 @@ html[data-theme="light"] .orbital-radar i {
     scale(0.985);
 }
 
-.practice-map[data-focus-id] .map-node {
+.practice-map[data-focus-id] .map-node:not(.is-filter-miss) {
   opacity: 0.56;
 }
 
 .practice-map[data-focus-id]
-  .map-node:is(:hover, :focus-visible, .is-selected),
-.practice-map[data-focus-id="garage"] .map-node[data-map-parent="garage"],
+  .map-node:not(.is-filter-miss):is(:hover, :focus-visible, .is-selected),
+.practice-map[data-focus-id="garage"]
+  .map-node[data-map-parent="garage"]:not(.is-filter-miss),
 .practice-map[data-focus-id="private-practice"]
-  .map-node[data-map-parent="private-practice"] {
+  .map-node[data-map-parent="private-practice"]:not(.is-filter-miss) {
   filter: saturate(1.06);
   opacity: 1;
 }
