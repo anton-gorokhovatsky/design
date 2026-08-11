@@ -1340,7 +1340,7 @@ const auditBrowser = async (client, origin) => {
     const input = document.querySelector("[data-command-input]");
     input?.focus();
     if (input) {
-      input.value = "последовательное";
+      input.value = "материалов Tarski";
       input.dispatchEvent(new Event("input", { bubbles: true }));
     }
     document.querySelector('[data-result-id="tarski"]')?.click();
@@ -1368,7 +1368,7 @@ const auditBrowser = async (client, origin) => {
         Object.keys(parameters)
       )))],
       leakedValues: goals.flatMap(({ parameters }) => Object.values(parameters))
-        .filter((value) => /последовательное|anton|@|gmail|telegram\\.me/i.test(String(value))),
+        .filter((value) => /материалов tarski|anton|@|gmail|telegram\\.me/i.test(String(value))),
     };
   })()`);
   const decisionGoals = [
