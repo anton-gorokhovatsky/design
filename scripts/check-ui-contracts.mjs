@@ -943,7 +943,7 @@ const auditBrowser = async (client, origin) => {
   await navigate(client, `${origin}/?qa=ui-contracts-search`);
   await evaluate(client, `(() => {
     const input = document.querySelector("[data-command-input]");
-    input.value = "tarski";
+    input.value = "герман";
     input.focus();
     input.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText" }));
     return true;
@@ -967,12 +967,14 @@ const auditBrowser = async (client, origin) => {
     expanded: document.querySelector("[data-command-input]")?.getAttribute("aria-expanded"),
     count: document.querySelectorAll(".command-result").length,
     active: document.querySelector("[data-command-input]")?.getAttribute("aria-activedescendant"),
+    firstResult: document.querySelector(".command-result")?.id || "",
   }))()`);
   if (
     !searchState.visible.searchResults
     || searchContract.expanded !== "true"
-    || searchContract.count < 1
-    || !searchContract.active
+    || searchContract.count !== 1
+    || searchContract.active !== "command-result-node-herman"
+    || searchContract.firstResult !== "command-result-node-herman"
   ) {
     fail("search: visible results and active option are not synchronized.", searchContract);
   }

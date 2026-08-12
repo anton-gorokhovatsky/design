@@ -1017,6 +1017,7 @@ const applySearchHighlight = (query) => {
   mapItems.forEach((item) => {
     const haystack = normalizeSearch([
       item.label,
+      item.mapLabel,
       item.title,
       item.meta,
       item.kindLabel,
@@ -1054,6 +1055,7 @@ const getCommandResults = (query) => {
   const nodes = mapItems
     .filter((item) => normalizeSearch([
       item.label,
+      item.mapLabel,
       item.title,
       item.meta,
       item.kindLabel,
