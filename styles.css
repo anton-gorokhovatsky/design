@@ -8416,6 +8416,31 @@ html[data-theme="light"] .orbital-horizon::after {
   -webkit-mask-image: linear-gradient(#000 0, rgba(0, 0, 0, 0.5) 54%, transparent 90%);
 }
 
+/* A low map focus lights the lower plane instead of letting one screen-space
+   halo ignore the horizon. The plane clips this broad, faint reflection to
+   its own curved edge. */
+
+.practice-map[data-focus-plane="ground"] .orbital-horizon::before {
+  position: absolute;
+  inset: 0;
+  display: block;
+  background: radial-gradient(
+    ellipse 7% 28% at var(--focus-horizon-x, 50%) 0%,
+    color-mix(in srgb, var(--map-focus-accent) 17%, transparent) 0,
+    color-mix(in srgb, var(--map-focus-accent) 7%, transparent) 38%,
+    transparent 76%
+  );
+  content: "";
+  opacity: 0.78;
+  pointer-events: none;
+}
+
+html[data-theme="light"]
+  .practice-map[data-focus-plane="ground"]
+  .orbital-horizon::before {
+  opacity: 0.46;
+}
+
 .orbital-radar {
   position: absolute;
   z-index: 0;

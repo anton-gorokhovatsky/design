@@ -1097,6 +1097,9 @@ const auditBrowser = async (client, origin) => {
   await navigate(client, `${origin}/?qa=ui-contracts-food-forks&point=food#map`);
   const foodForks = await evaluate(client, `(() => {
     const link = document.querySelector("[data-map-link]");
+    const map = document.querySelector("[data-practice-map]");
+    const horizon = document.querySelector(".orbital-horizon");
+    const reflection = horizon ? getComputedStyle(horizon, "::before") : null;
     return {
       description: (document.querySelector("[data-map-description]")?.textContent || "")
         .replace(/\\s+/g, " ")
@@ -1105,18 +1108,26 @@ const auditBrowser = async (client, origin) => {
       linkHidden: link?.hidden,
       linkLabel: link?.textContent || "",
       linkHref: link?.href || "",
+      focusPlane: map?.dataset.focusPlane || "",
+      focusHorizonX: getComputedStyle(map).getPropertyValue("--focus-horizon-x").trim(),
+      reflectionDisplay: reflection?.display || "",
+      reflectionBackground: reflection?.backgroundImage || "",
     };
   })()`);
   if (
     !foodForks.description.includes("заметить человека")
-    || !foodForks.description.includes("внимание → ремесло → неожиданность → эмоция")
+    || !foodForks.description.includes("этот вечер — именно для него")
     || foodForks.description.includes("Чикаго")
     || foodForks.meta !== "ВКУС / СЕРВИС / ДЕТАЛИ"
     || foodForks.linkHidden
     || foodForks.linkLabel !== "СМОТРЕТЬ ФРАГМЕНТ"
     || !foodForks.linkHref.includes("/the-bear/video-extras/video/64beaaa830c49e0001e758d8")
+    || foodForks.focusPlane !== "ground"
+    || !foodForks.focusHorizonX.endsWith("%")
+    || foodForks.reflectionDisplay === "none"
+    || foodForks.reflectionBackground === "none"
   ) {
-    fail("food-forks: the accepted service reference or official scene link regressed.", foodForks);
+    fail("food-forks: the accepted copy, scene link, or grounded light regressed.", foodForks);
   }
   await saveScreenshot(client, "desktop-food-forks");
   await saveElementScreenshot(client, "crop-desktop-food-forks", ".map-inspector");

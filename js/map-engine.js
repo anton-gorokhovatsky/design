@@ -300,8 +300,10 @@ const setMapAtmosphere = (item = null) => {
     atmosphereMapId = null;
     delete signalField.dataset.focusId;
     delete signalField.dataset.focusKind;
+    delete signalField.dataset.focusPlane;
     signalField.style.removeProperty("--focus-x");
     signalField.style.removeProperty("--focus-y");
+    signalField.style.removeProperty("--focus-horizon-x");
     syncMapRelationships();
     return;
   }
@@ -312,6 +314,15 @@ const setMapAtmosphere = (item = null) => {
   signalField.dataset.focusKind = item.accentKind || item.kind;
   signalField.style.setProperty("--focus-x", `${position.x}%`);
   signalField.style.setProperty("--focus-y", `${position.y}%`);
+
+  if (position.y >= 74) {
+    const horizonX = ((position.x + 12) / 124) * 100;
+    signalField.dataset.focusPlane = "ground";
+    signalField.style.setProperty("--focus-horizon-x", `${horizonX}%`);
+  } else {
+    delete signalField.dataset.focusPlane;
+    signalField.style.removeProperty("--focus-horizon-x");
+  }
   syncMapRelationships();
 };
 
