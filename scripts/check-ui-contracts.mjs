@@ -420,6 +420,32 @@ const navigate = async (client, url) => {
   await delay(360);
 };
 
+const readReactiveRelationsContract = async (client, mapId) => evaluate(
+  client,
+  `((mapId) => new Promise((resolve) => {
+    const paths = [...document.querySelectorAll("[data-map-links] path")];
+    const initial = paths.map((path) => path.getAttribute("d"));
+    document.querySelector(\`[data-map-id="\${mapId}"]\`)?.click();
+    window.setTimeout(() => {
+      const active = paths.filter((path) => path.classList.contains("is-active-relation"));
+      const changed = paths.filter((path, index) => path.getAttribute("d") !== initial[index]);
+      resolve({
+        selectedId: document.querySelector("[data-signal-field]")?.dataset.selectedId || "",
+        activeCount: active.length,
+        changedCount: changed.length,
+        changedActiveCount: active.filter((path) => changed.includes(path)).length,
+        changedInactiveCount: changed.filter((path) => (
+          !path.classList.contains("is-active-relation")
+        )).length,
+        pendingAnimations: paths.reduce((count, path) => (
+          count + path.querySelectorAll("animate").length
+        ), 0),
+      });
+    }, 420);
+  }))(${JSON.stringify(mapId)})`,
+  true,
+);
+
 const pressTab = async (client, { shift = false } = {}) => {
   const modifiers = shift ? 8 : 0;
   await client.send("Input.dispatchKeyEvent", {
@@ -726,6 +752,79 @@ const auditBrowser = async (client, origin) => {
   }
   await saveScreenshot(client, "desktop-selected-garage");
   await saveElementScreenshot(client, "crop-desktop-inspector", ".map-inspector");
+
+  await navigate(client, `${origin}/?qa=ui-contracts-reactive-relations`);
+  await client.send("Input.dispatchMouseEvent", {
+    type: "mouseMoved",
+    x: 1,
+    y: 1,
+  });
+  await delay(420);
+  const reactiveGarageContract = await readReactiveRelationsContract(client, "garage");
+  if (
+    reactiveGarageContract.selectedId !== "garage"
+    || reactiveGarageContract.activeCount !== 9
+    || reactiveGarageContract.changedCount !== 9
+    || reactiveGarageContract.changedActiveCount !== 9
+    || reactiveGarageContract.changedInactiveCount !== 0
+    || reactiveGarageContract.pendingAnimations !== 0
+  ) {
+    fail(
+      "reactive-relations: Garage does not morph exactly its real relation family.",
+      reactiveGarageContract,
+    );
+  }
+
+  await navigate(client, `${origin}/?qa=ui-contracts-reactive-relations-child`);
+  await client.send("Input.dispatchMouseEvent", {
+    type: "mouseMoved",
+    x: 1,
+    y: 1,
+  });
+  await delay(420);
+  const reactiveChildContract = await readReactiveRelationsContract(client, "narkomfin");
+  if (
+    reactiveChildContract.selectedId !== "narkomfin"
+    || reactiveChildContract.activeCount !== 1
+    || reactiveChildContract.changedCount !== 1
+    || reactiveChildContract.changedActiveCount !== 1
+    || reactiveChildContract.changedInactiveCount !== 0
+    || reactiveChildContract.pendingAnimations !== 0
+  ) {
+    fail(
+      "reactive-relations: a child morphs only its own route to the parent.",
+      reactiveChildContract,
+    );
+  }
+
+  await setViewport(client, {
+    width: 1440,
+    height: 900,
+    mobile: false,
+    theme: "light",
+    reducedMotion: "reduce",
+  });
+  await navigate(client, `${origin}/?qa=ui-contracts-reactive-relations-reduced`);
+  const reducedRelationsContract = await readReactiveRelationsContract(client, "garage");
+  if (
+    reducedRelationsContract.selectedId !== "garage"
+    || reducedRelationsContract.activeCount !== 9
+    || reducedRelationsContract.changedCount !== 0
+    || reducedRelationsContract.changedActiveCount !== 0
+    || reducedRelationsContract.changedInactiveCount !== 0
+    || reducedRelationsContract.pendingAnimations !== 0
+  ) {
+    fail(
+      "reactive-relations: reduced motion keeps semantic routes static.",
+      reducedRelationsContract,
+    );
+  }
+  await setViewport(client, {
+    width: 1440,
+    height: 900,
+    mobile: false,
+    theme: "light",
+  });
 
   for (const pointId of ["private-practice", "running"]) {
     await navigate(
@@ -1158,9 +1257,9 @@ const auditBrowser = async (client, origin) => {
     };
   })()`);
   if (
-    !foodForks.description.includes("гость буквально охренел")
-    || !foodForks.description.includes("не показать, как ты старался")
-    || !foodForks.description.includes("всё это было сделано для него")
+    !foodForks.description.includes("гости буквально охренели")
+    || !foodForks.description.includes("точности внимания")
+    || !foodForks.description.includes("огромная работа остаётся за сценой")
     || foodForks.description.includes("Чикаго")
     || foodForks.meta !== "ВКУС / СЕРВИС / ДЕТАЛИ"
     || foodForks.linkHidden

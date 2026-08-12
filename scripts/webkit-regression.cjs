@@ -518,7 +518,13 @@ const routeAudit = async (page, mapId, expectedCount) => {
       "[data-constellation-nav].is-open [data-constellation-nav-toggle]",
     )?.click();
   });
+  await page.mouse.move(1, 1);
   await waitForLayout(page, 420);
+
+  const baselinePaths = await page.evaluate(() => (
+    Array.from(document.querySelectorAll("[data-map-links] path"))
+      .map((path) => path.getAttribute("d"))
+  ));
 
   const hitTest = await page.evaluate((id) => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -542,13 +548,20 @@ const routeAudit = async (page, mapId, expectedCount) => {
     };
   }, mapId);
 
-  const readRouteState = (mode) => page.evaluate(({ id, count, phase }) => {
+  const readRouteState = (mode) => page.evaluate(({
+    id,
+    count,
+    phase,
+    baseline,
+  }) => {
     const field = document.querySelector("[data-signal-field]");
-    const routeSelector = id === "garage"
-      ? ".map-links path.is-garage-link"
-      : ".map-links path.is-private-practice-link";
-    const active = Array.from(document.querySelectorAll(routeSelector))
+    const paths = Array.from(document.querySelectorAll("[data-map-links] path"));
+    const active = paths
+      .filter((path) => path.classList.contains("is-active-relation"))
       .filter((path) => Number(getComputedStyle(path).opacity) > 0);
+    const changed = paths.filter((path, index) => (
+      path.getAttribute("d") !== baseline[index]
+    ));
     const badPaths = active.filter((path) => {
       const data = path.getAttribute("d") || "";
       return !data || /NaN|undefined|Infinity/.test(data);
@@ -561,14 +574,31 @@ const routeAudit = async (page, mapId, expectedCount) => {
       phase,
       stateId,
       activeCount: active.length,
+      changedCount: changed.length,
+      changedActiveCount: active.filter((path) => changed.includes(path)).length,
+      changedInactiveCount: changed.filter((path) => (
+        !path.classList.contains("is-active-relation")
+      )).length,
+      pendingAnimations: paths.reduce((total, path) => (
+        total + path.querySelectorAll("animate").length
+      ), 0),
       badPaths: badPaths.length,
       failure: active.length !== count
+        || changed.length !== count
+        || active.filter((path) => changed.includes(path)).length !== count
+        || changed.some((path) => !path.classList.contains("is-active-relation"))
+        || paths.some((path) => path.querySelector("animate"))
         || badPaths.length > 0,
     };
-  }, { id: mapId, count: expectedCount, phase: mode });
+  }, {
+    id: mapId,
+    count: expectedCount,
+    phase: mode,
+    baseline: baselinePaths,
+  });
 
   await page.locator(`[data-map-id="${mapId}"]`).hover({ force: true });
-  await waitForLayout(page, 340);
+  await waitForLayout(page, 420);
   const hover = await readRouteState("hover");
 
   await page.mouse.move(1, 1);
@@ -576,7 +606,7 @@ const routeAudit = async (page, mapId, expectedCount) => {
   await page.evaluate((id) => {
     document.querySelector(`[data-map-id="${id}"]`)?.click();
   }, mapId);
-  await waitForLayout(page, 340);
+  await waitForLayout(page, 420);
   const click = await readRouteState("click");
   click.failure = click.failure || click.stateId !== mapId;
 
@@ -586,6 +616,103 @@ const routeAudit = async (page, mapId, expectedCount) => {
     hover,
     click,
     failure: !hitTest.hitInsideNode || hover.failure || click.failure,
+  };
+};
+
+const reducedMotionRelationsAudit = async (browser) => {
+  const context = await browser.newContext({
+    viewport: { width: 1440, height: 900 },
+    colorScheme: "light",
+    reducedMotion: "reduce",
+  });
+  const page = await context.newPage();
+  await isolateThirdPartyTelemetry(page);
+  attachRuntimeLog(page, "reduced-motion-relations");
+  await page.goto(`${baseUrl}-reduced-motion-relations`, {
+    waitUntil: "networkidle",
+  });
+  await page.evaluate(() => document.fonts?.ready);
+  await waitForLayout(page, 500);
+
+  const state = await page.evaluate(() => new Promise((resolve) => {
+    const paths = Array.from(document.querySelectorAll("[data-map-links] path"));
+    const baseline = paths.map((path) => path.getAttribute("d"));
+    document.querySelector('[data-map-id="garage"]')?.click();
+    window.setTimeout(() => {
+      const active = paths.filter((path) => path.classList.contains("is-active-relation"));
+      const changed = paths.filter((path, index) => (
+        path.getAttribute("d") !== baseline[index]
+      ));
+      resolve({
+        selectedId: document.querySelector("[data-signal-field]")?.dataset.selectedId || "",
+        activeCount: active.length,
+        changedCount: changed.length,
+        pendingAnimations: paths.reduce((total, path) => (
+          total + path.querySelectorAll("animate").length
+        ), 0),
+        reducedMotion: matchMedia("(prefers-reduced-motion: reduce)").matches,
+      });
+    }, 420);
+  }));
+  await context.close();
+
+  return {
+    ...state,
+    failure: state.selectedId !== "garage"
+      || state.activeCount !== 9
+      || state.changedCount !== 0
+      || state.pendingAnimations !== 0
+      || !state.reducedMotion,
+  };
+};
+
+const childRelationsAudit = async (browser) => {
+  const context = await browser.newContext({
+    viewport: { width: 1440, height: 900 },
+    colorScheme: "light",
+  });
+  const page = await context.newPage();
+  await isolateThirdPartyTelemetry(page);
+  attachRuntimeLog(page, "child-relations");
+  await page.goto(`${baseUrl}-child-relations`, {
+    waitUntil: "networkidle",
+  });
+  await page.evaluate(() => document.fonts?.ready);
+  await waitForLayout(page, 500);
+
+  const state = await page.evaluate(() => new Promise((resolve) => {
+    const paths = Array.from(document.querySelectorAll("[data-map-links] path"));
+    const baseline = paths.map((path) => path.getAttribute("d"));
+    document.querySelector('[data-map-id="narkomfin"]')?.click();
+    window.setTimeout(() => {
+      const active = paths.filter((path) => path.classList.contains("is-active-relation"));
+      const changed = paths.filter((path, index) => (
+        path.getAttribute("d") !== baseline[index]
+      ));
+      resolve({
+        selectedId: document.querySelector("[data-signal-field]")?.dataset.selectedId || "",
+        activeCount: active.length,
+        changedCount: changed.length,
+        changedActiveCount: active.filter((path) => changed.includes(path)).length,
+        changedInactiveCount: changed.filter((path) => (
+          !path.classList.contains("is-active-relation")
+        )).length,
+        pendingAnimations: paths.reduce((total, path) => (
+          total + path.querySelectorAll("animate").length
+        ), 0),
+      });
+    }, 420);
+  }));
+  await context.close();
+
+  return {
+    ...state,
+    failure: state.selectedId !== "narkomfin"
+      || state.activeCount !== 1
+      || state.changedCount !== 1
+      || state.changedActiveCount !== 1
+      || state.changedInactiveCount !== 0
+      || state.pendingAnimations !== 0,
   };
 };
 
@@ -1193,10 +1320,12 @@ const accessibilityAcceptanceAudit = async (browser) => {
     schemaVersion: 1,
     accessibility: null,
     annotationHierarchy: null,
+    childRelations: null,
     firstPaint: [],
     viewports: [],
     mobileSearch: null,
     noScript: null,
+    reducedMotionRelations: null,
     telemetryRequests,
     runtimeErrors,
   };
@@ -1241,6 +1370,9 @@ const accessibilityAcceptanceAudit = async (browser) => {
       const garage = await routeAudit(page, "garage", 9);
       await page.keyboard.press("Escape");
       await waitForLayout(page, 300);
+      await page.reload({ waitUntil: "networkidle" });
+      await page.evaluate(() => document.fonts?.ready);
+      await waitForLayout(page, 500);
       const privatePractice = await routeAudit(page, "private-practice", 8);
       const relationshipCascade = await relationshipCascadeAudit(page);
       const material = await materialAudit(page);
@@ -1311,6 +1443,8 @@ const accessibilityAcceptanceAudit = async (browser) => {
     report.annotationHierarchy = await annotationHierarchyAudit(browser);
     report.mobileSearch = await mobileSearchViewportAudit(browser);
     report.accessibility = await accessibilityAcceptanceAudit(browser);
+    report.childRelations = await childRelationsAudit(browser);
+    report.reducedMotionRelations = await reducedMotionRelationsAudit(browser);
 
     const noScriptContext = await browser.newContext({
       viewport: { width: 390, height: 844 },
@@ -1353,6 +1487,12 @@ const accessibilityAcceptanceAudit = async (browser) => {
     ...(report.mobileSearch?.failures || []).map(
       (failure) => `mobile search: ${failure}`,
     ),
+    ...(report.childRelations?.failure
+      ? ["child relation: Narkomfin must morph only its route to Garage"]
+      : []),
+    ...(report.reducedMotionRelations?.failure
+      ? ["reduced motion: semantic relationship routes must remain static"]
+      : []),
     ...report.firstPaint.flatMap((state) => state.failures.map(
       (failure) => `first-paint ${state.viewport.width}/${state.colorScheme}: `
         + `${failure.surface} ${failure.background} ${failure.backdrop}`,

@@ -71,6 +71,92 @@ const mapFilterKinds = ["company", "project", "personal", "practice"];
 let activeMapFilters = new Set(mapFilterKinds);
 let applyingUrlState = false;
 let scheduleMapLinksRender = () => {};
+const mapLinkGeometries = new WeakMap();
+const mapLinkAnimations = new WeakMap();
+
+const getMotionShiftSpline = () => {
+  const token = window.getComputedStyle(document.documentElement)
+    .getPropertyValue("--motion-shift")
+    .trim();
+  const match = token.match(/^cubic-bezier\(([^)]+)\)$/);
+
+  if (!match) {
+    return null;
+  }
+
+  const values = match[1]
+    .split(",")
+    .map((value) => Number.parseFloat(value.trim()));
+
+  return values.length === 4 && values.every(Number.isFinite)
+    ? values.join(" ")
+    : null;
+};
+
+const setMapLinkReactiveState = (path, isReactive) => {
+  const geometry = mapLinkGeometries.get(path);
+  const shouldMorph = isReactive && !reducedMotion.matches;
+
+  if (!geometry || geometry.isReactive === shouldMorph) {
+    return;
+  }
+
+  const targetD = shouldMorph ? geometry.reactiveD : geometry.baseD;
+  const previousAnimation = mapLinkAnimations.get(path);
+
+  if (previousAnimation) {
+    path.setAttribute("d", geometry.currentD);
+  }
+  previousAnimation?.remove();
+  window.clearTimeout(geometry.cleanupTimer);
+  geometry.isReactive = shouldMorph;
+
+  if (reducedMotion.matches) {
+    path.setAttribute("d", geometry.baseD);
+    geometry.currentD = geometry.baseD;
+    return;
+  }
+
+  if (!path.isConnected) {
+    path.setAttribute("d", targetD);
+    geometry.currentD = targetD;
+    return;
+  }
+
+  const animation = document.createElementNS(svgNamespace, "animate");
+  const spline = getMotionShiftSpline();
+  let cleaned = false;
+  const finish = () => {
+    if (cleaned) {
+      return;
+    }
+
+    cleaned = true;
+    path.setAttribute("d", targetD);
+    geometry.currentD = targetD;
+    animation.remove();
+    mapLinkAnimations.delete(path);
+    window.clearTimeout(geometry.cleanupTimer);
+  };
+
+  animation.setAttribute("attributeName", "d");
+  animation.setAttribute("from", geometry.currentD);
+  animation.setAttribute("to", targetD);
+  animation.setAttribute("dur", "260ms");
+  animation.setAttribute("fill", "freeze");
+
+  if (spline) {
+    animation.setAttribute("calcMode", "spline");
+    animation.setAttribute("keyTimes", "0;1");
+    animation.setAttribute("keySplines", spline);
+  }
+
+  animation.addEventListener("endEvent", finish, { once: true });
+  path.append(animation);
+  mapLinkAnimations.set(path, animation);
+  animation.beginElement();
+  geometry.cleanupTimer = window.setTimeout(finish, 340);
+};
 
 const writeUrlState = (changes, { replace = false } = {}) => {
   if (applyingUrlState) {
@@ -274,6 +360,7 @@ const syncMapRelationships = () => {
 
     path.classList.toggle("is-filter-hidden", !isFilterVisible);
     path.classList.toggle("is-active-relation", isVisibleRelationship);
+    setMapLinkReactiveState(path, isVisibleRelationship);
     hasVisibleRelationship ||= isVisibleRelationship;
   });
 
@@ -1180,14 +1267,39 @@ if (mapLinksRoot) {
         const control1Y = toViewBoxY(control1PixelY);
         const control2X = toViewBoxX(control2PixelX);
         const control2Y = toViewBoxY(control2PixelY);
-
-        path.setAttribute(
-          "d",
-          `M${sourceX.toFixed(3)} ${sourceY.toFixed(3)}`
-            + `C${control1X.toFixed(3)} ${control1Y.toFixed(3)}`
-            + ` ${control2X.toFixed(3)} ${control2Y.toFixed(3)}`
-            + ` ${targetX.toFixed(3)} ${targetY.toFixed(3)}`,
+        const normalPixelX = -deltaY / distance;
+        const normalPixelY = deltaX / distance;
+        const relationDirection = index % 2 === 0 ? 1 : -1;
+        const relationTension = Math.min(6, Math.max(2.5, distance * 0.018));
+        const reactiveControl1X = toViewBoxX(
+          control1PixelX + normalPixelX * relationTension * relationDirection,
         );
+        const reactiveControl1Y = toViewBoxY(
+          control1PixelY + normalPixelY * relationTension * relationDirection,
+        );
+        const reactiveControl2X = toViewBoxX(
+          control2PixelX - normalPixelX * relationTension * relationDirection,
+        );
+        const reactiveControl2Y = toViewBoxY(
+          control2PixelY - normalPixelY * relationTension * relationDirection,
+        );
+        const baseD = `M${sourceX.toFixed(3)} ${sourceY.toFixed(3)}`
+          + `C${control1X.toFixed(3)} ${control1Y.toFixed(3)}`
+          + ` ${control2X.toFixed(3)} ${control2Y.toFixed(3)}`
+          + ` ${targetX.toFixed(3)} ${targetY.toFixed(3)}`;
+        const reactiveD = `M${sourceX.toFixed(3)} ${sourceY.toFixed(3)}`
+          + `C${reactiveControl1X.toFixed(3)} ${reactiveControl1Y.toFixed(3)}`
+          + ` ${reactiveControl2X.toFixed(3)} ${reactiveControl2Y.toFixed(3)}`
+          + ` ${targetX.toFixed(3)} ${targetY.toFixed(3)}`;
+
+        path.setAttribute("d", baseD);
+        mapLinkGeometries.set(path, {
+          baseD,
+          reactiveD,
+          currentD: baseD,
+          isReactive: false,
+          cleanupTimer: 0,
+        });
 
         if (parentId === "garage") {
           path.classList.add("is-garage-link");
@@ -1223,6 +1335,7 @@ if (mapLinksRoot) {
   };
 
   renderMapLinks();
+  reducedMotion.addEventListener?.("change", () => syncMapRelationships());
   mapLinksRoot.addEventListener("transitionend", (event) => {
     if (event.target === mapLinksRoot && event.propertyName === "transform") {
       renderMapLinks();
