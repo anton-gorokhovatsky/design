@@ -52,6 +52,18 @@ const fail = (message, details = undefined) => {
 const delay = (milliseconds) => new Promise((resolveDelay) => {
   setTimeout(resolveDelay, milliseconds);
 });
+const waitForExpression = async (
+  client,
+  expression,
+  { timeout = 10000, interval = 80 } = {},
+) => {
+  const startedAt = performance.now();
+  while (performance.now() - startedAt < timeout) {
+    if (await evaluate(client, expression)) return true;
+    await delay(interval);
+  }
+  return false;
+};
 
 class CdpClient {
   constructor(session) {
@@ -678,6 +690,17 @@ const auditBrowser = async (client, origin) => {
     theme: "light",
   });
   await navigate(client, `${origin}/?qa=ui-contracts-selected&point=garage`);
+  await waitForExpression(client, `(() => {
+    const inspector = document.querySelector(".map-inspector");
+    const bounds = inspector?.getBoundingClientRect();
+    const style = inspector ? getComputedStyle(inspector) : null;
+    return inspector?.getAttribute("aria-hidden") === "false"
+      && style?.display !== "none"
+      && style?.visibility !== "hidden"
+      && Number(style?.opacity) > 0
+      && bounds?.width > 0
+      && bounds?.height > 0;
+  })()`);
   const selectedState = await evaluate(client, geometryExpression);
   const selectedContract = await evaluate(client, `(() => {
     const node = document.querySelector('[data-map-id="garage"]');
@@ -780,7 +803,20 @@ const auditBrowser = async (client, origin) => {
     input.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText" }));
     return true;
   })()`);
-  await delay(220);
+  await waitForExpression(client, `(() => {
+    const input = document.querySelector("[data-command-input]");
+    const results = document.querySelector(".command-results");
+    const bounds = results?.getBoundingClientRect();
+    const style = results ? getComputedStyle(results) : null;
+    return input?.getAttribute("aria-expanded") === "true"
+      && Boolean(input?.getAttribute("aria-activedescendant"))
+      && document.querySelectorAll(".command-result").length > 0
+      && style?.display !== "none"
+      && style?.visibility !== "hidden"
+      && Number(style?.opacity) > 0
+      && bounds?.width > 0
+      && bounds?.height > 0;
+  })()`);
   const searchState = await evaluate(client, geometryExpression);
   const searchContract = await evaluate(client, `(() => ({
     expanded: document.querySelector("[data-command-input]")?.getAttribute("aria-expanded"),
@@ -810,7 +846,19 @@ const auditBrowser = async (client, origin) => {
     node.dispatchEvent(new PointerEvent("pointerenter"));
     return true;
   })()`);
-  await delay(240);
+  await waitForExpression(client, `(() => {
+    const preview = document.querySelector(".map-hover-preview");
+    const media = document.querySelector(".map-hover-preview__media");
+    const bounds = media?.getBoundingClientRect();
+    const style = preview ? getComputedStyle(preview) : null;
+    return preview?.classList.contains("is-visible")
+      && style?.display !== "none"
+      && style?.visibility !== "hidden"
+      && Number(style?.opacity) > 0
+      && Boolean(media?.querySelector("video"))
+      && bounds?.width > 0
+      && bounds?.height > 0;
+  })()`);
   const reelState = await evaluate(client, geometryExpression);
   const reelContract = await evaluate(client, `(() => {
     const preview = document.querySelector(".map-hover-preview");
