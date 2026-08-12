@@ -1527,15 +1527,9 @@ const setMapFilter = (
   mapFilterButtons.forEach((button) => {
     const kind = button.dataset.mapFilter;
     const isReset = kind === "all";
-    const isActive = !isReset && activeMapFilters.has(kind);
+    const isActive = isReset ? isAll : activeMapFilters.has(kind);
     button.classList.toggle("is-active", isActive);
-    button.classList.toggle("is-reset-available", isReset && !isAll);
-
-    if (isReset) {
-      button.removeAttribute("aria-pressed");
-    } else {
-      button.setAttribute("aria-pressed", String(isActive));
-    }
+    button.setAttribute("aria-pressed", String(isActive));
   });
 
   document.querySelectorAll(".map-speck").forEach((speck) => {

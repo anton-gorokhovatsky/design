@@ -947,7 +947,8 @@ const auditBrowser = async (client, origin) => {
       '[data-map-filter]:not([data-map-filter="all"])',
     ));
     return {
-      allPressed: all?.hasAttribute("aria-pressed"),
+      allPressed: all?.getAttribute("aria-pressed"),
+      allActive: all?.classList.contains("is-active"),
       categoryStates: categories.map((button) => button.getAttribute("aria-pressed")),
       filterGroup: document.querySelector(".map-control-group--filters")
         ?.getAttribute("role"),
@@ -957,7 +958,8 @@ const auditBrowser = async (client, origin) => {
     };
   })()`);
   if (
-    initialMapControlContract.allPressed
+    initialMapControlContract.allPressed !== "true"
+    || !initialMapControlContract.allActive
     || initialMapControlContract.categoryStates.length !== 4
     || initialMapControlContract.categoryStates.some((state) => state !== "true")
     || initialMapControlContract.filterGroup !== "group"
@@ -976,8 +978,10 @@ const auditBrowser = async (client, origin) => {
       ?.getAttribute("aria-pressed"),
     projectPressed: document.querySelector('[data-map-filter="project"]')
       ?.getAttribute("aria-pressed"),
-    resetAvailable: document.querySelector('[data-map-filter="all"]')
-      ?.classList.contains("is-reset-available"),
+    allPressed: document.querySelector('[data-map-filter="all"]')
+      ?.getAttribute("aria-pressed"),
+    allActive: document.querySelector('[data-map-filter="all"]')
+      ?.classList.contains("is-active"),
     filter: new URL(location.href).searchParams.get("filter"),
     companyHidden: document.querySelector('[data-map-id="garage"]')
       ?.classList.contains("is-filter-miss"),
@@ -985,7 +989,8 @@ const auditBrowser = async (client, origin) => {
   if (
     filteredMapControlContract.companyPressed !== "false"
     || filteredMapControlContract.projectPressed !== "true"
-    || !filteredMapControlContract.resetAvailable
+    || filteredMapControlContract.allPressed !== "false"
+    || filteredMapControlContract.allActive
     || filteredMapControlContract.filter !== "project,personal,practice"
     || !filteredMapControlContract.companyHidden
   ) {
@@ -1016,6 +1021,44 @@ const auditBrowser = async (client, origin) => {
     client,
     "document.querySelector('[data-map-filter=\"all\"]')?.click(); true",
   );
+  const aggregateMapControlContract = await evaluate(client, `(() => {
+    const all = document.querySelector('[data-map-filter="all"]');
+    const categories = Array.from(document.querySelectorAll(
+      '[data-map-filter]:not([data-map-filter="all"])',
+    ));
+    const symbolStyle = getComputedStyle(all.querySelector(".map-control__symbol"));
+    const referenceSymbolStyle = getComputedStyle(document.querySelector(
+      '[data-map-filter="project"] .map-control__symbol',
+    ));
+    return {
+      allPressed: all?.getAttribute("aria-pressed"),
+      allActive: all?.classList.contains("is-active"),
+      categoryStates: categories.map((button) => button.getAttribute("aria-pressed")),
+      filter: new URL(location.href).searchParams.get("filter"),
+      indicatorHeight: getComputedStyle(all, "::after").height,
+      symbolColor: symbolStyle.color,
+      referenceSymbolColor: referenceSymbolStyle.color,
+    };
+  })()`);
+  if (
+    aggregateMapControlContract.allPressed !== "true"
+    || !aggregateMapControlContract.allActive
+    || aggregateMapControlContract.categoryStates.some((state) => state !== "true")
+    || aggregateMapControlContract.filter !== null
+    || Number.parseFloat(aggregateMapControlContract.indicatorHeight) < 17
+    || aggregateMapControlContract.symbolColor
+      !== aggregateMapControlContract.referenceSymbolColor
+  ) {
+    fail(
+      "map-controls: the aggregate all state is not visibly or semantically current.",
+      aggregateMapControlContract,
+    );
+  }
+  await saveElementScreenshot(
+    client,
+    "crop-desktop-map-filters-all",
+    ".map-control-group--filters",
+  );
   await evaluate(
     client,
     "document.querySelector('.map-control-group--coordinates [data-time-toggle]')?.click(); true",
@@ -1023,12 +1066,15 @@ const auditBrowser = async (client, origin) => {
   const chronologyControlContract = await evaluate(client, `(() => ({
     states: Array.from(document.querySelectorAll("[data-time-toggle]"))
       .map((button) => button.getAttribute("aria-pressed")),
+    allPressed: document.querySelector('[data-map-filter="all"]')
+      ?.getAttribute("aria-pressed"),
     view: new URL(location.href).searchParams.get("view"),
     filter: new URL(location.href).searchParams.get("filter"),
   }))()`);
   if (
     chronologyControlContract.states.length !== 2
     || chronologyControlContract.states.some((state) => state !== "true")
+    || chronologyControlContract.allPressed !== "true"
     || chronologyControlContract.view !== "time"
     || chronologyControlContract.filter !== null
   ) {

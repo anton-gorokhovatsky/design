@@ -53,7 +53,9 @@ route.
   `?route=observation&step=<n>` restore the corresponding context and work with
   browser Back/Forward.
 - A compact `ВИД` selector can isolate one field or combine any subset of the
-  four semantic fields without moving nodes. `ВСЁ` resets the custom view;
+  four semantic fields without moving nodes. `ВСЁ` is the aggregate state: it
+  is visibly and semantically active when all four fields are shown, switches
+  off for a custom subset, and restores the full view when pressed.
   `ХРОНОЛОГИЯ` switches the same filtered map to year orbits.
 - The desktop `ЭКРАН` instrument contains the clock, theme, and two meaningful
   accessibility overrides: less motion and higher contrast. System preferences

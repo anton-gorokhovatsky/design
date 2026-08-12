@@ -9501,10 +9501,6 @@ html[data-contrast="true"] .map-node__glyph {
   border-top: 1px solid var(--line-soft);
 }
 
-.system-dock .map-control.is-reset-available {
-  color: var(--signal);
-}
-
 .display-control__analytics > span:first-child {
   box-sizing: border-box;
   width: 10px;
@@ -9550,8 +9546,7 @@ html[data-contrast="true"] .map-node__glyph {
     display: none;
   }
 
-  .system-dock .map-control[aria-pressed="true"] .map-control__symbol,
-  .system-dock .map-control.is-reset-available .map-control__symbol {
+  .system-dock .map-control[aria-pressed="true"] .map-control__symbol {
     color: var(--signal);
   }
 

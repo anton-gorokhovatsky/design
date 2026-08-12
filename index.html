@@ -124,7 +124,7 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=441c7bac9115">
+    <link rel="stylesheet" href="styles.css?v=7dd2f45cf36e">
     <!-- runtime-import-map:start -->
     <script type="importmap" data-runtime-import-map>
       {
@@ -133,7 +133,7 @@
           "./js/analytics.js": "./js/analytics.js?v=a63d759e1b36",
           "./js/signal-field.js": "./js/signal-field.js?v=50bb6509089d",
           "./js/map-data.js": "./js/map-data.js?v=dfae4cae3a05",
-          "./js/map-engine.js": "./js/map-engine.js?v=9f972ca52923",
+          "./js/map-engine.js": "./js/map-engine.js?v=4ae28cceec08",
           "./js/panels.js": "./js/panels.js?v=57e4689cd711",
           "./js/favicon.js": "./js/favicon.js?v=515506b106d3"
         }
@@ -145,7 +145,7 @@
     <script type="module" src="js/analytics.js?v=a63d759e1b36"></script>
     <script type="module" src="js/signal-field.js?v=50bb6509089d"></script>
     <script type="module" src="js/map-data.js?v=dfae4cae3a05"></script>
-    <script type="module" src="js/map-engine.js?v=9f972ca52923"></script>
+    <script type="module" src="js/map-engine.js?v=4ae28cceec08"></script>
     <script type="module" src="js/panels.js?v=57e4689cd711"></script>
     <script type="module" src="js/favicon.js?v=515506b106d3"></script>
     <script type="application/ld+json">
@@ -699,10 +699,11 @@
             >
               <span class="map-control-group__label" id="map-filter-group-label">СОСТАВ</span>
               <button
-                class="map-control map-control--all"
+                class="map-control map-control--all is-active"
                 type="button"
                 data-map-filter="all"
-                aria-label="Показать все категории"
+                aria-label="Показывать все категории"
+                aria-pressed="true"
               >
                 <span class="map-control__symbol map-control__symbol--all" aria-hidden="true"></span>
                 <span>ВСЁ</span>
