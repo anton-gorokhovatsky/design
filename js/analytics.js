@@ -71,7 +71,7 @@ const syncAnalyticsPreferenceUi = () => {
     button.dataset.analyticsState = state;
     button.setAttribute(
       "aria-label",
-      `Настройки аналитики: сейчас ${accessibleState}`,
+      `Аналитика и приватность: сейчас ${accessibleState}`,
     );
   });
   analyticsSummaries.forEach((summary) => {
@@ -123,6 +123,7 @@ const openSettingsPanel = ({
     : activeElement instanceof HTMLElement && !settingsPanel.contains(activeElement)
       ? activeElement
       : lastSettingsTrigger;
+  settingsPanel.dataset.settingsMode = section === "analytics" ? "analytics" : "settings";
   if (!settingsPanel.open) {
     document.body.classList.add("has-settings-panel");
     settingsPanel.hidden = false;

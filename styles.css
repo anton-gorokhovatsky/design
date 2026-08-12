@@ -9501,6 +9501,31 @@ html[data-contrast="true"] .map-node__glyph {
   border-top: 1px solid var(--line-soft);
 }
 
+/* Hover identifies a target but never impersonates its selected state. The
+   signal symbol and rail belong only to an active filter, so a click remains
+   legible even while the pointer stays over the same row. */
+.system-dock
+  .map-control:not(.is-active):is(:hover, :focus-visible)::after {
+  height: 0;
+}
+
+.system-dock
+  .map-control:not(.is-active):is(:hover, :focus-visible)
+  .map-control__symbol {
+  color: var(--content-ink);
+  opacity: 0.76;
+  transform: none;
+}
+
+html[data-focus-modality="keyboard"]
+  .system-dock
+  .map-control:focus-visible
+  .map-control__symbol {
+  border-radius: 50%;
+  outline: 2px solid var(--signal);
+  outline-offset: 3px;
+}
+
 .display-control__analytics > span:first-child {
   box-sizing: border-box;
   width: 10px;
@@ -9657,8 +9682,9 @@ html[data-contrast="true"] .map-node__glyph {
   }
 }
 
-/* Screen preferences form one place. Theme/accessibility shortcuts and search
-   all resolve to this dialog; analytics remains an explicit opt-in substate. */
+/* Site preferences share one dialog shell. General settings expose every
+   preference; the analytics launcher switches the shell to a focused privacy
+   place so its destination matches the label that opened it. */
 .settings-panel {
   position: fixed;
   top: 50%;
@@ -9780,6 +9806,16 @@ html[data-focus-modality="keyboard"] .settings-panel__close:focus-visible {
   overflow: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
+}
+
+.settings-panel [data-settings-copy="analytics"],
+.settings-panel[data-settings-mode="analytics"] [data-settings-copy="settings"],
+.settings-panel[data-settings-mode="analytics"] .settings-panel__screen {
+  display: none;
+}
+
+.settings-panel[data-settings-mode="analytics"] [data-settings-copy="analytics"] {
+  display: block;
 }
 
 .settings-panel__row {

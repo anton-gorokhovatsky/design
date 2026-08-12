@@ -969,6 +969,74 @@ const auditBrowser = async (client, origin) => {
     fail("map-controls: initial visibility and control groups disagree.", initialMapControlContract);
   }
 
+  const personalFilterPoint = await evaluate(client, `(() => {
+    const bounds = document.querySelector('[data-map-filter="personal"]')
+      ?.getBoundingClientRect();
+    return bounds ? {
+      x: bounds.left + bounds.width / 2,
+      y: bounds.top + bounds.height / 2,
+    } : null;
+  })()`);
+  if (personalFilterPoint) {
+    await client.send("Input.dispatchMouseEvent", {
+      type: "mouseMoved",
+      x: personalFilterPoint.x,
+      y: personalFilterPoint.y,
+    });
+  }
+  await evaluate(
+    client,
+    "document.querySelector('[data-map-filter=\"personal\"]')?.click(); true",
+  );
+  await delay(260);
+  const hoveredInactiveFilterContract = await evaluate(client, `(() => {
+    const personal = document.querySelector('[data-map-filter="personal"]');
+    const project = document.querySelector('[data-map-filter="project"]');
+    return {
+      hovered: personal?.matches(':hover'),
+      pressed: personal?.getAttribute('aria-pressed'),
+      active: personal?.classList.contains('is-active'),
+      label: personal?.getAttribute('aria-label'),
+      allPressed: document.querySelector('[data-map-filter="all"]')
+        ?.getAttribute('aria-pressed'),
+      personalHidden: document.querySelector('[data-map-id="running"]')
+        ?.classList.contains('is-filter-miss'),
+      indicatorHeight: getComputedStyle(personal, '::after').height,
+      symbolColor: getComputedStyle(personal.querySelector('.map-control__symbol')).color,
+      activeSymbolColor: getComputedStyle(project.querySelector('.map-control__symbol')).color,
+    };
+  })()`);
+  if (
+    !hoveredInactiveFilterContract.hovered
+    || hoveredInactiveFilterContract.pressed !== "false"
+    || hoveredInactiveFilterContract.active
+    || hoveredInactiveFilterContract.label !== "Личное"
+    || hoveredInactiveFilterContract.allPressed !== "false"
+    || !hoveredInactiveFilterContract.personalHidden
+    || Number.parseFloat(hoveredInactiveFilterContract.indicatorHeight) > 0.5
+    || hoveredInactiveFilterContract.symbolColor
+      === hoveredInactiveFilterContract.activeSymbolColor
+  ) {
+    fail(
+      "map-controls: hover visually impersonates an active filter after click.",
+      hoveredInactiveFilterContract,
+    );
+  }
+  await saveElementScreenshot(
+    client,
+    "crop-desktop-map-filters-personal-hover-off",
+    ".map-control-group--filters",
+  );
+  await evaluate(
+    client,
+    "document.querySelector('[data-map-filter=\"all\"]')?.click(); true",
+  );
+  await client.send("Input.dispatchMouseEvent", {
+    type: "mouseMoved",
+    x: 0,
+    y: 0,
+  });
+
   await evaluate(
     client,
     "document.querySelector('[data-map-filter=\"company\"]')?.click(); true",
@@ -1021,6 +1089,7 @@ const auditBrowser = async (client, origin) => {
     client,
     "document.querySelector('[data-map-filter=\"all\"]')?.click(); true",
   );
+  await delay(260);
   const aggregateMapControlContract = await evaluate(client, `(() => {
     const all = document.querySelector('[data-map-filter="all"]');
     const categories = Array.from(document.querySelectorAll(
@@ -1131,7 +1200,7 @@ const auditBrowser = async (client, origin) => {
   const searchIntentCases = [
     ["герман сайт", "command-result-node-herman"],
     ["сайт винокурова", "command-result-node-herman"],
-    ["аналитика", "command-result-action-settings"],
+    ["аналитика", "command-result-action-analytics-settings"],
     ["движение", "command-result-action-settings"],
     ["контраст", "command-result-action-settings"],
     ["проекты", "command-result-panel-work"],
@@ -1175,13 +1244,54 @@ const auditBrowser = async (client, origin) => {
   await delay(80);
   const settingsSearchRouteContract = await evaluate(client, `(() => ({
     visible: !document.querySelector("[data-settings-panel]")?.hidden,
+    mode: document.querySelector("[data-settings-panel]")?.dataset.settingsMode,
+    title: document.querySelector("[data-settings-title]")?.innerText.trim(),
+    screenControlsDisplay: getComputedStyle(
+      document.querySelector("[data-settings-screen-controls]"),
+    ).display,
     focusedMotion: document.activeElement?.hasAttribute("data-motion-toggle"),
   }))()`);
   if (
     !settingsSearchRouteContract.visible
+    || settingsSearchRouteContract.mode !== "settings"
+    || settingsSearchRouteContract.title !== "НАСТРОЙКИ САЙТА"
+    || settingsSearchRouteContract.screenControlsDisplay === "none"
     || !settingsSearchRouteContract.focusedMotion
   ) {
     fail("search-intent: settings query does not focus the relevant preference.", settingsSearchRouteContract);
+  }
+  await evaluate(client, "document.querySelector('[data-close-settings]')?.click(); true");
+
+  await evaluate(client, `(() => {
+    const input = document.querySelector("[data-command-input]");
+    input.value = "аналитика";
+    input.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText" }));
+    document.querySelector(".command-result")?.click();
+    return true;
+  })()`);
+  await delay(80);
+  const analyticsSearchRouteContract = await evaluate(client, `(() => ({
+    visible: !document.querySelector("[data-settings-panel]")?.hidden,
+    mode: document.querySelector("[data-settings-panel]")?.dataset.settingsMode,
+    title: document.querySelector("[data-settings-title]")?.innerText.trim(),
+    screenControlsDisplay: getComputedStyle(
+      document.querySelector("[data-settings-screen-controls]"),
+    ).display,
+    focusedAnalyticsAction: document.activeElement?.matches(
+      "[data-analytics-allow], [data-analytics-deny]",
+    ),
+  }))()`);
+  if (
+    !analyticsSearchRouteContract.visible
+    || analyticsSearchRouteContract.mode !== "analytics"
+    || analyticsSearchRouteContract.title !== "АНАЛИТИКА И\u00a0ПРИВАТНОСТЬ"
+    || analyticsSearchRouteContract.screenControlsDisplay !== "none"
+    || !analyticsSearchRouteContract.focusedAnalyticsAction
+  ) {
+    fail(
+      "search-intent: analytics query opens broader settings instead of privacy.",
+      analyticsSearchRouteContract,
+    );
   }
   await evaluate(client, "document.querySelector('[data-close-settings]')?.click(); true");
 
@@ -1781,22 +1891,6 @@ const auditBrowser = async (client, origin) => {
     url.startsWith("https://mc.yandex.ru/")
   ));
   const analyticsConsentState = await evaluate(client, geometryExpression);
-  const contrastHoverPoint = await evaluate(client, `(() => {
-    const bounds = document.querySelector("#settings-panel [data-contrast-toggle]")
-      ?.getBoundingClientRect();
-    return bounds ? {
-      x: bounds.left + bounds.width / 2,
-      y: bounds.top + bounds.height / 2,
-    } : null;
-  })()`);
-  if (contrastHoverPoint) {
-    await client.send("Input.dispatchMouseEvent", {
-      type: "mouseMoved",
-      x: contrastHoverPoint.x,
-      y: contrastHoverPoint.y,
-    });
-    await delay(40);
-  }
   const analyticsConsentContract = await evaluate(client, `(() => {
     const consent = document.querySelector("[data-analytics-consent]");
     const input = document.querySelector("[data-command-input]");
@@ -1819,17 +1913,28 @@ const auditBrowser = async (client, origin) => {
     };
     const dialog = read("#settings-panel");
     const dialogStyle = consent ? getComputedStyle(consent) : null;
-    const theme = read("#settings-panel [data-theme-toggle]");
-    const motion = read("#settings-panel [data-motion-toggle]");
-    const contrast = read("#settings-panel [data-contrast-toggle]");
+    const screenControls = consent?.querySelector("[data-settings-screen-controls]");
     const activeStyle = active ? getComputedStyle(active) : null;
     return {
       visible: !consent?.hidden && consent?.classList.contains("is-open"),
       inert: consent?.inert,
       focusInside: Boolean(active && consent?.contains(active)),
+      mode: consent?.dataset.settingsMode,
       role: consent?.getAttribute("role"),
       modal: consent?.getAttribute("aria-modal"),
       closeExists: Boolean(consent?.querySelector("[data-close-settings]")),
+      closeLabel: consent?.querySelector("[data-close-settings]")
+        ?.getAttribute("aria-label"),
+      eyebrow: consent?.querySelector("[data-settings-eyebrow]")
+        ?.innerText.trim(),
+      title: consent?.querySelector("[data-settings-title]")
+        ?.innerText.trim(),
+      intro: consent?.querySelector("[data-settings-intro]")
+        ?.innerText.replace(/\\s+/g, " ").trim(),
+      screenControlsDisplay: screenControls ? getComputedStyle(screenControls).display : "",
+      visibleScreenControls: Array.from(
+        screenControls?.querySelectorAll("button") || [],
+      ).filter((button) => button.getClientRects().length > 0).length,
       preferenceLabel: consent?.querySelector("[data-analytics-preference]")
         ?.textContent.trim(),
       open: consent?.open,
@@ -1858,19 +1963,6 @@ const auditBrowser = async (client, origin) => {
         .visibility,
       displayVisibility: getComputedStyle(document.querySelector(".display-control"))
         .visibility,
-      theme,
-      motion,
-      contrast,
-      motionBorderColor: getComputedStyle(
-        document.querySelector("#settings-panel [data-motion-toggle]"),
-      ).borderColor,
-      contrastBorderColor: getComputedStyle(
-        document.querySelector("#settings-panel [data-contrast-toggle]"),
-      ).borderColor,
-      contrastHovered: document.querySelector("#settings-panel [data-contrast-toggle]")
-        ?.matches(":hover"),
-      themeLabel: document.querySelector("[data-theme-panel-state]")
-        ?.textContent.trim(),
       analyticsLauncherLabel: document.querySelector("[data-analytics-summary]")
         ?.textContent.trim(),
       analyticsLauncherWhiteSpace: getComputedStyle(
@@ -1887,6 +1979,10 @@ const auditBrowser = async (client, origin) => {
       detailsDisplay: getComputedStyle(
         document.querySelector(".settings-panel__details"),
       ).display,
+      analyticsSectionTitle: document.querySelector("#settings-analytics-title")
+        ?.textContent.trim(),
+      analyticsSectionMeta: document.querySelector(".settings-panel__analytics-header p")
+        ?.textContent.replace(/\\s+/g, " ").trim(),
       allowLabel: document.querySelector("[data-analytics-allow]")?.textContent.trim(),
       denyLabel: document.querySelector("[data-analytics-deny]")?.textContent.trim(),
       focusModality: document.documentElement.dataset.focusModality,
@@ -1904,9 +2000,17 @@ const auditBrowser = async (client, origin) => {
     !analyticsConsentContract.visible
     || analyticsConsentContract.inert
     || !analyticsConsentContract.focusInside
+    || analyticsConsentContract.mode !== "analytics"
     || analyticsConsentContract.role !== "dialog"
     || analyticsConsentContract.modal !== "true"
     || !analyticsConsentContract.closeExists
+    || analyticsConsentContract.closeLabel !== "Закрыть"
+    || analyticsConsentContract.eyebrow !== "САЙТ / ПРИВАТНОСТЬ"
+    || analyticsConsentContract.title !== "АНАЛИТИКА И\u00a0ПРИВАТНОСТЬ"
+    || analyticsConsentContract.intro
+      !== "Метрика загружается только после явного согласия. Выбор можно изменить в любой момент."
+    || analyticsConsentContract.screenControlsDisplay !== "none"
+    || analyticsConsentContract.visibleScreenControls !== 0
     || analyticsConsentContract.preferenceLabel !== "НЕ ВЫБРАНО"
     || !analyticsConsentContract.open
     || !analyticsConsentContract.searchPrivate
@@ -1924,14 +2028,6 @@ const auditBrowser = async (client, origin) => {
     || analyticsConsentContract.consoleVisibility !== "hidden"
     || analyticsConsentContract.dockVisibility !== "hidden"
     || analyticsConsentContract.displayVisibility !== "hidden"
-    || !analyticsConsentContract.theme
-    || !analyticsConsentContract.motion
-    || !analyticsConsentContract.contrast
-    || Math.abs(
-      analyticsConsentContract.theme.width
-      - analyticsConsentContract.motion.width
-    ) > 1
-    || analyticsConsentContract.themeLabel !== "СИСТЕМА"
     || analyticsConsentContract.analyticsLauncherLabel !== "АНАЛИТИКА"
     || analyticsConsentContract.analyticsLauncherWhiteSpace !== "nowrap"
     || JSON.stringify(analyticsConsentContract.privacyRows) !== JSON.stringify([
@@ -1943,13 +2039,12 @@ const auditBrowser = async (client, origin) => {
     || analyticsConsentContract.detailsHref
       !== "https://yandex.ru/support/metrica/ru/general/cookie-usage"
     || analyticsConsentContract.detailsDisplay !== "inline-flex"
+    || analyticsConsentContract.analyticsSectionTitle !== "ЯНДЕКС МЕТРИКА"
+    || analyticsConsentContract.analyticsSectionMeta !== "ТОЛЬКО ПО СОГЛАСИЮ"
     || analyticsConsentContract.allowLabel !== "РАЗРЕШИТЬ"
     || analyticsConsentContract.denyLabel !== "НЕ РАЗРЕШАТЬ"
     || analyticsConsentContract.focusModality !== "pointer"
     || analyticsConsentContract.pointerOutlineStyle !== "none"
-    || !analyticsConsentContract.contrastHovered
-    || analyticsConsentContract.contrastBorderColor
-      !== analyticsConsentContract.motionBorderColor
     || analyticsConsentContract.mapNodesOpacity > 0.1
     || analyticsConsentContract.signalOpacity > 0.1
     || analyticsConsentContract.axisLabelOpacity !== 0
@@ -2046,6 +2141,11 @@ const auditBrowser = async (client, origin) => {
   ))()`);
   const reopenedContract = await evaluate(client, `(() => ({
     visible: !document.querySelector("[data-analytics-consent]")?.hidden,
+    mode: document.querySelector("[data-settings-panel]")?.dataset.settingsMode,
+    title: document.querySelector("[data-settings-title]")?.innerText.trim(),
+    screenControlsDisplay: getComputedStyle(
+      document.querySelector("[data-settings-screen-controls]"),
+    ).display,
     focusedAction: document.activeElement?.hasAttribute("data-analytics-allow")
       ? "allow"
       : document.activeElement?.hasAttribute("data-analytics-deny")
@@ -2058,6 +2158,9 @@ const auditBrowser = async (client, origin) => {
   }))()`);
   if (
     !reopenedContract.visible
+    || reopenedContract.mode !== "analytics"
+    || reopenedContract.title !== "АНАЛИТИКА И\u00a0ПРИВАТНОСТЬ"
+    || reopenedContract.screenControlsDisplay !== "none"
     || reopenedContract.focusedAction !== "allow"
     || reopenedContract.preferenceLabel !== "ВЫКЛЮЧЕНА"
     || reopenedContract.launcherPressed
@@ -2109,6 +2212,15 @@ const auditBrowser = async (client, origin) => {
       : null;
     return {
       bodyHasSettings: document.body.classList.contains('has-settings-panel'),
+      mode: document.querySelector('[data-settings-panel]')?.dataset.settingsMode,
+      title: document.querySelector('[data-settings-title]')?.innerText.trim(),
+      eyebrow: document.querySelector('[data-settings-eyebrow]')?.innerText.trim(),
+      screenControlsDisplay: getComputedStyle(
+        document.querySelector('[data-settings-screen-controls]'),
+      ).display,
+      analyticsVisible: Boolean(
+        document.querySelector('[data-settings-section="analytics"]')?.getClientRects().length,
+      ),
       dialog,
       command: read('.command-dock'),
       dock: read('.system-dock'),
@@ -2145,6 +2257,11 @@ const auditBrowser = async (client, origin) => {
   ));
   if (
     !mobileShortSettingsContract.bodyHasSettings
+    || mobileShortSettingsContract.mode !== "settings"
+    || mobileShortSettingsContract.title !== "НАСТРОЙКИ САЙТА"
+    || mobileShortSettingsContract.eyebrow !== "САЙТ / НАСТРОЙКИ"
+    || mobileShortSettingsContract.screenControlsDisplay === "none"
+    || !mobileShortSettingsContract.analyticsVisible
     || !mobileShortSettingsContract.dialog
     || mobileShortSettingsContract.dialog.top < 13
     || mobileShortSettingsContract.dialog.bottom > 637

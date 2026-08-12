@@ -932,7 +932,9 @@ const requiredAgentEvalCases = [
   "settings-space",
   "focus-language",
   "analytics-copy",
+  "destination-scope",
   "filter-aggregate",
+  "filter-feedback",
   "map-entity",
   "new-surface",
 ];

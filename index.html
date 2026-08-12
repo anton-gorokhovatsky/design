@@ -124,17 +124,17 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=7dd2f45cf36e">
+    <link rel="stylesheet" href="styles.css?v=863de4cf39a7">
     <!-- runtime-import-map:start -->
     <script type="importmap" data-runtime-import-map>
       {
         "imports": {
           "./js/preferences.js": "./js/preferences.js?v=0c102e473cb4",
-          "./js/analytics.js": "./js/analytics.js?v=a63d759e1b36",
+          "./js/analytics.js": "./js/analytics.js?v=812e92a451e8",
           "./js/signal-field.js": "./js/signal-field.js?v=50bb6509089d",
           "./js/map-data.js": "./js/map-data.js?v=dfae4cae3a05",
           "./js/map-engine.js": "./js/map-engine.js?v=4ae28cceec08",
-          "./js/panels.js": "./js/panels.js?v=57e4689cd711",
+          "./js/panels.js": "./js/panels.js?v=b149a2252ccd",
           "./js/favicon.js": "./js/favicon.js?v=515506b106d3"
         }
       }
@@ -142,11 +142,11 @@
     <!-- runtime-import-map:end -->
     <!-- Native modules keep their dependencies explicit; see js/README.md. -->
     <script type="module" src="js/preferences.js?v=0c102e473cb4"></script>
-    <script type="module" src="js/analytics.js?v=a63d759e1b36"></script>
+    <script type="module" src="js/analytics.js?v=812e92a451e8"></script>
     <script type="module" src="js/signal-field.js?v=50bb6509089d"></script>
     <script type="module" src="js/map-data.js?v=dfae4cae3a05"></script>
     <script type="module" src="js/map-engine.js?v=4ae28cceec08"></script>
-    <script type="module" src="js/panels.js?v=57e4689cd711"></script>
+    <script type="module" src="js/panels.js?v=b149a2252ccd"></script>
     <script type="module" src="js/favicon.js?v=515506b106d3"></script>
     <script type="application/ld+json">
       {
@@ -620,7 +620,7 @@
                     class="constellation-nav__utility-mark constellation-nav__utility-mark--settings"
                     aria-hidden="true"
                   ></span>
-                  <span>НАСТРОЙКИ</span>
+                  <span>НАСТРОЙКИ САЙТА</span>
                 </button>
               </div>
             </div>
@@ -702,7 +702,7 @@
                 class="map-control map-control--all is-active"
                 type="button"
                 data-map-filter="all"
-                aria-label="Показывать все категории"
+                aria-label="Все категории"
                 aria-pressed="true"
               >
                 <span class="map-control__symbol map-control__symbol--all" aria-hidden="true"></span>
@@ -712,7 +712,7 @@
                 class="map-control is-active"
                 type="button"
                 data-map-filter="company"
-                aria-label="Показывать компании"
+                aria-label="Компании"
                 aria-pressed="true"
               >
                 <span class="map-control__symbol map-control__symbol--company" aria-hidden="true"></span>
@@ -722,7 +722,7 @@
                 class="map-control is-active"
                 type="button"
                 data-map-filter="project"
-                aria-label="Показывать проекты"
+                aria-label="Проекты"
                 aria-pressed="true"
               >
                 <span class="map-control__symbol map-control__symbol--project" aria-hidden="true"></span>
@@ -732,7 +732,7 @@
                 class="map-control is-active"
                 type="button"
                 data-map-filter="personal"
-                aria-label="Показывать личное"
+                aria-label="Личное"
                 aria-pressed="true"
               >
                 <span class="map-control__symbol map-control__symbol--personal" aria-hidden="true"></span>
@@ -742,7 +742,7 @@
                 class="map-control is-active"
                 type="button"
                 data-map-filter="practice"
-                aria-label="Показывать принципы"
+                aria-label="Принципы"
                 aria-pressed="true"
               >
                 <span class="map-control__symbol map-control__symbol--practice" aria-hidden="true"></span>
@@ -1123,49 +1123,63 @@
     >
       <div class="settings-panel__header">
         <div>
-          <p>ЭКРАН / НАСТРОЙКИ</p>
-          <h2 id="settings-panel-title">НАСТРОЙКИ ЭКРАНА</h2>
+          <p data-settings-eyebrow>
+            <span data-settings-copy="settings">САЙТ / НАСТРОЙКИ</span>
+            <span data-settings-copy="analytics">САЙТ / ПРИВАТНОСТЬ</span>
+          </p>
+          <h2 id="settings-panel-title" data-settings-title>
+            <span data-settings-copy="settings">НАСТРОЙКИ САЙТА</span>
+            <span data-settings-copy="analytics">АНАЛИТИКА И&nbsp;ПРИВАТНОСТЬ</span>
+          </h2>
         </div>
         <button
           class="settings-panel__close"
           type="button"
           data-close-settings
-          aria-label="Закрыть настройки"
+          aria-label="Закрыть"
         >
           <span aria-hidden="true">×</span>
         </button>
       </div>
-      <p class="settings-panel__intro" id="settings-panel-intro">
-        Настройки действуют только на&nbsp;этом сайте. Системные предпочтения
-        движения и&nbsp;контраста всегда имеют приоритет.
+      <p class="settings-panel__intro" id="settings-panel-intro" data-settings-intro>
+        <span data-settings-copy="settings">
+          Настройки действуют только на&nbsp;этом сайте. Системные предпочтения
+          движения и&nbsp;контраста всегда имеют приоритет.
+        </span>
+        <span data-settings-copy="analytics">
+          Метрика загружается только после явного согласия. Выбор можно изменить
+          в&nbsp;любой момент.
+        </span>
       </p>
       <div class="settings-panel__body">
-        <div class="settings-panel__row">
-          <div>
-            <h3>ТЕМА</h3>
-            <p>Системная, светлая или&nbsp;тёмная.</p>
+        <div class="settings-panel__screen" data-settings-screen-controls>
+          <div class="settings-panel__row">
+            <div>
+              <h3>ТЕМА</h3>
+              <p>Системная, светлая или&nbsp;тёмная.</p>
+            </div>
+            <button type="button" data-theme-toggle>
+              <span data-theme-panel-state>СИСТЕМНАЯ</span>
+            </button>
           </div>
-          <button type="button" data-theme-toggle>
-            <span data-theme-panel-state>СИСТЕМНАЯ</span>
-          </button>
-        </div>
-        <div class="settings-panel__row">
-          <div>
-            <h3>ДВИЖЕНИЕ</h3>
-            <p>Уменьшает перемещение и&nbsp;морфинг.</p>
+          <div class="settings-panel__row">
+            <div>
+              <h3>ДВИЖЕНИЕ</h3>
+              <p>Уменьшает перемещение и&nbsp;морфинг.</p>
+            </div>
+            <button type="button" data-motion-toggle aria-pressed="false">
+              <span data-motion-state>ОБЫЧНОЕ</span>
+            </button>
           </div>
-          <button type="button" data-motion-toggle aria-pressed="false">
-            <span data-motion-state>ОБЫЧНОЕ</span>
-          </button>
-        </div>
-        <div class="settings-panel__row">
-          <div>
-            <h3>КОНТРАСТ</h3>
-            <p>Усиливает текст, линии и&nbsp;индикатор фокуса.</p>
+          <div class="settings-panel__row">
+            <div>
+              <h3>КОНТРАСТ</h3>
+              <p>Усиливает текст, линии и&nbsp;индикатор фокуса.</p>
+            </div>
+            <button type="button" data-contrast-toggle aria-pressed="false">
+              <span data-contrast-state>ОБЫЧНЫЙ</span>
+            </button>
           </div>
-          <button type="button" data-contrast-toggle aria-pressed="false">
-            <span data-contrast-state>ОБЫЧНЫЙ</span>
-          </button>
         </div>
         <section
           class="settings-panel__analytics"
@@ -1174,8 +1188,8 @@
         >
           <div class="settings-panel__analytics-header">
             <div>
-              <h3 id="settings-analytics-title">АНАЛИТИКА</h3>
-              <p>ЯНДЕКС МЕТРИКА / ТОЛЬКО ПО&nbsp;СОГЛАСИЮ</p>
+              <h3 id="settings-analytics-title">ЯНДЕКС МЕТРИКА</h3>
+              <p>ТОЛЬКО ПО&nbsp;СОГЛАСИЮ</p>
             </div>
             <strong data-analytics-preference>НЕ ВЫБРАНО</strong>
           </div>

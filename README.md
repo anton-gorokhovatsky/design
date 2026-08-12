@@ -61,8 +61,10 @@ route.
   accessibility overrides: less motion and higher contrast. System preferences
   remain authoritative; manual choices persist locally.
 - Yandex Metrica and Webvisor are delayed until an explicit opt-in. The choice
-  is reversible from `ЭКРАН` or search, the search field is excluded from
-  Webvisor key capture, and declining analytics does not alter the site.
+  is reversible from the focused `АНАЛИТИКА И ПРИВАТНОСТЬ` place opened from
+  `ЭКРАН` or search; the general `НАСТРОЙКИ САЙТА` place remains available on
+  mobile. The search field is excluded from Webvisor key capture, and declining
+  analytics does not alter the site.
   After consent, a small allowlist of goal events measures successful
   navigation — point opens, filters, chronology, the observation route,
   content panels, and contact actions. Search text, contact addresses, and
