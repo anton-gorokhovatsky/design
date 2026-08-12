@@ -205,9 +205,7 @@ const setThemeMode = (mode, persist = false) => {
     label.textContent = modeLabel;
   });
   themePanelStates.forEach((state) => {
-    state.textContent = themeMode === "system"
-      ? `СИСТЕМНАЯ / ${isDark ? "ТЁМНАЯ" : "СВЕТЛАЯ"} СЕЙЧАС`
-      : isDark ? "ТЁМНАЯ" : "СВЕТЛАЯ";
+    state.textContent = modeLabel;
   });
 
   themeColor?.setAttribute("content", isDark ? "#11120f" : "#eeede7");

@@ -9287,6 +9287,11 @@ html[data-focus-modality="pointer"]
   display: none;
 }
 
+.display-control__analytics [data-analytics-summary] {
+  min-width: 0;
+  white-space: nowrap;
+}
+
 @media (min-width: 901px) {
   .map-inspector {
     right: 248px;
@@ -9661,22 +9666,25 @@ html[data-contrast="true"] .map-node__glyph {
    all resolve to this dialog; analytics remains an explicit opt-in substate. */
 .settings-panel {
   position: fixed;
-  right: max(18px, env(safe-area-inset-right));
-  bottom: max(18px, env(safe-area-inset-bottom));
+  top: 50%;
+  right: auto;
+  bottom: auto;
+  left: 50%;
   z-index: 90;
   display: grid;
   box-sizing: border-box;
-  width: min(460px, calc(100vw - 36px));
+  width: min(540px, calc(100vw - 36px));
   max-height: calc(100svh - 36px);
   grid-template-rows: auto auto minmax(0, 1fr);
-  gap: 16px;
+  gap: 20px;
   margin: 0;
-  padding: 22px;
+  padding: 28px;
   border: 0;
-  border-radius: 28px;
+  border-radius: 30px;
   background: var(--material-01);
   box-shadow: none;
   color: var(--content-ink);
+  transform: translate(-50%, -50%);
   -webkit-backdrop-filter: blur(24px);
   backdrop-filter: blur(24px);
 }
@@ -9687,6 +9695,32 @@ html[data-contrast="true"] .map-node__glyph {
 
 .settings-panel[hidden] {
   display: none;
+}
+
+body.has-settings-panel .control-console,
+body.has-settings-panel .system-dock,
+body.has-settings-panel .display-control {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+body.has-settings-panel
+  :is(
+    .map-axis,
+    .map-links,
+    .map-nodes,
+    .map-specks,
+    .origin-marker,
+    .signal-constellation
+  ) {
+  opacity: 0.08;
+  transition: none;
+}
+
+body.has-settings-panel
+  :is(.map-axis-label, .map-node-label, .origin-marker__label) {
+  opacity: 0;
 }
 
 .settings-panel :is(h2, h3, p) {
@@ -9709,7 +9743,7 @@ html[data-contrast="true"] .map-node__glyph {
 
 .settings-panel__header h2 {
   margin-top: 9px;
-  font-size: clamp(1.15rem, calc(1rem + 0.5vw), 1.45rem);
+  font-size: clamp(1.15rem, calc(1rem + 0.5vw), 1.55rem);
   font-weight: 600;
   line-height: 1.05;
 }
@@ -9729,7 +9763,11 @@ html[data-contrast="true"] .map-node__glyph {
   place-items: center;
 }
 
-.settings-panel__close:is(:hover, :focus-visible) {
+.settings-panel__close:hover {
+  color: var(--signal);
+}
+
+html[data-focus-modality="keyboard"] .settings-panel__close:focus-visible {
   color: var(--signal);
   outline: 2px solid var(--signal);
   outline-offset: -2px;
@@ -9737,7 +9775,7 @@ html[data-contrast="true"] .map-node__glyph {
 
 .settings-panel__intro {
   color: var(--content-muted);
-  font-size: 0.76rem;
+  font-size: 0.8rem;
   line-height: 1.4;
   text-wrap: pretty;
 }
@@ -9751,17 +9789,17 @@ html[data-contrast="true"] .map-node__glyph {
 
 .settings-panel__row {
   display: grid;
-  min-height: 64px;
+  min-height: 72px;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 18px;
+  gap: 24px;
   border-top: 1px solid var(--line-soft);
 }
 
 .settings-panel__row h3,
 .settings-panel__analytics h3 {
   color: var(--content-ink);
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.06em;
   line-height: 1.15;
@@ -9770,20 +9808,20 @@ html[data-contrast="true"] .map-node__glyph {
 .settings-panel__row p {
   margin-top: 4px;
   color: var(--content-muted);
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   line-height: 1.3;
 }
 
 .settings-panel__row > button {
-  min-width: 118px;
-  min-height: 38px;
-  padding: 0 12px;
+  min-width: 132px;
+  min-height: 42px;
+  padding: 0 16px;
   border: 1px solid var(--line-soft);
   border-radius: 999px;
   background: transparent;
   color: var(--content-ink);
   cursor: pointer;
-  font: 600 0.62rem/1 var(--font-sans);
+  font: 600 0.66rem/1 var(--font-sans);
   letter-spacing: 0.045em;
 }
 
@@ -9797,16 +9835,22 @@ html[data-contrast="true"] .map-node__glyph {
   opacity: 0.66;
 }
 
-.settings-panel__row > button:not(:disabled):is(:hover, :focus-visible) {
+.settings-panel__row > button:not(:disabled):hover {
+  border-color: var(--signal);
+  color: var(--signal);
+}
+
+html[data-focus-modality="keyboard"]
+  .settings-panel__row > button:not(:disabled):focus-visible {
   border-color: var(--signal);
   color: var(--signal);
   outline: 2px solid var(--signal);
-  outline-offset: 2px;
+  outline-offset: -2px;
 }
 
 .settings-panel__analytics {
-  margin-top: 4px;
-  padding-top: 18px;
+  margin-top: 6px;
+  padding-top: 22px;
   border-top: 1px solid var(--line-soft);
 }
 
@@ -9814,13 +9858,13 @@ html[data-contrast="true"] .map-node__glyph {
   display: flex;
   align-items: start;
   justify-content: space-between;
-  gap: 16px;
+  gap: 20px;
 }
 
 .settings-panel__analytics-header p {
   margin-top: 5px;
   color: var(--content-muted);
-  font-size: 0.6rem;
+  font-size: 0.62rem;
   font-weight: 500;
   letter-spacing: 0.035em;
   line-height: 1.25;
@@ -9829,43 +9873,82 @@ html[data-contrast="true"] .map-node__glyph {
 .settings-panel__analytics strong {
   flex: 0 0 auto;
   color: var(--signal);
-  font-size: 0.6rem;
+  font-size: 0.62rem;
   font-weight: 600;
   letter-spacing: 0.045em;
   line-height: 1.2;
 }
 
-.settings-panel__analytics > p {
-  margin-top: 14px;
+.settings-panel__privacy {
+  display: grid;
+  gap: 9px;
+  margin: 16px 0 0;
+}
+
+.settings-panel__privacy > div {
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr);
+  gap: 14px;
+  align-items: baseline;
+}
+
+.settings-panel__privacy :is(dt, dd) {
+  margin: 0;
+}
+
+.settings-panel__privacy dt {
+  color: var(--content-ink);
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.045em;
+  line-height: 1.35;
+}
+
+.settings-panel__privacy dd {
   color: var(--content-muted);
-  font-size: 0.76rem;
-  line-height: 1.42;
+  font-size: 0.74rem;
+  line-height: 1.35;
   text-wrap: pretty;
 }
 
 .settings-panel__details {
-  display: inline-block;
-  margin-top: 10px;
-  color: var(--content-muted);
-  font-size: 0.72rem;
-  text-underline-offset: 3px;
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 14px;
+  padding-bottom: 2px;
+  border-bottom: 1px solid currentColor;
+  color: var(--content-ink);
+  font-size: 0.74rem;
+  line-height: 1.25;
+  text-decoration: none;
+}
+
+.settings-panel__details::after {
+  content: "↗";
+  font-size: 0.72em;
+  transform: translateY(-1px);
+}
+
+.settings-panel__details:hover {
+  color: var(--signal);
 }
 
 .settings-panel__analytics-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-top: 16px;
+  gap: 10px;
+  margin-top: 20px;
 }
 
 .settings-panel__analytics-actions button {
-  min-height: 44px;
-  padding: 0 12px;
+  min-height: 48px;
+  padding: 0 16px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: transparent;
   color: var(--content-ink);
-  font: 600 0.68rem/1 var(--font-sans);
+  font: 600 0.7rem/1 var(--font-sans);
   letter-spacing: 0.055em;
 }
 
@@ -9880,10 +9963,25 @@ html[data-contrast="true"] .map-node__glyph {
   opacity: 0.46;
 }
 
-.settings-panel__analytics-actions button:not(:disabled):is(:hover, :focus-visible),
-.settings-panel__details:focus-visible {
+.settings-panel__analytics-actions button:not(:disabled):hover {
+  border-color: var(--signal);
+}
+
+html[data-focus-modality="keyboard"]
+  .settings-panel__analytics-actions button:not(:disabled):focus-visible {
   outline: 2px solid var(--signal);
-  outline-offset: 2px;
+  outline-offset: -2px;
+}
+
+html[data-focus-modality="keyboard"] .settings-panel__details:focus-visible {
+  outline: none;
+  box-shadow: inset 0 -2px 0 var(--signal);
+}
+
+html[data-focus-modality="keyboard"]
+  .settings-panel__analytics-actions button[data-analytics-allow]:not(:disabled):focus-visible {
+  outline-color: var(--content-ink);
+  outline-offset: -3px;
 }
 
 .no-script-fallback {
@@ -9976,7 +10074,7 @@ html[data-contrast="true"] .map-node__glyph {
 
 @media (max-width: 680px) {
   .settings-panel {
-    top: max(14px, env(safe-area-inset-top));
+    top: 50%;
     right: max(14px, env(safe-area-inset-right));
     bottom: auto;
     left: max(14px, env(safe-area-inset-left));
@@ -9985,10 +10083,15 @@ html[data-contrast="true"] .map-node__glyph {
     gap: 13px;
     padding: 18px;
     border-radius: 24px;
+    transform: translateY(-50%);
   }
 
   .settings-panel__header h2 {
     margin-top: 7px;
+  }
+
+  .settings-panel__intro {
+    font-size: 0.76rem;
   }
 
   .settings-panel__row {
@@ -9996,13 +10099,65 @@ html[data-contrast="true"] .map-node__glyph {
     gap: 10px;
   }
 
-  .settings-panel__row > button {
-    min-width: 104px;
-    padding-inline: 9px;
+  .settings-panel__row h3,
+  .settings-panel__analytics h3,
+  .settings-panel__row p {
+    font-size: 0.68rem;
   }
 
-  .settings-panel__analytics > p {
+  .settings-panel__row > button {
+    min-width: 104px;
+    min-height: 38px;
+    padding-inline: 9px;
+    font-size: 0.62rem;
+  }
+
+  .settings-panel__analytics {
+    margin-top: 4px;
+    padding-top: 18px;
+  }
+
+  .settings-panel__analytics-header {
+    gap: 16px;
+  }
+
+  .settings-panel__analytics-header p,
+  .settings-panel__analytics strong {
+    font-size: 0.6rem;
+  }
+
+  .settings-panel__privacy {
+    margin-top: 14px;
+    gap: 8px;
+  }
+
+  .settings-panel__privacy > div {
+    grid-template-columns: 88px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .settings-panel__privacy dt {
+    font-size: 0.54rem;
+  }
+
+  .settings-panel__privacy dd {
+    font-size: 0.68rem;
+  }
+
+  .settings-panel__details {
+    margin-top: 10px;
     font-size: 0.72rem;
+  }
+
+  .settings-panel__analytics-actions {
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .settings-panel__analytics-actions button {
+    min-height: 44px;
+    padding-inline: 12px;
+    font-size: 0.68rem;
   }
 
   .no-script-fallback nav {

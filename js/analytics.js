@@ -58,6 +58,9 @@ const syncAnalyticsPreferenceUi = () => {
   const stateLabel = state === "allowed"
     ? "РАЗРЕШЕНА"
     : state === "denied" ? "ВЫКЛЮЧЕНА" : "НЕ ВЫБРАНО";
+  const summaryLabel = state === "allowed"
+    ? "АНАЛИТИКА\u00a0—\u00a0ВКЛ."
+    : state === "denied" ? "АНАЛИТИКА\u00a0—\u00a0ВЫКЛ." : "АНАЛИТИКА";
   const accessibleState = state === "allowed"
     ? "разрешена"
     : state === "denied" ? "выключена" : "не выбрана";
@@ -72,11 +75,19 @@ const syncAnalyticsPreferenceUi = () => {
     );
   });
   analyticsSummaries.forEach((summary) => {
-    summary.textContent = stateLabel;
+    summary.textContent = summaryLabel;
   });
   analyticsPreferenceLabels.forEach((label) => {
     label.textContent = stateLabel;
   });
+  if (analyticsAllow) {
+    analyticsAllow.textContent = state === "allowed" ? "РАЗРЕШЕНО" : "РАЗРЕШИТЬ";
+  }
+  if (analyticsDeny) {
+    analyticsDeny.textContent = state === "denied"
+      ? "ВЫКЛЮЧЕНО"
+      : state === "allowed" ? "ВЫКЛЮЧИТЬ" : "НЕ РАЗРЕШАТЬ";
+  }
   analyticsAllow?.toggleAttribute("disabled", state === "allowed");
   analyticsDeny?.toggleAttribute("disabled", state === "denied");
 };
@@ -90,6 +101,7 @@ const closeSettingsPanel = ({ restoreFocus = true } = {}) => {
   settingsPanel.hidden = true;
   settingsPanel.inert = true;
   settingsPanel.classList.remove("is-open");
+  document.body.classList.remove("has-settings-panel");
 
   if (restoreFocus && lastSettingsTrigger?.isConnected) {
     lastSettingsTrigger.focus({ preventScroll: true });
@@ -112,6 +124,7 @@ const openSettingsPanel = ({
       ? activeElement
       : lastSettingsTrigger;
   if (!settingsPanel.open) {
+    document.body.classList.add("has-settings-panel");
     settingsPanel.hidden = false;
     settingsPanel.inert = false;
     settingsPanel.showModal();

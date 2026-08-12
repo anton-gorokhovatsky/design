@@ -631,3 +631,20 @@ names и 31 их использование.
 | Настройки | Desktop `1440×900` light/dark; mobile `390×844`; compact `320×568`; unset/denied; Escape и close | Тема, движение, контраст и аналитика собраны в один modal dialog. На `390` окно content-driven и помещается целиком, на `320` прокручивается только body; horizontal overflow и page scroll — `0`. Escape и нейтральное закрытие сохраняют выбор и возвращают focus |
 | Аналитика | `НЕ ВЫБРАНО`, `РАЗРЕШЕНА`, `ВЫКЛЮЧЕНА`; повторное открытие после выбора | Launcher больше не объявляет бинарный `aria-pressed`; статус видим и доступен. До opt-in запросов Метрики нет, разрешение запускает один counter, отказ сохраняет tracker-free состояние; текущая кнопка решения disabled |
 | Контракты | Полный `check-project`; Chromium full matrix, 200% reflow, reduced motion, forced colors; WebKit `390×844`/`320×568` light/dark | Локальный gate — PASS за `180.3s`: Chromium UI — PASS; WebKit — `4` viewport/theme states, `0 failures`; CSS — `207.3 KiB`, runtime — `191.4 KiB`, весь first-party source — `465.0 KiB`. Runtime-лимит после сокращения кода точечно поднят с `190` до `192 KiB`; общий лимит `600 KiB` не менялся. MATERIAL / 01, mobile search, пять маршрутных строк, privacy, no-JS и deferred media сохранены. Production-PASS фиксируется отдельно после публикации и публичной проверки |
+
+## Корректирующий проход 2026-08-12 — композиция настроек и privacy-текст
+
+Предыдущая приёмка семейства `settings-panel` отозвана после
+реальных кадров: desktop-окно было тесным и прижатым к углу,
+короткий Safari viewport пересекал нижние controls, pointer-focus оставлял
+двойной ореол, а privacy-текст не имел ясной иерархии.
+
+| Семейство | Реальные состояния | Результат |
+|---|---|---|
+| Desktop dialog | Chromium/WebKit `1440×900`, light/dark, unset analytics | Окно `540 px` центрировано по двум осям; поля `28 px`, gap `20 px`, строки и controls получили свободный ритм. На время modal скрыты побочные consoles, смысловые слои карты приглушены до `0.08`; один `MATERIAL / 01` сохранён |
+| Mobile dialog | Chromium/WebKit `393×650` при screen `393×852`; `390×844`; `320×568`, light/dark | На `393×650` dialog симметрично встаёт между краями и не пересекает поиск/dock; на `320×568` в viewport остаётся целая оболочка, прокручивается только её body; horizontal overflow — `0` |
+| Focus | Pointer click/touch; отдельный `Tab`; allow/deny/close | После pointer/touch вычисленный outline — `none`: двойного внешнего ореола нет. Только после `Tab` появляется одна внутренняя линия `2 px`; focus trap/return и Escape сохранены |
+| Analytics launcher | Desktop, unset/allowed/denied | До выбора — одна строка `АНАЛИТИКА`; после — `АНАЛИТИКА — ВКЛ.` или `АНАЛИТИКА — ВЫКЛ.`. Неразрывные пробелы и `white-space: nowrap` исключают две строки |
+| Privacy copy | Unset/allowed/denied; desktop, `393×650`, `320×568` | Вместо длинного абзаца — три пары `ПО СОГЛАСИЮ / ПОИСК / БЕЗ СОГЛАСИЯ`; ссылка `Что сохраняет Метрика` ведёт на официальную страницу cookie и визуально отделена как действие. В unset-состоянии вторая кнопка названа `НЕ РАЗРЕШАТЬ`; текущее решение после выбора disabled |
+| Theme chrome | WebKit first-paint samples, light/dark | `<meta name="theme-color">` синхронизируется в early theme-script до first paint: `#eeede7` light, `#11120f` dark; светлой Safari-планки в dark на первом кадре нет |
+| Полный gate | `node scripts/check-project.mjs`, cache, syntax, assets, 13 masters / 26 chapters, Chromium, WebKit | PASS за `177.9s`: audit — `0 errors / 0 warnings`; Chromium UI — PASS; WebKit — `4` viewport/theme states, `0 failures`; CSS — `210.1 KiB`, runtime — `191.8 KiB`, first-party source — `468.3 KiB`. Настоящий физический iOS Safari в этом локальном проходе не заменён WebKit-симуляцией |

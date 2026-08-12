@@ -1693,7 +1693,7 @@ const auditBrowser = async (client, origin) => {
   });
   await evaluate(
     client,
-    "localStorage.removeItem('anton-signal-analytics'); true",
+    "localStorage.removeItem('anton-signal-theme'); localStorage.removeItem('anton-signal-analytics'); true",
   );
   await client.send("Emulation.setScriptExecutionDisabled", { value: true });
   {
@@ -1740,6 +1740,26 @@ const auditBrowser = async (client, origin) => {
     const input = document.querySelector("[data-command-input]");
     const active = document.activeElement;
     const videos = Array.from(document.querySelectorAll("video"));
+    const read = (selector) => {
+      const element = document.querySelector(selector);
+      const bounds = element?.getBoundingClientRect();
+      const style = element ? getComputedStyle(element) : null;
+      return bounds && style ? {
+        top: bounds.top,
+        right: bounds.right,
+        bottom: bounds.bottom,
+        left: bounds.left,
+        width: bounds.width,
+        height: bounds.height,
+        opacity: Number(style.opacity),
+        visibility: style.visibility,
+      } : null;
+    };
+    const dialog = read("#settings-panel");
+    const dialogStyle = consent ? getComputedStyle(consent) : null;
+    const theme = read("#settings-panel [data-theme-toggle]");
+    const motion = read("#settings-panel [data-motion-toggle]");
+    const activeStyle = active ? getComputedStyle(active) : null;
     return {
       visible: !consent?.hidden && consent?.classList.contains("is-open"),
       inert: consent?.inert,
@@ -1759,6 +1779,53 @@ const auditBrowser = async (client, origin) => {
       loadedVideoResources: performance.getEntriesByType("resource").filter((entry) => (
         entry.name.includes(".mp4")
       )).length,
+      bodyHasSettings: document.body.classList.contains("has-settings-panel"),
+      dialog,
+      dialogGap: dialogStyle?.gap || "",
+      dialogPadding: dialogStyle?.padding || "",
+      horizontalBalance: dialog
+        ? Math.abs(dialog.left - (innerWidth - dialog.right))
+        : Infinity,
+      verticalBalance: dialog
+        ? Math.abs(dialog.top - (innerHeight - dialog.bottom))
+        : Infinity,
+      consoleVisibility: getComputedStyle(document.querySelector(".control-console"))
+        .visibility,
+      dockVisibility: getComputedStyle(document.querySelector(".system-dock"))
+        .visibility,
+      displayVisibility: getComputedStyle(document.querySelector(".display-control"))
+        .visibility,
+      theme,
+      motion,
+      themeLabel: document.querySelector("[data-theme-panel-state]")
+        ?.textContent.trim(),
+      analyticsLauncherLabel: document.querySelector("[data-analytics-summary]")
+        ?.textContent.trim(),
+      analyticsLauncherWhiteSpace: getComputedStyle(
+        document.querySelector("[data-analytics-summary]"),
+      ).whiteSpace,
+      privacyRows: Array.from(document.querySelectorAll(".settings-panel__privacy > div"))
+        .map((row) => [
+          row.querySelector("dt")?.textContent.trim(),
+          row.querySelector("dd")?.textContent.replace(/\\s+/g, " ").trim(),
+        ]),
+      detailsLabel: document.querySelector(".settings-panel__details")
+        ?.textContent.trim(),
+      detailsHref: document.querySelector(".settings-panel__details")?.href,
+      detailsDisplay: getComputedStyle(
+        document.querySelector(".settings-panel__details"),
+      ).display,
+      allowLabel: document.querySelector("[data-analytics-allow]")?.textContent.trim(),
+      denyLabel: document.querySelector("[data-analytics-deny]")?.textContent.trim(),
+      focusModality: document.documentElement.dataset.focusModality,
+      pointerOutlineStyle: activeStyle?.outlineStyle || "",
+      mapNodesOpacity: Number(getComputedStyle(document.querySelector(".map-nodes")).opacity),
+      signalOpacity: Number(
+        getComputedStyle(document.querySelector(".signal-constellation")).opacity,
+      ),
+      axisLabelOpacity: Number(
+        getComputedStyle(document.querySelector(".map-axis-label")).opacity,
+      ),
     };
   })()`);
   if (
@@ -1775,6 +1842,41 @@ const auditBrowser = async (client, origin) => {
     || analyticsConsentContract.preference !== null
     || analyticsConsentContract.videoSources !== 0
     || analyticsConsentContract.loadedVideoResources !== 0
+    || !analyticsConsentContract.bodyHasSettings
+    || !analyticsConsentContract.dialog
+    || analyticsConsentContract.dialog.width !== 540
+    || analyticsConsentContract.dialogGap !== "20px"
+    || analyticsConsentContract.dialogPadding !== "28px"
+    || analyticsConsentContract.horizontalBalance > 1
+    || analyticsConsentContract.verticalBalance > 1
+    || analyticsConsentContract.consoleVisibility !== "hidden"
+    || analyticsConsentContract.dockVisibility !== "hidden"
+    || analyticsConsentContract.displayVisibility !== "hidden"
+    || !analyticsConsentContract.theme
+    || !analyticsConsentContract.motion
+    || Math.abs(
+      analyticsConsentContract.theme.width
+      - analyticsConsentContract.motion.width
+    ) > 1
+    || analyticsConsentContract.themeLabel !== "СИСТЕМА"
+    || analyticsConsentContract.analyticsLauncherLabel !== "АНАЛИТИКА"
+    || analyticsConsentContract.analyticsLauncherWhiteSpace !== "nowrap"
+    || JSON.stringify(analyticsConsentContract.privacyRows) !== JSON.stringify([
+      ["ПО СОГЛАСИЮ", "Обезличенная статистика посещений и действий на карте."],
+      ["ПОИСК", "Введённый текст не передаётся."],
+      ["БЕЗ СОГЛАСИЯ", "Аналитика не загружается."],
+    ])
+    || analyticsConsentContract.detailsLabel !== "Что сохраняет Метрика"
+    || analyticsConsentContract.detailsHref
+      !== "https://yandex.ru/support/metrica/ru/general/cookie-usage"
+    || analyticsConsentContract.detailsDisplay !== "inline-flex"
+    || analyticsConsentContract.allowLabel !== "РАЗРЕШИТЬ"
+    || analyticsConsentContract.denyLabel !== "НЕ РАЗРЕШАТЬ"
+    || analyticsConsentContract.focusModality !== "pointer"
+    || analyticsConsentContract.pointerOutlineStyle !== "none"
+    || analyticsConsentContract.mapNodesOpacity > 0.1
+    || analyticsConsentContract.signalOpacity > 0.1
+    || analyticsConsentContract.axisLabelOpacity !== 0
     || analyticsRequestsBeforeChoice.length !== 0
   ) {
     fail("privacy: analytics or heavy media started before an explicit choice.", {
@@ -1845,18 +1947,27 @@ const auditBrowser = async (client, origin) => {
     trackerScripts: Array.from(document.scripts).filter((script) => (
       script.src.includes("mc.yandex.ru")
     )).length,
+    summary: document.querySelector("[data-analytics-summary]")?.textContent.trim(),
+    allowLabel: document.querySelector("[data-analytics-allow]")?.textContent.trim(),
+    denyLabel: document.querySelector("[data-analytics-deny]")?.textContent.trim(),
   }))()`);
   if (
     !deniedContract.hidden
     || deniedContract.preference !== "denied"
     || deniedContract.disabled !== true
     || deniedContract.trackerScripts !== 0
+    || deniedContract.summary !== "АНАЛИТИКА\u00a0—\u00a0ВЫКЛ."
+    || deniedContract.allowLabel !== "РАЗРЕШИТЬ"
+    || deniedContract.denyLabel !== "ВЫКЛЮЧЕНО"
   ) {
     fail("privacy: declining analytics does not persist a tracker-free state.", deniedContract);
   }
 
   await evaluate(client, "document.querySelector('[data-analytics-settings]')?.click(); true");
-  await delay(40);
+  await waitForExpression(client, `(() => (
+    document.activeElement?.hasAttribute('data-analytics-allow')
+    || document.activeElement?.hasAttribute('data-analytics-deny')
+  ))()`);
   const reopenedContract = await evaluate(client, `(() => ({
     visible: !document.querySelector("[data-analytics-consent]")?.hidden,
     focusedAction: document.activeElement?.hasAttribute("data-analytics-allow")
@@ -1878,6 +1989,180 @@ const auditBrowser = async (client, origin) => {
     fail("privacy: the saved choice cannot be reopened with deliberate focus.", reopenedContract);
   }
   await evaluate(client, "document.querySelector('[data-close-settings]')?.click(); true");
+
+  await evaluate(
+    client,
+    "localStorage.removeItem('anton-signal-theme'); localStorage.removeItem('anton-signal-analytics'); true",
+  );
+  await setViewport(client, {
+    label: "mobile-393-safari-short-dark",
+    width: 393,
+    height: 650,
+    screenWidth: 393,
+    screenHeight: 852,
+    mobile: true,
+    theme: "dark",
+  });
+  await navigate(client, `${origin}/?qa=mobile-393-safari-short-settings`);
+  await evaluate(client, `(() => {
+    document.querySelector('[data-nav-utility][data-open-settings]')?.click();
+    return true;
+  })()`);
+  await delay(120);
+  const mobileShortSettingsContract = await evaluate(client, `(() => {
+    const read = (selector) => {
+      const element = document.querySelector(selector);
+      const bounds = element?.getBoundingClientRect();
+      const style = element ? getComputedStyle(element) : null;
+      return bounds && style ? {
+        top: bounds.top,
+        right: bounds.right,
+        bottom: bounds.bottom,
+        left: bounds.left,
+        width: bounds.width,
+        height: bounds.height,
+        opacity: Number(style.opacity),
+        visibility: style.visibility,
+      } : null;
+    };
+    const dialog = read('#settings-panel');
+    const theme = read('#settings-panel [data-theme-toggle]');
+    const motion = read('#settings-panel [data-motion-toggle]');
+    const activeStyle = document.activeElement
+      ? getComputedStyle(document.activeElement)
+      : null;
+    return {
+      bodyHasSettings: document.body.classList.contains('has-settings-panel'),
+      dialog,
+      command: read('.command-dock'),
+      dock: read('.system-dock'),
+      nav: read('[data-constellation-nav-toggle]'),
+      theme,
+      motion,
+      themeLabel: document.querySelector('[data-theme-panel-state]')?.textContent.trim(),
+      themeColor: document.querySelector('meta[name="theme-color"]')?.content,
+      activeInside: document.querySelector('#settings-panel')
+        ?.contains(document.activeElement),
+      pointerModality: document.documentElement.dataset.focusModality,
+      pointerOutlineStyle: activeStyle?.outlineStyle || '',
+      mapNodesOpacity: Number(getComputedStyle(document.querySelector('.map-nodes')).opacity),
+      signalOpacity: Number(
+        getComputedStyle(document.querySelector('.signal-constellation')).opacity,
+      ),
+      axisLabelOpacity: Number(
+        getComputedStyle(document.querySelector('.map-axis-label')).opacity,
+      ),
+      verticalBalance: dialog
+        ? Math.abs(dialog.top - (innerHeight - dialog.bottom))
+        : Infinity,
+      overflowX: document.documentElement.scrollWidth
+        - document.documentElement.clientWidth,
+    };
+  })()`);
+  const backgroundControlsHidden = [
+    mobileShortSettingsContract.command,
+    mobileShortSettingsContract.dock,
+    mobileShortSettingsContract.nav,
+  ].every((control) => (
+    control
+    && (control.visibility === "hidden" || control.opacity === 0)
+  ));
+  if (
+    !mobileShortSettingsContract.bodyHasSettings
+    || !mobileShortSettingsContract.dialog
+    || mobileShortSettingsContract.dialog.top < 13
+    || mobileShortSettingsContract.dialog.bottom > 637
+    || mobileShortSettingsContract.verticalBalance > 1
+    || !backgroundControlsHidden
+    || !mobileShortSettingsContract.theme
+    || !mobileShortSettingsContract.motion
+    || Math.abs(
+      mobileShortSettingsContract.theme.width
+      - mobileShortSettingsContract.motion.width
+    ) > 1
+    || mobileShortSettingsContract.themeLabel !== "СИСТЕМА"
+    || mobileShortSettingsContract.themeColor !== "#11120f"
+    || !mobileShortSettingsContract.activeInside
+    || mobileShortSettingsContract.pointerModality !== "pointer"
+    || mobileShortSettingsContract.pointerOutlineStyle !== "none"
+    || mobileShortSettingsContract.mapNodesOpacity > 0.1
+    || mobileShortSettingsContract.signalOpacity > 0.1
+    || mobileShortSettingsContract.axisLabelOpacity !== 0
+    || mobileShortSettingsContract.overflowX !== 0
+  ) {
+    fail(
+      "mobile-settings: the short Safari viewport loses modal hierarchy.",
+      {
+        ...mobileShortSettingsContract,
+        backgroundControlsHidden,
+      },
+    );
+  }
+  await saveScreenshot(client, "mobile-393-safari-short-settings-dark");
+  await saveElementScreenshot(
+    client,
+    "crop-mobile-393-safari-short-settings-dark",
+    ".settings-panel",
+  );
+
+  await pressTab(client);
+  const mobileShortKeyboardContract = await evaluate(client, `(() => {
+    const active = document.activeElement;
+    const style = active ? getComputedStyle(active) : null;
+    return {
+      inside: document.querySelector('#settings-panel')?.contains(active),
+      modality: document.documentElement.dataset.focusModality,
+      outlineStyle: style?.outlineStyle || '',
+      outlineWidth: Number.parseFloat(style?.outlineWidth || '0'),
+    };
+  })()`);
+  if (
+    !mobileShortKeyboardContract.inside
+    || mobileShortKeyboardContract.modality !== "keyboard"
+    || mobileShortKeyboardContract.outlineStyle !== "solid"
+    || mobileShortKeyboardContract.outlineWidth < 2
+  ) {
+    fail(
+      "mobile-settings: keyboard focus is not restored after pointer suppression.",
+      mobileShortKeyboardContract,
+    );
+  }
+
+  await evaluate(client, "document.querySelector('[data-close-settings]')?.click(); true");
+  await delay(240);
+  const mobileShortCloseContract = await evaluate(client, `(() => {
+    const visible = (selector) => {
+      const element = document.querySelector(selector);
+      const style = element ? getComputedStyle(element) : null;
+      return Boolean(style && style.visibility !== 'hidden' && Number(style.opacity) > 0);
+    };
+    return {
+      bodyHasSettings: document.body.classList.contains('has-settings-panel'),
+      commandVisible: visible('.command-dock'),
+      dockVisible: visible('.system-dock'),
+      navVisible: visible('[data-constellation-nav-toggle]'),
+      mapNodesOpacity: Number(getComputedStyle(document.querySelector('.map-nodes')).opacity),
+    };
+  })()`);
+  if (
+    mobileShortCloseContract.bodyHasSettings
+    || !mobileShortCloseContract.commandVisible
+    || !mobileShortCloseContract.dockVisible
+    || !mobileShortCloseContract.navVisible
+    || mobileShortCloseContract.mapNodesOpacity < 0.99
+  ) {
+    fail(
+      "mobile-settings: closing the dialog does not restore the mobile console.",
+      mobileShortCloseContract,
+    );
+  }
+
+  await setViewport(client, {
+    width: 1440,
+    height: 900,
+    mobile: false,
+    theme: "light",
+  });
   await evaluate(
     client,
     "localStorage.removeItem('anton-signal-analytics'); true",
@@ -1897,6 +2182,8 @@ const auditBrowser = async (client, origin) => {
       entry?.[0] === 111107350 && entry?.[1] === "init"
     )),
     summary: document.querySelector("[data-analytics-summary]")?.textContent.trim(),
+    allowLabel: document.querySelector("[data-analytics-allow]")?.textContent.trim(),
+    denyLabel: document.querySelector("[data-analytics-deny]")?.textContent.trim(),
     launcherPressed: document.querySelector("[data-analytics-settings]")
       ?.hasAttribute("aria-pressed"),
   }))()`);
@@ -1909,7 +2196,9 @@ const auditBrowser = async (client, origin) => {
     || allowedContract.disabled !== false
     || allowedContract.trackerScripts !== 1
     || !allowedContract.queuedInit
-    || allowedContract.summary !== "РАЗРЕШЕНА"
+    || allowedContract.summary !== "АНАЛИТИКА\u00a0—\u00a0ВКЛ."
+    || allowedContract.allowLabel !== "РАЗРЕШЕНО"
+    || allowedContract.denyLabel !== "ВЫКЛЮЧИТЬ"
     || allowedContract.launcherPressed
     || analyticsRequestsAfterAllow.length === 0
   ) {

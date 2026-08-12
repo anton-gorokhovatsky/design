@@ -951,6 +951,7 @@ const firstPaintAudit = async (browser, viewport, colorScheme) => {
           surface: surface.dataset.materialSurface,
           background: style.backgroundColor,
           backdrop: style.webkitBackdropFilter || style.backdropFilter,
+          themeColor: document.querySelector('meta[name="theme-color"]')?.content || "",
         });
       }
       if (performance.now() - started < 1500) {
@@ -976,9 +977,22 @@ const firstPaintAudit = async (browser, viewport, colorScheme) => {
       first,
       last,
       failures,
+      themeColors: [...new Set(samples.map(({ themeColor }) => themeColor))],
       themeAtEnd: document.documentElement.dataset.theme,
     };
   });
+  const expectedThemeColor = colorScheme === "dark" ? "#11120f" : "#eeede7";
+  if (
+    result.themeColors.length !== 1
+    || result.themeColors[0] !== expectedThemeColor
+  ) {
+    result.failures.push({
+      surface: "theme-color",
+      background: result.themeColors.join(",") || "missing",
+      backdrop: `expected ${expectedThemeColor}`,
+    });
+  }
+  result.expectedThemeColor = expectedThemeColor;
   await context.close();
   return result;
 };
@@ -1118,6 +1132,21 @@ const analyticsConsentAudit = async (page, viewport, label) => {
     const consent = document.querySelector("[data-analytics-consent]");
     const rect = consent?.getBoundingClientRect();
     const input = document.querySelector("[data-command-input]");
+    const read = (selector) => {
+      const element = document.querySelector(selector);
+      const bounds = element?.getBoundingClientRect();
+      const style = element ? getComputedStyle(element) : null;
+      return bounds && style ? {
+        width: bounds.width,
+        opacity: Number(style.opacity),
+        visibility: style.visibility,
+      } : null;
+    };
+    const activeStyle = document.activeElement
+      ? getComputedStyle(document.activeElement)
+      : null;
+    const theme = read("#settings-panel [data-theme-toggle]");
+    const motion = read("#settings-panel [data-motion-toggle]");
     return {
       visible: Boolean(consent && !consent.hidden && consent.classList.contains("is-open")),
       inert: consent?.inert ?? true,
@@ -1133,6 +1162,41 @@ const analyticsConsentAudit = async (page, viewport, label) => {
         script.src.includes("mc.yandex.ru")
       )).length,
       preference: localStorage.getItem("anton-signal-analytics"),
+      bodyHasSettings: document.body.classList.contains("has-settings-panel"),
+      command: read(".command-dock"),
+      dock: read(".system-dock"),
+      navigation: read("[data-constellation-nav-toggle]"),
+      theme,
+      motion,
+      themeLabel: document.querySelector("[data-theme-panel-state]")
+        ?.textContent.trim() || "",
+      analyticsLauncherLabel: document.querySelector("[data-analytics-summary]")
+        ?.textContent.trim() || "",
+      analyticsLauncherWhiteSpace: getComputedStyle(
+        document.querySelector("[data-analytics-summary]"),
+      ).whiteSpace,
+      privacyRows: Array.from(document.querySelectorAll(".settings-panel__privacy > div"))
+        .map((row) => row.textContent.replace(/\s+/g, " ").trim()),
+      detailsLabel: document.querySelector(".settings-panel__details")
+        ?.textContent.trim() || "",
+      detailsHref: document.querySelector(".settings-panel__details")?.href || "",
+      detailsDisplay: getComputedStyle(
+        document.querySelector(".settings-panel__details"),
+      ).display,
+      allowLabel: document.querySelector("[data-analytics-allow]")
+        ?.textContent.trim() || "",
+      denyLabel: document.querySelector("[data-analytics-deny]")
+        ?.textContent.trim() || "",
+      themeColorMatches: document.querySelector('meta[name="theme-color"]')?.content
+        === (document.documentElement.dataset.theme === "dark" ? "#11120f" : "#eeede7"),
+      pointerOutlineStyle: activeStyle?.outlineStyle || "",
+      mapNodesOpacity: Number(getComputedStyle(document.querySelector(".map-nodes")).opacity),
+      signalOpacity: Number(
+        getComputedStyle(document.querySelector(".signal-constellation")).opacity,
+      ),
+      axisLabelOpacity: Number(
+        getComputedStyle(document.querySelector(".map-axis-label")).opacity,
+      ),
       rect: rect ? {
         left: rect.left,
         top: rect.top,
@@ -1148,11 +1212,21 @@ const analyticsConsentAudit = async (page, viewport, label) => {
     surface === "settings-panel"
   ));
   const rect = result.rect;
+  const backgroundControlsHidden = [
+    result.command,
+    result.dock,
+    result.navigation,
+  ].every((control) => (
+    control
+    && (control.visibility === "hidden" || control.opacity === 0)
+  ));
   const withinViewport = rect
     && rect.left >= -0.5
     && rect.top >= -0.5
     && rect.right <= viewport.width + 0.5
     && rect.bottom <= viewport.height + 0.5;
+  const verticallyBalanced = rect
+    && Math.abs(rect.top - (viewport.height - rect.bottom)) <= 1;
 
   await page.screenshot({
     path: path.join(artifactDir, `${label}-analytics-consent.png`),
@@ -1162,7 +1236,9 @@ const analyticsConsentAudit = async (page, viewport, label) => {
   return {
     ...result,
     materialFailures,
+    backgroundControlsHidden,
     withinViewport,
+    verticallyBalanced,
     failure: !result.visible
       || result.inert
       || !result.focusInside
@@ -1174,7 +1250,31 @@ const analyticsConsentAudit = async (page, viewport, label) => {
       || !result.searchPrivate
       || result.trackerScripts !== 0
       || result.preference !== null
+      || !result.bodyHasSettings
+      || !backgroundControlsHidden
+      || !result.theme
+      || !result.motion
+      || Math.abs(result.theme.width - result.motion.width) > 1
+      || result.themeLabel !== "СИСТЕМА"
+      || result.analyticsLauncherLabel !== "АНАЛИТИКА"
+      || result.analyticsLauncherWhiteSpace !== "nowrap"
+      || JSON.stringify(result.privacyRows) !== JSON.stringify([
+        "ПО СОГЛАСИЮ Обезличенная статистика посещений и действий на карте.",
+        "ПОИСК Введённый текст не передаётся.",
+        "БЕЗ СОГЛАСИЯ Аналитика не загружается.",
+      ])
+      || result.detailsLabel !== "Что сохраняет Метрика"
+      || result.detailsHref !== "https://yandex.ru/support/metrica/ru/general/cookie-usage"
+      || result.detailsDisplay !== "inline-flex"
+      || result.allowLabel !== "РАЗРЕШИТЬ"
+      || result.denyLabel !== "НЕ РАЗРЕШАТЬ"
+      || !result.themeColorMatches
+      || result.pointerOutlineStyle !== "none"
+      || result.mapNodesOpacity > 0.1
+      || result.signalOpacity > 0.1
+      || result.axisLabelOpacity !== 0
       || !withinViewport
+      || !verticallyBalanced
       || materialFailures.length > 0,
   };
 };
@@ -1390,6 +1490,7 @@ const accessibilityAcceptanceAudit = async (browser) => {
     mobileSearch: null,
     noScript: null,
     reducedMotionRelations: null,
+    shortSettings: null,
     telemetryRequests,
     runtimeErrors,
   };
@@ -1510,6 +1611,23 @@ const accessibilityAcceptanceAudit = async (browser) => {
     report.childRelations = await childRelationsAudit(browser);
     report.reducedMotionRelations = await reducedMotionRelationsAudit(browser);
 
+    const shortSettingsViewport = { width: 393, height: 650 };
+    const shortSettingsContext = await browser.newContext({
+      viewport: shortSettingsViewport,
+      colorScheme: "dark",
+      hasTouch: true,
+      isMobile: true,
+    });
+    const shortSettingsPage = await shortSettingsContext.newPage();
+    await isolateThirdPartyTelemetry(shortSettingsPage);
+    attachRuntimeLog(shortSettingsPage, "393x650-dark-short-settings");
+    report.shortSettings = await analyticsConsentAudit(
+      shortSettingsPage,
+      shortSettingsViewport,
+      "393x650-dark-short-settings",
+    );
+    await shortSettingsContext.close();
+
     const noScriptContext = await browser.newContext({
       viewport: { width: 390, height: 844 },
       colorScheme: "dark",
@@ -1556,6 +1674,9 @@ const accessibilityAcceptanceAudit = async (browser) => {
       : []),
     ...(report.reducedMotionRelations?.failure
       ? ["reduced motion: semantic relationship routes must remain static"]
+      : []),
+    ...(report.shortSettings?.failure
+      ? ["393/dark: short Safari settings composition failed"]
       : []),
     ...report.firstPaint.flatMap((state) => state.failures.map(
       (failure) => `first-paint ${state.viewport.width}/${state.colorScheme}: `

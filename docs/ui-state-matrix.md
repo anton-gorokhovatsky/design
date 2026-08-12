@@ -27,6 +27,7 @@
 | `desktop` | `1440×900` | Полная композиция, drag-модули и project reel |
 | `tablet` | `1024×768` | Промежуточная компоновка |
 | `mobile` | `390×844` | Основной touch-сценарий |
+| `mobile-short` | `393×650`, screen `393×852` | Видимая область Safari после появления browser chrome |
 | `compact` | `320×568` | Минимальная ширина и короткий экран |
 | `keyboard` | `390×430`, screen `390×844` | Поиск над экранной клавиатурой |
 | `reflow` | `720×450`, device scale `2` | Эквивалент 200% zoom |
@@ -55,13 +56,13 @@
 | `panel-contact` | Открыть `СВЯЗАТЬСЯ` | Два контакта и один маршрут резюме в Notion; без открытых адресов и overflow |
 | `mobile-nav-open` | Открыть mobile navigation | Пять равных маршрутных строк видимы одновременно; ниже отдельно стоят утилиты хронологии и настроек; hit-area, aria-current и Escape/focus return сохранены |
 | `mobile-authorship-compact` | Любая ширина `≤680px`, карта без выбранной точки | Тихая desktop-подпись авторства скрыта; карта сохраняет исходное кадрирование |
-| `settings-panel` | Открыть из mobile navigation, `ЭКРАН` или поиска | В одном dialog доступны тема, движение, контраст и аналитика; Escape и нейтральное закрытие не меняют предпочтения и возвращают focus; системные motion/contrast блокируют локальный override с объясняющим именем |
-| `analytics-consent` | Открыть настройки через `ЭКРАН`, поиск или `?analytics-consent=show` | Состояния `НЕ ВЫБРАНО / РАЗРЕШЕНА / ВЫКЛЮЧЕНА` различимы; до opt-in нет Метрики; allow/deny сохраняются; launcher не притворяется binary toggle |
+| `settings-panel` | Открыть из mobile navigation, `ЭКРАН` или поиска | В одном dialog доступны тема, движение, контраст и аналитика; на desktop окно центрировано и имеет свободный ритм, на `393×650` не пересекает нижнюю консоль, на `320×568` прокручивается только body; фоновые controls скрыты, смысловые слои карты приглушены; Escape и нейтральное закрытие не меняют предпочтения и возвращают focus |
+| `analytics-consent` | Открыть настройки через `ЭКРАН`, поиск или `?analytics-consent=show` | Внутри dialog различимы `НЕ ВЫБРАНО / РАЗРЕШЕНА / ВЫКЛЮЧЕНА`; privacy-объяснение разделено на `ПО СОГЛАСИЮ / ПОИСК / БЕЗ СОГЛАСИЯ`, ссылка точно описывает страницу о cookie; до выбора launcher показывает одну строку `АНАЛИТИКА`, после — `АНАЛИТИКА — ВКЛ.` или `АНАЛИТИКА — ВЫКЛ.`; initial deny назван `НЕ РАЗРЕШАТЬ`, текущее решение disabled; до opt-in нет Метрики |
 | `analytics-decision-signals` | После opt-in открыть точку, выбрать результат поиска, открыть панель и завершить маршрут | Есть `point_open`, `search_success`, `panel_open`, `observation_complete`; только allowlisted параметры, без поискового текста и свободных значений |
 | `resume-notion` | Открыть маршрут `РЕЗЮМЕ / NOTION` | Внешняя ссылка имеет понятное доступное имя и ведёт на актуальную хронологию |
 | `share-route` | Открыть шесть `/work/<id>/` | Собственные title/description/canonical/OG `1200×630`, затем корректный `?point=<id>#map` |
 | `no-script` | Отключить JavaScript | Автор, назначение, шесть работ, Notion-резюме и контакты доступны без tracking pixel |
-| `keyboard-focus` | Tab/Shift+Tab/Enter/Space/Arrows/Escape | Видимый focus, порядок, focus trap/return |
+| `keyboard-focus` | Tab/Shift+Tab/Enter/Space/Arrows/Escape | После pointer/touch нет остаточного ореола; после `Tab` видна одна внутренняя focus-линия; порядок, focus trap/return сохранены |
 | `text-zoom` | 200% zoom и ширина 320 CSS px | Текст не обрезан, обычный контент не требует горизонтального скролла |
 | `reduced-motion` | `prefers-reduced-motion: reduce` | Нет морфинга/перемещения; функции и конечные состояния сохранены |
 | `forced-colors` | Forced colors/high contrast | Точки, controls, focus и selected различимы без tint/blur |
@@ -74,7 +75,7 @@
 | `first-visit` | Авторство, origin CTA, mobile top area | Иерархия, отсутствие overlap, роль не становится logo-object |
 | `console-view` | Группы `СОСТАВ` и `КООРДИНАТЫ`, category on/off и reset | Колонка маркеров, baseline, разделитель, focus и соответствие видимости состояниям |
 | `console-display` | Панель и analytics action во всех трёх состояниях | Общий ритм, material, focus и явный статус privacy |
-| `settings-panel` | Полное окно, analytics substate, mobile `390×844` и compact `320×568` | Иерархия заголовка, строки контролов, переносы, scroll, focus и один MATERIAL / 01 |
+| `settings-panel` | Полное окно desktop, analytics substate, mobile `390×844`, `393×650` и compact `320×568` | Иерархия заголовка, строки контролов, переносы, scroll, pointer/keyboard focus, тихий фон и один MATERIAL / 01 |
 | `console-command` | Nav + поиск | Оси знаков, input, submit и keyboard results |
 | `map-annotations` | Оси, origin, Garage, running | Линии под material-подписями, отступы и оптические центры |
 | `map-inspector` | Garage, Ilmix, `ЕДА`, длинный принцип | Иерархия kind/title/meta/body/action, переносы, material и оптический ритм коротких и длинных карточек |
