@@ -774,7 +774,9 @@ const relationshipCascadeAudit = async (page) => {
     document.querySelector(
       "[data-constellation-nav].is-open [data-constellation-nav-toggle]",
     )?.click();
-    document.querySelector('[data-map-filter="project"]')?.click();
+    document.querySelector('[data-map-filter="company"]')?.click();
+    document.querySelector('[data-map-filter="personal"]')?.click();
+    document.querySelector('[data-map-filter="practice"]')?.click();
     document.querySelector('[data-map-id="private-practice"]')?.click();
   });
   await waitForLayout(page, 420);
@@ -1120,6 +1122,12 @@ const analyticsConsentAudit = async (page, viewport, label) => {
       visible: Boolean(consent && !consent.hidden && consent.classList.contains("is-open")),
       inert: consent?.inert ?? true,
       focusInside: Boolean(consent?.contains(document.activeElement)),
+      role: consent?.getAttribute("role") || "",
+      modal: consent?.getAttribute("aria-modal") || "",
+      closeExists: Boolean(consent?.querySelector("[data-close-settings]")),
+      preferenceLabel: consent?.querySelector("[data-analytics-preference]")
+        ?.textContent.trim() || "",
+      open: consent?.open ?? false,
       searchPrivate: input?.classList.contains("ym-disable-keys") ?? false,
       trackerScripts: Array.from(document.scripts).filter((script) => (
         script.src.includes("mc.yandex.ru")
@@ -1137,7 +1145,7 @@ const analyticsConsentAudit = async (page, viewport, label) => {
   });
   const material = await materialAudit(page);
   const materialFailures = material.failures.filter(({ surface }) => (
-    surface === "analytics-consent"
+    surface === "settings-panel"
   ));
   const rect = result.rect;
   const withinViewport = rect
@@ -1157,7 +1165,12 @@ const analyticsConsentAudit = async (page, viewport, label) => {
     withinViewport,
     failure: !result.visible
       || result.inert
-      || result.focusInside
+      || !result.focusInside
+      || result.role !== "dialog"
+      || result.modal !== "true"
+      || !result.closeExists
+      || result.preferenceLabel !== "НЕ ВЫБРАНО"
+      || !result.open
       || !result.searchPrivate
       || result.trackerScripts !== 0
       || result.preference !== null

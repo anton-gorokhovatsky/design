@@ -44,18 +44,19 @@
 | `food-forks` | `?point=food#map` | Текст связывает еду с сервисом и вниманием к человеку; ссылка ведёт на официальный фрагмент `Forks`, без упоминания Чикаго и без стороннего autoplay-медиа |
 | `project-selected` | Выбрать независимый проект | Контракт выдерживает разные title/meta/description |
 | `project-reel` | Hover/focus проекта на desktop | Receiver `3:2`, `contain`, отдельный material-readout, без chrome и crop |
-| `filter-*` | Переключить пять фильтров | Типы не смещаются, выбранная точка и реальные связи сохраняются |
-| `chronology` | Включить хронологию | Датированные точки следуют годовым орбитам; недатированные не имитируют дату |
+| `filter-*` | Переключить четыре категории и команду `ВСЁ` | `aria-pressed` каждой категории совпадает с фактической видимостью; `ВСЁ` остаётся командой сброса без toggle-семантики; последний видимый тип нельзя выключить |
+| `chronology` | Включить хронологию в группе `КООРДИНАТЫ`, mobile navigation или поиске | Хронология не маскируется под категорию; оба запуска синхронизированы, датированные точки следуют годовым орбитам, недатированные не имитируют дату |
 | `search-default` | Фокус пустого поиска | Семь результатов, listbox/active option и fit над строкой |
-| `search-match` | Ввести `гараж` | Keyboard route и совпадения без ложных результатов |
+| `search-match` | Ввести `сайт герман`, `герман сайт`, `аналитика`, `проекты` и `подход` | Все слова учитываются независимо от порядка; прямое намерение раздела или настройки ранжируется выше случайного совпадения в тексте точки |
 | `search-empty` | Ввести строку без совпадений | Понятное empty-state сообщение без декоративной заглушки |
 | `search-keyboard` | `390×430`, `ArrowUp`, `Escape` | Список сразу встаёт над строкой без въездного смещения; скроллится список, не страница; dock/nav скрываются и возвращаются |
 | `panel-work` | Открыть `ПРОЕКТЫ` | Intro и восемь карточек; роль видна; mobile stack не обрезает текст |
 | `panel-approach` | Открыть `ПОДХОД` | Четыре операции, читаемый sticky-stack и обычная прокрутка |
 | `panel-contact` | Открыть `СВЯЗАТЬСЯ` | Два контакта и один маршрут резюме в Notion; без открытых адресов и overflow |
-| `mobile-nav-open` | Открыть mobile navigation | Пять равных строк, hit-area `40px`, aria-current и Escape/focus return |
+| `mobile-nav-open` | Открыть mobile navigation | Пять равных маршрутных строк видимы одновременно; ниже отдельно стоят утилиты хронологии и настроек; hit-area, aria-current и Escape/focus return сохранены |
 | `mobile-authorship-compact` | Любая ширина `≤680px`, карта без выбранной точки | Тихая desktop-подпись авторства скрыта; карта сохраняет исходное кадрирование |
-| `analytics-consent` | Открыть через `ЭКРАН`, поиск или `?analytics-consent=show` | До opt-in нет Метрики; allow/deny сохраняются; consent не появляется сам на первом визите |
+| `settings-panel` | Открыть из mobile navigation, `ЭКРАН` или поиска | В одном dialog доступны тема, движение, контраст и аналитика; Escape и нейтральное закрытие не меняют предпочтения и возвращают focus; системные motion/contrast блокируют локальный override с объясняющим именем |
+| `analytics-consent` | Открыть настройки через `ЭКРАН`, поиск или `?analytics-consent=show` | Состояния `НЕ ВЫБРАНО / РАЗРЕШЕНА / ВЫКЛЮЧЕНА` различимы; до opt-in нет Метрики; allow/deny сохраняются; launcher не притворяется binary toggle |
 | `analytics-decision-signals` | После opt-in открыть точку, выбрать результат поиска, открыть панель и завершить маршрут | Есть `point_open`, `search_success`, `panel_open`, `observation_complete`; только allowlisted параметры, без поискового текста и свободных значений |
 | `resume-notion` | Открыть маршрут `РЕЗЮМЕ / NOTION` | Внешняя ссылка имеет понятное доступное имя и ведёт на актуальную хронологию |
 | `share-route` | Открыть шесть `/work/<id>/` | Собственные title/description/canonical/OG `1200×630`, затем корректный `?point=<id>#map` |
@@ -71,8 +72,9 @@
 | Семейство | Кропы | Что сравнивать |
 |---|---|---|
 | `first-visit` | Авторство, origin CTA, mobile top area | Иерархия, отсутствие overlap, роль не становится logo-object |
-| `console-view` | Панель и active-row | Колонка маркеров, baseline, focus и активная риска |
-| `console-display` | Панель и analytics action | Общий ритм, material, focus, состояние privacy |
+| `console-view` | Группы `СОСТАВ` и `КООРДИНАТЫ`, category on/off и reset | Колонка маркеров, baseline, разделитель, focus и соответствие видимости состояниям |
+| `console-display` | Панель и analytics action во всех трёх состояниях | Общий ритм, material, focus и явный статус privacy |
+| `settings-panel` | Полное окно, analytics substate, mobile `390×844` и compact `320×568` | Иерархия заголовка, строки контролов, переносы, scroll, focus и один MATERIAL / 01 |
 | `console-command` | Nav + поиск | Оси знаков, input, submit и keyboard results |
 | `map-annotations` | Оси, origin, Garage, running | Линии под material-подписями, отступы и оптические центры |
 | `map-inspector` | Garage, Ilmix, `ЕДА`, длинный принцип | Иерархия kind/title/meta/body/action, переносы, material и оптический ритм коротких и длинных карточек |

@@ -7,10 +7,16 @@ import {
 const analyticsCounterId = 111107350;
 const analyticsPreferenceKey = "anton-signal-analytics";
 const analyticsDisableKey = `disableYaCounter${analyticsCounterId}`;
-const analyticsConsent = document.querySelector("[data-analytics-consent]");
+const settingsPanel = document.querySelector("[data-settings-panel]");
+const settingsClose = document.querySelector("[data-close-settings]");
+const settingsOpeners = Array.from(document.querySelectorAll("[data-open-settings]"));
 const analyticsAllow = document.querySelector("[data-analytics-allow]");
 const analyticsDeny = document.querySelector("[data-analytics-deny]");
-const analyticsSettings = document.querySelector("[data-analytics-settings]");
+const analyticsSettings = Array.from(document.querySelectorAll("[data-analytics-settings]"));
+const analyticsSummaries = Array.from(document.querySelectorAll("[data-analytics-summary]"));
+const analyticsPreferenceLabels = Array.from(
+  document.querySelectorAll("[data-analytics-preference]"),
+);
 const analyticsStatus = document.querySelector("[data-analytics-status]");
 const analyticsQuery = new URLSearchParams(window.location.search);
 const analyticsConsentRequested = analyticsQuery.get("analytics-consent") === "show";
@@ -26,6 +32,7 @@ const analyticsGoalParameters = new Map([
 ]);
 let analyticsPreference = null;
 let analyticsLoaded = false;
+let lastSettingsTrigger = null;
 
 try {
   const storedAnalyticsPreference = window.localStorage.getItem(analyticsPreferenceKey);
@@ -47,40 +54,92 @@ const writeAnalyticsPreference = (preference) => {
 };
 
 const syncAnalyticsPreferenceUi = () => {
-  const isAllowed = analyticsPreference === "allowed";
+  const state = analyticsPreference || "unset";
+  const stateLabel = state === "allowed"
+    ? "РАЗРЕШЕНА"
+    : state === "denied" ? "ВЫКЛЮЧЕНА" : "НЕ ВЫБРАНО";
+  const accessibleState = state === "allowed"
+    ? "разрешена"
+    : state === "denied" ? "выключена" : "не выбрана";
+
   root.dataset.analytics = analyticsPreference || "unset";
-  analyticsSettings?.setAttribute("aria-pressed", String(isAllowed));
-  analyticsSettings?.setAttribute(
-    "aria-label",
-    isAllowed
-      ? "Настроить аналитику: сейчас разрешена"
-      : "Настроить аналитику: сейчас выключена",
-  );
+  analyticsSettings.forEach((button) => {
+    button.removeAttribute("aria-pressed");
+    button.dataset.analyticsState = state;
+    button.setAttribute(
+      "aria-label",
+      `Настройки аналитики: сейчас ${accessibleState}`,
+    );
+  });
+  analyticsSummaries.forEach((summary) => {
+    summary.textContent = stateLabel;
+  });
+  analyticsPreferenceLabels.forEach((label) => {
+    label.textContent = stateLabel;
+  });
+  analyticsAllow?.toggleAttribute("disabled", state === "allowed");
+  analyticsDeny?.toggleAttribute("disabled", state === "denied");
 };
 
-const closeAnalyticsConsent = () => {
-  if (!analyticsConsent) {
+const closeSettingsPanel = ({ restoreFocus = true } = {}) => {
+  if (!settingsPanel?.open) {
     return;
   }
 
-  analyticsConsent.hidden = true;
-  analyticsConsent.inert = true;
-  analyticsConsent.classList.remove("is-open");
+  settingsPanel.close();
+  settingsPanel.hidden = true;
+  settingsPanel.inert = true;
+  settingsPanel.classList.remove("is-open");
+
+  if (restoreFocus && lastSettingsTrigger?.isConnected) {
+    lastSettingsTrigger.focus({ preventScroll: true });
+  }
 };
 
-const openAnalyticsConsent = ({ focus = true } = {}) => {
-  if (!analyticsConsent) {
+const openSettingsPanel = ({
+  focus = true,
+  section = "settings",
+  trigger = null,
+} = {}) => {
+  if (!settingsPanel) {
     return;
   }
 
-  analyticsConsent.hidden = false;
-  analyticsConsent.inert = false;
-  analyticsConsent.classList.add("is-open");
+  const activeElement = document.activeElement;
+  lastSettingsTrigger = trigger instanceof HTMLElement
+    ? trigger
+    : activeElement instanceof HTMLElement && !settingsPanel.contains(activeElement)
+      ? activeElement
+      : lastSettingsTrigger;
+  if (!settingsPanel.open) {
+    settingsPanel.hidden = false;
+    settingsPanel.inert = false;
+    settingsPanel.showModal();
+    settingsPanel.classList.add("is-open");
+  }
+  settingsPanel.dataset.focusSection = section;
 
   if (focus) {
-    analyticsAllow?.focus({ preventScroll: true });
+    window.requestAnimationFrame(() => {
+      let target = settingsPanel.querySelector("[data-theme-toggle]") || settingsClose;
+
+      if (section === "analytics") {
+        target = analyticsPreference === "allowed" ? analyticsDeny : analyticsAllow;
+      } else if (section === "motion") {
+        target = settingsPanel.querySelector("[data-motion-toggle]");
+      } else if (section === "contrast") {
+        target = settingsPanel.querySelector("[data-contrast-toggle]");
+      }
+
+      (target?.disabled ? settingsClose : target)?.focus({ preventScroll: true });
+    });
   }
 };
+
+const openAnalyticsConsent = (options = {}) => openSettingsPanel({
+  ...options,
+  section: "analytics",
+});
 
 const loadYandexAnalytics = () => {
   if (analyticsLoaded || analyticsPreference !== "allowed") {
@@ -154,7 +213,7 @@ analyticsAllow?.addEventListener("click", () => {
   writeAnalyticsPreference("allowed");
   syncAnalyticsPreferenceUi();
   loadYandexAnalytics();
-  closeAnalyticsConsent();
+  closeSettingsPanel();
 
   if (analyticsStatus) {
     analyticsStatus.textContent = "Аналитика разрешена.";
@@ -166,7 +225,7 @@ analyticsDeny?.addEventListener("click", () => {
   writeAnalyticsPreference("denied");
   window[analyticsDisableKey] = true;
   syncAnalyticsPreferenceUi();
-  closeAnalyticsConsent();
+  closeSettingsPanel();
 
   if (analyticsStatus) {
     analyticsStatus.textContent = "Аналитика выключена.";
@@ -177,8 +236,19 @@ analyticsDeny?.addEventListener("click", () => {
   }
 });
 
-analyticsSettings?.addEventListener("click", () => {
-  openAnalyticsConsent();
+settingsOpeners.forEach((opener) => {
+  opener.addEventListener("click", () => {
+    openSettingsPanel({
+      trigger: opener,
+      section: opener.dataset.settingsFocus || "settings",
+    });
+  });
+});
+
+settingsClose?.addEventListener("click", () => closeSettingsPanel());
+settingsPanel?.addEventListener("cancel", (event) => {
+  event.preventDefault();
+  closeSettingsPanel();
 });
 
 document.addEventListener("click", (event) => {
@@ -201,10 +271,11 @@ syncAnalyticsPreferenceUi();
 if (analyticsPreference === "allowed") {
   loadYandexAnalytics();
 } else if (!analyticsPreference && !captureMode && analyticsConsentRequested) {
-  window.requestAnimationFrame(() => openAnalyticsConsent({ focus: false }));
+  window.requestAnimationFrame(() => openAnalyticsConsent());
 }
 
 export {
+  openSettingsPanel,
   openAnalyticsConsent,
   trackPortfolioEvent,
 };

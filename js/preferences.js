@@ -33,11 +33,14 @@ const typographUiText = (value = "") => String(value).replace(
   shortRussianUiWordPattern,
   "$1$2\u00a0",
 );
-const themeToggle = document.querySelector("[data-theme-toggle]");
-const themeLabel = document.querySelector("[data-theme-label]");
+const themeToggles = Array.from(document.querySelectorAll("[data-theme-toggle]"));
+const themeLabels = Array.from(document.querySelectorAll("[data-theme-label]"));
+const themePanelStates = Array.from(document.querySelectorAll("[data-theme-panel-state]"));
 const themeColor = document.querySelector('meta[name="theme-color"]');
-const motionToggle = document.querySelector("[data-motion-toggle]");
-const contrastToggle = document.querySelector("[data-contrast-toggle]");
+const motionToggles = Array.from(document.querySelectorAll("[data-motion-toggle]"));
+const motionStates = Array.from(document.querySelectorAll("[data-motion-state]"));
+const contrastToggles = Array.from(document.querySelectorAll("[data-contrast-toggle]"));
+const contrastStates = Array.from(document.querySelectorAll("[data-contrast-state]"));
 const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
 const systemReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 const systemContrast = window.matchMedia("(prefers-contrast: more)");
@@ -64,9 +67,13 @@ const createEffectivePreference = ({
   mediaQuery,
   storageKey,
   rootAttribute,
-  toggle,
-  activeLabel,
+  toggles,
+  stateElements,
+  label,
   systemLabel,
+  inactiveState,
+  activeState,
+  systemState,
 }) => {
   const preference = new EventTarget();
   let forced = readPreferenceFlag(storageKey);
@@ -82,26 +89,35 @@ const createEffectivePreference = ({
       delete root.dataset[rootAttribute];
     }
 
-    toggle?.setAttribute("aria-pressed", String(preference.matches));
-    toggle?.toggleAttribute("disabled", mediaQuery.matches);
-    toggle?.setAttribute(
-      "aria-label",
-      mediaQuery.matches ? systemLabel : activeLabel,
-    );
+    toggles.forEach((toggle) => {
+      toggle.setAttribute("aria-pressed", String(preference.matches));
+      toggle.toggleAttribute("disabled", mediaQuery.matches);
+      toggle.setAttribute(
+        "aria-label",
+        mediaQuery.matches ? systemLabel : label,
+      );
+    });
+    stateElements.forEach((element) => {
+      element.textContent = mediaQuery.matches
+        ? systemState
+        : forced ? activeState : inactiveState;
+    });
 
     if (notify) {
       preference.dispatchEvent(new Event("change"));
     }
   };
 
-  toggle?.addEventListener("click", () => {
-    if (mediaQuery.matches) {
-      return;
-    }
+  toggles.forEach((toggle) => {
+    toggle.addEventListener("click", () => {
+      if (mediaQuery.matches) {
+        return;
+      }
 
-    forced = !forced;
-    writePreferenceFlag(storageKey, forced);
-    sync({ notify: true });
+      forced = !forced;
+      writePreferenceFlag(storageKey, forced);
+      sync({ notify: true });
+    });
   });
 
   mediaQuery.addEventListener?.("change", () => sync({ notify: true }));
@@ -113,17 +129,25 @@ const reducedMotion = createEffectivePreference({
   mediaQuery: systemReducedMotion,
   storageKey: "anton-signal-reduced-motion",
   rootAttribute: "reduceMotion",
-  toggle: motionToggle,
-  activeLabel: "Использовать меньше движения",
-  systemLabel: "Меньше движения включено в настройках системы",
+  toggles: motionToggles,
+  stateElements: motionStates,
+  label: "Меньше движения",
+  systemLabel: "Меньше движения: включено в настройках системы",
+  inactiveState: "ОБЫЧНОЕ",
+  activeState: "МЕНЬШЕ",
+  systemState: "СИСТЕМНО",
 });
 createEffectivePreference({
   mediaQuery: systemContrast,
   storageKey: "anton-signal-high-contrast",
   rootAttribute: "contrast",
-  toggle: contrastToggle,
-  activeLabel: "Использовать более высокий контраст",
-  systemLabel: "Высокий контраст включён в настройках системы",
+  toggles: contrastToggles,
+  stateElements: contrastStates,
+  label: "Высокий контраст",
+  systemLabel: "Высокий контраст: включён в настройках системы",
+  inactiveState: "ОБЫЧНЫЙ",
+  activeState: "ВЫСОКИЙ",
+  systemState: "СИСТЕМНО",
 });
 
 const readThemeMode = () => {
@@ -145,12 +169,13 @@ const getEffectiveTheme = (mode) => (
     : mode
 );
 const getNextThemeMode = () => {
+  const systemMode = systemTheme.matches ? "dark" : "light";
+
   if (themeMode === "system") {
-    return systemTheme.matches ? "light" : "dark";
+    return systemMode === "dark" ? "light" : "dark";
   }
 
-  const systemValue = systemTheme.matches ? "dark" : "light";
-  return themeMode === systemValue ? "system" : systemValue;
+  return themeMode === systemMode ? "system" : systemMode;
 };
 const setThemeMode = (mode, persist = false) => {
   themeMode = mode === "light" || mode === "dark" ? mode : "system";
@@ -169,14 +194,21 @@ const setThemeMode = (mode, persist = false) => {
     ? "системный"
     : nextMode === "dark" ? "тёмный" : "светлый";
 
-  themeToggle?.setAttribute(
-    "aria-label",
-    `Режим темы: ${currentModeLabel}. Переключить на ${nextModeLabel}`,
-  );
+  themeToggles.forEach((toggle) => {
+    toggle.setAttribute(
+      "aria-label",
+      `Режим темы: ${currentModeLabel}. Переключить на ${nextModeLabel}`,
+    );
+  });
 
-  if (themeLabel) {
-    themeLabel.textContent = modeLabel;
-  }
+  themeLabels.forEach((label) => {
+    label.textContent = modeLabel;
+  });
+  themePanelStates.forEach((state) => {
+    state.textContent = themeMode === "system"
+      ? `СИСТЕМНАЯ / ${isDark ? "ТЁМНАЯ" : "СВЕТЛАЯ"} СЕЙЧАС`
+      : isDark ? "ТЁМНАЯ" : "СВЕТЛАЯ";
+  });
 
   themeColor?.setAttribute("content", isDark ? "#11120f" : "#eeede7");
 
@@ -195,8 +227,10 @@ const setThemeMode = (mode, persist = false) => {
 
 setThemeMode(themeMode);
 
-themeToggle?.addEventListener("click", () => {
-  setThemeMode(getNextThemeMode(), true);
+themeToggles.forEach((toggle) => {
+  toggle.addEventListener("click", () => {
+    setThemeMode(getNextThemeMode(), true);
+  });
 });
 
 systemTheme.addEventListener?.("change", () => {

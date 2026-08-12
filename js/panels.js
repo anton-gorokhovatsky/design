@@ -1,6 +1,6 @@
 // Runtime module 6/7: movable consoles, content panels, search, and URL state.
 import {
-  openAnalyticsConsent,
+  openSettingsPanel,
   trackPortfolioEvent,
 } from "./analytics.js";
 import { mapItems } from "./map-data.js";
@@ -306,6 +306,7 @@ const constellationNavToggle = document.querySelector("[data-constellation-nav-t
 const constellationNavToggleLabel = document.querySelector("[data-constellation-nav-toggle-label]");
 const constellationNavOrbit = document.querySelector("[data-constellation-nav-orbit]");
 const constellationNavItems = Array.from(document.querySelectorAll("[data-nav-view]"));
+const constellationNavUtilities = Array.from(document.querySelectorAll("[data-nav-utility]"));
 const constellationNavHome = document.querySelector('[data-nav-view="map"]');
 const compactConstellationNav = window.matchMedia("(max-width: 680px)");
 let isConstellationNavOpen = false;
@@ -347,6 +348,11 @@ constellationNavToggle?.addEventListener("click", () => {
 });
 
 constellationNavItems.forEach((item) => {
+  item.addEventListener("click", () => {
+    setConstellationNavOpen(false);
+  });
+});
+constellationNavUtilities.forEach((item) => {
   item.addEventListener("click", () => {
     setConstellationNavOpen(false);
   });
@@ -889,11 +895,48 @@ const setCommandStatus = (message = "") => {
   }
 };
 
-const normalizeSearch = (value) => value
+const normalizeSearch = (value) => String(value || "")
   .toLocaleLowerCase("ru")
   .replaceAll("ё", "е")
   .replace(/[^a-zа-я0-9]+/gi, " ")
   .trim();
+
+const tokenizeSearch = (value) => normalizeSearch(value).split(" ").filter(Boolean);
+const getMapItemSearchFields = (item) => [
+  item.label,
+  item.mapLabel,
+  item.title,
+  item.meta,
+  item.kindLabel,
+  item.description,
+];
+const scoreSearchCandidate = ({
+  intents = "",
+  primary = [],
+  fields = [],
+}, query) => {
+  const tokens = tokenizeSearch(query);
+  const haystack = normalizeSearch(fields.join(" "));
+
+  if (!tokens.every((token) => haystack.includes(token))) {
+    return -1;
+  }
+
+  const intentTokens = tokenizeSearch(intents);
+  const normalizedPrimary = primary.map(normalizeSearch);
+
+  if (tokens.every((token) => intentTokens.includes(token))) {
+    return 700;
+  }
+  if (normalizedPrimary.includes(query)) {
+    return 600;
+  }
+  if (normalizedPrimary.some((field) => field.includes(query))) {
+    return 500;
+  }
+
+  return haystack.includes(query) ? 400 : 300;
+};
 
 const commandViews = [
   {
@@ -901,6 +944,7 @@ const commandViews = [
     id: "observation",
     title: "СЕАНС НАБЛЮДЕНИЯ",
     meta: "ОКОЛО 60 СЕКУНД / 8 КООРДИНАТ",
+    intents: "сеанс наблюдения обзор экскурсия маршрут",
     keywords: "сеанс наблюдение маршрут обзор экскурсия 60 секунд",
   },
   {
@@ -908,20 +952,23 @@ const commandViews = [
     id: "time",
     title: "ХРОНОЛОГИЯ",
     meta: "ОПЫТ / 2009—2026 / ГОДОВЫЕ ОРБИТЫ",
+    intents: "хронология время таймлайн",
     keywords: "время годы хронология таймлайн орбиты",
   },
   {
     type: "action",
-    id: "analytics",
-    title: "НАСТРОЙКИ АНАЛИТИКИ",
-    meta: "ЯНДЕКС МЕТРИКА / ТОЛЬКО ПО СОГЛАСИЮ",
-    keywords: "аналитика приватность privacy метрика вебвизор cookie настройки",
+    id: "settings",
+    title: "НАСТРОЙКИ ЭКРАНА",
+    meta: "ТЕМА / ДВИЖЕНИЕ / КОНТРАСТ / АНАЛИТИКА",
+    intents: "настройки экран тема движение контраст аналитика приватность",
+    keywords: "настройки экрана тема светлая темная движение анимация контраст доступность аналитика приватность privacy метрика вебвизор cookie",
   },
   {
     type: "panel",
     id: "work",
     title: "ИЗБРАННЫЕ ПРОЕКТЫ",
     meta: "8 ПРОЕКТОВ / 2023—2026",
+    intents: "проекты работы портфолио",
     keywords: "проекты работы портфолио избранные недавние последние текущие сайты",
   },
   {
@@ -929,6 +976,7 @@ const commandViews = [
     id: "approach",
     title: "КАК Я РАБОТАЮ",
     meta: "ИССЛЕДОВАНИЕ → ФОРМА → КООРДИНАЦИЯ → РЕАЛИЗАЦИЯ",
+    intents: "подход метод процесс",
     keywords: "подход метод процесс принципы работа approach how",
   },
   {
@@ -936,6 +984,7 @@ const commandViews = [
     id: "contact",
     title: "СВЯЗАТЬСЯ",
     meta: "МОСКВА / УДАЛЁННО / ПОЧТА",
+    intents: "связаться контакт почта",
     keywords: "контакт почта написать связаться contact email",
   },
 ];
@@ -1015,15 +1064,10 @@ const applySearchHighlight = (query) => {
   }
 
   mapItems.forEach((item) => {
-    const haystack = normalizeSearch([
-      item.label,
-      item.mapLabel,
-      item.title,
-      item.meta,
-      item.kindLabel,
-      item.description,
-    ].join(" "));
-    mapButtons.get(item.id)?.classList.toggle("is-search-miss", !haystack.includes(normalizedQuery));
+    mapButtons.get(item.id)?.classList.toggle(
+      "is-search-miss",
+      scoreSearchCandidate({ fields: getMapItemSearchFields(item) }, normalizedQuery) < 0,
+    );
   });
 
   syncMapNodeAvailability();
@@ -1052,23 +1096,31 @@ const getCommandResults = (query) => {
     ];
   }
 
-  const nodes = mapItems
-    .filter((item) => normalizeSearch([
-      item.label,
-      item.mapLabel,
-      item.title,
-      item.meta,
-      item.kindLabel,
-      item.description,
-    ].join(" ")).includes(normalizedQuery))
-    .slice(0, 6)
-    .map(makeNodeCommandResult);
+  const candidates = [
+    ...mapItems.map((item, index) => ({
+      result: makeNodeCommandResult(item),
+      order: index,
+      score: scoreSearchCandidate({
+        primary: [item.label, item.mapLabel, item.title],
+        fields: getMapItemSearchFields(item),
+      }, normalizedQuery),
+    })),
+    ...commandViews.map((view, index) => ({
+      result: view,
+      order: mapItems.length + index,
+      score: scoreSearchCandidate({
+        intents: view.intents,
+        primary: [view.title],
+        fields: [view.title, view.meta, view.keywords, view.intents],
+      }, normalizedQuery),
+    })),
+  ];
 
-  const views = commandViews.filter((view) => (
-    normalizeSearch(`${view.title} ${view.meta} ${view.keywords}`).includes(normalizedQuery)
-  ));
-
-  return [...nodes, ...views].slice(0, 7);
+  return candidates
+    .filter(({ score }) => score >= 0)
+    .sort((left, right) => right.score - left.score || left.order - right.order)
+    .slice(0, 7)
+    .map(({ result }) => result);
 };
 
 const renderCommandResults = (query = "") => {
@@ -1150,8 +1202,22 @@ const runCommandResult = (result) => {
     startObservation({ source: "search" });
   } else if (result.id === "time") {
     setTimeMode(true);
-  } else if (result.id === "analytics") {
-    openAnalyticsConsent();
+  } else if (result.id === "settings") {
+    const settingsQuery = normalizeSearch(commandInput?.value || "");
+    let settingsSection = "settings";
+
+    if (settingsQuery.includes("аналит")) {
+      settingsSection = "analytics";
+    } else if (settingsQuery.includes("движ")) {
+      settingsSection = "motion";
+    } else if (settingsQuery.includes("контраст")) {
+      settingsSection = "contrast";
+    }
+
+    openSettingsPanel({
+      trigger: commandInput,
+      section: settingsSection,
+    });
   }
 
   if (hadSearchQuery) {

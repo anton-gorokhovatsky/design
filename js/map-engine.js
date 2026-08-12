@@ -36,7 +36,7 @@ const mapEvidenceTask = document.querySelector("[data-map-evidence-task]");
 const mapEvidenceRole = document.querySelector("[data-map-evidence-role]");
 const mapEvidenceResult = document.querySelector("[data-map-evidence-result]");
 const mapNote = document.querySelector("[data-map-note]");
-const timeToggle = document.querySelector("[data-time-toggle]");
+const timeToggles = Array.from(document.querySelectorAll("[data-time-toggle]"));
 const observationStart = document.querySelector("[data-start-observation]");
 const observationControls = document.querySelector("[data-observation-controls]");
 const observationProgress = document.querySelector("[data-observation-progress]");
@@ -1526,11 +1526,16 @@ const setMapFilter = (
 
   mapFilterButtons.forEach((button) => {
     const kind = button.dataset.mapFilter;
-    const isActive = kind === "all"
-      ? isAll
-      : !isAll && activeMapFilters.has(kind);
+    const isReset = kind === "all";
+    const isActive = !isReset && activeMapFilters.has(kind);
     button.classList.toggle("is-active", isActive);
-    button.setAttribute("aria-pressed", String(isActive));
+    button.classList.toggle("is-reset-available", isReset && !isAll);
+
+    if (isReset) {
+      button.removeAttribute("aria-pressed");
+    } else {
+      button.setAttribute("aria-pressed", String(isActive));
+    }
   });
 
   document.querySelectorAll(".map-speck").forEach((speck) => {
@@ -1591,19 +1596,19 @@ const toggleMapFilter = (kind) => {
     return;
   }
 
-  const nextFilters = allMapFiltersActive()
-    ? new Set([kind])
-    : new Set(activeMapFilters);
+  const nextFilters = new Set(activeMapFilters);
 
-  if (!allMapFiltersActive()) {
-    if (nextFilters.has(kind)) {
-      nextFilters.delete(kind);
-    } else {
-      nextFilters.add(kind);
+  if (nextFilters.has(kind)) {
+    if (nextFilters.size === 1) {
+      return;
     }
+
+    nextFilters.delete(kind);
+  } else {
+    nextFilters.add(kind);
   }
 
-  setMapFilter(nextFilters.size ? nextFilters : "all");
+  setMapFilter(nextFilters);
 };
 
 mapFilterButtons.forEach((button) => {
@@ -1648,14 +1653,14 @@ const setTimeMode = (
     }
   }
 
-  timeToggle?.setAttribute("aria-pressed", String(nextEnabled));
-  if (timeToggle) {
-    timeToggle.classList.toggle("is-active", nextEnabled);
-    timeToggle.setAttribute(
+  timeToggles.forEach((toggle) => {
+    toggle.setAttribute("aria-pressed", String(nextEnabled));
+    toggle.classList.toggle("is-active", nextEnabled);
+    toggle.setAttribute(
       "aria-label",
       nextEnabled ? "Вернуть смысловую карту" : "Показывать хронологию",
     );
-  }
+  });
 
   if (mapNote) {
     mapNote.textContent = nextEnabled
@@ -1678,10 +1683,12 @@ const setTimeMode = (
   }
 };
 
-timeToggle?.addEventListener("click", () => {
-  setTimeMode(!timeModeActive);
-  trackPortfolioEvent("chronology_toggle", {
-    state: timeModeActive ? "enabled" : "disabled",
+timeToggles.forEach((toggle) => {
+  toggle.addEventListener("click", () => {
+    setTimeMode(!timeModeActive);
+    trackPortfolioEvent("chronology_toggle", {
+      state: timeModeActive ? "enabled" : "disabled",
+    });
   });
 });
 

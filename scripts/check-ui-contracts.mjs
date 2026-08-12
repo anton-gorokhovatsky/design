@@ -940,10 +940,105 @@ const auditBrowser = async (client, origin) => {
     }
   }
 
+  await navigate(client, `${origin}/?qa=ui-contracts-map-controls`);
+  const initialMapControlContract = await evaluate(client, `(() => {
+    const all = document.querySelector('[data-map-filter="all"]');
+    const categories = Array.from(document.querySelectorAll(
+      '[data-map-filter]:not([data-map-filter="all"])',
+    ));
+    return {
+      allPressed: all?.hasAttribute("aria-pressed"),
+      categoryStates: categories.map((button) => button.getAttribute("aria-pressed")),
+      filterGroup: document.querySelector(".map-control-group--filters")
+        ?.getAttribute("role"),
+      coordinateGroup: document.querySelector(".map-control-group--coordinates")
+        ?.getAttribute("role"),
+      chronologyControls: document.querySelectorAll("[data-time-toggle]").length,
+    };
+  })()`);
+  if (
+    initialMapControlContract.allPressed
+    || initialMapControlContract.categoryStates.length !== 4
+    || initialMapControlContract.categoryStates.some((state) => state !== "true")
+    || initialMapControlContract.filterGroup !== "group"
+    || initialMapControlContract.coordinateGroup !== "group"
+    || initialMapControlContract.chronologyControls !== 2
+  ) {
+    fail("map-controls: initial visibility and control groups disagree.", initialMapControlContract);
+  }
+
+  await evaluate(
+    client,
+    "document.querySelector('[data-map-filter=\"company\"]')?.click(); true",
+  );
+  const filteredMapControlContract = await evaluate(client, `(() => ({
+    companyPressed: document.querySelector('[data-map-filter="company"]')
+      ?.getAttribute("aria-pressed"),
+    projectPressed: document.querySelector('[data-map-filter="project"]')
+      ?.getAttribute("aria-pressed"),
+    resetAvailable: document.querySelector('[data-map-filter="all"]')
+      ?.classList.contains("is-reset-available"),
+    filter: new URL(location.href).searchParams.get("filter"),
+    companyHidden: document.querySelector('[data-map-id="garage"]')
+      ?.classList.contains("is-filter-miss"),
+  }))()`);
+  if (
+    filteredMapControlContract.companyPressed !== "false"
+    || filteredMapControlContract.projectPressed !== "true"
+    || !filteredMapControlContract.resetAvailable
+    || filteredMapControlContract.filter !== "project,personal,practice"
+    || !filteredMapControlContract.companyHidden
+  ) {
+    fail("map-controls: category toggles do not reflect actual visibility.", filteredMapControlContract);
+  }
+
+  await evaluate(client, `(() => {
+    document.querySelector('[data-map-filter="project"]')?.click();
+    document.querySelector('[data-map-filter="personal"]')?.click();
+    document.querySelector('[data-map-filter="practice"]')?.click();
+    return true;
+  })()`);
+  const finalCategoryContract = await evaluate(client, `(() => ({
+    practicePressed: document.querySelector('[data-map-filter="practice"]')
+      ?.getAttribute("aria-pressed"),
+    filter: new URL(location.href).searchParams.get("filter"),
+    visibleKinds: document.querySelector("[data-practice-map]")?.dataset.activeKinds,
+  }))()`);
+  if (
+    finalCategoryContract.practicePressed !== "true"
+    || finalCategoryContract.filter !== "practice"
+    || finalCategoryContract.visibleKinds !== "practice"
+  ) {
+    fail("map-controls: the last visible category can be switched off.", finalCategoryContract);
+  }
+
+  await evaluate(
+    client,
+    "document.querySelector('[data-map-filter=\"all\"]')?.click(); true",
+  );
+  await evaluate(
+    client,
+    "document.querySelector('.map-control-group--coordinates [data-time-toggle]')?.click(); true",
+  );
+  const chronologyControlContract = await evaluate(client, `(() => ({
+    states: Array.from(document.querySelectorAll("[data-time-toggle]"))
+      .map((button) => button.getAttribute("aria-pressed")),
+    view: new URL(location.href).searchParams.get("view"),
+    filter: new URL(location.href).searchParams.get("filter"),
+  }))()`);
+  if (
+    chronologyControlContract.states.length !== 2
+    || chronologyControlContract.states.some((state) => state !== "true")
+    || chronologyControlContract.view !== "time"
+    || chronologyControlContract.filter !== null
+  ) {
+    fail("map-controls: chronology is not synchronized as a separate axis.", chronologyControlContract);
+  }
+
   await navigate(client, `${origin}/?qa=ui-contracts-search`);
   await evaluate(client, `(() => {
     const input = document.querySelector("[data-command-input]");
-    input.value = "герман";
+    input.value = "сайт герман";
     input.focus();
     input.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText" }));
     return true;
@@ -972,7 +1067,7 @@ const auditBrowser = async (client, origin) => {
   if (
     !searchState.visible.searchResults
     || searchContract.expanded !== "true"
-    || searchContract.count !== 1
+    || searchContract.count < 1
     || searchContract.active !== "command-result-node-herman"
     || searchContract.firstResult !== "command-result-node-herman"
   ) {
@@ -986,6 +1081,63 @@ const auditBrowser = async (client, origin) => {
   }
   await saveScreenshot(client, "desktop-search-results");
   await saveElementScreenshot(client, "crop-desktop-search-results", ".command-results");
+
+  const searchIntentCases = [
+    ["герман сайт", "command-result-node-herman"],
+    ["сайт винокурова", "command-result-node-herman"],
+    ["аналитика", "command-result-action-settings"],
+    ["движение", "command-result-action-settings"],
+    ["контраст", "command-result-action-settings"],
+    ["проекты", "command-result-panel-work"],
+    ["подход", "command-result-panel-approach"],
+  ];
+
+  for (const [query, expectedFirstResult] of searchIntentCases) {
+    await evaluate(client, `(() => {
+      const input = document.querySelector("[data-command-input]");
+      input.value = ${JSON.stringify(query)};
+      input.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText" }));
+      return true;
+    })()`);
+    await delay(40);
+    const intentContract = await evaluate(client, `(() => ({
+      firstResult: document.querySelector(".command-result")?.id || "",
+      activeResult: document.querySelector("[data-command-input]")
+        ?.getAttribute("aria-activedescendant") || "",
+      resultCount: document.querySelectorAll(".command-result").length,
+    }))()`);
+
+    if (
+      intentContract.firstResult !== expectedFirstResult
+      || intentContract.activeResult !== expectedFirstResult
+      || intentContract.resultCount < 1
+    ) {
+      fail(`search-intent: ${query} does not resolve to the expected object.`, {
+        ...intentContract,
+        expectedFirstResult,
+      });
+    }
+  }
+
+  await evaluate(client, `(() => {
+    const input = document.querySelector("[data-command-input]");
+    input.value = "движение";
+    input.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText" }));
+    document.querySelector(".command-result")?.click();
+    return true;
+  })()`);
+  await delay(80);
+  const settingsSearchRouteContract = await evaluate(client, `(() => ({
+    visible: !document.querySelector("[data-settings-panel]")?.hidden,
+    focusedMotion: document.activeElement?.hasAttribute("data-motion-toggle"),
+  }))()`);
+  if (
+    !settingsSearchRouteContract.visible
+    || !settingsSearchRouteContract.focusedMotion
+  ) {
+    fail("search-intent: settings query does not focus the relevant preference.", settingsSearchRouteContract);
+  }
+  await evaluate(client, "document.querySelector('[data-close-settings]')?.click(); true");
 
   await navigate(client, `${origin}/?qa=ui-contracts-reel&preview=tarski`);
   await waitForExpression(client, `(() => {
@@ -1592,6 +1744,12 @@ const auditBrowser = async (client, origin) => {
       visible: !consent?.hidden && consent?.classList.contains("is-open"),
       inert: consent?.inert,
       focusInside: Boolean(active && consent?.contains(active)),
+      role: consent?.getAttribute("role"),
+      modal: consent?.getAttribute("aria-modal"),
+      closeExists: Boolean(consent?.querySelector("[data-close-settings]")),
+      preferenceLabel: consent?.querySelector("[data-analytics-preference]")
+        ?.textContent.trim(),
+      open: consent?.open,
       searchPrivate: input?.classList.contains("ym-disable-keys"),
       trackerScripts: Array.from(document.scripts).filter((script) => (
         script.src.includes("mc.yandex.ru")
@@ -1606,7 +1764,12 @@ const auditBrowser = async (client, origin) => {
   if (
     !analyticsConsentContract.visible
     || analyticsConsentContract.inert
-    || analyticsConsentContract.focusInside
+    || !analyticsConsentContract.focusInside
+    || analyticsConsentContract.role !== "dialog"
+    || analyticsConsentContract.modal !== "true"
+    || !analyticsConsentContract.closeExists
+    || analyticsConsentContract.preferenceLabel !== "НЕ ВЫБРАНО"
+    || !analyticsConsentContract.open
     || !analyticsConsentContract.searchPrivate
     || analyticsConsentContract.trackerScripts !== 0
     || analyticsConsentContract.preference !== null
@@ -1623,7 +1786,56 @@ const auditBrowser = async (client, origin) => {
     fail("privacy: consent lost MATERIAL / 01.", analyticsConsentState.materialFailures);
   }
   await saveScreenshot(client, "desktop-analytics-consent");
-  await saveElementScreenshot(client, "crop-desktop-analytics-consent", ".analytics-consent");
+  await saveElementScreenshot(client, "crop-desktop-analytics-consent", ".settings-panel");
+
+  await evaluate(client, "document.querySelector('[data-close-settings]')?.click(); true");
+  await delay(40);
+  const neutralCloseContract = await evaluate(client, `(() => ({
+    hidden: document.querySelector("[data-settings-panel]")?.hidden,
+    preference: localStorage.getItem("anton-signal-analytics"),
+    launcherPressed: document.querySelector("[data-analytics-settings]")
+      ?.hasAttribute("aria-pressed"),
+  }))()`);
+  if (
+    !neutralCloseContract.hidden
+    || neutralCloseContract.preference !== null
+    || neutralCloseContract.launcherPressed
+  ) {
+    fail("privacy: neutral close changes consent or keeps toggle semantics.", neutralCloseContract);
+  }
+
+  await evaluate(client, "document.querySelector('[data-analytics-settings]')?.click(); true");
+  await delay(40);
+  await client.send("Input.dispatchKeyEvent", {
+    type: "rawKeyDown",
+    key: "Escape",
+    code: "Escape",
+    windowsVirtualKeyCode: 27,
+    nativeVirtualKeyCode: 27,
+  });
+  await client.send("Input.dispatchKeyEvent", {
+    type: "keyUp",
+    key: "Escape",
+    code: "Escape",
+    windowsVirtualKeyCode: 27,
+    nativeVirtualKeyCode: 27,
+  });
+  await delay(120);
+  const escapeCloseContract = await evaluate(client, `(() => ({
+    hidden: document.querySelector("[data-settings-panel]")?.hidden,
+    focusReturned: document.activeElement?.hasAttribute("data-analytics-settings"),
+    preference: localStorage.getItem("anton-signal-analytics"),
+  }))()`);
+  if (
+    !escapeCloseContract.hidden
+    || !escapeCloseContract.focusReturned
+    || escapeCloseContract.preference !== null
+  ) {
+    fail("privacy: Escape does not cancel and return focus.", escapeCloseContract);
+  }
+
+  await evaluate(client, "document.querySelector('[data-analytics-settings]')?.click(); true");
+  await delay(40);
 
   await evaluate(client, "document.querySelector('[data-analytics-deny]')?.click(); true");
   const deniedContract = await evaluate(client, `(() => ({
@@ -1647,12 +1859,25 @@ const auditBrowser = async (client, origin) => {
   await delay(40);
   const reopenedContract = await evaluate(client, `(() => ({
     visible: !document.querySelector("[data-analytics-consent]")?.hidden,
-    focused: document.activeElement?.hasAttribute("data-analytics-allow"),
+    focusedAction: document.activeElement?.hasAttribute("data-analytics-allow")
+      ? "allow"
+      : document.activeElement?.hasAttribute("data-analytics-deny")
+        ? "deny"
+        : "",
+    preferenceLabel: document.querySelector("[data-analytics-preference]")
+      ?.textContent.trim(),
+    launcherPressed: document.querySelector("[data-analytics-settings]")
+      ?.hasAttribute("aria-pressed"),
   }))()`);
-  if (!reopenedContract.visible || !reopenedContract.focused) {
+  if (
+    !reopenedContract.visible
+    || reopenedContract.focusedAction !== "allow"
+    || reopenedContract.preferenceLabel !== "ВЫКЛЮЧЕНА"
+    || reopenedContract.launcherPressed
+  ) {
     fail("privacy: the saved choice cannot be reopened with deliberate focus.", reopenedContract);
   }
-  await evaluate(client, "document.querySelector('[data-analytics-deny]')?.click(); true");
+  await evaluate(client, "document.querySelector('[data-close-settings]')?.click(); true");
   await evaluate(
     client,
     "localStorage.removeItem('anton-signal-analytics'); true",
@@ -1671,6 +1896,9 @@ const auditBrowser = async (client, origin) => {
     queuedInit: Array.isArray(window.ym?.a) && window.ym.a.some((entry) => (
       entry?.[0] === 111107350 && entry?.[1] === "init"
     )),
+    summary: document.querySelector("[data-analytics-summary]")?.textContent.trim(),
+    launcherPressed: document.querySelector("[data-analytics-settings]")
+      ?.hasAttribute("aria-pressed"),
   }))()`);
   const analyticsRequestsAfterAllow = observedNetworkRequests
     .slice(analyticsRequestBaseline)
@@ -1681,6 +1909,8 @@ const auditBrowser = async (client, origin) => {
     || allowedContract.disabled !== false
     || allowedContract.trackerScripts !== 1
     || !allowedContract.queuedInit
+    || allowedContract.summary !== "РАЗРЕШЕНА"
+    || allowedContract.launcherPressed
     || analyticsRequestsAfterAllow.length === 0
   ) {
     fail("privacy: explicit opt-in does not initialize the counter exactly once.", {

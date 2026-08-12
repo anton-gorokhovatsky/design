@@ -120,29 +120,29 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=cff29ce075c6">
+    <link rel="stylesheet" href="styles.css?v=9c370050e408">
     <!-- runtime-import-map:start -->
     <script type="importmap" data-runtime-import-map>
       {
         "imports": {
-          "./js/preferences.js": "./js/preferences.js?v=77f862a63d22",
-          "./js/analytics.js": "./js/analytics.js?v=843d35ceb18d",
+          "./js/preferences.js": "./js/preferences.js?v=3f6aacd26e84",
+          "./js/analytics.js": "./js/analytics.js?v=4fe2a5962250",
           "./js/signal-field.js": "./js/signal-field.js?v=50bb6509089d",
           "./js/map-data.js": "./js/map-data.js?v=dfae4cae3a05",
-          "./js/map-engine.js": "./js/map-engine.js?v=d5d133cc9dd5",
-          "./js/panels.js": "./js/panels.js?v=904d3e1c469c",
+          "./js/map-engine.js": "./js/map-engine.js?v=9f972ca52923",
+          "./js/panels.js": "./js/panels.js?v=57e4689cd711",
           "./js/favicon.js": "./js/favicon.js?v=515506b106d3"
         }
       }
     </script>
     <!-- runtime-import-map:end -->
     <!-- Native modules keep their dependencies explicit; see js/README.md. -->
-    <script type="module" src="js/preferences.js?v=77f862a63d22"></script>
-    <script type="module" src="js/analytics.js?v=843d35ceb18d"></script>
+    <script type="module" src="js/preferences.js?v=3f6aacd26e84"></script>
+    <script type="module" src="js/analytics.js?v=4fe2a5962250"></script>
     <script type="module" src="js/signal-field.js?v=50bb6509089d"></script>
     <script type="module" src="js/map-data.js?v=dfae4cae3a05"></script>
-    <script type="module" src="js/map-engine.js?v=d5d133cc9dd5"></script>
-    <script type="module" src="js/panels.js?v=904d3e1c469c"></script>
+    <script type="module" src="js/map-engine.js?v=9f972ca52923"></script>
+    <script type="module" src="js/panels.js?v=57e4689cd711"></script>
     <script type="module" src="js/favicon.js?v=515506b106d3"></script>
     <script type="application/ld+json">
       {
@@ -585,6 +585,40 @@
                 ></span>
                 <span class="constellation-nav__label">РЕЗЮМЕ / NOTION</span>
               </a>
+              <div
+                class="constellation-nav__utilities"
+                role="group"
+                aria-label="Инструменты карты"
+              >
+                <button
+                  class="constellation-nav__utility"
+                  type="button"
+                  data-nav-utility
+                  data-time-toggle
+                  aria-label="Показывать хронологию"
+                  aria-pressed="false"
+                >
+                  <span
+                    class="constellation-nav__utility-mark constellation-nav__utility-mark--time"
+                    aria-hidden="true"
+                  ></span>
+                  <span>ХРОНОЛОГИЯ</span>
+                </button>
+                <button
+                  class="constellation-nav__utility"
+                  type="button"
+                  data-nav-utility
+                  data-open-settings
+                  aria-haspopup="dialog"
+                  aria-controls="settings-panel"
+                >
+                  <span
+                    class="constellation-nav__utility-mark constellation-nav__utility-mark--settings"
+                    aria-hidden="true"
+                  ></span>
+                  <span>НАСТРОЙКИ</span>
+                </button>
+              </div>
             </div>
           </nav>
 
@@ -654,66 +688,79 @@
             aria-label="Режим отображения карты"
             data-context="ВИД"
           >
-            <button
-              class="map-control is-active"
-              type="button"
-              data-map-filter="all"
-              aria-label="Сбросить фильтры и показать все точки"
-              aria-pressed="true"
+            <div
+              class="map-control-group map-control-group--filters"
+              role="group"
+              aria-labelledby="map-filter-group-label"
             >
-              <span class="map-control__symbol map-control__symbol--all" aria-hidden="true"></span>
-              <span>ВСЁ</span>
-            </button>
-            <button
-              class="map-control"
-              type="button"
-              data-map-filter="company"
-              aria-label="Показывать компании"
-              aria-pressed="false"
+              <span class="map-control-group__label" id="map-filter-group-label">СОСТАВ</span>
+              <button
+                class="map-control map-control--all"
+                type="button"
+                data-map-filter="all"
+                aria-label="Показать все категории"
+              >
+                <span class="map-control__symbol map-control__symbol--all" aria-hidden="true"></span>
+                <span>ВСЁ</span>
+              </button>
+              <button
+                class="map-control is-active"
+                type="button"
+                data-map-filter="company"
+                aria-label="Показывать компании"
+                aria-pressed="true"
+              >
+                <span class="map-control__symbol map-control__symbol--company" aria-hidden="true"></span>
+                <span>КОМПАНИИ</span>
+              </button>
+              <button
+                class="map-control is-active"
+                type="button"
+                data-map-filter="project"
+                aria-label="Показывать проекты"
+                aria-pressed="true"
+              >
+                <span class="map-control__symbol map-control__symbol--project" aria-hidden="true"></span>
+                <span>ПРОЕКТЫ</span>
+              </button>
+              <button
+                class="map-control is-active"
+                type="button"
+                data-map-filter="personal"
+                aria-label="Показывать личное"
+                aria-pressed="true"
+              >
+                <span class="map-control__symbol map-control__symbol--personal" aria-hidden="true"></span>
+                <span>ЛИЧНОЕ</span>
+              </button>
+              <button
+                class="map-control is-active"
+                type="button"
+                data-map-filter="practice"
+                aria-label="Показывать принципы"
+                aria-pressed="true"
+              >
+                <span class="map-control__symbol map-control__symbol--practice" aria-hidden="true"></span>
+                <span>ПРИНЦИПЫ</span>
+              </button>
+            </div>
+            <div
+              class="map-control-group map-control-group--coordinates"
+              role="group"
+              aria-labelledby="map-coordinate-group-label"
             >
-              <span class="map-control__symbol map-control__symbol--company" aria-hidden="true"></span>
-              <span>КОМПАНИИ</span>
-            </button>
-            <button
-              class="map-control"
-              type="button"
-              data-map-filter="project"
-              aria-label="Показывать проекты"
-              aria-pressed="false"
-            >
-              <span class="map-control__symbol map-control__symbol--project" aria-hidden="true"></span>
-              <span>ПРОЕКТЫ</span>
-            </button>
-            <button
-              class="map-control"
-              type="button"
-              data-map-filter="personal"
-              aria-label="Показывать личное"
-              aria-pressed="false"
-            >
-              <span class="map-control__symbol map-control__symbol--personal" aria-hidden="true"></span>
-              <span>ЛИЧНОЕ</span>
-            </button>
-            <button
-              class="map-control"
-              type="button"
-              data-map-filter="practice"
-              aria-label="Показывать принципы"
-              aria-pressed="false"
-            >
-              <span class="map-control__symbol map-control__symbol--practice" aria-hidden="true"></span>
-              <span>ПРИНЦИПЫ</span>
-            </button>
-            <button
-              class="map-control map-control--time"
-              type="button"
-              data-time-toggle
-              aria-label="Показывать хронологию"
-              aria-pressed="false"
-            >
-              <span class="map-control__symbol map-control__symbol--time" aria-hidden="true"></span>
-              <span>ХРОНОЛОГИЯ</span>
-            </button>
+              <span class="map-control-group__label" id="map-coordinate-group-label">КООРДИНАТЫ</span>
+              <button
+                class="map-control map-control--time"
+                type="button"
+                data-time-toggle
+                aria-label="Показывать хронологию"
+                aria-pressed="false"
+              >
+                <span class="map-control__symbol map-control__symbol--time" aria-hidden="true"></span>
+                <span>ХРОНОЛОГИЯ</span>
+              </button>
+            </div>
           </nav>
 
           <div
@@ -765,14 +812,19 @@
                 >
                   КОНТРАСТ +
                 </button>
-                <button
-                  type="button"
-                  data-analytics-settings
-                  aria-pressed="false"
-                >
-                  АНАЛИТИКА
-                </button>
               </div>
+              <button
+                class="display-control__analytics"
+                type="button"
+                data-analytics-settings
+                data-open-settings
+                data-settings-focus="analytics"
+                aria-haspopup="dialog"
+                aria-controls="settings-panel"
+              >
+                <span aria-hidden="true"></span>
+                <span>АНАЛИТИКА / <span data-analytics-summary>НЕ ВЫБРАНО</span></span>
+              </button>
               <p data-map-note>
                 КООРДИНАТЫ СУБЪЕКТИВНЫ: ПОЛОЖЕНИЕ — СМЫСЛОВАЯ БЛИЗОСТЬ, РАЗМЕР — ЛИЧНЫЙ ВЕС ОПЫТА.
               </p>
@@ -1050,38 +1102,99 @@
       </div>
     </main>
 
-    <section
-      class="analytics-consent"
+    <dialog
+      id="settings-panel"
+      class="settings-panel"
+      data-settings-panel
       data-analytics-consent
-      data-material-surface="analytics-consent"
+      data-material-surface="settings-panel"
       data-material-active="always"
-      role="region"
-      aria-labelledby="analytics-consent-title"
-      aria-describedby="analytics-consent-copy"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="settings-panel-title"
+      aria-describedby="settings-panel-intro"
       hidden
       inert
     >
-      <p class="analytics-consent__eyebrow">АНАЛИТИКА / С&nbsp;СОГЛАСИЯ</p>
-      <h2 id="analytics-consent-title">ПОМОЧЬ УЛУЧШАТЬ КАРТУ?</h2>
-      <p id="analytics-consent-copy">
-        Метрика помогает понять, как&nbsp;пользуются картой. Для&nbsp;этого
-        используются файлы cookie и&nbsp;Вебвизор; поисковые запросы
-        не&nbsp;записываются. Без согласия сайт работает как обычно.
-      </p>
-      <a
-        class="analytics-consent__details"
-        href="https://yandex.ru/support/metrica/ru/general/cookie-usage"
-        target="_blank"
-        rel="noreferrer"
-      >
-        Как Метрика использует данные
-      </a>
-      <div class="analytics-consent__actions">
-        <button type="button" data-analytics-allow>РАЗРЕШИТЬ</button>
-        <button type="button" data-analytics-deny>БЕЗ АНАЛИТИКИ</button>
+      <div class="settings-panel__header">
+        <div>
+          <p>ЭКРАН / НАСТРОЙКИ</p>
+          <h2 id="settings-panel-title">НАСТРОЙКИ ЭКРАНА</h2>
+        </div>
+        <button
+          class="settings-panel__close"
+          type="button"
+          data-close-settings
+          aria-label="Закрыть настройки"
+        >
+          <span aria-hidden="true">×</span>
+        </button>
       </div>
-      <p class="visually-hidden" data-analytics-status role="status" aria-live="polite"></p>
-    </section>
+      <p class="settings-panel__intro" id="settings-panel-intro">
+        Настройки действуют только на&nbsp;этом сайте. Системные предпочтения
+        движения и&nbsp;контраста всегда имеют приоритет.
+      </p>
+      <div class="settings-panel__body">
+        <div class="settings-panel__row">
+          <div>
+            <h3>ТЕМА</h3>
+            <p>Системная, светлая или&nbsp;тёмная.</p>
+          </div>
+          <button type="button" data-theme-toggle>
+            <span data-theme-panel-state>СИСТЕМНАЯ</span>
+          </button>
+        </div>
+        <div class="settings-panel__row">
+          <div>
+            <h3>ДВИЖЕНИЕ</h3>
+            <p>Уменьшает перемещение и&nbsp;морфинг.</p>
+          </div>
+          <button type="button" data-motion-toggle aria-pressed="false">
+            <span data-motion-state>ОБЫЧНОЕ</span>
+          </button>
+        </div>
+        <div class="settings-panel__row">
+          <div>
+            <h3>КОНТРАСТ</h3>
+            <p>Усиливает текст, линии и&nbsp;индикатор фокуса.</p>
+          </div>
+          <button type="button" data-contrast-toggle aria-pressed="false">
+            <span data-contrast-state>ОБЫЧНЫЙ</span>
+          </button>
+        </div>
+        <section
+          class="settings-panel__analytics"
+          data-settings-section="analytics"
+          aria-labelledby="settings-analytics-title"
+        >
+          <div class="settings-panel__analytics-header">
+            <div>
+              <h3 id="settings-analytics-title">АНАЛИТИКА</h3>
+              <p>ЯНДЕКС МЕТРИКА / ТОЛЬКО ПО&nbsp;СОГЛАСИЮ</p>
+            </div>
+            <strong data-analytics-preference>НЕ ВЫБРАНО</strong>
+          </div>
+          <p>
+            Метрика помогает понять, как&nbsp;пользуются картой. Для&nbsp;этого
+            используются файлы cookie и&nbsp;Вебвизор; поисковые запросы
+            не&nbsp;записываются. Без согласия сайт работает как обычно.
+          </p>
+          <a
+            class="settings-panel__details"
+            href="https://yandex.ru/support/metrica/ru/general/cookie-usage"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Как Метрика использует данные
+          </a>
+          <div class="settings-panel__analytics-actions">
+            <button type="button" data-analytics-allow>РАЗРЕШИТЬ</button>
+            <button type="button" data-analytics-deny>ВЫКЛЮЧИТЬ</button>
+          </div>
+        </section>
+      </div>
+    </dialog>
+    <p class="visually-hidden" data-analytics-status role="status" aria-live="polite"></p>
 
     <footer class="site-footer">
       <p>ANTON GOROKHOVATSKY © 2026</p>

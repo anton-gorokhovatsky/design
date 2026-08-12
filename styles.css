@@ -8899,41 +8899,7 @@ body:has(.practice-map[data-observation-active]) .site-header {
   transform: none;
 }
 
-/* MATERIAL / 01 CASCADE CONTRACT
-   The registry controls the rendered material. Component rules may define
-   geometry and type, but cannot substitute a local fill, border, shadow, or
-   blur for an active registered interface surface. */
-
-[data-material-surface][data-material-active="always"]:not(
-    .is-content-stack-hidden
-  ),
-.map-node-label[data-material-surface][data-material-active="always"] {
-  border: 0;
-  background: var(--material-01);
-  box-shadow: none;
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-}
-
-@media (min-width: 681px) {
-  [data-material-surface][data-material-active="desktop"] {
-    border: 0;
-    background: var(--material-01);
-    box-shadow: none;
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-  }
-}
-
 @media (max-width: 680px) {
-  [data-material-surface][data-material-active="mobile"] {
-    border: 0;
-    background: var(--material-01);
-    box-shadow: none;
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-  }
-
   /* Keep the search row on the material's true centerline. The 48px controls
      must not be offset by additional block padding or desktop optical nudges. */
   .control-console .command-dock {
@@ -9023,14 +8989,6 @@ html[data-focus-modality="pointer"]
     background: Canvas;
     color: CanvasText;
     forced-color-adjust: none;
-  }
-
-  [data-material-surface] {
-    border: 1px solid CanvasText;
-    background: Canvas;
-    box-shadow: none;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
   }
 
   .constellation-nav__cluster i {
@@ -9515,15 +9473,204 @@ html[data-contrast="true"] .map-node__glyph {
   filter: contrast(1.18);
 }
 
-/* Consent belongs to the observatory instrument family. It never blocks the
-   map, takes focus on arrival, or starts telemetry before a clear choice. */
-.analytics-consent {
+/* Map composition and chronology are independent controls. The five category
+   cells stay in the mobile dock; chronology moves to the navigation utilities. */
+.map-control-group {
+  display: grid;
+  gap: 2px;
+}
+
+.map-control-group__label {
+  display: block;
+  padding: 6px 7px 3px;
+  color: var(--content-muted);
+  font-size: 0.5rem;
+  font-weight: 600;
+  letter-spacing: 0.075em;
+  line-height: 1;
+}
+
+.map-control-group--coordinates {
+  margin-top: 7px;
+  padding-top: 7px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.system-dock .map-control.is-reset-available {
+  color: var(--signal);
+}
+
+.display-control__analytics > span:first-child {
+  box-sizing: border-box;
+  width: 10px;
+  height: 10px;
+  justify-self: center;
+  border: 1px solid var(--content-muted);
+  border-radius: 50%;
+}
+
+.display-control__analytics[data-analytics-state="allowed"] > span:first-child {
+  border-color: var(--signal);
+  background: var(--signal);
+  box-shadow: inset 0 0 0 3px var(--material-01);
+}
+
+.display-control__analytics[data-analytics-state="denied"] > span:first-child {
+  border-color: var(--content-muted);
+  background:
+    linear-gradient(
+      135deg,
+      transparent 44%,
+      currentColor 45% 55%,
+      transparent 56%
+    );
+}
+
+.constellation-nav__utilities {
+  display: none;
+}
+
+@media (max-width: 680px) {
+  .system-dock {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .system-dock .map-controls,
+  .system-dock .map-control-group--filters {
+    display: contents;
+  }
+
+  .system-dock .map-control-group--coordinates,
+  .system-dock .map-control-group__label {
+    display: none;
+  }
+
+  .system-dock .map-control[aria-pressed="true"] .map-control__symbol,
+  .system-dock .map-control.is-reset-available .map-control__symbol {
+    color: var(--signal);
+  }
+
+  .control-console .constellation-nav.is-open {
+    height: 334px;
+  }
+
+  .constellation-nav__utilities {
+    display: grid;
+    gap: 0;
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px solid var(--line-soft);
+  }
+
+  .control-console .constellation-nav__utility {
+    display: grid;
+    width: 100%;
+    height: 36px;
+    grid-template-columns: 30px minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+    padding: 0 8px;
+    border: 0;
+    border-radius: 13px;
+    background: transparent;
+    color: var(--content-ink);
+    cursor: pointer;
+    font: 600 0.68rem/1 var(--font-sans);
+    letter-spacing: 0.01em;
+    text-align: left;
+  }
+
+  .control-console .constellation-nav__utility:is(:hover, :focus-visible) {
+    color: var(--signal);
+    outline: none;
+  }
+
+  .constellation-nav__utility-mark {
+    position: relative;
+    display: block;
+    box-sizing: border-box;
+    width: 16px;
+    height: 16px;
+    justify-self: center;
+    color: currentColor;
+  }
+
+  .constellation-nav__utility:focus-visible .constellation-nav__utility-mark {
+    border-radius: 50%;
+    outline: 2px solid var(--signal);
+    outline-offset: 3px;
+  }
+
+  .constellation-nav__utility-mark--time {
+    height: 12px;
+    border: 1.25px solid currentColor;
+    border-radius: 50%;
+    transform: rotate(-16deg);
+  }
+
+  .constellation-nav__utility-mark--time::before {
+    position: absolute;
+    inset: 2px 3px;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    content: "";
+  }
+
+  .constellation-nav__utility-mark--time::after {
+    position: absolute;
+    top: -1px;
+    right: 1px;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: currentColor;
+    content: "";
+  }
+
+  .constellation-nav__utility-mark--settings {
+    border: 1.25px solid currentColor;
+    border-radius: 50%;
+  }
+
+  .constellation-nav__utility-mark--settings::before,
+  .constellation-nav__utility-mark--settings::after {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    background: currentColor;
+    content: "";
+    transform: translate(-50%, -50%);
+  }
+
+  .constellation-nav__utility-mark--settings::before {
+    width: 8px;
+    height: 1px;
+  }
+
+  .constellation-nav__utility-mark--settings::after {
+    width: 1px;
+    height: 8px;
+  }
+
+  .constellation-nav__utility[data-time-toggle][aria-pressed="true"] {
+    color: var(--signal);
+  }
+}
+
+/* Screen preferences form one place. Theme/accessibility shortcuts and search
+   all resolve to this dialog; analytics remains an explicit opt-in substate. */
+.settings-panel {
   position: fixed;
   right: max(18px, env(safe-area-inset-right));
   bottom: max(18px, env(safe-area-inset-bottom));
   z-index: 90;
+  display: grid;
   box-sizing: border-box;
-  width: min(370px, calc(100vw - 36px));
+  width: min(460px, calc(100vw - 36px));
+  max-height: calc(100svh - 36px);
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: 16px;
+  margin: 0;
   padding: 22px;
   border: 0;
   border-radius: 28px;
@@ -9534,39 +9681,169 @@ html[data-contrast="true"] .map-node__glyph {
   backdrop-filter: blur(24px);
 }
 
-.analytics-consent[hidden] {
+.settings-panel::backdrop {
+  background: transparent;
+}
+
+.settings-panel[hidden] {
   display: none;
 }
 
-.analytics-consent__eyebrow,
-.analytics-consent h2,
-.analytics-consent > p {
+.settings-panel :is(h2, h3, p) {
   margin: 0;
 }
 
-.analytics-consent__eyebrow {
+.settings-panel__header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.settings-panel__header p {
   color: var(--content-muted);
-  font-size: 0.68rem;
+  font-size: 0.62rem;
   font-weight: 600;
   letter-spacing: 0.08em;
 }
 
-.analytics-consent h2 {
-  margin-top: 18px;
+.settings-panel__header h2 {
+  margin-top: 9px;
   font-size: clamp(1.15rem, calc(1rem + 0.5vw), 1.45rem);
   font-weight: 600;
   line-height: 1.05;
 }
 
-.analytics-consent #analytics-consent-copy {
-  margin-top: 12px;
+.settings-panel__close {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--content-ink);
+  cursor: pointer;
+  font: 400 1.35rem/1 var(--font-sans);
+  place-items: center;
+}
+
+.settings-panel__close:is(:hover, :focus-visible) {
+  color: var(--signal);
+  outline: 2px solid var(--signal);
+  outline-offset: -2px;
+}
+
+.settings-panel__intro {
   color: var(--content-muted);
-  font-size: 0.82rem;
-  line-height: 1.45;
+  font-size: 0.76rem;
+  line-height: 1.4;
   text-wrap: pretty;
 }
 
-.analytics-consent__details {
+.settings-panel__body {
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.settings-panel__row {
+  display: grid;
+  min-height: 64px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.settings-panel__row h3,
+.settings-panel__analytics h3 {
+  color: var(--content-ink);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  line-height: 1.15;
+}
+
+.settings-panel__row p {
+  margin-top: 4px;
+  color: var(--content-muted);
+  font-size: 0.68rem;
+  line-height: 1.3;
+}
+
+.settings-panel__row > button {
+  min-width: 118px;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--line-soft);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--content-ink);
+  cursor: pointer;
+  font: 600 0.62rem/1 var(--font-sans);
+  letter-spacing: 0.045em;
+}
+
+.settings-panel__row > button[aria-pressed="true"] {
+  border-color: color-mix(in srgb, var(--signal) 56%, var(--line-soft));
+  color: var(--signal);
+}
+
+.settings-panel__row > button:disabled {
+  cursor: default;
+  opacity: 0.66;
+}
+
+.settings-panel__row > button:not(:disabled):is(:hover, :focus-visible) {
+  border-color: var(--signal);
+  color: var(--signal);
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+
+.settings-panel__analytics {
+  margin-top: 4px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.settings-panel__analytics-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.settings-panel__analytics-header p {
+  margin-top: 5px;
+  color: var(--content-muted);
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.035em;
+  line-height: 1.25;
+}
+
+.settings-panel__analytics strong {
+  flex: 0 0 auto;
+  color: var(--signal);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.045em;
+  line-height: 1.2;
+}
+
+.settings-panel__analytics > p {
+  margin-top: 14px;
+  color: var(--content-muted);
+  font-size: 0.76rem;
+  line-height: 1.42;
+  text-wrap: pretty;
+}
+
+.settings-panel__details {
   display: inline-block;
   margin-top: 10px;
   color: var(--content-muted);
@@ -9574,14 +9851,14 @@ html[data-contrast="true"] .map-node__glyph {
   text-underline-offset: 3px;
 }
 
-.analytics-consent__actions {
+.settings-panel__analytics-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
-  margin-top: 20px;
+  margin-top: 16px;
 }
 
-.analytics-consent__actions button {
+.settings-panel__analytics-actions button {
   min-height: 44px;
   padding: 0 12px;
   border: 1px solid var(--line);
@@ -9592,13 +9869,19 @@ html[data-contrast="true"] .map-node__glyph {
   letter-spacing: 0.055em;
 }
 
-.analytics-consent__actions [data-analytics-allow] {
+.settings-panel__analytics-actions [data-analytics-allow] {
   border-color: var(--signal);
   background: var(--signal);
   color: #fff;
 }
 
-.analytics-consent__actions button:is(:hover, :focus-visible) {
+.settings-panel__analytics-actions button:disabled {
+  cursor: default;
+  opacity: 0.46;
+}
+
+.settings-panel__analytics-actions button:not(:disabled):is(:hover, :focus-visible),
+.settings-panel__details:focus-visible {
   outline: 2px solid var(--signal);
   outline-offset: 2px;
 }
@@ -9692,22 +9975,34 @@ html[data-contrast="true"] .map-node__glyph {
 }
 
 @media (max-width: 680px) {
-  .analytics-consent {
-    top: max(70px, calc(env(safe-area-inset-top) + 56px));
+  .settings-panel {
+    top: max(14px, env(safe-area-inset-top));
     right: max(14px, env(safe-area-inset-right));
     bottom: auto;
     left: max(14px, env(safe-area-inset-left));
     width: auto;
+    max-height: calc(100svh - 28px);
+    gap: 13px;
     padding: 18px;
     border-radius: 24px;
   }
 
-  .analytics-consent h2 {
-    margin-top: 14px;
+  .settings-panel__header h2 {
+    margin-top: 7px;
   }
 
-  .analytics-consent #analytics-consent-copy {
-    font-size: 0.76rem;
+  .settings-panel__row {
+    min-height: 60px;
+    gap: 10px;
+  }
+
+  .settings-panel__row > button {
+    min-width: 104px;
+    padding-inline: 9px;
+  }
+
+  .settings-panel__analytics > p {
+    font-size: 0.72rem;
   }
 
   .no-script-fallback nav {
@@ -9727,5 +10022,51 @@ html[data-contrast="true"] .map-node__glyph {
     --ink: #f2f1ec;
     --muted: #989b91;
     --line: rgba(242, 241, 236, 0.18);
+  }
+}
+
+/* MATERIAL / 01 CASCADE CONTRACT
+   The registry controls the rendered material. Component rules may define
+   geometry and type, but cannot substitute a local fill, border, shadow, or
+   blur for an active registered interface surface. */
+
+[data-material-surface][data-material-active="always"]:not(
+    .is-content-stack-hidden
+  ),
+.map-node-label[data-material-surface][data-material-active="always"] {
+  border: 0;
+  background: var(--material-01);
+  box-shadow: none;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+@media (min-width: 681px) {
+  [data-material-surface][data-material-active="desktop"] {
+    border: 0;
+    background: var(--material-01);
+    box-shadow: none;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+}
+
+@media (max-width: 680px) {
+  [data-material-surface][data-material-active="mobile"] {
+    border: 0;
+    background: var(--material-01);
+    box-shadow: none;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+}
+
+@media (forced-colors: active) {
+  [data-material-surface] {
+    border: 1px solid CanvasText;
+    background: Canvas;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 }

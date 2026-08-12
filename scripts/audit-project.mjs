@@ -354,7 +354,7 @@ const requiredMaterialSurfaces = [
   "approach-03",
   "approach-04",
   "contact",
-  "analytics-consent",
+  "settings-panel",
 ];
 const materialSurfaceTags = [
   ...indexSource.matchAll(/<[^>]*\sdata-material-surface="([^"]+)"[^>]*>/gs),
@@ -906,6 +906,7 @@ const requiredStates = [
   "reduced-motion",
   "forced-colors",
   "text-zoom",
+  "settings-panel",
   "analytics-consent",
   "no-script",
   "favicon-hidden",
