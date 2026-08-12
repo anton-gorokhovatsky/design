@@ -840,12 +840,7 @@ const auditBrowser = async (client, origin) => {
   await saveScreenshot(client, "desktop-search-results");
   await saveElementScreenshot(client, "crop-desktop-search-results", ".command-results");
 
-  await navigate(client, `${origin}/?qa=ui-contracts-reel`);
-  await evaluate(client, `(() => {
-    const node = document.querySelector('[data-map-id="tarski"]');
-    node.dispatchEvent(new PointerEvent("pointerenter"));
-    return true;
-  })()`);
+  await navigate(client, `${origin}/?qa=ui-contracts-reel&preview=tarski`);
   await waitForExpression(client, `(() => {
     const preview = document.querySelector(".map-hover-preview");
     const media = document.querySelector(".map-hover-preview__media");
@@ -1163,8 +1158,9 @@ const auditBrowser = async (client, origin) => {
     };
   })()`);
   if (
-    !foodForks.description.includes("заметить человека")
-    || !foodForks.description.includes("этот вечер — именно для него")
+    !foodForks.description.includes("гость буквально охренел")
+    || !foodForks.description.includes("не показать, как ты старался")
+    || !foodForks.description.includes("всё это было сделано для него")
     || foodForks.description.includes("Чикаго")
     || foodForks.meta !== "ВКУС / СЕРВИС / ДЕТАЛИ"
     || foodForks.linkHidden

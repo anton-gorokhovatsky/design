@@ -40,7 +40,7 @@ const syntaxSteps = [
   })),
 ];
 
-const contractSteps = [
+const staticContractSteps = [
   {
     label: "Cache-busting contract",
     command: process.execPath,
@@ -72,16 +72,6 @@ const contractSteps = [
     args: ["scripts/check-publication-assets.mjs"],
   },
   {
-    label: "Real-browser UI contracts",
-    command: process.execPath,
-    args: ["scripts/check-ui-contracts.mjs"],
-  },
-  {
-    label: "WebKit UI contracts",
-    command: process.execPath,
-    args: ["scripts/webkit-regression.cjs"],
-  },
-  {
     label: "Reel contracts",
     command: process.execPath,
     args: ["scripts/check-reels.mjs"],
@@ -110,6 +100,18 @@ const contractSteps = [
     label: "Git whitespace",
     command: "git",
     args: ["diff", "--check"],
+  },
+];
+const browserContractSteps = [
+  {
+    label: "Real-browser UI contracts",
+    command: process.execPath,
+    args: ["scripts/check-ui-contracts.mjs"],
+  },
+  {
+    label: "WebKit UI contracts",
+    command: process.execPath,
+    args: ["scripts/webkit-regression.cjs"],
   },
 ];
 
@@ -183,10 +185,22 @@ failures.push(...syntaxResults.filter((result) => (
 )));
 
 if (failures.length === 0) {
-  const contractResults = await runPhase("Release gate", contractSteps);
-  failures.push(...contractResults.filter((result) => (
+  const staticContractResults = await runPhase("Static release gate", staticContractSteps);
+  failures.push(...staticContractResults.filter((result) => (
     result.error || result.status !== 0
   )));
+}
+
+if (failures.length === 0) {
+  console.log("\nBrowser release gate: 2 serial tasks");
+  for (const step of browserContractSteps) {
+    const result = await runStep(step);
+    printResults([result]);
+    if (result.error || result.status !== 0) {
+      failures.push(result);
+      break;
+    }
+  }
 }
 
 if (failures.length > 0) {
