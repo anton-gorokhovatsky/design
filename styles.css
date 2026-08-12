@@ -6239,9 +6239,9 @@ html[data-theme="dark"] .map-node--running.is-selected .map-node__glyph {
 
 .map-links path {
   transition:
-    opacity 180ms var(--motion-shift),
-    stroke 180ms var(--motion-shift),
-    stroke-width 220ms var(--motion-shift);
+    opacity 440ms var(--motion-shift),
+    stroke 440ms var(--motion-shift),
+    stroke-width 440ms var(--motion-shift);
 }
 
 .practice-map .map-links.has-active-relation,
@@ -6255,8 +6255,8 @@ body:has(.command-dock.is-open) .map-links.has-active-relation {
 
 .map-links.has-active-relation path.is-active-relation {
   stroke: color-mix(in srgb, var(--signal) 74%, var(--ink));
-  stroke-width: 1.4;
-  opacity: 1;
+  stroke-width: 1.1;
+  opacity: 0.74;
 }
 
 .map-links path.is-filter-hidden,

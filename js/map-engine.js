@@ -74,24 +74,20 @@ let scheduleMapLinksRender = () => {};
 const mapLinkGeometries = new WeakMap();
 const mapLinkAnimations = new WeakMap();
 
-const getMotionShiftSpline = () => {
-  const token = window.getComputedStyle(document.documentElement)
-    .getPropertyValue("--motion-shift")
-    .trim();
-  const match = token.match(/^cubic-bezier\(([^)]+)\)$/);
+const parseMapLinkCurve = (value) => {
+  const numbers = value.match(/-?\d+(?:\.\d+)?/g)?.map(Number) || [];
 
-  if (!match) {
-    return null;
-  }
-
-  const values = match[1]
-    .split(",")
-    .map((value) => Number.parseFloat(value.trim()));
-
-  return values.length === 4 && values.every(Number.isFinite)
-    ? values.join(" ")
+  return numbers.length === 8 && numbers.every(Number.isFinite)
+    ? numbers
     : null;
 };
+
+const formatMapLinkCurve = (values) => (
+  `M${values[0].toFixed(3)} ${values[1].toFixed(3)}`
+  + `C${values[2].toFixed(3)} ${values[3].toFixed(3)}`
+  + ` ${values[4].toFixed(3)} ${values[5].toFixed(3)}`
+  + ` ${values[6].toFixed(3)} ${values[7].toFixed(3)}`
+);
 
 const setMapLinkReactiveState = (path, isReactive) => {
   const geometry = mapLinkGeometries.get(path);
@@ -104,58 +100,71 @@ const setMapLinkReactiveState = (path, isReactive) => {
   const targetD = shouldMorph ? geometry.reactiveD : geometry.baseD;
   const previousAnimation = mapLinkAnimations.get(path);
 
-  if (previousAnimation) {
-    path.setAttribute("d", geometry.currentD);
-  }
-  previousAnimation?.remove();
-  window.clearTimeout(geometry.cleanupTimer);
+  window.cancelAnimationFrame(previousAnimation?.frame || 0);
+  mapLinkAnimations.delete(path);
   geometry.isReactive = shouldMorph;
 
   if (reducedMotion.matches) {
     path.setAttribute("d", geometry.baseD);
     geometry.currentD = geometry.baseD;
+    delete path.dataset.relationMorphing;
     return;
   }
 
   if (!path.isConnected) {
     path.setAttribute("d", targetD);
     geometry.currentD = targetD;
+    delete path.dataset.relationMorphing;
     return;
   }
 
-  const animation = document.createElementNS(svgNamespace, "animate");
-  const spline = getMotionShiftSpline();
-  let cleaned = false;
-  const finish = () => {
-    if (cleaned) {
+  const fromValues = parseMapLinkCurve(path.getAttribute("d") || geometry.currentD);
+  const targetValues = parseMapLinkCurve(targetD);
+
+  if (!fromValues || !targetValues) {
+    path.setAttribute("d", targetD);
+    geometry.currentD = targetD;
+    delete path.dataset.relationMorphing;
+    return;
+  }
+
+  const animation = { frame: 0 };
+  const startedAt = window.performance.now();
+  const duration = shouldMorph ? 440 : 320;
+
+  // Keep the existing SVG path alive throughout the transition. Replacing it or
+  // delegating `d` to SMIL can expose an empty intermediate frame in WebKit.
+  path.dataset.relationMorphing = "true";
+  const renderFrame = (timestamp) => {
+    if (!path.isConnected) {
+      delete path.dataset.relationMorphing;
+      mapLinkAnimations.delete(path);
       return;
     }
 
-    cleaned = true;
+    const progress = Math.min(1, (timestamp - startedAt) / duration);
+    const easedProgress = 1 - ((1 - progress) ** 3);
+    const currentValues = fromValues.map((value, index) => (
+      value + (targetValues[index] - value) * easedProgress
+    ));
+    const currentD = formatMapLinkCurve(currentValues);
+
+    path.setAttribute("d", currentD);
+    geometry.currentD = currentD;
+
+    if (progress < 1) {
+      animation.frame = window.requestAnimationFrame(renderFrame);
+      return;
+    }
+
     path.setAttribute("d", targetD);
     geometry.currentD = targetD;
-    animation.remove();
+    delete path.dataset.relationMorphing;
     mapLinkAnimations.delete(path);
-    window.clearTimeout(geometry.cleanupTimer);
   };
 
-  animation.setAttribute("attributeName", "d");
-  animation.setAttribute("from", geometry.currentD);
-  animation.setAttribute("to", targetD);
-  animation.setAttribute("dur", "260ms");
-  animation.setAttribute("fill", "freeze");
-
-  if (spline) {
-    animation.setAttribute("calcMode", "spline");
-    animation.setAttribute("keyTimes", "0;1");
-    animation.setAttribute("keySplines", spline);
-  }
-
-  animation.addEventListener("endEvent", finish, { once: true });
-  path.append(animation);
   mapLinkAnimations.set(path, animation);
-  animation.beginElement();
-  geometry.cleanupTimer = window.setTimeout(finish, 340);
+  animation.frame = window.requestAnimationFrame(renderFrame);
 };
 
 const writeUrlState = (changes, { replace = false } = {}) => {
@@ -1232,7 +1241,10 @@ if (mapLinksRoot) {
         const portAngle = portStart + (portEnd - portStart) * portProgress;
         const parentRadius = parentGeometry.radius + 3;
         const childRadius = geometry.radius + 2;
-        const path = document.createElementNS(svgNamespace, "path");
+        const relationKey = `${parentId}:${item.id}`;
+        const path = mapLinksRoot.querySelector(
+          `path[data-relation-key="${relationKey}"]`,
+        ) || document.createElementNS(svgNamespace, "path");
         const parentCenterX = parentGeometry.centerX;
         const parentCenterY = parentGeometry.centerY;
         const childCenterX = geometry.centerX;
@@ -1269,8 +1281,16 @@ if (mapLinksRoot) {
         const control2Y = toViewBoxY(control2PixelY);
         const normalPixelX = -deltaY / distance;
         const normalPixelY = deltaX / distance;
-        const relationDirection = index % 2 === 0 ? 1 : -1;
-        const relationTension = Math.min(6, Math.max(2.5, distance * 0.018));
+        const relationSpread = measuredChildren.length > 1
+          ? (index / (measuredChildren.length - 1)) * 2 - 1
+          : 0;
+        const relationDirection = Math.abs(relationSpread) > 0.08
+          ? Math.sign(relationSpread)
+          : 1;
+        const relationTension = Math.min(
+          30,
+          Math.max(14, distance * (0.09 + Math.abs(relationSpread) * 0.025)),
+        );
         const reactiveControl1X = toViewBoxX(
           control1PixelX + normalPixelX * relationTension * relationDirection,
         );
@@ -1292,13 +1312,19 @@ if (mapLinksRoot) {
           + ` ${reactiveControl2X.toFixed(3)} ${reactiveControl2Y.toFixed(3)}`
           + ` ${targetX.toFixed(3)} ${targetY.toFixed(3)}`;
 
-        path.setAttribute("d", baseD);
+        const existingGeometry = mapLinkGeometries.get(path);
+        const preserveReactiveShape = Boolean(existingGeometry?.isReactive);
+        const nextD = preserveReactiveShape ? reactiveD : baseD;
+
+        window.cancelAnimationFrame(mapLinkAnimations.get(path)?.frame || 0);
+        mapLinkAnimations.delete(path);
+        delete path.dataset.relationMorphing;
+        path.setAttribute("d", nextD);
         mapLinkGeometries.set(path, {
           baseD,
           reactiveD,
-          currentD: baseD,
-          isReactive: false,
-          cleanupTimer: 0,
+          currentD: nextD,
+          isReactive: preserveReactiveShape,
         });
 
         if (parentId === "garage") {
@@ -1311,11 +1337,21 @@ if (mapLinksRoot) {
 
         path.dataset.parentId = parentId;
         path.dataset.childId = item.id;
+        path.dataset.relationKey = relationKey;
         linkElements.push(path);
       });
     });
 
-    mapLinksRoot.replaceChildren(...linkElements);
+    linkElements.forEach((path) => {
+      if (!path.isConnected) {
+        mapLinksRoot.append(path);
+      }
+    });
+    Array.from(mapLinksRoot.querySelectorAll("path")).forEach((path) => {
+      if (!linkElements.includes(path)) {
+        path.remove();
+      }
+    });
     syncMapRelationships();
   };
 

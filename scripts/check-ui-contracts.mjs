@@ -425,23 +425,63 @@ const readReactiveRelationsContract = async (client, mapId) => evaluate(
   `((mapId) => new Promise((resolve) => {
     const paths = [...document.querySelectorAll("[data-map-links] path")];
     const initial = paths.map((path) => path.getAttribute("d"));
-    document.querySelector(\`[data-map-id="\${mapId}"]\`)?.click();
+    document.querySelector(\`[data-map-id="\${mapId}"]\`)?.dispatchEvent(
+      new PointerEvent("pointerenter"),
+    );
+    let minimumActiveOpacity = 1;
+    let opacityFrame = 0;
+    const sampleActiveOpacity = () => {
+      const active = paths.filter((path) => path.classList.contains("is-active-relation"));
+      if (active.length) {
+        minimumActiveOpacity = Math.min(
+          minimumActiveOpacity,
+          ...active.map((path) => Number(getComputedStyle(path).opacity)),
+        );
+      }
+      opacityFrame = window.requestAnimationFrame(sampleActiveOpacity);
+    };
+    opacityFrame = window.requestAnimationFrame(sampleActiveOpacity);
+    const getMaximumCurveDeflection = (path) => {
+      const numbers = (path.getAttribute("d") || "")
+        .match(/-?\\d+(?:\\.\\d+)?/g)?.map(Number) || [];
+      if (numbers.length !== 8) return 0;
+      const [startX, startY, control1X, control1Y, control2X, control2Y, endX, endY]
+        = numbers;
+      const deltaX = endX - startX;
+      const deltaY = endY - startY;
+      const length = Math.hypot(deltaX, deltaY) || 1;
+      const distanceFromChord = (x, y) => Math.abs(
+        deltaY * x - deltaX * y + endX * startY - endY * startX
+      ) / length;
+      return Math.max(
+        distanceFromChord(control1X, control1Y),
+        distanceFromChord(control2X, control2Y),
+      );
+    };
     window.setTimeout(() => {
+      window.cancelAnimationFrame(opacityFrame);
       const active = paths.filter((path) => path.classList.contains("is-active-relation"));
       const changed = paths.filter((path, index) => path.getAttribute("d") !== initial[index]);
       resolve({
-        selectedId: document.querySelector("[data-signal-field]")?.dataset.selectedId || "",
+        relationshipId: document.querySelector("[data-map-links]")?.dataset.relationshipId || "",
         activeCount: active.length,
         changedCount: changed.length,
         changedActiveCount: active.filter((path) => changed.includes(path)).length,
         changedInactiveCount: changed.filter((path) => (
           !path.classList.contains("is-active-relation")
         )).length,
+        connectedCount: paths.filter((path) => path.isConnected).length,
+        minimumActiveDeflection: active.length
+          ? Math.min(...active.map(getMaximumCurveDeflection))
+          : 0,
+        minimumActiveOpacity,
         pendingAnimations: paths.reduce((count, path) => (
-          count + path.querySelectorAll("animate").length
+          count
+          + path.querySelectorAll("animate").length
+          + Number(path.dataset.relationMorphing === "true")
         ), 0),
       });
-    }, 420);
+    }, 620);
   }))(${JSON.stringify(mapId)})`,
   true,
 );
@@ -762,11 +802,14 @@ const auditBrowser = async (client, origin) => {
   await delay(420);
   const reactiveGarageContract = await readReactiveRelationsContract(client, "garage");
   if (
-    reactiveGarageContract.selectedId !== "garage"
+    reactiveGarageContract.relationshipId !== "garage"
     || reactiveGarageContract.activeCount !== 9
     || reactiveGarageContract.changedCount !== 9
     || reactiveGarageContract.changedActiveCount !== 9
     || reactiveGarageContract.changedInactiveCount !== 0
+    || reactiveGarageContract.connectedCount !== 17
+    || reactiveGarageContract.minimumActiveDeflection < 0.8
+    || reactiveGarageContract.minimumActiveOpacity < 0.2
     || reactiveGarageContract.pendingAnimations !== 0
   ) {
     fail(
@@ -784,11 +827,14 @@ const auditBrowser = async (client, origin) => {
   await delay(420);
   const reactiveChildContract = await readReactiveRelationsContract(client, "narkomfin");
   if (
-    reactiveChildContract.selectedId !== "narkomfin"
+    reactiveChildContract.relationshipId !== "narkomfin"
     || reactiveChildContract.activeCount !== 1
     || reactiveChildContract.changedCount !== 1
     || reactiveChildContract.changedActiveCount !== 1
     || reactiveChildContract.changedInactiveCount !== 0
+    || reactiveChildContract.connectedCount !== 17
+    || reactiveChildContract.minimumActiveDeflection < 0.8
+    || reactiveChildContract.minimumActiveOpacity < 0.2
     || reactiveChildContract.pendingAnimations !== 0
   ) {
     fail(
@@ -807,7 +853,7 @@ const auditBrowser = async (client, origin) => {
   await navigate(client, `${origin}/?qa=ui-contracts-reactive-relations-reduced`);
   const reducedRelationsContract = await readReactiveRelationsContract(client, "garage");
   if (
-    reducedRelationsContract.selectedId !== "garage"
+    reducedRelationsContract.relationshipId !== "garage"
     || reducedRelationsContract.activeCount !== 9
     || reducedRelationsContract.changedCount !== 0
     || reducedRelationsContract.changedActiveCount !== 0

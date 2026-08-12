@@ -569,6 +569,26 @@ const routeAudit = async (page, mapId, expectedCount) => {
     const stateId = phase === "hover"
       ? field?.dataset.focusId || ""
       : field?.dataset.selectedId || "";
+    const getMaximumCurveDeflection = (path) => {
+      const numbers = (path.getAttribute("d") || "")
+        .match(/-?\d+(?:\.\d+)?/g)?.map(Number) || [];
+      if (numbers.length !== 8) return 0;
+      const [startX, startY, control1X, control1Y, control2X, control2Y, endX, endY]
+        = numbers;
+      const deltaX = endX - startX;
+      const deltaY = endY - startY;
+      const length = Math.hypot(deltaX, deltaY) || 1;
+      const distanceFromChord = (x, y) => Math.abs(
+        deltaY * x - deltaX * y + endX * startY - endY * startX
+      ) / length;
+      return Math.max(
+        distanceFromChord(control1X, control1Y),
+        distanceFromChord(control2X, control2Y),
+      );
+    };
+    const minimumActiveDeflection = active.length
+      ? Math.min(...active.map(getMaximumCurveDeflection))
+      : 0;
 
     return {
       phase,
@@ -579,15 +599,21 @@ const routeAudit = async (page, mapId, expectedCount) => {
       changedInactiveCount: changed.filter((path) => (
         !path.classList.contains("is-active-relation")
       )).length,
+      minimumActiveDeflection,
       pendingAnimations: paths.reduce((total, path) => (
-        total + path.querySelectorAll("animate").length
+        total
+        + path.querySelectorAll("animate").length
+        + Number(path.dataset.relationMorphing === "true")
       ), 0),
       badPaths: badPaths.length,
       failure: active.length !== count
         || changed.length !== count
         || active.filter((path) => changed.includes(path)).length !== count
         || changed.some((path) => !path.classList.contains("is-active-relation"))
-        || paths.some((path) => path.querySelector("animate"))
+        || minimumActiveDeflection < 0.8
+        || paths.some((path) => (
+          path.querySelector("animate") || path.dataset.relationMorphing === "true"
+        ))
         || badPaths.length > 0,
     };
   }, {
@@ -598,7 +624,7 @@ const routeAudit = async (page, mapId, expectedCount) => {
   });
 
   await page.locator(`[data-map-id="${mapId}"]`).hover({ force: true });
-  await waitForLayout(page, 420);
+  await waitForLayout(page, 620);
   const hover = await readRouteState("hover");
 
   await page.mouse.move(1, 1);
@@ -606,7 +632,7 @@ const routeAudit = async (page, mapId, expectedCount) => {
   await page.evaluate((id) => {
     document.querySelector(`[data-map-id="${id}"]`)?.click();
   }, mapId);
-  await waitForLayout(page, 420);
+  await waitForLayout(page, 620);
   const click = await readRouteState("click");
   click.failure = click.failure || click.stateId !== mapId;
 
@@ -648,11 +674,13 @@ const reducedMotionRelationsAudit = async (browser) => {
         activeCount: active.length,
         changedCount: changed.length,
         pendingAnimations: paths.reduce((total, path) => (
-          total + path.querySelectorAll("animate").length
+          total
+          + path.querySelectorAll("animate").length
+          + Number(path.dataset.relationMorphing === "true")
         ), 0),
         reducedMotion: matchMedia("(prefers-reduced-motion: reduce)").matches,
       });
-    }, 420);
+    }, 620);
   }));
   await context.close();
 
@@ -683,6 +711,23 @@ const childRelationsAudit = async (browser) => {
   const state = await page.evaluate(() => new Promise((resolve) => {
     const paths = Array.from(document.querySelectorAll("[data-map-links] path"));
     const baseline = paths.map((path) => path.getAttribute("d"));
+    const getMaximumCurveDeflection = (path) => {
+      const numbers = (path.getAttribute("d") || "")
+        .match(/-?\d+(?:\.\d+)?/g)?.map(Number) || [];
+      if (numbers.length !== 8) return 0;
+      const [startX, startY, control1X, control1Y, control2X, control2Y, endX, endY]
+        = numbers;
+      const deltaX = endX - startX;
+      const deltaY = endY - startY;
+      const length = Math.hypot(deltaX, deltaY) || 1;
+      const distanceFromChord = (x, y) => Math.abs(
+        deltaY * x - deltaX * y + endX * startY - endY * startX
+      ) / length;
+      return Math.max(
+        distanceFromChord(control1X, control1Y),
+        distanceFromChord(control2X, control2Y),
+      );
+    };
     document.querySelector('[data-map-id="narkomfin"]')?.click();
     window.setTimeout(() => {
       const active = paths.filter((path) => path.classList.contains("is-active-relation"));
@@ -697,11 +742,16 @@ const childRelationsAudit = async (browser) => {
         changedInactiveCount: changed.filter((path) => (
           !path.classList.contains("is-active-relation")
         )).length,
+        minimumActiveDeflection: active.length
+          ? Math.min(...active.map(getMaximumCurveDeflection))
+          : 0,
         pendingAnimations: paths.reduce((total, path) => (
-          total + path.querySelectorAll("animate").length
+          total
+          + path.querySelectorAll("animate").length
+          + Number(path.dataset.relationMorphing === "true")
         ), 0),
       });
-    }, 420);
+    }, 620);
   }));
   await context.close();
 
@@ -712,6 +762,7 @@ const childRelationsAudit = async (browser) => {
       || state.changedCount !== 1
       || state.changedActiveCount !== 1
       || state.changedInactiveCount !== 0
+      || state.minimumActiveDeflection < 0.8
       || state.pendingAnimations !== 0,
   };
 };
@@ -785,7 +836,7 @@ const relationshipCascadeAudit = async (page) => {
       failure: rootOpacity < 0.99
         || root?.dataset.relationshipId !== "garage-site"
         || active.length !== 1
-        || minimumActiveOpacity < 0.99,
+        || minimumActiveOpacity < 0.7,
     };
   });
 
