@@ -62,7 +62,7 @@
 | `resume-notion` | Открыть маршрут `РЕЗЮМЕ / NOTION` | Внешняя ссылка имеет понятное доступное имя и ведёт на актуальную хронологию |
 | `share-route` | Открыть шесть `/work/<id>/` | Собственные title/description/canonical/OG `1200×630`, затем корректный `?point=<id>#map` |
 | `no-script` | Отключить JavaScript | Автор, назначение, шесть работ, Notion-резюме и контакты доступны без tracking pixel |
-| `keyboard-focus` | Tab/Shift+Tab/Enter/Space/Arrows/Escape | После pointer/touch нет остаточного ореола; после `Tab` видна одна внутренняя focus-линия; порядок, focus trap/return сохранены |
+| `keyboard-focus` | Hover, pointer/touch, Tab/Shift+Tab/Enter/Space/Arrows/Escape | Hover меняет только цвет текста, но не рисует сигнальную рамку; после pointer/touch нет остаточного ореола; после `Tab` видна одна внутренняя focus-линия; порядок, focus trap/return сохранены |
 | `text-zoom` | 200% zoom и ширина 320 CSS px | Текст не обрезан, обычный контент не требует горизонтального скролла |
 | `reduced-motion` | `prefers-reduced-motion: reduce` | Нет морфинга/перемещения; функции и конечные состояния сохранены |
 | `forced-colors` | Forced colors/high contrast | Точки, controls, focus и selected различимы без tint/blur |

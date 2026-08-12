@@ -9836,7 +9836,6 @@ html[data-focus-modality="keyboard"] .settings-panel__close:focus-visible {
 }
 
 .settings-panel__row > button:not(:disabled):hover {
-  border-color: var(--signal);
   color: var(--signal);
 }
 

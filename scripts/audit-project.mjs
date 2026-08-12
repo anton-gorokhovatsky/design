@@ -26,6 +26,10 @@ const stateMatrixPath = join(projectRoot, "docs", "ui-state-matrix.md");
 const stateMatrixSource = existsSync(stateMatrixPath)
   ? readFileSync(stateMatrixPath, "utf8")
   : "";
+const agentEvalsPath = join(projectRoot, "docs", "agent-evals.md");
+const agentEvalsSource = existsSync(agentEvalsPath)
+  ? readFileSync(agentEvalsPath, "utf8")
+  : "";
 
 const findings = [];
 
@@ -921,6 +925,26 @@ requireContract(
   "state-matrix-incomplete",
   "The UI state matrix is missing one or more release states.",
   requiredStates.filter((state) => !stateMatrixSource.includes(`\`${state}\``)),
+);
+
+const requiredAgentEvalCases = [
+  "search-intent",
+  "settings-space",
+  "focus-language",
+  "analytics-copy",
+  "map-entity",
+  "new-surface",
+];
+requireContract(
+  existsSync(agentEvalsPath),
+  "agent-evals-missing",
+  "docs/agent-evals.md is required for recurring agent-generated UI work.",
+);
+requireContract(
+  requiredAgentEvalCases.every((id) => agentEvalsSource.includes(`\`${id}\``)),
+  "agent-evals-incomplete",
+  "The agent eval catalog is missing one or more representative intent-level cases.",
+  requiredAgentEvalCases.filter((id) => !agentEvalsSource.includes(`\`${id}\``)),
 );
 
 const codeReferences = `${indexSource}\n${scriptSource}`;

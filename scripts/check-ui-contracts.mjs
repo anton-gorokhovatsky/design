@@ -1735,6 +1735,22 @@ const auditBrowser = async (client, origin) => {
     url.startsWith("https://mc.yandex.ru/")
   ));
   const analyticsConsentState = await evaluate(client, geometryExpression);
+  const contrastHoverPoint = await evaluate(client, `(() => {
+    const bounds = document.querySelector("#settings-panel [data-contrast-toggle]")
+      ?.getBoundingClientRect();
+    return bounds ? {
+      x: bounds.left + bounds.width / 2,
+      y: bounds.top + bounds.height / 2,
+    } : null;
+  })()`);
+  if (contrastHoverPoint) {
+    await client.send("Input.dispatchMouseEvent", {
+      type: "mouseMoved",
+      x: contrastHoverPoint.x,
+      y: contrastHoverPoint.y,
+    });
+    await delay(40);
+  }
   const analyticsConsentContract = await evaluate(client, `(() => {
     const consent = document.querySelector("[data-analytics-consent]");
     const input = document.querySelector("[data-command-input]");
@@ -1759,6 +1775,7 @@ const auditBrowser = async (client, origin) => {
     const dialogStyle = consent ? getComputedStyle(consent) : null;
     const theme = read("#settings-panel [data-theme-toggle]");
     const motion = read("#settings-panel [data-motion-toggle]");
+    const contrast = read("#settings-panel [data-contrast-toggle]");
     const activeStyle = active ? getComputedStyle(active) : null;
     return {
       visible: !consent?.hidden && consent?.classList.contains("is-open"),
@@ -1797,6 +1814,15 @@ const auditBrowser = async (client, origin) => {
         .visibility,
       theme,
       motion,
+      contrast,
+      motionBorderColor: getComputedStyle(
+        document.querySelector("#settings-panel [data-motion-toggle]"),
+      ).borderColor,
+      contrastBorderColor: getComputedStyle(
+        document.querySelector("#settings-panel [data-contrast-toggle]"),
+      ).borderColor,
+      contrastHovered: document.querySelector("#settings-panel [data-contrast-toggle]")
+        ?.matches(":hover"),
       themeLabel: document.querySelector("[data-theme-panel-state]")
         ?.textContent.trim(),
       analyticsLauncherLabel: document.querySelector("[data-analytics-summary]")
@@ -1854,6 +1880,7 @@ const auditBrowser = async (client, origin) => {
     || analyticsConsentContract.displayVisibility !== "hidden"
     || !analyticsConsentContract.theme
     || !analyticsConsentContract.motion
+    || !analyticsConsentContract.contrast
     || Math.abs(
       analyticsConsentContract.theme.width
       - analyticsConsentContract.motion.width
@@ -1874,6 +1901,9 @@ const auditBrowser = async (client, origin) => {
     || analyticsConsentContract.denyLabel !== "НЕ РАЗРЕШАТЬ"
     || analyticsConsentContract.focusModality !== "pointer"
     || analyticsConsentContract.pointerOutlineStyle !== "none"
+    || !analyticsConsentContract.contrastHovered
+    || analyticsConsentContract.contrastBorderColor
+      !== analyticsConsentContract.motionBorderColor
     || analyticsConsentContract.mapNodesOpacity > 0.1
     || analyticsConsentContract.signalOpacity > 0.1
     || analyticsConsentContract.axisLabelOpacity !== 0

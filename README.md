@@ -287,6 +287,9 @@ instead of adding Storybook:
   desktop, tablet, mobile, theme, zoom, contrast, and reduced-motion renders.
   Dated runs and revoked acceptances live separately in
   `docs/acceptance-history.md`.
+- `docs/agent-evals.md` keeps natural intent-level tasks for recurring agent
+  work. Mechanical code/accessibility checks and human review of real renders
+  stay separate; documentation and tokens are grounding, not proof.
 
 Static cleanup candidates are never deletion instructions. Confirm them with
 computed styles, runtime state coverage, and matched before/after renders.
