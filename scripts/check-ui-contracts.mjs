@@ -694,6 +694,7 @@ const auditBrowser = async (client, origin) => {
         fail(`annotation-hierarchy: ${failure.message}`, failure.details);
       }
       await saveScreenshot(client, "desktop-annotation-hierarchy");
+      await saveElementScreenshot(client, "crop-desktop-display-light", ".display-control");
     }
     if (scenario.label === "desktop-dark") {
       await saveElementScreenshot(client, "crop-desktop-view-dark", ".map-controls");
@@ -941,6 +942,64 @@ const auditBrowser = async (client, origin) => {
   }
 
   await navigate(client, `${origin}/?qa=ui-contracts-map-controls`);
+  const displayGlyphContract = await evaluate(client, `(() => {
+    const readGlyph = (selector) => {
+      const glyph = document.querySelector(selector);
+      const before = glyph ? getComputedStyle(glyph, "::before") : null;
+      const after = glyph ? getComputedStyle(glyph, "::after") : null;
+      return glyph ? {
+        ariaHidden: glyph.getAttribute("aria-hidden"),
+        className: glyph.className,
+        width: getComputedStyle(glyph).width,
+        height: getComputedStyle(glyph).height,
+        borderRadius: getComputedStyle(glyph).borderRadius,
+        borderTopWidth: getComputedStyle(glyph).borderTopWidth,
+        beforeWidth: before?.width,
+        beforeBackground: before?.backgroundColor,
+        beforeBoxShadow: before?.boxShadow,
+        afterHeight: after?.height,
+        afterBoxShadow: after?.boxShadow,
+      } : null;
+    };
+    return {
+      motion: readGlyph(".display-control__glyph--motion"),
+      contrast: readGlyph(".display-control__glyph--contrast"),
+      analytics: readGlyph(".display-control__glyph--analytics"),
+      labels: {
+        motion: document.querySelector(".display-control [data-motion-toggle]")
+          ?.getAttribute("aria-label"),
+        contrast: document.querySelector(".display-control [data-contrast-toggle]")
+          ?.getAttribute("aria-label"),
+        analytics: document.querySelector(".display-control__analytics")
+          ?.getAttribute("aria-label"),
+      },
+    };
+  })()`);
+  if (
+    !displayGlyphContract.motion?.className.includes("--motion")
+    || !displayGlyphContract.contrast?.className.includes("--contrast")
+    || !displayGlyphContract.analytics?.className.includes("--analytics")
+    || [
+      displayGlyphContract.motion,
+      displayGlyphContract.contrast,
+      displayGlyphContract.analytics,
+    ].some((glyph) => glyph?.ariaHidden !== "true" || glyph?.borderRadius === "50%")
+    || displayGlyphContract.motion.beforeWidth !== "11px"
+    || displayGlyphContract.motion.afterBoxShadow === "none"
+    || Number.parseFloat(displayGlyphContract.contrast.borderTopWidth) < 1
+    || displayGlyphContract.contrast.beforeBackground === "rgba(0, 0, 0, 0)"
+    || displayGlyphContract.analytics.beforeBoxShadow === "none"
+    || Number.parseFloat(displayGlyphContract.analytics.afterHeight) < 1
+    || displayGlyphContract.labels.motion !== "Меньше движения"
+    || displayGlyphContract.labels.contrast !== "Высокий контраст"
+    || displayGlyphContract.labels.analytics
+      !== "Аналитика и приватность: сейчас не выбрана"
+  ) {
+    fail(
+      "display-controls: different screen states collapse into one circular symbol.",
+      displayGlyphContract,
+    );
+  }
   const initialMapControlContract = await evaluate(client, `(() => {
     const all = document.querySelector('[data-map-filter="all"]');
     const categories = Array.from(document.querySelectorAll(
@@ -1096,9 +1155,13 @@ const auditBrowser = async (client, origin) => {
     const referenceSymbol = document.querySelector(
       '[data-map-filter="project"] .map-control__symbol',
     );
+    const referenceButton = document.querySelector(
+      '[data-map-filter="project"]',
+    );
     return allSymbol && referenceSymbol
       && getComputedStyle(allSymbol).color
-        === getComputedStyle(referenceSymbol).color;
+        !== getComputedStyle(referenceSymbol).color
+      && Number.parseFloat(getComputedStyle(referenceButton, "::after").height) <= 0.5;
   })()`, { timeout: 1200, interval: 40 });
   const aggregateMapControlContract = await evaluate(client, `(() => {
     const all = document.querySelector('[data-map-filter="all"]');
@@ -1117,6 +1180,9 @@ const auditBrowser = async (client, origin) => {
       indicatorHeight: getComputedStyle(all, "::after").height,
       symbolColor: symbolStyle.color,
       referenceSymbolColor: referenceSymbolStyle.color,
+      categoryIndicatorHeights: categories.map((button) => (
+        getComputedStyle(button, "::after").height
+      )),
     };
   })()`);
   if (
@@ -1126,7 +1192,10 @@ const auditBrowser = async (client, origin) => {
     || aggregateMapControlContract.filter !== null
     || Number.parseFloat(aggregateMapControlContract.indicatorHeight) < 17
     || aggregateMapControlContract.symbolColor
-      !== aggregateMapControlContract.referenceSymbolColor
+      === aggregateMapControlContract.referenceSymbolColor
+    || aggregateMapControlContract.categoryIndicatorHeights.some((height) => (
+      Number.parseFloat(height) > 0.5
+    ))
   ) {
     fail(
       "map-controls: the aggregate all state is not visibly or semantically current.",
@@ -2454,7 +2523,7 @@ const auditBrowser = async (client, origin) => {
     return signal && signal !== "rgba(0, 0, 0, 0)"
       && getComputedStyle(status).color === signal
       && getComputedStyle(launcher).color === signal
-      && getComputedStyle(launcherMarker).backgroundColor === signal;
+      && getComputedStyle(launcherMarker).color === signal;
   })()`, { timeout: 1200, interval: 40 });
   const allowedPanelContract = await evaluate(client, `(() => {
     const marker = document.querySelector(".settings-panel__analytics-marker");
@@ -2474,11 +2543,13 @@ const auditBrowser = async (client, origin) => {
         document.querySelector("[data-analytics-preference]"),
       ).color,
       launcherColor: launcher ? getComputedStyle(launcher).color : "",
-      launcherMarkerBackground: launcherMarker
-        ? getComputedStyle(launcherMarker).backgroundColor
+      launcherMarkerColor: launcherMarker
+        ? getComputedStyle(launcherMarker).color
         : "",
       launcherMarkerSize: launcherMarker
         ? getComputedStyle(launcherMarker).width
+          + " × "
+          + getComputedStyle(launcherMarker).height
         : "",
     };
   })()`);
@@ -2491,9 +2562,9 @@ const auditBrowser = async (client, origin) => {
     || allowedPanelContract.markerBackground === "rgba(0, 0, 0, 0)"
     || allowedPanelContract.statusColor !== allowedPanelContract.markerBackground
     || allowedPanelContract.launcherColor !== allowedPanelContract.markerBackground
-    || allowedPanelContract.launcherMarkerBackground
+    || allowedPanelContract.launcherMarkerColor
       !== allowedPanelContract.markerBackground
-    || allowedPanelContract.launcherMarkerSize !== "12px"
+    || allowedPanelContract.launcherMarkerSize !== "14px × 12px"
   ) {
     fail("privacy: enabled analytics does not have one strong, consistent state.", {
       ...allowedPanelContract,

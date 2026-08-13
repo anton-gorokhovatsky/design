@@ -124,7 +124,7 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=04224c616839">
+    <link rel="stylesheet" href="styles.css?v=e2d8e9dc2a67">
     <!-- runtime-import-map:start -->
     <script type="importmap" data-runtime-import-map>
       {
@@ -808,14 +808,22 @@
                   data-motion-toggle
                   aria-pressed="false"
                 >
-                  ДВИЖЕНИЕ −
+                  <span
+                    class="display-control__glyph display-control__glyph--motion"
+                    aria-hidden="true"
+                  ></span>
+                  <span>ДВИЖЕНИЕ −</span>
                 </button>
                 <button
                   type="button"
                   data-contrast-toggle
                   aria-pressed="false"
                 >
-                  КОНТРАСТ +
+                  <span
+                    class="display-control__glyph display-control__glyph--contrast"
+                    aria-hidden="true"
+                  ></span>
+                  <span>КОНТРАСТ +</span>
                 </button>
               </div>
               <button
@@ -827,7 +835,10 @@
                 aria-haspopup="dialog"
                 aria-controls="settings-panel"
               >
-                <span aria-hidden="true"></span>
+                <span
+                  class="display-control__glyph display-control__glyph--analytics"
+                  aria-hidden="true"
+                ></span>
                 <span data-analytics-summary>АНАЛИТИКА</span>
               </button>
               <p data-map-note>

@@ -55,11 +55,16 @@ route.
 - A compact `ВИД` selector can isolate one field or combine any subset of the
   four semantic fields without moving nodes. `ВСЁ` is the aggregate state: it
   is visibly and semantically active when all four fields are shown, switches
-  off for a custom subset, and restores the full view when pressed.
+  off for a custom subset, and restores the full view when pressed. In the
+  complete composition it owns the only visible signal rail; the four included
+  category buttons remain semantically pressed but visually quiet. In a custom
+  subset, visible emphasis returns to the included categories.
   `ХРОНОЛОГИЯ` switches the same filtered map to year orbits.
 - The desktop `ЭКРАН` instrument contains the clock, theme, and two meaningful
   accessibility overrides: less motion and higher contrast. System preferences
-  remain authoritative; manual choices persist locally.
+  remain authoritative; manual choices persist locally. Its marks use distinct
+  silhouettes for live time, theme, motion, contrast, and analytics instead of
+  presenting unrelated states as a column of radio buttons.
 - Yandex Metrica and Webvisor are delayed until an explicit opt-in. The choice
   is reversible from the focused `АНАЛИТИКА И ПРИВАТНОСТЬ` place opened from
   `ЭКРАН` or search; the general `НАСТРОЙКИ САЙТА` place remains available on
