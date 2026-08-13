@@ -1089,7 +1089,17 @@ const auditBrowser = async (client, origin) => {
     client,
     "document.querySelector('[data-map-filter=\"all\"]')?.click(); true",
   );
-  await delay(260);
+  await waitForExpression(client, `(() => {
+    const allSymbol = document.querySelector(
+      '[data-map-filter="all"] .map-control__symbol',
+    );
+    const referenceSymbol = document.querySelector(
+      '[data-map-filter="project"] .map-control__symbol',
+    );
+    return allSymbol && referenceSymbol
+      && getComputedStyle(allSymbol).color
+        === getComputedStyle(referenceSymbol).color;
+  })()`, { timeout: 1200, interval: 40 });
   const aggregateMapControlContract = await evaluate(client, `(() => {
     const all = document.querySelector('[data-map-filter="all"]');
     const categories = Array.from(document.querySelectorAll(
@@ -2435,6 +2445,17 @@ const auditBrowser = async (client, origin) => {
   await waitForExpression(client, `(() => (
     document.activeElement?.hasAttribute('data-analytics-deny')
   ))()`);
+  await waitForExpression(client, `(() => {
+    const marker = document.querySelector(".settings-panel__analytics-marker");
+    const status = document.querySelector("[data-analytics-preference]");
+    const launcher = document.querySelector(".display-control__analytics");
+    const launcherMarker = launcher?.firstElementChild;
+    const signal = marker ? getComputedStyle(marker).backgroundColor : "";
+    return signal && signal !== "rgba(0, 0, 0, 0)"
+      && getComputedStyle(status).color === signal
+      && getComputedStyle(launcher).color === signal
+      && getComputedStyle(launcherMarker).backgroundColor === signal;
+  })()`, { timeout: 1200, interval: 40 });
   const allowedPanelContract = await evaluate(client, `(() => {
     const marker = document.querySelector(".settings-panel__analytics-marker");
     const launcher = document.querySelector(".display-control__analytics");

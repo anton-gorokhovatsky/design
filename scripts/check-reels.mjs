@@ -46,7 +46,6 @@ const reelSpecs = new Map(
     },
   ]),
 );
-reelSpecs.get("11111.mp4").sourceViewport = "1350x900";
 reelSpecs.get("11111.mp4").duration = { min: 11.5, max: 12.1 };
 reelSpecs.get("garage-webzine.mp4").duration = { min: 12.1, max: 12.7 };
 reelSpecs.get("narkomfin.mp4").duration = { min: 12.9, max: 13.5 };

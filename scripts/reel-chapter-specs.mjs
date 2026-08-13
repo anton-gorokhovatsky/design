@@ -88,8 +88,8 @@ export const reelChapterSpecs = [
     itemId: "eleven",
     master: "11111.mp4",
     chapters: [
-      { label: "menu", start: 1.1, duration: 3.6 },
-      { label: "partners", start: 7, duration: 4.7 },
+      { label: "hero-diary", start: 0.2, duration: 4.8 },
+      { label: "dark-diary-entry", start: 7.5, duration: 4.1 },
     ],
   },
   {

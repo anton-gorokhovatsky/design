@@ -44,8 +44,8 @@ const reelChapterSources = new Map([
       "assets/reel-chapters/dusty-camp-02.mp4?v=0fec39e9dd30",
   ]],
   ["eleven", [
-      "assets/reel-chapters/11111-01.mp4?v=1fbe0a45a894",
-      "assets/reel-chapters/11111-02.mp4?v=dc70b183f7bc",
+      "assets/reel-chapters/11111-01.mp4?v=33263c3024e2",
+      "assets/reel-chapters/11111-02.mp4?v=2129a4eaa56a",
   ]],
   ["ks-fish", [
       "assets/reel-chapters/ks-fish-01.mp4?v=556fd200a8ab",
@@ -424,8 +424,8 @@ const mapItems = [
     },
     href: "https://11111.life/",
     kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
-    previewVideo: "assets/reels/11111.mp4?v=5bc77fdb52a4",
-    previewPoster: "assets/reel-posters/11111.jpg?v=6b3b34e685f3",
+    previewVideo: "assets/reels/11111.mp4?v=a848a8f93283",
+    previewPoster: "assets/reel-posters/11111.jpg?v=cb3ffc3a8d94",
     previewOrientation: "landscape",
     previewMeta: "ИСТОРИЯ, ЦЕЛЬ И МАСШТАБ / 00:12",
     x: 74,

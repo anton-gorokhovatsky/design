@@ -89,8 +89,11 @@ route.
   walkthroughs of characteristic live states: full-page scrolls, meaningful
   inner routes, theme changes, or distinctive interface controls. A longer
   editorial pass is allowed when a real interaction needs legible dwell time;
-  the current `11 111` reel uses twelve seconds for its hero, menu and partner
-  chapter. Tarski uses 12.4 seconds for its light editorial route, a real theme
+  the current `11 111` reel uses 11.8 seconds for its bicycle-challenge hero,
+  preparation diary, archive, a real diary-entry switch and the site's dark-theme
+  control. Its secondary loops separate the light hero-to-diary route from the
+  selected diary entry in dark mode. Tarski
+  uses 12.4 seconds for its light editorial route, a real theme
   switch, the dark artist network, and an artist dossier; its secondary loops
   keep one light editorial chapter and one dark network/dossier chapter.
   Narkomfin uses 13.2 seconds to make the live 3D building legible across its

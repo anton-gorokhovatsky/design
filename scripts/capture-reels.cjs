@@ -61,9 +61,8 @@ const projects = {
   },
   "11111": {
     url: "https://11111.life/",
-    sourceViewport: { width: 1350, height: 900 },
     outputDuration: 11.8,
-    finalHold: 2400,
+    finalHold: 2800,
   },
   "ks-fish": {
     url: "https://ks.fish/",
@@ -114,41 +113,59 @@ const smoothScroll = async (page, duration = 6500) => {
   }, duration);
 };
 
-const slowScrollThroughPartners = async (page, duration = 5200) => {
-  await page.evaluate(async (scrollDuration) => {
-    const partners = document.querySelector("#partners");
+const runElevenCaptureMotion = async (page) => {
+  await page.waitForTimeout(1400);
 
-    if (!partners) {
-      throw new Error("The 11 111 partner chapter is missing");
-    }
+  const diaryLink = page.locator('#top a[href="#diary"]');
 
-    const scrollRoot = document.scrollingElement || document.documentElement;
-    const start = scrollRoot.scrollTop;
-    const maximum = Math.max(0, scrollRoot.scrollHeight - innerHeight);
-    const sectionEnd = partners.offsetTop + partners.offsetHeight;
-    const target = Math.min(
-      maximum,
-      Math.max(start, sectionEnd - innerHeight * 0.85),
-    );
-    const startedAt = Date.now();
+  if (await diaryLink.count() !== 1) {
+    throw new Error("The 11 111 diary entry point must be unique");
+  }
 
-    await new Promise((resolve) => {
-      const frame = () => {
-        const elapsed = Date.now() - startedAt;
-        const progress = Math.min(1, elapsed / scrollDuration);
-        const eased = 0.5 - Math.cos(progress * Math.PI) / 2;
-        scrollRoot.scrollTop = start + (target - start) * eased;
+  await diaryLink.click();
+  await page.waitForTimeout(2000);
 
-        if (progress < 1) {
-          requestAnimationFrame(frame);
-        } else {
-          resolve();
-        }
-      };
+  const archiveLink = page.locator('#diary a[href="#diary-archive"]');
 
-      requestAnimationFrame(frame);
-    });
-  }, duration);
+  if (await archiveLink.count() !== 1) {
+    throw new Error("The 11 111 diary archive entry point must be unique");
+  }
+
+  await archiveLink.click();
+  await page.waitForTimeout(1500);
+
+  const previousEntry = page.locator("#diary-tab-2026-05-09");
+
+  if (await previousEntry.count() !== 1) {
+    throw new Error("The 11 111 diary chapter control must be unique");
+  }
+
+  await previousEntry.click();
+  await page.waitForTimeout(700);
+
+  const menuToggle = page.locator("details.nav-shell > summary");
+
+  if (await menuToggle.count() !== 1) {
+    throw new Error("The 11 111 menu toggle must be unique");
+  }
+
+  await menuToggle.click();
+  await page.waitForTimeout(700);
+
+  const darkTheme = page.locator(
+    'details.nav-shell [data-theme-option="dark"]',
+  );
+
+  if (await darkTheme.count() !== 1) {
+    throw new Error("The 11 111 dark-theme control must be unique");
+  }
+
+  await darkTheme.click();
+  await page.waitForTimeout(700);
+  await menuToggle.click();
+  await page.waitForTimeout(800);
+  await smoothScrollBy(page, 360, 1400);
+  await page.waitForTimeout(200);
 };
 
 const smoothScrollTo = async (
@@ -505,28 +522,7 @@ const runCaptureMotion = async (page, id, source) => {
   }
 
   if (id === "11111") {
-    const menuToggle = page.locator('details > summary[aria-label="Меню"]');
-
-    if (await menuToggle.count() !== 1) {
-      throw new Error("The 11 111 menu toggle must be unique");
-    }
-
-    await page.waitForTimeout(1200);
-    await menuToggle.click();
-    await page.waitForTimeout(2600);
-
-    const partnerLink = page.getByRole("link", {
-      name: "07 Партнёрам",
-      exact: true,
-    });
-
-    if (await partnerLink.count() !== 1) {
-      throw new Error("The 11 111 partner-menu link must be unique");
-    }
-
-    await partnerLink.click();
-    await page.waitForTimeout(1000);
-    await slowScrollThroughPartners(page);
+    await runElevenCaptureMotion(page);
     return;
   }
 
