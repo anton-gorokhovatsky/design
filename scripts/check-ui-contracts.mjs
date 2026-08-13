@@ -1936,7 +1936,9 @@ const auditBrowser = async (client, origin) => {
         screenControls?.querySelectorAll("button") || [],
       ).filter((button) => button.getClientRects().length > 0).length,
       preferenceLabel: consent?.querySelector("[data-analytics-preference]")
-        ?.textContent.trim(),
+        ?.innerText.trim(),
+      stateCopy: consent?.querySelector(".settings-panel__analytics-state p")
+        ?.innerText.replace(/\\s+/g, " ").trim(),
       open: consent?.open,
       searchPrivate: input?.classList.contains("ym-disable-keys"),
       trackerScripts: Array.from(document.scripts).filter((script) => (
@@ -1981,10 +1983,23 @@ const auditBrowser = async (client, origin) => {
       ).display,
       analyticsSectionTitle: document.querySelector("#settings-analytics-title")
         ?.textContent.trim(),
-      analyticsSectionMeta: document.querySelector(".settings-panel__analytics-header p")
-        ?.textContent.replace(/\\s+/g, " ").trim(),
-      allowLabel: document.querySelector("[data-analytics-allow]")?.textContent.trim(),
-      denyLabel: document.querySelector("[data-analytics-deny]")?.textContent.trim(),
+      allowLabel: document.querySelector("[data-analytics-allow]")?.innerText.trim(),
+      denyLabel: document.querySelector("[data-analytics-deny]")?.innerText.trim(),
+      visibleActions: Array.from(
+        document.querySelectorAll(".settings-panel__analytics-actions button"),
+      ).filter((button) => button.getClientRects().length > 0)
+        .map((button) => button.innerText.trim()),
+      stateMarker: (() => {
+        const marker = document.querySelector(".settings-panel__analytics-marker");
+        const bounds = marker?.getBoundingClientRect();
+        const style = marker ? getComputedStyle(marker) : null;
+        return bounds && style ? {
+          width: bounds.width,
+          height: bounds.height,
+          backgroundColor: style.backgroundColor,
+          borderColor: style.borderColor,
+        } : null;
+      })(),
       focusModality: document.documentElement.dataset.focusModality,
       pointerOutlineStyle: activeStyle?.outlineStyle || "",
       mapNodesOpacity: Number(getComputedStyle(document.querySelector(".map-nodes")).opacity),
@@ -2011,7 +2026,8 @@ const auditBrowser = async (client, origin) => {
       !== "Метрика загружается только после явного согласия. Выбор можно изменить в любой момент."
     || analyticsConsentContract.screenControlsDisplay !== "none"
     || analyticsConsentContract.visibleScreenControls !== 0
-    || analyticsConsentContract.preferenceLabel !== "НЕ ВЫБРАНО"
+    || analyticsConsentContract.preferenceLabel !== "РЕШЕНИЕ НЕ ПРИНЯТО"
+    || analyticsConsentContract.stateCopy !== "До выбора Метрика не загружается."
     || !analyticsConsentContract.open
     || !analyticsConsentContract.searchPrivate
     || analyticsConsentContract.trackerScripts !== 0
@@ -2031,18 +2047,22 @@ const auditBrowser = async (client, origin) => {
     || analyticsConsentContract.analyticsLauncherLabel !== "АНАЛИТИКА"
     || analyticsConsentContract.analyticsLauncherWhiteSpace !== "nowrap"
     || JSON.stringify(analyticsConsentContract.privacyRows) !== JSON.stringify([
-      ["ПО СОГЛАСИЮ", "Обезличенная статистика посещений и действий на карте."],
-      ["ПОИСК", "Введённый текст не передаётся."],
-      ["БЕЗ СОГЛАСИЯ", "Аналитика не загружается."],
+      ["СТАТИСТИКА", "Обезличенная статистика посещений и действий на карте."],
+      ["ПОИСК", "Текст запросов в Метрику не передаётся."],
     ])
-    || analyticsConsentContract.detailsLabel !== "Что сохраняет Метрика"
+    || analyticsConsentContract.detailsLabel !== "Как Метрика использует файлы cookie"
     || analyticsConsentContract.detailsHref
       !== "https://yandex.ru/support/metrica/ru/general/cookie-usage"
     || analyticsConsentContract.detailsDisplay !== "inline-flex"
     || analyticsConsentContract.analyticsSectionTitle !== "ЯНДЕКС МЕТРИКА"
-    || analyticsConsentContract.analyticsSectionMeta !== "ТОЛЬКО ПО СОГЛАСИЮ"
     || analyticsConsentContract.allowLabel !== "РАЗРЕШИТЬ"
-    || analyticsConsentContract.denyLabel !== "НЕ РАЗРЕШАТЬ"
+    || analyticsConsentContract.denyLabel !== "НЕ ВКЛЮЧАТЬ"
+    || JSON.stringify(analyticsConsentContract.visibleActions)
+      !== JSON.stringify(["РАЗРЕШИТЬ", "НЕ ВКЛЮЧАТЬ"])
+    || !analyticsConsentContract.stateMarker
+    || Math.abs(analyticsConsentContract.stateMarker.width - 13) > 0.5
+    || Math.abs(analyticsConsentContract.stateMarker.height - 13) > 0.5
+    || analyticsConsentContract.stateMarker.backgroundColor !== "rgba(0, 0, 0, 0)"
     || analyticsConsentContract.focusModality !== "pointer"
     || analyticsConsentContract.pointerOutlineStyle !== "none"
     || analyticsConsentContract.mapNodesOpacity > 0.1
@@ -2119,8 +2139,6 @@ const auditBrowser = async (client, origin) => {
       script.src.includes("mc.yandex.ru")
     )).length,
     summary: document.querySelector("[data-analytics-summary]")?.textContent.trim(),
-    allowLabel: document.querySelector("[data-analytics-allow]")?.textContent.trim(),
-    denyLabel: document.querySelector("[data-analytics-deny]")?.textContent.trim(),
   }))()`);
   if (
     !deniedContract.hidden
@@ -2128,8 +2146,6 @@ const auditBrowser = async (client, origin) => {
     || deniedContract.disabled !== true
     || deniedContract.trackerScripts !== 0
     || deniedContract.summary !== "АНАЛИТИКА\u00a0—\u00a0ВЫКЛ."
-    || deniedContract.allowLabel !== "РАЗРЕШИТЬ"
-    || deniedContract.denyLabel !== "ВЫКЛЮЧЕНО"
   ) {
     fail("privacy: declining analytics does not persist a tracker-free state.", deniedContract);
   }
@@ -2152,7 +2168,20 @@ const auditBrowser = async (client, origin) => {
         ? "deny"
         : "",
     preferenceLabel: document.querySelector("[data-analytics-preference]")
-      ?.textContent.trim(),
+      ?.innerText.trim(),
+    stateCopy: document.querySelector(".settings-panel__analytics-state p")
+      ?.innerText.replace(/\\s+/g, " ").trim(),
+    visibleActions: Array.from(
+      document.querySelectorAll(".settings-panel__analytics-actions button"),
+    ).filter((button) => button.getClientRects().length > 0)
+      .map((button) => button.innerText.trim()),
+    markerBackground: getComputedStyle(
+      document.querySelector(".settings-panel__analytics-marker"),
+    ).backgroundColor,
+    markerSlashWidth: getComputedStyle(
+      document.querySelector(".settings-panel__analytics-marker"),
+      "::after",
+    ).width,
     launcherPressed: document.querySelector("[data-analytics-settings]")
       ?.hasAttribute("aria-pressed"),
   }))()`);
@@ -2162,7 +2191,12 @@ const auditBrowser = async (client, origin) => {
     || reopenedContract.title !== "АНАЛИТИКА И\u00a0ПРИВАТНОСТЬ"
     || reopenedContract.screenControlsDisplay !== "none"
     || reopenedContract.focusedAction !== "allow"
-    || reopenedContract.preferenceLabel !== "ВЫКЛЮЧЕНА"
+    || reopenedContract.preferenceLabel !== "АНАЛИТИКА ВЫКЛЮЧЕНА"
+    || reopenedContract.stateCopy !== "Метрика не загружается."
+    || JSON.stringify(reopenedContract.visibleActions)
+      !== JSON.stringify(["ВКЛЮЧИТЬ АНАЛИТИКУ"])
+    || reopenedContract.markerBackground !== "rgba(0, 0, 0, 0)"
+    || reopenedContract.markerSlashWidth !== "10px"
     || reopenedContract.launcherPressed
   ) {
     fail("privacy: the saved choice cannot be reopened with deliberate focus.", reopenedContract);
@@ -2375,8 +2409,6 @@ const auditBrowser = async (client, origin) => {
       entry?.[0] === 111107350 && entry?.[1] === "init"
     )),
     summary: document.querySelector("[data-analytics-summary]")?.textContent.trim(),
-    allowLabel: document.querySelector("[data-analytics-allow]")?.textContent.trim(),
-    denyLabel: document.querySelector("[data-analytics-deny]")?.textContent.trim(),
     launcherPressed: document.querySelector("[data-analytics-settings]")
       ?.hasAttribute("aria-pressed"),
   }))()`);
@@ -2390,8 +2422,6 @@ const auditBrowser = async (client, origin) => {
     || allowedContract.trackerScripts !== 1
     || !allowedContract.queuedInit
     || allowedContract.summary !== "АНАЛИТИКА\u00a0—\u00a0ВКЛ."
-    || allowedContract.allowLabel !== "РАЗРЕШЕНО"
-    || allowedContract.denyLabel !== "ВЫКЛЮЧИТЬ"
     || allowedContract.launcherPressed
     || analyticsRequestsAfterAllow.length === 0
   ) {
@@ -2400,6 +2430,55 @@ const auditBrowser = async (client, origin) => {
       analyticsRequestsAfterAllow,
     });
   }
+
+  await evaluate(client, "document.querySelector('[data-analytics-settings]')?.click(); true");
+  await waitForExpression(client, `(() => (
+    document.activeElement?.hasAttribute('data-analytics-deny')
+  ))()`);
+  const allowedPanelContract = await evaluate(client, `(() => {
+    const marker = document.querySelector(".settings-panel__analytics-marker");
+    const launcher = document.querySelector(".display-control__analytics");
+    const launcherMarker = launcher?.firstElementChild;
+    return {
+      preferenceLabel: document.querySelector("[data-analytics-preference]")
+        ?.innerText.trim(),
+      stateCopy: document.querySelector(".settings-panel__analytics-state p")
+        ?.innerText.replace(/\\s+/g, " ").trim(),
+      visibleActions: Array.from(
+        document.querySelectorAll(".settings-panel__analytics-actions button"),
+      ).filter((button) => button.getClientRects().length > 0)
+        .map((button) => button.innerText.trim()),
+      markerBackground: marker ? getComputedStyle(marker).backgroundColor : "",
+      statusColor: getComputedStyle(
+        document.querySelector("[data-analytics-preference]"),
+      ).color,
+      launcherColor: launcher ? getComputedStyle(launcher).color : "",
+      launcherMarkerBackground: launcherMarker
+        ? getComputedStyle(launcherMarker).backgroundColor
+        : "",
+      launcherMarkerSize: launcherMarker
+        ? getComputedStyle(launcherMarker).width
+        : "",
+    };
+  })()`);
+  if (
+    allowedPanelContract.preferenceLabel !== "АНАЛИТИКА ВКЛЮЧЕНА"
+    || allowedPanelContract.stateCopy
+      !== "Метрика загружена и собирает обезличенную статистику."
+    || JSON.stringify(allowedPanelContract.visibleActions)
+      !== JSON.stringify(["ВЫКЛЮЧИТЬ АНАЛИТИКУ"])
+    || allowedPanelContract.markerBackground === "rgba(0, 0, 0, 0)"
+    || allowedPanelContract.statusColor !== allowedPanelContract.markerBackground
+    || allowedPanelContract.launcherColor !== allowedPanelContract.markerBackground
+    || allowedPanelContract.launcherMarkerBackground
+      !== allowedPanelContract.markerBackground
+    || allowedPanelContract.launcherMarkerSize !== "12px"
+  ) {
+    fail("privacy: enabled analytics does not have one strong, consistent state.", {
+      ...allowedPanelContract,
+    });
+  }
+  await evaluate(client, "document.querySelector('[data-close-settings]')?.click(); true");
 
   const goalContract = await evaluate(client, `(() => {
     const preventContactNavigation = (event) => {

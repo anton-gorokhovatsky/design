@@ -9528,8 +9528,8 @@ html[data-focus-modality="keyboard"]
 
 .display-control__analytics > span:first-child {
   box-sizing: border-box;
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   justify-self: center;
   border: 1px solid var(--content-muted);
   border-radius: 50%;
@@ -9538,7 +9538,13 @@ html[data-focus-modality="keyboard"]
 .display-control__analytics[data-analytics-state="allowed"] > span:first-child {
   border-color: var(--signal);
   background: var(--signal);
-  box-shadow: inset 0 0 0 3px var(--material-01);
+}
+
+html[data-analytics="allowed"]
+  .display-control__service
+  .display-control__analytics[data-analytics-state="allowed"] {
+  color: var(--signal);
+  font-weight: 600;
 }
 
 .display-control__analytics[data-analytics-state="denied"] > span:first-child {
@@ -9880,46 +9886,100 @@ html[data-focus-modality="keyboard"]
 
 .settings-panel__analytics {
   margin-top: 6px;
-  padding-top: 22px;
+  padding-top: 24px;
   border-top: 1px solid var(--line-soft);
 }
 
 .settings-panel__analytics-header {
-  display: flex;
+  display: block;
+}
+
+.settings-panel__analytics-state {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  gap: 13px;
   align-items: start;
-  justify-content: space-between;
-  gap: 20px;
+  margin-top: 17px;
+  padding-bottom: 21px;
+  border-bottom: 1px solid var(--line-soft);
 }
 
-.settings-panel__analytics-header p {
-  margin-top: 5px;
+.settings-panel__analytics-marker {
+  position: relative;
+  box-sizing: border-box;
+  width: 13px;
+  height: 13px;
+  margin-top: 1px;
+  border: 1.5px solid var(--content-muted);
+  border-radius: 50%;
   color: var(--content-muted);
-  font-size: 0.62rem;
-  font-weight: 500;
-  letter-spacing: 0.035em;
-  line-height: 1.25;
 }
 
-.settings-panel__analytics strong {
-  flex: 0 0 auto;
-  color: var(--signal);
-  font-size: 0.62rem;
+html[data-analytics="allowed"] .settings-panel__analytics-marker {
+  border-color: var(--signal);
+  background: var(--signal);
+}
+
+html[data-analytics="denied"] .settings-panel__analytics-marker::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 1.5px;
+  border-radius: 1px;
+  background: currentColor;
+  content: "";
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.settings-panel__analytics-state strong {
+  display: block;
+  color: var(--content-muted);
+  font-size: 0.76rem;
   font-weight: 600;
-  letter-spacing: 0.045em;
-  line-height: 1.2;
+  letter-spacing: 0.04em;
+  line-height: 1.15;
+}
+
+html[data-analytics="allowed"] .settings-panel__analytics-state strong {
+  color: var(--signal);
+}
+
+html[data-analytics="denied"] .settings-panel__analytics-state strong {
+  color: var(--content-ink);
+}
+
+.settings-panel__analytics-state p {
+  margin-top: 7px;
+  color: var(--content-muted);
+  font-size: 0.74rem;
+  line-height: 1.4;
+  text-wrap: pretty;
+}
+
+[data-analytics-state-copy],
+[data-analytics-action] {
+  display: none;
+}
+
+html[data-analytics="unset"] [data-analytics-state-copy="unset"],
+html[data-analytics="allowed"] [data-analytics-state-copy="allowed"],
+html[data-analytics="denied"] [data-analytics-state-copy="denied"],
+html[data-analytics="unset"] [data-analytics-action="unset"],
+html[data-analytics="allowed"] [data-analytics-action="allowed"],
+html[data-analytics="denied"] [data-analytics-action="denied"] {
+  display: inline;
 }
 
 .settings-panel__privacy {
   display: grid;
-  gap: 9px;
-  margin: 16px 0 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px;
+  margin: 21px 0 0;
 }
 
 .settings-panel__privacy > div {
-  display: grid;
-  grid-template-columns: 104px minmax(0, 1fr);
-  gap: 14px;
-  align-items: baseline;
+  display: block;
 }
 
 .settings-panel__privacy :is(dt, dd) {
@@ -9935,17 +9995,17 @@ html[data-focus-modality="keyboard"]
 }
 
 .settings-panel__privacy dd {
+  margin-top: 7px;
   color: var(--content-muted);
   font-size: 0.74rem;
-  line-height: 1.35;
+  line-height: 1.4;
   text-wrap: pretty;
 }
 
 .settings-panel__details {
   display: inline-flex;
-  gap: 6px;
   align-items: center;
-  margin-top: 14px;
+  margin-top: 19px;
   padding-bottom: 2px;
   border-bottom: 1px solid currentColor;
   color: var(--content-ink);
@@ -9954,30 +10014,27 @@ html[data-focus-modality="keyboard"]
   text-decoration: none;
 }
 
-.settings-panel__details::after {
-  content: "↗";
-  font-size: 0.72em;
-  transform: translateY(-1px);
-}
-
 .settings-panel__details:hover {
   color: var(--signal);
 }
 
 .settings-panel__analytics-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-wrap: wrap;
   gap: 10px;
-  margin-top: 20px;
+  align-items: center;
+  margin-top: 25px;
 }
 
 .settings-panel__analytics-actions button {
-  min-height: 48px;
-  padding: 0 16px;
+  width: auto;
+  min-height: 44px;
+  padding: 0 22px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: transparent;
   color: var(--content-ink);
+  cursor: pointer;
   font: 600 0.7rem/1 var(--font-sans);
   letter-spacing: 0.055em;
 }
@@ -9988,9 +10045,17 @@ html[data-focus-modality="keyboard"]
   color: #fff;
 }
 
+.settings-panel__analytics-actions [data-analytics-deny] {
+  border-color: transparent;
+}
+
+html[data-analytics="allowed"]
+  .settings-panel__analytics-actions [data-analytics-deny] {
+  border-color: var(--line);
+}
+
 .settings-panel__analytics-actions button:disabled {
-  cursor: default;
-  opacity: 0.46;
+  display: none;
 }
 
 .settings-panel__analytics-actions button:not(:disabled):hover {
@@ -10147,23 +10212,38 @@ html[data-focus-modality="keyboard"]
     padding-top: 18px;
   }
 
-  .settings-panel__analytics-header {
-    gap: 16px;
+  .settings-panel__analytics-state {
+    grid-template-columns: 14px minmax(0, 1fr);
+    gap: 11px;
+    margin-top: 14px;
+    padding-bottom: 17px;
   }
 
-  .settings-panel__analytics-header p,
-  .settings-panel__analytics strong {
-    font-size: 0.6rem;
+  .settings-panel__analytics-marker {
+    width: 12px;
+    height: 12px;
+  }
+
+  .settings-panel__analytics-state strong {
+    font-size: 0.68rem;
+  }
+
+  .settings-panel__analytics-state p {
+    margin-top: 6px;
+    font-size: 0.68rem;
   }
 
   .settings-panel__privacy {
-    margin-top: 14px;
-    gap: 8px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    margin-top: 17px;
   }
 
   .settings-panel__privacy > div {
-    grid-template-columns: 88px minmax(0, 1fr);
+    display: grid;
+    grid-template-columns: 78px minmax(0, 1fr);
     gap: 10px;
+    align-items: baseline;
   }
 
   .settings-panel__privacy dt {
@@ -10171,23 +10251,24 @@ html[data-focus-modality="keyboard"]
   }
 
   .settings-panel__privacy dd {
+    margin-top: 0;
     font-size: 0.68rem;
   }
 
   .settings-panel__details {
-    margin-top: 10px;
-    font-size: 0.72rem;
+    margin-top: 15px;
+    font-size: 0.7rem;
   }
 
   .settings-panel__analytics-actions {
     gap: 8px;
-    margin-top: 16px;
+    margin-top: 19px;
   }
 
   .settings-panel__analytics-actions button {
     min-height: 44px;
-    padding-inline: 12px;
-    font-size: 0.68rem;
+    padding-inline: 16px;
+    font-size: 0.66rem;
   }
 
   .no-script-fallback nav {

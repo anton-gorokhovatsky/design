@@ -124,13 +124,13 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=863de4cf39a7">
+    <link rel="stylesheet" href="styles.css?v=04224c616839">
     <!-- runtime-import-map:start -->
     <script type="importmap" data-runtime-import-map>
       {
         "imports": {
           "./js/preferences.js": "./js/preferences.js?v=0c102e473cb4",
-          "./js/analytics.js": "./js/analytics.js?v=812e92a451e8",
+          "./js/analytics.js": "./js/analytics.js?v=9b7969006562",
           "./js/signal-field.js": "./js/signal-field.js?v=50bb6509089d",
           "./js/map-data.js": "./js/map-data.js?v=dfae4cae3a05",
           "./js/map-engine.js": "./js/map-engine.js?v=4ae28cceec08",
@@ -142,7 +142,7 @@
     <!-- runtime-import-map:end -->
     <!-- Native modules keep their dependencies explicit; see js/README.md. -->
     <script type="module" src="js/preferences.js?v=0c102e473cb4"></script>
-    <script type="module" src="js/analytics.js?v=812e92a451e8"></script>
+    <script type="module" src="js/analytics.js?v=9b7969006562"></script>
     <script type="module" src="js/signal-field.js?v=50bb6509089d"></script>
     <script type="module" src="js/map-data.js?v=dfae4cae3a05"></script>
     <script type="module" src="js/map-engine.js?v=4ae28cceec08"></script>
@@ -1187,24 +1187,33 @@
           aria-labelledby="settings-analytics-title"
         >
           <div class="settings-panel__analytics-header">
+            <h3 id="settings-analytics-title">ЯНДЕКС МЕТРИКА</h3>
+          </div>
+          <div class="settings-panel__analytics-state">
+            <span class="settings-panel__analytics-marker" aria-hidden="true"></span>
             <div>
-              <h3 id="settings-analytics-title">ЯНДЕКС МЕТРИКА</h3>
-              <p>ТОЛЬКО ПО&nbsp;СОГЛАСИЮ</p>
+              <strong data-analytics-preference>РЕШЕНИЕ НЕ ПРИНЯТО</strong>
+              <p>
+                <span data-analytics-state-copy="unset">
+                  До&nbsp;выбора Метрика не&nbsp;загружается.
+                </span>
+                <span data-analytics-state-copy="allowed">
+                  Метрика загружена и&nbsp;собирает обезличенную статистику.
+                </span>
+                <span data-analytics-state-copy="denied">
+                  Метрика не&nbsp;загружается.
+                </span>
+              </p>
             </div>
-            <strong data-analytics-preference>НЕ ВЫБРАНО</strong>
           </div>
           <dl class="settings-panel__privacy">
             <div>
-              <dt>ПО СОГЛАСИЮ</dt>
+              <dt>СТАТИСТИКА</dt>
               <dd>Обезличенная статистика посещений и&nbsp;действий на&nbsp;карте.</dd>
             </div>
             <div>
               <dt>ПОИСК</dt>
-              <dd>Введённый текст не&nbsp;передаётся.</dd>
-            </div>
-            <div>
-              <dt>БЕЗ СОГЛАСИЯ</dt>
-              <dd>Аналитика не&nbsp;загружается.</dd>
+              <dd>Текст запросов в&nbsp;Метрику не&nbsp;передаётся.</dd>
             </div>
           </dl>
           <a
@@ -1213,11 +1222,17 @@
             target="_blank"
             rel="noreferrer"
           >
-            Что сохраняет Метрика
+            Как Метрика использует файлы cookie
           </a>
           <div class="settings-panel__analytics-actions">
-            <button type="button" data-analytics-allow>РАЗРЕШИТЬ</button>
-            <button type="button" data-analytics-deny>НЕ РАЗРЕШАТЬ</button>
+            <button type="button" data-analytics-allow>
+              <span data-analytics-action="unset">РАЗРЕШИТЬ</span>
+              <span data-analytics-action="denied">ВКЛЮЧИТЬ АНАЛИТИКУ</span>
+            </button>
+            <button type="button" data-analytics-deny>
+              <span data-analytics-action="unset">НЕ ВКЛЮЧАТЬ</span>
+              <span data-analytics-action="allowed">ВЫКЛЮЧИТЬ АНАЛИТИКУ</span>
+            </button>
           </div>
         </section>
       </div>

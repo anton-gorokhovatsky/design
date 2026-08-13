@@ -65,6 +65,11 @@ route.
   `ЭКРАН` or search; the general `НАСТРОЙКИ САЙТА` place remains available on
   mobile. The search field is excluded from Webvisor key capture, and declining
   analytics does not alter the site.
+  That focused place leads with the current state and its consequence:
+  signal-blue belongs only to a loaded counter, while unset and denied states
+  stay neutral and use different marker shapes. Once a choice exists, the
+  panel shows only the available reverse action rather than a disabled copy of
+  the current decision.
   After consent, a small allowlist of goal events measures successful
   navigation — point opens, filters, chronology, the observation route,
   content panels, and contact actions. Search text, contact addresses, and

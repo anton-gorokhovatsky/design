@@ -56,8 +56,8 @@ const writeAnalyticsPreference = (preference) => {
 const syncAnalyticsPreferenceUi = () => {
   const state = analyticsPreference || "unset";
   const stateLabel = state === "allowed"
-    ? "РАЗРЕШЕНА"
-    : state === "denied" ? "ВЫКЛЮЧЕНА" : "НЕ ВЫБРАНО";
+    ? "АНАЛИТИКА ВКЛЮЧЕНА"
+    : state === "denied" ? "АНАЛИТИКА ВЫКЛЮЧЕНА" : "РЕШЕНИЕ НЕ ПРИНЯТО";
   const summaryLabel = state === "allowed"
     ? "АНАЛИТИКА\u00a0—\u00a0ВКЛ."
     : state === "denied" ? "АНАЛИТИКА\u00a0—\u00a0ВЫКЛ." : "АНАЛИТИКА";
@@ -80,14 +80,6 @@ const syncAnalyticsPreferenceUi = () => {
   analyticsPreferenceLabels.forEach((label) => {
     label.textContent = stateLabel;
   });
-  if (analyticsAllow) {
-    analyticsAllow.textContent = state === "allowed" ? "РАЗРЕШЕНО" : "РАЗРЕШИТЬ";
-  }
-  if (analyticsDeny) {
-    analyticsDeny.textContent = state === "denied"
-      ? "ВЫКЛЮЧЕНО"
-      : state === "allowed" ? "ВЫКЛЮЧИТЬ" : "НЕ РАЗРЕШАТЬ";
-  }
   analyticsAllow?.toggleAttribute("disabled", state === "allowed");
   analyticsDeny?.toggleAttribute("disabled", state === "denied");
 };

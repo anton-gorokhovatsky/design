@@ -1155,7 +1155,9 @@ const analyticsConsentAudit = async (page, viewport, label) => {
       modal: consent?.getAttribute("aria-modal") || "",
       closeExists: Boolean(consent?.querySelector("[data-close-settings]")),
       preferenceLabel: consent?.querySelector("[data-analytics-preference]")
-        ?.textContent.trim() || "",
+        ?.innerText.trim() || "",
+      stateCopy: consent?.querySelector(".settings-panel__analytics-state p")
+        ?.innerText.replace(/\s+/g, " ").trim() || "",
       open: consent?.open ?? false,
       searchPrivate: input?.classList.contains("ym-disable-keys") ?? false,
       trackerScripts: Array.from(document.scripts).filter((script) => (
@@ -1184,9 +1186,22 @@ const analyticsConsentAudit = async (page, viewport, label) => {
         document.querySelector(".settings-panel__details"),
       ).display,
       allowLabel: document.querySelector("[data-analytics-allow]")
-        ?.textContent.trim() || "",
+        ?.innerText.trim() || "",
       denyLabel: document.querySelector("[data-analytics-deny]")
-        ?.textContent.trim() || "",
+        ?.innerText.trim() || "",
+      visibleActions: Array.from(
+        document.querySelectorAll(".settings-panel__analytics-actions button"),
+      ).filter((button) => button.getClientRects().length > 0)
+        .map((button) => button.innerText.trim()),
+      stateMarker: (() => {
+        const marker = document.querySelector(".settings-panel__analytics-marker");
+        const bounds = marker?.getBoundingClientRect();
+        return bounds && marker ? {
+          width: bounds.width,
+          height: bounds.height,
+          backgroundColor: getComputedStyle(marker).backgroundColor,
+        } : null;
+      })(),
       themeColorMatches: document.querySelector('meta[name="theme-color"]')?.content
         === (document.documentElement.dataset.theme === "dark" ? "#11120f" : "#eeede7"),
       pointerOutlineStyle: activeStyle?.outlineStyle || "",
@@ -1245,7 +1260,8 @@ const analyticsConsentAudit = async (page, viewport, label) => {
       || result.role !== "dialog"
       || result.modal !== "true"
       || !result.closeExists
-      || result.preferenceLabel !== "НЕ ВЫБРАНО"
+      || result.preferenceLabel !== "РЕШЕНИЕ НЕ ПРИНЯТО"
+      || result.stateCopy !== "До выбора Метрика не загружается."
       || !result.open
       || !result.searchPrivate
       || result.trackerScripts !== 0
@@ -1259,15 +1275,21 @@ const analyticsConsentAudit = async (page, viewport, label) => {
       || result.analyticsLauncherLabel !== "АНАЛИТИКА"
       || result.analyticsLauncherWhiteSpace !== "nowrap"
       || JSON.stringify(result.privacyRows) !== JSON.stringify([
-        "ПО СОГЛАСИЮ Обезличенная статистика посещений и действий на карте.",
-        "ПОИСК Введённый текст не передаётся.",
-        "БЕЗ СОГЛАСИЯ Аналитика не загружается.",
+        "СТАТИСТИКА Обезличенная статистика посещений и действий на карте.",
+        "ПОИСК Текст запросов в Метрику не передаётся.",
       ])
-      || result.detailsLabel !== "Что сохраняет Метрика"
+      || result.detailsLabel !== "Как Метрика использует файлы cookie"
       || result.detailsHref !== "https://yandex.ru/support/metrica/ru/general/cookie-usage"
       || result.detailsDisplay !== "inline-flex"
       || result.allowLabel !== "РАЗРЕШИТЬ"
-      || result.denyLabel !== "НЕ РАЗРЕШАТЬ"
+      || result.denyLabel !== "НЕ ВКЛЮЧАТЬ"
+      || JSON.stringify(result.visibleActions)
+        !== JSON.stringify(["РАЗРЕШИТЬ", "НЕ ВКЛЮЧАТЬ"])
+      || !result.stateMarker
+      || result.stateMarker.width < 11.5
+      || result.stateMarker.width > 13.5
+      || Math.abs(result.stateMarker.width - result.stateMarker.height) > 0.5
+      || result.stateMarker.backgroundColor !== "rgba(0, 0, 0, 0)"
       || !result.themeColorMatches
       || result.pointerOutlineStyle !== "none"
       || result.mapNodesOpacity > 0.1
