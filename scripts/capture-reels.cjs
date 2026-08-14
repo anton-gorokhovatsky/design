@@ -51,7 +51,7 @@ const projects = {
   },
   herman: {
     url: "https://barberherman.ru/",
-    outputDuration: 12.4,
+    outputDuration: 14.8,
     finalHold: 1800,
   },
   "dusty-merch": {
@@ -542,7 +542,38 @@ const runHermanCaptureMotion = async (page) => {
   }
 
   await gridView.click();
-  await page.waitForTimeout(1800);
+  await page.waitForTimeout(1350);
+
+  await page.getByRole("button", {
+    name: "Закрыть раздел «Медиа»",
+    exact: true,
+  }).click();
+  await page.waitForTimeout(250);
+
+  const music = page.getByRole("button", { name: "Музыка", exact: true });
+
+  if (await music.count() !== 1) {
+    throw new Error("The HERMAN & CO Music control must be unique");
+  }
+
+  await music.click();
+
+  const musicArchive = page.getByRole("region", {
+    name: "Музыкальные подборки Германа",
+    exact: true,
+  });
+  await musicArchive.waitFor({ state: "visible", timeout: 5000 });
+
+  const volTwo = musicArchive.getByRole("heading", {
+    name: "Vol. 2",
+    exact: true,
+  });
+
+  if (await volTwo.count() !== 1) {
+    throw new Error("The HERMAN & CO Vol. 2 playlist must be unique");
+  }
+
+  await page.waitForTimeout(2400);
 };
 
 const prepareNarkomfinCapture = async (page) => {

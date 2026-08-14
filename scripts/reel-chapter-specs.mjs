@@ -65,7 +65,7 @@ export const reelChapterSpecs = [
     master: "herman.mp4",
     chapters: [
       { label: "light-profile-expertise", start: 0.2, duration: 5 },
-      { label: "partnerships-dark-media", start: 5.3, duration: 6.8 },
+      { label: "partnerships-dark-media-music", start: 5.3, duration: 9.2 },
     ],
   },
   {
