@@ -16,7 +16,7 @@ const selectedFrames = new Map([
   ["garage-courses", 1.45],
   ["garage-site", 1.35],
   ["garage-webzine", 0.6],
-  ["herman", 1.35],
+  ["herman", 2.2],
   ["ks-fish", 1.45],
   ["narkomfin", 0.75],
   ["shirokostup", 0.6],

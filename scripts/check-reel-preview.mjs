@@ -74,6 +74,22 @@ const expectedById = new Map([
     height: 600,
     duration: { min: 12.5, max: 13.1 },
   }],
+  ["herman", {
+    mapId: "herman",
+    artifactId: "herman",
+    index: "08 / 13",
+    titleFragments: ["Сайт стилиста", "Германа Винокурова"],
+    meta: "ПРОФИЛЬ, ЭКСПЕРТИЗА И МЕДИА / 00:12",
+    videoPath: "/assets/reels/herman.mp4",
+    posterPath: "/assets/reel-posters/herman.jpg",
+    chapterPaths: [
+      "/assets/reel-chapters/herman-01.mp4",
+      "/assets/reel-chapters/herman-02.mp4",
+    ],
+    width: 900,
+    height: 600,
+    duration: { min: 12.1, max: 12.7 },
+  }],
 ]);
 const expected = expectedById.get(reelId);
 

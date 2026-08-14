@@ -51,6 +51,8 @@ const projects = {
   },
   herman: {
     url: "https://barberherman.ru/",
+    outputDuration: 12.4,
+    finalHold: 1800,
   },
   "dusty-merch": {
     url: "https://merch.dustydumbbells.com/",
@@ -432,6 +434,117 @@ const runTarskiCaptureMotion = async (page) => {
   await page.waitForTimeout(1800);
 };
 
+const prepareHermanCapture = async (page) => {
+  const currentTheme = await page.locator("html").getAttribute("data-theme");
+
+  if (currentTheme !== "light") {
+    const lightTheme = page.getByRole("button", {
+      name: "Включить светлую тему",
+      exact: true,
+    });
+
+    if (await lightTheme.count() !== 1) {
+      throw new Error(
+        `Expected the HERMAN & CO light-theme action; found ${currentTheme}`,
+      );
+    }
+
+    await lightTheme.click();
+    await page.waitForTimeout(600);
+  }
+
+  const preparedTheme = await page.locator("html").getAttribute("data-theme");
+
+  if (preparedTheme !== "light") {
+    throw new Error(`Expected the HERMAN & CO light theme; found ${preparedTheme}`);
+  }
+};
+
+const runHermanCaptureMotion = async (page) => {
+  await page.waitForTimeout(1800);
+
+  const profile = page.getByRole("button", { name: "Профиль", exact: true });
+
+  if (await profile.count() !== 1) {
+    throw new Error("The HERMAN & CO Profile control must be unique");
+  }
+
+  await profile.click();
+  await page.waitForTimeout(1800);
+  await page.getByRole("button", {
+    name: "Закрыть панель «Профиль»",
+    exact: true,
+  }).click();
+  await page.waitForTimeout(250);
+
+  const expertise = page.getByRole("button", {
+    name: "Экспертиза",
+    exact: true,
+  });
+
+  if (await expertise.count() !== 1) {
+    throw new Error("The HERMAN & CO Expertise control must be unique");
+  }
+
+  await expertise.click();
+  await page.waitForTimeout(1700);
+  await page.getByRole("button", {
+    name: "Закрыть панель «Экспертиза»",
+    exact: true,
+  }).click();
+  await page.waitForTimeout(250);
+
+  const partnerships = page.getByRole("button", {
+    name: "Партнёрства",
+    exact: true,
+  });
+
+  if (await partnerships.count() !== 1) {
+    throw new Error("The HERMAN & CO Partnerships control must be unique");
+  }
+
+  await partnerships.click();
+  await page.waitForTimeout(1700);
+  await page.getByRole("button", {
+    name: "Закрыть раздел «Партнёрства»",
+    exact: true,
+  }).click();
+  await page.waitForTimeout(250);
+
+  const darkTheme = page.getByRole("button", {
+    name: "Включить тёмную тему",
+    exact: true,
+  });
+
+  if (await darkTheme.count() !== 1) {
+    throw new Error("The HERMAN & CO dark-theme control must be unique");
+  }
+
+  await darkTheme.click();
+  await page.waitForTimeout(900);
+
+  const media = page.getByRole("button", { name: "Медиа", exact: true });
+
+  if (await media.count() !== 1) {
+    throw new Error("The HERMAN & CO Media control must be unique");
+  }
+
+  await media.click();
+  await page.waitForTimeout(800);
+
+  const gridView = page.getByRole("button", {
+    name: "Логотипы сеткой",
+    exact: true,
+  });
+
+  if (await gridView.count() !== 1) {
+    throw new Error("The HERMAN & CO media grid control must be unique");
+  }
+
+  await gridView.click();
+  await page.waitForTimeout(1800);
+};
+
 const prepareNarkomfinCapture = async (page) => {
   const modelCanvas = page.locator('[class*="Model_container"] canvas').first();
   await modelCanvas.waitFor({ state: "visible", timeout: 20000 });
@@ -526,6 +639,11 @@ const runCaptureMotion = async (page, id, source) => {
     return;
   }
 
+  if (id === "herman") {
+    await runHermanCaptureMotion(page);
+    return;
+  }
+
   if (id === "tarski") {
     await runTarskiCaptureMotion(page);
     return;
@@ -595,6 +713,10 @@ const runCaptureMotion = async (page, id, source) => {
 
   if (projectId === "shirokostup") {
     await prepareShirokostupCapture(page);
+  }
+
+  if (projectId === "herman") {
+    await prepareHermanCapture(page);
   }
 
   await applyCaptureStyles(page);

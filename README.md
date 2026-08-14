@@ -281,9 +281,10 @@ instead of adding Storybook:
 - `scripts/browser-contracts.cjs` owns shared scenarios, mobile expressions,
   validators, MIME types, and the local static server. Chromium, WebKit, share
   capture, and focused reel checks keep only their browser-specific drivers.
-- `node scripts/check-reel-preview.mjs` is the focused `11 111` receiver check:
-  it hovers the mapped project, verifies the current 900×600 video/poster and
-  readout, and writes a full frame plus a 1:1 receiver crop.
+- `node scripts/check-reel-preview.mjs <id>` is the focused receiver check for
+  the supported reel ids: it hovers the mapped project, verifies the current
+  900×600 video/poster, two 450×300 chapters and readout, and writes a full
+  frame plus a 1:1 receiver crop.
 - The WebKit gate also completes one assistive-technology route at `390×844`:
   it reads the live accessibility tree, enters through the visible skip link,
   moves between map points with arrows, opens and closes a point with
