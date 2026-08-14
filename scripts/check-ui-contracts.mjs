@@ -1692,7 +1692,7 @@ const auditBrowser = async (client, origin) => {
     };
   })()`);
   if (
-    !foodForks.description.includes("гости буквально охренели")
+    !foodForks.description.includes("гостям буквально снесло крышу")
     || !foodForks.description.includes("точности внимания")
     || !foodForks.description.includes("огромная работа остаётся за сценой")
     || foodForks.description.includes("Чикаго")

@@ -8791,6 +8791,10 @@ html[data-theme="light"]
     scroll-margin-top: 14px;
   }
 
+  .content-panel .approach-grid li:hover {
+    transform: none;
+  }
+
   .content-panel .approach-grid h3 {
     margin: 24px 0 10px;
   }
