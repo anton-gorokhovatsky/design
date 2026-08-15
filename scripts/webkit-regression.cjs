@@ -1160,6 +1160,12 @@ const analyticsConsentAudit = async (page, viewport, label) => {
     const analyticsActions = consent
       ?.querySelector(".settings-panel__analytics-actions")
       ?.getBoundingClientRect();
+    const privacyDetails = consent
+      ?.querySelector(".settings-panel__privacy")
+      ?.getBoundingClientRect();
+    const analyticsTail = consent
+      ?.querySelector(".settings-panel__details")
+      ?.getBoundingClientRect();
     const input = document.querySelector("[data-command-input]");
     const read = (selector) => {
       const element = document.querySelector(selector);
@@ -1249,9 +1255,19 @@ const analyticsConsentAudit = async (page, viewport, label) => {
         width: rect.width,
         height: rect.height,
       } : null,
-      trailingGap: rect && analyticsActions
-        ? rect.bottom - analyticsActions.bottom
+      trailingGap: rect && analyticsTail
+        ? rect.bottom - analyticsTail.bottom
         : null,
+      actionBeforePrivacy: Boolean(
+        analyticsActions
+        && privacyDetails
+        && analyticsActions.bottom <= privacyDetails.top,
+      ),
+      privacyBeforeDetails: Boolean(
+        privacyDetails
+        && analyticsTail
+        && privacyDetails.bottom <= analyticsTail.top,
+      ),
     };
   });
   await page.screenshot({
@@ -1266,9 +1282,13 @@ const analyticsConsentAudit = async (page, viewport, label) => {
   const generalSettings = await page.evaluate(() => {
     const panel = document.querySelector("[data-settings-panel]");
     const body = panel?.querySelector(".settings-panel__body");
-    const actions = panel
+    const tail = panel
+      ?.querySelector(".settings-panel__details")
+      ?.getBoundingClientRect();
+    const action = panel
       ?.querySelector(".settings-panel__analytics-actions")
       ?.getBoundingClientRect();
+    const bodyRect = body?.getBoundingClientRect();
     const rect = panel?.getBoundingClientRect();
 
     return {
@@ -1288,7 +1308,15 @@ const analyticsConsentAudit = async (page, viewport, label) => {
         width: rect.width,
         height: rect.height,
       } : null,
-      trailingGap: rect && actions ? rect.bottom - actions.bottom : null,
+      trailingGap: rect && tail ? rect.bottom - tail.bottom : null,
+      actionHeight: action?.height ?? null,
+      actionVisibleHeight: action && bodyRect
+        ? Math.max(
+          0,
+          Math.min(action.bottom, bodyRect.bottom)
+            - Math.max(action.top, bodyRect.top),
+        )
+        : null,
     };
   });
   const material = await materialAudit(page);
@@ -1378,6 +1406,8 @@ const analyticsConsentAudit = async (page, viewport, label) => {
       || result.trailingGap === null
       || result.trailingGap < 12
       || result.trailingGap > 40
+      || !result.actionBeforePrivacy
+      || !result.privacyBeforeDetails
       || !withinViewport
       || !verticallyBalanced
       || generalSettings.mode !== "settings"
@@ -1393,6 +1423,12 @@ const analyticsConsentAudit = async (page, viewport, label) => {
         || generalSettings.bodyScrollable
       ))
       || (viewport.width <= 320 && !generalSettings.bodyScrollable)
+      || (viewport.width >= 390 && viewport.height >= 650 && (
+        generalSettings.actionHeight === null
+        || generalSettings.actionVisibleHeight === null
+        || generalSettings.actionVisibleHeight
+          < generalSettings.actionHeight - 1
+      ))
       || materialFailures.length > 0,
   };
 };

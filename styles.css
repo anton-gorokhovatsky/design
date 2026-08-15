@@ -10432,12 +10432,11 @@ html[data-focus-modality="keyboard"]
 
 @media (max-width: 680px) and (min-height: 620px) {
   .settings-panel__details {
-    margin-top: 30px;
+    margin-top: 28px;
   }
 
   .settings-panel__analytics-actions {
-    margin-top: 36px;
-    padding-bottom: 10px;
+    margin-top: 30px;
   }
 }
 
