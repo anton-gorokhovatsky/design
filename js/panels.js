@@ -39,6 +39,7 @@ import {
 import { signalField } from "./signal-field.js";
 
 const compactCommandViewport = window.matchMedia("(max-width: 680px)");
+const commandResultsMaximumHeight = 404;
 const commandViewportProperties = [
   "--command-focus-left",
   "--command-focus-top",
@@ -48,26 +49,6 @@ const clearCommandViewportPosition = () => {
   commandViewportProperties.forEach((property) => {
     document.documentElement.style.removeProperty(property);
   });
-};
-const syncCommandResultEdges = () => {
-  const results = document.querySelector("[data-command-results]");
-
-  if (!results?.classList.contains("is-open")) {
-    results?.classList.remove("has-results-above", "has-results-below");
-    return;
-  }
-
-  const maximumScrollTop = Math.max(0, results.scrollHeight - results.clientHeight);
-  const edgeTolerance = 2;
-
-  results.classList.toggle(
-    "has-results-above",
-    results.scrollTop > edgeTolerance,
-  );
-  results.classList.toggle(
-    "has-results-below",
-    maximumScrollTop - results.scrollTop > edgeTolerance,
-  );
 };
 const getCommandVisualViewport = () => {
   const viewport = window.visualViewport;
@@ -95,7 +76,10 @@ const positionDetachedCommandResults = () => {
   let left = bounds.left;
   let width = bounds.width;
   let bottom = window.innerHeight - bounds.top + gap;
-  let maximumHeight = Math.min(390, window.innerHeight * 0.54);
+  let maximumHeight = Math.min(
+    commandResultsMaximumHeight,
+    window.innerHeight * 0.57,
+  );
   let focusedViewport = null;
   let focusedDockTop = 0;
   let focusedEdgeGap = 0;
@@ -116,7 +100,10 @@ const positionDetachedCommandResults = () => {
     focusedEdgeGap = edgeGap;
     maximumHeight = Math.max(
       88,
-      Math.min(390, dockTop - viewport.top - gap - edgeGap),
+      Math.min(
+        commandResultsMaximumHeight,
+        dockTop - viewport.top - gap - edgeGap,
+      ),
     );
     document.documentElement.style.setProperty(
       "--command-focus-left",
@@ -167,8 +154,6 @@ const positionDetachedCommandResults = () => {
       element.style.removeProperty("--command-results-top");
     }
   });
-
-  syncCommandResultEdges();
 };
 let commandPositionFrame = 0;
 const scheduleDetachedCommandResultsPosition = () => {
@@ -1086,12 +1071,6 @@ const setCommandOpen = (isOpen) => {
     commandResults.inert = !isOpen;
   }
 
-  syncCommandResultEdges();
-
-  if (isOpen) {
-    window.requestAnimationFrame(syncCommandResultEdges);
-  }
-
   if (!isOpen) {
     setSearchRelationshipPreview(null);
     commandInput?.removeAttribute("aria-activedescendant");
@@ -1130,8 +1109,6 @@ const setActiveCommandResult = (index) => {
     } else if (buttonBottom > visibleBottom) {
       commandResults.scrollTop = buttonBottom - commandResults.clientHeight;
     }
-
-    syncCommandResultEdges();
   }
 
   const activeResult = currentCommandResults[activeCommandIndex];
@@ -1386,10 +1363,6 @@ commandSubmit?.addEventListener("click", (event) => {
   setCommandOpen(false);
   setCommandStatus("");
   clearSearchHighlight();
-});
-
-commandResults?.addEventListener("scroll", syncCommandResultEdges, {
-  passive: true,
 });
 
 commandResults?.addEventListener("pointerdown", (event) => {

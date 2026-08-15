@@ -1690,7 +1690,7 @@ main {
 
 .command-results {
 
-  max-height: min(390px, var(--command-results-max-height, 54svh));
+  max-height: min(404px, var(--command-results-max-height, 57svh));
 
   overflow: auto;
 
@@ -4760,10 +4760,9 @@ html[data-focus-modality="keyboard"]
   transform: none;
 }
 
-/* A directional edge fade replaces the visually dominant scrollbar;
-   forced colours restore the native scroll affordance below. */
+/* A clipped neighbouring row reveals that the list continues without adding
+   a texture or another control. Forced colours keep the native affordance. */
 .command-results {
-  --command-overflow-fade: 32px;
   scrollbar-width: none;
 }
 
@@ -4773,64 +4772,9 @@ html[data-focus-modality="keyboard"]
   height: 0;
 }
 
-.command-results.has-results-below:not(.has-results-above) {
-  mask-image: linear-gradient(
-    to bottom,
-    #000 0,
-    #000 calc(100% - var(--command-overflow-fade)),
-    transparent 100%
-  );
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    #000 0,
-    #000 calc(100% - var(--command-overflow-fade)),
-    transparent 100%
-  );
-}
-
-.command-results.has-results-above:not(.has-results-below) {
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 0,
-    #000 var(--command-overflow-fade),
-    #000 100%
-  );
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    transparent 0,
-    #000 var(--command-overflow-fade),
-    #000 100%
-  );
-}
-
-.command-results.has-results-above.has-results-below {
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 0,
-    #000 var(--command-overflow-fade),
-    #000 calc(100% - var(--command-overflow-fade)),
-    transparent 100%
-  );
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    transparent 0,
-    #000 var(--command-overflow-fade),
-    #000 calc(100% - var(--command-overflow-fade)),
-    transparent 100%
-  );
-}
-
-@media (max-width: 680px) {
-  .command-results {
-    --command-overflow-fade: 20px;
-  }
-}
-
 @media (forced-colors: active) {
   .command-results {
     scrollbar-width: auto;
-    mask-image: none !important;
-    -webkit-mask-image: none !important;
   }
 
   .command-results::-webkit-scrollbar {

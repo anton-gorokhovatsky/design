@@ -1307,22 +1307,27 @@ const auditBrowser = async (client, origin) => {
   const searchOverflowStartContract = await evaluate(client, `(() => {
     const results = document.querySelector("[data-command-results]");
     const style = getComputedStyle(results);
+    const bounds = results.getBoundingClientRect();
+    const buttons = [...results.querySelectorAll(".command-result")];
+    const lastBounds = buttons.at(-1)?.getBoundingClientRect();
     return {
       canScroll: results.scrollHeight > results.clientHeight,
-      hasAbove: results.classList.contains("has-results-above"),
-      hasBelow: results.classList.contains("has-results-below"),
+      showsNextRow: Boolean(
+        lastBounds
+        && lastBounds.top < bounds.bottom - 8
+        && lastBounds.bottom > bounds.bottom + 8
+      ),
       scrollbarWidth: style.scrollbarWidth,
-      maskImage: style.maskImage || style.webkitMaskImage,
+      maskImage: style.maskImage || style.webkitMaskImage || "none",
     };
   })()`);
   if (
     !searchOverflowStartContract.canScroll
-    || searchOverflowStartContract.hasAbove
-    || !searchOverflowStartContract.hasBelow
+    || !searchOverflowStartContract.showsNextRow
     || searchOverflowStartContract.scrollbarWidth !== "none"
-    || !searchOverflowStartContract.maskImage.includes("linear-gradient")
+    || searchOverflowStartContract.maskImage !== "none"
   ) {
-    fail("search-overflow: the initial list does not quietly disclose results below.", searchOverflowStartContract);
+    fail("search-overflow: the initial list does not reveal a crisp partial row below.", searchOverflowStartContract);
   }
   await saveElementScreenshot(
     client,
@@ -1339,18 +1344,22 @@ const auditBrowser = async (client, origin) => {
   await delay(40);
   const searchOverflowEndContract = await evaluate(client, `(() => {
     const results = document.querySelector("[data-command-results]");
+    const bounds = results.getBoundingClientRect();
+    const firstBounds = results.querySelector(".command-result")?.getBoundingClientRect();
     return {
-      hasAbove: results.classList.contains("has-results-above"),
-      hasBelow: results.classList.contains("has-results-below"),
+      showsPreviousRow: Boolean(
+        firstBounds
+        && firstBounds.top < bounds.top - 8
+        && firstBounds.bottom > bounds.top + 8
+      ),
       scrollTop: results.scrollTop,
     };
   })()`);
   if (
-    !searchOverflowEndContract.hasAbove
-    || searchOverflowEndContract.hasBelow
+    !searchOverflowEndContract.showsPreviousRow
     || searchOverflowEndContract.scrollTop <= 0
   ) {
-    fail("search-overflow: the end of the list does not disclose results above.", searchOverflowEndContract);
+    fail("search-overflow: the end of the list does not reveal a crisp partial row above.", searchOverflowEndContract);
   }
 
   const searchIntentCases = [
