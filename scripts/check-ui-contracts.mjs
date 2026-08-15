@@ -1671,6 +1671,129 @@ const auditBrowser = async (client, origin) => {
   await saveScreenshot(client, "desktop-ilmix-copy");
   await saveElementScreenshot(client, "crop-desktop-ilmix-copy", ".map-inspector");
 
+  await navigate(
+    client,
+    `${origin}/?qa=ui-contracts-notion-project-evidence&point=garage-site#map`,
+  );
+  const notionProjectEvidence = await evaluate(client, `(() => {
+    const ids = [
+      "garage-site",
+      "narkomfin",
+      "collection",
+      "garage-courses",
+      "garage-app",
+      "garage-institutions",
+      "garage-webzine",
+    ];
+    const inspector = document.querySelector("[data-map-inspector]");
+    const evidence = document.querySelector("[data-map-evidence]");
+    const task = document.querySelector("[data-map-evidence-task]");
+    const role = document.querySelector("[data-map-evidence-role]");
+    const result = document.querySelector("[data-map-evidence-result]");
+
+    return ids.map((id) => {
+      const button = document.querySelector('[data-map-id="' + id + '"]');
+      button?.click();
+      return {
+        id,
+        buttonFound: Boolean(button),
+        selectedId: document.querySelector("[data-map-id].is-selected")?.dataset.mapId || "",
+        evidenceHidden: evidence?.hidden,
+        task: task?.textContent?.trim() || "",
+        role: role?.textContent?.trim() || "",
+        result: result?.textContent?.trim() || "",
+        hiddenRows: [task, role, result].filter((entry) => entry?.closest("div")?.hidden).length,
+        horizontalOverflow: inspector
+          ? Math.max(0, inspector.scrollWidth - inspector.clientWidth)
+          : -1,
+      };
+    });
+  })()`);
+  const brokenNotionProjectEvidence = notionProjectEvidence.filter((entry) => (
+    !entry.buttonFound
+    || entry.selectedId !== entry.id
+    || entry.evidenceHidden
+    || !entry.task
+    || !entry.role
+    || !entry.result
+    || entry.hiddenRows !== 0
+    || entry.horizontalOverflow > 1
+  ));
+  if (brokenNotionProjectEvidence.length > 0) {
+    fail(
+      "notion-project-evidence: one or more project records are missing or clipped.",
+      brokenNotionProjectEvidence,
+    );
+  }
+  await saveScreenshot(client, "desktop-notion-project-evidence");
+  await saveElementScreenshot(
+    client,
+    "crop-desktop-notion-project-evidence",
+    ".map-inspector",
+  );
+
+  await setViewport(client, {
+    width: 390,
+    height: 844,
+    mobile: true,
+    theme: "light",
+  });
+  await navigate(
+    client,
+    `${origin}/?qa=ui-contracts-notion-project-mobile&point=garage-site#map`,
+  );
+  const notionProjectMobile = await evaluate(client, `(() => {
+    const inspector = document.querySelector("[data-map-inspector]");
+    const description = document.querySelector(".map-readout__description");
+    const evidence = document.querySelector("[data-map-evidence]");
+    const link = document.querySelector("[data-map-link]");
+    const rect = inspector?.getBoundingClientRect();
+    const linkRect = link?.getBoundingClientRect();
+    return {
+      title: document.querySelector("[data-map-title]")?.textContent || "",
+      evidenceHidden: evidence?.hidden,
+      horizontalOverflow: inspector
+        ? Math.max(0, inspector.scrollWidth - inspector.clientWidth)
+        : -1,
+      descriptionOverflow: description
+        ? Math.max(0, description.scrollWidth - description.clientWidth)
+        : -1,
+      inspectorInsideViewport: Boolean(rect)
+        && rect.left >= -1
+        && rect.right <= innerWidth + 1,
+      linkVisible: Boolean(linkRect)
+        && !link?.hidden
+        && linkRect.top >= 0
+        && linkRect.bottom <= innerHeight,
+    };
+  })()`);
+  if (
+    !notionProjectMobile.title.includes("САЙТ МУЗЕЯ")
+    || notionProjectMobile.evidenceHidden
+    || notionProjectMobile.horizontalOverflow > 1
+    || notionProjectMobile.descriptionOverflow > 1
+    || !notionProjectMobile.inspectorInsideViewport
+    || !notionProjectMobile.linkVisible
+  ) {
+    fail(
+      "notion-project-evidence: the enriched mobile project card is clipped.",
+      notionProjectMobile,
+    );
+  }
+  await saveScreenshot(client, "mobile-notion-project-evidence");
+  await saveElementScreenshot(
+    client,
+    "crop-mobile-notion-project-evidence",
+    ".map-inspector",
+  );
+
+  await setViewport(client, {
+    width: 1280,
+    height: 720,
+    mobile: false,
+    theme: "light",
+  });
+
   await navigate(client, `${origin}/?qa=ui-contracts-food-forks&point=food#map`);
   const foodForks = await evaluate(client, `(() => {
     const link = document.querySelector("[data-map-link]");

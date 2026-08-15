@@ -35,6 +35,9 @@ const mapEvidence = document.querySelector("[data-map-evidence]");
 const mapEvidenceTask = document.querySelector("[data-map-evidence-task]");
 const mapEvidenceRole = document.querySelector("[data-map-evidence-role]");
 const mapEvidenceResult = document.querySelector("[data-map-evidence-result]");
+const mapEvidenceById = JSON.parse(
+  document.querySelector("#map-evidence-data")?.textContent || "{}",
+);
 const mapNote = document.querySelector("[data-map-note]");
 const timeToggles = Array.from(document.querySelectorAll("[data-time-toggle]"));
 const observationStart = document.querySelector("[data-start-observation]");
@@ -927,7 +930,7 @@ const selectMapItem = (
     mapDescription.textContent = typographUiText(item.description);
   }
 
-  setMapEvidence(item.evidence);
+  setMapEvidence(mapEvidenceById[item.id]);
 
   if (mapLink) {
     const itemHref = item.href || (item.kind === "practice" ? principlesSourceHref : "");

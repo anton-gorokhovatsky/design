@@ -104,7 +104,37 @@ const extractMapItems = () => {
   }
 };
 
+const extractEmbeddedJson = (id) => {
+  const pattern = new RegExp(
+    `<script[^>]*id=["']${id}["'][^>]*>([\\s\\S]*?)<\\/script>`,
+  );
+  const match = indexSource.match(pattern);
+
+  requireContract(
+    Boolean(match),
+    "embedded-json-missing",
+    `Could not find embedded JSON data "${id}" in index.html.`,
+  );
+
+  if (!match) {
+    return {};
+  }
+
+  try {
+    return JSON.parse(match[1]);
+  } catch (error) {
+    addFinding(
+      "error",
+      "embedded-json-parse",
+      `Embedded JSON data "${id}" could not be parsed.`,
+      String(error),
+    );
+    return {};
+  }
+};
+
 const mapItems = extractMapItems();
+const mapEvidenceById = extractEmbeddedJson("map-evidence-data");
 const allowedKinds = new Set(["company", "project", "personal", "practice"]);
 const ids = new Set();
 const duplicateIds = new Set();
@@ -177,6 +207,51 @@ requireContract(
   "map-id-duplicate",
   "Map ids must be unique.",
   [...duplicateIds].sort(),
+);
+
+const notionProjectIds = [
+  "narkomfin",
+  "garage-courses",
+  "garage-app",
+  "garage-institutions",
+  "garage-site",
+  "collection",
+  "garage-webzine",
+];
+const incompleteNotionEvidence = notionProjectIds.filter((id) => {
+  const evidence = mapEvidenceById[id];
+  return !evidence || ["task", "role", "result"].some((field) => (
+    typeof evidence[field] !== "string" || !evidence[field].trim()
+  ));
+});
+const orphanEvidenceIds = Object.keys(mapEvidenceById).filter((id) => !ids.has(id));
+
+requireContract(
+  mapItems.every((item) => !("evidence" in item)),
+  "map-evidence-runtime",
+  "Long-form project evidence must stay in embedded content data, not the runtime map graph.",
+);
+requireContract(
+  incompleteNotionEvidence.length === 0,
+  "notion-project-evidence",
+  "All seven projects from the Notion project table need task, role, and result evidence.",
+  incompleteNotionEvidence,
+);
+requireContract(
+  orphanEvidenceIds.length === 0,
+  "map-evidence-orphan",
+  "Every embedded evidence record must belong to an existing map node.",
+  orphanEvidenceIds,
+);
+requireContract(
+  mapEvidenceById.narkomfin?.result.includes("51\u00a0420")
+    && mapEvidenceById.narkomfin?.result.includes("67\u00a0893")
+    && mapEvidenceById["garage-courses"]?.result.includes("четыре курса")
+    && mapEvidenceById["garage-webzine"]?.role.includes("ChatGPT")
+    && mapEvidenceById["garage-institutions"]?.result.includes("Сотворчество")
+    && mapEvidenceById["garage-site"]?.result.includes("Awwwards"),
+  "notion-project-facts",
+  "Distinctive source facts from the seven Notion cards must remain represented.",
 );
 
 for (const item of mapItems) {
@@ -785,8 +860,8 @@ requireContract(
   "Analytics must load only after an explicit choice, keep search private, and expose a reversible setting.",
 );
 requireContract(
-  mapDataSource.includes("51\\u00a0420")
-    && mapDataSource.includes("67\\u00a0893"),
+  mapEvidenceById.narkomfin?.result.includes("51\u00a0420")
+    && mapEvidenceById.narkomfin?.result.includes("67\u00a0893"),
   "nonbreaking-metrics",
   "Thousands-separated project metrics must remain indivisible at mobile line breaks.",
 );
