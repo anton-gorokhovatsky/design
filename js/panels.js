@@ -49,6 +49,26 @@ const clearCommandViewportPosition = () => {
     document.documentElement.style.removeProperty(property);
   });
 };
+const syncCommandResultEdges = () => {
+  const results = document.querySelector("[data-command-results]");
+
+  if (!results?.classList.contains("is-open")) {
+    results?.classList.remove("has-results-above", "has-results-below");
+    return;
+  }
+
+  const maximumScrollTop = Math.max(0, results.scrollHeight - results.clientHeight);
+  const edgeTolerance = 2;
+
+  results.classList.toggle(
+    "has-results-above",
+    results.scrollTop > edgeTolerance,
+  );
+  results.classList.toggle(
+    "has-results-below",
+    maximumScrollTop - results.scrollTop > edgeTolerance,
+  );
+};
 const getCommandVisualViewport = () => {
   const viewport = window.visualViewport;
 
@@ -147,6 +167,8 @@ const positionDetachedCommandResults = () => {
       element.style.removeProperty("--command-results-top");
     }
   });
+
+  syncCommandResultEdges();
 };
 let commandPositionFrame = 0;
 const scheduleDetachedCommandResultsPosition = () => {
@@ -1064,6 +1086,12 @@ const setCommandOpen = (isOpen) => {
     commandResults.inert = !isOpen;
   }
 
+  syncCommandResultEdges();
+
+  if (isOpen) {
+    window.requestAnimationFrame(syncCommandResultEdges);
+  }
+
   if (!isOpen) {
     setSearchRelationshipPreview(null);
     commandInput?.removeAttribute("aria-activedescendant");
@@ -1102,6 +1130,8 @@ const setActiveCommandResult = (index) => {
     } else if (buttonBottom > visibleBottom) {
       commandResults.scrollTop = buttonBottom - commandResults.clientHeight;
     }
+
+    syncCommandResultEdges();
   }
 
   const activeResult = currentCommandResults[activeCommandIndex];
@@ -1356,6 +1386,10 @@ commandSubmit?.addEventListener("click", (event) => {
   setCommandOpen(false);
   setCommandStatus("");
   clearSearchHighlight();
+});
+
+commandResults?.addEventListener("scroll", syncCommandResultEdges, {
+  passive: true,
 });
 
 commandResults?.addEventListener("pointerdown", (event) => {

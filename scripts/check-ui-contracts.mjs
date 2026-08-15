@@ -1297,6 +1297,62 @@ const auditBrowser = async (client, origin) => {
     fail("search-close: the visible close action does not dismiss only the results list.", searchCloseContract);
   }
 
+  await evaluate(client, `(() => {
+    const input = document.querySelector("[data-command-input]");
+    input.value = "";
+    input.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "deleteContent" }));
+    return true;
+  })()`);
+  await delay(60);
+  const searchOverflowStartContract = await evaluate(client, `(() => {
+    const results = document.querySelector("[data-command-results]");
+    const style = getComputedStyle(results);
+    return {
+      canScroll: results.scrollHeight > results.clientHeight,
+      hasAbove: results.classList.contains("has-results-above"),
+      hasBelow: results.classList.contains("has-results-below"),
+      scrollbarWidth: style.scrollbarWidth,
+      maskImage: style.maskImage || style.webkitMaskImage,
+    };
+  })()`);
+  if (
+    !searchOverflowStartContract.canScroll
+    || searchOverflowStartContract.hasAbove
+    || !searchOverflowStartContract.hasBelow
+    || searchOverflowStartContract.scrollbarWidth !== "none"
+    || !searchOverflowStartContract.maskImage.includes("linear-gradient")
+  ) {
+    fail("search-overflow: the initial list does not quietly disclose results below.", searchOverflowStartContract);
+  }
+  await saveElementScreenshot(
+    client,
+    "crop-desktop-search-overflow-cue",
+    ".command-results",
+  );
+
+  await evaluate(client, `(() => {
+    const results = document.querySelector("[data-command-results]");
+    results.scrollTop = results.scrollHeight;
+    results.dispatchEvent(new Event("scroll"));
+    return true;
+  })()`);
+  await delay(40);
+  const searchOverflowEndContract = await evaluate(client, `(() => {
+    const results = document.querySelector("[data-command-results]");
+    return {
+      hasAbove: results.classList.contains("has-results-above"),
+      hasBelow: results.classList.contains("has-results-below"),
+      scrollTop: results.scrollTop,
+    };
+  })()`);
+  if (
+    !searchOverflowEndContract.hasAbove
+    || searchOverflowEndContract.hasBelow
+    || searchOverflowEndContract.scrollTop <= 0
+  ) {
+    fail("search-overflow: the end of the list does not disclose results above.", searchOverflowEndContract);
+  }
+
   const searchIntentCases = [
     ["герман сайт", "command-result-node-herman"],
     ["сайт винокурова", "command-result-node-herman"],

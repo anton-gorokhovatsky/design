@@ -4760,6 +4760,86 @@ html[data-focus-modality="keyboard"]
   transform: none;
 }
 
+/* A directional edge fade replaces the visually dominant scrollbar;
+   forced colours restore the native scroll affordance below. */
+.command-results {
+  --command-overflow-fade: 32px;
+  scrollbar-width: none;
+}
+
+.command-results::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.command-results.has-results-below:not(.has-results-above) {
+  mask-image: linear-gradient(
+    to bottom,
+    #000 0,
+    #000 calc(100% - var(--command-overflow-fade)),
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0,
+    #000 calc(100% - var(--command-overflow-fade)),
+    transparent 100%
+  );
+}
+
+.command-results.has-results-above:not(.has-results-below) {
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 var(--command-overflow-fade),
+    #000 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 var(--command-overflow-fade),
+    #000 100%
+  );
+}
+
+.command-results.has-results-above.has-results-below {
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 var(--command-overflow-fade),
+    #000 calc(100% - var(--command-overflow-fade)),
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 var(--command-overflow-fade),
+    #000 calc(100% - var(--command-overflow-fade)),
+    transparent 100%
+  );
+}
+
+@media (max-width: 680px) {
+  .command-results {
+    --command-overflow-fade: 20px;
+  }
+}
+
+@media (forced-colors: active) {
+  .command-results {
+    scrollbar-width: auto;
+    mask-image: none !important;
+    -webkit-mask-image: none !important;
+  }
+
+  .command-results::-webkit-scrollbar {
+    display: block;
+    width: auto;
+    height: auto;
+  }
+}
+
 body:has(.command-dock.is-open) .signal-constellation {
   opacity: 0.28;
 }
