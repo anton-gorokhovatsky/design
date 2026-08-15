@@ -1661,15 +1661,62 @@ const auditBrowser = async (client, origin) => {
     || ilmixCopy.evidenceHidden
     || ilmixCopy.taskHidden
     || ilmixCopy.roleHidden
-    || !ilmixCopy.resultHidden
-    || ilmixCopy.resultDisplay !== "none"
-    || ilmixCopy.result
+    || ilmixCopy.resultHidden
+    || ilmixCopy.resultDisplay === "none"
+    || !ilmixCopy.result.includes("19 905")
+    || !ilmixCopy.result.includes("48 835")
+    || !ilmixCopy.result.includes("66,9 %")
     || !ilmixCopy.meta.startsWith("5 ЛЕТ")
   ) {
-    fail("ilmix-copy: the accepted hh copy or partial evidence rows regressed.", ilmixCopy);
+    fail("ilmix-copy: the accepted company copy or Notion metrics regressed.", ilmixCopy);
   }
   await saveScreenshot(client, "desktop-ilmix-copy");
   await saveElementScreenshot(client, "crop-desktop-ilmix-copy", ".map-inspector");
+
+  await navigate(client, `${origin}/?qa=ui-contracts-optimal-copy&point=optimal#map`);
+  const optimalCopy = await evaluate(client, `(() => {
+    const evidence = document.querySelector("[data-map-evidence]");
+    const task = document.querySelector("[data-map-evidence-task]");
+    const role = document.querySelector("[data-map-evidence-role]");
+    const result = document.querySelector("[data-map-evidence-result]");
+    const link = document.querySelector("[data-map-link]");
+    const readText = (element) => (element?.textContent || "")
+      .replace(/\\s+/g, " ")
+      .trim();
+    return {
+      evidenceHidden: evidence?.hidden,
+      task: readText(task),
+      taskHidden: task?.closest("div")?.hidden,
+      role: readText(role),
+      roleHidden: role?.closest("div")?.hidden,
+      result: readText(result),
+      resultHidden: result?.closest("div")?.hidden,
+      linkHref: link?.href || "",
+      linkText: link?.textContent?.trim() || "",
+      linkVisible: Boolean(link && getComputedStyle(link).display !== "none"),
+      overflow: Math.max(0, document.documentElement.scrollWidth - window.innerWidth),
+    };
+  })()`);
+  if (
+    optimalCopy.evidenceHidden
+    || optimalCopy.taskHidden
+    || optimalCopy.roleHidden
+    || optimalCopy.resultHidden
+    || !optimalCopy.task.includes("вернуть управляемость")
+    || !optimalCopy.role.includes("Принял проект у другого менеджера")
+    || !optimalCopy.role.includes("навёл порядок")
+    || !optimalCopy.role.includes("оптимизировал")
+    || !optimalCopy.result.includes("Передал новому менеджеру")
+    || !optimalCopy.result.includes("дорожной карте")
+    || !optimalCopy.linkVisible
+    || optimalCopy.linkText !== "ОТКРЫТЬ КЕЙС"
+    || optimalCopy.linkHref !== "https://optimalgroup.ru/projects/academy-tn-ru/"
+    || optimalCopy.overflow > 1
+  ) {
+    fail("optimal-copy: the Notion-backed role and scope regressed.", optimalCopy);
+  }
+  await saveScreenshot(client, "desktop-optimal-copy");
+  await saveElementScreenshot(client, "crop-desktop-optimal-copy", ".map-inspector");
 
   await navigate(
     client,

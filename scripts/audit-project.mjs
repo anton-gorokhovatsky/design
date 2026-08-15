@@ -218,7 +218,19 @@ const notionProjectIds = [
   "collection",
   "garage-webzine",
 ];
+const notionExperienceIds = [
+  "garage",
+  "private-practice",
+  "optimal",
+  "ilmix",
+];
 const incompleteNotionEvidence = notionProjectIds.filter((id) => {
+  const evidence = mapEvidenceById[id];
+  return !evidence || ["task", "role", "result"].some((field) => (
+    typeof evidence[field] !== "string" || !evidence[field].trim()
+  ));
+});
+const incompleteNotionExperience = notionExperienceIds.filter((id) => {
   const evidence = mapEvidenceById[id];
   return !evidence || ["task", "role", "result"].some((field) => (
     typeof evidence[field] !== "string" || !evidence[field].trim()
@@ -238,6 +250,12 @@ requireContract(
   incompleteNotionEvidence,
 );
 requireContract(
+  incompleteNotionExperience.length === 0,
+  "notion-experience-evidence",
+  "The four current Notion experience anchors need task, role, and result evidence.",
+  incompleteNotionExperience,
+);
+requireContract(
   orphanEvidenceIds.length === 0,
   "map-evidence-orphan",
   "Every embedded evidence record must belong to an existing map node.",
@@ -252,6 +270,27 @@ requireContract(
     && mapEvidenceById["garage-site"]?.result.includes("Awwwards"),
   "notion-project-facts",
   "Distinctive source facts from the seven Notion cards must remain represented.",
+);
+requireContract(
+  mapEvidenceById.optimal?.task.includes("вернуть управляемость")
+    && mapEvidenceById.optimal?.role.includes("Принял проект у другого менеджера")
+    && mapEvidenceById.optimal?.role.includes("навёл порядок")
+    && mapEvidenceById.optimal?.role.includes("оптимизировал")
+    && mapEvidenceById.optimal?.result.includes("Передал новому менеджеру")
+    && mapEvidenceById.optimal?.result.includes("дорожной карте")
+    && mapEvidenceById.ilmix?.result.includes("19\u00a0905")
+    && mapEvidenceById.ilmix?.result.includes("48\u00a0835")
+    && mapEvidenceById.ilmix?.result.includes("66,9\u00a0%")
+    && indexSource.includes("15&nbsp;лет работаю на&nbsp;стыке продукта"),
+  "notion-experience-facts",
+  "Distinctive source facts from the full Notion resume must remain represented.",
+);
+const optimal = mapItems.find((item) => item.id === "optimal");
+requireContract(
+  optimal?.href === "https://optimalgroup.ru/projects/academy-tn-ru/"
+    && optimal?.linkLabel === "ОТКРЫТЬ КЕЙС",
+  "optimal-case-route",
+  "The OptimalGroup experience anchor must link to the public Academy case.",
 );
 
 for (const item of mapItems) {
