@@ -224,6 +224,7 @@ const notionExperienceIds = [
   "optimal",
   "ilmix",
 ];
+const hhExperienceIds = ["early-career"];
 const incompleteNotionEvidence = notionProjectIds.filter((id) => {
   const evidence = mapEvidenceById[id];
   return !evidence || ["task", "role", "result"].some((field) => (
@@ -231,6 +232,12 @@ const incompleteNotionEvidence = notionProjectIds.filter((id) => {
   ));
 });
 const incompleteNotionExperience = notionExperienceIds.filter((id) => {
+  const evidence = mapEvidenceById[id];
+  return !evidence || ["task", "role", "result"].some((field) => (
+    typeof evidence[field] !== "string" || !evidence[field].trim()
+  ));
+});
+const incompleteHhExperience = hhExperienceIds.filter((id) => {
   const evidence = mapEvidenceById[id];
   return !evidence || ["task", "role", "result"].some((field) => (
     typeof evidence[field] !== "string" || !evidence[field].trim()
@@ -254,6 +261,12 @@ requireContract(
   "notion-experience-evidence",
   "The four current Notion experience anchors need task, role, and result evidence.",
   incompleteNotionExperience,
+);
+requireContract(
+  incompleteHhExperience.length === 0,
+  "hh-experience-evidence",
+  "The early-career anchor sourced from hh.ru needs task, role, and result evidence.",
+  incompleteHhExperience,
 );
 requireContract(
   orphanEvidenceIds.length === 0,
@@ -286,11 +299,23 @@ requireContract(
   "Distinctive source facts from the full Notion resume must remain represented.",
 );
 const optimal = mapItems.find((item) => item.id === "optimal");
+const earlyCareer = mapItems.find((item) => item.id === "early-career");
 requireContract(
   optimal?.href === "https://optimalgroup.ru/projects/academy-tn-ru/"
     && optimal?.linkLabel === "ОТКРЫТЬ КЕЙС",
   "optimal-case-route",
   "The OptimalGroup experience anchor must link to the public Academy case.",
+);
+requireContract(
+  earlyCareer?.timeLabel === "2010—2016"
+    && earlyCareer?.href === "https://hh.ru/resume/e469b9deff00850af10039ed1f736563726574?print=true"
+    && earlyCareer?.linkLabel === "ПОЛНОЕ РЕЗЮМЕ НА HH.RU"
+    && mapEvidenceById["early-career"]?.role.includes("ВАЛЛЕКС М")
+    && mapEvidenceById["early-career"]?.role.includes("ИльмиксГрупп")
+    && mapEvidenceById["early-career"]?.role.includes("Freya Project")
+    && mapEvidenceById["early-career"]?.result.includes("онлайн-платежами"),
+  "hh-experience-facts",
+  "Distinctive early-career facts from the public hh.ru resume must remain represented.",
 );
 
 for (const item of mapItems) {
@@ -906,11 +931,23 @@ requireContract(
 );
 requireContract(
   indexSource.includes('class="no-script-fallback"')
-    && indexSource.includes('aria-label="Избранные проекты"')
+    && indexSource.includes('aria-label="Ключевые кейсы"')
+    && indexSource.includes("https://hh.ru/resume/e469b9deff00850af10039ed1f736563726574?print=true")
+    && indexSource.includes("Подробное резюме в Notion")
     && indexSource.includes("mailto:anton.gorokhovatsky@gmail.com")
     && indexSource.includes("body > :not(noscript)"),
   "no-script-fallback",
   "The no-JavaScript path must expose selected work and contact routes without a tracking pixel.",
+);
+requireContract(
+  indexSource.match(/data-map-point="[^"]+"/g)?.length === 8
+    && indexSource.includes("КЛЮЧЕВЫЕ <span>КЕЙСЫ</span>")
+    && scriptSource.includes('source: "cases"')
+    && scriptSource.includes("evidence.task")
+    && scriptSource.includes("evidence.role")
+    && scriptSource.includes("evidence.result"),
+  "employer-case-route",
+  "The employer route must expose eight evidence-backed cases and index task, role, and result text.",
 );
 requireContract(
   scriptSource.includes("if (document.hidden)")

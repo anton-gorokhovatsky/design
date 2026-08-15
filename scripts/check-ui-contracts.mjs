@@ -1282,7 +1282,13 @@ const auditBrowser = async (client, origin) => {
     ["аналитика", "command-result-action-analytics-settings"],
     ["движение", "command-result-action-settings"],
     ["контраст", "command-result-action-settings"],
+    ["кейсы", "command-result-panel-work"],
     ["проекты", "command-result-panel-work"],
+    ["бэклог", "command-result-node-optimal"],
+    ["дорожная карта", "command-result-node-optimal"],
+    ["органический трафик", "command-result-node-ilmix"],
+    ["19 905", "command-result-node-ilmix"],
+    ["валлекс", "command-result-node-early-career"],
     ["подход", "command-result-panel-approach"],
   ];
 
@@ -1312,6 +1318,59 @@ const auditBrowser = async (client, origin) => {
       });
     }
   }
+
+  await navigate(client, `${origin}/?qa=ui-contracts-employer-cases#work`);
+  await delay(80);
+  const casesPanelContract = await evaluate(client, `(() => {
+    const panel = document.querySelector("[data-content-panel]");
+    const rows = Array.from(document.querySelectorAll(".work-row[data-map-point]"));
+    const optimal = document.querySelector('.work-row[data-map-point="optimal"]');
+    const before = {
+      rowCount: rows.length,
+      title: document.querySelector("[data-panel-title]")?.textContent.trim(),
+      heading: document.querySelector("#work-title")?.textContent.replace(/\\s+/g, " ").trim(),
+    };
+    optimal?.click();
+    const evidence = document.querySelector("[data-map-evidence]");
+    return {
+      ...before,
+      panelHidden: panel?.getAttribute("aria-hidden"),
+      inspectorOpen: document.querySelector("[data-map-inspector]")?.classList.contains("is-open"),
+      evidenceHidden: evidence?.hidden,
+      result: document.querySelector("[data-map-evidence-result]")?.textContent.trim(),
+      selectedId: document.querySelector("[data-signal-field]")?.dataset.selectedId,
+      point: new URL(location.href).searchParams.get("point"),
+      hash: location.hash,
+      focusOnInspectorClose: document.activeElement?.matches?.("[data-close-inspector]") || false,
+    };
+  })()`);
+  await delay(80);
+  const casesPanelFocus = await evaluate(
+    client,
+    "document.activeElement?.matches?.('[data-close-inspector]') || false",
+  );
+  if (
+    casesPanelContract.rowCount !== 8
+    || casesPanelContract.title !== "КЛЮЧЕВЫЕ КЕЙСЫ"
+    || casesPanelContract.heading !== "КЛЮЧЕВЫЕ КЕЙСЫ"
+    || casesPanelContract.panelHidden !== "true"
+    || !casesPanelContract.inspectorOpen
+    || casesPanelContract.evidenceHidden
+    || !casesPanelContract.result.includes("Передал новому менеджеру")
+    || casesPanelContract.selectedId !== "optimal"
+    || casesPanelContract.point !== "optimal"
+    || casesPanelContract.hash !== "#map"
+    || !casesPanelFocus
+  ) {
+    fail("employer-cases: a case does not lead to its task, role, and result evidence.", {
+      ...casesPanelContract,
+      focusOnInspectorClose: casesPanelFocus,
+    });
+  }
+  await saveScreenshot(client, "desktop-employer-case-optimal");
+  await saveElementScreenshot(client, "crop-desktop-employer-case-optimal", ".map-inspector");
+
+  await navigate(client, `${origin}/?qa=ui-contracts-settings-search`);
 
   await evaluate(client, `(() => {
     const input = document.querySelector("[data-command-input]");

@@ -1,8 +1,10 @@
 # Anton — practice map
 
 Static personal portfolio for a digital product manager, web project lead, and
-design engineer. The site is organized around a semantic four-direction map
-instead of a conventional résumé timeline.
+design engineer. Its primary audience is an employer: a concise case route
+surfaces task, contribution, and outcome, while the semantic four-direction
+map preserves the full authorial model instead of becoming a conventional
+résumé timeline.
 
 ## Map model
 
@@ -14,6 +16,9 @@ instead of a conventional résumé timeline.
   score or a distance from a supposedly objective centre.
 - Point size communicates the personal weight of an experience.
 - Shape distinguishes company, project, personal, and practice nodes.
+- One quiet `2010—2016` anchor summarizes the early progression from content
+  and e-commerce through corporate web products to founding and operating
+  Freya Project; the chronology begins in 2010 rather than the education year.
 - The Ilmix evidence readout is transcribed from the source
   [résumé](https://gorokhovatsky.notion.site/digital-web-digital-f68fc13247614ccb9738d9a85acf29b4?pvs=74):
   role/dates and the 2020 oncology.help audience and bounce-rate comparison.
@@ -39,7 +44,7 @@ route.
 - The map is the full-screen default state; the portfolio does not continue as
   a conventional scrolling page.
 - Node selection opens a compact readout assembled around the selected point as
-  the composition's anchor object. Eleven anchor points add the evidence fields
+  the composition's anchor object. Twelve anchor points add the evidence fields
   `ЗАДАЧА / МОЯ РОЛЬ / РЕЗУЛЬТАТ`; numerical claims are included only where
   they are supported by the source résumé.
 - `СЕАНС НАБЛЮДЕНИЯ` is an optional eight-stop, roughly sixty-second route
@@ -81,10 +86,12 @@ route.
   free-form values are never sent as goal parameters. The four signals used
   for product decisions and the deliberately conservative reading gate are
   documented in [`docs/analytics-decision-signals.md`](docs/analytics-decision-signals.md).
-- With JavaScript unavailable, a focused fallback still exposes selected work,
-  the résumé, email, and Telegram instead of leaving a dead canvas.
+- With JavaScript unavailable, a focused fallback still exposes employer-facing
+  cases, both résumé routes, email, and Telegram instead of leaving a dead canvas.
 - The query bar sits above the system rail and uses the functional prompt
-  `Найти или открыть…` to search nodes or open content panels.
+  `Найти или открыть…` to search nodes or open content panels. It also indexes
+  the evidence fields `ЗАДАЧА / МОЯ РОЛЬ / РЕЗУЛЬТАТ`, so a process, outcome,
+  or metric can find a case without its project name.
 - Primary navigation is part of the map rather than a separate header: an
   indexed row of satellite points on desktop becomes a compact regular menu
   with one icon column, one label column, and equal hit areas on narrow
@@ -140,7 +147,7 @@ route.
   refreshes all 26 content hashes in the managed `map-data.js` manifest.
 - Touch devices keep the direct node-to-inspector interaction and do not render
   hover-only media.
-- Long-form content remains inside the same coordinate system. Projects,
+- Long-form content remains inside the same coordinate system. Key cases,
   approach, and contact appear as groups of soft, dismissible floating
   materials; they never replace the map with a full-height drawer.
 - Contact is one compact material terminal rather than a separate empty
@@ -190,8 +197,9 @@ route.
 
 ## Recruiter and share routes
 
-- The public resume route points to the long-form Notion chronology from
-  navigation, contact, and no-script fallback.
+- The primary public résumé route points to hh.ru from navigation, contact, and
+  no-script fallback. The long-form Notion chronology remains a secondary,
+  evidence-rich route in contact and no-script contexts.
 - `assets/anton-gorokhovatsky-resume.pdf` remains an unlinked draft for a
   separate editorial pass. Rebuild it with `python3 scripts/build-resume-pdf.py`
   in an environment with ReportLab; do not expose it in the interface until it

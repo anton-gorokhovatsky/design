@@ -488,8 +488,8 @@ const invalidateContentStack = () => {
 
 const panelViews = {
   work: {
-    index: "01 / ПРОЕКТЫ",
-    title: "ПРОЕКТЫ",
+    index: "01 / КЕЙСЫ",
+    title: "КЛЮЧЕВЫЕ КЕЙСЫ",
   },
   approach: {
     index: "02 / ПОДХОД",
@@ -706,6 +706,39 @@ panelClose?.addEventListener("click", () => closeContentPanel());
 panelScrim?.addEventListener("click", () => closeContentPanel());
 contentPanelBody?.addEventListener("scroll", scheduleContentStackSync, { passive: true });
 
+contentPanelBody?.addEventListener("click", (event) => {
+  const caseLink = event.target.closest?.(".work-row[data-map-point]");
+
+  if (
+    !caseLink
+    || event.defaultPrevented
+    || event.button !== 0
+    || event.metaKey
+    || event.ctrlKey
+    || event.shiftKey
+    || event.altKey
+  ) {
+    return;
+  }
+
+  const pointId = caseLink.dataset.mapPoint;
+
+  if (!mapButtons.has(pointId)) {
+    return;
+  }
+
+  event.preventDefault();
+  closeContentPanel({ restoreFocus: false });
+  setMapFilter("all");
+  trackPortfolioEvent("point_open", {
+    point_id: pointId,
+    source: "cases",
+  });
+  selectMapItem(pointId, { reveal: true });
+  writeUrlState({ hash: "#map" }, { replace: true });
+  window.requestAnimationFrame(() => inspectorClose?.focus());
+});
+
 if (typeof compactContentStack.addEventListener === "function") {
   compactContentStack.addEventListener("change", invalidateContentStack);
 } else {
@@ -902,14 +935,25 @@ const normalizeSearch = (value) => String(value || "")
   .trim();
 
 const tokenizeSearch = (value) => normalizeSearch(value).split(" ").filter(Boolean);
-const getMapItemSearchFields = (item) => [
-  item.label,
-  item.mapLabel,
-  item.title,
-  item.meta,
-  item.kindLabel,
-  item.description,
-];
+const mapSearchEvidence = JSON.parse(
+  document.querySelector("#map-evidence-data")?.textContent || "{}",
+);
+const getMapItemSearchFields = (item) => {
+  const evidence = mapSearchEvidence[item.id] || {};
+
+  return [
+    item.label,
+    item.mapLabel,
+    item.title,
+    item.meta,
+    item.kindLabel,
+    item.description,
+    evidence.task,
+    evidence.role,
+    evidence.result,
+    evidence.keywords,
+  ];
+};
 const scoreSearchCandidate = ({
   intents = "",
   primary = [],
@@ -934,6 +978,9 @@ const scoreSearchCandidate = ({
   if (normalizedPrimary.some((field) => field.includes(query))) {
     return 500;
   }
+  if (normalizedPrimary.some((field) => tokens.every((token) => field.includes(token)))) {
+    return 450;
+  }
 
   return haystack.includes(query) ? 400 : 300;
 };
@@ -951,7 +998,7 @@ const commandViews = [
     type: "action",
     id: "time",
     title: "ХРОНОЛОГИЯ",
-    meta: "ОПЫТ / 2009—2026 / ГОДОВЫЕ ОРБИТЫ",
+    meta: "ОПЫТ / 2010—2026 / ГОДОВЫЕ ОРБИТЫ",
     intents: "хронология время таймлайн",
     keywords: "время годы хронология таймлайн орбиты",
   },
@@ -974,10 +1021,10 @@ const commandViews = [
   {
     type: "panel",
     id: "work",
-    title: "ИЗБРАННЫЕ ПРОЕКТЫ",
-    meta: "8 ПРОЕКТОВ / 2023—2026",
-    intents: "проекты работы портфолио",
-    keywords: "проекты работы портфолио избранные недавние последние текущие сайты",
+    title: "КЛЮЧЕВЫЕ КЕЙСЫ",
+    meta: "8 КЕЙСОВ / 2017—2026",
+    intents: "кейсы проекты работы портфолио",
+    keywords: "кейсы проекты работы портфолио работодатель результаты вклад задача роль сайты",
   },
   {
     type: "panel",

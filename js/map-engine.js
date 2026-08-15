@@ -230,7 +230,7 @@ const getTimeLayout = (item) => {
     radiusX = 27 + progress * 12;
     radiusY = 20 + progress * 9;
   } else {
-    const progress = Math.max(0, Math.min(1, (2015 - item.timeYear) / 6));
+    const progress = Math.max(0, Math.min(1, (2015 - item.timeYear) / 5));
     radiusX = 39 + progress * 13;
     radiusY = 29 + progress * 9;
   }

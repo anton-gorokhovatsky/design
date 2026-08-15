@@ -819,7 +819,6 @@ const relationshipCascadeAudit = async (page) => {
   });
   const input = page.locator("[data-command-input]");
   await input.fill("Сайт музея");
-  await input.press("ArrowDown");
   await waitForLayout(page, 420);
 
   const search = await page.evaluate(() => {
@@ -1452,12 +1451,12 @@ const accessibilityAcceptanceAudit = async (browser) => {
     || panelOpen.inert
     || !panelOpen.activeIsClose
     || !trappedInside
-    || !dialogSnapshot.includes("ПРОЕКТЫ")
+    || !dialogSnapshot.includes("КЛЮЧЕВЫЕ КЕЙСЫ")
     || !panelClosed.focusReturned
     || panelClosed.hidden !== "true"
     || !panelClosed.inert
   ) {
-    failures.push("the projects dialog loses its name, focus trap, or focus return");
+    failures.push("the cases dialog loses its name, focus trap, or focus return");
   }
 
   const environment = await page.evaluate(() => ({
@@ -1480,7 +1479,7 @@ const accessibilityAcceptanceAudit = async (browser) => {
   await context.close();
 
   return {
-    dialogSnapshotPresent: dialogSnapshot.includes("ПРОЕКТЫ"),
+    dialogSnapshotPresent: dialogSnapshot.includes("КЛЮЧЕВЫЕ КЕЙСЫ"),
     environment,
     failures,
     inspectorSnapshotPresent: inspectorSnapshot.includes("Закрыть карточку"),

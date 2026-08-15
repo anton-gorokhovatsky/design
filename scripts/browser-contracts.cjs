@@ -549,8 +549,9 @@ const validateMobileContactResume = (resume) => {
   if (
     resume.visible
     && resume.horizontalOverflow <= 1
-    && resume.links.length === 1
-    && resume.links[0].href.startsWith("https://gorokhovatsky.notion.site/")
+    && resume.links.length === 2
+    && resume.links[0].href.startsWith("https://hh.ru/resume/")
+    && resume.links[1].href.startsWith("https://gorokhovatsky.notion.site/")
     && resume.links.every((link) => (
       link.lines === 1
       && link.width <= resume.containerWidth + 1
@@ -561,7 +562,7 @@ const validateMobileContactResume = (resume) => {
 
   return [{
     id: "contact-resume-wrap",
-    message: "mobile Notion resume route is missing or wraps incorrectly",
+    message: "mobile employer and detailed resume routes are missing or wrap incorrectly",
     details: resume,
   }];
 };
