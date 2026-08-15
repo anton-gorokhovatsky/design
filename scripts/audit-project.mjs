@@ -884,6 +884,11 @@ requireContract(
   "Core controls must use the accepted Russian interface labels.",
 );
 requireContract(
+  /class="practice-map"[\s\S]*?data-practice-map[\s\S]*?data-active-kind="all"[\s\S]*?data-active-kinds="company,project,personal,practice"[\s\S]*?>/m.test(indexSource),
+  "filter-first-paint",
+  "The initial map markup must expose the complete filter composition before JavaScript runs.",
+);
+requireContract(
   /data-map-nodes[\s\S]*?role="group"[\s\S]*?aria-label=/m.test(indexSource),
   "map-group",
   "Map nodes need a named accessibility group.",
