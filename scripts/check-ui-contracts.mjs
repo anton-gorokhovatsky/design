@@ -1257,6 +1257,7 @@ const auditBrowser = async (client, origin) => {
     count: document.querySelectorAll(".command-result").length,
     active: document.querySelector("[data-command-input]")?.getAttribute("aria-activedescendant"),
     firstResult: document.querySelector(".command-result")?.id || "",
+    closeLabel: document.querySelector(".command-dock__submit")?.getAttribute("aria-label"),
   }))()`);
   if (
     !searchState.visible.searchResults
@@ -1264,6 +1265,7 @@ const auditBrowser = async (client, origin) => {
     || searchContract.count < 1
     || searchContract.active !== "command-result-node-herman"
     || searchContract.firstResult !== "command-result-node-herman"
+    || searchContract.closeLabel !== "Закрыть поиск"
   ) {
     fail("search: visible results and active option are not synchronized.", searchContract);
   }
@@ -1275,6 +1277,25 @@ const auditBrowser = async (client, origin) => {
   }
   await saveScreenshot(client, "desktop-search-results");
   await saveElementScreenshot(client, "crop-desktop-search-results", ".command-results");
+
+  await evaluate(client, "document.querySelector('.command-dock__submit')?.click()");
+  await delay(40);
+  const searchCloseContract = await evaluate(client, `(() => ({
+    expanded: document.querySelector("[data-command-input]")?.getAttribute("aria-expanded"),
+    formOpen: document.querySelector("[data-command-form]")?.classList.contains("is-open"),
+    resultsHidden: document.querySelector("[data-command-results]")?.getAttribute("aria-hidden"),
+    submitLabel: document.querySelector(".command-dock__submit")?.getAttribute("aria-label"),
+    query: document.querySelector("[data-command-input]")?.value,
+  }))()`);
+  if (
+    searchCloseContract.expanded !== "false"
+    || searchCloseContract.formOpen
+    || searchCloseContract.resultsHidden !== "true"
+    || searchCloseContract.submitLabel !== "Выполнить запрос"
+    || searchCloseContract.query !== "сайт герман"
+  ) {
+    fail("search-close: the visible close action does not dismiss only the results list.", searchCloseContract);
+  }
 
   const searchIntentCases = [
     ["герман сайт", "command-result-node-herman"],

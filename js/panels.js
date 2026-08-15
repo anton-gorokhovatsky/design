@@ -780,6 +780,7 @@ const commandForm = document.querySelector("[data-command-form]");
 const commandInput = document.querySelector("[data-command-input]");
 const commandResults = document.querySelector("[data-command-results]");
 const commandStatus = document.querySelector("[data-command-status]");
+const commandSubmit = commandForm?.querySelector(".command-dock__submit");
 const syncCommandFocusViewport = () => {
   const usesFocusedMobileLayout = compactCommandViewport.matches
     && document.activeElement === commandInput;
@@ -1054,6 +1055,10 @@ const setCommandOpen = (isOpen) => {
   commandResults?.classList.toggle("is-open", isOpen);
   commandInput?.setAttribute("aria-expanded", String(isOpen));
   commandResults?.setAttribute("aria-hidden", String(!isOpen));
+  commandSubmit?.setAttribute(
+    "aria-label",
+    isOpen ? "Закрыть поиск" : "Выполнить запрос",
+  );
 
   if (commandResults) {
     commandResults.inert = !isOpen;
@@ -1331,10 +1336,26 @@ commandInput?.addEventListener("keydown", (event) => {
 
 commandInput?.addEventListener("blur", () => {
   window.setTimeout(() => {
+    if (commandForm?.contains(document.activeElement)) {
+      syncCommandFocusViewport();
+      return;
+    }
+
     setCommandOpen(false);
     setCommandStatus("");
     syncCommandFocusViewport();
   }, 120);
+});
+
+commandSubmit?.addEventListener("click", (event) => {
+  if (!commandForm?.classList.contains("is-open")) {
+    return;
+  }
+
+  event.preventDefault();
+  setCommandOpen(false);
+  setCommandStatus("");
+  clearSearchHighlight();
 });
 
 commandResults?.addEventListener("pointerdown", (event) => {

@@ -6472,6 +6472,36 @@ body:has(.command-dock.is-open) .map-links.has-active-relation {
   transform: translateY(-50%) rotate(45deg);
 }
 
+.command-dock.is-open .command-dock__submit-mark {
+  width: 16px;
+  height: 16px;
+}
+
+.command-dock.is-open .command-dock__submit-mark::before,
+.command-dock.is-open .command-dock__submit-mark::after {
+  top: 50%;
+  right: auto;
+  left: 50%;
+  width: 15px;
+  height: 1.5px;
+  border: 0;
+  background: currentColor;
+  transform-origin: center;
+}
+
+.command-dock.is-open .command-dock__submit-mark::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.command-dock.is-open .command-dock__submit-mark::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.command-dock.is-open .command-dock__submit:hover,
+.command-dock.is-open .command-dock__submit:focus-visible {
+  transform: none;
+}
+
 .command-result__mark {
   position: relative;
   display: block;
