@@ -1157,6 +1157,9 @@ const analyticsConsentAudit = async (page, viewport, label) => {
   const result = await page.evaluate(() => {
     const consent = document.querySelector("[data-analytics-consent]");
     const rect = consent?.getBoundingClientRect();
+    const analyticsActions = consent
+      ?.querySelector(".settings-panel__analytics-actions")
+      ?.getBoundingClientRect();
     const input = document.querySelector("[data-command-input]");
     const read = (selector) => {
       const element = document.querySelector(selector);
@@ -1246,6 +1249,46 @@ const analyticsConsentAudit = async (page, viewport, label) => {
         width: rect.width,
         height: rect.height,
       } : null,
+      trailingGap: rect && analyticsActions
+        ? rect.bottom - analyticsActions.bottom
+        : null,
+    };
+  });
+  await page.screenshot({
+    path: path.join(artifactDir, `${label}-analytics-consent.png`),
+    fullPage: false,
+  });
+  await page.evaluate(() => {
+    document.querySelector("[data-close-settings]")?.click();
+    document.querySelector("[data-nav-utility][data-open-settings]")?.click();
+  });
+  await waitForLayout(page, 80);
+  const generalSettings = await page.evaluate(() => {
+    const panel = document.querySelector("[data-settings-panel]");
+    const body = panel?.querySelector(".settings-panel__body");
+    const actions = panel
+      ?.querySelector(".settings-panel__analytics-actions")
+      ?.getBoundingClientRect();
+    const rect = panel?.getBoundingClientRect();
+
+    return {
+      mode: panel?.dataset.settingsMode || "",
+      title: panel?.querySelector("[data-settings-title]")?.innerText.trim() || "",
+      screenControlsVisible: Boolean(
+        panel?.querySelector("[data-settings-screen-controls]")?.getClientRects().length,
+      ),
+      bodyScrollable: Boolean(body && body.scrollHeight > body.clientHeight + 1),
+      overflowX: document.documentElement.scrollWidth
+        - document.documentElement.clientWidth,
+      rect: rect ? {
+        left: rect.left,
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+        width: rect.width,
+        height: rect.height,
+      } : null,
+      trailingGap: rect && actions ? rect.bottom - actions.bottom : null,
     };
   });
   const material = await materialAudit(page);
@@ -1268,14 +1311,25 @@ const analyticsConsentAudit = async (page, viewport, label) => {
     && rect.bottom <= viewport.height + 0.5;
   const verticallyBalanced = rect
     && Math.abs(rect.top - (viewport.height - rect.bottom)) <= 1;
+  const generalRect = generalSettings.rect;
+  const generalWithinViewport = generalRect
+    && generalRect.left >= -0.5
+    && generalRect.top >= -0.5
+    && generalRect.right <= viewport.width + 0.5
+    && generalRect.bottom <= viewport.height + 0.5;
+  const generalVerticallyBalanced = generalRect
+    && Math.abs(generalRect.top - (viewport.height - generalRect.bottom)) <= 1;
 
   await page.screenshot({
-    path: path.join(artifactDir, `${label}-analytics-consent.png`),
+    path: path.join(artifactDir, `${label}-settings-panel.png`),
     fullPage: false,
   });
 
   return {
     ...result,
+    generalSettings,
+    generalWithinViewport,
+    generalVerticallyBalanced,
     materialFailures,
     backgroundControlsHidden,
     withinViewport,
@@ -1321,8 +1375,24 @@ const analyticsConsentAudit = async (page, viewport, label) => {
       || result.mapNodesOpacity > 0.1
       || result.signalOpacity > 0.1
       || result.axisLabelOpacity !== 0
+      || result.trailingGap === null
+      || result.trailingGap < 12
+      || result.trailingGap > 40
       || !withinViewport
       || !verticallyBalanced
+      || generalSettings.mode !== "settings"
+      || generalSettings.title !== "НАСТРОЙКИ САЙТА"
+      || !generalSettings.screenControlsVisible
+      || generalSettings.overflowX !== 0
+      || !generalWithinViewport
+      || !generalVerticallyBalanced
+      || (viewport.height >= 800 && (
+        generalSettings.trailingGap === null
+        || generalSettings.trailingGap < 12
+        || generalSettings.trailingGap > 40
+        || generalSettings.bodyScrollable
+      ))
+      || (viewport.width <= 320 && !generalSettings.bodyScrollable)
       || materialFailures.length > 0,
   };
 };

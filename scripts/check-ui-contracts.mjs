@@ -1433,10 +1433,10 @@ const auditBrowser = async (client, origin) => {
       focusOnInspectorClose: document.activeElement?.matches?.("[data-close-inspector]") || false,
     };
   })()`);
-  await delay(80);
-  const casesPanelFocus = await evaluate(
+  const casesPanelFocus = await waitForExpression(
     client,
     "document.activeElement?.matches?.('[data-close-inspector]') || false",
+    { timeout: 1200, interval: 40 },
   );
   if (
     casesPanelContract.rowCount !== 8
