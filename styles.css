@@ -9953,7 +9953,13 @@ html[data-focus-modality="keyboard"] .settings-panel__close:focus-visible {
   min-height: 0;
   overflow: auto;
   overscroll-behavior: contain;
-  scrollbar-width: thin;
+  scrollbar-width: none;
+}
+
+.settings-panel__body::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .settings-panel [data-settings-copy="analytics"],
@@ -10424,6 +10430,17 @@ html[data-focus-modality="keyboard"]
   }
 }
 
+@media (max-width: 680px) and (min-height: 620px) {
+  .settings-panel__details {
+    margin-top: 30px;
+  }
+
+  .settings-panel__analytics-actions {
+    margin-top: 36px;
+    padding-bottom: 10px;
+  }
+}
+
 @media (max-width: 340px) {
   .settings-panel {
     padding-inline: 18px;
@@ -10484,6 +10501,16 @@ html[data-focus-modality="keyboard"]
 }
 
 @media (forced-colors: active) {
+  .settings-panel__body {
+    scrollbar-width: auto;
+  }
+
+  .settings-panel__body::-webkit-scrollbar {
+    display: block;
+    width: auto;
+    height: auto;
+  }
+
   [data-material-surface] {
     border: 1px solid CanvasText;
     background: Canvas;
