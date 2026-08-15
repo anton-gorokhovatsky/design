@@ -1694,7 +1694,8 @@ const auditBrowser = async (client, origin) => {
   if (
     !foodForks.description.includes("гостям буквально снесло крышу")
     || !foodForks.description.includes("точности внимания")
-    || !foodForks.description.includes("огромная работа остаётся за сценой")
+    || !foodForks.description.includes("прежде всего любить и уважать себя")
+    || !foodForks.description.includes("потратить себя без остатка")
     || foodForks.description.includes("Чикаго")
     || foodForks.meta !== "ВКУС / СЕРВИС / ДЕТАЛИ"
     || foodForks.linkHidden
