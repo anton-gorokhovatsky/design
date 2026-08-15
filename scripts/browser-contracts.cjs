@@ -287,6 +287,12 @@ const readMobileSearchFocusedExpression = `(() => {
   const navigationToggle = document.querySelector(
     "[data-constellation-nav-toggle]",
   );
+  const activeResult = results?.querySelector(
+    ".command-result[aria-selected='true']",
+  );
+  const inactiveResult = results?.querySelector(
+    ".command-result[aria-selected='false']",
+  );
   const dockBounds = rect("[data-command-form]");
   const resultsBounds = rect("[data-command-results]");
   return {
@@ -316,6 +322,14 @@ const readMobileSearchFocusedExpression = `(() => {
     )?.textContent.trim(),
     navigationToggleControls: navigationToggle?.getAttribute("aria-controls"),
     navigationToggleExpanded: navigationToggle?.getAttribute("aria-expanded"),
+    focusModality: document.documentElement.dataset.focusModality,
+    activeSelected: activeResult?.getAttribute("aria-selected"),
+    activeBackground: activeResult
+      ? getComputedStyle(activeResult).backgroundColor
+      : null,
+    inactiveBackground: inactiveResult
+      ? getComputedStyle(inactiveResult).backgroundColor
+      : null,
   };
 })()`;
 
@@ -493,6 +507,9 @@ const validateMobileSearchContract = ({
     || focused.navigationToggleLabel !== "Закрыть поиск"
     || focused.navigationToggleControls !== "command-results"
     || focused.navigationToggleExpanded !== null
+    || focused.focusModality !== "pointer"
+    || focused.activeSelected !== "true"
+    || focused.activeBackground !== focused.inactiveBackground
   ) {
     failures.push({
       id: "focused-state",
@@ -592,6 +609,9 @@ const validateMobileSafariSplitSearchContract = ({ emulation, focused }) => {
     && focused.navigationToggleLabel === "Закрыть поиск"
     && focused.navigationToggleControls === "command-results"
     && focused.navigationToggleExpanded === null
+    && focused.focusModality === "pointer"
+    && focused.activeSelected === "true"
+    && focused.activeBackground === focused.inactiveBackground
   ) {
     return [];
   }

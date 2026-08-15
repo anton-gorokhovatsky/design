@@ -4485,6 +4485,25 @@ body.has-content-panel .constellation-nav {
   .command-results {
     border-radius: 22px;
   }
+
+  /* Touch already identifies the row spatially. Do not let iOS retain a
+     pointer hover or the combobox's automatic active option as a false
+     selected surface after the finger leaves the screen. */
+  html[data-focus-modality="pointer"] .command-result:hover,
+  html[data-focus-modality="pointer"] .command-result:focus,
+  html[data-focus-modality="pointer"] .command-result:focus-visible,
+  html[data-focus-modality="pointer"] .command-result.is-active,
+  html[data-focus-modality="pointer"]
+    .command-result[aria-selected="true"] {
+    background: transparent;
+    outline: none;
+  }
+
+  html[data-focus-modality="keyboard"] .command-result.is-active,
+  html[data-focus-modality="keyboard"]
+    .command-result[aria-selected="true"] {
+    background: color-mix(in srgb, var(--content-ink) 6%, transparent);
+  }
 }
 
 /* Edge controls form one predictable instrument-console family. Context
