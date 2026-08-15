@@ -16,8 +16,10 @@ const projectRoot = resolve(scriptDirectory, "..");
 const require = createRequire(import.meta.url);
 const {
   chromiumScenarioCatalog,
+  clickMobileSearchDismissExpression,
   dispatchMobileSearchKeyExpression,
   emulateMobileSafariSplitViewportExpression,
+  exposeMobileSearchDismissFallbackExpression,
   mobileMetricViewport,
   mobileSafariSplitViewport,
   mobileSearchViewport,
@@ -27,6 +29,7 @@ const {
   readMobileContactResumeExpression,
   readMobileMetricGroupsExpression,
   readMobileSearchArrowExpression,
+  readMobileSearchDismissFallbackExpression,
   readMobileSearchFocusedExpression,
   readMobileSearchRestoredExpression,
   startStaticServer,
@@ -1723,6 +1726,22 @@ const auditBrowser = async (client, origin) => {
     ".command-results",
   );
 
+  await evaluate(client, exposeMobileSearchDismissFallbackExpression);
+  await delay(40);
+  const mobileSearchFallback = await evaluate(
+    client,
+    readMobileSearchDismissFallbackExpression,
+  );
+  await saveScreenshot(client, "mobile-search-visible-dismiss");
+  await evaluate(client, clickMobileSearchDismissExpression);
+  await delay(160);
+  const mobileSearchDismissed = await evaluate(
+    client,
+    readMobileSearchRestoredExpression,
+  );
+
+  await evaluate(client, openMobileSearchExpression);
+  await delay(140);
   await evaluate(client, dispatchMobileSearchKeyExpression("ArrowUp"));
   const mobileSearchArrow = await evaluate(
     client,
@@ -1736,6 +1755,8 @@ const auditBrowser = async (client, origin) => {
   );
   for (const failure of validateMobileSearchContract({
     arrow: mobileSearchArrow,
+    dismissed: mobileSearchDismissed,
+    fallback: mobileSearchFallback,
     focused: mobileSearchFocused,
     restored: mobileSearchRestored,
   })) {

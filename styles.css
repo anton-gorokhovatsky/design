@@ -5700,20 +5700,29 @@ body:has(.command-dock.is-open) .origin-marker__label {
       transform 220ms var(--motion-shift);
   }
 
-  .control-console .constellation-nav.is-open .constellation-nav__cluster {
+  .control-console
+    .constellation-nav:is(.is-open, .is-command-close)
+    .constellation-nav__cluster {
     transform: none;
   }
 
-  .control-console .constellation-nav.is-open .constellation-nav__cluster i {
+  .control-console
+    .constellation-nav:is(.is-open, .is-command-close)
+    .constellation-nav__cluster
+    i {
     opacity: 0;
   }
 
-  .control-console .constellation-nav.is-open .constellation-nav__cluster::before {
+  .control-console
+    .constellation-nav:is(.is-open, .is-command-close)
+    .constellation-nav__cluster::before {
     opacity: 1;
     transform: translate(-50%, -50%) rotate(45deg);
   }
 
-  .control-console .constellation-nav.is-open .constellation-nav__cluster::after {
+  .control-console
+    .constellation-nav:is(.is-open, .is-command-close)
+    .constellation-nav__cluster::after {
     opacity: 1;
     transform: translate(-50%, -50%) rotate(-45deg);
   }
@@ -6718,6 +6727,10 @@ body:has(.command-dock.is-open) .map-links.has-active-relation {
       width 260ms var(--motion-shift),
       height 260ms var(--motion-shift),
       border-radius 260ms var(--motion-shift);
+  }
+
+  .control-console .constellation-nav.is-command-close {
+    z-index: 66;
   }
 
   .control-console .constellation-nav.is-open {

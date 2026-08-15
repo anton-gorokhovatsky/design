@@ -224,6 +224,17 @@ const openMobileSearchExpression = `(() => {
   return true;
 })()`;
 
+const exposeMobileSearchDismissFallbackExpression = `(() => {
+  document.body.classList.remove("has-command-focus");
+  return true;
+})()`;
+
+const clickMobileSearchDismissExpression = `(() => {
+  const toggle = document.querySelector("[data-constellation-nav-toggle]");
+  toggle?.click();
+  return Boolean(toggle);
+})()`;
+
 const emulateMobileSafariSplitViewportExpression = `(() => {
   const visibleHeight = ${mobileSafariSplitViewport.visibleHeight};
   const fakeVisualViewport = {
@@ -272,6 +283,10 @@ const readMobileSearchFocusedExpression = `(() => {
   );
   const input = document.querySelector("[data-command-input]");
   const results = document.querySelector("[data-command-results]");
+  const navigation = document.querySelector("[data-constellation-nav]");
+  const navigationToggle = document.querySelector(
+    "[data-constellation-nav-toggle]",
+  );
   const dockBounds = rect("[data-command-form]");
   const resultsBounds = rect("[data-command-results]");
   return {
@@ -293,8 +308,63 @@ const readMobileSearchFocusedExpression = `(() => {
       document.querySelector(".system-dock"),
     ).visibility,
     navigationVisibility: getComputedStyle(
-      document.querySelector("[data-constellation-nav]"),
+      navigation,
     ).visibility,
+    navigationCommandClose: navigation?.classList.contains("is-command-close"),
+    navigationToggleLabel: document.querySelector(
+      "[data-constellation-nav-toggle-label]",
+    )?.textContent.trim(),
+    navigationToggleControls: navigationToggle?.getAttribute("aria-controls"),
+    navigationToggleExpanded: navigationToggle?.getAttribute("aria-expanded"),
+  };
+})()`;
+
+const readMobileSearchDismissFallbackExpression = `(() => {
+  const navigation = document.querySelector("[data-constellation-nav]");
+  const toggle = document.querySelector("[data-constellation-nav-toggle]");
+  const cluster = toggle?.querySelector(".constellation-nav__cluster");
+  const results = document.querySelector("[data-command-results]");
+  const bounds = toggle?.getBoundingClientRect();
+  return {
+    bodyHasFocus: document.body.classList.contains("has-command-focus"),
+    button: bounds ? {
+      top: bounds.top,
+      right: bounds.right,
+      bottom: bounds.bottom,
+      left: bounds.left,
+      width: bounds.width,
+      height: bounds.height,
+    } : null,
+    buttonFits: Boolean(
+      bounds
+      && bounds.top >= -1
+      && bounds.left >= -1
+      && bounds.right <= innerWidth + 1
+      && bounds.bottom <= innerHeight + 1
+    ),
+    dotsOpacity: Array.from(cluster?.querySelectorAll("i") || []).map(
+      (dot) => getComputedStyle(dot).opacity,
+    ),
+    inputExpanded: document.querySelector("[data-command-input]")
+      ?.getAttribute("aria-expanded"),
+    navigationCommandClose: navigation?.classList.contains("is-command-close"),
+    navigationOpacity: getComputedStyle(navigation).opacity,
+    navigationPointerEvents: getComputedStyle(navigation).pointerEvents,
+    navigationVisibility: getComputedStyle(navigation).visibility,
+    navigationZIndex: Number.parseInt(getComputedStyle(navigation).zIndex, 10),
+    resultsOpen: results?.classList.contains("is-open"),
+    resultsZIndex: Number.parseInt(getComputedStyle(results).zIndex, 10),
+    toggleAfterOpacity: cluster
+      ? getComputedStyle(cluster, "::after").opacity
+      : null,
+    toggleBeforeOpacity: cluster
+      ? getComputedStyle(cluster, "::before").opacity
+      : null,
+    toggleControls: toggle?.getAttribute("aria-controls"),
+    toggleExpanded: toggle?.getAttribute("aria-expanded"),
+    toggleLabel: document.querySelector(
+      "[data-constellation-nav-toggle-label]",
+    )?.textContent.trim(),
   };
 })()`;
 
@@ -327,6 +397,17 @@ const readMobileSearchRestoredExpression = `(() => ({
   navigationVisibility: getComputedStyle(
     document.querySelector("[data-constellation-nav]"),
   ).visibility,
+  navigationCommandClose: document.querySelector("[data-constellation-nav]")
+    ?.classList.contains("is-command-close"),
+  navigationToggleLabel: document.querySelector(
+    "[data-constellation-nav-toggle-label]",
+  )?.textContent.trim(),
+  navigationToggleControls: document.querySelector(
+    "[data-constellation-nav-toggle]",
+  )?.getAttribute("aria-controls"),
+  navigationToggleExpanded: document.querySelector(
+    "[data-constellation-nav-toggle]",
+  )?.getAttribute("aria-expanded"),
 }))()`;
 
 const readMobileMetricGroupsExpression = `(() => {
@@ -391,6 +472,8 @@ const readMobileContactResumeExpression = `(() => {
 
 const validateMobileSearchContract = ({
   arrow,
+  dismissed,
+  fallback,
   focused,
   restored,
 }) => {
@@ -406,11 +489,44 @@ const validateMobileSearchContract = ({
     || focused.overflowX !== 0
     || focused.systemDockVisibility !== "hidden"
     || focused.navigationVisibility !== "hidden"
+    || !focused.navigationCommandClose
+    || focused.navigationToggleLabel !== "Закрыть поиск"
+    || focused.navigationToggleControls !== "command-results"
+    || focused.navigationToggleExpanded !== null
   ) {
     failures.push({
       id: "focused-state",
       message: "focused search does not fit the keyboard-sized viewport",
       details: focused,
+    });
+  }
+
+  if (
+    fallback.bodyHasFocus
+    || !fallback.navigationCommandClose
+    || fallback.navigationVisibility !== "visible"
+    || fallback.navigationOpacity !== "1"
+    || fallback.navigationPointerEvents === "none"
+    || fallback.toggleLabel !== "Закрыть поиск"
+    || fallback.toggleControls !== "command-results"
+    || fallback.toggleExpanded !== null
+    || fallback.inputExpanded !== "true"
+    || !fallback.resultsOpen
+    || !fallback.buttonFits
+    || fallback.button?.width < 40
+    || fallback.button?.height < 40
+    || fallback.toggleBeforeOpacity !== "1"
+    || fallback.toggleAfterOpacity !== "1"
+    || fallback.dotsOpacity.length !== 4
+    || fallback.dotsOpacity.some((opacity) => opacity !== "0")
+    || !Number.isFinite(fallback.navigationZIndex)
+    || !Number.isFinite(fallback.resultsZIndex)
+    || fallback.navigationZIndex <= fallback.resultsZIndex
+  ) {
+    failures.push({
+      id: "visible-dismiss",
+      message: "open mobile results lack a visible, labelled close action",
+      details: fallback,
     });
   }
 
@@ -426,14 +542,28 @@ const validateMobileSearchContract = ({
     });
   }
 
-  if (
-    restored.focused
-    || restored.bodyHasFocus
-    || restored.expanded !== "false"
-    || restored.pageScrollY !== 0
-    || restored.systemDockVisibility !== "visible"
-    || restored.navigationVisibility !== "visible"
-  ) {
+  const restoredStateFails = (state) => (
+    state.focused
+    || state.bodyHasFocus
+    || state.expanded !== "false"
+    || state.pageScrollY !== 0
+    || state.systemDockVisibility !== "visible"
+    || state.navigationVisibility !== "visible"
+    || state.navigationCommandClose
+    || state.navigationToggleLabel !== "Открыть навигацию"
+    || state.navigationToggleControls !== "constellation-nav-orbit"
+    || state.navigationToggleExpanded !== "false"
+  );
+
+  if (restoredStateFails(dismissed)) {
+    failures.push({
+      id: "button-dismiss",
+      message: "mobile close action does not restore the map controls",
+      details: dismissed,
+    });
+  }
+
+  if (restoredStateFails(restored)) {
     failures.push({
       id: "escape-restore",
       message: "Escape does not restore the map controls",
@@ -458,6 +588,10 @@ const validateMobileSafariSplitSearchContract = ({ emulation, focused }) => {
     && focused.overflowX === 0
     && focused.systemDockVisibility === "hidden"
     && focused.navigationVisibility === "hidden"
+    && focused.navigationCommandClose
+    && focused.navigationToggleLabel === "Закрыть поиск"
+    && focused.navigationToggleControls === "command-results"
+    && focused.navigationToggleExpanded === null
   ) {
     return [];
   }
@@ -586,8 +720,10 @@ const validateMobileMetricGroups = (metricGroups) => {
 
 module.exports = {
   chromiumScenarioCatalog,
+  clickMobileSearchDismissExpression,
   dispatchMobileSearchKeyExpression,
   emulateMobileSafariSplitViewportExpression,
+  exposeMobileSearchDismissFallbackExpression,
   mobileMetricViewport,
   mobileSafariSplitViewport,
   mobileSearchViewport,
@@ -597,6 +733,7 @@ module.exports = {
   readMobileContactResumeExpression,
   readMobileMetricGroupsExpression,
   readMobileSearchArrowExpression,
+  readMobileSearchDismissFallbackExpression,
   readMobileSearchFocusedExpression,
   readMobileSearchRestoredExpression,
   startStaticServer,

@@ -3,6 +3,8 @@ const fs = require("node:fs/promises");
 const os = require("node:os");
 const path = require("node:path");
 const {
+  clickMobileSearchDismissExpression,
+  exposeMobileSearchDismissFallbackExpression,
   mobileMetricViewport,
   mobileSearchViewport,
   openMobileSearchExpression,
@@ -11,6 +13,7 @@ const {
   readMobileContactResumeExpression,
   readMobileMetricGroupsExpression,
   readMobileSearchArrowExpression,
+  readMobileSearchDismissFallbackExpression,
   readMobileSearchFocusedExpression,
   readMobileSearchRestoredExpression,
   startStaticServer,
@@ -1064,6 +1067,22 @@ const mobileSearchViewportAudit = async (browser) => {
     path: path.join(artifactDir, "390x430-dark-mobile-search.png"),
     fullPage: false,
   });
+
+  await page.evaluate(exposeMobileSearchDismissFallbackExpression);
+  await waitForLayout(page, 40);
+  const fallback = await page.evaluate(
+    readMobileSearchDismissFallbackExpression,
+  );
+  await page.screenshot({
+    path: path.join(artifactDir, "390x430-dark-mobile-search-dismiss.png"),
+    fullPage: false,
+  });
+  await page.evaluate(clickMobileSearchDismissExpression);
+  await waitForLayout(page, 160);
+  const dismissed = await page.evaluate(readMobileSearchRestoredExpression);
+
+  await page.evaluate(openMobileSearchExpression);
+  await waitForLayout(page, 140);
   await page.keyboard.press("ArrowUp");
   const arrow = await page.evaluate(readMobileSearchArrowExpression);
 
@@ -1081,7 +1100,13 @@ const mobileSearchViewportAudit = async (browser) => {
   const metricGroups = await page.evaluate(readMobileMetricGroupsExpression);
   const failures = [
     ...validateCompactAuthorship(authorship),
-    ...validateMobileSearchContract({ arrow, focused, restored }),
+    ...validateMobileSearchContract({
+      arrow,
+      dismissed,
+      fallback,
+      focused,
+      restored,
+    }),
     ...validateMobileMetricGroups(metricGroups),
   ].map((failure) => failure.message);
   await page.screenshot({
@@ -1093,8 +1118,10 @@ const mobileSearchViewportAudit = async (browser) => {
   return {
     arrow,
     authorship,
+    dismissed,
     failure: failures.length > 0,
     failures,
+    fallback,
     focused,
     metricGroups,
     restored,
