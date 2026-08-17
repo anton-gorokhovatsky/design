@@ -210,9 +210,12 @@ route.
   `1200×630` previews are reproduced with
   `node scripts/capture-share-images.mjs`; pass route IDs to refresh only
   selected images.
-- `node scripts/check-publication-assets.mjs` keeps the six canonical/OG
-  routes, their image geometry, the sitemap, and the draft PDF integrity in one
-  reproducible contract.
+- The main `1200×630` browser share image is reproduced from the current
+  `?og=1` site state with `node scripts/capture-share-images.mjs site`; its
+  metadata URL uses the first 12 characters of the JPEG SHA-256 as a cache key.
+- `node scripts/check-publication-assets.mjs` keeps the main share image, the
+  six canonical/OG routes, their image geometry, the sitemap, and the draft PDF
+  integrity in one reproducible contract.
 - Arial/Helvetica remain system fallbacks only. The constellation positions
   each glyph independently on the canvas, so its geometry does not require a
   monospace font.

@@ -2,7 +2,7 @@
 
 import { mkdirSync } from "node:fs";
 import { createRequire } from "node:module";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
@@ -12,26 +12,34 @@ const require = createRequire(import.meta.url);
 const { chromium } = require("playwright");
 const { startStaticServer } = require("./browser-contracts.cjs");
 
+const siteShare = {
+  id: "site",
+  outputPath: join(projectRoot, "assets", "og-signal.jpg"),
+};
 const sharePoints = [
-  { id: "garage", output: "garage.jpg" },
-  { id: "narkomfin", output: "narkomfin.jpg" },
-  { id: "tarski", output: "tarski.jpg" },
-  { id: "doronin", output: "doronin.jpg" },
-  { id: "eleven", output: "eleven.jpg" },
-  { id: "shirokostup", output: "shirokostup.jpg" },
-];
+  "garage",
+  "narkomfin",
+  "tarski",
+  "doronin",
+  "eleven",
+  "shirokostup",
+].map((id) => ({
+  id,
+  outputPath: join(outputDirectory, `${id}.jpg`),
+}));
+const shareCaptures = [siteShare, ...sharePoints];
 const requestedIds = process.argv.slice(2);
-const selectedPoints = requestedIds.length === 0
+const selectedCaptures = requestedIds.length === 0
   ? sharePoints
   : requestedIds.map((id) => {
-    const point = sharePoints.find((candidate) => candidate.id === id);
-    if (!point) {
+    const capture = shareCaptures.find((candidate) => candidate.id === id);
+    if (!capture) {
       throw new Error(
-        `Unknown share point "${id}". Expected one of: `
-          + sharePoints.map(({ id: availableId }) => availableId).join(", "),
+        `Unknown share capture "${id}". Expected one of: `
+          + shareCaptures.map(({ id: availableId }) => availableId).join(", "),
       );
     }
-    return point;
+    return capture;
   });
 
 const { origin, server } = await startStaticServer({ projectRoot });
@@ -58,25 +66,36 @@ try {
     viewport: { width: 1200, height: 630 },
     colorScheme: "dark",
     deviceScaleFactor: 1,
+    reducedMotion: "reduce",
   });
   const page = await context.newPage();
 
-  for (const point of selectedPoints) {
-    await page.goto(`${origin}/?og=1&point=${point.id}`, {
+  for (const capture of selectedCaptures) {
+    const pointQuery = capture.id === "site" ? "" : `&point=${capture.id}`;
+    await page.goto(`${origin}/?og=1${pointQuery}`, {
       waitUntil: "domcontentloaded",
     });
     await page.evaluate(() => document.fonts?.ready);
-    await page.locator(".map-inspector.is-open").waitFor({
+    await page.locator(
+      capture.id === "site" ? ".share-heading" : ".map-inspector.is-open",
+    ).waitFor({
+      state: "visible",
+      timeout: 10000,
+    });
+    await page.locator(".map-node").first().waitFor({
       state: "visible",
       timeout: 10000,
     });
     await page.waitForTimeout(500);
     await page.screenshot({
-      path: join(outputDirectory, point.output),
+      path: capture.outputPath,
       type: "jpeg",
       quality: 90,
+      animations: "disabled",
     });
-    console.log(`Captured assets/share/${point.output}`);
+    console.log(
+      `Captured ${relative(projectRoot, capture.outputPath).replaceAll("\\", "/")}`,
+    );
   }
 
   await context.close();

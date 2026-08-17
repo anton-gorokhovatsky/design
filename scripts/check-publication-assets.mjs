@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -96,6 +97,64 @@ const readJpegDimensions = (path) => {
 
   throw new Error("JPEG dimensions not found");
 };
+
+const indexSource = readText("index.html");
+const mainSharePath = join(projectRoot, "assets", "og-signal.jpg");
+const mainShareFile = readFileSync(mainSharePath);
+const mainShareVersion = createHash("sha256")
+  .update(mainShareFile)
+  .digest("hex")
+  .slice(0, 12);
+const mainShareUrl = `${publicOrigin}/assets/og-signal.jpg?v=${mainShareVersion}`;
+const mainOgImage = metaContent(indexSource, "property", "og:image");
+const mainSecureImage = metaContent(indexSource, "property", "og:image:secure_url");
+const mainTwitterImage = metaContent(indexSource, "name", "twitter:image");
+const mainOgImageAlt = metaContent(indexSource, "property", "og:image:alt");
+const mainTwitterImageAlt = metaContent(indexSource, "name", "twitter:image:alt");
+
+if (
+  mainOgImage !== mainShareUrl
+  || mainSecureImage !== mainShareUrl
+  || mainTwitterImage !== mainShareUrl
+  || mainOgImageAlt !== mainTwitterImageAlt
+  || mainOgImageAlt.length < 60
+  || metaContent(indexSource, "property", "og:image:width") !== "1200"
+  || metaContent(indexSource, "property", "og:image:height") !== "630"
+) {
+  failures.push("index.html: main share image metadata or content hash diverges");
+}
+
+const mainStructuredDataSource = indexSource.match(
+  /<script type="application\/ld\+json">([\s\S]*?)<\/script>/i,
+)?.[1];
+try {
+  const mainStructuredData = JSON.parse(mainStructuredDataSource || "");
+  const mainStructuredImage = mainStructuredData["@graph"]?.find(
+    (entry) => entry["@id"] === `${publicOrigin}/#share-image`,
+  );
+  if (
+    mainStructuredImage?.["@type"] !== "ImageObject"
+    || mainStructuredImage.url !== mainShareUrl
+    || mainStructuredImage.contentUrl !== mainShareUrl
+    || mainStructuredImage.encodingFormat !== "image/jpeg"
+    || mainStructuredImage.width !== 1200
+    || mainStructuredImage.height !== 630
+    || mainStructuredImage.caption !== mainOgImageAlt
+  ) {
+    failures.push("index.html: main share ImageObject does not match metadata");
+  }
+} catch {
+  failures.push("index.html: main structured data is not valid JSON");
+}
+
+try {
+  const dimensions = readJpegDimensions(mainSharePath);
+  if (dimensions.width !== 1200 || dimensions.height !== 630) {
+    failures.push("assets/og-signal.jpg: main share image must stay 1200×630");
+  }
+} catch (error) {
+  failures.push(`assets/og-signal.jpg: ${error.message}`);
+}
 
 for (const route of shareRoutes) {
   const path = `work/${route.id}/index.html`;
@@ -204,6 +263,7 @@ if (failures.length > 0) {
 }
 
 console.log(
-  `Publication assets passed: ${shareRoutes.length} share routes at 1200×630, `
+  `Publication assets passed: main share image and ${shareRoutes.length} routes `
+    + `at 1200×630, `
     + `unlinked two-page PDF draft with ${linkCount} links.`,
 );
