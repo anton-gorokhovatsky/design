@@ -86,7 +86,7 @@
 | `content-approach` | Intro + четыре карточки | Meta/title/body, sticky layers и целые формы |
 | `content-contact` | Полная карточка | Два действия, resume links и reflow |
 | `project-reel` | Receiver + readout | Нативная геометрия, poster/video и progress |
-| `observation-showcase` | Активная плоскость Tarski + inspector | Читаемый фокус, видимые тихие соседние плоскости, отсутствие рамки/тени, минимум 24 px воздуха до origin-label, свободная граница с inspector и единая camera-геометрия |
+| `observation-showcase` | Стартовый скрин Музея и активная плоскость Tarski + inspector | Читаемый фокус, видимые тихие соседние плоскости, отсутствие рамки/тени, минимум 24 px воздуха до origin-label и левой панели, свободная граница с inspector и единая camera-геометрия |
 
 ## Accessibility tree
 

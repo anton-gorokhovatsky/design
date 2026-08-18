@@ -8003,8 +8003,8 @@ html[data-theme="dark"] .map-node--running .map-node__glyph {
     position: absolute;
     z-index: var(--showcase-z, 1);
     top: 52%;
-    left: 30%;
-    width: clamp(300px, 30vw, 460px);
+    left: 33%;
+    width: clamp(300px, 26vw, 460px);
     aspect-ratio: 3 / 2;
     margin: 0;
     overflow: hidden;

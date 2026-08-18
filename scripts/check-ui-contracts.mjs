@@ -664,6 +664,8 @@ const readObservationShowcaseContract = (client) => evaluate(client, `(() => {
     ?.getBoundingClientRect();
   const originLabelBounds = document.querySelector('.origin-marker__label')
     ?.getBoundingClientRect();
+  const railBounds = document.querySelector('.map-controls')
+    ?.getBoundingClientRect();
   const intersectionArea = activeBounds && inspectorBounds
     ? Math.max(
       0,
@@ -700,6 +702,9 @@ const readObservationShowcaseContract = (client) => evaluate(client, `(() => {
       : 1,
     activeOriginGap: activeBounds && originLabelBounds
       ? originLabelBounds.left - activeBounds.right
+      : -1,
+    activeRailGap: activeBounds && railBounds
+      ? activeBounds.left - railBounds.right
       : -1,
     ariaHidden: stage?.getAttribute('aria-hidden') || '',
     display: stage ? getComputedStyle(stage).display : '',
@@ -876,6 +881,40 @@ const auditBrowser = async (client, origin) => {
   await saveScreenshot(client, "desktop-selected-garage");
   await saveElementScreenshot(client, "crop-desktop-inspector", ".map-inspector");
 
+  const expectedShowcaseIds = [
+    "garage-site",
+    "narkomfin",
+    "eleven",
+    "tarski",
+    "shirokostup",
+  ];
+  await navigate(
+    client,
+    `${origin}/?qa=ui-contracts-observation-showcase-origin&route=observation&step=1#map`,
+  );
+  await waitForExpression(client, `(() => {
+    const stage = document.querySelector('[data-observation-showcase]');
+    const image = stage?.querySelector(
+      '[data-observation-showcase-id="garage-site"] img',
+    );
+    return stage?.dataset.activeId === 'garage-site'
+      && image?.complete
+      && image.naturalWidth > 0;
+  })()`);
+  const originShowcase = await readObservationShowcaseContract(client);
+  if (
+    originShowcase.activeId !== "garage-site"
+    || originShowcase.activePlaneId !== "garage-site"
+    || originShowcase.routeProgress !== "01 / 08"
+    || originShowcase.activeOriginGap < 24
+    || originShowcase.activeRailGap < 24
+  ) {
+    fail(
+      "observation-showcase: the opening Museum plane does not clear the route chrome.",
+      originShowcase,
+    );
+  }
+
   await navigate(
     client,
     `${origin}/?qa=ui-contracts-observation-showcase&route=observation&step=3#map`,
@@ -895,13 +934,6 @@ const auditBrowser = async (client, origin) => {
       && activeStyle?.filter.includes('blur(0px)');
   })()`);
   const narkomfinShowcase = await readObservationShowcaseContract(client);
-  const expectedShowcaseIds = [
-    "garage-site",
-    "narkomfin",
-    "eleven",
-    "tarski",
-    "shirokostup",
-  ];
   if (
     !narkomfinShowcase.visible
     || narkomfinShowcase.display === "none"
@@ -972,6 +1004,7 @@ const auditBrowser = async (client, origin) => {
     || !tarskiShowcase.activeInsideViewport
     || tarskiShowcase.activeInspectorOverlapRatio > 0.14
     || tarskiShowcase.activeOriginGap < 24
+    || tarskiShowcase.activeRailGap < 24
   ) {
     fail(
       "observation-showcase: the route does not move focus to Tarski.",

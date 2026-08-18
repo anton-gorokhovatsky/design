@@ -639,10 +639,11 @@ const renderObservationShowcase = ({ itemId, showcaseId } = {}) => {
       const delta = index - progress;
       const distance = Math.abs(delta);
       const isActive = plane.dataset.observationShowcaseId === activeId;
+      const isIntroPlane = isActive && activeId === "garage-site";
       const properties = {
-        x: `${delta * 14}vw`,
+        x: isIntroPlane ? "-2vw" : `${delta * 14}vw`,
         y: `${(delta < 0 ? 1 : -1) * Math.min(28, distance * 17)}vh`,
-        scale: Math.max(0.48, 1 - distance * 0.28),
+        scale: isIntroPlane ? 0.85 : Math.max(0.48, 1 - distance * 0.28),
         opacity: isActive ? 1 : Math.max(0.16, 0.46 - distance * 0.1),
         blur: `${isActive ? 0 : Math.min(4, distance * 1.8)}px`,
         saturation: isActive ? 1 : 0.72,
