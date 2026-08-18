@@ -651,6 +651,65 @@ const saveElementScreenshot = async (client, name, selector, padding = 12) => {
   writeFileSync(join(artifactDirectory, `${name}.png`), Buffer.from(screenshot.data, "base64"));
 };
 
+const readObservationShowcaseContract = (client) => evaluate(client, `(() => {
+  const stage = document.querySelector('[data-observation-showcase]');
+  const planes = Array.from(
+    stage?.querySelectorAll('.observation-showcase__plane') || [],
+  );
+  const active = stage?.querySelector(
+    '[data-observation-showcase-id="' + stage.dataset.activeId + '"]',
+  );
+  const activeBounds = active?.getBoundingClientRect();
+  const inspectorBounds = document.querySelector('.map-inspector')
+    ?.getBoundingClientRect();
+  const intersectionArea = activeBounds && inspectorBounds
+    ? Math.max(
+      0,
+      Math.min(activeBounds.right, inspectorBounds.right)
+        - Math.max(activeBounds.left, inspectorBounds.left),
+    ) * Math.max(
+      0,
+      Math.min(activeBounds.bottom, inspectorBounds.bottom)
+        - Math.max(activeBounds.top, inspectorBounds.top),
+    )
+    : 0;
+  const activeArea = activeBounds
+    ? activeBounds.width * activeBounds.height
+    : 0;
+
+  return {
+    activeId: stage?.dataset.activeId || '',
+    activePlaneId: active?.dataset.observationShowcaseId || '',
+    activeFilter: active ? getComputedStyle(active).filter : '',
+    activeOpacity: active ? Number(getComputedStyle(active).opacity) : 0,
+    activeInsideViewport: Boolean(
+      activeBounds
+      && activeBounds.left >= -1
+      && activeBounds.top >= -1
+      && activeBounds.right <= innerWidth + 1
+      && activeBounds.bottom <= innerHeight + 1
+    ),
+    activeInspectorOverlapRatio: activeArea > 0
+      ? intersectionArea / activeArea
+      : 1,
+    ariaHidden: stage?.getAttribute('aria-hidden') || '',
+    display: stage ? getComputedStyle(stage).display : '',
+    focusables: stage?.querySelectorAll(
+      'a, button, input, select, textarea, [tabindex]',
+    ).length || 0,
+    imageCount: stage?.querySelectorAll('img[alt=""]').length || 0,
+    imagesReady: planes.every((plane) => {
+      const image = plane.querySelector('img');
+      return Boolean(image?.complete && image.naturalWidth > 0);
+    }),
+    parentIsCamera: stage?.parentElement?.matches('[data-map-camera]') || false,
+    planeIds: planes.map((plane) => plane.dataset.observationShowcaseId),
+    routeProgress: document.querySelector('[data-observation-progress]')
+      ?.textContent.trim() || '',
+    visible: stage?.classList.contains('is-visible') || false,
+  };
+})()`);
+
 const auditBrowser = async (client, origin) => {
   await Promise.all([
     client.send("Page.enable"),
@@ -796,6 +855,124 @@ const auditBrowser = async (client, origin) => {
   }
   await saveScreenshot(client, "desktop-selected-garage");
   await saveElementScreenshot(client, "crop-desktop-inspector", ".map-inspector");
+
+  await navigate(
+    client,
+    `${origin}/?qa=ui-contracts-observation-showcase&route=observation&step=3#map`,
+  );
+  await waitForExpression(client, `(() => {
+    const stage = document.querySelector('[data-observation-showcase]');
+    const active = stage?.querySelector(
+      '[data-observation-showcase-id="' + stage.dataset.activeId + '"]',
+    );
+    const image = active?.querySelector('img');
+    const activeStyle = active ? getComputedStyle(active) : null;
+    return stage?.classList.contains('is-visible')
+      && stage.dataset.activeId === 'narkomfin'
+      && image?.complete
+      && image.naturalWidth > 0
+      && Number(activeStyle?.opacity) >= 0.9
+      && activeStyle?.filter.includes('blur(0px)');
+  })()`);
+  const narkomfinShowcase = await readObservationShowcaseContract(client);
+  const expectedShowcaseIds = ["narkomfin", "tarski", "shirokostup"];
+  if (
+    !narkomfinShowcase.visible
+    || narkomfinShowcase.display === "none"
+    || narkomfinShowcase.activeId !== "narkomfin"
+    || narkomfinShowcase.activePlaneId !== "narkomfin"
+    || narkomfinShowcase.routeProgress !== "03 / 08"
+    || JSON.stringify(narkomfinShowcase.planeIds)
+      !== JSON.stringify(expectedShowcaseIds)
+    || narkomfinShowcase.imageCount !== expectedShowcaseIds.length
+    || !narkomfinShowcase.imagesReady
+    || !narkomfinShowcase.parentIsCamera
+    || narkomfinShowcase.ariaHidden !== "true"
+    || narkomfinShowcase.focusables !== 0
+    || narkomfinShowcase.activeOpacity < 0.9
+    || !narkomfinShowcase.activeFilter.includes("blur(0px)")
+    || !narkomfinShowcase.activeInsideViewport
+    || narkomfinShowcase.activeInspectorOverlapRatio > 0.14
+  ) {
+    fail(
+      "observation-showcase: Narkomfin does not enter one accessible focal plane.",
+      narkomfinShowcase,
+    );
+  }
+
+  await evaluate(
+    client,
+    "document.querySelector('[data-observation-next]')?.click(); true",
+  );
+  await delay(820);
+  await evaluate(
+    client,
+    "document.querySelector('[data-observation-next]')?.click(); true",
+  );
+  await delay(820);
+  const tarskiShowcase = await readObservationShowcaseContract(client);
+  if (
+    tarskiShowcase.activeId !== "tarski"
+    || tarskiShowcase.activePlaneId !== "tarski"
+    || tarskiShowcase.routeProgress !== "05 / 08"
+  ) {
+    fail(
+      "observation-showcase: the route does not move focus to Tarski.",
+      tarskiShowcase,
+    );
+  }
+  await saveScreenshot(client, "desktop-observation-showcase-tarski");
+  await saveElementScreenshot(
+    client,
+    "crop-desktop-observation-showcase-tarski",
+    '[data-observation-showcase][data-active-id="tarski"] [data-observation-showcase-id="tarski"]',
+  );
+
+  await evaluate(
+    client,
+    "document.querySelector('[data-observation-next]')?.click(); true",
+  );
+  await delay(820);
+  const shirokostupShowcase = await readObservationShowcaseContract(client);
+  if (
+    shirokostupShowcase.activeId !== "shirokostup"
+    || shirokostupShowcase.activePlaneId !== "shirokostup"
+    || shirokostupShowcase.routeProgress !== "06 / 08"
+  ) {
+    fail(
+      "observation-showcase: the route does not move focus to Shirokostup.",
+      shirokostupShowcase,
+    );
+  }
+
+  await setViewport(client, {
+    width: 1440,
+    height: 900,
+    mobile: false,
+    theme: "light",
+    reducedMotion: "reduce",
+  });
+  await navigate(
+    client,
+    `${origin}/?qa=ui-contracts-observation-showcase-reduced&route=observation&step=3#map`,
+  );
+  const reducedShowcase = await readObservationShowcaseContract(client);
+  if (
+    reducedShowcase.display !== "none"
+    || reducedShowcase.ariaHidden !== "true"
+    || reducedShowcase.focusables !== 0
+  ) {
+    fail(
+      "observation-showcase: reduced motion must keep the atmospheric planes absent.",
+      reducedShowcase,
+    );
+  }
+  await setViewport(client, {
+    width: 1440,
+    height: 900,
+    mobile: false,
+    theme: "light",
+  });
 
   await navigate(client, `${origin}/?qa=ui-contracts-reactive-relations`);
   await client.send("Input.dispatchMouseEvent", {

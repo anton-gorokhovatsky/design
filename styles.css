@@ -7972,6 +7972,85 @@ html[data-theme="dark"] .map-node--running .map-node__glyph {
    existing map and MATERIAL / 01 system. They add meaning, not another UI
    family. */
 
+.observation-showcase {
+  display: none;
+}
+
+@media (min-width: 901px) {
+  .observation-showcase {
+    position: absolute;
+    z-index: 6;
+    inset: 0;
+    display: block;
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+    transition:
+      opacity 360ms var(--motion-exit),
+      visibility 360ms var(--motion-exit);
+  }
+
+  .observation-showcase.is-visible {
+    opacity: 1;
+    visibility: visible;
+    transition:
+      opacity 520ms var(--motion-enter),
+      visibility 520ms var(--motion-enter);
+  }
+
+  .observation-showcase__plane {
+    position: absolute;
+    z-index: var(--showcase-z, 1);
+    top: 52%;
+    left: 34%;
+    width: clamp(300px, 34vw, 500px);
+    aspect-ratio: 3 / 2;
+    margin: 0;
+    overflow: hidden;
+    border: 0;
+    border-radius: clamp(18px, 1.5vw, 25px);
+    background: color-mix(in srgb, var(--bg) 88%, var(--ink));
+    box-shadow: none;
+    corner-shape: var(--corner-card-shape);
+    filter:
+      blur(var(--showcase-blur, 4px))
+      saturate(var(--showcase-saturation, 0.72));
+    opacity: var(--showcase-opacity, 0);
+    transform:
+      translate3d(
+        calc(-50% + var(--showcase-x, 0px)),
+        calc(-50% + var(--showcase-y, 0px)),
+        0
+      )
+      rotate(var(--showcase-rotation, 0deg))
+      scale(var(--showcase-scale, 0.72));
+    transform-origin: center;
+    transition:
+      opacity 420ms var(--motion-shift),
+      filter 620ms var(--motion-shift),
+      transform 760ms var(--motion-shift);
+    will-change: opacity, filter, transform;
+  }
+
+  .observation-showcase__plane img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center top;
+  }
+}
+
+@media (prefers-reduced-motion: reduce), (forced-colors: active) {
+  .observation-showcase {
+    display: none;
+  }
+}
+
+html[data-reduce-motion="true"] .observation-showcase {
+  display: none;
+}
+
 .origin-marker__label {
   appearance: none;
   color: var(--content-ink);

@@ -18,6 +18,13 @@ const mapNodesRoot = document.querySelector("[data-map-nodes]");
 const mapLabelsRoot = document.querySelector("[data-map-labels]");
 const mapSpecksRoot = document.querySelector("[data-map-specks]");
 const mapLinksRoot = document.querySelector("[data-map-links]");
+const observationShowcase = document.querySelector("[data-observation-showcase]");
+const observationShowcaseProgress = {
+  narkomfin: 0,
+  "private-practice": 0.5,
+  tarski: 1,
+  shirokostup: 2,
+};
 const mapKind = document.querySelector("[data-map-kind]");
 const mapTitle = document.querySelector("[data-map-title]");
 const mapMeta = document.querySelector("[data-map-meta]");
@@ -610,6 +617,42 @@ if (
 
   mapPreviewMedia.append(mosaic);
 }
+
+const renderObservationShowcase = ({ itemId } = {}) => {
+  const progress = observationShowcaseProgress[itemId];
+  const isVisible = Number.isFinite(progress);
+
+  observationShowcase?.classList.toggle("is-visible", isVisible);
+
+  if (observationShowcase) {
+    observationShowcase.dataset.activeId = isVisible ? itemId : "";
+  }
+
+  if (!isVisible) {
+    return;
+  }
+
+  observationShowcase.querySelectorAll("[data-observation-showcase-id]")
+    .forEach((plane, index) => {
+      const delta = index - progress;
+      const distance = Math.abs(delta);
+      const isActive = plane.dataset.observationShowcaseId === itemId;
+      const properties = {
+        x: `${delta * 14}vw`,
+        y: `${(delta < 0 ? 1 : -1) * Math.min(28, distance * 17)}vh`,
+        scale: Math.max(0.48, 1 - distance * 0.28),
+        opacity: isActive ? 0.96 : Math.max(0.16, 0.46 - distance * 0.1),
+        blur: `${isActive ? 0 : Math.min(4, distance * 1.8)}px`,
+        saturation: isActive ? 1 : 0.72,
+        rotation: `${delta * -0.8}deg`,
+        z: isActive ? 4 : Math.max(1, 3 - Math.round(distance)),
+      };
+
+      Object.entries(properties).forEach(([name, value]) => {
+        plane.style.setProperty(`--showcase-${name}`, value);
+      });
+    });
+};
 
 const pauseReelMosaic = () => {
   reelMosaicVideos.forEach((video) => video.pause());
@@ -1843,6 +1886,7 @@ function renderObservationStep(index, { updateHistory = true } = {}) {
   const step = observationSteps[observationStepIndex];
 
   setObservationCamera(step);
+  renderObservationShowcase(step);
 
   if (step.itemId) {
     selectMapItem(step.itemId, {
@@ -1885,6 +1929,7 @@ const stopObservation = (
   observationPaused = false;
   observationControls?.setAttribute("hidden", "");
   delete signalField?.dataset.observationActive;
+  renderObservationShowcase();
   signalField?.style.removeProperty("--observation-camera-x");
   signalField?.style.removeProperty("--observation-camera-y");
   signalField?.style.removeProperty("--observation-route-progress");
