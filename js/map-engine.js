@@ -23,8 +23,8 @@ const observationShowcaseProgress = {
   "garage-site": 0,
   narkomfin: 1,
   "private-practice": 2,
-  tarski: 3,
-  shirokostup: 4,
+  eleven: 2,
+  shirokostup: 3,
 };
 const mapKind = document.querySelector("[data-map-kind]");
 const mapTitle = document.querySelector("[data-map-title]");
@@ -1749,7 +1749,7 @@ const observationSteps = [
   { id: "garage", itemId: "garage", showcaseId: "garage-site" },
   { id: "narkomfin", itemId: "narkomfin" },
   { id: "private-practice", itemId: "private-practice" },
-  { id: "tarski", itemId: "tarski" },
+  { id: "eleven", itemId: "eleven" },
   { id: "shirokostup", itemId: "shirokostup" },
   { id: "principle", itemId: "principle-design-engineering" },
   {

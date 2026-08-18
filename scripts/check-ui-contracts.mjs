@@ -885,7 +885,6 @@ const auditBrowser = async (client, origin) => {
     "garage-site",
     "narkomfin",
     "eleven",
-    "tarski",
     "shirokostup",
   ];
   await navigate(
@@ -996,26 +995,26 @@ const auditBrowser = async (client, origin) => {
     "document.querySelector('[data-observation-next]')?.click(); true",
   );
   await delay(820);
-  const tarskiShowcase = await readObservationShowcaseContract(client);
+  const elevenShowcase = await readObservationShowcaseContract(client);
   if (
-    tarskiShowcase.activeId !== "tarski"
-    || tarskiShowcase.activePlaneId !== "tarski"
-    || tarskiShowcase.routeProgress !== "05 / 08"
-    || !tarskiShowcase.activeInsideViewport
-    || tarskiShowcase.activeInspectorOverlapRatio > 0.14
-    || tarskiShowcase.activeOriginGap < 24
-    || tarskiShowcase.activeRailGap < 24
+    elevenShowcase.activeId !== "eleven"
+    || elevenShowcase.activePlaneId !== "eleven"
+    || elevenShowcase.routeProgress !== "05 / 08"
+    || !elevenShowcase.activeInsideViewport
+    || elevenShowcase.activeInspectorOverlapRatio > 0.14
+    || elevenShowcase.activeOriginGap < 24
+    || elevenShowcase.activeRailGap < 24
   ) {
     fail(
-      "observation-showcase: the route does not move focus to Tarski.",
-      tarskiShowcase,
+      "observation-showcase: the route does not move focus to 11 111.",
+      elevenShowcase,
     );
   }
-  await saveScreenshot(client, "desktop-observation-showcase-tarski");
+  await saveScreenshot(client, "desktop-observation-showcase-eleven");
   await saveElementScreenshot(
     client,
-    "crop-desktop-observation-showcase-tarski",
-    '[data-observation-showcase][data-active-id="tarski"] [data-observation-showcase-id="tarski"]',
+    "crop-desktop-observation-showcase-eleven",
+    '[data-observation-showcase][data-active-id="eleven"] [data-observation-showcase-id="eleven"]',
   );
 
   await evaluate(
