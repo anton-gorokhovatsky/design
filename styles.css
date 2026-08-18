@@ -2312,7 +2312,7 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 
 .origin-marker__label {
   position: absolute;
-  z-index: 7;
+  z-index: 12;
   top: calc(50% + var(--core-y));
   left: calc(50% + var(--core-x));
   background: var(--material-01);
@@ -8048,9 +8048,23 @@ html[data-theme="dark"] .map-node--running .map-node__glyph {
   }
 
   .observation-showcase[data-active-id="private-practice"]
+    [data-observation-showcase-id="narkomfin"] {
+    z-index: 2;
+    transform: translate3d(calc(-50% - 12vw), calc(-50% + 12vh), 0)
+      rotate(0.8deg) scale(0.64);
+  }
+
+  .observation-showcase[data-active-id="private-practice"]
     [data-observation-showcase-id="tarski"] {
-    z-index: 4;
-    opacity: 1;
+    z-index: 3;
+    transform: translate3d(-50%, -50%, 0) scale(0.64);
+  }
+
+  .observation-showcase[data-active-id="private-practice"]
+    [data-observation-showcase-id="shirokostup"] {
+    z-index: 2;
+    transform: translate3d(calc(-50% + 12vw), calc(-50% - 12vh), 0)
+      rotate(-0.8deg) scale(0.64);
   }
 
   .observation-showcase[data-active-id="narkomfin"]

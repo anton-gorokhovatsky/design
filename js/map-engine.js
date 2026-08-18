@@ -641,11 +641,11 @@ const renderObservationShowcase = ({ itemId } = {}) => {
         x: `${delta * 14}vw`,
         y: `${(delta < 0 ? 1 : -1) * Math.min(28, distance * 17)}vh`,
         scale: Math.max(0.48, 1 - distance * 0.28),
-        opacity: isActive ? 0.96 : Math.max(0.16, 0.46 - distance * 0.1),
+        opacity: isActive ? 1 : Math.max(0.16, 0.46 - distance * 0.1),
         blur: `${isActive ? 0 : Math.min(4, distance * 1.8)}px`,
         saturation: isActive ? 1 : 0.72,
         rotation: `${delta * -0.8}deg`,
-        z: isActive ? 4 : Math.max(1, 3 - Math.round(distance)),
+        z: isActive ? 9 : Math.max(1, 3 - Math.round(distance)),
       };
 
       Object.entries(properties).forEach(([name, value]) => {
