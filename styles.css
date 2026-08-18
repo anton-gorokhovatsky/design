@@ -8003,8 +8003,8 @@ html[data-theme="dark"] .map-node--running .map-node__glyph {
     position: absolute;
     z-index: var(--showcase-z, 1);
     top: 52%;
-    left: 34%;
-    width: clamp(300px, 34vw, 500px);
+    left: 30%;
+    width: clamp(300px, 30vw, 460px);
     aspect-ratio: 3 / 2;
     margin: 0;
     overflow: hidden;
@@ -8044,6 +8044,11 @@ html[data-theme="dark"] .map-node--running .map-node__glyph {
   .observation-showcase[data-active-id="private-practice"]
     .observation-showcase__plane {
     filter: blur(0) saturate(1);
+    opacity: 0;
+  }
+
+  .observation-showcase[data-active-id="private-practice"]
+    [data-observation-overview] {
     opacity: 1;
   }
 
@@ -8055,18 +8060,19 @@ html[data-theme="dark"] .map-node--running .map-node__glyph {
   }
 
   .observation-showcase[data-active-id="private-practice"]
-    [data-observation-showcase-id="tarski"] {
-    z-index: 3;
+    [data-observation-showcase-id="eleven"] {
     transform: translate3d(-50%, -50%, 0) scale(0.64);
   }
 
   .observation-showcase[data-active-id="private-practice"]
     [data-observation-showcase-id="shirokostup"] {
     z-index: 2;
-    transform: translate3d(calc(-50% + 12vw), calc(-50% - 12vh), 0)
+    transform: translate3d(calc(-50% + 12vw), calc(-50% - 18vh), 0)
       rotate(-0.8deg) scale(0.64);
   }
 
+  .observation-showcase[data-active-id="garage-site"]
+    [data-observation-showcase-id="garage-site"],
   .observation-showcase[data-active-id="narkomfin"]
     [data-observation-showcase-id="narkomfin"],
   .observation-showcase[data-active-id="tarski"]

@@ -662,6 +662,8 @@ const readObservationShowcaseContract = (client) => evaluate(client, `(() => {
   const activeBounds = active?.getBoundingClientRect();
   const inspectorBounds = document.querySelector('.map-inspector')
     ?.getBoundingClientRect();
+  const originLabelBounds = document.querySelector('.origin-marker__label')
+    ?.getBoundingClientRect();
   const intersectionArea = activeBounds && inspectorBounds
     ? Math.max(
       0,
@@ -696,6 +698,9 @@ const readObservationShowcaseContract = (client) => evaluate(client, `(() => {
     activeInspectorOverlapRatio: activeArea > 0
       ? intersectionArea / activeArea
       : 1,
+    activeOriginGap: activeBounds && originLabelBounds
+      ? originLabelBounds.left - activeBounds.right
+      : -1,
     ariaHidden: stage?.getAttribute('aria-hidden') || '',
     display: stage ? getComputedStyle(stage).display : '',
     focusables: stage?.querySelectorAll(
@@ -890,7 +895,13 @@ const auditBrowser = async (client, origin) => {
       && activeStyle?.filter.includes('blur(0px)');
   })()`);
   const narkomfinShowcase = await readObservationShowcaseContract(client);
-  const expectedShowcaseIds = ["narkomfin", "tarski", "shirokostup"];
+  const expectedShowcaseIds = [
+    "garage-site",
+    "narkomfin",
+    "eleven",
+    "tarski",
+    "shirokostup",
+  ];
   if (
     !narkomfinShowcase.visible
     || narkomfinShowcase.display === "none"
@@ -908,6 +919,7 @@ const auditBrowser = async (client, origin) => {
     || !narkomfinShowcase.activeFilter.includes("blur(0px)")
     || !narkomfinShowcase.activeInsideViewport
     || narkomfinShowcase.activeInspectorOverlapRatio > 0.14
+    || narkomfinShowcase.activeOriginGap < 24
   ) {
     fail(
       "observation-showcase: Narkomfin does not enter one accessible focal plane.",
@@ -921,18 +933,21 @@ const auditBrowser = async (client, origin) => {
   );
   await delay(820);
   const privatePracticeShowcase = await readObservationShowcaseContract(client);
-  const tarskiOverview = privatePracticeShowcase.planeStates.find(
-    (plane) => plane.id === "tarski",
+  const overviewIds = ["narkomfin", "eleven", "shirokostup"];
+  const overviewPlanes = privatePracticeShowcase.planeStates.filter(
+    (plane) => overviewIds.includes(plane.id),
   );
   if (
     privatePracticeShowcase.activeId !== "private-practice"
     || privatePracticeShowcase.routeProgress !== "04 / 08"
-    || !tarskiOverview
-    || tarskiOverview.opacity < 0.95
-    || privatePracticeShowcase.planeStates.some((plane) => (
+    || overviewPlanes.length !== overviewIds.length
+    || overviewPlanes.some((plane) => (
       plane.opacity < 0.8
       || !plane.filter.startsWith("blur(")
       || Number.parseFloat(plane.filter.slice(5)) > 0.05
+    ))
+    || privatePracticeShowcase.planeStates.some((plane) => (
+      !overviewIds.includes(plane.id) && plane.opacity > 0.05
     ))
     || privatePracticeShowcase.layerLevels.camera
       <= privatePracticeShowcase.layerLevels.axisLabel
@@ -954,6 +969,9 @@ const auditBrowser = async (client, origin) => {
     tarskiShowcase.activeId !== "tarski"
     || tarskiShowcase.activePlaneId !== "tarski"
     || tarskiShowcase.routeProgress !== "05 / 08"
+    || !tarskiShowcase.activeInsideViewport
+    || tarskiShowcase.activeInspectorOverlapRatio > 0.14
+    || tarskiShowcase.activeOriginGap < 24
   ) {
     fail(
       "observation-showcase: the route does not move focus to Tarski.",

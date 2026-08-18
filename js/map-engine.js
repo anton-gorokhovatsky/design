@@ -20,10 +20,11 @@ const mapSpecksRoot = document.querySelector("[data-map-specks]");
 const mapLinksRoot = document.querySelector("[data-map-links]");
 const observationShowcase = document.querySelector("[data-observation-showcase]");
 const observationShowcaseProgress = {
-  narkomfin: 0,
-  "private-practice": 0.5,
-  tarski: 1,
-  shirokostup: 2,
+  "garage-site": 0,
+  narkomfin: 1,
+  "private-practice": 2,
+  tarski: 3,
+  shirokostup: 4,
 };
 const mapKind = document.querySelector("[data-map-kind]");
 const mapTitle = document.querySelector("[data-map-title]");
@@ -618,14 +619,15 @@ if (
   mapPreviewMedia.append(mosaic);
 }
 
-const renderObservationShowcase = ({ itemId } = {}) => {
-  const progress = observationShowcaseProgress[itemId];
+const renderObservationShowcase = ({ itemId, showcaseId } = {}) => {
+  const activeId = showcaseId || itemId;
+  const progress = observationShowcaseProgress[activeId];
   const isVisible = Number.isFinite(progress);
 
   observationShowcase?.classList.toggle("is-visible", isVisible);
 
   if (observationShowcase) {
-    observationShowcase.dataset.activeId = isVisible ? itemId : "";
+    observationShowcase.dataset.activeId = isVisible ? activeId : "";
   }
 
   if (!isVisible) {
@@ -636,7 +638,7 @@ const renderObservationShowcase = ({ itemId } = {}) => {
     .forEach((plane, index) => {
       const delta = index - progress;
       const distance = Math.abs(delta);
-      const isActive = plane.dataset.observationShowcaseId === itemId;
+      const isActive = plane.dataset.observationShowcaseId === activeId;
       const properties = {
         x: `${delta * 14}vw`,
         y: `${(delta < 0 ? 1 : -1) * Math.min(28, distance * 17)}vh`,
@@ -1739,10 +1741,11 @@ const observationSteps = [
     title: "СЕАНС НАБЛЮДЕНИЯ",
     meta: "ОКОЛО 60 СЕКУНД / 8 КООРДИНАТ",
     description: "Короткий маршрут по карте: от моей профессиональной оптики к институциональной работе, частной практике и принципам.",
+    showcaseId: "garage-site",
     x: 50,
     y: 54,
   },
-  { id: "garage", itemId: "garage" },
+  { id: "garage", itemId: "garage", showcaseId: "garage-site" },
   { id: "narkomfin", itemId: "narkomfin" },
   { id: "private-practice", itemId: "private-practice" },
   { id: "tarski", itemId: "tarski" },
