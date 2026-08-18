@@ -676,6 +676,10 @@ const readObservationShowcaseContract = (client) => evaluate(client, `(() => {
   const activeArea = activeBounds
     ? activeBounds.width * activeBounds.height
     : 0;
+  const readZIndex = (element) => Number.parseInt(
+    element ? getComputedStyle(element).zIndex : '0',
+    10,
+  ) || 0;
 
   return {
     activeId: stage?.dataset.activeId || '',
@@ -704,6 +708,17 @@ const readObservationShowcaseContract = (client) => evaluate(client, `(() => {
     }),
     parentIsCamera: stage?.parentElement?.matches('[data-map-camera]') || false,
     planeIds: planes.map((plane) => plane.dataset.observationShowcaseId),
+    planeStates: planes.map((plane) => ({
+      filter: getComputedStyle(plane).filter,
+      id: plane.dataset.observationShowcaseId,
+      opacity: Number(getComputedStyle(plane).opacity),
+    })),
+    layerLevels: {
+      axisLabel: readZIndex(document.querySelector('.map-axis-label')),
+      camera: readZIndex(stage?.parentElement),
+      origin: readZIndex(document.querySelector('.origin-marker')),
+      stage: readZIndex(stage),
+    },
     routeProgress: document.querySelector('[data-observation-progress]')
       ?.textContent.trim() || '',
     visible: stage?.classList.contains('is-visible') || false,
@@ -905,6 +920,28 @@ const auditBrowser = async (client, origin) => {
     "document.querySelector('[data-observation-next]')?.click(); true",
   );
   await delay(820);
+  const privatePracticeShowcase = await readObservationShowcaseContract(client);
+  const tarskiOverview = privatePracticeShowcase.planeStates.find(
+    (plane) => plane.id === "tarski",
+  );
+  if (
+    privatePracticeShowcase.activeId !== "private-practice"
+    || privatePracticeShowcase.routeProgress !== "04 / 08"
+    || !tarskiOverview
+    || tarskiOverview.opacity < 0.95
+    || privatePracticeShowcase.planeStates.some((plane) => (
+      plane.opacity < 0.8 || !plane.filter.includes("blur(0px)")
+    ))
+    || privatePracticeShowcase.layerLevels.camera
+      <= privatePracticeShowcase.layerLevels.axisLabel
+    || privatePracticeShowcase.layerLevels.stage
+      <= privatePracticeShowcase.layerLevels.origin
+  ) {
+    fail(
+      "observation-showcase: private-practice must be a crisp foreground stack.",
+      privatePracticeShowcase,
+    );
+  }
   await evaluate(
     client,
     "document.querySelector('[data-observation-next]')?.click(); true",

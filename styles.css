@@ -7979,7 +7979,7 @@ html[data-theme="dark"] .map-node--running .map-node__glyph {
 @media (min-width: 901px) {
   .observation-showcase {
     position: absolute;
-    z-index: 6;
+    z-index: 7;
     inset: 0;
     display: block;
     opacity: 0;
@@ -8038,6 +8038,18 @@ html[data-theme="dark"] .map-node--running .map-node__glyph {
     height: 100%;
     object-fit: contain;
     object-position: center top;
+  }
+
+  .observation-showcase[data-active-id="private-practice"]
+    .observation-showcase__plane {
+    filter: blur(0) saturate(1);
+    opacity: 0.82;
+  }
+
+  .observation-showcase[data-active-id="private-practice"]
+    [data-observation-showcase-id="tarski"] {
+    z-index: 4;
+    opacity: 0.98;
   }
 }
 
@@ -8222,6 +8234,7 @@ html[data-reduce-motion="true"] .observation-showcase {
 }
 
 .practice-map[data-observation-active] .map-camera {
+  z-index: 10;
   transform:
     translate3d(
       var(--observation-camera-x, 0%),
