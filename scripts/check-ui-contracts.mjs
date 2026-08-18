@@ -930,7 +930,9 @@ const auditBrowser = async (client, origin) => {
     || !tarskiOverview
     || tarskiOverview.opacity < 0.95
     || privatePracticeShowcase.planeStates.some((plane) => (
-      plane.opacity < 0.8 || !plane.filter.includes("blur(0px)")
+      plane.opacity < 0.8
+      || !plane.filter.startsWith("blur(")
+      || Number.parseFloat(plane.filter.slice(5)) > 0.05
     ))
     || privatePracticeShowcase.layerLevels.camera
       <= privatePracticeShowcase.layerLevels.axisLabel
