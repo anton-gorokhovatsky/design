@@ -367,7 +367,7 @@ const mapItems = [
     previewVideo: "assets/reels/hotline-camp.mp4?v=e3fcea6a4f20",
     previewPoster: "assets/reel-posters/hotline-camp.jpg?v=6239adca3706",
     previewOrientation: "landscape",
-    previewMeta: "СОЛНЕЧНАЯ ПАЛИТРА, ПРОГРАММА И ТРЕНЕРЫ / 00:13",
+    previewMeta: "СОЧИНСКАЯ ПАЛИТРА, ПРОГРАММА И ТРЕНЕРЫ / 00:13",
     x: 68,
     y: 54,
     size: 18,

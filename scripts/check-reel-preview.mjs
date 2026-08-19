@@ -95,7 +95,7 @@ const expectedById = new Map([
     artifactId: "hotline-camp",
     index: "09 / 14",
     titleFragments: ["Сайт предстартового кэмпа", "Hotline Camp"],
-    meta: "СОЛНЕЧНАЯ ПАЛИТРА, ПРОГРАММА И ТРЕНЕРЫ / 00:13",
+    meta: "СОЧИНСКАЯ ПАЛИТРА, ПРОГРАММА И ТРЕНЕРЫ / 00:13",
     videoPath: "/assets/reels/hotline-camp.mp4",
     posterPath: "/assets/reel-posters/hotline-camp.jpg",
     chapterPaths: [
