@@ -13,7 +13,7 @@ const expectedById = new Map([
   ["eleven", {
     mapId: "eleven",
     artifactId: "11111",
-    index: "11 / 13",
+    index: "12 / 14",
     titleFragments: ["11 111", "Виктора Доронина"],
     meta: "ИСТОРИЯ, ЦЕЛЬ И МАСШТАБ / 00:12",
     videoPath: "/assets/reels/11111.mp4",
@@ -29,7 +29,7 @@ const expectedById = new Map([
   ["narkomfin", {
     mapId: "narkomfin",
     artifactId: "narkomfin",
-    index: "02 / 13",
+    index: "02 / 14",
     titleFragments: ["ДОМ НАРКОМФИНА"],
     meta: "МОДЕЛЬ, РАЗДЕЛЫ И ТЕМЫ / 00:13",
     videoPath: "/assets/reels/narkomfin.mp4",
@@ -45,7 +45,7 @@ const expectedById = new Map([
   ["garage-webzine", {
     mapId: "garage-webzine",
     artifactId: "garage-webzine",
-    index: "05 / 13",
+    index: "05 / 14",
     titleFragments: ["НЕЧЕЛОВЕЧЕСКИЕ ЖИВОТНЫЕ", "ТЕХНИКА"],
     meta: "ГЛАВНАЯ, ТЕКСТ И ТЁМНАЯ ТЕМА / 00:12",
     videoPath: "/assets/reels/garage-webzine.mp4",
@@ -61,7 +61,7 @@ const expectedById = new Map([
   ["shirokostup", {
     mapId: "shirokostup",
     artifactId: "shirokostup",
-    index: "06 / 13",
+    index: "06 / 14",
     titleFragments: ["Сайт независимого куратора", "Ольги Широкоступ"],
     meta: "ГЛАВНАЯ, МЕНЮ И ТЁМНАЯ ТЕМА / 00:13",
     videoPath: "/assets/reels/shirokostup.mp4",
@@ -77,7 +77,7 @@ const expectedById = new Map([
   ["herman", {
     mapId: "herman",
     artifactId: "herman",
-    index: "08 / 13",
+    index: "08 / 14",
     titleFragments: ["Сайт стилиста", "Германа Винокурова"],
     meta: "ПРОФИЛЬ, МЕДИА И ПЛЕЙЛИСТЫ / 00:15",
     videoPath: "/assets/reels/herman.mp4",
@@ -89,6 +89,22 @@ const expectedById = new Map([
     width: 900,
     height: 600,
     duration: { min: 14.5, max: 15.1 },
+  }],
+  ["hotline-camp", {
+    mapId: "hotline-camp",
+    artifactId: "hotline-camp",
+    index: "09 / 14",
+    titleFragments: ["Сайт предстартового кэмпа", "Hotline Camp"],
+    meta: "СОЛНЕЧНАЯ ПАЛИТРА, ПРОГРАММА И ТРЕНЕРЫ / 00:13",
+    videoPath: "/assets/reels/hotline-camp.mp4",
+    posterPath: "/assets/reel-posters/hotline-camp.jpg",
+    chapterPaths: [
+      "/assets/reel-chapters/hotline-camp-01.mp4",
+      "/assets/reel-chapters/hotline-camp-02.mp4",
+    ],
+    width: 900,
+    height: 600,
+    duration: { min: 12.7, max: 13.1 },
   }],
 ]);
 const expected = expectedById.get(reelId);

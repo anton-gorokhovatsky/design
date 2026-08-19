@@ -69,6 +69,14 @@ export const reelChapterSpecs = [
     ],
   },
   {
+    itemId: "hotline-camp",
+    master: "hotline-camp.mp4",
+    chapters: [
+      { label: "solar-hero-programme", start: 0.2, duration: 4.5 },
+      { label: "dark-trainers-finish", start: 5.7, duration: 7.2 },
+    ],
+  },
+  {
     itemId: "dusty",
     master: "dusty-merch.mp4",
     chapters: [

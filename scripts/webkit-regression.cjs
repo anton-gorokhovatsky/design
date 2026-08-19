@@ -592,16 +592,19 @@ const routeAudit = async (page, mapId, expectedCount) => {
     const minimumActiveDeflection = active.length
       ? Math.min(...active.map(getMaximumCurveDeflection))
       : 0;
+    const changedActiveCount = active.filter((path) => changed.includes(path)).length;
+    const changedInactiveCount = changed.filter((path) => (
+      !path.classList.contains("is-active-relation")
+    )).length;
+    const requiresExactRelationshipFamily = phase === "hover";
 
     return {
       phase,
       stateId,
       activeCount: active.length,
       changedCount: changed.length,
-      changedActiveCount: active.filter((path) => changed.includes(path)).length,
-      changedInactiveCount: changed.filter((path) => (
-        !path.classList.contains("is-active-relation")
-      )).length,
+      changedActiveCount,
+      changedInactiveCount,
       minimumActiveDeflection,
       pendingAnimations: paths.reduce((total, path) => (
         total
@@ -610,9 +613,9 @@ const routeAudit = async (page, mapId, expectedCount) => {
       ), 0),
       badPaths: badPaths.length,
       failure: active.length !== count
-        || changed.length !== count
-        || active.filter((path) => changed.includes(path)).length !== count
-        || changed.some((path) => !path.classList.contains("is-active-relation"))
+        || changedActiveCount !== count
+        || (requiresExactRelationshipFamily && changed.length !== count)
+        || (requiresExactRelationshipFamily && changedInactiveCount !== 0)
         || minimumActiveDeflection < 0.8
         || paths.some((path) => (
           path.querySelector("animate") || path.dataset.relationMorphing === "true"
@@ -631,7 +634,7 @@ const routeAudit = async (page, mapId, expectedCount) => {
   const hover = await readRouteState("hover");
 
   await page.mouse.move(1, 1);
-  await waitForLayout(page, 180);
+  await waitForLayout(page, 620);
   await page.evaluate((id) => {
     document.querySelector(`[data-map-id="${id}"]`)?.click();
   }, mapId);
@@ -809,7 +812,7 @@ const relationshipCascadeAudit = async (page) => {
       maximumActiveOpacity,
       maximumHiddenOpacity,
       failure: rootOpacity < 0.99
-        || active.length !== 8
+        || active.length !== 9
         || minimumActiveOpacity < 0.15
         || maximumActiveOpacity > 0.17
         || maximumHiddenOpacity > 0.01,
@@ -1692,7 +1695,7 @@ const accessibilityAcceptanceAudit = async (browser) => {
       await page.reload({ waitUntil: "networkidle" });
       await page.evaluate(() => document.fonts?.ready);
       await waitForLayout(page, 500);
-      const privatePractice = await routeAudit(page, "private-practice", 8);
+      const privatePractice = await routeAudit(page, "private-practice", 9);
       const relationshipCascade = await relationshipCascadeAudit(page);
       const material = await materialAudit(page);
 

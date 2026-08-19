@@ -29,6 +29,7 @@ const landscapeReels = [
   "garage-site.mp4",
   "garage-webzine.mp4",
   "herman.mp4",
+  "hotline-camp.mp4",
   "ks-fish.mp4",
   "narkomfin.mp4",
   "shirokostup.mp4",
@@ -49,6 +50,7 @@ const reelSpecs = new Map(
 reelSpecs.get("11111.mp4").duration = { min: 11.5, max: 12.1 };
 reelSpecs.get("garage-webzine.mp4").duration = { min: 12.1, max: 12.7 };
 reelSpecs.get("herman.mp4").duration = { min: 14.5, max: 15.1 };
+reelSpecs.get("hotline-camp.mp4").duration = { min: 12.7, max: 13.1 };
 reelSpecs.get("narkomfin.mp4").duration = { min: 12.9, max: 13.5 };
 reelSpecs.get("shirokostup.mp4").duration = { min: 12.5, max: 13.1 };
 reelSpecs.get("tarski.mp4").duration = { min: 12.1, max: 12.7 };

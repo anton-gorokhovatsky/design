@@ -97,6 +97,11 @@ const staticContractSteps = [
     args: ["scripts/check-reel-preview.mjs", "shirokostup"],
   },
   {
+    label: "Hotline Camp reel preview",
+    command: process.execPath,
+    args: ["scripts/check-reel-preview.mjs", "hotline-camp"],
+  },
+  {
     label: "Git whitespace",
     command: "git",
     args: ["diff", "--check"],

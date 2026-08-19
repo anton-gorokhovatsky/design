@@ -54,6 +54,11 @@ const projects = {
     outputDuration: 14.8,
     finalHold: 1800,
   },
+  "hotline-camp": {
+    url: "https://anton-gorokhovatsky.github.io/hotline-camp/",
+    outputDuration: 13.2,
+    finalHold: 2000,
+  },
   "dusty-merch": {
     url: "https://merch.dustydumbbells.com/",
     dismissSelectors: [".t-popup__close"],
@@ -576,6 +581,28 @@ const runHermanCaptureMotion = async (page) => {
   await page.waitForTimeout(2400);
 };
 
+const runHotlineCampCaptureMotion = async (page) => {
+  await page.waitForTimeout(1600);
+  await smoothScrollTo(page, "#program", 2200, 0);
+  await page.waitForTimeout(900);
+
+  const darkTheme = page.getByRole("button", {
+    name: "Включить тёмную тему",
+    exact: true,
+  });
+
+  if (await darkTheme.count() !== 1) {
+    throw new Error("The Hotline Camp dark-theme control must be unique");
+  }
+
+  await darkTheme.click();
+  await page.waitForTimeout(1000);
+  await smoothScrollTo(page, "#trainers", 2200, 0);
+  await page.waitForTimeout(1000);
+  await smoothScrollTo(page, "#registration", 2300, 0);
+  await page.waitForTimeout(500);
+};
+
 const prepareNarkomfinCapture = async (page) => {
   const modelCanvas = page.locator('[class*="Model_container"] canvas').first();
   await modelCanvas.waitFor({ state: "visible", timeout: 20000 });
@@ -672,6 +699,11 @@ const runCaptureMotion = async (page, id, source) => {
 
   if (id === "herman") {
     await runHermanCaptureMotion(page);
+    return;
+  }
+
+  if (id === "hotline-camp") {
+    await runHotlineCampCaptureMotion(page);
     return;
   }
 

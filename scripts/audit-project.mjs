@@ -417,9 +417,9 @@ const duplicatedReels = referencedReels.filter(
 );
 
 requireContract(
-  reelFiles.length === 13,
+  reelFiles.length === 14,
   "reel-count",
-  "The master reel set must contain 13 videos.",
+  "The master reel set must contain 14 videos.",
   { actual: reelFiles.length },
 );
 requireContract(
