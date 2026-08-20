@@ -1533,6 +1533,17 @@ const auditBrowser = async (client, origin) => {
     const yearsById = Object.fromEntries(
       childNodes.map((node) => [node.dataset.mapId, Number(node.dataset.timeYear)]),
     );
+    const referenceCenters = childNodes.map((node) => ({
+      id: node.dataset.mapId,
+      x: Number.parseFloat(node.style.getPropertyValue("--x")) * 4.39,
+      y: Number.parseFloat(node.style.getPropertyValue("--y")) * 8.63,
+    }));
+    const referenceGaps = referenceCenters.flatMap((center, index) => (
+      referenceCenters.slice(index + 1).map((candidate) => Math.hypot(
+        center.x - candidate.x,
+        center.y - candidate.y,
+      ))
+    ));
     const linkBounds = document.querySelector("[data-map-links]").getBoundingClientRect();
     const practiceBounds = document
       .querySelector('[data-map-id="private-practice"] .map-node__glyph')
@@ -1553,7 +1564,11 @@ const auditBrowser = async (client, origin) => {
       );
 
       return angle < 0 ? angle + Math.PI * 2 : angle;
-    });
+    }).sort((left, right) => left - right);
+    const fanGaps = fanAngles.map((angle, index) => (
+      (fanAngles[(index + 1) % fanAngles.length] - angle + Math.PI * 2)
+      % (Math.PI * 2)
+    ));
 
     return {
       datedIds,
@@ -1562,8 +1577,8 @@ const auditBrowser = async (client, origin) => {
       timeHiddenIds,
       timeHiddenDisplay,
       yearsById,
-      fanSpanDegrees: (Math.max(...fanAngles) - Math.min(...fanAngles))
-        * 180 / Math.PI,
+      minimumReferenceGap: Math.min(...referenceGaps),
+      fanSpanDegrees: (Math.PI * 2 - Math.max(...fanGaps)) * 180 / Math.PI,
       note: document.querySelector("[data-map-note]")?.textContent?.trim(),
     };
   })()`);
@@ -1588,12 +1603,14 @@ const auditBrowser = async (client, origin) => {
     || Object.entries(expectedPrivatePracticeYears).some(
       ([id, year]) => chronologyPrivatePracticeContract.yearsById[id] !== year,
     )
+    || chronologyPrivatePracticeContract.minimumReferenceGap < 34
+    || chronologyPrivatePracticeContract.fanSpanDegrees < 70
     || chronologyPrivatePracticeContract.fanSpanDegrees > 120
     || !chronologyPrivatePracticeContract.note
       ?.includes("ДЕВЯТЬ ПРОЕКТОВ ПОКАЗАНЫ ПО\u00a0ГОДАМ ЗАПУСКА")
   ) {
     fail(
-      "chronology: private practice must reveal nine projects in a calm relation fan.",
+      "chronology: private practice must reveal nine separated projects in a calm relation fan.",
       chronologyPrivatePracticeContract,
     );
   }

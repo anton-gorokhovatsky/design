@@ -231,38 +231,39 @@ const getTimeLayout = (item) => {
 
   const centerX = 50;
   const centerY = 54;
-  const getSourceAngle = (candidate) => Math.atan2(
-    (candidate.y - centerY) / 34,
-    (candidate.x - centerX) / 44,
-  );
+  const getSourceAngle = ({ x, y }) => Math.atan2((y - centerY) / 34, (x - centerX) / 44);
   const sourceAngle = getSourceAngle(item);
-  const sameYearItems = mapItems
+  const peers = mapItems
     .filter((candidate) => candidate.timeYear === item.timeYear)
     .sort((left, right) => getSourceAngle(left) - getSourceAngle(right));
-  const sameYearIndex = sameYearItems.findIndex((candidate) => candidate.id === item.id);
-  const centeredIndex = sameYearIndex - ((sameYearItems.length - 1) / 2);
-  let radiusX;
-  let radiusY;
+  const lane = peers.findIndex(({ id }) => id === item.id) - (peers.length - 1) / 2;
+  const practiceIndex = item.parent === "private-practice" && mapItems.indexOf(item);
+  const year = item.timeYear;
+  let radiusX = year >= 2021
+    ? 14 + (2026 - year) * 2.6
+    : year >= 2015
+      ? 27 + (2021 - year) * 2
+      : 39 + Math.max(0, Math.min(1, (2015 - year) / 5)) * 13;
+  let radiusY = year >= 2021
+    ? 11 + (2026 - year) * 1.8
+    : year >= 2015
+      ? 20 + (2021 - year) * 1.5
+      : 29 + Math.max(0, Math.min(1, (2015 - year) / 5)) * 9;
 
-  if (item.timeYear >= 2021) {
-    const progress = (2026 - item.timeYear) / 5;
-    radiusX = 14 + progress * 13;
-    radiusY = 11 + progress * 9;
-  } else if (item.timeYear >= 2015) {
-    const progress = (2021 - item.timeYear) / 6;
-    radiusX = 27 + progress * 12;
-    radiusY = 20 + progress * 9;
+  if (practiceIndex) {
+    const scale = 0.7 + (practiceIndex % 3) * 0.35;
+    radiusX *= scale;
+    radiusY *= scale;
   } else {
-    const progress = Math.max(0, Math.min(1, (2015 - item.timeYear) / 5));
-    radiusX = 39 + progress * 13;
-    radiusY = 29 + progress * 9;
+    radiusX += lane * 0.8;
+    radiusY += lane * 0.55;
   }
 
-  radiusX += centeredIndex * 0.8;
-  radiusY += centeredIndex * 0.55;
-  const angle = sourceAngle
-    + centeredIndex * 0.32
-    + (window.innerWidth <= 680 ? compactTimeAngleOffsets[item.id] || 0 : 0);
+  const angle = practiceIndex
+    ? ((practiceIndex * 137) % 360 - 180) * Math.PI / 180
+    : sourceAngle
+      + lane * 0.32
+      + (window.innerWidth <= 680 ? compactTimeAngleOffsets[item.id] || 0 : 0);
 
   return {
     x: centerX + Math.cos(angle) * radiusX,
