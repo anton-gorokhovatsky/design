@@ -6286,8 +6286,8 @@ html[data-theme="dark"] .map-node--running.is-selected .map-node__glyph {
   outline-offset: 3px;
 }
 
-/* A centre reveals its whole relation family; a child reveals its exact
-   route. Pointer, keyboard, click and search all use the same path state. */
+/* A centre reveals its family; a child reveals its route.
+   Pointer, keyboard, click and search share one path state. */
 
 .map-links path {
   transition:
@@ -8349,10 +8349,11 @@ html[data-reduce-motion="true"] .observation-showcase {
   display: block;
 }
 
-.practice-map[data-time-view] .map-node:not([data-time-year]) {
+.practice-map[data-time-view][data-time-view] .map-node:not([data-time-year]) {
   opacity: 0.055;
   filter: grayscale(1);
   pointer-events: none;
+  transition: none;
 }
 
 .practice-map[data-time-view] .map-node[data-time-year] {

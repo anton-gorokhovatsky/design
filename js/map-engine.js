@@ -85,6 +85,21 @@ let scheduleMapLinksRender = () => {};
 const mapLinkGeometries = new WeakMap();
 const mapLinkAnimations = new WeakMap();
 
+const syncMapNote = () => {
+  if (!mapNote) {
+    return;
+  }
+
+  if (!timeModeActive) {
+    mapNote.textContent = "КООРДИНАТЫ СУБЪЕКТИВНЫ: ПОЛОЖЕНИЕ — СМЫСЛОВАЯ БЛИЗОСТЬ, РАЗМЕР — ЛИЧНЫЙ ВЕС ОПЫТА.";
+    return;
+  }
+
+  mapNote.textContent = atmosphereMapId === "private-practice"
+    ? "ЧАСТНАЯ ПРАКТИКА — 2020—СЕЙЧАС. В\u00a0ХРОНОЛОГИИ ОСТАЮТСЯ ТОЛЬКО ПРОЕКТЫ С\u00a0ПОДТВЕРЖДЁННОЙ ДАТОЙ."
+    : "КОЛЬЦА — ГОДЫ: БЛИЖЕ К\u00a0ЦЕНТРУ — НОВЕЕ.";
+};
+
 const parseMapLinkCurve = (value) => {
   const numbers = value.match(/-?\d+(?:\.\d+)?/g)?.map(Number) || [];
 
@@ -368,17 +383,25 @@ const syncMapRelationships = () => {
   paths.forEach((path) => {
     const parentId = path.dataset.parentId;
     const childId = path.dataset.childId;
-    const parentKind = mapButtons.get(parentId)?.dataset.mapKind;
-    const childKind = mapButtons.get(childId)?.dataset.mapKind;
+    const parentButton = mapButtons.get(parentId);
+    const childButton = mapButtons.get(childId);
+    const parentKind = parentButton?.dataset.mapKind;
+    const childKind = childButton?.dataset.mapKind;
     const isFilterVisible = activeMapFilters.has(parentKind)
       && activeMapFilters.has(childKind);
+    const isTimeVisible = !timeModeActive || (
+      parentButton?.hasAttribute("data-time-year")
+      && childButton?.hasAttribute("data-time-year")
+    );
     const isActive = Boolean(
       relationshipId
       && (relationshipId === parentId || relationshipId === childId),
     );
-    const isVisibleRelationship = isActive && isFilterVisible;
+    const isVisibleRelationship = isActive && isFilterVisible && isTimeVisible;
 
     path.classList.toggle("is-filter-hidden", !isFilterVisible);
+    path.toggleAttribute("hidden", !isTimeVisible);
+    path.style.display = isTimeVisible ? "" : "none";
     path.classList.toggle("is-active-relation", isVisibleRelationship);
     setMapLinkReactiveState(path, isVisibleRelationship);
     hasVisibleRelationship ||= isVisibleRelationship;
@@ -412,6 +435,7 @@ const setMapAtmosphere = (item = null) => {
     signalField.style.removeProperty("--focus-y");
     signalField.style.removeProperty("--focus-horizon-x");
     syncMapRelationships();
+    syncMapNote();
     return;
   }
 
@@ -431,6 +455,7 @@ const setMapAtmosphere = (item = null) => {
     signalField.style.removeProperty("--focus-horizon-x");
   }
   syncMapRelationships();
+  syncMapNote();
 };
 
 const restoreSelectedMapAtmosphere = () => {
@@ -1705,11 +1730,7 @@ const setTimeMode = (
     );
   });
 
-  if (mapNote) {
-    mapNote.textContent = nextEnabled
-      ? "КОЛЬЦА — ГОДЫ: БЛИЖЕ К ЦЕНТРУ — НОВЕЕ."
-      : "КООРДИНАТЫ СУБЪЕКТИВНЫ: ПОЛОЖЕНИЕ — СМЫСЛОВАЯ БЛИЗОСТЬ, РАЗМЕР — ЛИЧНЫЙ ВЕС ОПЫТА.";
-  }
+  syncMapNote();
 
   applyMapLayout();
   syncMapNodeAvailability();

@@ -1498,6 +1498,75 @@ const auditBrowser = async (client, origin) => {
     fail("map-controls: chronology is not synchronized as a separate axis.", chronologyControlContract);
   }
 
+  await evaluate(
+    client,
+    "document.querySelector('[data-map-id=\"private-practice\"]')?.click(); true",
+  );
+  await delay(320);
+  const chronologyPrivatePracticeContract = await evaluate(client, `(() => {
+    const childNodes = Array.from(
+      document.querySelectorAll('.map-node[data-map-parent="private-practice"]'),
+    );
+    const datedIds = childNodes
+      .filter((node) => node.hasAttribute("data-time-year"))
+      .map((node) => node.dataset.mapId)
+      .sort();
+    const undatedNodes = childNodes
+      .filter((node) => !node.hasAttribute("data-time-year"));
+    const undatedIds = undatedNodes
+      .map((node) => node.dataset.mapId)
+      .sort();
+    const relationPaths = Array.from(
+      document.querySelectorAll('.map-links path[data-parent-id="private-practice"]'),
+    );
+    const activeIds = relationPaths
+      .filter((path) => path.classList.contains("is-active-relation"))
+      .map((path) => path.dataset.childId)
+      .sort();
+    const timeHiddenIds = relationPaths
+      .filter((path) => path.hasAttribute("hidden"))
+      .map((path) => path.dataset.childId)
+      .sort();
+    const timeHiddenDisplay = relationPaths
+      .filter((path) => path.hasAttribute("hidden"))
+      .every((path) => getComputedStyle(path).display === "none");
+
+    return {
+      datedIds,
+      undatedIds,
+      activeIds,
+      timeHiddenIds,
+      timeHiddenDisplay,
+      undatedInert: undatedNodes.every((node) => node.hasAttribute("inert")),
+      undatedAriaHidden: undatedNodes.every(
+        (node) => node.getAttribute("aria-hidden") === "true",
+      ),
+      maximumUndatedOpacity: undatedNodes.length
+        ? Math.max(...undatedNodes.map((node) => Number(getComputedStyle(node).opacity)))
+        : 1,
+      note: document.querySelector("[data-map-note]")?.textContent?.trim(),
+    };
+  })()`);
+  if (
+    chronologyPrivatePracticeContract.datedIds.length === 0
+    || chronologyPrivatePracticeContract.undatedIds.length === 0
+    || chronologyPrivatePracticeContract.activeIds.join("|")
+      !== chronologyPrivatePracticeContract.datedIds.join("|")
+    || chronologyPrivatePracticeContract.timeHiddenIds.join("|")
+      !== chronologyPrivatePracticeContract.undatedIds.join("|")
+    || !chronologyPrivatePracticeContract.timeHiddenDisplay
+    || !chronologyPrivatePracticeContract.undatedInert
+    || !chronologyPrivatePracticeContract.undatedAriaHidden
+    || chronologyPrivatePracticeContract.maximumUndatedOpacity > 0.06
+    || !chronologyPrivatePracticeContract.note
+      ?.includes("ТОЛЬКО ПРОЕКТЫ С\u00a0ПОДТВЕРЖДЁННОЙ ДАТОЙ")
+  ) {
+    fail(
+      "chronology: private practice must reveal only dated, available projects.",
+      chronologyPrivatePracticeContract,
+    );
+  }
+
   await navigate(client, `${origin}/?qa=ui-contracts-search`);
   await evaluate(client, `(() => {
     const input = document.querySelector("[data-command-input]");
