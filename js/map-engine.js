@@ -221,12 +221,14 @@ const writeUrlState = (changes, { replace = false } = {}) => {
 const timeGroupSectors = {
   garage: {
     parent: -2.28,
+    compactParent: -2.28,
     children: [-3.08, -2.72, -1.82, -1.48],
-    compactChildren: [-3.04, -2.68, -1.92, -1.58],
+    compactChildren: [-2.95, -2.58, -1.9, -1.45],
     order: ["garage-site", "collection", "narkomfin", "garage-app"],
   },
   "private-practice": {
     parent: -0.32,
+    compactParent: -0.55,
     children: [0.02, 0.3, 0.58, 0.86, 1.14, 1.42, 1.7, 1.98, 2.26],
     compactChildren: [-0.08, 0.25, 0.58, 0.91, 1.24, 1.57, 1.9, 2.23, 2.56],
     order: [
@@ -244,9 +246,9 @@ const timeGroupSectors = {
 };
 
 const timeRootAngles = {
-  optimal: [-2.98, -2.72],
-  "early-career": [-2.76, -2.35],
-  ilmix: [-2.54, -2.08],
+  optimal: [-2.98, -3],
+  "early-career": [-2.76, -2.08],
+  ilmix: [-2.54, -1.95],
 };
 
 const getTimeSectorAngle = (item, compact) => {
@@ -263,7 +265,7 @@ const getTimeSectorAngle = (item, compact) => {
   const sector = timeGroupSectors[groupId];
 
   if (item.id === groupId) {
-    return sector.parent;
+    return compact ? sector.compactParent : sector.parent;
   }
 
   const index = sector.order.indexOf(item.id);
@@ -297,6 +299,7 @@ const getTimeLayout = (item) => {
       ? 25 + (2021 - year) * 1.33
       : 33 + Math.max(0, Math.min(1, (2015 - year) / 5)) * 8;
   const compact = window.innerWidth <= 680;
+  const compactRadiusXScale = compact ? 1.35 : 1;
   const groupAngle = getTimeSectorAngle(item, compact);
   const rootAngles = timeRootAngles[item.id];
   const angle = groupAngle
@@ -304,7 +307,7 @@ const getTimeLayout = (item) => {
     ?? sourceAngle + lane * 0.18;
 
   return {
-    x: centerX + Math.cos(angle) * radiusX,
+    x: centerX + Math.cos(angle) * radiusX * compactRadiusXScale,
     y: centerY + Math.sin(angle) * radiusY,
   };
 };

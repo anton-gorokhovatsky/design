@@ -9651,6 +9651,22 @@ html[data-focus-modality="pointer"]
     transform: translate3d(0, -0.75%, 0) scale(var(--mobile-time-scale));
   }
 
+  .practice-map[data-time-view] .orbital-radar i:nth-child(1) {
+    width: 59.4%;
+  }
+
+  .practice-map[data-time-view] .orbital-radar i:nth-child(2) {
+    width: 91.8%;
+  }
+
+  .practice-map[data-time-view] .orbital-radar i:nth-child(3) {
+    width: 121.5%;
+  }
+
+  .practice-map[data-time-view] .orbital-radar i:nth-child(4) {
+    width: 151.2%;
+  }
+
   .practice-map[data-time-view] .map-node--garage {
     --node-scale: 0.56;
   }
