@@ -259,10 +259,10 @@ const getTimeLayout = (item) => {
     radiusY += lane * 0.55;
   }
 
-  const angle = practiceIndex
-    ? ((practiceIndex * 137) % 360 - 180) * Math.PI / 180
-    : sourceAngle
-      + lane * 0.32
+  const angle=practiceIndex
+    ? (innerWidth>680?practiceIndex*23-320:practiceIndex*137%360-180)*Math.PI/180
+    :sourceAngle
+      +lane*.32
       + (window.innerWidth <= 680 ? compactTimeAngleOffsets[item.id] || 0 : 0);
 
   return {

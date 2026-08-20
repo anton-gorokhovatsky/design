@@ -1544,6 +1544,26 @@ const auditBrowser = async (client, origin) => {
         center.y - candidate.y,
       ))
     ));
+    const renderedNodes = Array.from(document.querySelectorAll('.map-node'))
+      .map((node) => {
+        const bounds = node.querySelector('.map-node__glyph').getBoundingClientRect();
+
+        return {
+          id: node.dataset.mapId,
+          parent: node.dataset.mapParent,
+          x: bounds.left + bounds.width / 2,
+          y: bounds.top + bounds.height / 2,
+          radius: Math.max(bounds.width, bounds.height) / 2,
+        };
+      });
+    const renderedGaps = renderedNodes
+      .filter(({ parent }) => parent === "private-practice")
+      .flatMap((node) => renderedNodes
+        .filter(({ id }) => id !== node.id)
+        .map((candidate) => Math.hypot(
+          node.x - candidate.x,
+          node.y - candidate.y,
+        ) - node.radius - candidate.radius));
     const linkBounds = document.querySelector("[data-map-links]").getBoundingClientRect();
     const practiceBounds = document
       .querySelector('[data-map-id="private-practice"] .map-node__glyph')
@@ -1578,6 +1598,7 @@ const auditBrowser = async (client, origin) => {
       timeHiddenDisplay,
       yearsById,
       minimumReferenceGap: Math.min(...referenceGaps),
+      minimumRenderedGap: Math.min(...renderedGaps),
       fanSpanDegrees: (Math.PI * 2 - Math.max(...fanGaps)) * 180 / Math.PI,
       note: document.querySelector("[data-map-note]")?.textContent?.trim(),
     };
@@ -1604,6 +1625,7 @@ const auditBrowser = async (client, origin) => {
       ([id, year]) => chronologyPrivatePracticeContract.yearsById[id] !== year,
     )
     || chronologyPrivatePracticeContract.minimumReferenceGap < 34
+    || chronologyPrivatePracticeContract.minimumRenderedGap < 24
     || chronologyPrivatePracticeContract.fanSpanDegrees < 70
     || chronologyPrivatePracticeContract.fanSpanDegrees > 120
     || !chronologyPrivatePracticeContract.note
@@ -1926,6 +1948,10 @@ const auditBrowser = async (client, origin) => {
     const video = media?.querySelector("video");
     const bounds = media?.getBoundingClientRect();
     const style = video ? getComputedStyle(video) : null;
+    const previewStyle = preview ? getComputedStyle(preview) : null;
+    const originStyle = getComputedStyle(
+      document.querySelector(".origin-marker__label"),
+    );
     return {
       visible: preview?.classList.contains("is-visible"),
       hidden: preview?.getAttribute("aria-hidden"),
@@ -1933,6 +1959,8 @@ const auditBrowser = async (client, origin) => {
       objectFit: style?.objectFit,
       objectPosition: style?.objectPosition,
       poster: video?.getAttribute("poster"),
+      previewZ: Number.parseInt(previewStyle?.zIndex || "0", 10),
+      originZ: Number.parseInt(originStyle.zIndex || "0", 10),
     };
   })()`);
   if (
@@ -1945,6 +1973,7 @@ const auditBrowser = async (client, origin) => {
     || reelContract.objectFit !== "contain"
     || reelContract.objectPosition !== "50% 0%"
     || !reelContract.poster?.endsWith("assets/reel-posters/tarski.jpg")
+    || reelContract.previewZ <= reelContract.originZ
   ) {
     fail("reel: Tarski receiver lost its native 3:2 content geometry.", reelContract);
   }
