@@ -36,8 +36,8 @@ const reelChapterSources = new Map([
       "assets/reel-chapters/herman-02.mp4?v=7196d29d1d8f",
   ]],
   ["hotline-camp", [
-      "assets/reel-chapters/hotline-camp-01.mp4?v=eb1934984728",
-      "assets/reel-chapters/hotline-camp-02.mp4?v=6854aa71c926",
+      "assets/reel-chapters/hotline-camp-01.mp4?v=e44db2778f0c",
+      "assets/reel-chapters/hotline-camp-02.mp4?v=2924e0b20f5f",
   ]],
   ["dusty", [
       "assets/reel-chapters/dusty-merch-01.mp4?v=7219d4df4177",
@@ -357,8 +357,8 @@ const mapItems = [
     timeYear: 2026,
     href: "https://anton-gorokhovatsky.github.io/hotline-camp/",
     kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
-    previewVideo: "assets/reels/hotline-camp.mp4?v=e3fcea6a4f20",
-    previewPoster: "assets/reel-posters/hotline-camp.jpg?v=6239adca3706",
+    previewVideo: "assets/reels/hotline-camp.mp4?v=924c581d4d85",
+    previewPoster: "assets/reel-posters/hotline-camp.jpg?v=4b3549dcfb7f",
     previewOrientation: "landscape",
     previewMeta: "СОЧИНСКАЯ ПАЛИТРА, ПРОГРАММА И ТРЕНЕРЫ / 00:13",
     x: 68,

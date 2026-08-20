@@ -56,7 +56,7 @@ const projects = {
   },
   "hotline-camp": {
     url: "https://anton-gorokhovatsky.github.io/hotline-camp/",
-    outputDuration: 13.2,
+    outputDuration: 13,
     finalHold: 2000,
   },
   "dusty-merch": {
