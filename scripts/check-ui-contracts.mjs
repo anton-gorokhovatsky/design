@@ -1530,6 +1530,9 @@ const auditBrowser = async (client, origin) => {
     const timeHiddenDisplay = relationPaths
       .filter((path) => path.hasAttribute("hidden"))
       .every((path) => getComputedStyle(path).display === "none");
+    const yearsById = Object.fromEntries(
+      childNodes.map((node) => [node.dataset.mapId, Number(node.dataset.timeYear)]),
+    );
 
     return {
       datedIds,
@@ -1537,32 +1540,36 @@ const auditBrowser = async (client, origin) => {
       activeIds,
       timeHiddenIds,
       timeHiddenDisplay,
-      undatedInert: undatedNodes.every((node) => node.hasAttribute("inert")),
-      undatedAriaHidden: undatedNodes.every(
-        (node) => node.getAttribute("aria-hidden") === "true",
-      ),
-      maximumUndatedOpacity: undatedNodes.length
-        ? Math.max(...undatedNodes.map((node) => Number(getComputedStyle(node).opacity)))
-        : 1,
+      yearsById,
       note: document.querySelector("[data-map-note]")?.textContent?.trim(),
     };
   })()`);
+  const expectedPrivatePracticeYears = {
+    "dd-camp": 2025,
+    doronin: 2025,
+    dusty: 2025,
+    eleven: 2026,
+    herman: 2026,
+    "hotline-camp": 2026,
+    "ks-fish": 2020,
+    shirokostup: 2026,
+    tarski: 2026,
+  };
   if (
-    chronologyPrivatePracticeContract.datedIds.length === 0
-    || chronologyPrivatePracticeContract.undatedIds.length === 0
+    chronologyPrivatePracticeContract.datedIds.length !== 9
+    || chronologyPrivatePracticeContract.undatedIds.length !== 0
     || chronologyPrivatePracticeContract.activeIds.join("|")
       !== chronologyPrivatePracticeContract.datedIds.join("|")
-    || chronologyPrivatePracticeContract.timeHiddenIds.join("|")
-      !== chronologyPrivatePracticeContract.undatedIds.join("|")
+    || chronologyPrivatePracticeContract.timeHiddenIds.length !== 0
     || !chronologyPrivatePracticeContract.timeHiddenDisplay
-    || !chronologyPrivatePracticeContract.undatedInert
-    || !chronologyPrivatePracticeContract.undatedAriaHidden
-    || chronologyPrivatePracticeContract.maximumUndatedOpacity > 0.06
+    || Object.entries(expectedPrivatePracticeYears).some(
+      ([id, year]) => chronologyPrivatePracticeContract.yearsById[id] !== year,
+    )
     || !chronologyPrivatePracticeContract.note
-      ?.includes("ТОЛЬКО ПРОЕКТЫ С\u00a0ПОДТВЕРЖДЁННОЙ ДАТОЙ")
+      ?.includes("ДЕВЯТЬ ПРОЕКТОВ ПОКАЗАНЫ ПО\u00a0ГОДАМ ЗАПУСКА")
   ) {
     fail(
-      "chronology: private practice must reveal only dated, available projects.",
+      "chronology: private practice must reveal all nine projects on their launch years.",
       chronologyPrivatePracticeContract,
     );
   }
