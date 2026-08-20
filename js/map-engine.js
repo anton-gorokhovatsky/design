@@ -238,6 +238,9 @@ const getTimeLayout = (item) => {
     .sort((left, right) => getSourceAngle(left) - getSourceAngle(right));
   const lane = peers.findIndex(({ id }) => id === item.id) - (peers.length - 1) / 2;
   const practiceIndex = item.parent === "private-practice" && mapItems.indexOf(item);
+  const garageIndex = item.parent === "garage" && mapItems
+    .filter((candidate) => candidate.parent === "garage" && Number.isFinite(candidate.timeYear))
+    .findIndex(({ id }) => id === item.id);
   const year = item.timeYear;
   let radiusX = year >= 2021
     ? 14 + (2026 - year) * 2.6
@@ -261,6 +264,8 @@ const getTimeLayout = (item) => {
 
   const angle=practiceIndex
     ? (innerWidth>680?practiceIndex*23-320:practiceIndex*137%360-180)*Math.PI/180
+    :garageIndex!==false
+      ? getSourceAngle(mapItems.find(({id})=>id==="garage"))-.26-garageIndex*.18
     :sourceAngle
       +lane*.32
       + (window.innerWidth <= 680 ? compactTimeAngleOffsets[item.id] || 0 : 0);

@@ -1564,23 +1564,26 @@ const auditBrowser = async (client, origin) => {
           node.x - candidate.x,
           node.y - candidate.y,
         ) - node.radius - candidate.radius));
-    const linkBounds = document.querySelector("[data-map-links]").getBoundingClientRect();
-    const practiceBounds = document
-      .querySelector('[data-map-id="private-practice"] .map-node__glyph')
-      .getBoundingClientRect();
-    const practiceCenter = {
-      x: ((practiceBounds.left + practiceBounds.width / 2 - linkBounds.left)
-        / linkBounds.width) * 100,
-      y: ((practiceBounds.top + practiceBounds.height / 2 - linkBounds.top)
-        / linkBounds.height) * 100,
+    const chronologyPointById = (id) => {
+      const node = document.querySelector('[data-map-id="' + id + '"]');
+
+      return {
+        x: Number.parseFloat(node.style.getPropertyValue("--x")),
+        y: Number.parseFloat(node.style.getPropertyValue("--y")),
+      };
     };
-    const fanAngles = relationPaths.map((path) => {
-      const [sourceX, sourceY] = path.getAttribute("d")
-        .match(/-?\\d+(?:\\.\\d+)?/g)
-        .map(Number);
+    const garageCenter = chronologyPointById("garage");
+    const garageAppCenter = chronologyPointById("garage-app");
+    const privatePracticeCenter = chronologyPointById("private-practice");
+    const garageAppDistance = (center) => Math.hypot(
+      garageAppCenter.x - center.x,
+      garageAppCenter.y - center.y,
+    );
+    const fanAngles = childNodes.map((node) => {
+      const childCenter = chronologyPointById(node.dataset.mapId);
       const angle = Math.atan2(
-        sourceY - practiceCenter.y,
-        sourceX - practiceCenter.x,
+        childCenter.y - privatePracticeCenter.y,
+        childCenter.x - privatePracticeCenter.x,
       );
 
       return angle < 0 ? angle + Math.PI * 2 : angle;
@@ -1599,6 +1602,8 @@ const auditBrowser = async (client, origin) => {
       yearsById,
       minimumReferenceGap: Math.min(...referenceGaps),
       minimumRenderedGap: Math.min(...renderedGaps),
+      garageAppToGarage: garageAppDistance(garageCenter),
+      garageAppToPrivatePractice: garageAppDistance(privatePracticeCenter),
       fanSpanDegrees: (Math.PI * 2 - Math.max(...fanGaps)) * 180 / Math.PI,
       note: document.querySelector("[data-map-note]")?.textContent?.trim(),
     };
@@ -1626,6 +1631,8 @@ const auditBrowser = async (client, origin) => {
     )
     || chronologyPrivatePracticeContract.minimumReferenceGap < 34
     || chronologyPrivatePracticeContract.minimumRenderedGap < 24
+    || chronologyPrivatePracticeContract.garageAppToGarage
+      >= chronologyPrivatePracticeContract.garageAppToPrivatePractice
     || chronologyPrivatePracticeContract.fanSpanDegrees < 70
     || chronologyPrivatePracticeContract.fanSpanDegrees > 120
     || !chronologyPrivatePracticeContract.note
