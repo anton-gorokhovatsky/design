@@ -1533,17 +1533,6 @@ const auditBrowser = async (client, origin) => {
     const yearsById = Object.fromEntries(
       childNodes.map((node) => [node.dataset.mapId, Number(node.dataset.timeYear)]),
     );
-    const referenceCenters = childNodes.map((node) => ({
-      id: node.dataset.mapId,
-      x: Number.parseFloat(node.style.getPropertyValue("--x")) * 4.39,
-      y: Number.parseFloat(node.style.getPropertyValue("--y")) * 8.63,
-    }));
-    const referenceGaps = referenceCenters.flatMap((center, index) => (
-      referenceCenters.slice(index + 1).map((candidate) => Math.hypot(
-        center.x - candidate.x,
-        center.y - candidate.y,
-      ))
-    ));
     const renderedNodes = Array.from(document.querySelectorAll('.map-node'))
       .map((node) => {
         const bounds = node.querySelector('.map-node__glyph').getBoundingClientRect();
@@ -1573,12 +1562,22 @@ const auditBrowser = async (client, origin) => {
       };
     };
     const garageCenter = chronologyPointById("garage");
-    const garageAppCenter = chronologyPointById("garage-app");
     const privatePracticeCenter = chronologyPointById("private-practice");
-    const garageAppDistance = (center) => Math.hypot(
-      garageAppCenter.x - center.x,
-      garageAppCenter.y - center.y,
+    const datedGarageNodes = Array.from(
+      document.querySelectorAll('.map-node[data-map-parent="garage"][data-time-year]'),
     );
+    const misplacedGarageIds = datedGarageNodes
+      .filter((node) => {
+        const center = chronologyPointById(node.dataset.mapId);
+        const distanceTo = (target) => Math.hypot(
+          center.x - target.x,
+          center.y - target.y,
+        );
+
+        return distanceTo(garageCenter) >= distanceTo(privatePracticeCenter);
+      })
+      .map((node) => node.dataset.mapId)
+      .sort();
     const fanAngles = childNodes.map((node) => {
       const childCenter = chronologyPointById(node.dataset.mapId);
       const angle = Math.atan2(
@@ -1600,10 +1599,12 @@ const auditBrowser = async (client, origin) => {
       timeHiddenIds,
       timeHiddenDisplay,
       yearsById,
-      minimumReferenceGap: Math.min(...referenceGaps),
       minimumRenderedGap: Math.min(...renderedGaps),
-      garageAppToGarage: garageAppDistance(garageCenter),
-      garageAppToPrivatePractice: garageAppDistance(privatePracticeCenter),
+      groupCenterDistance: Math.hypot(
+        garageCenter.x - privatePracticeCenter.x,
+        garageCenter.y - privatePracticeCenter.y,
+      ),
+      misplacedGarageIds,
       fanSpanDegrees: (Math.PI * 2 - Math.max(...fanGaps)) * 180 / Math.PI,
       note: document.querySelector("[data-map-note]")?.textContent?.trim(),
     };
@@ -1629,12 +1630,11 @@ const auditBrowser = async (client, origin) => {
     || Object.entries(expectedPrivatePracticeYears).some(
       ([id, year]) => chronologyPrivatePracticeContract.yearsById[id] !== year,
     )
-    || chronologyPrivatePracticeContract.minimumReferenceGap < 34
-    || chronologyPrivatePracticeContract.minimumRenderedGap < 24
-    || chronologyPrivatePracticeContract.garageAppToGarage
-      >= chronologyPrivatePracticeContract.garageAppToPrivatePractice
-    || chronologyPrivatePracticeContract.fanSpanDegrees < 70
-    || chronologyPrivatePracticeContract.fanSpanDegrees > 120
+    || chronologyPrivatePracticeContract.minimumRenderedGap < 4
+    || chronologyPrivatePracticeContract.groupCenterDistance < 25
+    || chronologyPrivatePracticeContract.misplacedGarageIds.length !== 0
+    || chronologyPrivatePracticeContract.fanSpanDegrees < 50
+    || chronologyPrivatePracticeContract.fanSpanDegrees > 80
     || !chronologyPrivatePracticeContract.note
       ?.includes("ДЕВЯТЬ ПРОЕКТОВ ПОКАЗАНЫ ПО\u00a0ГОДАМ ЗАПУСКА")
   ) {

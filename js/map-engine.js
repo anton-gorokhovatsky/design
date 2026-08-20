@@ -218,10 +218,58 @@ const writeUrlState = (changes, { replace = false } = {}) => {
   window.history[method]({ ...window.history.state, ...changes }, "", nextUrl);
 };
 
-const compactTimeAngleOffsets = {
-  optimal: -0.55,
-  "garage-app": 0.45,
-  narkomfin: 0.18,
+const timeGroupSectors = {
+  garage: {
+    parent: -2.28,
+    children: [-3.08, -2.72, -1.82, -1.48],
+    compactChildren: [-3.04, -2.68, -1.92, -1.58],
+    order: ["garage-site", "collection", "narkomfin", "garage-app"],
+  },
+  "private-practice": {
+    parent: -0.32,
+    children: [0.02, 0.3, 0.58, 0.86, 1.14, 1.42, 1.7, 1.98, 2.26],
+    compactChildren: [-0.08, 0.25, 0.58, 0.91, 1.24, 1.57, 1.9, 2.23, 2.56],
+    order: [
+      "shirokostup",
+      "dusty",
+      "tarski",
+      "ks-fish",
+      "herman",
+      "dd-camp",
+      "hotline-camp",
+      "doronin",
+      "eleven",
+    ],
+  },
+};
+
+const timeRootAngles = {
+  optimal: [-2.98, -2.72],
+  "early-career": [-2.76, -2.35],
+  ilmix: [-2.54, -2.08],
+};
+
+const getTimeSectorAngle = (item, compact) => {
+  const groupId = item.parent && timeGroupSectors[item.parent]
+    ? item.parent
+    : timeGroupSectors[item.id]
+      ? item.id
+      : null;
+
+  if (!groupId) {
+    return null;
+  }
+
+  const sector = timeGroupSectors[groupId];
+
+  if (item.id === groupId) {
+    return sector.parent;
+  }
+
+  const index = sector.order.indexOf(item.id);
+  const angles = compact ? sector.compactChildren : sector.children;
+
+  return angles[index] ?? sector.parent;
 };
 
 const getTimeLayout = (item) => {
@@ -237,38 +285,23 @@ const getTimeLayout = (item) => {
     .filter((candidate) => candidate.timeYear === item.timeYear)
     .sort((left, right) => getSourceAngle(left) - getSourceAngle(right));
   const lane = peers.findIndex(({ id }) => id === item.id) - (peers.length - 1) / 2;
-  const practiceIndex = item.parent === "private-practice" && mapItems.indexOf(item);
-  const garageIndex = item.parent === "garage" && mapItems
-    .filter((candidate) => candidate.parent === "garage" && Number.isFinite(candidate.timeYear))
-    .findIndex(({ id }) => id === item.id);
   const year = item.timeYear;
-  let radiusX = year >= 2021
-    ? 14 + (2026 - year) * 2.6
+  const radiusX = year >= 2021
+    ? 22 + (2026 - year) * 2.4
     : year >= 2015
-      ? 27 + (2021 - year) * 2
-      : 39 + Math.max(0, Math.min(1, (2015 - year) / 5)) * 13;
-  let radiusY = year >= 2021
-    ? 11 + (2026 - year) * 1.8
+      ? 34 + (2021 - year) * 1.83
+      : 45 + Math.max(0, Math.min(1, (2015 - year) / 5)) * 11;
+  const radiusY = year >= 2021
+    ? 17 + (2026 - year) * 1.6
     : year >= 2015
-      ? 20 + (2021 - year) * 1.5
-      : 29 + Math.max(0, Math.min(1, (2015 - year) / 5)) * 9;
-
-  if (practiceIndex) {
-    const scale = 0.7 + (practiceIndex % 3) * 0.35;
-    radiusX *= scale;
-    radiusY *= scale;
-  } else {
-    radiusX += lane * 0.8;
-    radiusY += lane * 0.55;
-  }
-
-  const angle=practiceIndex
-    ? (innerWidth>680?practiceIndex*23-320:practiceIndex*137%360-180)*Math.PI/180
-    :garageIndex!==false
-      ? getSourceAngle(mapItems.find(({id})=>id==="garage"))-.26-garageIndex*.18
-    :sourceAngle
-      +lane*.32
-      + (window.innerWidth <= 680 ? compactTimeAngleOffsets[item.id] || 0 : 0);
+      ? 25 + (2021 - year) * 1.33
+      : 33 + Math.max(0, Math.min(1, (2015 - year) / 5)) * 8;
+  const compact = window.innerWidth <= 680;
+  const groupAngle = getTimeSectorAngle(item, compact);
+  const rootAngles = timeRootAngles[item.id];
+  const angle = groupAngle
+    ?? rootAngles?.[compact ? 1 : 0]
+    ?? sourceAngle + lane * 0.18;
 
   return {
     x: centerX + Math.cos(angle) * radiusX,

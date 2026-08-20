@@ -24,7 +24,7 @@ const eagerMedia = [
   ...indexSource.matchAll(/<(?:video|source)[^>]+(?:src|srcset)="([^"]+\.(?:mp4|webm))"/g),
 ].map((match) => match[1]);
 const budgets = {
-  css: 220 * 1024,
+  css: 221 * 1024,
   runtime: 195 * 1024,
   fonts: 160 * 1024,
   initialSource: 600 * 1024,

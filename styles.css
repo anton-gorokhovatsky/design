@@ -8326,23 +8326,23 @@ html[data-reduce-motion="true"] .observation-showcase {
 }
 
 .practice-map[data-time-view] .orbital-radar i:nth-child(1) {
-  width: 28%;
-  height: 22%;
+  width: 44%;
+  height: 34%;
 }
 
 .practice-map[data-time-view] .orbital-radar i:nth-child(2) {
-  width: 54%;
-  height: 40%;
+  width: 68%;
+  height: 50%;
 }
 
 .practice-map[data-time-view] .orbital-radar i:nth-child(3) {
-  width: 78%;
-  height: 58%;
+  width: 90%;
+  height: 66%;
 }
 
 .practice-map[data-time-view] .orbital-radar i:nth-child(4) {
-  width: 104%;
-  height: 76%;
+  width: 112%;
+  height: 82%;
 }
 
 .practice-map[data-time-view] .orbital-radar i span {
@@ -8358,6 +8358,25 @@ html[data-reduce-motion="true"] .observation-showcase {
 
 .practice-map[data-time-view] .map-node[data-time-year] {
   opacity: 1;
+}
+
+.practice-map[data-time-view] .map-node--garage {
+  --node-scale: 0.78;
+}
+
+.practice-map[data-time-view]
+  .map-node--garage:is(:hover, :focus-visible, .is-selected) {
+  --node-scale: 0.86;
+}
+
+.practice-map[data-time-view]
+  .map-links:is(
+    [data-relationship-id="garage"],
+    [data-relationship-id="private-practice"]
+  )
+  path.is-active-relation {
+  stroke-width: 0.72;
+  opacity: 0.28;
 }
 
 .practice-map[data-time-view] .map-node-label[data-time-year]::after {
@@ -9223,7 +9242,7 @@ html[data-focus-modality="pointer"]
     --mobile-map-center-y: calc(50svh - 72px);
     --mobile-map-y-scale: 1;
     --mobile-horizon-top: 85%;
-    --mobile-time-scale: 1.18;
+    --mobile-time-scale: 1;
   }
 
   .map-camera {
@@ -9630,6 +9649,15 @@ html[data-focus-modality="pointer"]
 @media (max-width: 680px) {
   .practice-map[data-time-view] .map-camera {
     transform: translate3d(0, -0.75%, 0) scale(var(--mobile-time-scale));
+  }
+
+  .practice-map[data-time-view] .map-node--garage {
+    --node-scale: 0.56;
+  }
+
+  .practice-map[data-time-view]
+    .map-node--garage:is(:hover, :focus-visible, .is-selected) {
+    --node-scale: 0.64;
   }
 }
 
