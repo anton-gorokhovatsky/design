@@ -1290,11 +1290,16 @@ if (mapLinksRoot) {
           const geometry = getNodeGeometry(item);
           const deltaX = geometry.centerX - parentGeometry.centerX;
           const deltaY = geometry.centerY - parentGeometry.centerY;
+          let angle = Math.atan2(deltaY, deltaX);
+
+          if (timeModeActive && parentId === "private-practice" && angle < 0) {
+            angle += Math.PI * 2;
+          }
 
           return {
             item,
             geometry,
-            angle: Math.atan2(deltaY, deltaX),
+            angle,
           };
         })
         .sort((left, right) => (

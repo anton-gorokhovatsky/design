@@ -1533,6 +1533,27 @@ const auditBrowser = async (client, origin) => {
     const yearsById = Object.fromEntries(
       childNodes.map((node) => [node.dataset.mapId, Number(node.dataset.timeYear)]),
     );
+    const linkBounds = document.querySelector("[data-map-links]").getBoundingClientRect();
+    const practiceBounds = document
+      .querySelector('[data-map-id="private-practice"] .map-node__glyph')
+      .getBoundingClientRect();
+    const practiceCenter = {
+      x: ((practiceBounds.left + practiceBounds.width / 2 - linkBounds.left)
+        / linkBounds.width) * 100,
+      y: ((practiceBounds.top + practiceBounds.height / 2 - linkBounds.top)
+        / linkBounds.height) * 100,
+    };
+    const fanAngles = relationPaths.map((path) => {
+      const [sourceX, sourceY] = path.getAttribute("d")
+        .match(/-?\\d+(?:\\.\\d+)?/g)
+        .map(Number);
+      const angle = Math.atan2(
+        sourceY - practiceCenter.y,
+        sourceX - practiceCenter.x,
+      );
+
+      return angle < 0 ? angle + Math.PI * 2 : angle;
+    });
 
     return {
       datedIds,
@@ -1541,6 +1562,8 @@ const auditBrowser = async (client, origin) => {
       timeHiddenIds,
       timeHiddenDisplay,
       yearsById,
+      fanSpanDegrees: (Math.max(...fanAngles) - Math.min(...fanAngles))
+        * 180 / Math.PI,
       note: document.querySelector("[data-map-note]")?.textContent?.trim(),
     };
   })()`);
@@ -1565,11 +1588,12 @@ const auditBrowser = async (client, origin) => {
     || Object.entries(expectedPrivatePracticeYears).some(
       ([id, year]) => chronologyPrivatePracticeContract.yearsById[id] !== year,
     )
+    || chronologyPrivatePracticeContract.fanSpanDegrees > 120
     || !chronologyPrivatePracticeContract.note
       ?.includes("ДЕВЯТЬ ПРОЕКТОВ ПОКАЗАНЫ ПО\u00a0ГОДАМ ЗАПУСКА")
   ) {
     fail(
-      "chronology: private practice must reveal all nine projects on their launch years.",
+      "chronology: private practice must reveal nine projects in a calm relation fan.",
       chronologyPrivatePracticeContract,
     );
   }
