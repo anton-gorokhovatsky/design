@@ -56,7 +56,7 @@ const projects = {
   },
   "hotline-camp": {
     url: "https://anton-gorokhovatsky.github.io/hotline-camp/",
-    outputDuration: 13,
+    outputDuration: 14,
     finalHold: 2000,
   },
   "dusty-merch": {
@@ -582,24 +582,35 @@ const runHermanCaptureMotion = async (page) => {
 };
 
 const runHotlineCampCaptureMotion = async (page) => {
-  await page.waitForTimeout(1600);
-  await smoothScrollTo(page, "#program", 2200, 0);
   await page.waitForTimeout(900);
 
-  const darkTheme = page.getByRole("button", {
-    name: "Включить тёмную тему",
-    exact: true,
-  });
+  const menuToggle = page.locator("#menu-toggle");
+  await activateControlWithoutScrolling(
+    menuToggle,
+    "The Hotline Camp menu control",
+  );
+  await page.waitForTimeout(1900);
+  await activateControlWithoutScrolling(
+    menuToggle,
+    "The Hotline Camp menu control",
+  );
+  await page.waitForTimeout(450);
 
-  if (await darkTheme.count() !== 1) {
-    throw new Error("The Hotline Camp dark-theme control must be unique");
-  }
+  await smoothScrollTo(page, "#program", 1900, 0);
+  await page.waitForTimeout(650);
 
-  await darkTheme.click();
-  await page.waitForTimeout(1000);
-  await smoothScrollTo(page, "#trainers", 2200, 0);
-  await page.waitForTimeout(1000);
-  await smoothScrollTo(page, "#registration", 2300, 0);
+  const darkTheme = page.locator(
+    '.theme-toggle--icon[data-theme-toggle][aria-label="Включить тёмную тему"]',
+  );
+
+  await activateControlWithoutScrolling(
+    darkTheme,
+    "The Hotline Camp dark-theme control",
+  );
+  await page.waitForTimeout(800);
+  await smoothScrollTo(page, "#trainers", 1900, 0);
+  await page.waitForTimeout(750);
+  await smoothScrollTo(page, "#registration", 2000, 0);
   await page.waitForTimeout(500);
 };
 
