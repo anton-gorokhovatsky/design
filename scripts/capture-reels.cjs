@@ -55,7 +55,7 @@ const projects = {
     finalHold: 1800,
   },
   "hotline-camp": {
-    url: "https://anton-gorokhovatsky.github.io/hotline-camp/",
+    url: "https://hotlinecamp.ru/",
     outputDuration: 14,
     finalHold: 2000,
   },
