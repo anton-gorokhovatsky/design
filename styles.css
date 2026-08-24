@@ -8418,7 +8418,7 @@ html[data-theme="dark"] .signal-constellation {
   }
 
   .map-evidence > div {
-    grid-template-columns: 64px minmax(0, 1fr);
+    grid-template-columns: 72px minmax(0, 1fr);
     gap: 8px;
   }
 

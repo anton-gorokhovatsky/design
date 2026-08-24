@@ -124,7 +124,12 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=4af00f70b31f">
+    <link rel="stylesheet" href="styles.css?v=c1bfcc3e54f1">
+    <style>
+      .map-evidence [data-map-evidence-role-label]{font-family:var(--font-author);font-size:.6rem;font-weight:400;letter-spacing:0}
+      .map-inspector:is([data-selected-map-id="principle-autonomy"],[data-selected-map-id="principle-own"]) [data-map-title]{font-size:clamp(1.35rem,6.8cqi,1.8rem)}
+      .map-inspector:is([data-selected-map-id="principle-communicate"],[data-selected-map-id="principle-experiment"]) [data-map-title]{font-size:clamp(1.5rem,7.8cqi,2.05rem)}
+    </style>
     <!-- runtime-import-map:start -->
     <script type="importmap" data-runtime-import-map>
       {
@@ -506,7 +511,7 @@
                 <dd data-map-evidence-task></dd>
               </div>
               <div>
-                <dt>МОЯ РОЛЬ</dt>
+                <dt data-map-evidence-role-label>МОЯ РОЛЬ</dt>
                 <dd data-map-evidence-role></dd>
               </div>
               <div>
