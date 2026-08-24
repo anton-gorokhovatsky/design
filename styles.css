@@ -1,34 +1,8 @@
-@font-face {
-  font-family: "Golos Text";
-  src: url("assets/fonts/GolosText-Regular.woff2") format("woff2");
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Golos Text";
-  src: url("assets/fonts/GolosText-Medium.woff2") format("woff2");
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Golos Text";
-  src: url("assets/fonts/GolosText-SemiBold.woff2") format("woff2");
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Golos Text";
-  src: url("assets/fonts/GolosText-Bold.woff2") format("woff2");
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-}
+@font-face{font-family:"Golos Text";src:url(assets/fonts/GolosText-Regular.woff2);font-weight:400;font-display:swap;}
+@font-face{font-family:"Golos Text";src:url(assets/fonts/GolosText-Medium.woff2);font-weight:500;font-display:swap;}
+@font-face{font-family:"Golos Text";src:url(assets/fonts/GolosText-SemiBold.woff2);font-weight:600;font-display:swap;}
+@font-face{font-family:"Golos Text";src:url(assets/fonts/GolosText-Bold.woff2);font-weight:700;font-display:swap;}
+@font-face{font-family:Rene;src:url(assets/fonts/Rene-Regular.woff2);font-display:swap;}
 
 :root {
   --bg: #eeede7;
@@ -51,6 +25,7 @@
   --font-mono: "Golos Text", Arial, Helvetica, sans-serif;
   --font-serif: "Golos Text", Arial, Helvetica, sans-serif;
   --font-ascii: var(--font-sans);
+  --font-author:Rene,var(--font-sans);
   --motion-enter: cubic-bezier(0.16, 1, 0.3, 1);
   --motion-shift: cubic-bezier(0.65, 0, 0.35, 1);
   --motion-exit: cubic-bezier(0.4, 0, 1, 1);
@@ -8205,6 +8180,8 @@ html[data-reduce-motion="true"] .observation-showcase {
   font-size: clamp(0.72rem, calc(0.67rem + 0.14vw), 0.82rem);
   line-height: 1.35;
 }
+
+[data-map-evidence-role],body:has(.practice-map:is([data-selected-kind=personal],[data-selected-kind=practice])) [data-map-title]{font-family:var(--font-author);font-weight:400}
 
 .observation-controls {
   position: static;
