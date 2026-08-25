@@ -1027,7 +1027,7 @@ const selectMapItem = (
   }
 
   if (mapTitle) {
-    mapTitle.textContent = typographUiText(item.displayTitle || item.title);
+    mapTitle.textContent = item.displayTitle || typographUiText(item.title);
     mapTitle.setAttribute("aria-label", typographUiText(item.title));
   }
 

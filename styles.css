@@ -5178,6 +5178,7 @@ body:has(.command-dock.is-open) .origin-marker__label {
   line-height: 0.94;
   overflow-wrap: normal;
   text-wrap: balance;
+  white-space: pre-line;
 }
 
 .map-inspector .map-readout__identity p {
