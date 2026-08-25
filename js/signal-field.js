@@ -1,4 +1,4 @@
-// Runtime module 3/7: decorative signal field and depth-grid renderer.
+// Runtime module 3/9: decorative signal field and depth-grid renderer.
 import {
   captureMode,
   reducedMotion,

@@ -1,10 +1,11 @@
-// Runtime module 5/7: spatial map, relations, filters, and observation route.
+// Runtime module 6/9: spatial map geometry, relations, filters, and previews.
 import { trackPortfolioEvent } from "./analytics.js";
 import {
   mapItems,
   principlesSourceHref,
   reelChapterSources,
 } from "./map-data.js";
+import { createObservationRoute } from "./observation-route.js";
 import {
   reducedMotion,
   typographUiText,
@@ -49,12 +50,6 @@ const mapEvidenceById = JSON.parse(
 const mapNote = document.querySelector("[data-map-note]");
 const timeToggles = Array.from(document.querySelectorAll("[data-time-toggle]"));
 const observationStart = document.querySelector("[data-start-observation]");
-const observationControls = document.querySelector("[data-observation-controls]");
-const observationProgress = document.querySelector("[data-observation-progress]");
-const observationPrevious = document.querySelector("[data-observation-previous]");
-const observationPause = document.querySelector("[data-observation-pause]");
-const observationNext = document.querySelector("[data-observation-next]");
-const observationStatus = document.querySelector("[data-observation-status]");
 const reelItems = mapItems.filter((item) => item.previewVideo);
 const hoverCapable = window.matchMedia("(hover: hover) and (pointer: fine)");
 const compactMapViewport = window.matchMedia("(max-width: 680px)");
@@ -1085,7 +1080,7 @@ const selectMapItem = (
 };
 
 inspectorClose?.addEventListener("click", () => {
-  if (observationActive) {
+  if (observationRoute.active) {
     stopObservation();
     observationStart?.focus({ preventScroll: true });
     return;
@@ -1803,57 +1798,6 @@ timeToggles.forEach((toggle) => {
   });
 });
 
-const observationSteps = [
-  {
-    id: "origin",
-    kind: "МАРШРУТ / 01",
-    title: "СЕАНС НАБЛЮДЕНИЯ",
-    meta: "ОКОЛО 60 СЕКУНД / 8 КООРДИНАТ",
-    description: "Короткий маршрут по карте: от моей профессиональной оптики к институциональной работе, частной практике и принципам.",
-    showcaseId: "garage-site",
-    x: 50,
-    y: 54,
-  },
-  { id: "garage", itemId: "garage", showcaseId: "garage-site" },
-  { id: "narkomfin", itemId: "narkomfin" },
-  { id: "private-practice", itemId: "private-practice" },
-  { id: "eleven", itemId: "eleven" },
-  { id: "shirokostup", itemId: "shirokostup" },
-  { id: "principle", itemId: "principle-design-engineering" },
-  {
-    id: "contact",
-    kind: "ФИНАЛ / 08",
-    title: "СВЯЗАТЬСЯ",
-    meta: "МОСКВА / УДАЛЁННО / ПОЧТА",
-    description: "Если вам нужен человек, который соединяет исследование, продукт, дизайн, координацию и реализацию — напишите мне.",
-    href: "mailto:anton@gorokhovatsky.tech",
-    x: 50,
-    y: 54,
-  },
-];
-const observationStepDuration = 7500;
-let observationActive = false;
-let observationPaused = false;
-let observationStepIndex = 0;
-let observationTimer = 0;
-
-const clearObservationTimer = () => {
-  window.clearTimeout(observationTimer);
-  observationTimer = 0;
-};
-
-const setObservationCamera = (step) => {
-  const item = step.itemId
-    ? mapItems.find((candidate) => candidate.id === step.itemId)
-    : null;
-  const position = item ? resolveMapLayout(item) : { x: step.x, y: step.y };
-  const cameraX = Math.max(-5.2, Math.min(5.2, (50 - position.x) * 0.12));
-  const cameraY = Math.max(-3.6, Math.min(3.6, (54 - position.y) * 0.09));
-
-  signalField?.style.setProperty("--observation-camera-x", `${cameraX}%`);
-  signalField?.style.setProperty("--observation-camera-y", `${cameraY}%`);
-};
-
 const renderObservationSyntheticStep = (step) => {
   selectedMapId = null;
   setMapAtmosphere(null);
@@ -1864,7 +1808,7 @@ const renderObservationSyntheticStep = (step) => {
   });
 
   if (mapInspector) {
-    mapInspector.dataset.selectedMapId = `observation-${step.id}`;
+    mapInspector.dataset.selectedMapId = "observation-" + step.id;
     mapInspector.dataset.mobilePlacement = step.id === "contact" ? "top" : "bottom";
   }
 
@@ -1901,229 +1845,28 @@ const renderObservationSyntheticStep = (step) => {
   setInspectorOpen(true);
 };
 
-const updateObservationControls = () => {
-  if (observationProgress) {
-    observationProgress.textContent = `${String(observationStepIndex + 1).padStart(2, "0")} / ${String(observationSteps.length).padStart(2, "0")}`;
-  }
+const observationRoute = createObservationRoute({
+  clearMapSelection,
+  getSelectedMapId: () => selectedMapId,
+  getStepPosition: (step) => {
+    const item = step.itemId
+      ? mapItems.find((candidate) => candidate.id === step.itemId)
+      : null;
 
-  if (observationPrevious) {
-    observationPrevious.disabled = observationStepIndex === 0;
-  }
-
-  if (observationPause) {
-    observationPause.textContent = observationPaused ? "ПРОДОЛЖИТЬ" : "ПАУЗА";
-    observationPause.setAttribute("aria-pressed", String(observationPaused));
-  }
-
-  if (observationNext) {
-    observationNext.textContent = observationStepIndex === observationSteps.length - 1
-      ? "ЗАВЕРШИТЬ"
-      : "ДАЛЬШЕ";
-  }
-
-  signalField?.style.setProperty(
-    "--observation-route-progress",
-    String((observationStepIndex + 1) / observationSteps.length),
-  );
-};
-
-const scheduleObservationStep = () => {
-  clearObservationTimer();
-
-  if (!observationActive || observationPaused) {
-    return;
-  }
-
-  if (observationStepIndex >= observationSteps.length - 1) {
-    observationPaused = true;
-    updateObservationControls();
-    return;
-  }
-
-  observationTimer = window.setTimeout(() => {
-    observationStepIndex += 1;
-    renderObservationStep(observationStepIndex, { updateHistory: true });
-  }, observationStepDuration);
-};
-
-function renderObservationStep(index, { updateHistory = true } = {}) {
-  if (!observationActive) {
-    return;
-  }
-
-  observationStepIndex = Math.max(
-    0,
-    Math.min(observationSteps.length - 1, Number(index) || 0),
-  );
-  const step = observationSteps[observationStepIndex];
-
-  setObservationCamera(step);
-  renderObservationShowcase(step);
-
-  if (step.itemId) {
-    selectMapItem(step.itemId, {
-      reveal: true,
-      updateHistory: false,
-    });
-  } else {
-    renderObservationSyntheticStep(step);
-  }
-
-  updateObservationControls();
-
-  if (observationStatus) {
-    observationStatus.textContent = `Сеанс наблюдения: шаг ${observationStepIndex + 1} из ${observationSteps.length}. ${step.title || mapItems.find((item) => item.id === step.itemId)?.title || ""}`;
-  }
-
-  if (updateHistory) {
-    writeUrlState(
-      {
-        point: null,
-        route: "observation",
-        step: observationStepIndex + 1,
-        view: null,
-      },
-      { replace: true },
-    );
-  }
-
-  scheduleObservationStep();
-}
-
-const stopObservation = (
-  {
-    updateHistory = true,
-    closeInspector = true,
-  } = {},
-) => {
-  clearObservationTimer();
-  observationActive = false;
-  observationPaused = false;
-  observationControls?.setAttribute("hidden", "");
-  delete signalField?.dataset.observationActive;
-  renderObservationShowcase();
-  signalField?.style.removeProperty("--observation-camera-x");
-  signalField?.style.removeProperty("--observation-camera-y");
-  signalField?.style.removeProperty("--observation-route-progress");
-
-  if (closeInspector) {
-    clearMapSelection();
-  }
-
-  if (updateHistory) {
-    writeUrlState(
-      {
-        route: null,
-        step: null,
-        point: closeInspector ? null : selectedMapId,
-      },
-      { replace: true },
-    );
-  }
-};
-
-const startObservation = (
-  {
-    step = 0,
-    autoplay = true,
-    updateHistory = true,
-    source = "direct",
-  } = {},
-) => {
-  if (timeModeActive) {
-    setTimeMode(false, {
-      updateHistory: false,
-      restoreFilter: false,
-    });
-  }
-
-  setMapFilter("all", { updateHistory: false });
-  hideMapPreview({ immediate: true });
-  observationActive = true;
-  observationPaused = !autoplay || reducedMotion.matches;
-  signalField?.setAttribute("data-observation-active", "");
-
-  if (observationControls) {
-    observationControls.hidden = false;
-  }
-
-  if (updateHistory) {
-    trackPortfolioEvent("observation_start", { source });
-    writeUrlState(
-      {
-        route: "observation",
-        step: Number(step) + 1,
-        point: null,
-        view: null,
-        filter: null,
-      },
-    );
-  }
-
-  renderObservationStep(step, { updateHistory: true });
-};
-
-observationStart?.addEventListener("click", () => {
-  startObservation();
+    return item ? resolveMapLayout(item) : { x: step.x, y: step.y };
+  },
+  hideMapPreview,
+  isTimeModeActive: () => timeModeActive,
+  renderShowcase: renderObservationShowcase,
+  renderSyntheticStep: renderObservationSyntheticStep,
+  selectMapItem,
+  setMapFilter,
+  setTimeMode,
+  writeUrlState,
 });
-
-observationPrevious?.addEventListener("click", () => {
-  observationPaused = true;
-  renderObservationStep(observationStepIndex - 1);
-});
-
-observationPause?.addEventListener("click", () => {
-  observationPaused = !observationPaused;
-  updateObservationControls();
-  scheduleObservationStep();
-});
-
-observationNext?.addEventListener("click", () => {
-  if (observationStepIndex >= observationSteps.length - 1) {
-    trackPortfolioEvent("observation_complete", { source: "route" });
-    stopObservation();
-    return;
-  }
-
-  renderObservationStep(observationStepIndex + 1);
-});
-
-reducedMotion.addEventListener?.("change", () => {
-  if (!reducedMotion.matches || !observationActive || observationPaused) {
-    return;
-  }
-
-  observationPaused = true;
-  clearObservationTimer();
-  updateObservationControls();
-});
-
-document.addEventListener("keydown", (event) => {
-  if (
-    !observationActive
-    || event.defaultPrevented
-    || event.target instanceof HTMLInputElement
-    || event.target instanceof HTMLTextAreaElement
-    || event.target instanceof HTMLSelectElement
-    || event.target?.isContentEditable
-  ) {
-    return;
-  }
-
-  if (event.key === "ArrowLeft" && observationStepIndex > 0) {
-    event.preventDefault();
-    observationPaused = true;
-    renderObservationStep(observationStepIndex - 1);
-  } else if (event.key === "ArrowRight") {
-    event.preventDefault();
-
-    if (observationStepIndex >= observationSteps.length - 1) {
-      stopObservation();
-    } else {
-      renderObservationStep(observationStepIndex + 1);
-    }
-  }
-});
+const observationSteps = observationRoute.steps;
+const startObservation = (options) => observationRoute.start(options);
+const stopObservation = (options) => observationRoute.stop(options);
 
 const pauseMapPreviewPlayback = () => {
   mapPreviewVideo?.pause();
@@ -2148,7 +1891,7 @@ export {
   mapInspector,
   mapPreview,
   normalizeMapFilters,
-  observationActive,
+  observationRoute,
   observationSteps,
   pauseMapPreviewPlayback,
   requestMapLinksRender,

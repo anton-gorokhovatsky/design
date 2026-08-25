@@ -8,6 +8,7 @@ const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(scriptDirectory, "..");
 const stylePath = join(projectRoot, "styles.css");
 const fixMode = process.argv.includes("--fix-identical");
+const fixEmpty = process.argv.includes("--fix-empty");
 const reportOverridden = process.argv.includes("--report-overridden");
 const overriddenRangeArgument = process.argv.find((argument) => (
   argument.startsWith("--fix-overridden-range=")
@@ -178,6 +179,7 @@ const splitDeclarations = (text, start, end) => {
 
 const nestedAtRule = /^@(media|supports|container|layer|keyframes|-webkit-keyframes)\b/i;
 const rules = [];
+const emptyRanges = [];
 
 const parseRules = (start, end, context = []) => {
   let cursor = start;
@@ -191,7 +193,8 @@ const parseRules = (start, end, context = []) => {
       continue;
     }
 
-    const prelude = source.slice(cursor, boundary.index)
+    const rawPrelude = source.slice(cursor, boundary.index);
+    const prelude = rawPrelude
       .replace(/\/\*[\s\S]*?\*\//g, " ")
       .replace(/\s+/g, " ")
       .trim();
@@ -203,6 +206,16 @@ const parseRules = (start, end, context = []) => {
     if (nestedAtRule.test(prelude)) {
       parseRules(boundary.index + 1, closeIndex, [...context, prelude]);
     } else if (prelude && !prelude.startsWith("@")) {
+      const body = source.slice(boundary.index + 1, closeIndex)
+        .replace(/\/\*[\s\S]*?\*\//g, "")
+        .trim();
+      if (!body) {
+        let selectorStart = cursor;
+        while (selectorStart < boundary.index && /\s/.test(source[selectorStart])) {
+          selectorStart += 1;
+        }
+        emptyRanges.push({ start: selectorStart, end: closeIndex + 1 });
+      }
       rules.push({
         selector: prelude,
         context: context.join(" && "),
@@ -215,6 +228,15 @@ const parseRules = (start, end, context = []) => {
 };
 
 parseRules(0, source.length);
+
+if (fixEmpty && emptyRanges.length > 0) {
+  for (const range of emptyRanges.sort((left, right) => right.start - left.start)) {
+    source = source.slice(0, range.start) + source.slice(range.end);
+  }
+  writeFileSync(stylePath, source);
+  console.log(`Removed ${emptyRanges.length} empty CSS rules.`);
+  process.exit(0);
+}
 
 const lastDeclaration = new Map();
 const redundantRanges = [];
@@ -311,6 +333,9 @@ const unexpectedBackdropValues = [...new Set(backdropValues)]
   .filter((value) => !["blur(24px)", "none"].includes(value));
 const failures = [];
 
+if (emptyRanges.length > 0) {
+  failures.push(`${emptyRanges.length} empty CSS rules remain.`);
+}
 if (redundantRanges.length > 0) {
   failures.push(`${redundantRanges.length} identical cascade declarations remain.`);
 }

@@ -10,6 +10,7 @@ const {
   openMobileSearchExpression,
   readAnnotationHierarchyExpression,
   readCompactAuthorshipExpression,
+  readMaterialAuditExpression,
   readMobileContactResumeExpression,
   readMobileMetricGroupsExpression,
   readMobileSearchArrowExpression,
@@ -93,49 +94,7 @@ const attachRuntimeLog = (page, label) => {
   });
 };
 
-const materialAudit = async (page) => page.evaluate(() => {
-  const expected = getComputedStyle(document.documentElement)
-    .getPropertyValue("--material-01")
-    .trim();
-  const probe = document.createElement("i");
-  probe.style.background = expected;
-  document.body.append(probe);
-  const expectedBackground = getComputedStyle(probe).backgroundColor;
-  probe.remove();
-
-  const active = Array.from(document.querySelectorAll("[data-material-surface]"))
-    .filter((element) => {
-      const style = getComputedStyle(element);
-      const rect = element.getBoundingClientRect();
-      return style.display !== "none"
-        && style.visibility !== "hidden"
-        && Number(style.opacity) > 0
-        && rect.width > 0
-        && rect.height > 0
-        && !element.classList.contains("is-content-stack-hidden");
-    })
-    .map((element) => {
-      const style = getComputedStyle(element);
-      return {
-        surface: element.dataset.materialSurface,
-        background: style.backgroundColor,
-        backdrop: style.webkitBackdropFilter || style.backdropFilter,
-        border: style.border,
-        shadow: style.boxShadow,
-      };
-    });
-
-  return {
-    expectedBackground,
-    active,
-    failures: active.filter((surface) => (
-      surface.background !== expectedBackground
-      || !surface.backdrop.includes("blur(24px)")
-      || surface.shadow !== "none"
-      || !surface.border.startsWith("0px")
-    )),
-  };
-});
+const materialAudit = async (page) => page.evaluate(readMaterialAuditExpression);
 
 const readStackState = (page, panelName, expectedScroll, inputMode) => {
   const selector = panelName === "work"

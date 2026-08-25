@@ -25,7 +25,7 @@ const eagerMedia = [
 ].map((match) => match[1]);
 const budgets = {
   css: 222 * 1024,
-  runtime: 195 * 1024,
+  runtime: 198 * 1024,
   fonts: 160 * 1024,
   initialSource: 600 * 1024,
 };

@@ -1,4 +1,4 @@
-// Runtime module 7/7: animated variant 01 favicon and visibility lifecycle.
+// Runtime module 9/9: animated variant 01 favicon and visibility lifecycle.
 import { pauseMapPreviewPlayback } from "./map-engine.js";
 import {
   captureMode,

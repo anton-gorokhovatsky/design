@@ -83,6 +83,56 @@ const mobileMetricViewport = {
   height: 844,
 };
 
+const readMaterialAuditExpression = `(() => {
+  const expected = getComputedStyle(document.documentElement)
+    .getPropertyValue("--material-01")
+    .trim();
+  const probe = document.createElement("i");
+  probe.style.background = expected;
+  document.body.append(probe);
+  const expectedBackground = getComputedStyle(probe).backgroundColor;
+  probe.remove();
+
+  const mobile = matchMedia("(max-width: 680px)").matches;
+  const active = Array.from(document.querySelectorAll("[data-material-surface]"))
+    .filter((element) => {
+      const mode = element.dataset.materialActive;
+      const modeActive = mode === "always"
+        || (mode === "mobile" && mobile)
+        || (mode === "desktop" && !mobile);
+      const style = getComputedStyle(element);
+      const rect = element.getBoundingClientRect();
+      return modeActive
+        && style.display !== "none"
+        && style.visibility !== "hidden"
+        && Number(style.opacity) > 0
+        && rect.width > 0
+        && rect.height > 0
+        && !element.classList.contains("is-content-stack-hidden");
+    })
+    .map((element) => {
+      const style = getComputedStyle(element);
+      return {
+        surface: element.dataset.materialSurface,
+        background: style.backgroundColor,
+        backdrop: style.backdropFilter || style.webkitBackdropFilter,
+        border: style.border,
+        shadow: style.boxShadow,
+      };
+    });
+
+  return {
+    expectedBackground,
+    active,
+    failures: active.filter((surface) => (
+      surface.background !== expectedBackground
+      || !surface.backdrop.includes("blur(24px)")
+      || surface.shadow !== "none"
+      || !surface.border.startsWith("0px")
+    )),
+  };
+})()`;
+
 const readCompactAuthorshipExpression = `(() => {
   const header = document.querySelector(".site-header");
   const bounds = header?.getBoundingClientRect();
@@ -750,6 +800,7 @@ module.exports = {
   openMobileSearchExpression,
   readAnnotationHierarchyExpression,
   readCompactAuthorshipExpression,
+  readMaterialAuditExpression,
   readMobileContactResumeExpression,
   readMobileMetricGroupsExpression,
   readMobileSearchArrowExpression,

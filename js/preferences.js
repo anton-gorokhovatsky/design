@@ -1,4 +1,4 @@
-// Runtime module 1/7: shared preferences, typography, theme, and clock.
+// Runtime module 1/9: shared preferences, typography, theme, and clock.
 const root = document.documentElement;
 const setFocusModality = (modality) => {
   root.dataset.focusModality = modality;

@@ -26,6 +26,7 @@ const {
   openMobileSearchExpression,
   readAnnotationHierarchyExpression,
   readCompactAuthorshipExpression,
+  readMaterialAuditExpression,
   readMobileContactResumeExpression,
   readMobileMetricGroupsExpression,
   readMobileSearchArrowExpression,
@@ -286,39 +287,8 @@ const geometryExpression = String.raw`(() => {
     && item.opacity > 0
     && item.width > 0
     && item.height > 0;
-  const probe = document.createElement("i");
-  probe.style.background = getComputedStyle(document.documentElement)
-    .getPropertyValue("--material-01");
-  document.body.append(probe);
-  const expectedBackground = getComputedStyle(probe).backgroundColor;
-  probe.remove();
+  const materialAudit = ${readMaterialAuditExpression};
   const mobile = matchMedia("(max-width: 680px)").matches;
-  const materials = Array.from(document.querySelectorAll("[data-material-surface]"))
-    .filter((element) => {
-      const mode = element.dataset.materialActive;
-      const modeActive = mode === "always"
-        || (mode === "mobile" && mobile)
-        || (mode === "desktop" && !mobile);
-      const bounds = element.getBoundingClientRect();
-      const style = getComputedStyle(element);
-      return modeActive
-        && style.display !== "none"
-        && style.visibility !== "hidden"
-        && Number(style.opacity) > 0
-        && bounds.width > 0
-        && bounds.height > 0
-        && !element.classList.contains("is-content-stack-hidden");
-    })
-    .map((element) => {
-      const style = getComputedStyle(element);
-      return {
-        surface: element.dataset.materialSurface,
-        background: style.backgroundColor,
-        backdrop: style.backdropFilter || style.webkitBackdropFilter,
-        border: style.border,
-        shadow: style.boxShadow,
-      };
-    });
   const selectors = {
     view: ".map-controls",
     display: ".display-control",
@@ -354,13 +324,8 @@ const geometryExpression = String.raw`(() => {
       Object.entries(geometry).map(([name, item]) => [name, visible(item)]),
     ),
     overflowX: document.documentElement.scrollWidth - document.documentElement.clientWidth,
-    materials,
-    materialFailures: materials.filter((surface) => (
-      surface.background !== expectedBackground
-      || !surface.backdrop.includes("blur(24px)")
-      || surface.shadow !== "none"
-      || !surface.border.startsWith("0px")
-    )),
+    materials: materialAudit.active,
+    materialFailures: materialAudit.failures,
   };
 })()`;
 

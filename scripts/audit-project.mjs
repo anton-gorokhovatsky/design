@@ -1130,10 +1130,15 @@ const cssClassNames = [
   ),
 ].sort();
 const runtimeGeneratedClassNames = new Set(
-  Object.keys(kindCounts).flatMap((kind) => [
-    `map-node--${kind}`,
-    `map-speck--${kind}`,
-  ]),
+  [
+    ...Object.keys(kindCounts).flatMap((kind) => [
+      `map-node--${kind}`,
+      `map-speck--${kind}`,
+    ]),
+    ...["context", "detail"].map(
+      (slot) => `map-hover-preview__mosaic-slot--${slot}`,
+    ),
+  ],
 );
 const unreferencedClassCandidates = cssClassNames
   .filter((name) => !codeReferences.includes(name))
