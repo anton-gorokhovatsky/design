@@ -164,7 +164,7 @@
 
       .not-found__actions {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: 1fr;
         margin-top: clamp(32px, 4vw, 52px);
         border-top: 1px solid var(--line);
       }
@@ -185,10 +185,6 @@
         transition:
           background-color 160ms var(--motion-shift),
           color 160ms var(--motion-shift);
-      }
-
-      .not-found__action + .not-found__action {
-        border-left: 1px solid var(--line);
       }
 
       .not-found__action-index {
@@ -300,7 +296,6 @@
         }
 
         .not-found__actions {
-          grid-template-columns: 1fr;
           margin-top: 32px;
         }
 
@@ -308,11 +303,6 @@
           min-height: 68px;
           gap: 10px;
           padding-inline: 8px;
-        }
-
-        .not-found__action + .not-found__action {
-          border-top: 1px solid var(--line);
-          border-left: 0;
         }
       }
 
@@ -385,15 +375,10 @@
           Этого адреса нет на карте опыта. Возможно, ссылка устарела
           или в&nbsp;ней потерялась координата.
         </p>
-        <nav class="not-found__actions" aria-label="Дальнейшие действия">
+        <nav class="not-found__actions" aria-label="Дальнейшее действие">
           <a class="not-found__action" href="/#map">
             <span class="not-found__action-index">01</span>
             <span>Вернуться на&nbsp;карту</span>
-            <span class="not-found__action-arrow" aria-hidden="true"></span>
-          </a>
-          <a class="not-found__action" href="/#map-command">
-            <span class="not-found__action-index">02</span>
-            <span>Перейти к&nbsp;поиску</span>
             <span class="not-found__action-arrow" aria-hidden="true"></span>
           </a>
         </nav>
