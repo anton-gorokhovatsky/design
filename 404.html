@@ -163,37 +163,21 @@
       }
 
       .not-found__actions {
-        display: grid;
-        grid-template-columns: 1fr;
-        margin-top: clamp(32px, 4vw, 52px);
-        border-top: 1px solid var(--line);
+        margin-top: clamp(28px, 3.4vw, 44px);
       }
 
       .not-found__action {
-        display: grid;
-        min-width: 0;
-        min-height: 84px;
-        grid-template-columns: auto minmax(0, 1fr) auto;
-        gap: 16px;
+        display: inline-flex;
+        min-height: 44px;
+        gap: 14px;
         align-items: center;
-        padding: 12px 20px;
+        padding-block: 10px;
         font-size: 0.88rem;
         font-weight: 600;
         letter-spacing: 0.045em;
         line-height: 1.2;
         text-transform: uppercase;
-        transition:
-          background-color 160ms var(--motion-shift),
-          color 160ms var(--motion-shift);
-      }
-
-      .not-found__action-index {
-        color: var(--muted);
-        font-variant-numeric: tabular-nums;
-      }
-
-      .not-found__action:first-child .not-found__action-index {
-        color: var(--signal);
+        transition: color 160ms var(--motion-shift);
       }
 
       .not-found__action-arrow {
@@ -201,6 +185,7 @@
         display: block;
         width: 16px;
         height: 12px;
+        transition: transform 160ms var(--motion-shift);
       }
 
       .not-found__action-arrow::before {
@@ -227,14 +212,16 @@
       }
 
       .not-found__action:hover {
-        background: color-mix(in srgb, var(--ink) 4%, transparent);
+        color: var(--signal);
+      }
+
+      .not-found__action:hover .not-found__action-arrow {
+        transform: translateX(3px);
       }
 
       .not-found__action:focus-visible {
-        position: relative;
-        z-index: 1;
-        outline: 3px solid var(--signal);
-        outline-offset: -3px;
+        outline: 2px solid var(--signal);
+        outline-offset: 5px;
       }
 
       @media (max-width: 680px) {
@@ -296,13 +283,11 @@
         }
 
         .not-found__actions {
-          margin-top: 32px;
+          margin-top: 28px;
         }
 
         .not-found__action {
-          min-height: 68px;
-          gap: 10px;
-          padding-inline: 8px;
+          gap: 12px;
         }
       }
 
@@ -377,7 +362,6 @@
         </p>
         <nav class="not-found__actions" aria-label="Дальнейшее действие">
           <a class="not-found__action" href="/#map">
-            <span class="not-found__action-index">01</span>
             <span>Вернуться на&nbsp;карту</span>
             <span class="not-found__action-arrow" aria-hidden="true"></span>
           </a>
