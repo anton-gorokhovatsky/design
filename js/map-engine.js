@@ -1027,7 +1027,8 @@ const selectMapItem = (
   }
 
   if (mapTitle) {
-    mapTitle.textContent = typographUiText(item.title);
+    mapTitle.textContent = typographUiText(item.displayTitle || item.title);
+    mapTitle.setAttribute("aria-label", typographUiText(item.title));
   }
 
   if (mapMeta) {
@@ -1818,6 +1819,7 @@ const renderObservationSyntheticStep = (step) => {
 
   if (mapTitle) {
     mapTitle.textContent = typographUiText(step.title);
+    mapTitle.setAttribute("aria-label", typographUiText(step.title));
   }
 
   setMapMetaText(step.meta);
