@@ -1,0 +1,634 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Точка не найдена — Антон Гороховатский</title>
+    <meta
+      name="description"
+      content="Такого адреса на карте опыта Антона Гороховатского нет. Вернитесь на карту или перейдите к поиску."
+    >
+    <meta name="author" content="Антон Гороховатский">
+    <meta name="robots" content="noindex, follow">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#eeede7">
+    <link rel="icon" href="/assets/favicon.png" type="image/png" sizes="64x64">
+    <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" sizes="180x180">
+    <script>
+      (() => {
+        let savedThemeMode = null;
+
+        try {
+          savedThemeMode = window.localStorage.getItem("anton-signal-theme");
+        } catch {
+          savedThemeMode = null;
+        }
+
+        const themeMode = savedThemeMode === "light" || savedThemeMode === "dark"
+          ? savedThemeMode
+          : "system";
+        const theme = themeMode === "system"
+          ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+          : themeMode;
+
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.dataset.themeMode = themeMode;
+        document.querySelector('meta[name="theme-color"]')?.setAttribute(
+          "content",
+          theme === "dark" ? "#11120f" : "#eeede7",
+        );
+      })();
+    </script>
+    <style>
+      @font-face {
+        font-family: "Golos Text";
+        src: url("/assets/fonts/GolosText-Regular.woff2") format("woff2");
+        font-display: swap;
+        font-style: normal;
+        font-weight: 400;
+      }
+
+      @font-face {
+        font-family: "Golos Text";
+        src: url("/assets/fonts/GolosText-Medium.woff2") format("woff2");
+        font-display: swap;
+        font-style: normal;
+        font-weight: 600;
+      }
+
+      @font-face {
+        font-family: Rene;
+        src: url("/assets/fonts/Rene-Regular.woff2") format("woff2");
+        font-display: swap;
+        font-style: normal;
+        font-weight: 400;
+      }
+
+      :root {
+        --bg: #eeede7;
+        --ink: #10110f;
+        --muted: #666862;
+        --line: rgba(16, 17, 15, 0.18);
+        --line-soft: rgba(16, 17, 15, 0.08);
+        --signal: #2448ed;
+        --pulse: #d8ff47;
+        --material-01: rgba(255, 255, 255, 0.5);
+        --font-sans: "Golos Text", Arial, sans-serif;
+        --font-author: Rene, var(--font-sans);
+        --card-radius: 2.5rem;
+        color-scheme: light;
+        font-family: var(--font-sans);
+        font-synthesis: none;
+      }
+
+      :root[data-theme="dark"] {
+        --bg: #11120f;
+        --ink: #f2f1ec;
+        --muted: #afb0aa;
+        --line: rgba(242, 241, 236, 0.2);
+        --line-soft: rgba(242, 241, 236, 0.08);
+        --signal: #5672ff;
+        --material-01: rgba(35, 36, 32, 0.5);
+        color-scheme: dark;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html {
+        min-width: 20rem;
+        background: var(--bg);
+      }
+
+      body {
+        min-height: 100svh;
+        margin: 0;
+        overflow-x: hidden;
+        color: var(--ink);
+        background:
+          linear-gradient(var(--line-soft) 1px, transparent 1px),
+          linear-gradient(90deg, var(--line-soft) 1px, transparent 1px),
+          var(--bg);
+        background-position: center;
+        background-size: clamp(7rem, 12vw, 12rem) clamp(7rem, 12vw, 12rem);
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .not-found {
+        position: relative;
+        isolation: isolate;
+        display: grid;
+        min-height: 100svh;
+        align-items: center;
+        overflow-x: clip;
+        padding: clamp(5rem, 8vw, 8rem) clamp(1.5rem, 8vw, 8rem);
+      }
+
+      .not-found::before,
+      .not-found::after {
+        position: absolute;
+        z-index: -3;
+        inset: 50% auto auto 50%;
+        width: min(112vw, 94rem);
+        aspect-ratio: 2 / 1;
+        border: 1px solid var(--line);
+        border-radius: 50%;
+        content: "";
+        transform: translate(-50%, -50%);
+      }
+
+      .not-found::after {
+        z-index: -2;
+        width: min(76vw, 64rem);
+        border-color: color-mix(in srgb, var(--signal) 42%, transparent);
+        background: radial-gradient(
+          ellipse at center,
+          color-mix(in srgb, var(--signal) 10%, transparent),
+          transparent 68%
+        );
+      }
+
+      .field {
+        position: absolute;
+        z-index: -1;
+        inset: 0;
+        overflow: hidden;
+        pointer-events: none;
+      }
+
+      .field__axis {
+        position: absolute;
+        background: var(--line);
+      }
+
+      .field__axis--x {
+        top: 51%;
+        right: 0;
+        left: 0;
+        height: 1px;
+      }
+
+      .field__axis--y {
+        top: 0;
+        bottom: 0;
+        left: 72%;
+        width: 1px;
+      }
+
+      .field__node {
+        position: absolute;
+        width: var(--size, 1.2rem);
+        aspect-ratio: 1;
+        border: 2px solid currentColor;
+        border-radius: 50%;
+        color: color-mix(in srgb, var(--ink) 64%, transparent);
+      }
+
+      .field__node::after {
+        position: absolute;
+        inset: 50% auto auto 50%;
+        width: 0.25rem;
+        aspect-ratio: 1;
+        border-radius: 50%;
+        background: currentColor;
+        content: "";
+        transform: translate(-50%, -50%);
+      }
+
+      .field__node--a {
+        top: 18%;
+        left: 62%;
+        --size: 2rem;
+      }
+
+      .field__node--b {
+        top: 31%;
+        left: 84%;
+        --size: 1.4rem;
+      }
+
+      .field__node--c {
+        top: 72%;
+        left: 80%;
+        --size: 2.6rem;
+      }
+
+      .field__node--d {
+        top: 82%;
+        left: 58%;
+        --size: 1rem;
+      }
+
+      .field__node--e {
+        top: 12%;
+        left: 41%;
+        --size: 0.85rem;
+      }
+
+      .field__target {
+        position: absolute;
+        top: 51%;
+        left: 72%;
+        width: clamp(5rem, 8vw, 7.25rem);
+        aspect-ratio: 1;
+        border: 1px solid color-mix(in srgb, var(--signal) 48%, transparent);
+        border-radius: 50%;
+        color: var(--signal);
+        transform: translate(-50%, -50%);
+      }
+
+      .field__target::before,
+      .field__target::after {
+        position: absolute;
+        inset: 50% auto auto 50%;
+        border-radius: 50%;
+        content: "";
+        transform: translate(-50%, -50%);
+      }
+
+      .field__target::before {
+        width: 48%;
+        aspect-ratio: 1;
+        border: 2px solid currentColor;
+      }
+
+      .field__target::after {
+        width: 0.75rem;
+        aspect-ratio: 1;
+        background: var(--pulse);
+        box-shadow: 0 0 0 0.65rem color-mix(in srgb, var(--pulse) 14%, transparent);
+      }
+
+      .field__target-label {
+        position: absolute;
+        top: calc(51% - 4.8rem);
+        left: calc(72% + 3.75rem);
+        width: max-content;
+        max-width: calc(28vw - 2rem);
+        padding: 0.55rem 0.8rem;
+        border-radius: 999px;
+        background: var(--material-01);
+        color: var(--muted);
+        font-size: clamp(0.72rem, 1vw, 0.9rem);
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        line-height: 1.1;
+        text-transform: uppercase;
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+      }
+
+      .not-found__card {
+        width: min(46rem, calc(100vw - 3rem));
+        min-width: 0;
+        max-width: 100%;
+        padding: clamp(2rem, 4.5vw, 4rem);
+        border: 0;
+        border-radius: var(--card-radius);
+        background: var(--material-01);
+        box-shadow: none;
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+      }
+
+      .not-found__meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 0 0 clamp(1.75rem, 3vw, 2.5rem);
+        color: var(--muted);
+        font-size: 0.86rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        line-height: 1;
+        text-transform: uppercase;
+      }
+
+      .not-found__meta span:first-child {
+        display: inline-flex;
+        gap: 0.65rem;
+        align-items: center;
+      }
+
+      .not-found__meta span:first-child::before {
+        width: 0.55rem;
+        aspect-ratio: 1;
+        border-radius: 50%;
+        background: var(--pulse);
+        box-shadow: 0 0 0 0.35rem color-mix(in srgb, var(--pulse) 12%, transparent);
+        content: "";
+      }
+
+      h1 {
+        max-width: 100%;
+        margin: 0;
+        font-family: var(--font-author);
+        font-size: clamp(3.25rem, 5.8vw, 5.25rem);
+        font-weight: 400;
+        letter-spacing: -0.045em;
+        line-height: 0.84;
+        text-wrap: balance;
+      }
+
+      .not-found__title-line {
+        display: block;
+      }
+
+      .not-found__title-word {
+        display: block;
+      }
+
+      .not-found__copy {
+        max-width: 34rem;
+        margin: clamp(1.75rem, 3vw, 2.5rem) 0 0;
+        color: var(--muted);
+        font-size: clamp(1.05rem, 1.4vw, 1.3rem);
+        line-height: 1.42;
+        text-wrap: pretty;
+      }
+
+      .not-found__actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem 1.5rem;
+        align-items: center;
+        margin-top: clamp(2rem, 4vw, 3rem);
+      }
+
+      .not-found__primary {
+        display: inline-flex;
+        min-height: 3.5rem;
+        gap: 1rem;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.9rem 1.25rem;
+        border-radius: 999px;
+        background: var(--ink);
+        color: var(--bg);
+        font-size: 0.88rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        line-height: 1.2;
+        text-decoration: none;
+        text-transform: uppercase;
+      }
+
+      .not-found__primary::after {
+        width: 0.85rem;
+        height: 0.85rem;
+        border-top: 1.5px solid currentColor;
+        border-right: 1.5px solid currentColor;
+        content: "";
+        transform: rotate(45deg);
+      }
+
+      .not-found__secondary {
+        padding: 0.75rem 0;
+        color: var(--muted);
+        font-size: 0.88rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        line-height: 1.2;
+        text-decoration-color: var(--signal);
+        text-decoration-thickness: 1px;
+        text-underline-offset: 0.35em;
+        text-transform: uppercase;
+      }
+
+      .not-found__primary:hover,
+      .not-found__primary:focus-visible {
+        background: var(--signal);
+        color: #fff;
+      }
+
+      .not-found__secondary:hover,
+      .not-found__secondary:focus-visible {
+        color: var(--ink);
+      }
+
+      .not-found__primary:focus-visible,
+      .not-found__secondary:focus-visible {
+        outline: 3px solid var(--signal);
+        outline-offset: 4px;
+      }
+
+      .not-found__signature {
+        position: absolute;
+        right: clamp(1.5rem, 4vw, 4rem);
+        bottom: clamp(1.5rem, 3vw, 3rem);
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        line-height: 1.35;
+        text-align: right;
+        text-transform: uppercase;
+      }
+
+      @media (max-width: 46rem) {
+        .not-found {
+          align-items: start;
+          padding: 5rem 1rem 8rem;
+        }
+
+        .not-found::before {
+          top: 58%;
+          width: 170vw;
+          aspect-ratio: 1 / 1.28;
+        }
+
+        .not-found::after {
+          top: 58%;
+          width: 112vw;
+          aspect-ratio: 1 / 1.18;
+        }
+
+        .not-found__card {
+          width: 100%;
+          padding: 1.75rem 1.5rem 2rem;
+          border-radius: 2rem;
+        }
+
+        h1 {
+          font-size: clamp(2.75rem, 13vw, 4.75rem);
+          line-height: 0.86;
+        }
+
+        .not-found__copy {
+          font-size: 1.05rem;
+        }
+
+        .not-found__actions {
+          align-items: stretch;
+          flex-direction: column;
+        }
+
+        .not-found__primary {
+          width: 100%;
+        }
+
+        .not-found__secondary {
+          align-self: flex-start;
+        }
+
+        .field__axis--y,
+        .field__target {
+          left: 72%;
+        }
+
+        .field__target {
+          top: 84%;
+        }
+
+        .field__axis--x {
+          top: 84%;
+        }
+
+        .field__target-label {
+          display: none;
+        }
+
+        .field__node--a {
+          top: 62%;
+          left: 9%;
+        }
+
+        .field__node--b {
+          top: 71%;
+          left: 88%;
+        }
+
+        .field__node--c {
+          top: 88%;
+          left: 16%;
+        }
+
+        .field__node--d {
+          top: 92%;
+          left: 83%;
+        }
+
+        .field__node--e {
+          top: 69%;
+          left: 48%;
+        }
+
+        .not-found__signature {
+          right: 1rem;
+          bottom: 1.25rem;
+        }
+      }
+
+      @media (max-width: 24rem) {
+        .not-found {
+          padding-right: 0.75rem;
+          padding-left: 0.75rem;
+        }
+
+        .not-found__card {
+          padding-right: 1.25rem;
+          padding-left: 1.25rem;
+        }
+
+        h1 {
+          font-size: clamp(2.5rem, 12vw, 3rem);
+        }
+      }
+
+      @media (max-height: 43rem) and (min-width: 46.01rem) {
+        .not-found {
+          padding-top: 2rem;
+          padding-bottom: 2rem;
+        }
+
+        .not-found__card {
+          padding-top: 2rem;
+          padding-bottom: 2rem;
+        }
+
+        .not-found__meta {
+          margin-bottom: 1.5rem;
+        }
+
+        .not-found__copy,
+        .not-found__actions {
+          margin-top: 1.5rem;
+        }
+      }
+
+      @media (forced-colors: active) {
+        :root,
+        :root[data-theme="dark"] {
+          --bg: Canvas;
+          --ink: CanvasText;
+          --muted: CanvasText;
+          --line: GrayText;
+          --line-soft: GrayText;
+          --signal: Highlight;
+          --pulse: Highlight;
+          --material-01: Canvas;
+        }
+
+        .not-found__card,
+        .field__target-label {
+          border: 1px solid CanvasText;
+          backdrop-filter: none;
+          -webkit-backdrop-filter: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="not-found" id="content">
+      <div class="field" aria-hidden="true">
+        <span class="field__axis field__axis--x"></span>
+        <span class="field__axis field__axis--y"></span>
+        <span class="field__node field__node--a"></span>
+        <span class="field__node field__node--b"></span>
+        <span class="field__node field__node--c"></span>
+        <span class="field__node field__node--d"></span>
+        <span class="field__node field__node--e"></span>
+        <span class="field__target"></span>
+        <span class="field__target-label">Нет координат</span>
+      </div>
+
+      <section
+        class="not-found__card"
+        data-material-surface="page-404"
+        data-material-active="always"
+        aria-labelledby="not-found-title"
+      >
+        <p class="not-found__meta">
+          <span>Карта</span>
+          <span>404</span>
+        </p>
+        <h1 id="not-found-title">
+          <span class="not-found__title-line">ТОЧКА /</span>
+          <span class="not-found__title-line">
+            <span class="not-found__title-word">НЕ</span><span class="not-found__title-word">НАЙДЕНА</span>
+          </span>
+        </h1>
+        <p class="not-found__copy">
+          Этого адреса нет на карте опыта. Возможно, ссылка устарела
+          или в&nbsp;ней потерялась координата.
+        </p>
+        <nav class="not-found__actions" aria-label="Дальнейшие действия">
+          <a class="not-found__primary" href="/#map">Вернуться на&nbsp;карту</a>
+          <a class="not-found__secondary" href="/#map-command">Перейти к&nbsp;поиску</a>
+        </nav>
+      </section>
+
+      <p class="not-found__signature">
+        Антон Гороховатский<br>
+        Карта опыта
+      </p>
+    </main>
+  </body>
+</html>
