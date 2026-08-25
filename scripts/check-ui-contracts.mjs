@@ -653,6 +653,7 @@ const saveElementScreenshot = async (client, name, selector, padding = 12) => {
 
 const readObservationShowcaseContract = (client) => evaluate(client, `(() => {
   const stage = document.querySelector('[data-observation-showcase]');
+  const camera = document.querySelector('[data-map-camera]');
   const planes = Array.from(
     stage?.querySelectorAll('.observation-showcase__plane') || [],
   );
@@ -666,6 +667,49 @@ const readObservationShowcaseContract = (client) => evaluate(client, `(() => {
     ?.getBoundingClientRect();
   const railBounds = document.querySelector('.map-controls')
     ?.getBoundingClientRect();
+  const mapNativeTargets = Array.from(document.querySelectorAll(
+    '.map-camera .map-node, .map-speck, .principle-glyph, .map-axis-label, .map-node-label.is-visible, .origin-marker__label',
+  )).filter((target) => {
+    const style = getComputedStyle(target);
+    const bounds = target.getBoundingClientRect();
+    return style.display !== 'none'
+      && style.visibility !== 'hidden'
+      && Number(style.opacity) > 0.05
+      && bounds.width > 0
+      && bounds.height > 0;
+  });
+  const visiblePlanes = planes.filter((plane) => (
+    Number(getComputedStyle(plane).opacity) > 0.05
+  ));
+  const mediaOcclusionSamples = [];
+  const previousPointerEvents = stage?.style.pointerEvents || '';
+  if (stage) stage.style.pointerEvents = 'auto';
+  visiblePlanes.forEach((plane) => {
+    const planeBounds = plane.getBoundingClientRect();
+    mapNativeTargets.forEach((target) => {
+      const targetBounds = target.getBoundingClientRect();
+      const left = Math.max(planeBounds.left, targetBounds.left);
+      const right = Math.min(planeBounds.right, targetBounds.right);
+      const top = Math.max(planeBounds.top, targetBounds.top);
+      const bottom = Math.min(planeBounds.bottom, targetBounds.bottom);
+      if (right - left < 3 || bottom - top < 3) return;
+      const topElement = document.elementFromPoint(
+        (left + right) / 2,
+        (top + bottom) / 2,
+      );
+      mediaOcclusionSamples.push({
+        mediaWins: Boolean(
+          topElement?.closest('[data-observation-showcase]')
+          || topElement?.closest(
+            '.map-controls, .map-inspector, .site-header, .command-dock, .system-dock',
+          )
+        ),
+        target: target.getAttribute('class') || target.tagName,
+        top: topElement?.getAttribute?.('class') || topElement?.tagName || '',
+      });
+    });
+  });
+  if (stage) stage.style.pointerEvents = previousPointerEvents;
   const intersectionArea = activeBounds && inspectorBounds
     ? Math.max(
       0,
@@ -716,7 +760,7 @@ const readObservationShowcaseContract = (client) => evaluate(client, `(() => {
       const image = plane.querySelector('img');
       return Boolean(image?.complete && image.naturalWidth > 0);
     }),
-    parentIsCamera: stage?.parentElement?.matches('[data-map-camera]') || false,
+    parentIsMap: stage?.parentElement?.matches('.practice-map') || false,
     planeIds: planes.map((plane) => plane.dataset.observationShowcaseId),
     planeStates: planes.map((plane) => ({
       filter: getComputedStyle(plane).filter,
@@ -725,10 +769,14 @@ const readObservationShowcaseContract = (client) => evaluate(client, `(() => {
     })),
     layerLevels: {
       axisLabel: readZIndex(document.querySelector('.map-axis-label')),
-      camera: readZIndex(stage?.parentElement),
-      origin: readZIndex(document.querySelector('.origin-marker')),
+      camera: readZIndex(camera),
+      controls: readZIndex(document.querySelector('.map-controls')),
+      mapLabels: readZIndex(document.querySelector('.map-labels')),
+      routeLabel: readZIndex(document.querySelector('.origin-marker__label')),
       stage: readZIndex(stage),
     },
+    mediaOcclusionSampleCount: mediaOcclusionSamples.length,
+    mediaOcclusionSamples,
     routeProgress: document.querySelector('[data-observation-progress]')
       ?.textContent.trim() || '',
     visible: stage?.classList.contains('is-visible') || false,
@@ -943,7 +991,7 @@ const auditBrowser = async (client, origin) => {
       !== JSON.stringify(expectedShowcaseIds)
     || narkomfinShowcase.imageCount !== expectedShowcaseIds.length
     || !narkomfinShowcase.imagesReady
-    || !narkomfinShowcase.parentIsCamera
+    || !narkomfinShowcase.parentIsMap
     || narkomfinShowcase.ariaHidden !== "true"
     || narkomfinShowcase.focusables !== 0
     || narkomfinShowcase.activeOpacity < 0.9
@@ -980,10 +1028,20 @@ const auditBrowser = async (client, origin) => {
     || privatePracticeShowcase.planeStates.some((plane) => (
       !overviewIds.includes(plane.id) && plane.opacity > 0.05
     ))
-    || privatePracticeShowcase.layerLevels.camera
+    || privatePracticeShowcase.layerLevels.axisLabel
+      <= privatePracticeShowcase.layerLevels.camera
+    || privatePracticeShowcase.layerLevels.mapLabels
+      <= privatePracticeShowcase.layerLevels.camera
+    || privatePracticeShowcase.layerLevels.routeLabel
       <= privatePracticeShowcase.layerLevels.axisLabel
     || privatePracticeShowcase.layerLevels.stage
-      <= privatePracticeShowcase.layerLevels.origin
+      <= privatePracticeShowcase.layerLevels.routeLabel
+    || privatePracticeShowcase.layerLevels.controls
+      <= privatePracticeShowcase.layerLevels.stage
+    || privatePracticeShowcase.mediaOcclusionSampleCount < 1
+    || privatePracticeShowcase.mediaOcclusionSamples.some(
+      (sample) => !sample.mediaWins,
+    )
   ) {
     fail(
       "observation-showcase: private-practice must be a crisp foreground stack.",
