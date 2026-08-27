@@ -3332,10 +3332,6 @@ html[data-theme="dark"] {
   -webkit-backdrop-filter: blur(24px);
 }
 
-.map-inspector .map-readout__link:hover {
-  background: var(--material-01);
-  color: var(--ink);
-}
 
 .map-inspector .map-readout__link:focus-visible {
   background: var(--material-01);
@@ -5256,6 +5252,17 @@ body:has(.command-dock.is-open) .origin-marker__label {
   font-size: 0.62rem;
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
+  transition:
+    background-color 180ms var(--motion-enter),
+    transform 180ms var(--motion-enter);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .map-inspector .map-readout__link[data-material-surface]:hover {
+    background: color-mix(in srgb, var(--material-01) 88%, var(--ink) 12%);
+    color: var(--ink);
+    transform: translateY(-2px);
+  }
 }
 
 .map-related {

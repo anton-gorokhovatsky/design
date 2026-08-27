@@ -1239,3 +1239,9 @@ privacy-объяснение оставалось плотной таблице�
 | Действия | Unset/allowed/denied; pointer и keyboard focus | До решения видны `РАЗРЕШИТЬ / НЕ ВКЛЮЧАТЬ`. После решения disabled-дубликат скрыт: остаётся ровно одно актуальное обратное действие `ВКЛЮЧИТЬ АНАЛИТИКУ` или `ВЫКЛЮЧИТЬ АНАЛИТИКУ` |
 | Mobile | Chromium `390×844` и compact `320×568`, light | На `390×844` dialog занимает `352×424,1 px`, на `320×568` — `282×471,6 px`; весь контент помещается без page scroll и horizontal overflow, кнопки сохраняют hit-area `44 px` |
 | Точечный контракт | `audit-project`, performance, Chromium full UI contracts | Audit — `0 errors / 0 warnings`; Chromium UI — PASS, включая 200% reflow, forced colors, focus, privacy и MATERIAL / 01. CSS — `212,9 KiB`, runtime — `191,6 KiB`, first-party source — `470,9 KiB`; лимиты не повышались. Полный WebKit/release gate и production фиксируются после публикации |
+
+## Корректирующий проход 2026-08-27 — hover внешнего действия карточки
+
+| Семейство | Реальные состояния | Результат |
+|---|---|---|
+| Внешнее действие map inspector | Chromium `1440×900`, light/dark, настоящий fine-pointer hover; keyboard focus; touch `390×844`; подписи `ОТКРЫТЬ`, `ОТКРЫТЬ КЕЙС`, `ПОЛНОЕ РЕЗЮМЕ НА HH.RU`, `СМОТРЕТЬ ФРАГМЕНТ`, `ИСХОДНИК В NOTION` | Общий MATERIAL / 01 слегка уплотняется и поднимается на `2 px`; signal/selected-состояние не имитируется; keyboard focus сохраняет отдельную signal-рамку; touch остаётся статичным; console/page errors — `0` |
