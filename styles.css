@@ -5258,6 +5258,98 @@ body:has(.command-dock.is-open) .origin-marker__label {
   -webkit-backdrop-filter: blur(24px);
 }
 
+.map-related {
+  display: grid;
+  grid-row: 5;
+  grid-column: 1 / -1;
+  min-width: 0;
+  gap: 10px;
+  padding: 12px 13px 13px;
+  overflow: hidden;
+  border-radius: 22px;
+  background: var(--material-01);
+  corner-shape: var(--corner-card-shape);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.map-related[hidden] {
+  display: none;
+}
+
+.map-related__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.map-related__header > span,
+.map-related__item > span {
+  color: var(--content-muted);
+  font-family: var(--font-mono);
+  letter-spacing: 0.035em;
+}
+
+.map-related__header > span {
+  font-size: 0.58rem;
+}
+
+
+.map-related__track {
+  display: flex;
+  min-width: 0;
+  gap: 8px;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+  scroll-snap-type: inline mandatory;
+}
+
+.map-related__track::-webkit-scrollbar {
+  display: none;
+}
+
+.map-related__item {
+  display: grid;
+  flex: 0 0 min(72%, 252px);
+  min-height: 82px;
+  align-content: space-between;
+  gap: 14px;
+  padding: 12px;
+  overflow: hidden;
+  border: 1px solid var(--line-soft);
+  border-radius: 16px;
+  background: transparent;
+  color: var(--content-ink);
+  scroll-snap-align: start;
+  text-decoration: none;
+  transition:
+    border-color 180ms var(--ease-out),
+    color 180ms var(--ease-out);
+}
+
+.map-related__item:is(:hover, :focus-visible) {
+  border-color: var(--signal);
+  color: var(--signal);
+  outline: none;
+}
+
+.map-related__item > strong {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: clamp(0.76rem, calc(0.7rem + 0.18vw), 0.88rem);
+  line-height: 1.08;
+  text-wrap: balance;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.map-related__item > span {
+  font-size: 0.55rem;
+}
+
 .map-inspector .overlay-close {
   width: 42px;
   height: 42px;
@@ -8117,6 +8209,21 @@ html[data-theme="dark"] .signal-constellation {
 @media (max-width: 680px) {
   .map-inspector .map-readout__description {
     max-height: min(45vh, 300px);
+  }
+
+  .map-inspector:has(.map-related:not([hidden])) .map-readout__description {
+    max-height: clamp(120px, calc(100svh - 520px), 250px);
+  }
+
+  .map-related {
+    padding: 11px 12px 12px;
+    border-radius: 21px;
+  }
+
+
+  .map-related__item {
+    flex-basis: 82%;
+    min-height: 86px;
   }
 
   .map-evidence {

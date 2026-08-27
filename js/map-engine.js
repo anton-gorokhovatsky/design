@@ -33,6 +33,8 @@ const mapMeta = document.querySelector("[data-map-meta]");
 const mapDescription = document.querySelector("[data-map-description]");
 const mapLink = document.querySelector("[data-map-link]");
 const mapInspector = document.querySelector("[data-map-inspector]");
+const mapRelated = document.querySelector("[data-map-related]");
+const mapRelatedTrack = document.querySelector("[data-map-related-track]");
 const inspectorClose = document.querySelector("[data-close-inspector]");
 const mapPreview = document.querySelector("[data-map-preview]");
 const mapPreviewVideo = document.querySelector("[data-map-preview-video]");
@@ -949,6 +951,14 @@ const setMapEvidence = (evidence = null) => {
   });
 };
 
+const renderMapRelatedItems=(item=null)=>{
+  const peers=mapItems.filter((candidate)=>candidate.kind==="project"&&candidate.parent===item?.parent&&candidate!==item);
+  const start=peers.indexOf(item)+1;
+  const ids=item?.id==="hotline-camp"?["eleven","dd-camp","dusty"]:null;
+  const items=signalField?.hasAttribute("data-observation-active")?[]:(ids?ids.map((id)=>mapItems.find((candidate)=>candidate.id===id)):[...peers.slice(start),...peers.slice(0,start)]).slice(0,3);
+  mapRelated.hidden=!items.length;
+  mapRelatedTrack.innerHTML=items.map(({id,label,timeLabel,timeYear})=>`<a class="map-related__item" href="?point=${id}" role="listitem"><strong>${label}</strong><span>ПРОЕКТ${timeLabel||timeYear?` / ${timeLabel||timeYear}`:""}</span></a>`).join("");
+};
 const setInspectorOpen = (isOpen) => {
   if (!mapInspector) {
     return;
@@ -968,6 +978,7 @@ const clearMapSelection = ({ updateHistory = false } = {}) => {
   delete signalField.dataset.selectedKind;
   delete signalField.dataset.selectedId;
   setMapAtmosphere(null);
+  renderMapRelatedItems();
 
   if (mapInspector) {
     delete mapInspector.dataset.selectedMapId;
@@ -1063,6 +1074,8 @@ const selectMapItem = (
       mapLink.removeAttribute("aria-disabled");
     }
   }
+
+  renderMapRelatedItems(item);
 
   if (reveal) {
     setInspectorOpen(true);
@@ -1829,6 +1842,7 @@ const renderObservationSyntheticStep = (step) => {
   }
 
   setMapEvidence(null);
+  renderMapRelatedItems();
 
   if (mapLink) {
     if (step.href) {

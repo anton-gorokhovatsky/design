@@ -470,6 +470,7 @@ const requiredMaterialSurfaces = [
   "inspector-description",
   "inspector-observation",
   "inspector-link",
+  "inspector-related",
   "desktop-console",
   "mobile-navigation",
   "mobile-search",

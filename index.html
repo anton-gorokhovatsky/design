@@ -124,7 +124,7 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=2ea304e15683">
+    <link rel="stylesheet" href="styles.css?v=eac9b3abf0f8">
     <style>
       .map-evidence [data-map-evidence-role-label]{font-family:var(--font-author);font-size:.6rem;font-weight:400;letter-spacing:0}
     </style>
@@ -137,7 +137,7 @@
           "./js/signal-field.js": "./js/signal-field.js?v=e249b2dc021a",
           "./js/map-data.js": "./js/map-data.js?v=77d52b765833",
           "./js/observation-route.js": "./js/observation-route.js?v=bf8186463ee9",
-          "./js/map-engine.js": "./js/map-engine.js?v=2fdf8ae6fac0",
+          "./js/map-engine.js": "./js/map-engine.js?v=96c928e67186",
           "./js/viewport-ui.js": "./js/viewport-ui.js?v=61e9c456a69f",
           "./js/panels.js": "./js/panels.js?v=155b0d282695",
           "./js/favicon.js": "./js/favicon.js?v=3aa23538dc2d"
@@ -151,7 +151,7 @@
     <script type="module" src="js/signal-field.js?v=e249b2dc021a"></script>
     <script type="module" src="js/map-data.js?v=77d52b765833"></script>
     <script type="module" src="js/observation-route.js?v=bf8186463ee9"></script>
-    <script type="module" src="js/map-engine.js?v=2fdf8ae6fac0"></script>
+    <script type="module" src="js/map-engine.js?v=96c928e67186"></script>
     <script type="module" src="js/viewport-ui.js?v=61e9c456a69f"></script>
     <script type="module" src="js/panels.js?v=155b0d282695"></script>
     <script type="module" src="js/favicon.js?v=3aa23538dc2d"></script>
@@ -495,7 +495,7 @@
             data-material-surface="inspector-identity"
             data-material-active="always"
           >
-            <h2 id="map-inspector-title" data-map-title>МУЗЕЙ «ГАРАЖ»</h2>
+            <h2 id="map-inspector-title" data-map-title tabindex="-1">МУЗЕЙ «ГАРАЖ»</h2>
             <p data-map-meta>ОКТ 2021—МАР 2025 / СТАРШИЙ МЕНЕДЖЕР ВЕБ-РАЗРАБОТКИ</p>
           </div>
           <div
@@ -553,6 +553,23 @@
             target="_blank"
             rel="noreferrer"
           >ОТКРЫТЬ</a>
+          <nav
+            class="map-related"
+            data-map-related
+            data-material-surface="inspector-related"
+            data-material-active="always"
+            aria-label="Следующие кейсы"
+            hidden
+          >
+            <div class="map-related__header">
+              <span>ДАЛЬШЕ ПО КАРТЕ</span>
+            </div>
+            <div
+              class="map-related__track"
+              data-map-related-track
+              role="list"
+            ></div>
+          </nav>
         </aside>
 
         <!-- map-evidence-data:start -->
