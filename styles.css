@@ -9400,6 +9400,7 @@ html[data-focus-modality="pointer"]
       background-color 180ms var(--motion-enter);
   }
 
+  .system-dock .map-control:is(:hover, :focus-visible),
   .display-control__service button:is(:hover, :focus-visible) {
     background: color-mix(in srgb, var(--ink) 6%, transparent);
     color: var(--ink);
