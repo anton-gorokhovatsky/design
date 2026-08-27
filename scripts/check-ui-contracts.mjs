@@ -1343,6 +1343,16 @@ const auditBrowser = async (client, origin) => {
   const hoveredInactiveFilterContract = await evaluate(client, `(() => {
     const personal = document.querySelector('[data-map-filter="personal"]');
     const project = document.querySelector('[data-map-filter="project"]');
+    const motion = document.querySelector('.display-control__service [data-motion-toggle]');
+    const colorPixel = (value) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1;
+      canvas.height = 1;
+      const context = canvas.getContext('2d');
+      context.fillStyle = value;
+      context.fillRect(0, 0, 1, 1);
+      return Array.from(context.getImageData(0, 0, 1, 1).data).join(',');
+    };
     return {
       hovered: personal?.matches(':hover'),
       pressed: personal?.getAttribute('aria-pressed'),
@@ -1355,6 +1365,12 @@ const auditBrowser = async (client, origin) => {
       indicatorHeight: getComputedStyle(personal, '::after').height,
       symbolColor: getComputedStyle(personal.querySelector('.map-control__symbol')).color,
       activeSymbolColor: getComputedStyle(project.querySelector('.map-control__symbol')).color,
+      backgroundColor: getComputedStyle(personal).backgroundColor,
+      color: getComputedStyle(personal).color,
+      backgroundPixel: colorPixel(getComputedStyle(personal).backgroundColor),
+      colorPixel: colorPixel(getComputedStyle(personal).color),
+      referenceIdleBackgroundColor: getComputedStyle(motion).backgroundColor,
+      referenceIdleBackgroundPixel: colorPixel(getComputedStyle(motion).backgroundColor),
     };
   })()`);
   if (
@@ -1378,6 +1394,55 @@ const auditBrowser = async (client, origin) => {
     "crop-desktop-map-filters-personal-hover-off",
     ".map-control-group--filters",
   );
+  const motionTogglePoint = await evaluate(client, `(() => {
+    const bounds = document.querySelector('.display-control__service [data-motion-toggle]')
+      ?.getBoundingClientRect();
+    return bounds ? {
+      x: bounds.left + bounds.width / 2,
+      y: bounds.top + bounds.height / 2,
+    } : null;
+  })()`);
+  if (!motionTogglePoint) {
+    fail("side-panel-hover: motion control is missing from the display panel.");
+  }
+  await client.send("Input.dispatchMouseEvent", {
+    type: "mouseMoved",
+    x: motionTogglePoint.x,
+    y: motionTogglePoint.y,
+  });
+  await delay(260);
+  const sidePanelHoverContract = await evaluate(client, `(() => {
+    const motion = document.querySelector('.display-control__service [data-motion-toggle]');
+    const colorPixel = (value) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1;
+      canvas.height = 1;
+      const context = canvas.getContext('2d');
+      context.fillStyle = value;
+      context.fillRect(0, 0, 1, 1);
+      return Array.from(context.getImageData(0, 0, 1, 1).data).join(',');
+    };
+    return {
+      hovered: motion?.matches(':hover'),
+      backgroundColor: getComputedStyle(motion).backgroundColor,
+      color: getComputedStyle(motion).color,
+      backgroundPixel: colorPixel(getComputedStyle(motion).backgroundColor),
+      colorPixel: colorPixel(getComputedStyle(motion).color),
+    };
+  })()`);
+  if (
+    !sidePanelHoverContract.hovered
+    || sidePanelHoverContract.backgroundPixel
+      === hoveredInactiveFilterContract.referenceIdleBackgroundPixel
+    || sidePanelHoverContract.backgroundPixel
+      !== hoveredInactiveFilterContract.backgroundPixel
+    || sidePanelHoverContract.colorPixel !== hoveredInactiveFilterContract.colorPixel
+  ) {
+    fail("side-panel-hover: left and right neutral controls use different hover feedback.", {
+      left: hoveredInactiveFilterContract,
+      right: sidePanelHoverContract,
+    });
+  }
   await evaluate(
     client,
     "document.querySelector('[data-map-filter=\"all\"]')?.click(); true",
