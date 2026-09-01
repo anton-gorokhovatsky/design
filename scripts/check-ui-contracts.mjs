@@ -891,6 +891,56 @@ const auditBrowser = async (client, origin) => {
           mobileDockContract,
         );
       }
+      await evaluate(
+        client,
+        "document.querySelector('[data-map-filter=\"personal\"]')?.click(); true",
+      );
+      await delay(120);
+      const mobilePersonalOnlyContract = await evaluate(client, `(() => ({
+        allPressed: document.querySelector('[data-map-filter="all"]')
+          ?.getAttribute("aria-pressed"),
+        companyPressed: document.querySelector('[data-map-filter="company"]')
+          ?.getAttribute("aria-pressed"),
+        projectPressed: document.querySelector('[data-map-filter="project"]')
+          ?.getAttribute("aria-pressed"),
+        personalPressed: document.querySelector('[data-map-filter="personal"]')
+          ?.getAttribute("aria-pressed"),
+        practicePressed: document.querySelector('[data-map-filter="practice"]')
+          ?.getAttribute("aria-pressed"),
+        filter: new URL(location.href).searchParams.get("filter"),
+        activeKinds: document.querySelector("[data-practice-map]")?.dataset.activeKinds,
+        personalHidden: document.querySelector('[data-map-id="running"]')
+          ?.classList.contains("is-filter-miss"),
+        companyHidden: document.querySelector('[data-map-id="garage"]')
+          ?.classList.contains("is-filter-miss"),
+      }))()`);
+      if (
+        mobilePersonalOnlyContract.allPressed !== "false"
+        || mobilePersonalOnlyContract.companyPressed !== "false"
+        || mobilePersonalOnlyContract.projectPressed !== "false"
+        || mobilePersonalOnlyContract.personalPressed !== "true"
+        || mobilePersonalOnlyContract.practicePressed !== "false"
+        || mobilePersonalOnlyContract.filter !== "personal"
+        || mobilePersonalOnlyContract.activeKinds !== "personal"
+        || mobilePersonalOnlyContract.personalHidden
+        || !mobilePersonalOnlyContract.companyHidden
+      ) {
+        fail(
+          scenario.label + ": selecting Personal from All does not isolate Personal.",
+          mobilePersonalOnlyContract,
+        );
+      }
+      if (scenario.label === "mobile-390-dark") {
+        await saveElementScreenshot(
+          client,
+          "crop-mobile-dock-personal-only-dark",
+          ".system-dock",
+        );
+      }
+      await evaluate(
+        client,
+        "document.querySelector('[data-map-filter=\"all\"]')?.click(); true",
+      );
     }
     if (scenario.label === "desktop-light") {
       const annotationHierarchy = await evaluate(
@@ -1450,6 +1500,61 @@ const auditBrowser = async (client, origin) => {
     "document.querySelector('[data-map-filter=\"personal\"]')?.click(); true",
   );
   await delay(260);
+  const personalOnlyFilterContract = await evaluate(client, `(() => ({
+    allPressed: document.querySelector('[data-map-filter="all"]')
+      ?.getAttribute("aria-pressed"),
+    companyPressed: document.querySelector('[data-map-filter="company"]')
+      ?.getAttribute("aria-pressed"),
+    projectPressed: document.querySelector('[data-map-filter="project"]')
+      ?.getAttribute("aria-pressed"),
+    personalPressed: document.querySelector('[data-map-filter="personal"]')
+      ?.getAttribute("aria-pressed"),
+    practicePressed: document.querySelector('[data-map-filter="practice"]')
+      ?.getAttribute("aria-pressed"),
+    filter: new URL(location.href).searchParams.get("filter"),
+    activeKinds: document.querySelector("[data-practice-map]")?.dataset.activeKinds,
+    personalHidden: document.querySelector('[data-map-id="running"]')
+      ?.classList.contains("is-filter-miss"),
+    companyHidden: document.querySelector('[data-map-id="garage"]')
+      ?.classList.contains("is-filter-miss"),
+  }))()`);
+  if (
+    personalOnlyFilterContract.allPressed !== "false"
+    || personalOnlyFilterContract.companyPressed !== "false"
+    || personalOnlyFilterContract.projectPressed !== "false"
+    || personalOnlyFilterContract.personalPressed !== "true"
+    || personalOnlyFilterContract.practicePressed !== "false"
+    || personalOnlyFilterContract.filter !== "personal"
+    || personalOnlyFilterContract.activeKinds !== "personal"
+    || personalOnlyFilterContract.personalHidden
+    || !personalOnlyFilterContract.companyHidden
+  ) {
+    fail(
+      "map-controls: selecting Personal from All does not isolate Personal.",
+      personalOnlyFilterContract,
+    );
+  }
+  await saveElementScreenshot(
+    client,
+    "crop-desktop-map-filters-personal-only",
+    ".map-control-group--filters",
+  );
+  const projectFilterPoint = await evaluate(client, `(() => {
+    const bounds = document.querySelector('[data-map-filter="project"]')
+      ?.getBoundingClientRect();
+    return bounds ? {
+      x: bounds.left + bounds.width / 2,
+      y: bounds.top + bounds.height / 2,
+    } : null;
+  })()`);
+  if (projectFilterPoint) {
+    await client.send("Input.dispatchMouseEvent", {
+      type: "mouseMoved",
+      x: projectFilterPoint.x,
+      y: projectFilterPoint.y,
+    });
+  }
+  await delay(260);
   const hoveredInactiveFilterContract = await evaluate(client, `(() => {
     const personal = document.querySelector('[data-map-filter="personal"]');
     const project = document.querySelector('[data-map-filter="project"]');
@@ -1464,21 +1569,21 @@ const auditBrowser = async (client, origin) => {
       return Array.from(context.getImageData(0, 0, 1, 1).data).join(',');
     };
     return {
-      hovered: personal?.matches(':hover'),
-      pressed: personal?.getAttribute('aria-pressed'),
-      active: personal?.classList.contains('is-active'),
-      label: personal?.getAttribute('aria-label'),
+      hovered: project?.matches(':hover'),
+      pressed: project?.getAttribute('aria-pressed'),
+      active: project?.classList.contains('is-active'),
+      label: project?.getAttribute('aria-label'),
       allPressed: document.querySelector('[data-map-filter="all"]')
         ?.getAttribute('aria-pressed'),
-      personalHidden: document.querySelector('[data-map-id="running"]')
+      projectHidden: document.querySelector('[data-map-id="private-practice"]')
         ?.classList.contains('is-filter-miss'),
-      indicatorHeight: getComputedStyle(personal, '::after').height,
-      symbolColor: getComputedStyle(personal.querySelector('.map-control__symbol')).color,
-      activeSymbolColor: getComputedStyle(project.querySelector('.map-control__symbol')).color,
-      backgroundColor: getComputedStyle(personal).backgroundColor,
-      color: getComputedStyle(personal).color,
-      backgroundPixel: colorPixel(getComputedStyle(personal).backgroundColor),
-      colorPixel: colorPixel(getComputedStyle(personal).color),
+      indicatorHeight: getComputedStyle(project, '::after').height,
+      symbolColor: getComputedStyle(project.querySelector('.map-control__symbol')).color,
+      activeSymbolColor: getComputedStyle(personal.querySelector('.map-control__symbol')).color,
+      backgroundColor: getComputedStyle(project).backgroundColor,
+      color: getComputedStyle(project).color,
+      backgroundPixel: colorPixel(getComputedStyle(project).backgroundColor),
+      colorPixel: colorPixel(getComputedStyle(project).color),
       referenceIdleBackgroundColor: getComputedStyle(motion).backgroundColor,
       referenceIdleBackgroundPixel: colorPixel(getComputedStyle(motion).backgroundColor),
     };
@@ -1487,9 +1592,9 @@ const auditBrowser = async (client, origin) => {
     !hoveredInactiveFilterContract.hovered
     || hoveredInactiveFilterContract.pressed !== "false"
     || hoveredInactiveFilterContract.active
-    || hoveredInactiveFilterContract.label !== "Личное"
+    || hoveredInactiveFilterContract.label !== "Проекты"
     || hoveredInactiveFilterContract.allPressed !== "false"
-    || !hoveredInactiveFilterContract.personalHidden
+    || !hoveredInactiveFilterContract.projectHidden
     || Number.parseFloat(hoveredInactiveFilterContract.indicatorHeight) > 0.5
     || hoveredInactiveFilterContract.symbolColor
       === hoveredInactiveFilterContract.activeSymbolColor
@@ -1501,7 +1606,7 @@ const auditBrowser = async (client, origin) => {
   }
   await saveElementScreenshot(
     client,
-    "crop-desktop-map-filters-personal-hover-off",
+    "crop-desktop-map-filters-project-hover-off",
     ".map-control-group--filters",
   );
   const motionTogglePoint = await evaluate(client, `(() => {
@@ -1577,23 +1682,28 @@ const auditBrowser = async (client, origin) => {
     allActive: document.querySelector('[data-map-filter="all"]')
       ?.classList.contains("is-active"),
     filter: new URL(location.href).searchParams.get("filter"),
+    activeKinds: document.querySelector("[data-practice-map]")?.dataset.activeKinds,
     companyHidden: document.querySelector('[data-map-id="garage"]')
+      ?.classList.contains("is-filter-miss"),
+    projectHidden: document.querySelector('[data-map-id="private-practice"]')
       ?.classList.contains("is-filter-miss"),
   }))()`);
   if (
-    filteredMapControlContract.companyPressed !== "false"
-    || filteredMapControlContract.projectPressed !== "true"
+    filteredMapControlContract.companyPressed !== "true"
+    || filteredMapControlContract.projectPressed !== "false"
     || filteredMapControlContract.allPressed !== "false"
     || filteredMapControlContract.allActive
-    || filteredMapControlContract.filter !== "project,personal,practice"
-    || !filteredMapControlContract.companyHidden
+    || filteredMapControlContract.filter !== "company"
+    || filteredMapControlContract.activeKinds !== "company"
+    || filteredMapControlContract.companyHidden
+    || !filteredMapControlContract.projectHidden
   ) {
     fail("map-controls: category toggles do not reflect actual visibility.", filteredMapControlContract);
   }
 
   await evaluate(client, `(() => {
-    document.querySelector('[data-map-filter="project"]')?.click();
-    document.querySelector('[data-map-filter="personal"]')?.click();
+    document.querySelector('[data-map-filter="practice"]')?.click();
+    document.querySelector('[data-map-filter="company"]')?.click();
     document.querySelector('[data-map-filter="practice"]')?.click();
     return true;
   })()`);

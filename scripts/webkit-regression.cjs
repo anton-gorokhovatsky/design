@@ -739,9 +739,8 @@ const relationshipCascadeAudit = async (page) => {
     document.querySelector(
       "[data-constellation-nav].is-open [data-constellation-nav-toggle]",
     )?.click();
-    document.querySelector('[data-map-filter="company"]')?.click();
-    document.querySelector('[data-map-filter="personal"]')?.click();
-    document.querySelector('[data-map-filter="practice"]')?.click();
+    document.querySelector('[data-map-filter="all"]')?.click();
+    document.querySelector('[data-map-filter="project"]')?.click();
     document.querySelector('[data-map-id="private-practice"]')?.click();
   });
   await waitForLayout(page, 420);
@@ -762,15 +761,22 @@ const relationshipCascadeAudit = async (page) => {
     const maximumHiddenOpacity = hidden.length
       ? Math.max(...hidden.map((path) => Number(getComputedStyle(path).opacity)))
       : 0;
+    const filter = new URL(location.href).searchParams.get("filter");
+    const activeKinds = document.querySelector("[data-practice-map]")
+      ?.dataset.activeKinds;
 
     return {
+      filter,
+      activeKinds,
       rootOpacity,
       activeCount: active.length,
       hiddenCount: hidden.length,
       minimumActiveOpacity,
       maximumActiveOpacity,
       maximumHiddenOpacity,
-      failure: rootOpacity < 0.99
+      failure: filter !== "project"
+        || activeKinds !== "project"
+        || rootOpacity < 0.99
         || active.length !== 9
         || minimumActiveOpacity < 0.15
         || maximumActiveOpacity > 0.17

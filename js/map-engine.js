@@ -1720,7 +1720,7 @@ const toggleMapFilter = (kind) => {
     return;
   }
 
-  const nextFilters = new Set(activeMapFilters);
+  const nextFilters = new Set(allMapFiltersActive() ? [] : activeMapFilters);
 
   if (nextFilters.has(kind)) {
     if (nextFilters.size === 1) {
