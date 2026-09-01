@@ -804,17 +804,43 @@ const auditBrowser = async (client, origin) => {
         const labels = controls.map((control) => control.querySelector("span:last-child"));
         const symbols = controls.map((control) => control.querySelector(".map-control__symbol"));
         const widths = controls.map((control) => control.getBoundingClientRect().width);
+        const textBounds = labels.map((label) => {
+          if (!label) return null;
+          const range = document.createRange();
+          range.selectNodeContents(label);
+          return range.getBoundingClientRect();
+        });
         const centerX = (element) => {
           const bounds = element?.getBoundingClientRect();
           return bounds ? bounds.left + bounds.width / 2 : Number.NaN;
         };
+        const boundsCenterX = (bounds) => (
+          bounds ? bounds.left + bounds.width / 2 : Number.NaN
+        );
+        const dockBounds = dock?.getBoundingClientRect();
+        const dockStyle = dock ? getComputedStyle(dock) : null;
+        const contentLeft = dockBounds && dockStyle
+          ? dockBounds.left + Number.parseFloat(dockStyle.paddingLeft)
+          : Number.NaN;
+        const contentRight = dockBounds && dockStyle
+          ? dockBounds.right - Number.parseFloat(dockStyle.paddingRight)
+          : Number.NaN;
+        const innerLabelGaps = textBounds.slice(0, -1).map((bounds, index) => (
+          textBounds[index + 1].left - bounds.right
+        ));
+        const averageInnerLabelGap = innerLabelGaps.reduce((sum, gap) => sum + gap, 0)
+          / innerLabelGaps.length;
+        const outerLabelGaps = [
+          textBounds[0].left - contentLeft,
+          contentRight - textBounds.at(-1).right,
+        ];
         return {
           dockHeight: dock?.getBoundingClientRect().height || 0,
           labels: labels.map((label) => label?.textContent.trim() || ""),
           labelsVisible: labels.every(visible),
           labelsFit: labels.every((label, index) => {
             if (!label) return false;
-            const bounds = label.getBoundingClientRect();
+            const bounds = textBounds[index];
             const controlBounds = controls[index].getBoundingClientRect();
             return label.scrollWidth <= label.clientWidth + 1
               && bounds.left >= controlBounds.left - 1
@@ -825,13 +851,21 @@ const auditBrowser = async (client, origin) => {
           minimumControlHeight: Math.min(
             ...controls.map((control) => control.getBoundingClientRect().height),
           ),
-          labelCenterOffsets: labels.map((label, index) => (
-            Math.abs(centerX(label) - centerX(controls[index]))
+          minimumControlWidth: Math.min(...widths),
+          labelCenterOffsets: textBounds.map((bounds, index) => (
+            Math.abs(boundsCenterX(bounds) - centerX(controls[index]))
           )),
           symbolToLabelCenterOffsets: symbols.map((symbol, index) => (
-            Math.abs(centerX(symbol) - centerX(labels[index]))
+            Math.abs(centerX(symbol) - boundsCenterX(textBounds[index]))
           )),
-          widthSpread: Math.max(...widths) - Math.min(...widths),
+          controlWidths: widths,
+          innerLabelGaps,
+          innerLabelGapSpread: Math.max(...innerLabelGaps) - Math.min(...innerLabelGaps),
+          outerLabelGaps,
+          outerLabelGapDifference: Math.abs(outerLabelGaps[0] - outerLabelGaps[1]),
+          outerToHalfInnerGapDeviation: Math.max(
+            ...outerLabelGaps.map((gap) => Math.abs(gap - averageInnerLabelGap / 2)),
+          ),
           themeVisible: visible(
             document.querySelector(".system-dock > .display-control [data-theme-toggle]"),
           ),
@@ -843,14 +877,17 @@ const auditBrowser = async (client, origin) => {
         || !mobileDockContract.labelsVisible
         || !mobileDockContract.labelsFit
         || mobileDockContract.minimumControlHeight < 52
+        || mobileDockContract.minimumControlWidth < 32
         || mobileDockContract.dockHeight < 60
         || mobileDockContract.labelCenterOffsets.some((offset) => offset > 0.75)
         || mobileDockContract.symbolToLabelCenterOffsets.some((offset) => offset > 0.75)
-        || mobileDockContract.widthSpread > 1
+        || mobileDockContract.innerLabelGapSpread > 1
+        || mobileDockContract.outerLabelGapDifference > 1
+        || mobileDockContract.outerToHalfInnerGapDeviation > 1
         || mobileDockContract.themeVisible
       ) {
         fail(
-          scenario.label + ": mobile map filters are not five equally clear labelled controls.",
+          scenario.label + ": mobile map filters are not five label-balanced controls.",
           mobileDockContract,
         );
       }
