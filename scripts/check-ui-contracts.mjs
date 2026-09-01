@@ -785,6 +785,76 @@ const auditBrowser = async (client, origin) => {
     const state = await evaluate(client, geometryExpression);
     auditGeometry(scenario.label, state);
     await saveScreenshot(client, scenario.label);
+    if (scenario.mobile) {
+      const mobileDockContract = await evaluate(client, `(() => {
+        const visible = (element) => {
+          if (!element) return false;
+          const style = getComputedStyle(element);
+          const bounds = element.getBoundingClientRect();
+          return style.display !== "none"
+            && style.visibility !== "hidden"
+            && Number(style.opacity) > 0
+            && bounds.width > 0
+            && bounds.height > 0;
+        };
+        const dock = document.querySelector(".system-dock");
+        const controls = [...document.querySelectorAll(
+          ".system-dock .map-control-group--filters [data-map-filter]",
+        )];
+        const labels = controls.map((control) => control.querySelector("span:last-child"));
+        const symbols = controls.map((control) => control.querySelector(".map-control__symbol"));
+        const widths = controls.map((control) => control.getBoundingClientRect().width);
+        const centerX = (element) => {
+          const bounds = element?.getBoundingClientRect();
+          return bounds ? bounds.left + bounds.width / 2 : Number.NaN;
+        };
+        return {
+          dockHeight: dock?.getBoundingClientRect().height || 0,
+          labels: labels.map((label) => label?.textContent.trim() || ""),
+          labelsVisible: labels.every(visible),
+          labelsFit: labels.every((label, index) => {
+            if (!label) return false;
+            const bounds = label.getBoundingClientRect();
+            const controlBounds = controls[index].getBoundingClientRect();
+            return label.scrollWidth <= label.clientWidth + 1
+              && bounds.left >= controlBounds.left - 1
+              && bounds.right <= controlBounds.right + 1
+              && bounds.top >= controlBounds.top - 1
+              && bounds.bottom <= controlBounds.bottom + 1;
+          }),
+          minimumControlHeight: Math.min(
+            ...controls.map((control) => control.getBoundingClientRect().height),
+          ),
+          labelCenterOffsets: labels.map((label, index) => (
+            Math.abs(centerX(label) - centerX(controls[index]))
+          )),
+          symbolToLabelCenterOffsets: symbols.map((symbol, index) => (
+            Math.abs(centerX(symbol) - centerX(labels[index]))
+          )),
+          widthSpread: Math.max(...widths) - Math.min(...widths),
+          themeVisible: visible(
+            document.querySelector(".system-dock > .display-control [data-theme-toggle]"),
+          ),
+        };
+      })()`);
+      if (
+        JSON.stringify(mobileDockContract.labels)
+          !== JSON.stringify(["ВСЁ", "КОМПАНИИ", "ПРОЕКТЫ", "ЛИЧНОЕ", "ПРИНЦИПЫ"])
+        || !mobileDockContract.labelsVisible
+        || !mobileDockContract.labelsFit
+        || mobileDockContract.minimumControlHeight < 52
+        || mobileDockContract.dockHeight < 60
+        || mobileDockContract.labelCenterOffsets.some((offset) => offset > 0.75)
+        || mobileDockContract.symbolToLabelCenterOffsets.some((offset) => offset > 0.75)
+        || mobileDockContract.widthSpread > 1
+        || mobileDockContract.themeVisible
+      ) {
+        fail(
+          scenario.label + ": mobile map filters are not five equally clear labelled controls.",
+          mobileDockContract,
+        );
+      }
+    }
     if (scenario.label === "desktop-light") {
       const annotationHierarchy = await evaluate(
         client,
@@ -804,6 +874,9 @@ const auditBrowser = async (client, origin) => {
     if (scenario.label === "mobile-390-dark") {
       await saveElementScreenshot(client, "crop-mobile-search-dark", ".command-dock");
       await saveElementScreenshot(client, "crop-mobile-dock-dark", ".system-dock");
+    }
+    if (scenario.label === "mobile-320-dark") {
+      await saveElementScreenshot(client, "crop-mobile-dock-320-dark", ".system-dock");
     }
   }
 
