@@ -1135,7 +1135,30 @@ const auditBrowser = async (client, origin) => {
     client,
     "document.querySelector('[data-observation-next]')?.click(); true",
   );
-  await delay(820);
+  await waitForExpression(client, `(() => {
+    const stage = document.querySelector('[data-observation-showcase]');
+    const overviewIds = ['narkomfin', 'eleven', 'shirokostup'];
+    const planes = Array.from(
+      stage?.querySelectorAll('.observation-showcase__plane') || [],
+    );
+    const overviewPlanes = planes.filter((plane) => (
+      overviewIds.includes(plane.dataset.observationShowcaseId)
+    ));
+    const settledOverview = overviewPlanes.every((plane) => {
+      const style = getComputedStyle(plane);
+      return Number(style.opacity) >= 0.8
+        && style.filter.startsWith('blur(')
+        && Number.parseFloat(style.filter.slice(5)) <= 0.05;
+    });
+    const hiddenNonOverview = planes.every((plane) => (
+      overviewIds.includes(plane.dataset.observationShowcaseId)
+      || Number(getComputedStyle(plane).opacity) <= 0.05
+    ));
+
+    return stage?.dataset.activeId === 'private-practice'
+      && settledOverview
+      && hiddenNonOverview;
+  })()`, { timeout: 3000, interval: 80 });
   const privatePracticeShowcase = await readObservationShowcaseContract(client);
   const overviewIds = ["narkomfin", "eleven", "shirokostup"];
   const overviewPlanes = privatePracticeShowcase.planeStates.filter(
@@ -2243,6 +2266,12 @@ const auditBrowser = async (client, origin) => {
   await evaluate(client, "document.querySelector('[data-close-settings]')?.click(); true");
 
   await navigate(client, `${origin}/?qa=ui-contracts-reel&preview=tarski`);
+  await evaluate(client, `(() => {
+    document.querySelector('[data-map-id="tarski"]')?.dispatchEvent(
+      new PointerEvent('pointerenter'),
+    );
+    return true;
+  })()`);
   await waitForExpression(client, `(() => {
     const preview = document.querySelector(".map-hover-preview");
     const media = document.querySelector(".map-hover-preview__media");
