@@ -3665,7 +3665,18 @@ const auditBrowser = async (client, origin) => {
   }
 
   await evaluate(client, "document.querySelector('[data-close-settings]')?.click(); true");
-  await delay(240);
+  await waitForExpression(client, `(() => {
+    const visible = (selector) => {
+      const element = document.querySelector(selector);
+      const style = element ? getComputedStyle(element) : null;
+      return Boolean(style && style.visibility !== "hidden" && Number(style.opacity) > 0);
+    };
+    return !document.body.classList.contains("has-settings-panel")
+      && visible(".command-dock")
+      && visible(".system-dock")
+      && visible("[data-constellation-nav-toggle]")
+      && Number(getComputedStyle(document.querySelector(".map-nodes")).opacity) >= 0.99;
+  })()`);
   const mobileShortCloseContract = await evaluate(client, `(() => {
     const visible = (selector) => {
       const element = document.querySelector(selector);
