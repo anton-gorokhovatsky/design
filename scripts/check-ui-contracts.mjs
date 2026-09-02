@@ -2265,67 +2265,164 @@ const auditBrowser = async (client, origin) => {
   }
   await evaluate(client, "document.querySelector('[data-close-settings]')?.click(); true");
 
-  await navigate(client, `${origin}/?qa=ui-contracts-reel&preview=tarski`);
-  await evaluate(client, `(() => {
-    document.querySelector('[data-map-id="tarski"]')?.dispatchEvent(
-      new PointerEvent('pointerenter'),
-    );
-    return true;
+  await setViewport(client, {
+    width: 1440,
+    height: 900,
+    mobile: false,
+    theme: "light",
+  });
+  await client.send("Emulation.setEmitTouchEventsForMouse", {
+    enabled: false,
+    configuration: "desktop",
+  });
+  await navigate(client, `${origin}/?qa=ui-contracts-reel`);
+  await client.send("Input.dispatchMouseEvent", {
+    type: "mouseMoved",
+    x: 1,
+    y: 1,
+    pointerType: "mouse",
+  });
+  const tarskiHoverPoint = await evaluate(client, `(() => {
+    const target = document.querySelector('[data-map-id="tarski"]');
+    const bounds = target?.getBoundingClientRect();
+    return bounds ? {
+      x: bounds.left + bounds.width / 2,
+      y: bounds.top + bounds.height / 2,
+    } : null;
   })()`);
-  await waitForExpression(client, `(() => {
-    const preview = document.querySelector(".map-hover-preview");
-    const media = document.querySelector(".map-hover-preview__media");
-    const bounds = media?.getBoundingClientRect();
-    const style = preview ? getComputedStyle(preview) : null;
-    return preview?.classList.contains("is-visible")
-      && style?.display !== "none"
-      && style?.visibility !== "hidden"
-      && Number(style?.opacity) > 0
-      && Boolean(media?.querySelector("video"))
-      && bounds?.width > 0
-      && bounds?.height > 0;
-  })()`);
-  const reelState = await evaluate(client, geometryExpression);
-  const reelContract = await evaluate(client, `(() => {
+  if (tarskiHoverPoint) {
+    await client.send("Input.dispatchMouseEvent", {
+      type: "mouseMoved",
+      x: tarskiHoverPoint.x,
+      y: tarskiHoverPoint.y,
+      pointerType: "mouse",
+    });
+  }
+  const tarskiPreviewReady = tarskiHoverPoint
+    ? await waitForExpression(client, `(() => {
+      const target = document.querySelector('[data-map-id="tarski"]');
+      const preview = document.querySelector(".map-hover-preview");
+      const media = document.querySelector(".map-hover-preview__media");
+      const video = media?.querySelector("video");
+      const bounds = media?.getBoundingClientRect();
+      const style = preview ? getComputedStyle(preview) : null;
+      return target?.matches(":hover")
+        && preview?.classList.contains("is-visible")
+        && style?.display !== "none"
+        && style?.visibility !== "hidden"
+        && Number(style?.opacity) > 0
+        && video?.getAttribute("poster")?.endsWith(
+          "assets/reel-posters/tarski.jpg",
+        )
+        && bounds?.width > 0
+        && bounds?.height > 0;
+    })()`)
+    : false;
+  const tarskiPreviewDiagnostics = await evaluate(client, `(() => {
+    const target = document.querySelector('[data-map-id="tarski"]');
+    const targetBounds = target?.getBoundingClientRect();
+    const targetPoint = targetBounds ? {
+      x: targetBounds.left + targetBounds.width / 2,
+      y: targetBounds.top + targetBounds.height / 2,
+    } : null;
+    const topElement = targetPoint
+      ? document.elementFromPoint(targetPoint.x, targetPoint.y)
+      : null;
     const preview = document.querySelector(".map-hover-preview");
     const media = document.querySelector(".map-hover-preview__media");
     const video = media?.querySelector("video");
-    const bounds = media?.getBoundingClientRect();
-    const style = video ? getComputedStyle(video) : null;
+    const mediaBounds = media?.getBoundingClientRect();
     const previewStyle = preview ? getComputedStyle(preview) : null;
-    const originStyle = getComputedStyle(
-      document.querySelector(".origin-marker__label"),
-    );
     return {
-      visible: preview?.classList.contains("is-visible"),
-      hidden: preview?.getAttribute("aria-hidden"),
-      ratio: bounds?.width && bounds?.height ? bounds.width / bounds.height : 0,
-      objectFit: style?.objectFit,
-      objectPosition: style?.objectPosition,
-      poster: video?.getAttribute("poster"),
-      previewZ: Number.parseInt(previewStyle?.zIndex || "0", 10),
-      originZ: Number.parseInt(originStyle.zIndex || "0", 10),
+      viewport: { width: innerWidth, height: innerHeight },
+      maxTouchPoints: navigator.maxTouchPoints,
+      hoverCapable: matchMedia("(hover: hover) and (pointer: fine)").matches,
+      hoverNone: matchMedia("(hover: none)").matches,
+      pointerFine: matchMedia("(pointer: fine)").matches,
+      pointerCoarse: matchMedia("(pointer: coarse)").matches,
+      compactMapViewport: matchMedia("(max-width: 680px)").matches,
+      inspectorOpen: document.querySelector("[data-map-inspector]")
+        ?.classList.contains("is-open") || false,
+      targetExists: Boolean(target),
+      targetHovered: target?.matches(":hover") || false,
+      hitMapId: topElement?.closest("[data-map-id]")?.dataset.mapId || "",
+      targetBounds: targetBounds ? {
+        left: targetBounds.left,
+        top: targetBounds.top,
+        right: targetBounds.right,
+        bottom: targetBounds.bottom,
+      } : null,
+      previewVisible: preview?.classList.contains("is-visible") || false,
+      previewHidden: preview?.getAttribute("aria-hidden") || "",
+      previewDisplay: previewStyle?.display || "",
+      previewVisibility: previewStyle?.visibility || "",
+      previewOpacity: Number(previewStyle?.opacity || 0),
+      videoExists: Boolean(video),
+      poster: video?.getAttribute("poster") || "",
+      mediaBounds: mediaBounds ? {
+        width: mediaBounds.width,
+        height: mediaBounds.height,
+      } : null,
     };
   })()`);
-  if (
-    !reelState.visible.reel
-    || !reelState.visible.reelMedia
-    || !reelState.visible.reelReadout
-    || !reelContract.visible
-    || reelContract.hidden !== "true"
-    || Math.abs(reelContract.ratio - 1.5) > 0.02
-    || reelContract.objectFit !== "contain"
-    || reelContract.objectPosition !== "50% 0%"
-    || !reelContract.poster?.endsWith("assets/reel-posters/tarski.jpg")
-    || reelContract.previewZ <= reelContract.originZ
-  ) {
-    fail("reel: Tarski receiver lost its native 3:2 content geometry.", reelContract);
+
+  if (!tarskiHoverPoint) {
+    fail("reel: Tarski map receiver is missing.", tarskiPreviewDiagnostics);
+  } else if (!tarskiPreviewReady) {
+    fail(
+      "reel: Tarski receiver did not open on real desktop hover.",
+      tarskiPreviewDiagnostics,
+    );
+  } else {
+    const reelState = await evaluate(client, geometryExpression);
+    const reelContract = await evaluate(client, `(() => {
+      const preview = document.querySelector(".map-hover-preview");
+      const media = document.querySelector(".map-hover-preview__media");
+      const video = media?.querySelector("video");
+      const bounds = media?.getBoundingClientRect();
+      const style = video ? getComputedStyle(video) : null;
+      const previewStyle = preview ? getComputedStyle(preview) : null;
+      const originStyle = getComputedStyle(
+        document.querySelector(".origin-marker__label"),
+      );
+      return {
+        visible: preview?.classList.contains("is-visible"),
+        hidden: preview?.getAttribute("aria-hidden"),
+        ratio: bounds?.width && bounds?.height ? bounds.width / bounds.height : 0,
+        objectFit: style?.objectFit,
+        objectPosition: style?.objectPosition,
+        poster: video?.getAttribute("poster"),
+        previewZ: Number.parseInt(previewStyle?.zIndex || "0", 10),
+        originZ: Number.parseInt(originStyle.zIndex || "0", 10),
+      };
+    })()`);
+    if (
+      !reelState.visible.reel
+      || !reelState.visible.reelMedia
+      || !reelState.visible.reelReadout
+      || !reelContract.visible
+      || reelContract.hidden !== "true"
+      || Math.abs(reelContract.ratio - 1.5) > 0.02
+      || reelContract.objectFit !== "contain"
+      || reelContract.objectPosition !== "50% 0%"
+      || !reelContract.poster?.endsWith("assets/reel-posters/tarski.jpg")
+      || reelContract.previewZ <= reelContract.originZ
+    ) {
+      fail("reel: Tarski receiver lost its native 3:2 content geometry.", reelContract);
+    }
+    if (reelState.materialFailures.length > 0) {
+      fail("reel: MATERIAL / 01 readout mismatch.", reelState.materialFailures);
+    }
+    await saveScreenshot(client, "desktop-reel-tarski");
+    await saveElementScreenshot(client, "crop-desktop-reel-tarski", ".map-hover-preview");
   }
-  if (reelState.materialFailures.length > 0) {
-    fail("reel: MATERIAL / 01 readout mismatch.", reelState.materialFailures);
-  }
-  await saveScreenshot(client, "desktop-reel-tarski");
-  await saveElementScreenshot(client, "crop-desktop-reel-tarski", ".map-hover-preview");
+  await client.send("Input.dispatchMouseEvent", {
+    type: "mouseMoved",
+    x: 1,
+    y: 1,
+    pointerType: "mouse",
+  });
+  await delay(120);
 
   await navigate(client, `${origin}/?qa=ui-contracts-focus`);
   await pressTab(client);
