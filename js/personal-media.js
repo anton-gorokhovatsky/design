@@ -24,12 +24,10 @@ export const createPersonalMedia = ({ inspector, returnFocus }) => {
   const sync = () => {
     const visible = !root.hidden;
     slot.hidden = !visible || !inlineLayout.matches;
-    launch.hidden = !selectedItem?.youtube || (visible && inlineLayout.matches);
+    launch.hidden = !selectedItem?.youtube || (visible && (inlineLayout.matches || Boolean(iframe)));
     launch.textContent = !visible
       ? "ПОКАЗАТЬ СТРИМ"
-      : iframe
-        ? "К\u00a0ПЛЕЕРУ"
-        : "ВКЛЮЧИТЬ СТРИМ";
+      : "ВКЛЮЧИТЬ СТРИМ";
     launch.setAttribute("aria-expanded", String(visible));
     if (selectedItem?.youtube && mapLink) mapLink.hidden = true;
   };

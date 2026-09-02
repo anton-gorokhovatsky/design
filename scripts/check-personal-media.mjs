@@ -62,6 +62,20 @@ try {
       const player = page.locator("[data-personal-media]");
       assert.equal(await player.isVisible(), false, "No player on the untouched map.");
       assert.deepEqual(thirdParty, [], "No third-party video requests on entry.");
+      const sphere = await page.evaluate(() => {
+        const read = (id) => {
+          const node = document.querySelector('[data-map-id="' + id + '"]');
+          const style = getComputedStyle(node.querySelector(".map-node__glyph"));
+          return { sphere: node.classList.contains("map-node--sphere"),
+            area: parseFloat(style.width) * parseFloat(style.height),
+            fill: style.backgroundImage };
+        };
+        return { youtube: read("youtube"), running: read("running") };
+      });
+      assert.equal(sphere.youtube.sphere && sphere.running.sphere, true);
+      assert.ok(Math.abs(sphere.youtube.area / sphere.running.area - 0.49) < 0.01,
+        "YouTube has about half the visual mass of Running.");
+      assert.ok(sphere.youtube.fill.includes("gradient"), "YouTube is a shaded sphere.");
       // The relocated point must be directly reachable, not only through search.
       await page.locator('[data-map-id="youtube"]').click();
       // The player opens over this map sector: clear pointer hover for an idle-material audit.
@@ -115,6 +129,39 @@ try {
           "Desktop card and player must have a real gap.");
         assert.ok(geometry.player.bottom <= height - 100, "Player clears the dock.");
       }
+      const closeStyles = async (selector, keyboard = false) => {
+        const target = page.locator(selector);
+        if (keyboard) {
+          await page.mouse.move(0, 0);
+          // Enter keyboard modality from the player, not from a map point:
+          // WebKit can Tab from the map into search, which closes the card.
+          await page.locator("[data-close-personal-media]").focus();
+          await page.keyboard.press("Shift+Tab");
+          await target.focus();
+        } else {
+          await target.hover();
+        }
+        await target.evaluate((element) => Promise.all(
+          element.getAnimations().map((animation) => animation.finished.catch(() => {}))
+        ));
+        return target.evaluate((element) => {
+          const style = getComputedStyle(element);
+          return Object.fromEntries(["backgroundColor", "color", "transform",
+            "outlineColor", "outlineWidth", "outlineOffset", "borderRadius",
+            "boxShadow", "backdropFilter"].map((key) => [key, style[key]]));
+        });
+      };
+      for (const keyboard of [false, true]) {
+        const cardClose = await closeStyles("[data-close-inspector]", keyboard);
+        const playerClose = await closeStyles("[data-close-personal-media]", keyboard);
+        assert.deepEqual(playerClose, cardClose,
+          "Card and player close controls share hover and keyboard focus.");
+        assert.equal(await player.isVisible(), true, "The style probe must not leave the card.");
+        if (keyboard) assert.equal(cardClose.outlineWidth, "2px",
+          "Both close controls visibly identify keyboard focus.");
+      }
+      await page.locator("[data-close-personal-media]").evaluate((element) => element.blur());
+      await page.mouse.move(0, 0);
       await capture(page, label + "-" + theme + "-youtube-preview");
       await poster.scrollIntoViewIfNeeded();
       await poster.focus();
@@ -124,6 +171,8 @@ try {
         document.querySelector("[data-personal-media-status]").textContent === "Плеер YouTube открыт"
       ));
       assert.equal(thirdParty.length, 1, "Only explicit Play creates the iframe.");
+      assert.equal(await page.locator("[data-open-personal-media]").isVisible(), false,
+        "An open player has no redundant focus-only action.");
       const frame = player.locator("iframe");
       const url = new URL(await frame.getAttribute("src"));
       assert.equal(url.hostname, "www.youtube-nocookie.com");

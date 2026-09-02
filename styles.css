@@ -21,6 +21,7 @@
   --signal-dark: #07122e;
   --pulse: #d8ff47;
   --running-dusk: #a098b0;
+  --youtube-red: #ff0033;
   --tone-company: #887958;
   --tone-project: #2448ed;
   --tone-personal: #90869f;
@@ -4159,7 +4160,8 @@ body.has-content-panel .constellation-nav {
 
 }
 
-.map-inspector .overlay-close {
+.map-inspector .overlay-close,
+.personal-media .overlay-close {
   border: 0;
   border-radius: 50%;
   background: var(--material-01);
@@ -4168,12 +4170,14 @@ body.has-content-panel .constellation-nav {
   -webkit-backdrop-filter: blur(24px);
 }
 
-.map-inspector .overlay-close:hover {
+.map-inspector .overlay-close:hover,
+.personal-media .overlay-close:hover {
   background: var(--material-01);
   color: var(--ink);
 }
 
-.map-inspector .overlay-close:focus-visible {
+.map-inspector .overlay-close:focus-visible,
+.personal-media .overlay-close:focus-visible {
   background: var(--material-01);
   color: var(--ink);
   outline: 2px solid var(--signal);
@@ -5327,7 +5331,8 @@ body:has(.command-dock.is-open) .origin-marker__label {
   font-size: 0.55rem;
 }
 
-.map-inspector .overlay-close {
+.map-inspector .overlay-close,
+.personal-media .overlay-close {
   width: 42px;
   height: 42px;
 }
@@ -5929,7 +5934,7 @@ body:has(.command-dock.is-open) .origin-marker__label {
 }
 
 .practice-map[data-active-kind="personal"]
-  .map-node--personal:not(.map-node--running)
+  .map-node--personal:not(.map-node--sphere)
   .map-node__glyph {
   width: max(10px, calc(var(--size) * 0.7));
   height: max(10px, calc(var(--size) * 0.7));
@@ -5937,17 +5942,17 @@ body:has(.command-dock.is-open) .origin-marker__label {
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--tone-personal) 13%, transparent);
 }
 
-.map-node--running .map-node__glyph {
+.map-node--sphere .map-node__glyph {
   width: calc(var(--size) * 0.72);
   height: calc(var(--size) * 0.72);
   border: 0;
   background:
     radial-gradient(
       circle at 34% 27%,
-      #c7c1d1 0,
-      var(--running-dusk) 36%,
-      #696273 74%,
-      #39353f 100%
+      var(--sphere-highlight, #c7c1d1) 0,
+      var(--sphere-tone, var(--running-dusk)) 36%,
+      var(--sphere-shade, #696273) 74%,
+      var(--sphere-shadow, #39353f) 100%
     );
   box-shadow:
     inset -6px -9px 14px rgba(31, 27, 36, 0.24),
@@ -5958,11 +5963,19 @@ body:has(.command-dock.is-open) .origin-marker__label {
   --node-accent: color-mix(in srgb, var(--running-dusk) 54%, var(--signal));
 }
 
-.map-node--running .map-node__glyph::after {
+.map-node--personal.map-node--youtube {
+  --node-accent: var(--youtube-red);
+  --sphere-highlight: color-mix(in srgb, var(--youtube-red) 35%, white);
+  --sphere-tone: var(--youtube-red);
+  --sphere-shade: color-mix(in srgb, var(--youtube-red) 42%, #121015);
+  --sphere-shadow: color-mix(in srgb, var(--youtube-red) 20%, #121015);
+}
+
+.map-node--sphere .map-node__glyph::after {
   content: none;
 }
 
-.map-node--running.is-selected .map-node__glyph {
+.map-node--sphere.is-selected .map-node__glyph {
   box-shadow:
     inset -6px -9px 14px rgba(31, 27, 36, 0.24),
     0 11px 26px rgba(0, 0, 0, 0.2);
@@ -5971,7 +5984,7 @@ body:has(.command-dock.is-open) .origin-marker__label {
 
 
 .map-node--project.is-selected .map-node__glyph::after,
-.map-node--personal.is-selected .map-node__glyph,
+.map-node--personal:not(.map-node--sphere).is-selected .map-node__glyph,
 .map-node--practice.is-selected .map-node__glyph::before,
 .map-node--practice.is-selected .map-node__glyph::after {
   background: var(--signal);
@@ -6004,7 +6017,7 @@ html[data-theme="light"] .map-node--garage.is-selected .map-node__glyph {
 
 
 
-html[data-theme="dark"] .map-node--running.is-selected .map-node__glyph {
+html[data-theme="dark"] .map-node--sphere.is-selected .map-node__glyph {
   box-shadow:
     inset -9px -13px 19px rgba(9, 8, 11, 0.56),
     inset 2px 2px 7px rgba(255, 255, 255, 0.07),
@@ -6870,7 +6883,7 @@ html[data-theme="light"] .orbital-radar i {
   background: var(--node-accent);
 }
 
-.map-node--personal.is-selected .map-node__glyph,
+.map-node--personal:not(.map-node--sphere).is-selected .map-node__glyph,
 .map-node--practice.is-selected .map-node__glyph::before,
 .map-node--practice.is-selected .map-node__glyph::after {
   background: var(--node-accent);
@@ -6941,7 +6954,7 @@ html[data-theme="dark"]
   pointer-events: none;
 }
 
-html[data-theme="dark"] .map-node--running .map-node__glyph {
+html[data-theme="dark"] .map-node--sphere .map-node__glyph {
   background:
     radial-gradient(
       circle at 25% 18%,
@@ -6951,10 +6964,10 @@ html[data-theme="dark"] .map-node--running .map-node__glyph {
     ),
     radial-gradient(
       circle at 39% 33%,
-      #c8c2d1 0,
-      #9a91a7 24%,
-      #5b5465 56%,
-      #2d2933 82%,
+      var(--sphere-highlight, #c8c2d1) 0,
+      var(--sphere-tone, #9a91a7) 24%,
+      var(--sphere-shade, #5b5465) 56%,
+      var(--sphere-shadow, #2d2933) 82%,
       #121015 100%
     );
   box-shadow:
@@ -7681,13 +7694,13 @@ html[data-theme="dark"] .map-node--running .map-node__glyph {
     background: ButtonText;
   }
 
-  .map-node--running .map-node__glyph {
+  .map-node--sphere .map-node__glyph {
     border: 2px solid ButtonText;
     background: Canvas;
     box-shadow: none;
   }
 
-  .map-node--running .map-node__glyph::after {
+  .map-node--sphere .map-node__glyph::after {
     background: ButtonText;
   }
 
@@ -8942,7 +8955,8 @@ body:has(.practice-map[data-observation-active]) .site-header {
   }
 }
 
-.map-inspector .overlay-close:focus-visible {
+.map-inspector .overlay-close:focus-visible,
+.personal-media .overlay-close:focus-visible {
   outline-offset: -4px;
   transform: none;
 }
@@ -10514,8 +10528,7 @@ html[data-focus-modality="keyboard"]
 }
 
 .personal-media__source,
-.personal-media__play,
-.personal-media .overlay-close {
+.personal-media__play {
   border: 0;
   background: var(--material-01);
   color: var(--content-ink);
@@ -10602,7 +10615,6 @@ html[data-focus-modality="keyboard"]
 }
 
 .personal-media__source:focus-visible,
-.personal-media .overlay-close:focus-visible,
 .personal-media__poster:focus-visible {
   outline: 2px solid var(--signal);
   outline-offset: -4px;
@@ -10610,7 +10622,6 @@ html[data-focus-modality="keyboard"]
 
 @media (hover: hover) and (pointer: fine) {
   .personal-media__source:hover,
-  .personal-media .overlay-close:hover,
   .personal-media__poster:hover .personal-media__play {
     background: color-mix(in srgb, var(--material-01) 88%, var(--ink) 12%);
     color: var(--ink);

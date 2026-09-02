@@ -33,7 +33,9 @@ It samples ten emoji signatures
 morphs from one silhouette to the next, and slowly rotates as one orbital
 system. Running remains a clean `БЕГ` map node; its figurative image belongs to
 the central constellation rather than to the label. The running light uses the
-`--running-dusk` token sampled from SATISFY's Dusk Space-O™ Singlet.
+`--running-dusk` token sampled from SATISFY's Dusk Space-O™ Singlet. YouTube uses
+the same sphere geometry at about half the visible area, with its own red accent
+(`--youtube-red`); its approved position is `72 / 82`.
 `МАРШРУТ / 60 СЕК` remains a small coordinate label inside the field, not a separate
 logo card. It is also the explicit start control for the optional observation
 route.

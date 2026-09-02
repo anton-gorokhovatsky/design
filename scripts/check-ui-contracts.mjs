@@ -806,6 +806,31 @@ const auditBrowser = async (client, origin) => {
   for (const scenario of scenarios) {
     await setViewport(client, scenario);
     await navigate(client, `${origin}/?qa=ui-contracts-${scenario.label}`);
+    // A loaded page can still be resolving a camera transition or the mobile
+    // frame. Measure the settled composition, not an intermediate animation.
+    const settled = await waitForExpression(client, `(() => {
+      const map = document.querySelector("[data-signal-field]");
+      if (matchMedia("(max-width: 680px)").matches
+        && !map?.style.getPropertyValue("--mobile-horizon-top")) return false;
+      const elements = [...document.querySelectorAll(
+        ".map-camera, .orbital-horizon, .command-dock"
+      )];
+      const moving = elements.some((element) => element.getAnimations().some(
+        (animation) => animation.effect?.getTiming().iterations !== Infinity
+          && (animation.playState === "running" || animation.pending)
+      ));
+      const frame = elements.flatMap((element) => {
+        const rect = element.getBoundingClientRect();
+        return [rect.x, rect.y, rect.width, rect.height];
+      });
+      const previous = window.__uiContractMapFrame;
+      const unchanged = previous?.values.length === frame.length
+        && frame.every((value, index) => Math.abs(value - previous.values[index]) < 0.1);
+      const count = unchanged && !moving ? previous.count + 1 : 0;
+      window.__uiContractMapFrame = { values: frame, count };
+      return elements.length === 3 && count >= 3;
+    })()`, { timeout: 4000, interval: 40 });
+    if (!settled) fail(`${scenario.label}: initial map geometry did not settle.`);
     const state = await evaluate(client, geometryExpression);
     auditGeometry(scenario.label, state);
     await saveScreenshot(client, scenario.label);

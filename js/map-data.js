@@ -489,6 +489,7 @@ const mapItems = [
   {
     id: "running",
     kind: "personal",
+    shape: "sphere",
     label: "БЕГ",
     title: "БЕГ",
     meta: "ЛИЧНЫЙ ЦЕНТР / ДИСТАНЦИЯ / РИТМ",
@@ -566,10 +567,11 @@ const mapItems = [
   {
     id: "youtube",
     kind: "personal",
+    shape: "sphere",
     label: "YOUTUBE",
     title: "YOUTUBE",
     meta: "ИГРЫ / КУПЛИНОВ / «ТЕНЬ ЧЕРНОБЫЛЯ»",
-    description: "Люблю YouTube, особенно его игровую часть. Самому поиграть получается не\u00a0всегда, но\u00a0смотреть мне тоже нравится. А\u00a0это — великий Дмитрий Куплинов проходит «Тень Чернобыля». Один из\u00a0моих любимых стримов.",
+    description: "Люблю YouTube, особенно его игровой сегмент. Самому поиграть получается не\u00a0всегда, но\u00a0смотреть мне тоже нравится. А\u00a0это — великий Дмитрий Куплинов проходит «Тень Чернобыля». Один из\u00a0моих любимых стримов.",
     href: "https://www.youtube.com/watch?v=bkbJsunB5zY",
     linkLabel: "СМОТРЕТЬ НА\u00a0YOUTUBE",
     youtube: {
@@ -580,7 +582,7 @@ const mapItems = [
     kindLabel: "ЛИЧНОЕ / ИНТЕРЕС",
     x: 72,
     y: 82,
-    size: 12,
+    size: 42,
   },
   {
     id: "wave",

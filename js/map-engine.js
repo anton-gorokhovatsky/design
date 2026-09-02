@@ -1143,7 +1143,7 @@ if (mapNodesRoot) {
     button.style.setProperty("--y", `${position.y}%`);
     button.style.setProperty("--size", `${item.size}px`);
     const accessibleMapLabel = item.mapLabel || item.label;
-    const glyphScale = item.id === "running"
+    const glyphScale = item.shape === "sphere"
       ? 0.72
       : item.kind === "personal"
         ? 0.48
@@ -1158,8 +1158,8 @@ if (mapNodesRoot) {
       button.classList.add("map-node--garage");
     }
 
-    if (item.id === "running") {
-      button.classList.add("map-node--running");
+    if (item.shape === "sphere") {
+      button.classList.add("map-node--sphere", `map-node--${item.id}`);
     }
 
     if (item.parent === "garage") {
