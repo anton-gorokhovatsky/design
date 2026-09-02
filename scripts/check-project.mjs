@@ -35,6 +35,7 @@ const contractScripts = [
   "scripts/check-reel-preview.mjs",
   "scripts/check-reels.mjs",
   "scripts/check-personal-media.mjs",
+  "scripts/check-inspector-links.mjs",
   "scripts/release.mjs",
   "scripts/check-ui-contracts.mjs",
   "scripts/webkit-regression.cjs",
@@ -169,6 +170,18 @@ const browserContractSteps = [
     label: "Personal video lifecycle: WebKit",
     command: process.execPath,
     args: ["scripts/check-personal-media.mjs", "webkit"],
+  },
+  {
+    scope: "chromium",
+    label: "Inspector destination links: Chromium",
+    command: process.execPath,
+    args: ["scripts/check-inspector-links.mjs", "chromium"],
+  },
+  {
+    scope: "webkit",
+    label: "Inspector destination links: WebKit",
+    command: process.execPath,
+    args: ["scripts/check-inspector-links.mjs", "webkit"],
   },
 ];
 

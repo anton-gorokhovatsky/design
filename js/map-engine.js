@@ -1073,7 +1073,7 @@ const selectMapItem = (
       mapLink.hidden = false;
       mapLink.href = itemHref;
       mapLink.textContent = item.linkLabel
-        || (item.kind === "practice" ? "ИСХОДНИК В\u00a0NOTION" : "ОТКРЫТЬ");
+        || (item.kind === "practice" ? "ИСХОДНИК В\u00a0NOTION" : "ОТКРЫТЬ САЙТ");
       mapLink.classList.remove("is-disabled");
       mapLink.removeAttribute("aria-disabled");
       mapLink.target = "_blank";

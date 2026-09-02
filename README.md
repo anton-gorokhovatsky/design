@@ -48,6 +48,9 @@ route.
   the composition's anchor object. Twelve anchor points add the evidence fields
   `ЗАДАЧА / МОЯ РОЛЬ / РЕЗУЛЬТАТ`; numerical claims are included only where
   they are supported by the source résumé.
+- A card's primary external link sits inside its heading fragment, below the
+  metadata and before the story. It shares the existing text-link style, with no
+  nested material. Labels name the destination; related map points remain last.
 - `СЕАНС НАБЛЮДЕНИЯ` is an optional eight-stop, roughly sixty-second route
   through the same map and inspector. It never autostarts, never captures
   focus, and supports previous, pause/resume, next, arrow keys, and Escape.
