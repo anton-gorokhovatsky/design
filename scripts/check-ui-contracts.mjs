@@ -68,6 +68,30 @@ const waitForExpression = async (
   }
   return false;
 };
+const waitForHoverTransition = (client, selector) => waitForExpression(
+  client,
+  `(() => {
+    const element = document.querySelector(${JSON.stringify(selector)});
+    if (!element?.matches(":hover")) return false;
+
+    const probe = document.createElement("i");
+    probe.style.color = getComputedStyle(document.documentElement)
+      .getPropertyValue("--ink");
+    document.body.append(probe);
+    const expectedColor = getComputedStyle(probe).color;
+    probe.remove();
+
+    return getComputedStyle(element).color === expectedColor
+      && element.getAnimations().every((animation) => (
+        animation.playState !== "running"
+        && animation.playState !== "pending"
+      ));
+  })()`,
+  {
+    timeout: 3000,
+    interval: 40,
+  },
+);
 
 class CdpClient {
   constructor(session) {
@@ -1577,7 +1601,13 @@ const auditBrowser = async (client, origin) => {
       y: projectFilterPoint.y,
     });
   }
-  await delay(260);
+  const projectFilterHoverSettled = await waitForHoverTransition(
+    client,
+    '[data-map-filter="project"]',
+  );
+  if (!projectFilterHoverSettled) {
+    fail("side-panel-hover: the map-filter hover transition did not settle.");
+  }
   const hoveredInactiveFilterContract = await evaluate(client, `(() => {
     const personal = document.querySelector('[data-map-filter="personal"]');
     const project = document.querySelector('[data-map-filter="project"]');
@@ -1648,7 +1678,13 @@ const auditBrowser = async (client, origin) => {
     x: motionTogglePoint.x,
     y: motionTogglePoint.y,
   });
-  await delay(260);
+  const motionToggleHoverSettled = await waitForHoverTransition(
+    client,
+    ".display-control__service [data-motion-toggle]",
+  );
+  if (!motionToggleHoverSettled) {
+    fail("side-panel-hover: the motion-control hover transition did not settle.");
+  }
   const sidePanelHoverContract = await evaluate(client, `(() => {
     const motion = document.querySelector('.display-control__service [data-motion-toggle]');
     const colorPixel = (value) => {
