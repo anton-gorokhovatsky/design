@@ -694,12 +694,12 @@ const childRelationsAudit = async (browser) => {
       );
     };
     document.querySelector('[data-map-id="narkomfin"]')?.click();
-    window.setTimeout(() => {
+    const readState = () => {
       const active = paths.filter((path) => path.classList.contains("is-active-relation"));
       const changed = paths.filter((path, index) => (
         path.getAttribute("d") !== baseline[index]
       ));
-      resolve({
+      return {
         selectedId: document.querySelector("[data-signal-field]")?.dataset.selectedId || "",
         activeCount: active.length,
         changedCount: changed.length,
@@ -715,8 +715,25 @@ const childRelationsAudit = async (browser) => {
           + path.querySelectorAll("animate").length
           + Number(path.dataset.relationMorphing === "true")
         ), 0),
-      });
-    }, 620);
+      };
+    };
+    const startedAt = performance.now();
+    const settle = () => {
+      const nextState = readState();
+      const ready = nextState.selectedId === "narkomfin"
+        && nextState.activeCount === 1
+        && nextState.changedCount === 1
+        && nextState.changedActiveCount === 1
+        && nextState.changedInactiveCount === 0
+        && nextState.minimumActiveDeflection >= 0.8
+        && nextState.pendingAnimations === 0;
+      if (ready || performance.now() - startedAt >= 5000) {
+        resolve(nextState);
+        return;
+      }
+      requestAnimationFrame(settle);
+    };
+    requestAnimationFrame(settle);
   }));
   await context.close();
 
