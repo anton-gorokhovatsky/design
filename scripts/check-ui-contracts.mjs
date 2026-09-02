@@ -2239,7 +2239,14 @@ const auditBrowser = async (client, origin) => {
     document.querySelector(".command-result")?.click();
     return true;
   })()`);
-  await delay(80);
+  await waitForExpression(client, `(() => (
+    !document.querySelector("[data-settings-panel]")?.hidden
+    && document.querySelector("[data-settings-panel]")?.dataset.settingsMode
+      === "analytics"
+    && document.activeElement?.matches(
+      "[data-analytics-allow], [data-analytics-deny]",
+    )
+  ))()`);
   const analyticsSearchRouteContract = await evaluate(client, `(() => ({
     visible: !document.querySelector("[data-settings-panel]")?.hidden,
     mode: document.querySelector("[data-settings-panel]")?.dataset.settingsMode,
@@ -2265,6 +2272,36 @@ const auditBrowser = async (client, origin) => {
   }
   await evaluate(client, "document.querySelector('[data-close-settings]')?.click(); true");
 
+  const desktopPointerScript = await client.send(
+    "Page.addScriptToEvaluateOnNewDocument",
+    {
+      source: `(() => {
+        const nativeMatchMedia = window.matchMedia.bind(window);
+        const desktopPointerQueries = new Map([
+          ["(hover: hover) and (pointer: fine)", true],
+          ["(hover: hover)", true],
+          ["(hover: none)", false],
+          ["(pointer: fine)", true],
+          ["(pointer: coarse)", false],
+        ]);
+        window.matchMedia = (query) => {
+          const mediaQueryList = nativeMatchMedia(query);
+          if (!desktopPointerQueries.has(query)) {
+            return mediaQueryList;
+          }
+          return new Proxy(mediaQueryList, {
+            get(target, property) {
+              if (property === "matches") {
+                return desktopPointerQueries.get(query);
+              }
+              const value = Reflect.get(target, property, target);
+              return typeof value === "function" ? value.bind(target) : value;
+            },
+          });
+        };
+      })();`,
+    },
+  );
   await setViewport(client, {
     width: 1440,
     height: 900,
@@ -2423,6 +2460,9 @@ const auditBrowser = async (client, origin) => {
     pointerType: "mouse",
   });
   await delay(120);
+  await client.send("Page.removeScriptToEvaluateOnNewDocument", {
+    identifier: desktopPointerScript.identifier,
+  });
 
   await navigate(client, `${origin}/?qa=ui-contracts-focus`);
   await pressTab(client);
