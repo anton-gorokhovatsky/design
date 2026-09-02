@@ -87,6 +87,21 @@ const staticContractSteps = [
     args: ["scripts/check-reel-preview.mjs", "narkomfin"],
   },
   {
+    label: "Russian Art Archive reel preview",
+    command: process.execPath,
+    args: ["scripts/check-reel-preview.mjs", "garage-archives"],
+  },
+  {
+    label: "Radiance reel preview",
+    command: process.execPath,
+    args: ["scripts/check-reel-preview.mjs", "garage-institutions"],
+  },
+  {
+    label: "Garage Endowment reel preview",
+    command: process.execPath,
+    args: ["scripts/check-reel-preview.mjs", "garage-endowment"],
+  },
+  {
     label: "Garage Webzine reel preview",
     command: process.execPath,
     args: ["scripts/check-reel-preview.mjs", "garage-webzine"],

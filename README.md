@@ -116,9 +116,16 @@ route.
   uses 12.8 seconds for a calm light hero, the complete Index, its real dark
   appearance state, and one measured move into Selected work. Their chapter
   pairs keep those light and dark editorial states independently readable.
+  The Russian Art Archive uses 11.8 seconds for its catalogue identity, a real
+  search for «Мамышев-Монро», and the resulting archival cards. Radiance uses
+  11.6 seconds for current events, its programme, and visiting information.
+  Garage Endowment uses 10.8 seconds for the fund's mission and target
+  capitals, followed by a real move into the donation controls. Each of these
+  routes also has two chapters separating the source's identity from its
+  working interface.
   Nodes without recorded media do not open an empty or decorative
   media receiver.
-- A site reel is a window, not a crop: all 13 current sources are desktop
+- A site reel is a window, not a crop: all 17 current sources are desktop
   websites, so each uses square pixels and is captured from a `1200×800`
   viewport into a `900×600` / `3:2` master and matching landscape receiver.
   The receiver uses the same `MATERIAL / 01`, while the native video fills its
@@ -144,7 +151,7 @@ route.
   fallback. Regenerate every chapter with
   `node scripts/capture-reel-chapters.mjs`, or one pair with
   `node scripts/capture-reel-chapters.mjs <project-id>`; the command also
-  refreshes all 26 content hashes in the managed `map-data.js` manifest.
+  refreshes all 34 content hashes in the managed `map-data.js` manifest.
 - Touch devices keep the direct node-to-inspector interaction and do not render
   hover-only media.
 - Long-form content remains inside the same coordinate system. Key cases,

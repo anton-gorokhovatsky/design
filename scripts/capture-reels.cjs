@@ -33,6 +33,25 @@ const projects = {
     outputDuration: 12.4,
     finalHold: 1400,
   },
+  "garage-archives": {
+    url: "https://russianartarchive.net/ru",
+    outputDuration: 11.8,
+    finalHold: 4000,
+  },
+  "garage-institutions": {
+    url: "https://radiancecca.com/",
+    dismissSelectors: [
+      "#rec1613551871 .t886__btn",
+      ".t-popup__close",
+    ],
+    outputDuration: 11.6,
+    finalHold: 1200,
+  },
+  "garage-endowment": {
+    url: "https://endowment.garagemca.org/ru",
+    outputDuration: 10.8,
+    finalHold: 2500,
+  },
   narkomfin: {
     url: "https://narkomfin.ru/",
     dismissSelectors: ['button[aria-label="Закрыть виджет"]'],
@@ -305,6 +324,155 @@ const activateControlWithoutScrolling = async (locator, label) => {
   }
 
   await locator.evaluate((control) => control.click());
+};
+
+const prepareArchivesCapture = async (page) => {
+  const confirmation = page.getByText(
+    "Подтверждаю, что мне есть 18 лет",
+    { exact: true },
+  );
+  const confirmationCount = await confirmation.count();
+
+  if (confirmationCount > 1) {
+    throw new Error("The RAAN age confirmation must not be duplicated");
+  }
+
+  if (confirmationCount === 1) {
+    await confirmation.click();
+  }
+
+  const search = page.getByPlaceholder("Расширенный поиск", { exact: true });
+  await search.waitFor({ state: "visible", timeout: 10000 });
+
+  if (await search.count() !== 1) {
+    throw new Error("The RAAN catalogue search must be unique");
+  }
+};
+
+const runArchivesCaptureMotion = async (page) => {
+  await page.waitForTimeout(1100);
+
+  const search = page.getByPlaceholder("Расширенный поиск", { exact: true });
+
+  if (await search.count() !== 1) {
+    throw new Error("The RAAN catalogue search must be unique");
+  }
+
+  await smoothScrollToLocator(search, 2200, 0.28);
+  await page.waitForTimeout(650);
+  await search.pressSequentially("Мамышев-Монро", { delay: 55 });
+  await page.waitForTimeout(400);
+  await search.press("Enter");
+  await page.waitForLoadState("domcontentloaded", { timeout: 15000 }).catch(() => {});
+  await page.evaluate(() => document.fonts?.ready).catch(() => {});
+  await applyCaptureStyles(page);
+  await page.waitForTimeout(900);
+  await smoothScrollBy(page, 270, 1700);
+  await page.waitForTimeout(500);
+};
+
+const runRadianceCaptureMotion = async (page) => {
+  await page.waitForTimeout(1400);
+
+  const events = page.locator("#rec2152110011");
+
+  if (await events.count() !== 1) {
+    throw new Error("The Radiance current-events section must be unique");
+  }
+
+  await smoothScrollToLocator(events, 2400, 0.08);
+  await page.waitForTimeout(800);
+
+  const activities = page.getByRole("heading", {
+    name: "НАПРАВЛЕНИЯ ДЕЯТЕЛЬНОСТИ ЦЕНТРА «СИЯНИЕ»",
+    exact: true,
+  });
+
+  if (await activities.count() !== 1) {
+    throw new Error("The Radiance activities heading must be unique");
+  }
+
+  await smoothScrollToLocator(activities, 2400, 0.08);
+  await page.waitForTimeout(800);
+
+  const visit = page.locator("#rec462533933");
+
+  if (await visit.count() !== 1) {
+    throw new Error("The Radiance visit section must be unique");
+  }
+
+  await smoothScrollToLocator(visit, 2200, 0.06);
+  await page.waitForTimeout(600);
+};
+
+const runEndowmentCaptureMotion = async (page) => {
+  await page.waitForTimeout(1400);
+
+  const capitals = page.getByRole("heading", {
+    name: "Целевые капиталы",
+    exact: true,
+  });
+
+  if (await capitals.count() !== 1) {
+    throw new Error("The endowment target-capitals heading must be unique");
+  }
+
+  await smoothScrollToLocator(capitals, 2400, 0.26);
+  await page.waitForTimeout(900);
+
+  const supportLinks = page.locator('a[href="/ru/support"]')
+    .filter({ hasText: "Поддержать Музей" });
+
+  if (await supportLinks.count() < 1) {
+    throw new Error("The endowment support route must be available");
+  }
+
+  const supportHref = await supportLinks.first().getAttribute("href");
+
+  if (!supportHref) {
+    throw new Error("The endowment support route needs an href");
+  }
+
+  await page.goto(new URL(supportHref, page.url()).href, {
+    waitUntil: "domcontentloaded",
+    timeout: 30000,
+  });
+  await page.evaluate(() => document.fonts?.ready).catch(() => {});
+  await applyCaptureStyles(page);
+  await page.waitForTimeout(900);
+
+  const oneTime = page.getByRole("button", {
+    name: "Разовое",
+    exact: true,
+  });
+
+  if (await oneTime.count() !== 1) {
+    throw new Error("The endowment one-time donation control must be unique");
+  }
+
+  await oneTime.click();
+  await page.waitForTimeout(500);
+
+  const collectionsCapital = page.getByRole("button", {
+    name: "Целевой капитал № 3: Коллекции",
+    exact: true,
+  });
+
+  if (await collectionsCapital.count() !== 1) {
+    throw new Error("The endowment collection-capital control must be unique");
+  }
+
+  await collectionsCapital.click();
+  await page.waitForTimeout(650);
+
+  const amount = page.locator('button[data-value="5000"]');
+
+  if (await amount.count() !== 1) {
+    throw new Error("The endowment 5000 amount control must be unique");
+  }
+
+  await amount.click();
+  await page.waitForTimeout(650);
 };
 
 const prepareGarageWebzineCapture = async (page) => {
@@ -693,6 +861,24 @@ const keepOverlaysDismissed = async (page, selectors = [], duration = 7600) => {
 };
 
 const runCaptureMotion = async (page, id, source) => {
+  if (id === "garage-archives") {
+    await runArchivesCaptureMotion(page);
+    return;
+  }
+
+  if (id === "garage-institutions") {
+    await Promise.all([
+      runRadianceCaptureMotion(page),
+      keepOverlaysDismissed(page, source.dismissSelectors, 10600),
+    ]);
+    return;
+  }
+
+  if (id === "garage-endowment") {
+    await runEndowmentCaptureMotion(page);
+    return;
+  }
+
   if (id === "garage-webzine") {
     await runGarageWebzineCaptureMotion(page);
     return;
@@ -776,6 +962,10 @@ const runCaptureMotion = async (page, id, source) => {
   await page.waitForTimeout(1000);
   await dismissVisibleOverlays(page, project.dismissSelectors);
   await page.keyboard.press("Escape").catch(() => {});
+
+  if (projectId === "garage-archives") {
+    await prepareArchivesCapture(page);
+  }
 
   if (projectId === "narkomfin") {
     await prepareNarkomfinCapture(page);

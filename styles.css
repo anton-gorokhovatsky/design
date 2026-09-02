@@ -1111,12 +1111,6 @@ html[data-capture="og"] .map-grid {
     --gutter: 8px;
   }
 
-
-
-  .brand {
-    gap: 5px;
-  }
-
   .map-meta,
   .section-head {
     min-height: 37px;
@@ -1826,12 +1820,6 @@ main {
 }
 
 @media (max-width: 680px) {
-  .site-header {
-
-    padding: 0 9px;
-  }
-
-
 
   .practice-map {
     inset: 0;
@@ -2048,12 +2036,6 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 
 
 @media (max-width: 680px) {
-
-
-  .brand {
-
-    padding: 0 8px;
-  }
 
   .map-controls {
     gap: 0;
@@ -2776,15 +2758,6 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 }
 
 @media (max-width: 680px) {
-  .site-header {
-
-
-
-    min-height: 40px;
-    gap: 8px;
-  }
-
-
 
   .map-meta {
     top: 54px;
@@ -2979,9 +2952,6 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 }
 
 @media (max-width: 680px) {
-  .site-header {
-    grid-template-columns: 1fr auto;
-  }
 
   .constellation-nav {
     top: 8px;
@@ -8956,30 +8926,6 @@ body:has(.practice-map[data-observation-active]) .site-header {
   .map-hover-preview.has-video,
   .map-hover-preview.has-video.is-landscape {
     display: none;
-  }
-
-  .site-header {
-    top: max(12px, env(safe-area-inset-top));
-    right: auto;
-    bottom: auto;
-    left: max(14px, env(safe-area-inset-left));
-    max-width: calc(100vw - 86px);
-  }
-
-  .brand {
-    min-height: 0;
-    justify-items: start;
-    color: var(--content-ink);
-    font-size: 0.62rem;
-    line-height: 1.08;
-    opacity: 0.72;
-    text-align: left;
-  }
-
-  .brand__role {
-    max-width: 30ch;
-    font-size: 0.5rem;
-    line-height: 1.2;
   }
 
   .content-panel .work-row {

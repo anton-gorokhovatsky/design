@@ -29,6 +29,14 @@ export const reelChapterSpecs = [
     ],
   },
   {
+    itemId: "garage-archives",
+    master: "garage-archives.mp4",
+    chapters: [
+      { label: "catalogue-search", start: 0.1, duration: 5.7 },
+      { label: "search-results", start: 6.3, duration: 5.2 },
+    ],
+  },
+  {
     itemId: "garage-courses",
     master: "garage-courses.mp4",
     chapters: [
@@ -42,6 +50,22 @@ export const reelChapterSpecs = [
     chapters: [
       { label: "light-cover-contents", start: 0.1, duration: 4.6 },
       { label: "dark-article", start: 6.1, duration: 6.1 },
+    ],
+  },
+  {
+    itemId: "garage-institutions",
+    master: "garage-institutions.mp4",
+    chapters: [
+      { label: "identity-current-events", start: 0.1, duration: 5 },
+      { label: "activities-visit", start: 5.3, duration: 6.1 },
+    ],
+  },
+  {
+    itemId: "garage-endowment",
+    master: "garage-endowment.mp4",
+    chapters: [
+      { label: "mission-target-capitals", start: 0.1, duration: 5.2 },
+      { label: "donation-controls", start: 5.4, duration: 5.2 },
     ],
   },
   {
