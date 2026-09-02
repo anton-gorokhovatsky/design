@@ -7,6 +7,23 @@ import { runtimeFiles } from "./runtime-files.mjs";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(scriptDirectory, "..");
+const scopeArgument = process.argv.slice(2).find((argument) => (
+  argument.startsWith("--scope=")
+));
+const checkScope = scopeArgument?.slice("--scope=".length) || "all";
+const supportedScopes = new Set(["all", "static", "chromium", "webkit"]);
+
+if (
+  process.argv.length > (scopeArgument ? 3 : 2)
+  || !supportedScopes.has(checkScope)
+) {
+  console.error(
+    "Usage: node scripts/check-project.mjs "
+    + "[--scope=all|static|chromium|webkit]",
+  );
+  process.exit(2);
+}
+
 const contractScripts = [
   "scripts/audit-project.mjs",
   "scripts/browser-contracts.cjs",
@@ -76,6 +93,9 @@ const staticContractSteps = [
     command: process.execPath,
     args: ["scripts/check-reels.mjs"],
   },
+];
+
+const chromiumReelSteps = [
   {
     label: "11 111 reel preview",
     command: process.execPath,
@@ -116,19 +136,23 @@ const staticContractSteps = [
     command: process.execPath,
     args: ["scripts/check-reel-preview.mjs", "hotline-camp"],
   },
-  {
-    label: "Git whitespace",
-    command: "git",
-    args: ["diff", "--check"],
-  },
 ];
+
+const gitWhitespaceStep = {
+  label: "Git whitespace",
+  command: "git",
+  args: ["diff", "--check"],
+};
+
 const browserContractSteps = [
   {
+    scope: "chromium",
     label: "Real-browser UI contracts",
     command: process.execPath,
     args: ["scripts/check-ui-contracts.mjs"],
   },
   {
+    scope: "webkit",
     label: "WebKit UI contracts",
     command: process.execPath,
     args: ["scripts/webkit-regression.cjs"],
@@ -197,26 +221,50 @@ const runPhase = async (label, steps) => {
   return results;
 };
 
+const recordsFailure = (result) => result.error || result.status !== 0;
 const failures = [];
 const startedAt = performance.now();
-const syntaxResults = await runPhase("Syntax gate", syntaxSteps);
-failures.push(...syntaxResults.filter((result) => (
-  result.error || result.status !== 0
-)));
+const scopeLabel = checkScope === "all"
+  ? "Project check"
+  : `Project ${checkScope} check`;
 
-if (failures.length === 0) {
-  const staticContractResults = await runPhase("Static release gate", staticContractSteps);
-  failures.push(...staticContractResults.filter((result) => (
-    result.error || result.status !== 0
-  )));
+if (checkScope === "all" || checkScope === "static") {
+  const syntaxResults = await runPhase("Syntax gate", syntaxSteps);
+  failures.push(...syntaxResults.filter(recordsFailure));
+
+  if (failures.length === 0) {
+    const scopedStaticSteps = checkScope === "all"
+      ? [...staticContractSteps, ...chromiumReelSteps, gitWhitespaceStep]
+      : [...staticContractSteps, gitWhitespaceStep];
+    const staticContractResults = await runPhase(
+      "Static release gate",
+      scopedStaticSteps,
+    );
+    failures.push(...staticContractResults.filter(recordsFailure));
+  }
 }
 
-if (failures.length === 0) {
-  console.log("\nBrowser release gate: 2 serial tasks");
-  for (const step of browserContractSteps) {
+if (failures.length === 0 && checkScope === "chromium") {
+  const reelResults = await runPhase(
+    "Chromium reel preview gate",
+    chromiumReelSteps,
+  );
+  failures.push(...reelResults.filter(recordsFailure));
+}
+
+if (failures.length === 0 && checkScope !== "static") {
+  const scopedBrowserSteps = checkScope === "all"
+    ? browserContractSteps
+    : browserContractSteps.filter((step) => step.scope === checkScope);
+  console.log(
+    `\nBrowser release gate: ${scopedBrowserSteps.length} serial task`
+    + `${scopedBrowserSteps.length === 1 ? "" : "s"}`,
+  );
+
+  for (const step of scopedBrowserSteps) {
     const result = await runStep(step);
     printResults([result]);
-    if (result.error || result.status !== 0) {
+    if (recordsFailure(result)) {
       failures.push(result);
       break;
     }
@@ -224,7 +272,7 @@ if (failures.length === 0) {
 }
 
 if (failures.length > 0) {
-  console.error("\nProject check failed:");
+  console.error(`\n${scopeLabel} failed:`);
 
   for (const failure of failures) {
     console.error(
@@ -238,5 +286,6 @@ if (failures.length > 0) {
 }
 
 console.log(
-  `\nProject check passed in ${((performance.now() - startedAt) / 1000).toFixed(1)}s.`,
+  `\n${scopeLabel} passed in `
+  + `${((performance.now() - startedAt) / 1000).toFixed(1)}s.`,
 );
