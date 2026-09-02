@@ -2247,7 +2247,12 @@ const auditBrowser = async (client, origin) => {
     document.querySelector(".command-result")?.click();
     return true;
   })()`);
-  await delay(80);
+  const settingsSearchFocus = await waitForExpression(client, `(() => (
+    !document.querySelector("[data-settings-panel]")?.hidden
+    && document.querySelector("[data-settings-panel]")?.dataset.settingsMode
+      === "settings"
+    && document.activeElement?.hasAttribute("data-motion-toggle")
+  ))()`);
   const settingsSearchRouteContract = await evaluate(client, `(() => ({
     visible: !document.querySelector("[data-settings-panel]")?.hidden,
     mode: document.querySelector("[data-settings-panel]")?.dataset.settingsMode,
@@ -2262,9 +2267,12 @@ const auditBrowser = async (client, origin) => {
     || settingsSearchRouteContract.mode !== "settings"
     || settingsSearchRouteContract.title !== "НАСТРОЙКИ САЙТА"
     || settingsSearchRouteContract.screenControlsDisplay === "none"
-    || !settingsSearchRouteContract.focusedMotion
+    || !settingsSearchFocus
   ) {
-    fail("search-intent: settings query does not focus the relevant preference.", settingsSearchRouteContract);
+    fail("search-intent: settings query does not focus the relevant preference.", {
+      ...settingsSearchRouteContract,
+      focusedMotion: settingsSearchFocus,
+    });
   }
   await evaluate(client, "document.querySelector('[data-close-settings]')?.click(); true");
 
