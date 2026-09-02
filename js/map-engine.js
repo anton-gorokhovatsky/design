@@ -6,6 +6,7 @@ import {
   reelChapterSources,
 } from "./map-data.js";
 import { createObservationRoute } from "./observation-route.js";
+import { createPersonalMedia } from "./personal-media.js";
 import {
   reducedMotion,
   typographUiText,
@@ -81,6 +82,16 @@ let applyingUrlState = false;
 let scheduleMapLinksRender = () => {};
 const mapLinkGeometries = new WeakMap();
 const mapLinkAnimations = new WeakMap();
+const personalMedia = createPersonalMedia({
+  inspector: mapInspector,
+  returnFocus: () => {
+    const selected = mapButtons.get(selectedMapId);
+    const target = selected?.getClientRects().length
+      ? selected
+      : mapButtons.get(rovingMapId);
+    target?.focus({ preventScroll: true });
+  },
+});
 
 const syncMapNote = () => {
   if (!mapNote) {
@@ -970,6 +981,9 @@ const setInspectorOpen = (isOpen) => {
   mapButtons.forEach((button, buttonId) => {
     button.setAttribute("aria-expanded", String(isOpen && buttonId === selectedMapId));
   });
+  personalMedia.select(isOpen
+    ? mapItems.find((item) => item.id === selectedMapId)
+    : null);
 };
 
 const clearMapSelection = ({ updateHistory = false } = {}) => {
@@ -1079,6 +1093,8 @@ const selectMapItem = (
 
   if (reveal) {
     setInspectorOpen(true);
+  } else if (mapInspector?.classList.contains("is-open")) {
+    personalMedia.select(item);
   }
 
   if (updateHistory) {

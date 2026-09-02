@@ -34,6 +34,7 @@ const contractScripts = [
   "scripts/check-publication-assets.mjs",
   "scripts/check-reel-preview.mjs",
   "scripts/check-reels.mjs",
+  "scripts/check-personal-media.mjs",
   "scripts/release.mjs",
   "scripts/check-ui-contracts.mjs",
   "scripts/webkit-regression.cjs",
@@ -156,6 +157,18 @@ const browserContractSteps = [
     label: "WebKit UI contracts",
     command: process.execPath,
     args: ["scripts/webkit-regression.cjs"],
+  },
+  {
+    scope: "chromium",
+    label: "Personal video lifecycle: Chromium",
+    command: process.execPath,
+    args: ["scripts/check-personal-media.mjs", "chromium"],
+  },
+  {
+    scope: "webkit",
+    label: "Personal video lifecycle: WebKit",
+    command: process.execPath,
+    args: ["scripts/check-personal-media.mjs", "webkit"],
   },
 ];
 

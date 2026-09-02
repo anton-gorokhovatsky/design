@@ -7,6 +7,7 @@ export const runtimeFiles = [
   "js/signal-field.js",
   "js/map-data.js",
   "js/observation-route.js",
+  "js/personal-media.js",
   "js/map-engine.js",
   "js/viewport-ui.js",
   "js/panels.js",

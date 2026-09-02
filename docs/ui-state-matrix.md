@@ -40,6 +40,7 @@
 | State | Как получить | Что проверять |
 |---|---|---|
 | `map-idle` | Чистая загрузка без выбора | Имя и роль читаются как тихое авторство на desktop; consent скрыт; карта и оси не конфликтуют; `МАРШРУТ / 60 СЕК` повторяет границы `.map-axis-label`, не объектных подписей |
+| `youtube-personal` | `?point=youtube`, затем Play, другая точка и закрытие | До Play нет iframe или запросов к YouTube; desktop-плеер справа снизу не пересекается с inspector/dock и сохраняет тот же iframe между точками; mobile/tablet — внутри карточки; закрытие удаляет iframe и возвращает focus без повторного открытия; смена компоновки и полная панель останавливают видео; локальная обложка и внешний маршрут доступны без playback |
 | `garage-selected` | `?point=garage` | Один selected state, inspector в viewport, ссылка/close и возврат focus |
 | `running-selected` | Активировать `БЕГ` | Dusk-токен, южное положение, доступный readout и отсутствие перекрытия |
 | `food-forks` | `?point=food#map` | Текст связывает еду с сервисом и вниманием к человеку; ссылка ведёт на официальный фрагмент `Forks`, без упоминания Чикаго и без стороннего autoplay-медиа |
@@ -86,6 +87,7 @@
 | `content-approach` | Intro + четыре карточки | Meta/title/body, sticky layers и целые формы |
 | `content-contact` | Полная карточка | Два действия, resume links и reflow |
 | `project-reel` | Receiver + readout | Нативная геометрия, poster/video и progress |
+| `personal-video` | YouTube: desktop `1440/1100`, tablet `1024`, mobile `390/320`, reflow `720`; light/dark | Обложка, Rene-заголовок, shared material/hover/focus; окно видео не меньше `200×200`, без горизонтального overflow и перекрытия навигации; реальные воспроизведение/ошибка YouTube проверяются отдельно от изолированного lifecycle-контракта |
 | `observation-showcase` | Стартовый скрин Музея и активная плоскость 11 111 + inspector | Читаемый фокус, видимые тихие соседние плоскости, отсутствие рамки/тени, минимум 24 px воздуха до origin-label и левой панели, свободная граница с inspector и единая camera-геометрия |
 
 ## Accessibility tree

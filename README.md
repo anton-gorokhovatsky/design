@@ -1,10 +1,9 @@
 # Anton — practice map
 
-Static personal portfolio for a digital product manager, web project lead, and
-design engineer. Its primary audience is an employer: a concise case route
-surfaces task, contribution, and outcome, while the semantic four-direction
-map preserves the full authorial model instead of becoming a conventional
-résumé timeline.
+Static personal site with a portfolio: work, principles, interests, and favourite
+things are parts of the same authorial map. Finding work is a possible use, not
+the site's defining purpose. The concise case route still surfaces task,
+contribution, and outcome without turning the whole map into a résumé timeline.
 
 ## Map model
 

@@ -124,7 +124,7 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=a357c0ae7529">
+    <link rel="stylesheet" href="styles.css?v=361ef597b24f">
     <style>
       .map-evidence [data-map-evidence-role-label]{font-family:var(--font-author);font-size:.6rem;font-weight:400;letter-spacing:0}
     </style>
@@ -135,9 +135,10 @@
           "./js/preferences.js": "./js/preferences.js?v=75ec5c85331d",
           "./js/analytics.js": "./js/analytics.js?v=420bb229d6c0",
           "./js/signal-field.js": "./js/signal-field.js?v=e249b2dc021a",
-          "./js/map-data.js": "./js/map-data.js?v=e76993fbc97a",
+          "./js/map-data.js": "./js/map-data.js?v=4c8c75439510",
           "./js/observation-route.js": "./js/observation-route.js?v=bf8186463ee9",
-          "./js/map-engine.js": "./js/map-engine.js?v=11ea66537ceb",
+          "./js/personal-media.js": "./js/personal-media.js?v=c06a34aaa17e",
+          "./js/map-engine.js": "./js/map-engine.js?v=70ad548ffe1b",
           "./js/viewport-ui.js": "./js/viewport-ui.js?v=61e9c456a69f",
           "./js/panels.js": "./js/panels.js?v=155b0d282695",
           "./js/favicon.js": "./js/favicon.js?v=3aa23538dc2d"
@@ -149,9 +150,10 @@
     <script type="module" src="js/preferences.js?v=75ec5c85331d"></script>
     <script type="module" src="js/analytics.js?v=420bb229d6c0"></script>
     <script type="module" src="js/signal-field.js?v=e249b2dc021a"></script>
-    <script type="module" src="js/map-data.js?v=e76993fbc97a"></script>
+    <script type="module" src="js/map-data.js?v=4c8c75439510"></script>
     <script type="module" src="js/observation-route.js?v=bf8186463ee9"></script>
-    <script type="module" src="js/map-engine.js?v=11ea66537ceb"></script>
+    <script type="module" src="js/personal-media.js?v=c06a34aaa17e"></script>
+    <script type="module" src="js/map-engine.js?v=70ad548ffe1b"></script>
     <script type="module" src="js/viewport-ui.js?v=61e9c456a69f"></script>
     <script type="module" src="js/panels.js?v=155b0d282695"></script>
     <script type="module" src="js/favicon.js?v=3aa23538dc2d"></script>
@@ -553,6 +555,16 @@
             target="_blank"
             rel="noreferrer"
           >ОТКРЫТЬ</a>
+          <div class="personal-media-slot" data-personal-media-slot hidden></div>
+          <button
+            class="map-readout__link"
+            type="button"
+            data-open-personal-media
+            data-material-surface="personal-media-launch"
+            data-material-active="always"
+            aria-controls="personal-media"
+            hidden
+          >ВКЛЮЧИТЬ СТРИМ</button>
           <nav
             class="map-related"
             data-map-related
@@ -570,6 +582,46 @@
               role="list"
             ></div>
           </nav>
+        </aside>
+
+        <aside
+          class="personal-media"
+          id="personal-media"
+          data-personal-media
+          aria-label="Любимый стрим"
+          hidden
+        >
+          <div class="personal-media__head">
+            <a
+              class="personal-media__source"
+              data-personal-media-source
+              data-material-surface="personal-media-source"
+              data-material-active="always"
+              href="https://www.youtube.com/watch?v=bkbJsunB5zY"
+              target="_blank"
+              rel="noopener noreferrer"
+            >СМОТРЕТЬ НА&nbsp;YOUTUBE</a>
+            <button
+              class="overlay-close personal-media__close"
+              type="button"
+              data-close-personal-media
+              data-material-surface="personal-media-close"
+              data-material-active="always"
+              aria-label="Закрыть и остановить стрим"
+            ><span aria-hidden="true">×</span></button>
+          </div>
+          <div class="personal-media__screen" data-personal-media-screen>
+            <button class="personal-media__poster" type="button" data-play-personal-media>
+              <img data-personal-media-poster alt="" width="1280" height="720" decoding="async">
+              <span
+                class="personal-media__play"
+                data-material-surface="personal-media-play"
+                data-material-active="always"
+                aria-hidden="true"
+              ></span>
+            </button>
+          </div>
+          <p class="visually-hidden" data-personal-media-status role="status" aria-live="polite"></p>
         </aside>
 
         <!-- map-evidence-data:start -->
