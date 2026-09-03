@@ -1121,6 +1121,12 @@ inspectorClose?.addEventListener("click", () => {
   selectedButton?.focus();
 });
 
+// Rotate five surfaces, keeping glyph geometry and lighting fixed.
+const sphereTurnSeconds = new Map([
+  ["garage", 120], ["optimal", 96], ["ilmix", 108],
+  ["running", 112], ["youtube", 88],
+]);
+
 if (mapNodesRoot) {
   mapItems.forEach((item) => {
     const button = document.createElement("button");
@@ -1172,6 +1178,16 @@ if (mapNodesRoot) {
 
     glyph.className = "map-node__glyph";
     glyph.setAttribute("aria-hidden", "true");
+    const sphereTurn = sphereTurnSeconds.get(item.id);
+    if (sphereTurn) {
+      const surface = document.createElement("span");
+      surface.className = "map-node__surface";
+      surface.style.setProperty("--sphere-radius", (glyphDiameter / 2).toFixed(2) + "px");
+      surface.style.setProperty("--sphere-turn", sphereTurn + "s");
+      surface.style.setProperty("--sphere-phase", -(item.x + item.y) + "s");
+      surface.style.setProperty("--sphere-back-phase", -(item.x + item.y + sphereTurn / 2) + "s");
+      glyph.append(surface);
+    }
     label.className = `map-node-label map-node-label--${item.kind}`;
     label.dataset.mapLabelId = item.id;
     label.dataset.materialSurface = "map-node-label";

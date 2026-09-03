@@ -93,6 +93,40 @@ const waitForHoverTransition = (client, selector) => waitForExpression(
   },
 );
 
+const waitForGeometryTransition = async (client, selector) => {
+  await evaluate(client, `new Promise((done) => {
+    requestAnimationFrame(() => requestAnimationFrame(done));
+  })`, true);
+  const settled = await waitForExpression(client, `(() => {
+    const elements = [...document.querySelectorAll(${JSON.stringify(selector)})];
+    return elements.length > 0 && elements.every((element) => (
+      element.getAnimations().every((animation) => (
+        animation.effect?.getTiming().iterations === Infinity
+        || (animation.playState !== "running" && !animation.pending)
+      ))
+    ));
+  })()`, { timeout: 4000, interval: 40 });
+  if (!settled) fail("geometry: finite transitions did not settle.", selector);
+};
+
+const waitForSearchPlacement = async (client) => {
+  await waitForGeometryTransition(client, "[data-command-results]");
+  const positioned = await waitForExpression(client, `(() => {
+    const results = document.querySelector("[data-command-results]");
+    const form = document.querySelector("[data-command-form]");
+    const shell = form.closest("[data-floating-console]").getBoundingClientRect();
+    const popup = results.getBoundingClientRect();
+    const gap = results.dataset.placement === "below"
+      ? popup.top - shell.bottom : shell.top - popup.bottom;
+    return shell.top >= 7.5 && shell.bottom <= innerHeight - 7.5
+      && popup.top >= 7.5 && popup.bottom <= innerHeight - 7.5
+      && Math.abs(gap - 8) < 0.6
+      && Math.abs(popup.left - form.getBoundingClientRect().left) < 0.6
+      && Math.abs(popup.right - shell.right) < 0.6;
+  })()`, { timeout: 4000, interval: 40 });
+  if (!positioned) fail("search: popup did not follow the clamped console.");
+};
+
 class CdpClient {
   constructor(session) {
     this.session = session;
@@ -1894,7 +1928,10 @@ const auditBrowser = async (client, origin) => {
     client,
     "document.querySelector('[data-map-id=\"private-practice\"]')?.click(); true",
   );
-  await delay(320);
+  await waitForGeometryTransition(
+    client,
+    ".map-node, .map-node__glyph, .map-camera",
+  );
   const chronologyPrivatePracticeContract = await evaluate(client, `(() => {
     const childNodes = Array.from(
       document.querySelectorAll('.map-node[data-map-parent="private-practice"]'),
@@ -2110,37 +2147,55 @@ const auditBrowser = async (client, origin) => {
     input.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "deleteContent" }));
     return true;
   })()`);
-  await delay(60);
+  await waitForSearchPlacement(client);
+  const completeSearchContract = await evaluate(client, `(() => {
+    const results = document.querySelector("[data-command-results]");
+    const form = document.querySelector("[data-command-form]");
+    const surface = form.closest("[data-floating-console]").getBoundingClientRect();
+    const bounds = results.getBoundingClientRect();
+    const buttons = [...results.querySelectorAll(".command-result")];
+    return {
+      count: buttons.length,
+      overflow: results.scrollHeight - results.clientHeight,
+      lastInside: buttons.at(-1).getBoundingClientRect().bottom <= bounds.bottom - 6,
+      leftAligned: Math.abs(bounds.left - form.getBoundingClientRect().left) < 0.6,
+      rightAligned: Math.abs(bounds.right - surface.right) < 0.6,
+    };
+  })()`);
+  if (completeSearchContract.count !== 8 || completeSearchContract.overflow > 1
+    || !completeSearchContract.lastInside || !completeSearchContract.leftAligned
+    || !completeSearchContract.rightAligned) {
+    fail("search-default: the complete list must fit and share the visible console edges.", completeSearchContract);
+  }
+  await saveElementScreenshot(client, "crop-desktop-search-complete", ".command-results");
+
+  // Clipping is an honest cue only when the viewport really lacks room.
+  const searchRegularViewport = await evaluate(client, `({
+    width: innerWidth, height: innerHeight,
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light",
+  })`);
+  await setViewport(client, { ...searchRegularViewport, height: 430, mobile: false });
+  await waitForSearchPlacement(client);
   const searchOverflowStartContract = await evaluate(client, `(() => {
     const results = document.querySelector("[data-command-results]");
     const style = getComputedStyle(results);
     const bounds = results.getBoundingClientRect();
-    const buttons = [...results.querySelectorAll(".command-result")];
-    const lastBounds = buttons.at(-1)?.getBoundingClientRect();
     return {
       canScroll: results.scrollHeight > results.clientHeight,
-      showsNextRow: Boolean(
-        lastBounds
-        && lastBounds.top < bounds.bottom - 8
-        && lastBounds.bottom > bounds.bottom + 8
-      ),
+      showsNextRow: [...results.querySelectorAll(".command-result")].some((button) => {
+        const row = button.getBoundingClientRect();
+        return row.top < bounds.bottom - 8 && row.bottom > bounds.bottom + 8;
+      }),
       scrollbarWidth: style.scrollbarWidth,
       maskImage: style.maskImage || style.webkitMaskImage || "none",
     };
   })()`);
-  if (
-    !searchOverflowStartContract.canScroll
-    || !searchOverflowStartContract.showsNextRow
+  if (!searchOverflowStartContract.canScroll || !searchOverflowStartContract.showsNextRow
     || searchOverflowStartContract.scrollbarWidth !== "none"
-    || searchOverflowStartContract.maskImage !== "none"
-  ) {
-    fail("search-overflow: the initial list does not reveal a crisp partial row below.", searchOverflowStartContract);
+    || searchOverflowStartContract.maskImage !== "none") {
+    fail("search-overflow: a constrained viewport must reveal a crisp partial row below.", searchOverflowStartContract);
   }
-  await saveElementScreenshot(
-    client,
-    "crop-desktop-search-overflow-cue",
-    ".command-results",
-  );
+  await saveElementScreenshot(client, "crop-short-search-overflow-cue", ".command-results");
 
   await evaluate(client, `(() => {
     const results = document.querySelector("[data-command-results]");
@@ -2152,22 +2207,19 @@ const auditBrowser = async (client, origin) => {
   const searchOverflowEndContract = await evaluate(client, `(() => {
     const results = document.querySelector("[data-command-results]");
     const bounds = results.getBoundingClientRect();
-    const firstBounds = results.querySelector(".command-result")?.getBoundingClientRect();
     return {
-      showsPreviousRow: Boolean(
-        firstBounds
-        && firstBounds.top < bounds.top - 8
-        && firstBounds.bottom > bounds.top + 8
-      ),
+      showsPreviousRow: [...results.querySelectorAll(".command-result")].some((button) => {
+        const row = button.getBoundingClientRect();
+        return row.top < bounds.top - 8 && row.bottom > bounds.top + 8;
+      }),
       scrollTop: results.scrollTop,
     };
   })()`);
-  if (
-    !searchOverflowEndContract.showsPreviousRow
-    || searchOverflowEndContract.scrollTop <= 0
-  ) {
-    fail("search-overflow: the end of the list does not reveal a crisp partial row above.", searchOverflowEndContract);
+  if (!searchOverflowEndContract.showsPreviousRow || searchOverflowEndContract.scrollTop <= 0) {
+    fail("search-overflow: the end of a constrained list must reveal a crisp partial row above.", searchOverflowEndContract);
   }
+  await setViewport(client, { ...searchRegularViewport, mobile: false });
+  await waitForSearchPlacement(client);
 
   const searchIntentCases = [
     ["герман сайт", "command-result-node-herman"],

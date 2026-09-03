@@ -36,6 +36,8 @@ const contractScripts = [
   "scripts/check-reels.mjs",
   "scripts/check-personal-media.mjs",
   "scripts/check-inspector-links.mjs",
+  "scripts/check-command-placement.mjs",
+  "scripts/check-sphere-motion.mjs",
   "scripts/release.mjs",
   "scripts/check-ui-contracts.mjs",
   "scripts/webkit-regression.cjs",
@@ -184,6 +186,20 @@ const browserContractSteps = [
     args: ["scripts/check-inspector-links.mjs", "webkit"],
   },
 ];
+
+browserContractSteps.push(...["chromium", "webkit"].map((scope) => ({
+  scope,
+  label: "Command popup placement: " + scope,
+  command: process.execPath,
+  args: ["scripts/check-command-placement.mjs", scope],
+})));
+
+browserContractSteps.push(...["chromium", "webkit"].map((scope) => ({
+  scope,
+  label: "Sphere axial motion: " + scope,
+  command: process.execPath,
+  args: ["scripts/check-sphere-motion.mjs", scope],
+})));
 
 const runStep = (step) => new Promise((resolveStep) => {
   const startedAt = performance.now();

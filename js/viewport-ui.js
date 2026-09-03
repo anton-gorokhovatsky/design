@@ -1,6 +1,5 @@
 // Runtime module 7/9: viewport UI for detached command geometry and draggable desktop consoles.
 const compactCommandViewport = window.matchMedia("(max-width: 680px)");
-const commandResultsMaximumHeight = 404;
 const commandViewportProperties = [
   "--command-focus-left",
   "--command-focus-top",
@@ -10,6 +9,14 @@ const clearCommandViewportPosition = () => {
   commandViewportProperties.forEach((property) => {
     document.documentElement.style.removeProperty(property);
   });
+};
+const setCommandGeometry = (element, group, values) => {
+  for (const [name, value] of Object.entries(values)) {
+    element.style.setProperty(
+      `--command-${group}-${name}`,
+      typeof value === "number" ? value.toFixed(2) + "px" : value,
+    );
+  }
 };
 const getCommandVisualViewport = () => {
   const viewport = window.visualViewport;
@@ -30,90 +37,67 @@ const positionDetachedCommandResults = () => {
     return;
   }
 
+  const compact = compactCommandViewport.matches;
   const bounds = dock.getBoundingClientRect();
-  const gap = compactCommandViewport.matches ? 8 : 19;
-  const inputFocused = dock.contains(document.activeElement);
-  const usesFocusedMobileLayout = compactCommandViewport.matches && inputFocused;
-  let left = bounds.left;
-  let width = bounds.width;
-  let bottom = window.innerHeight - bounds.top + gap;
-  let maximumHeight = Math.min(
-    commandResultsMaximumHeight,
-    window.innerHeight * 0.57,
+  const surface = compact ? dock : dock.closest("[data-floating-console]") || dock;
+  const surfaceBounds = surface.getBoundingClientRect();
+  const viewport = getCommandVisualViewport();
+  const gap = 8;
+  const edgeGap = 8;
+  const focusedMobile = compact && dock.contains(document.activeElement);
+  let anchorTop = surfaceBounds.top;
+  let anchorBottom = surfaceBounds.bottom;
+  // Align with the search segment's left edge and the console material's right edge.
+  let width = Math.min(
+    surfaceBounds.right - bounds.left,
+    Math.max(0, viewport.width - edgeGap * 2),
   );
-  let focusedViewport = null;
-  let focusedDockTop = 0;
-  let focusedEdgeGap = 0;
+  let left = Math.max(
+    viewport.left + edgeGap,
+    Math.min(bounds.left, viewport.left + viewport.width - edgeGap - width),
+  );
 
-  if (usesFocusedMobileLayout) {
-    const viewport = getCommandVisualViewport();
-    const edgeGap = 8;
-    const dockTop = Math.max(
+  if (focusedMobile) {
+    anchorTop = Math.max(
       viewport.top + edgeGap,
       viewport.top + viewport.height - bounds.height - edgeGap,
     );
-
+    anchorBottom = anchorTop + bounds.height;
     left = viewport.left + edgeGap;
     width = Math.max(0, viewport.width - edgeGap * 2);
-    bottom = window.innerHeight - dockTop + gap;
-    focusedViewport = viewport;
-    focusedDockTop = dockTop;
-    focusedEdgeGap = edgeGap;
-    maximumHeight = Math.max(
-      88,
-      Math.min(
-        commandResultsMaximumHeight,
-        dockTop - viewport.top - gap - edgeGap,
-      ),
-    );
-    document.documentElement.style.setProperty(
-      "--command-focus-left",
-      `${left.toFixed(2)}px`,
-    );
-    document.documentElement.style.setProperty(
-      "--command-focus-top",
-      `${dockTop.toFixed(2)}px`,
-    );
-    document.documentElement.style.setProperty(
-      "--command-focus-width",
-      `${width.toFixed(2)}px`,
-    );
+    setCommandGeometry(document.documentElement, "focus", { left, top: anchorTop, width });
   } else {
     clearCommandViewportPosition();
   }
 
+  const spaceAbove = Math.max(0, anchorTop - viewport.top - gap - edgeGap);
+  const spaceBelow = Math.max(
+    0,
+    viewport.top + viewport.height - anchorBottom - gap - edgeGap,
+  );
+
   [results, status].filter(Boolean).forEach((element) => {
-    element.style.setProperty("--command-results-left", `${left.toFixed(2)}px`);
-    element.style.setProperty("--command-results-width", `${width.toFixed(2)}px`);
-    element.style.setProperty(
-      "--command-results-bottom",
-      `${bottom.toFixed(2)}px`,
-    );
-    element.style.setProperty(
-      "--command-results-max-height",
-      `${maximumHeight.toFixed(2)}px`,
-    );
+    setCommandGeometry(element, "results", { left, width });
 
-    if (focusedViewport) {
-      const elementHeight = Math.min(
-        maximumHeight,
-        Math.max(
-          element.scrollHeight,
-          element.getBoundingClientRect().height,
-        ),
-      );
-      const top = Math.max(
-        focusedViewport.top + focusedEdgeGap,
-        focusedDockTop - gap - elementHeight,
-      );
-
-      element.style.setProperty(
-        "--command-results-top",
-        `${top.toFixed(2)}px`,
-      );
-    } else {
-      element.style.removeProperty("--command-results-top");
-    }
+    const contentHeight = element.scrollHeight;
+    // Keep the familiar placement above when it fits; otherwise use the
+    // roomier side. Only the actual visible viewport may constrain the list.
+    const opensBelow = !focusedMobile
+      && contentHeight > spaceAbove
+      && spaceBelow > spaceAbove;
+    const maximumHeight = opensBelow ? spaceBelow : spaceAbove;
+    element.dataset.placement = opensBelow ? "below" : "above";
+    setCommandGeometry(element, "results", {
+      "max-height": maximumHeight,
+      top: opensBelow
+        ? anchorBottom + gap
+        : focusedMobile
+          ? anchorTop - gap - Math.min(maximumHeight, contentHeight)
+          : "auto",
+      bottom: opensBelow || focusedMobile
+        ? "auto"
+        : window.innerHeight - anchorTop + gap,
+    });
   });
 };
 let commandPositionFrame = 0;
@@ -210,6 +194,7 @@ floatingConsoleModules.forEach((module) => {
 
       hasFinished = true;
       module.classList.remove("is-dragging");
+      scheduleDetachedCommandResultsPosition();
       module.removeEventListener("pointermove", moveModule);
       module.removeEventListener("pointerup", finishDrag);
       module.removeEventListener("pointercancel", finishDrag);
@@ -259,7 +244,7 @@ const syncFloatingConsoleBounds = () => {
     setConsoleOffset(module, nextOffset.x, nextOffset.y);
   });
 
-  positionDetachedCommandResults();
+  scheduleDetachedCommandResultsPosition();
 };
 
 let consoleResizeFrame = 0;

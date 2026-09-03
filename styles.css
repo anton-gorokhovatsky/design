@@ -1590,15 +1590,16 @@ main {
 
 }
 
-.command-results {
-
-  max-height: min(404px, var(--command-results-max-height, 57svh));
-
+.command-results,
+.command-status {
+  max-height: var(--command-results-max-height, calc(100svh - 16px));
   overflow: auto;
+}
 
+.command-results {
   opacity: 0;
   pointer-events: none;
-  transform: translateY(8px) scale(0.985);
+  transform: translateY(var(--command-results-shift, 8px)) scale(0.985);
   transform-origin: bottom center;
   transition:
     opacity 180ms var(--ease-out),
@@ -1606,6 +1607,10 @@ main {
 }
 
 
+.command-results[data-placement="below"] {
+  --command-results-shift: -8px;
+  transform-origin: top center;
+}
 
 .command-result {
   display: grid;
@@ -4472,6 +4477,7 @@ html[data-focus-modality="keyboard"]
   position: fixed;
   z-index: 65;
   right: auto;
+  top: var(--command-results-top, auto);
   bottom: var(--command-results-bottom, 72px);
   left: var(--command-results-left, 8px);
   width: var(--command-results-width, calc(100vw - 16px));
@@ -4481,6 +4487,7 @@ html[data-focus-modality="keyboard"]
   position: fixed;
   z-index: 65;
   right: auto;
+  top: var(--command-results-top, auto);
   bottom: var(--command-results-bottom, 72px);
   left: var(--command-results-left, 8px);
   width: var(--command-results-width, calc(100vw - 16px));
@@ -5401,6 +5408,8 @@ body:has(.command-dock.is-open) .origin-marker__label {
     cursor: grab;
     touch-action: none;
     will-change: transform;
+    /* Drag and viewport clamping share the exact current geometry. */
+    transition: none;
   }
 
   [data-floating-console] :is(a, button, input, textarea, select, label) {
@@ -5956,6 +5965,59 @@ body:has(.command-dock.is-open) .origin-marker__label {
   box-shadow:
     inset -6px -9px 14px rgba(31, 27, 36, 0.24),
     0 9px 22px rgba(0, 0, 0, 0.18);
+}
+
+/* Axial motion belongs to a faint surface layer, never the lit sphere or
+   its hit area. Two tangent patches narrow at the limb and pass behind it. */
+.map-node__surface {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  opacity: 0.38;
+  pointer-events: none;
+  mask-image: radial-gradient(ellipse at 42% 40%, #000 0 24%, transparent 72%);
+  -webkit-mask-image: radial-gradient(ellipse at 42% 40%, #000 0 24%, transparent 72%);
+}
+
+.map-node__surface::before,
+.map-node__surface::after {
+  position: absolute;
+  top: -6%;
+  left: 22%;
+  width: 56%;
+  height: 112%;
+  background:
+    radial-gradient(ellipse at 32% 34%, rgba(255, 255, 255, 0.22), transparent 53%),
+    radial-gradient(ellipse at 72% 66%, rgba(0, 0, 0, 0.3), transparent 56%);
+  content: "";
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  animation: sphere-axial-turn var(--sphere-turn) linear infinite;
+  animation-delay: var(--sphere-phase);
+}
+
+.map-node__surface::after {
+  animation-delay: var(--sphere-back-phase);
+}
+
+@keyframes sphere-axial-turn {
+  from {
+    transform: rotateY(0turn) translateZ(var(--sphere-radius));
+  }
+  to {
+    transform: rotateY(1turn) translateZ(var(--sphere-radius));
+  }
+}
+
+html[data-reduce-motion="true"] .map-node__surface {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce), (forced-colors: active) {
+  .map-node__surface {
+    display: none;
+  }
 }
 
 .map-node--running {
