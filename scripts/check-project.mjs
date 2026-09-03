@@ -7,19 +7,27 @@ import { runtimeFiles } from "./runtime-files.mjs";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(scriptDirectory, "..");
-const scopeArgument = process.argv.slice(2).find((argument) => (
+const argumentsToCheck = process.argv.slice(2);
+const scopeArgument = argumentsToCheck.find((argument) => (
   argument.startsWith("--scope=")
 ));
 const checkScope = scopeArgument?.slice("--scope=".length) || "all";
 const supportedScopes = new Set(["all", "static", "chromium", "webkit"]);
+const suiteArgument = argumentsToCheck.find((argument) => (
+  argument.startsWith("--browser-suite=")
+));
+const browserSuite = suiteArgument?.slice("--browser-suite=".length) || "all";
+const supportedSuites = new Set(["all", "core", "components"]);
 
 if (
-  process.argv.length > (scopeArgument ? 3 : 2)
+  argumentsToCheck.length !== Number(Boolean(scopeArgument)) + Number(Boolean(suiteArgument))
   || !supportedScopes.has(checkScope)
+  || !supportedSuites.has(browserSuite)
+  || (browserSuite !== "all" && !["chromium", "webkit"].includes(checkScope))
 ) {
   console.error(
     "Usage: node scripts/check-project.mjs "
-    + "[--scope=all|static|chromium|webkit]",
+    + "[--scope=all|static|chromium|webkit] [--browser-suite=all|core|components]",
   );
   process.exit(2);
 }
@@ -151,12 +159,14 @@ const gitWhitespaceStep = {
 const browserContractSteps = [
   {
     scope: "chromium",
+    suite: "core",
     label: "Real-browser UI contracts",
     command: process.execPath,
     args: ["scripts/check-ui-contracts.mjs"],
   },
   {
     scope: "webkit",
+    suite: "core",
     label: "WebKit UI contracts",
     command: process.execPath,
     args: ["scripts/webkit-regression.cjs"],
@@ -286,7 +296,7 @@ if (checkScope === "all" || checkScope === "static") {
   }
 }
 
-if (failures.length === 0 && checkScope === "chromium") {
+if (failures.length === 0 && checkScope === "chromium" && browserSuite !== "components") {
   const reelResults = await runPhase(
     "Chromium reel preview gate",
     chromiumReelSteps,
@@ -295,9 +305,10 @@ if (failures.length === 0 && checkScope === "chromium") {
 }
 
 if (failures.length === 0 && checkScope !== "static") {
-  const scopedBrowserSteps = checkScope === "all"
-    ? browserContractSteps
-    : browserContractSteps.filter((step) => step.scope === checkScope);
+  const scopedBrowserSteps = browserContractSteps.filter((step) => (
+    (checkScope === "all" || step.scope === checkScope)
+    && (browserSuite === "all" || (step.suite || "components") === browserSuite)
+  ));
   console.log(
     `\nBrowser release gate: ${scopedBrowserSteps.length} serial task`
     + `${scopedBrowserSteps.length === 1 ? "" : "s"}`,

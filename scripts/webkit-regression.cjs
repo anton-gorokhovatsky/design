@@ -26,6 +26,17 @@ const {
   webkitCompactScenarios,
 } = require("./browser-contracts.cjs");
 
+const requestedScenario = process.env.PORTFOLIO_WEBKIT_SCENARIO || "";
+const scenarios = requestedScenario
+  ? webkitCompactScenarios.filter(({ label }) => label === requestedScenario)
+  : webkitCompactScenarios;
+if (scenarios.length === 0) {
+  throw new Error(`Unknown WebKit scenario: ${requestedScenario}`);
+}
+// Shared contracts run once: in the first CI shard, or in the full local gate.
+const runSharedChecks = !requestedScenario
+  || requestedScenario === webkitCompactScenarios[0].label;
+
 let baseUrl = process.env.PORTFOLIO_AUDIT_URL || "";
 const artifactDir = process.env.PORTFOLIO_AUDIT_DIR
   || path.join(os.tmpdir(), "portfolio-webkit-contracts");
@@ -1621,6 +1632,8 @@ const accessibilityAcceptanceAudit = async (browser) => {
   browser = await webkit.launch({ headless: true });
   const report = {
     schemaVersion: 1,
+    scenario: requestedScenario || "all",
+    sharedChecks: runSharedChecks,
     accessibility: null,
     annotationHierarchy: null,
     childRelations: null,
@@ -1635,7 +1648,7 @@ const accessibilityAcceptanceAudit = async (browser) => {
   };
 
   try {
-    for (const scenario of webkitCompactScenarios) {
+    for (const scenario of scenarios) {
       const {
         viewport,
         colorScheme,
@@ -1744,52 +1757,54 @@ const accessibilityAcceptanceAudit = async (browser) => {
       browser = await webkit.launch({ headless: true });
     }
 
-    report.annotationHierarchy = await annotationHierarchyAudit(browser);
-    report.mobileSearch = await mobileSearchViewportAudit(browser);
-    report.accessibility = await accessibilityAcceptanceAudit(browser);
-    report.childRelations = await childRelationsAudit(browser);
-    report.reducedMotionRelations = await reducedMotionRelationsAudit(browser);
+    if (runSharedChecks) {
+      report.annotationHierarchy = await annotationHierarchyAudit(browser);
+      report.mobileSearch = await mobileSearchViewportAudit(browser);
+      report.accessibility = await accessibilityAcceptanceAudit(browser);
+      report.childRelations = await childRelationsAudit(browser);
+      report.reducedMotionRelations = await reducedMotionRelationsAudit(browser);
 
-    const shortSettingsViewport = { width: 393, height: 650 };
-    const shortSettingsContext = await browser.newContext({
-      viewport: shortSettingsViewport,
-      colorScheme: "dark",
-      hasTouch: true,
-      isMobile: true,
-    });
-    const shortSettingsPage = await shortSettingsContext.newPage();
-    await isolateThirdPartyTelemetry(shortSettingsPage);
-    attachRuntimeLog(shortSettingsPage, "393x650-dark-short-settings");
-    report.shortSettings = await analyticsConsentAudit(
-      shortSettingsPage,
-      shortSettingsViewport,
-      "393x650-dark-short-settings",
-    );
-    await shortSettingsContext.close();
+      const shortSettingsViewport = { width: 393, height: 650 };
+      const shortSettingsContext = await browser.newContext({
+        viewport: shortSettingsViewport,
+        colorScheme: "dark",
+        hasTouch: true,
+        isMobile: true,
+      });
+      const shortSettingsPage = await shortSettingsContext.newPage();
+      await isolateThirdPartyTelemetry(shortSettingsPage);
+      attachRuntimeLog(shortSettingsPage, "393x650-dark-short-settings");
+      report.shortSettings = await analyticsConsentAudit(
+        shortSettingsPage,
+        shortSettingsViewport,
+        "393x650-dark-short-settings",
+      );
+      await shortSettingsContext.close();
 
-    const noScriptContext = await browser.newContext({
-      viewport: { width: 390, height: 844 },
-      colorScheme: "dark",
-      javaScriptEnabled: false,
-    });
-    const noScriptPage = await noScriptContext.newPage();
-    await isolateThirdPartyTelemetry(noScriptPage);
-    await noScriptPage.goto(`${baseUrl}-no-script`, {
-      waitUntil: "networkidle",
-    });
-    const noScriptFallback = noScriptPage.locator(".no-script-fallback");
-    const noScriptNormalMain = noScriptPage.locator("body > main:not(.no-script-fallback)");
-    report.noScript = {
-      visible: await noScriptFallback.isVisible(),
-      linkCount: await noScriptFallback.locator("a").count(),
-      normalMainVisible: await noScriptNormalMain.isVisible(),
-      trackerPixels: await noScriptPage.locator('img[src*="mc.yandex.ru"]').count(),
-    };
-    await noScriptPage.screenshot({
-      path: path.join(artifactDir, "390x844-dark-no-script.png"),
-      fullPage: false,
-    });
-    await noScriptContext.close();
+      const noScriptContext = await browser.newContext({
+        viewport: { width: 390, height: 844 },
+        colorScheme: "dark",
+        javaScriptEnabled: false,
+      });
+      const noScriptPage = await noScriptContext.newPage();
+      await isolateThirdPartyTelemetry(noScriptPage);
+      await noScriptPage.goto(`${baseUrl}-no-script`, {
+        waitUntil: "networkidle",
+      });
+      const noScriptFallback = noScriptPage.locator(".no-script-fallback");
+      const noScriptNormalMain = noScriptPage.locator("body > main:not(.no-script-fallback)");
+      report.noScript = {
+        visible: await noScriptFallback.isVisible(),
+        linkCount: await noScriptFallback.locator("a").count(),
+        normalMainVisible: await noScriptNormalMain.isVisible(),
+        trackerPixels: await noScriptPage.locator('img[src*="mc.yandex.ru"]').count(),
+      };
+      await noScriptPage.screenshot({
+        path: path.join(artifactDir, "390x844-dark-no-script.png"),
+        fullPage: false,
+      });
+      await noScriptContext.close();
+    }
   } finally {
     await browser?.close();
     if (localServer?.server) {
@@ -1860,10 +1875,10 @@ const accessibilityAcceptanceAudit = async (browser) => {
         (failure) => `${state.viewport.width}/${state.colorScheme}: material ${failure.surface}`,
       ),
     ]),
-    ...(!report.noScript?.visible
+    ...(runSharedChecks && (!report.noScript?.visible
       || report.noScript?.linkCount < 9
       || report.noScript?.normalMainVisible
-      || report.noScript?.trackerPixels !== 0
+      || report.noScript?.trackerPixels !== 0)
       ? ["390/dark: no-script fallback failed"]
       : []),
     ...(report.telemetryRequests.length > 0

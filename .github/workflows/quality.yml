@@ -30,18 +30,41 @@ jobs:
       - run: node scripts/check-project.mjs --scope=static
 
   browser-contracts:
-    name: browser-contracts (${{ matrix.browser }})
+    name: browser-contracts (${{ matrix.artifact }})
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        browser:
-          - chromium
-          - webkit
+        include:
+          - browser: chromium
+            suite: all
+            artifact: chromium
+            scenario: ""
+          - browser: webkit
+            suite: core
+            artifact: webkit-390-light
+            scenario: 390x844-light
+          - browser: webkit
+            suite: core
+            artifact: webkit-390-dark
+            scenario: 390x844-dark
+          - browser: webkit
+            suite: core
+            artifact: webkit-320-light
+            scenario: 320x568-light
+          - browser: webkit
+            suite: core
+            artifact: webkit-320-dark
+            scenario: 320x568-dark
+          - browser: webkit
+            suite: components
+            artifact: webkit-components
+            scenario: ""
     env:
-      PORTFOLIO_UI_ARTIFACT_DIR: artifacts/chromium
-      PORTFOLIO_AUDIT_DIR: artifacts/webkit
+      PORTFOLIO_UI_ARTIFACT_DIR: artifacts/${{ matrix.artifact }}
+      PORTFOLIO_AUDIT_DIR: artifacts/${{ matrix.artifact }}
+      PORTFOLIO_WEBKIT_SCENARIO: ${{ matrix.scenario }}
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -61,12 +84,12 @@ jobs:
       - name: Install Playwright ${{ matrix.browser }}
         id: playwright-install
         run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
-      - run: node scripts/check-project.mjs --scope=${{ matrix.browser }}
+      - run: node scripts/check-project.mjs --scope=${{ matrix.browser }} --browser-suite=${{ matrix.suite }}
       - if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: browser-contracts-${{ matrix.browser }}
-          path: artifacts/${{ matrix.browser }}
+          name: browser-contracts-${{ matrix.artifact }}
+          path: artifacts/${{ matrix.artifact }}
           if-no-files-found: ignore
           retention-days: 14
       - name: Save Playwright ${{ matrix.browser }}
@@ -78,3 +101,15 @@ jobs:
         with:
           path: ~/.cache/ms-playwright
           key: ${{ steps.playwright-cache.outputs.cache-primary-key }}
+
+  webkit-contracts:
+    name: browser-contracts (webkit)
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    needs: browser-contracts
+    if: always()
+    steps:
+      - name: Require every browser shard
+        env:
+          BROWSER_RESULT: ${{ needs.browser-contracts.result }}
+        run: test "$BROWSER_RESULT" = success
