@@ -7,6 +7,7 @@ import {
 } from "./map-data.js";
 import { createObservationRoute } from "./observation-route.js";
 import { createPersonalMedia } from "./personal-media.js";
+import { createSphereSurface } from "./sphere-surfaces.js";
 import {
   reducedMotion,
   typographUiText,
@@ -1180,13 +1181,7 @@ if (mapNodesRoot) {
     glyph.setAttribute("aria-hidden", "true");
     const sphereTurn = sphereTurnSeconds.get(item.id);
     if (sphereTurn) {
-      const surface = document.createElement("span");
-      surface.className = "map-node__surface";
-      surface.style.setProperty("--sphere-radius", (glyphDiameter / 2).toFixed(2) + "px");
-      surface.style.setProperty("--sphere-turn", sphereTurn + "s");
-      surface.style.setProperty("--sphere-phase", -(item.x + item.y) + "s");
-      surface.style.setProperty("--sphere-back-phase", -(item.x + item.y + sphereTurn / 2) + "s");
-      glyph.append(surface);
+      glyph.append(createSphereSurface(item.id, sphereTurn, (item.x + item.y) / sphereTurn));
     }
     label.className = `map-node-label map-node-label--${item.kind}`;
     label.dataset.mapLabelId = item.id;

@@ -37,7 +37,7 @@ try {
       await page.evaluate(() => document.fonts.ready);
       const exhaustive = label === "desktop" || label === "mobile";
       const items = exhaustive ? mapItems : mapItems.filter((item) => [
-        "narkomfin", "garage-app", "early-career", "coffee", "youtube", "private-practice",
+        "narkomfin", "garage-app", "early-career", "coffee", "youtube", "private-practice", "running", "art",
       ].includes(item.id));
       for (const item of items) {
         await select(page, item.id);
@@ -64,6 +64,8 @@ try {
         assert.equal(state.hidden, Boolean(item.youtube) || !(item.href || item.kind === "practice"), context);
         if (!state.hidden) {
           assert.notEqual(state.text, "ОТКРЫТЬ", context + ": name the destination");
+          const copy = { running: "БЕГ В INSTAGRAM", art: "СОБЫТИЯ НА САЙТЕ МУЗЕЯ" }[item.id];
+          if (copy) assert.equal(state.text.replace(/\s+/gu, " ").trim(), copy, context + ": explicit CTA copy");
           assert.equal(state.target, "_blank", context);
           assert.ok(state.rel.includes("noreferrer"), context);
           if (item.href) assert.equal(state.href, item.href, context);
@@ -74,6 +76,12 @@ try {
           assert.equal(state.fill, "rgba(0, 0, 0, 0)", context);
           assert.equal(state.blur, "none", context);
           assert.ok(state.underline.includes("underline"), context);
+        }
+        if (directory && ["running", "art"].includes(item.id)) {
+          await page.waitForFunction(() => getComputedStyle(document.querySelector("[data-map-inspector]")).opacity === "1");
+          await page.locator(".map-readout__identity").screenshot({
+            path: join(directory, engine + "-cta-" + item.id + "-" + label + "-" + theme + ".jpg"), quality: 90,
+          });
         }
         if (state.related) assert.ok(state.related.top >= state.description.bottom - 1,
           context + ": related points follow the story without overlap");

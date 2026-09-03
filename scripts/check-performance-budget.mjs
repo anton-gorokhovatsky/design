@@ -25,8 +25,8 @@ const eagerMedia = [
 ].map((match) => match[1]);
 const budgets = {
   css: 222 * 1024,
-  // The isolated personal-player controller adds 6 KiB; no runtime dependency.
-  runtime: 208 * 1024,
+  // 208 KiB baseline + 6 KiB for the dependency-free spherical material renderer.
+  runtime: 214 * 1024,
   fonts: 160 * 1024,
   initialSource: 600 * 1024,
 };

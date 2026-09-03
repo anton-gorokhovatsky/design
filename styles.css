@@ -5967,47 +5967,14 @@ body:has(.command-dock.is-open) .origin-marker__label {
     0 9px 22px rgba(0, 0, 0, 0.18);
 }
 
-/* Axial motion belongs to a faint surface layer, never the lit sphere or
-   its hit area. Two tangent patches narrow at the limb and pass behind it. */
+/* The material is projected onto a sphere; the original CSS light stays fixed. */
 .map-node__surface {
   position: absolute;
   inset: 0;
-  overflow: hidden;
+  width: 100%;
+  height: 100%;
   border-radius: inherit;
-  opacity: 0.38;
   pointer-events: none;
-  mask-image: radial-gradient(ellipse at 42% 40%, #000 0 24%, transparent 72%);
-  -webkit-mask-image: radial-gradient(ellipse at 42% 40%, #000 0 24%, transparent 72%);
-}
-
-.map-node__surface::before,
-.map-node__surface::after {
-  position: absolute;
-  top: -6%;
-  left: 22%;
-  width: 56%;
-  height: 112%;
-  background:
-    radial-gradient(ellipse at 32% 34%, rgba(255, 255, 255, 0.22), transparent 53%),
-    radial-gradient(ellipse at 72% 66%, rgba(0, 0, 0, 0.3), transparent 56%);
-  content: "";
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  animation: sphere-axial-turn var(--sphere-turn) linear infinite;
-  animation-delay: var(--sphere-phase);
-}
-
-.map-node__surface::after {
-  animation-delay: var(--sphere-back-phase);
-}
-
-@keyframes sphere-axial-turn {
-  from {
-    transform: rotateY(0turn) translateZ(var(--sphere-radius));
-  }
-  to {
-    transform: rotateY(1turn) translateZ(var(--sphere-radius));
-  }
 }
 
 html[data-reduce-motion="true"] .map-node__surface {
