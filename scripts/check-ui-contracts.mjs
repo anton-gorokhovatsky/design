@@ -2135,7 +2135,7 @@ const auditBrowser = async (client, origin) => {
     searchCloseContract.expanded !== "false"
     || searchCloseContract.formOpen
     || searchCloseContract.resultsHidden !== "true"
-    || searchCloseContract.submitLabel !== "Выполнить запрос"
+    || searchCloseContract.submitLabel !== "Открыть результат"
     || searchCloseContract.query !== "сайт герман"
   ) {
     fail("search-close: the visible close action does not dismiss only the results list.", searchCloseContract);

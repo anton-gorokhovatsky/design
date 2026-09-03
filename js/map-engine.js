@@ -1074,7 +1074,7 @@ const selectMapItem = (
       mapLink.hidden = false;
       mapLink.href = itemHref;
       mapLink.textContent = item.linkLabel
-        || (item.kind === "practice" ? "ИСХОДНИК В\u00a0NOTION" : "ОТКРЫТЬ САЙТ");
+        || (item.kind === "practice" ? "ПРИНЦИПЫ В\u00a0NOTION" : "ОТКРЫТЬ САЙТ");
       mapLink.classList.remove("is-disabled");
       mapLink.removeAttribute("aria-disabled");
       mapLink.target = "_blank";
@@ -1091,6 +1091,7 @@ const selectMapItem = (
   }
 
   renderMapRelatedItems(item);
+  if (mapInspector) mapInspector.scrollTop = 0;
 
   if (reveal) {
     setInspectorOpen(true);

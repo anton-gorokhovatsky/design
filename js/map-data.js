@@ -598,7 +598,7 @@ const mapItems = [
     meta: "МОРЕ / ГОРИЗОНТ / МАСШТАБ",
     description: "Открытый горизонт возвращает чувство масштаба и напоминает: за привычными границами всегда есть продолжение.",
     href: "https://www.instagram.com/stories/highlights/17870996476264206/",
-    linkLabel: "СМОТРЕТЬ В\u00a0INSTAGRAM",
+    linkLabel: "МОРЕ В\u00a0INSTAGRAM",
     kindLabel: "ЛИЧНОЕ / ИНТЕРЕС",
     x: 62,
     y: 65,

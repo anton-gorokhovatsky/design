@@ -5104,7 +5104,12 @@ body:has(.command-dock.is-open) .origin-marker__label {
   right: 178px;
   bottom: 112px;
   width: min(450px, calc(100vw - 390px));
+  max-height: calc(100svh - 128px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   grid-template-columns: minmax(0, 1fr) 42px;
+  grid-auto-rows: max-content;
+  align-content: start;
   gap: 8px;
   padding: 0;
   border: 0;

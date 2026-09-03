@@ -857,7 +857,7 @@ const setCommandOpen = (isOpen) => {
   commandResults?.setAttribute("aria-hidden", String(!isOpen));
   commandSubmit?.setAttribute(
     "aria-label",
-    isOpen ? "Закрыть поиск" : "Выполнить запрос",
+    isOpen ? "Закрыть поиск" : "Открыть результат",
   );
   syncCompactCommandDismiss(isOpen);
 

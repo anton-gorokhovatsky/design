@@ -91,7 +91,10 @@ try {
       await page.goto(origin, { waitUntil: "load" });
       await page.evaluate(() => document.fonts.ready);
       const input = page.locator("[data-command-input]");
+      const submit = page.locator(".command-dock__submit");
+      assert.equal(await submit.getAttribute("aria-label"), "Открыть результат");
       await input.focus();
+      assert.equal(await submit.getAttribute("aria-label"), "Закрыть поиск");
       await settle(page);
       assert.equal((await assertPopup(page)).count, 8);
       const material = await page.evaluate(readMaterialAuditExpression);
@@ -149,6 +152,10 @@ try {
       assert.ok(filtered.count > 0 && filtered.count < 8);
       await input.press("Escape");
       assert.equal(await input.getAttribute("aria-expanded"), "false");
+      assert.equal(await submit.getAttribute("aria-label"), "Открыть результат");
+      await submit.click();
+      await page.waitForFunction(() => document.querySelector("[data-map-inspector]")
+        ?.dataset.selectedMapId === "narkomfin");
       console.log("PASS " + engine + " command placement " + label + " " + theme);
       await page.close();
     }
