@@ -78,13 +78,26 @@ for(const engine of [process.argv[2]||'chromium']) {
     const closeBefore=await page.locator('[data-close-inspector]').boundingBox();
     const reading=page.locator('.case-scroll');
     await reading.focus();
+    assert.equal(await reading.evaluate(element=>document.activeElement===element),true);
+    await page.keyboard.press('Home');
+    await page.waitForFunction(()=>document.querySelector('.case-scroll').scrollTop===0);
     await page.keyboard.press('ArrowDown');
     await page.waitForFunction(()=>document.querySelector('.case-scroll').scrollTop>0);
     await waitForCaseLayout(page);
     assert.deepEqual(await page.locator('[data-close-inspector]').boundingBox(),closeBefore,'Keyboard scrolling keeps close fixed');
-    // GTK maps Home to beginning of line; Control+Home is beginning of document.
-    const readingHome=engine==='webkit'&&process.platform==='linux'?'Control+Home':'Home';
-    await page.keyboard.press(readingHome);
+    result.keyboard=[];
+    for(const [end,home] of [['End','Home'],['Control+End','Control+Home']]) {
+      await page.keyboard.press(end);
+      await page.waitForFunction(()=>{const s=document.querySelector('.case-scroll');return s.scrollTop>0&&s.scrollTop+s.clientHeight>=s.scrollHeight-2;});
+      const bottom=await reading.evaluate(element=>element.scrollTop);
+      await page.keyboard.press(home);
+      await page.waitForFunction(()=>document.querySelector('.case-scroll').scrollTop===0);
+      assert.deepEqual(await page.locator('[data-close-inspector]').boundingBox(),closeBefore,'Edge keys keep close fixed');
+      result.keyboard.push({end,home,bottom,top:0});
+    }
+    await page.keyboard.press('PageDown');
+    await page.waitForFunction(()=>document.querySelector('.case-scroll').scrollTop>0);
+    await page.keyboard.press('PageUp');
     await page.waitForFunction(()=>document.querySelector('.case-scroll').scrollTop===0);
     await waitForCaseLayout(page);
     const media=await page.locator('.case-media').boundingBox();
@@ -125,7 +138,15 @@ for(const engine of [process.argv[2]||'chromium']) {
     assert.equal(await page.locator('.map-inspector').evaluate(el=>getComputedStyle(el).opacity),'0','No flash of the old small readout on close');
     await page.screenshot({path:dir+engine+'-restored-map.jpg',type:'jpeg',quality:84});
     assert.deepEqual(result.errors,[]);
-  } catch(error) {result.status='FAIL';result.error=error.stack||error.message; await page.screenshot({path:dir+engine+'-flow-FAIL.jpg',type:'jpeg',quality:84}).catch(()=>{});}
+  } catch(error) {
+    result.status='FAIL';result.error=error.stack||error.message;
+    result.lastState=await page.evaluate(()=>({
+      active:document.activeElement?.outerHTML.slice(0,240),
+      scroll:document.querySelector('.case-scroll')?.scrollTop,
+      keyRegionFocused:document.activeElement===document.querySelector('.case-scroll'),
+    })).catch(()=>null);
+    await page.screenshot({path:dir+engine+'-flow-FAIL.jpg',type:'jpeg',quality:84}).catch(()=>{});
+  }
   report.push(result);console.log(result.status,engine,result.error||'');
   await browser.close();
 }

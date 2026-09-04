@@ -39,6 +39,7 @@ import {
 import { signalField } from "./signal-field.js";
 
 import {
+  scrollRegionFromKey,
   clearCommandViewportPosition,
   compactCommandViewport,
   getConsoleOffset,
@@ -435,29 +436,7 @@ contentPanel?.addEventListener("keydown", (event) => {
 });
 
 contentPanelBody?.addEventListener("keydown", (event) => {
-  if (!["ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End"].includes(event.key)) {
-    return;
-  }
-
-  const maximumScroll = contentPanelBody.scrollHeight - contentPanelBody.clientHeight;
-  const step = event.key.startsWith("Page")
-    ? contentPanelBody.clientHeight * 0.82
-    : 48;
-  let nextScroll = contentPanelBody.scrollTop;
-
-  if (event.key === "Home") {
-    nextScroll = 0;
-  } else if (event.key === "End") {
-    nextScroll = maximumScroll;
-  } else {
-    nextScroll += ["ArrowDown", "PageDown"].includes(event.key) ? step : -step;
-  }
-
-  event.preventDefault();
-  contentPanelBody.scrollTo({
-    top: Math.max(0, Math.min(maximumScroll, nextScroll)),
-    behavior: reducedMotion.matches ? "auto" : "smooth",
-  });
+  scrollRegionFromKey(event, contentPanelBody, reducedMotion.matches);
 });
 
 panelClose?.addEventListener("click", () => closeContentPanel());

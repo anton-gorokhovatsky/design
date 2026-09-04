@@ -1,4 +1,15 @@
 // Runtime module 7/9: viewport UI for detached command geometry and draggable desktop consoles.
+// Both ordinary panels and expanded cases use the same focused reading keys.
+// This changes keyboard input only; scrolling still belongs to the native region.
+const scrollRegionFromKey = (event, region, reduceMotion) => {
+  if (!["ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End"].includes(event.key)) return;
+  const maximum = region.scrollHeight - region.clientHeight;
+  const step = event.key.startsWith("Page") ? region.clientHeight * 0.82 : 48;
+  const top = event.key === "Home" ? 0 : event.key === "End" ? maximum
+    : region.scrollTop + (["ArrowDown", "PageDown"].includes(event.key) ? step : -step);
+  event.preventDefault();
+  region.scrollTo({ top: Math.max(0, Math.min(maximum, top)), behavior: reduceMotion ? "auto" : "smooth" });
+};
 const compactCommandViewport = window.matchMedia("(max-width: 680px)");
 const commandViewportProperties = [
   "--command-focus-left",
@@ -255,6 +266,7 @@ window.addEventListener("resize", () => {
 floatingConsoleMedia.addEventListener?.("change", syncFloatingConsoleBounds);
 
 export {
+  scrollRegionFromKey,
   clearCommandViewportPosition,
   compactCommandViewport,
   getConsoleOffset,
