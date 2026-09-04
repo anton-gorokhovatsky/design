@@ -16,7 +16,21 @@ const report=[];
 // caption during playback. Use a real pointer after explicit actionability and
 // hit-test checks; never force a click or invoke the DOM click handler directly.
 const clickVisiblePlaybackControl=async(page)=>{
-  await page.evaluate(()=>{delete window.__casePlaybackControl;});
+  await page.evaluate(()=>{
+    delete window.__casePlaybackControl;
+    const probe={started:performance.now(),frames:0,samples:[]};
+    const frame=()=>{probe.frames++;probe.raf=requestAnimationFrame(frame);};
+    probe.raf=requestAnimationFrame(frame);
+    probe.timer=setInterval(()=>{
+      const button=document.querySelector('[data-case-pause]');
+      const video=document.querySelector('.case-media video');
+      probe.samples.push({ms:Math.round(performance.now()-probe.started),frames:probe.frames,
+        box:button?.getBoundingClientRect().toJSON(),hidden:document.hidden,
+        videoTime:video?.currentTime,paused:video?.paused});
+      if(probe.samples.length>60)probe.samples.shift();
+    },100);
+    window.__casePlaybackProbe=probe;
+  });
   await page.waitForFunction(()=>{
     const button=document.querySelector('[data-case-pause]');
     if(!button)return false;
@@ -39,6 +53,7 @@ const clickVisiblePlaybackControl=async(page)=>{
   });
   assert.ok(state.visible&&state.enabled&&state.inside&&state.hit,JSON.stringify(state));
   await page.mouse.click(state.x,state.y);
+  await page.evaluate(()=>{const p=window.__casePlaybackProbe;clearInterval(p.timer);cancelAnimationFrame(p.raf);});
   return state;
 };
 try {
@@ -178,7 +193,10 @@ for(const engine of [process.argv[2]||'chromium']) {
       active:document.activeElement?.outerHTML.slice(0,240),
       scroll:document.querySelector('.case-scroll')?.scrollTop,
       keyRegionFocused:document.activeElement===document.querySelector('.case-scroll'),
+      playbackControl:window.__casePlaybackControl,
+      playbackProbe:window.__casePlaybackProbe,
     })).catch(()=>null);
+    console.log('Case failure state:',JSON.stringify(result.lastState));
     await page.screenshot({path:dir+engine+'-flow-FAIL.jpg',type:'jpeg',quality:84}).catch(()=>{});
   }
   report.push(result);console.log(result.status,engine,result.error||'');

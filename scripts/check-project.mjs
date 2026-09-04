@@ -228,10 +228,14 @@ browserContractSteps.push(...["chromium", "webkit"].map((scope) => ({
   args: ["scripts/check-sphere-motion.mjs", scope],
 })));
 
-browserContractSteps.push(...["chromium", "webkit"].flatMap((scope) => [
-  { scope, label: "Expanded case view: " + scope, command: process.execPath, args: ["scripts/check-case-view.mjs", scope] },
-  { scope, label: "Case reading lifecycle: " + scope, command: process.execPath, args: ["scripts/check-case-flow.mjs", scope] },
-]));
+browserContractSteps.push(...["chromium", "webkit"].map((scope) => ({
+  scope, label: "Expanded case view: " + scope, command: process.execPath, args: ["scripts/check-case-view.mjs", scope],
+})));
+// Exercise the integrated reading/playback path before the broader matrices.
+// Coverage and failure policy are unchanged; a broken lifecycle now fails fast.
+browserContractSteps.unshift(...["chromium", "webkit"].map((scope) => ({
+  scope, label: "Case reading lifecycle: " + scope, command: process.execPath, args: ["scripts/check-case-flow.mjs", scope],
+})));
 
 const runStep = (step) => new Promise((resolveStep) => {
   const startedAt = performance.now();
