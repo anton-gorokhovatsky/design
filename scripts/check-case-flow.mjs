@@ -80,8 +80,11 @@ for(const engine of [process.argv[2]||'chromium']) {
     await reading.focus();
     await page.keyboard.press('ArrowDown');
     await page.waitForFunction(()=>document.querySelector('.case-scroll').scrollTop>0);
+    await waitForCaseLayout(page);
     assert.deepEqual(await page.locator('[data-close-inspector]').boundingBox(),closeBefore,'Keyboard scrolling keeps close fixed');
-    await page.keyboard.press('Home');
+    // GTK maps Home to beginning of line; Control+Home is beginning of document.
+    const readingHome=engine==='webkit'&&process.platform==='linux'?'Control+Home':'Home';
+    await page.keyboard.press(readingHome);
     await page.waitForFunction(()=>document.querySelector('.case-scroll').scrollTop===0);
     await waitForCaseLayout(page);
     const media=await page.locator('.case-media').boundingBox();
@@ -98,8 +101,11 @@ for(const engine of [process.argv[2]||'chromium']) {
     assert.equal(await page.locator('[data-map-title]').textContent(),'YOUTUBE');
     await page.goto(origin+'/?point=garage-site',{waitUntil:'domcontentloaded'});
     await page.waitForFunction(()=>document.querySelector('[data-map-inspector]').dataset.selectedMapId);
+    await waitForCaseLayout(page);
     await page.emulateMedia({reducedMotion:'no-preference'});
-    await page.waitForFunction(()=>{const v=document.querySelector('.case-media video');return !v.paused&&v.currentTime>.15});
+    // preload=metadata must not be required to decode a frame before playback.
+    // Include public transfer time only after the setting permits video to play.
+    await page.waitForFunction(()=>{const v=document.querySelector('.case-media video');return !v.paused&&v.currentTime>.15},undefined,{timeout:15000});
     await page.locator('[data-case-pause]').click();
     const pausedAt=await page.locator('.case-media video').evaluate(v=>v.currentTime);
     await page.waitForTimeout(250);
