@@ -10783,12 +10783,13 @@ body[data-case-open] :is(.map-axis-label, .map-labels, .map-node-label, .origin-
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;
-  scrollbar-width: thin;
-  scrollbar-gutter: stable;
+  scrollbar-width: none;
+  scrollbar-gutter: auto;
   scroll-behavior: auto;
   scroll-padding-block: 12px;
   padding: 0 0 4px;
 }
+.case-scroll::-webkit-scrollbar { display: none; }
 .case-scroll:focus-visible { outline: 2px solid var(--signal); outline-offset: -2px; }
 .case-layout {
   display: grid;
@@ -10866,7 +10867,7 @@ body[data-case-open] :is(.map-axis-label, .map-labels, .map-node-label, .origin-
 }
 .is-case-view .map-evidence > div { grid-template-columns: 5.5rem minmax(0, 1fr); gap: var(--case-space-medium); }
 .is-case-view .map-evidence dt { font-size: var(--case-label-size); line-height: 1.45; }
-.is-case-view .map-evidence dd { font-size: var(--case-body-size); line-height: 1.5; }
+.is-case-view .map-evidence dd { font-size: var(--case-body-size); line-height: 1.5; overflow-wrap: anywhere; }
 .is-case-view .map-evidence [data-map-evidence-role-label] {
   font-size: calc(var(--case-label-size) * var(--case-author-optical-scale));
 }
@@ -10923,11 +10924,13 @@ body[data-case-open] :is(.map-axis-label, .map-labels, .map-node-label, .origin-
 }
 
 @media (forced-colors: active) {
-  .settings-panel__body {
+  .settings-panel__body,
+  .case-scroll {
     scrollbar-width: auto;
   }
 
-  .settings-panel__body::-webkit-scrollbar {
+  .settings-panel__body::-webkit-scrollbar,
+  .case-scroll::-webkit-scrollbar {
     display: block;
     width: auto;
     height: auto;

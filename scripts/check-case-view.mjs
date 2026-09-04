@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 const require = createRequire(import.meta.url);
 const { chromium, webkit } = require('playwright');
-const { startStaticServer, readMaterialAuditExpression } = require('./browser-contracts.cjs');
+const { startStaticServer, readMaterialAuditExpression, waitForCaseLayout } = require('./browser-contracts.cjs');
 const projectRoot = resolve(fileURLToPath(new URL('../', import.meta.url)));
 const local = process.env.PORTFOLIO_CASE_ORIGIN ? null : await startStaticServer({ projectRoot });
 const origin = process.env.PORTFOLIO_CASE_ORIGIN || local.origin;
@@ -36,7 +36,7 @@ for (const engine of [process.argv[2] || 'chromium']) {
       await page.waitForFunction(() => document.querySelector('.map-inspector.is-case-view'));
       await page.evaluate(() => document.fonts.ready);
       if (text) await page.evaluate(() => document.documentElement.style.fontSize='200%');
-      await page.waitForTimeout(180);
+      await waitForCaseLayout(page);
       const close = page.locator('[data-close-inspector]');
       const scroll = page.locator('.case-scroll');
       const scrollBy = async delta => {
@@ -52,6 +52,8 @@ for (const engine of [process.argv[2] || 'chromium']) {
         return {top:scroll.scrollTop,client:scroll.clientHeight,total:scroll.scrollHeight,
           sheet:{x:b.x,y:b.y,right:b.right,bottom:b.bottom},media:{x:media.x,y:media.y},
           nestedOverflow:description.scrollHeight-description.clientHeight,
+          copyOverflow:description.scrollWidth-description.clientWidth,
+          scrollbar:getComputedStyle(scroll).scrollbarWidth,
           scrollX:scroll.scrollWidth-scroll.clientWidth,pageX:document.documentElement.scrollWidth-innerWidth};
       });
       result.start = await measure();
@@ -76,6 +78,8 @@ for (const engine of [process.argv[2] || 'chromium']) {
         clip:{x:Math.max(0,result.start.sheet.x-110),y:Math.max(0,result.start.sheet.y-60),width:480,height:250}});
       assert.equal(result.start.pageX,0,'No page overflow');
       assert.ok(result.start.scrollX <= 1,'No case horizontal overflow');
+      assert.ok(result.start.copyOverflow <= 1,'No text extends into the sheet padding at enlarged font sizes');
+      assert.equal(result.start.scrollbar,'none','The case hides the native scrollbar without disabling scrolling');
       assert.ok(result.start.nestedOverflow <= 1,'No nested description scroller');
       if (width>900) assert.ok(Math.abs(result.start.media.y-result.start.sheet.y)<2,'Media and story share a top axis');
       const material = await page.evaluate(readMaterialAuditExpression);
@@ -112,7 +116,7 @@ for (const engine of [process.argv[2] || 'chromium']) {
       await page.waitForFunction(() => !document.body.hasAttribute('data-case-open'));
       assert.deepEqual(result.errors,[]);
     } catch (error) {
-      result.status='FAIL'; result.error=error.message;
+      result.status='FAIL'; result.error=error.stack || error.message;
       await page.screenshot({path:dir+engine+'-'+name+'-FAIL.jpg',type:'jpeg',quality:82}).catch(()=>{});
     }
     report.push(result);

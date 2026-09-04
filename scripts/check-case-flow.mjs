@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 const require=createRequire(import.meta.url);
 const {chromium,webkit}=require('playwright');
-const {startStaticServer}=require('./browser-contracts.cjs');
+const {startStaticServer,waitForCaseLayout}=require('./browser-contracts.cjs');
 const projectRoot=resolve(fileURLToPath(new URL('../',import.meta.url)));
 const local=process.env.PORTFOLIO_CASE_ORIGIN?null:await startStaticServer({projectRoot});
 const origin=process.env.PORTFOLIO_CASE_ORIGIN||local.origin;
@@ -21,11 +21,11 @@ for(const engine of [process.argv[2]||'chromium']) {
   const result={engine,status:'PASS',errors:[],cases:[]};
   page.on('pageerror',error=>result.errors.push(error.message));
   try {
-    for(const id of ['garage','private-practice','garage-app','garage-institutions','narkomfin']) {
+    for(const id of ['garage','private-practice','garage-app','garage-institutions','eleven','narkomfin']) {
       await page.goto(origin+'/?point='+id,{waitUntil:'domcontentloaded'});
       await page.waitForFunction(()=>document.querySelector('[data-map-inspector]').dataset.selectedMapId);
       await page.evaluate(()=>document.fonts.ready);
-      await page.waitForTimeout(150);
+      await waitForCaseLayout(page);
       const geometry=await page.evaluate(()=>{
         const scroll=document.querySelector('.case-scroll');
         const close=document.querySelector('[data-close-inspector]').getBoundingClientRect();
@@ -40,6 +40,21 @@ for(const engine of [process.argv[2]||'chromium']) {
       assert.equal(geometry.paused,true,'Reduced motion does not autoplay');
       assert.equal(geometry.metaAnimation,'none','Full metadata wraps; no marquee');
       await page.screenshot({path:dir+engine+'-'+id+'.jpg',type:'jpeg',quality:84});
+      if(id==='eleven') {
+        const reading=page.locator('.case-scroll');
+        const closeBefore=await page.locator('[data-close-inspector]').boundingBox();
+        const bounds=await reading.boundingBox();
+        await page.mouse.move(bounds.x+bounds.width*.8,bounds.y+bounds.height*.6);
+        await page.mouse.wheel(0,12000);
+        await page.waitForFunction(()=>{const s=document.querySelector('.case-scroll');return s.scrollTop>0&&s.scrollTop+s.clientHeight>=s.scrollHeight-2;});
+        geometry.scrollRange=await reading.evaluate(element=>element.scrollTop);
+        assert.deepEqual(await page.locator('[data-close-inspector]').boundingBox(),closeBefore);
+        await page.screenshot({path:dir+engine+'-eleven-bottom.jpg',type:'jpeg',quality:86});
+        await page.mouse.wheel(0,-12000);
+        await page.waitForFunction(()=>document.querySelector('.case-scroll').scrollTop===0);
+        assert.deepEqual(await page.locator('[data-close-inspector]').boundingBox(),closeBefore);
+        geometry.input='wheel down/up';
+      }
       result.cases.push({id,geometry});
     }
     const next=page.locator('.case-story .map-related__item').first();
@@ -59,7 +74,16 @@ for(const engine of [process.argv[2]||'chromium']) {
     assert.equal(await page.locator('.case-media video').count(),1);
     await page.setViewportSize({width:1440,height:650});
     await page.waitForFunction(()=>document.querySelector('.case-media').parentElement.classList.contains('case-layout'));
+    await waitForCaseLayout(page);
     const closeBefore=await page.locator('[data-close-inspector]').boundingBox();
+    const reading=page.locator('.case-scroll');
+    await reading.focus();
+    await page.keyboard.press('ArrowDown');
+    await page.waitForFunction(()=>document.querySelector('.case-scroll').scrollTop>0);
+    assert.deepEqual(await page.locator('[data-close-inspector]').boundingBox(),closeBefore,'Keyboard scrolling keeps close fixed');
+    await page.keyboard.press('Home');
+    await page.waitForFunction(()=>document.querySelector('.case-scroll').scrollTop===0);
+    await waitForCaseLayout(page);
     const media=await page.locator('.case-media').boundingBox();
     await page.mouse.move(media.x+media.width/2,media.y+media.height/2);
     await page.mouse.wheel(0,12000);
@@ -86,6 +110,7 @@ for(const engine of [process.argv[2]||'chromium']) {
     await page.waitForTimeout(180);
     for(const theme of ['light','dark']) {
       await page.emulateMedia({colorScheme:theme});
+      await waitForCaseLayout(page);
       await page.locator('.case-sheet').screenshot({path:dir+engine+'-story-'+theme+'.jpg',type:'jpeg',quality:90});
       await page.locator('.case-header').screenshot({path:dir+engine+'-header-'+theme+'.jpg',type:'jpeg',quality:86});
     }
@@ -94,7 +119,7 @@ for(const engine of [process.argv[2]||'chromium']) {
     assert.equal(await page.locator('.map-inspector').evaluate(el=>getComputedStyle(el).opacity),'0','No flash of the old small readout on close');
     await page.screenshot({path:dir+engine+'-restored-map.jpg',type:'jpeg',quality:84});
     assert.deepEqual(result.errors,[]);
-  } catch(error) {result.status='FAIL';result.error=error.message; await page.screenshot({path:dir+engine+'-flow-FAIL.jpg',type:'jpeg',quality:84}).catch(()=>{});}
+  } catch(error) {result.status='FAIL';result.error=error.stack||error.message; await page.screenshot({path:dir+engine+'-flow-FAIL.jpg',type:'jpeg',quality:84}).catch(()=>{});}
   report.push(result);console.log(result.status,engine,result.error||'');
   await browser.close();
 }

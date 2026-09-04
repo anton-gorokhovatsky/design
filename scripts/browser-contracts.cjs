@@ -93,6 +93,34 @@ const mobileSearchViewport = {
   screenHeight: 844,
 };
 
+// Case layout is committed asynchronously after mounting, font-size changes
+// and inherited enter transitions. Wait for geometry, not a fixed delay.
+const waitForCaseLayout = async (page) => {
+  await page.evaluate(() => document.fonts.ready);
+  await page.evaluate(() => { delete window.__portfolioCaseLayout; });
+  await page.waitForFunction(() => {
+    const inspector = document.querySelector('.map-inspector.is-case-view');
+    if (!inspector) return false;
+    const style = getComputedStyle(inspector);
+    const signature = JSON.stringify([
+      inspector.dataset.selectedMapId,
+      getComputedStyle(document.documentElement).fontSize,
+      ...['.case-header', '.case-scroll', '.case-sheet', '[data-close-inspector]'].map(selector => {
+        const element = inspector.querySelector(selector);
+        return [element.getBoundingClientRect().toJSON(), element.scrollWidth, element.scrollHeight];
+      }),
+    ]);
+    const previous = window.__portfolioCaseLayout;
+    const frames = previous?.signature === signature ? previous.frames + 1 : 0;
+    window.__portfolioCaseLayout = { signature, frames };
+    return document.fonts.status === 'loaded' && frames >= 3
+      && style.opacity === '1' && style.transform === 'none'
+      && inspector.getAnimations().every(animation => animation.playState === 'finished')
+      && [...document.querySelectorAll('.map-axis-label,.map-node-label,.origin-marker__label')]
+        .every(element => getComputedStyle(element).visibility === 'hidden');
+  }, undefined, { timeout: 8000 });
+};
+
 const mobileSafariSplitViewport = {
   width: 390,
   height: 844,
@@ -810,6 +838,7 @@ const validateMobileMetricGroups = (metricGroups) => {
 };
 
 module.exports = {
+  waitForCaseLayout,
   chromiumScenarioCatalog,
   clickMobileSearchDismissExpression,
   dispatchMobileSearchKeyExpression,
