@@ -51,7 +51,7 @@ route.
 - A card's primary external link sits inside its heading fragment, below the
   metadata and before the story. It shares the existing text-link style, with no
   nested material. Labels name the destination; related map points remain last.
-- `СЕАНС НАБЛЮДЕНИЯ` is an optional eight-stop, roughly sixty-second route
+- `РАБОТЫ / 60 СЕК` is an optional eight-stop, roughly sixty-second route
   through the same map and inspector. It never autostarts, never captures
   focus, and supports previous, pause/resume, next, arrow keys, and Escape.
 - `ПОКАЗАТЬ ХРОНОЛОГИЮ` gives the radar rings a chronological meaning. Only
@@ -350,12 +350,16 @@ repository's `gh-pages` branch.
 
 `pnpm release -- --message "…" --file <path> …` is the single production
 lane. Before validation it derives SHA-256 cache keys for the stylesheet and
-all seven native modules, updates the managed import map, and automatically
+all native modules, updates the managed import map, and automatically
 adds that `index.html` change to the release scope. It then verifies the real
-Git push credential path, runs the Chromium and WebKit contracts in parallel,
-stages only the approved files, publishes the same commit to `main` and
-`gh-pages`, and waits until the public domain serves the exact versioned URLs
-and byte-identical runtime assets.
+Git push credential path, runs the local Chromium and WebKit contracts,
+stages only the approved files, and pushes a candidate to `main`. Production
+stays unchanged until the exact commit's GitHub Quality push run succeeds.
+Only then does the script advance `gh-pages` and verify the public HTML and
+byte-identical runtime assets. Failed, cancelled, skipped or timed-out runs
+cannot publish. If interrupted after commit, `node scripts/release.mjs --resume <full-SHA>`
+resumes this barrier from a clean checkout without a second commit
+or a blind rerun of Quality.
 
 Golos Text font files are self-hosted under the SIL Open Font License 1.1; the
 license is included at `assets/fonts/OFL-GolosText.txt`.

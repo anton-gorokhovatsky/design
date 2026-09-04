@@ -150,7 +150,16 @@ try {
       await settle(page);
       const filtered = await assertPopup(page);
       assert.ok(filtered.count > 0 && filtered.count < 8);
+      await page.evaluate(() => {
+        document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape") {
+            window.commandDismissedLayout = !document.body.classList.contains("has-command-focus");
+          }
+        }, { once: true });
+      });
       await input.press("Escape");
+      assert.equal(await page.evaluate(() => window.commandDismissedLayout), true,
+        "Escape must finish mobile layout dismissal before the next pointer action.");
       assert.equal(await input.getAttribute("aria-expanded"), "false");
       assert.equal(await submit.getAttribute("aria-label"), "Открыть результат");
       await submit.click();

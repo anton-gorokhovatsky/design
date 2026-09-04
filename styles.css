@@ -5363,7 +5363,7 @@ body:has(.command-dock.is-open) .origin-marker__label {
   width: min(980px, calc(100vw - 320px));
   height: 64px;
   min-height: 64px;
-  grid-template-columns: auto minmax(260px, 1fr);
+  grid-template-columns: auto minmax(180px, 1fr);
   gap: 16px;
   padding: 8px 11px 8px 10px;
   border-radius: 28px;
@@ -5435,7 +5435,7 @@ body:has(.command-dock.is-open) .origin-marker__label {
 
 @media (min-width: 681px) and (max-width: 900px) {
   .control-console {
-    width: min(500px, calc(100vw - 320px));
+    width: calc(100vw - 320px);
     min-height: 64px;
     grid-template-columns: auto minmax(140px, 1fr);
     gap: 9px;
@@ -6383,10 +6383,12 @@ body:has(.command-dock.is-open) .map-links.has-active-relation {
   bottom: 16px;
   left: auto;
   display: block;
-  width: auto;
+  width: max-content;
+  max-width: 280px;
   min-height: 0;
   padding: 0;
   pointer-events: none;
+  transform: none;
 }
 
 .brand {
@@ -6394,17 +6396,23 @@ body:has(.command-dock.is-open) .map-links.has-active-relation {
   margin: 0;
   padding: 0;
   color: var(--content-ink);
-  font-size: clamp(0.58rem, calc(0.54rem + 0.12vw), 0.68rem);
+  font-size: clamp(.8125rem, calc(.75rem + .16vw), .9375rem);
   font-weight: 500;
   letter-spacing: 0.02em;
-  line-height: 1;
-  opacity: 0.58;
+  line-height: 1.3;
+  opacity: 1;
   pointer-events: none;
 }
 
 @media (max-width: 680px) {
   .site-header {
-    display: none;
+    display: block;
+    top: max(12px, env(safe-area-inset-top));
+    bottom: auto;
+    right: auto;
+    left: 12px;
+    max-width: calc(100vw - 80px);
+    transform: none;
   }
 
   .map-axis-label {
@@ -8879,8 +8887,55 @@ html[data-theme="light"]
 
 .brand__role {
   color: var(--content-muted);
-  font-size: clamp(0.5rem, calc(0.47rem + 0.08vw), 0.58rem);
+  font-size: clamp(.625rem, calc(.59rem + .1vw), .75rem);
   letter-spacing: 0.055em;
+}
+
+@media (max-width: 680px) {
+  .brand { justify-items: start; text-align: left; }
+}
+
+/* Names, not index numbers, explain the five routes before any hover. */
+@media (min-width: 681px) {
+  .control-console {
+    display: flex;
+    flex-wrap: wrap;
+    height: auto;
+  }
+  .control-console .constellation-nav { flex: 0 1 auto; max-width: 100%; }
+  .control-console .constellation-nav__orbit { display: flex; flex-wrap: wrap; row-gap: 8px; }
+  .control-console .command-dock { flex: 1 1 180px; width: auto; }
+  .control-console .constellation-nav__item {
+    width: auto;
+    min-width: 44px;
+    height: auto;
+    min-height: 48px;
+    padding-inline: 6px;
+    grid-template-rows: 28px auto;
+    gap: 4px;
+  }
+  .control-console .constellation-nav__item::after { content: none; }
+  .control-console .constellation-nav__item .constellation-nav__label {
+    position: static;
+    grid-row: 2;
+    justify-self: center;
+    font-size: clamp(.625rem, calc(.59rem + .1vw), .75rem);
+    line-height: 1.2;
+    color: var(--content-muted);
+    opacity: 1;
+    transform: none;
+  }
+  .control-console .constellation-nav__item:is(:hover, :focus-visible, .is-current) .constellation-nav__label {
+    opacity: 1;
+    transform: none;
+    color: var(--content-ink);
+  }
+  .control-console .constellation-nav__item.is-current .constellation-nav__label { color: var(--signal); }
+}
+
+@media (min-width: 681px) and (max-width: 900px) {
+  .brand { font-size: .6875rem; line-height: 1.15; gap: 2px; }
+  .brand__role { font-size: .5625rem; }
 }
 
 body.has-command-focus .site-header,
@@ -8899,10 +8954,11 @@ body:has(.practice-map[data-observation-active]) .site-header {
   margin-top: clamp(14px, 1.6vw, 20px);
   color: var(--content-muted);
   font-family: var(--content-font);
-  font-size: clamp(0.58rem, calc(0.54rem + 0.12vw), 0.68rem);
-  font-weight: 500;
-  letter-spacing: 0.025em;
-  line-height: 1.25;
+  font-size: clamp(.8125rem, calc(.76rem + .12vw), .9375rem);
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.4;
+  text-transform: none;
   text-wrap: pretty;
 }
 
@@ -8995,7 +9051,6 @@ body:has(.practice-map[data-observation-active]) .site-header {
   }
 
   .content-panel .work-row__scope {
-    font-size: clamp(0.54rem, 2.8cqi, 0.64rem);
     overflow-wrap: break-word;
   }
 
@@ -9047,7 +9102,7 @@ html[data-focus-modality="pointer"]
   :root {
     --mobile-console-bottom: max(8px, env(safe-area-inset-bottom));
     --mobile-map-reserve: 138px;
-    --mobile-map-top: -18px;
+    --mobile-map-top: 56px;
     --mobile-map-center-y: calc(50svh - 72px);
     --mobile-map-y-scale: 1;
     --mobile-horizon-top: 85%;
@@ -10744,8 +10799,7 @@ body[data-case-open] :is(.map-axis-label, .map-labels, .map-node-label, .origin-
   --case-lead-size: clamp(1.0625rem, calc(.95rem + .25vw), 1.25rem);
   --case-body-size: clamp(1rem, calc(.94rem + .1vw), 1.125rem);
   --case-label-size: clamp(.75rem, calc(.7rem + .08vw), .8125rem);
-  /* Rene has a wider, airier drawing than Golos at the same numeric size. */
-  --case-author-optical-scale: .92;
+  --case-author-optical-scale: 1;
   inset: max(20px, env(safe-area-inset-top)) clamp(20px, 3.3vw, 64px) max(20px, env(safe-area-inset-bottom));
   width: auto;
   max-width: 1680px;
@@ -10873,6 +10927,7 @@ body[data-case-open] :is(.map-axis-label, .map-labels, .map-node-label, .origin-
 }
 .is-case-view .map-evidence [data-map-evidence-role] {
   font-size: calc(var(--case-body-size) * var(--case-author-optical-scale));
+  color: var(--content-ink);
   line-height: 1.6;
 }
 .is-case-view .map-related { padding: var(--case-pad); gap: var(--case-space-medium); }

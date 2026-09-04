@@ -1,6 +1,6 @@
 # Runtime modules
 
-The portfolio has no build step, framework, or production dependency. Eleven
+The portfolio has no build step, framework, or production dependency. Twelve
 native ES modules use explicit `import`/`export` edges and keep their top-level
 names out of the browser global scope:
 
@@ -27,7 +27,11 @@ names out of the browser global scope:
     a shared 24 fps maximum Canvas loop; imports preferences. Offscreen, filtered,
     hidden-tab, reduced-motion, and forced-color states pause rendering.
 
+12. `case-view.js` — expanded professional case, single scroll viewport,
+    pinned media receiver, focus and background isolation. Reuses the preview
+    video instead of creating a second decoder; imports map-engine and panels.
+
 `scripts/runtime-files.mjs` is the authoritative runtime manifest. `index.html`
-loads the same eleven module URLs and contains a generated import map so every
+loads the same twelve module URLs and contains a generated import map so every
 direct and transitive request uses its own `?v=<content-hash>`. The release
 command updates that managed block before validation and commit.

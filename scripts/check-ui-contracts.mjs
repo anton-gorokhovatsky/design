@@ -569,7 +569,7 @@ const auditGeometry = (label, state) => {
       fail(`${label}: navigation and authorship overlap.`);
     }
   } else {
-    for (const name of ["mobileMenu", "search", "systemDock"]) {
+    for (const name of ["mobileMenu", "search", "systemDock", "brand"]) {
       if (!visible[name]) fail(`${label}: ${name} is not visible.`);
       else if (!withinViewport(geometry[name], viewport, 2)) {
         fail(`${label}: ${name} leaves the viewport.`, geometry[name]);
@@ -580,10 +580,10 @@ const auditGeometry = (label, state) => {
     } else if (
       geometry.mapCamera.left < -2
       || geometry.mapCamera.right > viewport.width + 2
-      || geometry.mapCamera.top < -64
-      || geometry.mapCamera.top > 2
+      || geometry.mapCamera.top - geometry.brand.bottom < 8
+      || geometry.mapCamera.top - geometry.brand.bottom > 24
       || geometry.mapCamera.bottom > viewport.height
-      || geometry.mapCamera.height < viewport.height * 0.72
+      || geometry.mapCamera.height < (viewport.height - geometry.mapCamera.top) * 0.72
     ) {
       fail(`${label}: mapCamera does not fill the useful mobile stage.`, geometry.mapCamera);
     }

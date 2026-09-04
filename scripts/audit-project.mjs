@@ -881,7 +881,7 @@ requireContract(
   /<p class="brand"[^>]*>[\s\S]*ANTON GOROKHOVATSKY © 2026[\s\S]*<\/p>/.test(indexSource)
     && !/<a class="brand"/.test(indexSource),
   "brand-authorship",
-  "The authorship mark must be a non-interactive bottom-corner signature with the current year.",
+  "The authorship mark must remain a non-interactive signature with the current year.",
 );
 requireContract(
   indexSource.includes('data-context="ВИД"')

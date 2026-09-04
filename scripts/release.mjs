@@ -5,6 +5,7 @@ import { spawn } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { waitForQuality } from "./release-quality.mjs";
 import {
   syncRuntimeAssetVersions,
   verifyRuntimeAssetVersions,
@@ -73,6 +74,7 @@ const parseArguments = () => {
     files: [],
     message: "",
     publicUrl: defaultPublicUrl,
+    resume: "",
   };
 
   for (let index = 0; index < args.length; index += 1) {
@@ -83,6 +85,9 @@ const parseArguments = () => {
       index += 1;
     } else if (argument === "--file" || argument === "-f") {
       options.files.push(args[index + 1] || "");
+      index += 1;
+    } else if (argument === "--resume") {
+      options.resume = args[index + 1] || "";
       index += 1;
     } else if (argument === "--url") {
       options.publicUrl = args[index + 1] || "";
@@ -241,7 +246,42 @@ const verifyRemoteBranches = async (commit) => {
   console.log(`✓ main and gh-pages point to ${commit.slice(0, 12)}.`);
 };
 
+const publishVerifiedCommit = async (commit, publicUrl, localRuntime) => {
+  await waitForQuality({ commit, readRuns: async () => {
+    const { stdout } = await run("gh", [
+      "run", "list", "--workflow", "quality.yml", "--branch", "main",
+      "--event", "push", "--commit", commit, "--limit", "10",
+      "--json", "databaseId,headSha,headBranch,event,workflowName,status,conclusion,url",
+    ], { capture: true, label: "Read Quality for the release commit" });
+    return JSON.parse(stdout);
+  } });
+  const [remoteMain] = await readGitLines(["ls-remote", "origin", "refs/heads/main"]);
+  if (remoteMain?.split(/\s+/)[0] !== commit) {
+    throw new Error("main changed during verification; refusing to publish an older commit.");
+  }
+  await run("git", ["push", "origin", `${commit}:refs/heads/gh-pages`], {
+    label: "Publish the exact Quality-approved commit",
+  });
+  await verifyRemoteBranches(commit);
+  await verifyPublicRelease(publicUrl, commit, localRuntime);
+};
+
 const options = parseArguments();
+if (options.resume) {
+  const [head] = await readGitLines(["rev-parse", "HEAD"]);
+  const status = await readGitLines(["status", "--porcelain=v1", "--untracked-files=all"]);
+  if (options.files.length || options.message || status.length || options.resume !== head) {
+    fail("--resume requires the exact current commit, a clean checkout, and no --file/--message.");
+  }
+  try {
+    verifyRuntimeAssetVersions(projectRoot);
+    await publishVerifiedCommit(head, options.publicUrl, getLocalRuntimeAssets());
+    console.log(`\nRelease complete: ${head}`);
+    process.exit(0);
+  } catch (error) {
+    fail(error instanceof Error ? error.message : String(error));
+  }
+}
 if (!options.message.trim()) {
   fail("provide a commit message with --message.");
 }
@@ -284,6 +324,12 @@ if (initialForbiddenPaths.length > 0) {
 }
 
 let cacheUpdate;
+
+try {
+  await run("gh", ["auth", "status"], { capture: true, label: "Verify GitHub CLI access for the Quality barrier" });
+} catch (error) {
+  fail("GitHub Quality cannot be verified: " + (error instanceof Error ? error.message : String(error)));
+}
 
 try {
   cacheUpdate = syncRuntimeAssetVersions(projectRoot);
@@ -351,11 +397,10 @@ try {
   const [commit] = await readGitLines(["rev-parse", "HEAD"]);
   const localRuntime = getLocalRuntimeAssets();
 
-  await run("git", ["push", "origin", "main", "main:gh-pages"], {
-    label: "Publish the same commit to main and gh-pages",
+  await run("git", ["push", "origin", `${commit}:refs/heads/main`], {
+    label: "Send the candidate to Quality without changing production",
   });
-  await verifyRemoteBranches(commit);
-  await verifyPublicRelease(options.publicUrl, commit, localRuntime);
+  await publishVerifiedCommit(commit, options.publicUrl, localRuntime);
 
   console.log(`\nRelease complete: ${commit}`);
   console.log(options.publicUrl);

@@ -124,7 +124,7 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=f582eb366609">
+    <link rel="stylesheet" href="styles.css?v=146750509b42">
     <style>
       .map-evidence [data-map-evidence-role-label]{font-family:var(--font-author);font-size:.6rem;font-weight:400;letter-spacing:0}
     </style>
@@ -135,13 +135,13 @@
           "./js/preferences.js": "./js/preferences.js?v=75ec5c85331d",
           "./js/analytics.js": "./js/analytics.js?v=420bb229d6c0",
           "./js/signal-field.js": "./js/signal-field.js?v=e249b2dc021a",
-          "./js/map-data.js": "./js/map-data.js?v=91ea4210ce38",
-          "./js/observation-route.js": "./js/observation-route.js?v=bf8186463ee9",
+          "./js/map-data.js": "./js/map-data.js?v=65039558ac43",
+          "./js/observation-route.js": "./js/observation-route.js?v=9484044902ab",
           "./js/personal-media.js": "./js/personal-media.js?v=9910a8959dd2",
           "./js/sphere-surfaces.js": "./js/sphere-surfaces.js?v=4cf52ae3e8a0",
           "./js/map-engine.js": "./js/map-engine.js?v=368c86d2c91c",
           "./js/viewport-ui.js": "./js/viewport-ui.js?v=52baf1d6ff1c",
-          "./js/panels.js": "./js/panels.js?v=0b7672ce69ae",
+          "./js/panels.js": "./js/panels.js?v=107cce62b787",
           "./js/case-view.js": "./js/case-view.js?v=f4f0996f93ac",
           "./js/favicon.js": "./js/favicon.js?v=3aa23538dc2d"
         }
@@ -152,13 +152,13 @@
     <script type="module" src="js/preferences.js?v=75ec5c85331d"></script>
     <script type="module" src="js/analytics.js?v=420bb229d6c0"></script>
     <script type="module" src="js/signal-field.js?v=e249b2dc021a"></script>
-    <script type="module" src="js/map-data.js?v=91ea4210ce38"></script>
-    <script type="module" src="js/observation-route.js?v=bf8186463ee9"></script>
+    <script type="module" src="js/map-data.js?v=65039558ac43"></script>
+    <script type="module" src="js/observation-route.js?v=9484044902ab"></script>
     <script type="module" src="js/personal-media.js?v=9910a8959dd2"></script>
     <script type="module" src="js/sphere-surfaces.js?v=4cf52ae3e8a0"></script>
     <script type="module" src="js/map-engine.js?v=368c86d2c91c"></script>
     <script type="module" src="js/viewport-ui.js?v=52baf1d6ff1c"></script>
-    <script type="module" src="js/panels.js?v=0b7672ce69ae"></script>
+    <script type="module" src="js/panels.js?v=107cce62b787"></script>
     <script type="module" src="js/case-view.js?v=f4f0996f93ac"></script>
     <script type="module" src="js/favicon.js?v=3aa23538dc2d"></script>
     <script type="application/ld+json">
@@ -269,7 +269,7 @@
     <header class="site-header">
       <p class="brand">
         <span class="brand__name">АНТОН ГОРОХОВАТСКИЙ © 2026</span>
-        <span class="brand__role">РУКОВОДИТЕЛЬ ВЕБ-ПРОЕКТОВ / ДИЗАЙН-ИНЖЕНЕР</span>
+        <span class="brand__role">РАБОТЫ И ИНТЕРЕСЫ</span>
       </p>
     </header>
 
@@ -286,8 +286,8 @@
           проекты справа, личное снизу и принципы слева. Чем ближе точки друг
           к другу, тем ближе их смысловая связь; размер точки показывает личный
           вес опыта, форма — тип объекта. Перемещайтесь между точками стрелками или
-          воспользуйтесь фильтрами и поиском. Кнопка «МАРШРУТ / 60 СЕК» запускает
-          необязательный последовательный сеанс наблюдения; режим «Время»
+          воспользуйтесь фильтрами и поиском. Кнопка «РАБОТЫ / 60 СЕК» запускает
+          короткое знакомство с работами; режим «Время»
           перестраивает датированные точки по годовым орбитам.
         </p>
         <div
@@ -440,8 +440,8 @@
             data-start-observation
             data-material-surface="origin-label"
             data-material-active="always"
-            aria-label="Начать сеанс наблюдения длительностью около 60 секунд"
-          >МАРШРУТ / 60 СЕК</button>
+            aria-label="Познакомиться с работами за 60 секунд"
+          >РАБОТЫ / 60 СЕК</button>
 
           <aside
             class="map-hover-preview"
@@ -657,8 +657,8 @@
             },
             "garage-site": {
               "task": "Перевести новый сайт из стадии запуска в зрелый цифровой продукт Музея.",
-              "role": "Продукт, UX/UI и управление веб-разработкой: пользовательские сигналы, метрики, исследования, приоритизация и координация релизов.",
-              "result": "Сформирован постоянный цикл развития; сайт отмечен Awwwards, Siteinspire, CSS Design Awards, CSS Light, ADCR Awards и Mindsparkle Mag."
+              "role": "Исследовал UX/UI, определял приоритеты и координировал разработку и релизы.",
+              "result": "После запуска продолжил развивать функции и сервисы сайта. Сайт отмечен Awwwards, Siteinspire, CSS Design Awards, CSS Light, ADCR Awards и Mindsparkle Mag."
             },
             "narkomfin": {
               "task": "Собрать цельный цифровой опыт институционального и исследовательского проекта.",
@@ -1145,8 +1145,9 @@
         >
           <h2 id="work-title">КЛЮЧЕВЫЕ <span>КЕЙСЫ</span></h2>
           <p>
-            Продукты, которыми я&nbsp;управлял и&nbsp;которые помогал запускать:
-            задача, моя роль и&nbsp;подтверждённый результат.
+            Музейные сайты, архивы и&nbsp;личные проекты.
+            Здесь — восемь разных задач: от&nbsp;развития большого продукта
+            до&nbsp;самостоятельного запуска. Остальные работы — на&nbsp;карте.
           </p>
         </div>
 
@@ -1155,12 +1156,12 @@
             class="work-row"
             data-material-surface="work-01"
             data-material-active="always"
-            href="?point=garage#map"
-            data-map-point="garage"
+            href="?point=garage-site#map"
+            data-map-point="garage-site"
           >
             <span class="work-row__number">01</span>
-            <span class="work-row__title">Цифровая экосистема Музея «Гараж»</span>
-            <span class="work-row__scope">ПОРТФЕЛЬ САЙТОВ, АРХИВОВ, КУРСОВ И&nbsp;ИНКЛЮЗИВНОГО ПРИЛОЖЕНИЯ</span>
+            <span class="work-row__title">Сайт Музея «Гараж»</span>
+            <span class="work-row__scope">Развитие после запуска: исследования, новые функции и&nbsp;релизы</span>
             <span class="work-row__domain">МУЗЕЙ «ГАРАЖ» / 2021—2025</span>
           </a>
 
@@ -1168,91 +1169,91 @@
             class="work-row"
             data-material-surface="work-02"
             data-material-active="always"
-            href="?point=optimal#map"
-            data-map-point="optimal"
+            href="?point=narkomfin#map"
+            data-map-point="narkomfin"
           >
             <span class="work-row__number">02</span>
-            <span class="work-row__title">Строительная академия ТЕХНОНИКОЛЬ</span>
-            <span class="work-row__scope">ГОД РАЗВИТИЯ / ПОРЯДОК В&nbsp;ПРОЦЕССАХ / ПЕРЕДАЧА ПРОЕКТА</span>
-            <span class="work-row__domain">ОПТИМАЛГРУПП / 2025—2026</span>
+            <span class="work-row__title">Дом Наркомфина</span>
+            <span class="work-row__scope">Интерактивная модель здания, световые состояния и&nbsp;календарь</span>
+            <span class="work-row__domain">МУЗЕЙ «ГАРАЖ» / 2023</span>
           </a>
 
           <a
             class="work-row"
             data-material-surface="work-03"
             data-material-active="always"
-            href="?point=garage-site#map"
-            data-map-point="garage-site"
+            href="?point=shirokostup#map"
+            data-map-point="shirokostup"
           >
             <span class="work-row__number">03</span>
-            <span class="work-row__title">Новая версия сайта Музея «Гараж»</span>
-            <span class="work-row__scope">ПРОДУКТ / UX/UI / УПРАВЛЕНИЕ РАЗРАБОТКОЙ / НАГРАДЫ</span>
-            <span class="work-row__domain">GARAGEMCA.ORG</span>
+            <span class="work-row__title">Ольга Широкоступ</span>
+            <span class="work-row__scope">Кураторская практика и&nbsp;архив проектов в&nbsp;личном портфолио</span>
+            <span class="work-row__domain">ЧАСТНАЯ ПРАКТИКА / 2026</span>
           </a>
 
           <a
             class="work-row"
             data-material-surface="work-04"
             data-material-active="always"
-            href="?point=narkomfin#map"
-            data-map-point="narkomfin"
+            href="?point=tarski#map"
+            data-map-point="tarski"
           >
             <span class="work-row__number">04</span>
-            <span class="work-row__title">Цифровой проект Дома Наркомфина</span>
-            <span class="work-row__scope">ПЕРВАЯ ВЕРСИЯ ЗА&nbsp;ДВА ДНЯ / 51&nbsp;420 ПОСЕТИТЕЛЕЙ</span>
-            <span class="work-row__domain">NARKOMFIN.RU / 2023</span>
+            <span class="work-row__title">Tarski</span>
+            <span class="work-row__scope">Программа, сообщество и&nbsp;участие в&nbsp;художественных проектах</span>
+            <span class="work-row__domain">ЧАСТНАЯ ПРАКТИКА / 2026</span>
           </a>
 
           <a
             class="work-row"
             data-material-surface="work-05"
             data-material-active="always"
-            href="?point=collection#map"
-            data-map-point="collection"
+            href="?point=eleven#map"
+            data-map-point="eleven"
           >
             <span class="work-row__number">05</span>
-            <span class="work-row__title">Открытое хранение и&nbsp;каталог коллекции</span>
-            <span class="work-row__scope">ПОИСК / НАВИГАЦИЯ / БОЛЬШИЕ МАССИВЫ ДАННЫХ</span>
-            <span class="work-row__domain">МУЗЕЙ «ГАРАЖ» / 2024</span>
+            <span class="work-row__title">11&nbsp;111 — Виктор Доронин</span>
+            <span class="work-row__scope">Подготовка к&nbsp;ультратриатлону: дневник и&nbsp;приглашение партнёров</span>
+            <span class="work-row__domain">ЧАСТНАЯ ПРАКТИКА / 2026</span>
           </a>
 
           <a
             class="work-row"
             data-material-surface="work-06"
             data-material-active="always"
-            href="?point=garage-courses#map"
-            data-map-point="garage-courses"
+            href="?point=herman#map"
+            data-map-point="herman"
           >
             <span class="work-row__number">06</span>
-            <span class="work-row__title">Платформа онлайн-курсов Музея</span>
-            <span class="work-row__scope">ЧЕТЫРЕ КУРСА / МОДЕЛЬ РАЗВИТИЯ / ПАРТНЁРЫ</span>
-            <span class="work-row__domain">МУЗЕЙ «ГАРАЖ»</span>
+            <span class="work-row__title">Герман Винокуров</span>
+            <span class="work-row__scope">Личный сайт: практика барбера, музыка и&nbsp;запись на&nbsp;стрижку</span>
+            <span class="work-row__domain">ЧАСТНАЯ ПРАКТИКА / 2026</span>
           </a>
 
           <a
             class="work-row"
             data-material-surface="work-07"
             data-material-active="always"
-            href="?point=ilmix#map"
-            data-map-point="ilmix"
+            href="?point=optimal#map"
+            data-map-point="optimal"
           >
             <span class="work-row__number">07</span>
-            <span class="work-row__title">Цифровые продукты «ИльмиксГрупп»</span>
-            <span class="work-row__scope">19&nbsp;905 → 48&nbsp;835 ПОСЕТИТЕЛЕЙ / 35,9&nbsp;% → 66,9&nbsp;% ОРГАНИКИ</span>
-            <span class="work-row__domain">ИЛЬМИКСГРУПП / 2017—2020</span>
+            <span class="work-row__title">Строительная академия ТЕХНОНИКОЛЬ</span>
+            <span class="work-row__scope">Год развития учебного портала и&nbsp;передача проекта новому менеджеру</span>
+            <span class="work-row__domain">ОПТИМАЛГРУПП / 2025—2026</span>
           </a>
 
           <a
             class="work-row"
             data-material-surface="work-08"
             data-material-active="always"
-            href="?point=private-practice#map"
-            data-map-point="private-practice"
+            href="?point=ilmix#map"
+            data-map-point="ilmix"
           >
             <span class="work-row__number">08</span>
-            <span class="work-row__title">Частная практика: продукты от&nbsp;замысла до&nbsp;запуска</span>
-            <span class="work-row__scope">ИССЛЕДОВАНИЕ / КОНЦЕПЦИЯ / ДИЗАЙН / КОД / ЗАПУСК</span>
-            <span class="work-row__domain">ЧАСТНАЯ ПРАКТИКА / 2020—СЕЙЧАС</span>
+            <span class="work-row__title">Цифровые продукты «ИльмиксГрупп»</span>
+            <span class="work-row__scope">Онкологическое медиа и&nbsp;внутренние сервисы компании</span>
+            <span class="work-row__domain">ИЛЬМИКСГРУПП / 2017—2020</span>
           </a>
         </div>
 

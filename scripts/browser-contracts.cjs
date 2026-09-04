@@ -191,9 +191,16 @@ const readCompactAuthorshipExpression = `(() => {
     visibility: style?.visibility || "",
     width: bounds?.width || 0,
     height: bounds?.height || 0,
+    left: bounds?.left || 0,
+    right: bounds?.right || 0,
+    top: bounds?.top || 0,
+    bottom: bounds?.bottom || 0,
+    viewportWidth: innerWidth,
+    cameraTop: document.querySelector(".map-camera")?.getBoundingClientRect().top || 0,
     hidden: !header
       || style?.display === "none"
       || style?.visibility === "hidden"
+      || Number(style?.opacity) === 0
       || !bounds?.width
       || !bounds?.height,
     overflowX: document.documentElement.scrollWidth
@@ -724,15 +731,20 @@ const validateMobileSafariSplitSearchContract = ({ emulation, focused }) => {
 
 const validateCompactAuthorship = (authorship) => {
   if (
-    authorship.hidden
+    !authorship.hidden
     && authorship.overflowX === 0
+    && authorship.left >= 0
+    && authorship.right <= authorship.viewportWidth
+    && authorship.top >= 0
+    && authorship.cameraTop - authorship.bottom >= 8
+    && authorship.cameraTop - authorship.bottom <= 24
   ) {
     return [];
   }
 
   return [{
-    id: "compact-authorship-hidden",
-    message: "compact authorship remains visible or causes horizontal overflow",
+    id: "compact-authorship-visible",
+    message: "compact authorship must stay visible, inside the viewport and clear of the map",
     details: authorship,
   }];
 };

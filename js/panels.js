@@ -97,6 +97,7 @@ constellationNavToggle?.addEventListener("click", () => {
     setCommandOpen(false);
     setCommandStatus("");
     commandInput?.blur();
+    syncCommandFocusViewport();
     clearSearchHighlight();
     return;
   }
@@ -629,7 +630,8 @@ const syncMobileMapFrame = () => {
     const controlClearance = Math.max(0, mapBounds.bottom - searchBounds.top);
     const stageGap = 14;
     const lowerOverscan = 26 * shortScreenPressure;
-    const cameraTop = -(18 + 10 * shortScreenPressure);
+    const authorBottom = document.querySelector(".site-header")?.getBoundingClientRect().bottom || 48;
+    const cameraTop = Math.max(48, authorBottom - mapBounds.top + 14);
     const cameraReserve = Math.max(
       52,
       controlClearance + stageGap - lowerOverscan,
@@ -638,7 +640,7 @@ const syncMobileMapFrame = () => {
       + (mapBounds.height - cameraReserve - cameraTop) / 2;
     const usableStageHeight = Math.max(
       0,
-      searchBounds.top - mapBounds.top - stageGap,
+      searchBounds.top - mapBounds.top - stageGap - cameraTop,
     );
     const stageAspect = usableStageHeight / Math.max(1, mapBounds.width);
     const viewportTallProgress = Math.max(
@@ -790,8 +792,8 @@ const commandViews = [
   {
     type: "action",
     id: "observation",
-    title: "СЕАНС НАБЛЮДЕНИЯ",
-    meta: "ОКОЛО 60 СЕКУНД / 8 КООРДИНАТ",
+    title: "ЗНАКОМСТВО С РАБОТАМИ",
+    meta: "ОКОЛО 60 СЕКУНД / 8 ОСТАНОВОК",
     intents: "сеанс наблюдения обзор экскурсия маршрут",
     keywords: "сеанс наблюдение маршрут обзор экскурсия 60 секунд",
   },
@@ -1211,6 +1213,9 @@ document.addEventListener("keydown", (event) => {
     setCommandOpen(false);
     setCommandStatus("");
     commandInput?.blur();
+    // Escape completes dismissal before the next pointer action. The delayed
+    // blur handler must not move the submit button 68 px during that click.
+    syncCommandFocusViewport();
     clearSearchHighlight();
   } else if (activePreviewItem || mapPreview?.classList.contains("is-visible")) {
     hideMapPreview({ immediate: true });

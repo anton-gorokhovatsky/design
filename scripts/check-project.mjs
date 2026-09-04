@@ -47,8 +47,11 @@ const contractScripts = [
   "scripts/check-case-view.mjs",
   "scripts/check-case-flow.mjs",
   "scripts/check-command-placement.mjs",
+  "scripts/check-first-visit.mjs",
   "scripts/check-sphere-motion.mjs",
   "scripts/release.mjs",
+  "scripts/release-quality.mjs",
+  "scripts/check-release-quality.mjs",
   "scripts/check-ui-contracts.mjs",
   "scripts/webkit-regression.cjs",
 ];
@@ -72,6 +75,11 @@ const syntaxSteps = [
 ];
 
 const staticContractSteps = [
+  {
+    label: "Quality publication barrier",
+    command: process.execPath,
+    args: ["scripts/check-release-quality.mjs"],
+  },
   {
     label: "Cache-busting contract",
     command: process.execPath,
@@ -201,6 +209,13 @@ const browserContractSteps = [
 
 browserContractSteps.push(...["chromium", "webkit"].map((scope) => ({
   scope,
+  label: "First visit and named navigation: " + scope,
+  command: process.execPath,
+  args: ["scripts/check-first-visit.mjs", scope],
+})));
+
+browserContractSteps.push(...["chromium", "webkit"].map((scope) => ({
+  scope,
   label: "Command popup placement: " + scope,
   command: process.execPath,
   args: ["scripts/check-command-placement.mjs", scope],
@@ -232,9 +247,11 @@ const runStep = (step) => new Promise((resolveStep) => {
   child.stderr.setEncoding("utf8");
   child.stdout.on("data", (chunk) => {
     stdout += chunk;
+    if (step.streamOutput) process.stdout.write(chunk);
   });
   child.stderr.on("data", (chunk) => {
     stderr += chunk;
+    if (step.streamOutput) process.stderr.write(chunk);
   });
   child.once("error", (error) => {
     resolveStep({
@@ -264,10 +281,10 @@ const printResults = (results) => {
     const marker = result.status === 0 && !result.error ? "✓" : "×";
     console.log(`\n${marker} ${result.label} (${duration})`);
 
-    if (result.stdout) {
+    if (result.stdout && !result.streamOutput) {
       process.stdout.write(result.stdout);
     }
-    if (result.stderr) {
+    if (result.stderr && !result.streamOutput) {
       process.stderr.write(result.stderr);
     }
   });
@@ -322,7 +339,8 @@ if (failures.length === 0 && checkScope !== "static") {
   );
 
   for (const step of scopedBrowserSteps) {
-    const result = await runStep(step);
+    console.log(`\n→ ${step.label}`);
+    const result = await runStep({ ...step, streamOutput: true });
     printResults([result]);
     if (recordsFailure(result)) {
       failures.push(result);
