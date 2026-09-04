@@ -10723,6 +10723,205 @@ html[data-focus-modality="keyboard"]
   }
 }
 
+/* Only the open professional case changes; the map retains its release layout. */
+body[data-case-open] :is(.site-header, .system-dock, .display-control, .control-console, .map-note) {
+  visibility: hidden;
+  pointer-events: none;
+}
+/* The map is a non-interactive backdrop while reading a case. Its labels
+   must not peek out from card corners or compete with the case's own text. */
+body[data-case-open] :is(.map-axis-label, .map-labels, .map-node-label, .origin-marker__label) {
+  visibility: hidden;
+  pointer-events: none;
+}
+.map-inspector.is-case-view {
+  --case-pad: clamp(1.25rem, calc(1rem + 1.2vw), 2.25rem);
+  --case-gap: clamp(1.25rem, calc(1rem + 1vw), 2.5rem);
+  --case-space-small: .5rem;
+  --case-space-medium: 1rem;
+  --case-space-section: clamp(1.5rem, calc(1.1rem + .8vw), 2rem);
+  --case-title-size: clamp(1.75rem, calc(1.25rem + 1.3vw), 2.75rem);
+  --case-lead-size: clamp(1.0625rem, calc(.95rem + .25vw), 1.25rem);
+  --case-body-size: clamp(1rem, calc(.94rem + .1vw), 1.125rem);
+  --case-label-size: clamp(.75rem, calc(.7rem + .08vw), .8125rem);
+  /* Rene has a wider, airier drawing than Golos at the same numeric size. */
+  --case-author-optical-scale: .92;
+  inset: max(20px, env(safe-area-inset-top)) clamp(20px, 3.3vw, 64px) max(20px, env(safe-area-inset-bottom));
+  width: auto;
+  max-width: 1680px;
+  height: auto;
+  max-height: none;
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 18px;
+  overflow: hidden;
+  transform: none;
+}
+.case-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+.map-inspector.is-case-view .case-header .map-readout__kind {
+  padding: 10px 14px;
+  font-size: var(--case-label-size);
+  line-height: 1.4;
+}
+.map-inspector.is-case-view .case-header .overlay-close {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+}
+.case-scroll {
+  align-self: stretch;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-gutter: stable;
+  scroll-behavior: auto;
+  scroll-padding-block: 12px;
+  padding: 0 0 4px;
+}
+.case-scroll:focus-visible { outline: 2px solid var(--signal); outline-offset: -2px; }
+.case-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  align-items: start;
+  gap: var(--case-gap);
+  min-width: 0;
+}
+.case-story { display: grid; gap: var(--case-space-medium); min-width: 0; }
+.case-sheet {
+  display: grid;
+  gap: var(--case-space-section);
+  min-width: 0;
+  padding: var(--case-pad);
+  border: 0;
+  border-radius: 30px;
+  corner-shape: var(--corner-card-shape);
+  background: var(--material-01);
+  box-shadow: none;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+.map-inspector.is-case-view :is(.map-readout__identity, .map-readout__description),
+.map-inspector.is-case-view:has(.map-evidence:not([hidden])) .map-readout__description {
+  grid-column: auto;
+  grid-row: auto;
+  padding: 0;
+  min-width: 0;
+  max-width: none;
+  max-height: none;
+  overflow: visible;
+  border-radius: 0;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.map-inspector.is-case-view .map-readout__identity h2 {
+  font-size: var(--case-title-size);
+  line-height: 1.08;
+  letter-spacing: -.035em;
+  margin-bottom: var(--case-space-small);
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+.map-inspector.is-case-view .map-readout__identity p {
+  color: var(--content-muted);
+  font-size: var(--case-label-size);
+  line-height: 1.45;
+  white-space: normal;
+  overflow: visible;
+  mask-image: none;
+}
+.map-inspector.is-case-view .map-readout__meta-track,
+.map-inspector.is-case-view .map-readout__identity p.is-marquee .map-readout__meta-track {
+  white-space: normal;
+  min-width: 0;
+  padding: 0;
+  animation: none;
+  transform: none;
+}
+.map-inspector.is-case-view .map-readout__destination {
+  min-height: 44px;
+  margin-top: 4px;
+  font-size: var(--case-body-size);
+}
+.map-inspector.is-case-view .map-readout__description {
+  font-size: var(--case-lead-size);
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+.is-case-view .map-evidence {
+  margin-top: var(--case-space-section);
+  padding: var(--case-space-section) 0 0;
+  gap: var(--case-space-section);
+}
+.is-case-view .map-evidence > div { grid-template-columns: 5.5rem minmax(0, 1fr); gap: var(--case-space-medium); }
+.is-case-view .map-evidence dt { font-size: var(--case-label-size); line-height: 1.45; }
+.is-case-view .map-evidence dd { font-size: var(--case-body-size); line-height: 1.5; }
+.is-case-view .map-evidence [data-map-evidence-role-label] {
+  font-size: calc(var(--case-label-size) * var(--case-author-optical-scale));
+}
+.is-case-view .map-evidence [data-map-evidence-role] {
+  font-size: calc(var(--case-body-size) * var(--case-author-optical-scale));
+  line-height: 1.6;
+}
+.is-case-view .map-related { padding: var(--case-pad); gap: var(--case-space-medium); }
+.is-case-view .map-related__header > span { font-size: var(--case-label-size); line-height: 1.45; }
+.is-case-view .map-related__track { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr)); overflow: visible; }
+.is-case-view .map-related__item { min-height: 0; align-content: start; gap: var(--case-space-small); padding: var(--case-space-medium); }
+.is-case-view .map-related__item > strong { font-size: var(--case-body-size); line-height: 1.25; }
+.is-case-view .map-related__item > span { font-size: var(--case-label-size); line-height: 1.45; }
+.case-media {
+  position: sticky;
+  top: 0;
+  width: min(100%, calc((100svh - 140px) * 1.5));
+  min-width: 0;
+  margin: 0;
+  justify-self: start;
+  align-self: start;
+}
+.case-media[data-orientation="portrait"] { width: min(100%, calc((100svh - 140px) * .8)); }
+.case-media .map-hover-preview__mosaic-main { display: block; width: 100%; aspect-ratio: 3 / 2; overflow: hidden; border-radius: 24px; }
+.case-media[data-orientation="portrait"] .map-hover-preview__mosaic-main { aspect-ratio: 4 / 5; }
+.case-media video { display: block; width: 100%; height: 100%; object-fit: contain; }
+.case-media figcaption { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0 var(--case-space-medium); color: var(--content-muted); }
+.case-media figcaption span { font-size: var(--case-label-size); line-height: 1.45; }
+.case-media button { flex: 0 0 auto; min-height: 44px; margin-inline-start: auto; padding-block: 10px; border: 0; background: transparent; cursor: pointer; font-size: var(--case-body-size); }
+.case-inline-media:empty, .case-media[hidden] { display: none; }
+.map-inspector.is-case-view[data-case-media="false"] { max-width: 840px; }
+.is-case-view[data-case-media="false"] .case-layout { grid-template-columns: minmax(0, 1fr); }
+.is-case-view[data-case-media="false"] .case-sheet { grid-template-columns: minmax(0, 1fr); }
+.is-case-view[data-case-media="false"] .map-related__track { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+@media (max-width: 1100px) {
+  .map-inspector.is-case-view { --case-pad: 24px; --case-gap: 24px; }
+  .is-case-view .map-evidence > div { grid-template-columns: minmax(0, 1fr); gap: var(--case-space-small); }
+}
+@media (max-width: 900px) {
+  .map-inspector.is-case-view { inset-inline: 20px; }
+  .case-layout, .is-case-view[data-case-media="false"] .case-layout { grid-template-columns: minmax(0, 1fr); max-width: 680px; margin-inline: auto; }
+  .case-header { width: 100%; max-width: 680px; margin-inline: auto; }
+  .is-case-view[data-case-media="false"] .case-sheet { grid-template-columns: minmax(0, 1fr); }
+  .case-media, .case-media[data-orientation="portrait"] { position: static; width: 100%; }
+  .case-media[data-orientation="portrait"] { max-width: 440px; }
+  .case-media .map-hover-preview__mosaic-main { border-radius: 18px; }
+  .is-case-view[data-case-media="false"] .map-related__track { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  .map-inspector.is-case-view { --case-pad: 20px; inset: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom)); gap: 12px; }
+  .case-sheet { border-radius: 25px; }
+  .is-case-view .map-related__track, .is-case-view[data-case-media="false"] .map-related__track { grid-template-columns: minmax(0, 1fr); }
+}
+
 @media (forced-colors: active) {
   .settings-panel__body {
     scrollbar-width: auto;

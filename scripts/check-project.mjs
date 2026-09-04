@@ -44,6 +44,8 @@ const contractScripts = [
   "scripts/check-reels.mjs",
   "scripts/check-personal-media.mjs",
   "scripts/check-inspector-links.mjs",
+  "scripts/check-case-view.mjs",
+  "scripts/check-case-flow.mjs",
   "scripts/check-command-placement.mjs",
   "scripts/check-sphere-motion.mjs",
   "scripts/release.mjs",
@@ -210,6 +212,11 @@ browserContractSteps.push(...["chromium", "webkit"].map((scope) => ({
   command: process.execPath,
   args: ["scripts/check-sphere-motion.mjs", scope],
 })));
+
+browserContractSteps.push(...["chromium", "webkit"].flatMap((scope) => [
+  { scope, label: "Expanded case view: " + scope, command: process.execPath, args: ["scripts/check-case-view.mjs", scope] },
+  { scope, label: "Case reading lifecycle: " + scope, command: process.execPath, args: ["scripts/check-case-flow.mjs", scope] },
+]));
 
 const runStep = (step) => new Promise((resolveStep) => {
   const startedAt = performance.now();

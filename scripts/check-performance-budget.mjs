@@ -24,9 +24,9 @@ const eagerMedia = [
   ...indexSource.matchAll(/<(?:video|source)[^>]+(?:src|srcset)="([^"]+\.(?:mp4|webm))"/g),
 ].map((match) => match[1]);
 const budgets = {
-  css: 222 * 1024,
-  // 208 KiB baseline + 6 KiB for the dependency-free spherical material renderer.
-  runtime: 214 * 1024,
+  // Accepted expanded case: +8 KiB CSS and +12 KiB dependency-free runtime.
+  css: 230 * 1024,
+  runtime: 226 * 1024,
   fonts: 160 * 1024,
   initialSource: 600 * 1024,
 };

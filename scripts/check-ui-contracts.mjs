@@ -1454,6 +1454,8 @@ const auditBrowser = async (client, origin) => {
 
       return {
         selected: document.querySelector(".map-inspector")?.dataset.selectedMapId,
+        expanded: document.querySelector(".map-inspector")?.classList.contains("is-case-view"),
+        displayHidden: getComputedStyle(document.querySelector(".display-control")).visibility === "hidden",
         inspectorDisplayOverlap:
           display && inspector ? intersectionArea(inspector, display) : null,
         inspectorDisplayGap:
@@ -1476,9 +1478,11 @@ const auditBrowser = async (client, origin) => {
 
     if (
       floatingSafeArea.selected !== pointId
-      || floatingSafeArea.inspectorDisplayOverlap !== 0
-      || floatingSafeArea.inspectorDisplayGap < 12
-      || floatingSafeArea.nodeCollisions.length > 0
+      || (floatingSafeArea.expanded
+        ? !floatingSafeArea.displayHidden
+        : (floatingSafeArea.inspectorDisplayOverlap !== 0
+          || floatingSafeArea.inspectorDisplayGap < 12
+          || floatingSafeArea.nodeCollisions.length > 0))
       || (
         pointId === "private-practice"
         && (
@@ -2291,7 +2295,7 @@ const auditBrowser = async (client, origin) => {
   })()`);
   const casesPanelFocus = await waitForExpression(
     client,
-    "document.activeElement?.matches?.('[data-close-inspector]') || false",
+    "document.activeElement?.matches?.('.is-case-view [data-map-title]') || false",
     { timeout: 1200, interval: 40 },
   );
   if (

@@ -1506,21 +1506,29 @@ const accessibilityAcceptanceAudit = async (browser) => {
 
   await page.keyboard.press("Enter");
   await waitForLayout(page, 220);
-  const inspectorOpen = await page.evaluate(() => {
+  const inspectorOpen = await page.evaluate((mapId) => {
     const active = document.activeElement;
     const inspector = document.querySelector("[data-map-inspector]");
+    const selected = document.querySelector('[data-map-id="' + mapId + '"]');
+    const isCase = inspector?.classList.contains("is-case-view");
     return {
-      activeMapId: active?.dataset?.mapId || "",
-      expanded: active?.getAttribute?.("aria-expanded"),
-      pressed: active?.getAttribute?.("aria-pressed"),
+      selectedMapId: inspector?.dataset.selectedMapId || "",
+      focusCorrect: isCase
+        ? active?.matches?.(".is-case-view [data-map-title]")
+          && inspector.getAttribute("role") === "dialog"
+          && inspector.getAttribute("aria-modal") === "true"
+        : active?.dataset?.mapId === mapId,
+      expanded: selected?.getAttribute("aria-expanded"),
+      pressed: selected?.getAttribute("aria-pressed"),
       hidden: inspector?.getAttribute("aria-hidden"),
       inert: Boolean(inspector?.inert),
     };
-  });
+  }, directionalMapId);
   const inspectorSnapshot = await page.locator("[data-map-inspector]").ariaSnapshot();
 
   if (
-    inspectorOpen.activeMapId !== directionalMapId
+    inspectorOpen.selectedMapId !== directionalMapId
+    || !inspectorOpen.focusCorrect
     || inspectorOpen.expanded !== "true"
     || inspectorOpen.pressed !== "true"
     || inspectorOpen.hidden !== "false"

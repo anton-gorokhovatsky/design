@@ -46,6 +46,27 @@ const startStaticServer = async ({
       return;
     }
 
+    // Match Pages byte ranges so the single case video can preserve playback
+    // while moving between desktop and mobile layouts, including in WebKit.
+    const range = path.extname(absolutePath) === ".mp4"
+      ? /^bytes=(\d*)-(\d*)$/.exec(request.headers.range || "") : null;
+    if (range) {
+      const size = fs.statSync(absolutePath).size;
+      const start = !range[1] && range[2] ? Math.max(0, size - Number(range[2])) : Number(range[1] || 0);
+      const end = range[1] && range[2] ? Math.min(size - 1, Number(range[2])) : size - 1;
+      if (start > end || start >= size) {
+        response.writeHead(416, { "content-range": `bytes */${size}` });
+        response.end();
+        return;
+      }
+      response.writeHead(206, {
+        "content-type": "video/mp4", "cache-control": "no-store", "accept-ranges": "bytes",
+        "content-range": `bytes ${start}-${end}/${size}`, "content-length": end - start + 1,
+      });
+      if (request.method === "HEAD") response.end();
+      else fs.createReadStream(absolutePath, { start, end }).pipe(response);
+      return;
+    }
     response.writeHead(200, {
       "cache-control": "no-store",
       "content-type": staticAssetMimeTypes[path.extname(absolutePath)]

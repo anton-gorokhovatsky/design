@@ -12,6 +12,7 @@ export const runtimeFiles = [
   "js/map-engine.js",
   "js/viewport-ui.js",
   "js/panels.js",
+  "js/case-view.js",
   "js/favicon.js",
 ];
 

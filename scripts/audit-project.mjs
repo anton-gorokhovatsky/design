@@ -525,6 +525,11 @@ const invalidMaterialModes = materialSurfaceTags.filter(
 );
 const dynamicMaterialSurfaces = [
   {
+    name: "case-story",
+    assignment: 'sheet.dataset.materialSurface = "case-story";',
+    mode: 'sheet.dataset.materialActive = "always";',
+  },
+  {
     name: "map-node-label",
     assignment: 'label.dataset.materialSurface = "map-node-label";',
     mode: 'label.dataset.materialActive = "always";',

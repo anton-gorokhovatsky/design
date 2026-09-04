@@ -17,11 +17,17 @@ if (directory) mkdirSync(directory, { recursive: true });
 const { server, origin } = await startStaticServer({ projectRoot });
 const errors = [];
 let browser;
-const select = (page, id) => page.evaluate(async (point) => {
-  const script = [...document.scripts].find((entry) => entry.src.includes("/js/map-engine.js?")).src;
-  (await import(script)).selectMapItem(point, { reveal: true });
-  await new Promise(requestAnimationFrame);
-}, id);
+const select = async (page, id) => {
+  await page.evaluate(async (point) => {
+    const script = [...document.scripts].find((entry) => entry.src.includes("/js/map-engine.js?")).src;
+    (await import(script)).selectMapItem(point, { reveal: true });
+    await new Promise(requestAnimationFrame);
+  }, id);
+  // Even a reduced-motion transition needs a committed frame after the
+  // dialog is mounted. Measure the finished surface, not its entrance matrix.
+  await page.waitForFunction(() => document.querySelector('[data-map-inspector]')
+    .getAnimations().every(animation => animation.playState === 'finished'));
+};
 
 // WebKit's macOS snapshot path can omit a backdrop blur that is present on
 // the actual window. Calibrate the capture before judging the site's material.
@@ -85,7 +91,8 @@ try {
             target: link.target, rel: link.rel, inside: link.parentElement === identity,
             surface: link.getAttribute("data-material-surface"), count: document.querySelectorAll("[data-map-link]").length,
             link: box(link), identity: box(identity), description: box(description),
-            inspector: box(inspector), scrollTop: inspector.scrollTop, viewportHeight: innerHeight,
+            inspector: box(inspector), scrollTop: (inspector.querySelector('.case-scroll') || inspector).scrollTop,
+            expanded: inspector.classList.contains('is-case-view'), viewportHeight: innerHeight,
             related: related.hidden ? null : box(related), meta: box(document.querySelector("[data-map-meta]")),
             fill: style.backgroundColor, blur: style.backdropFilter, underline: style.textDecorationLine,
             overflow: document.documentElement.scrollWidth - innerWidth };
@@ -107,8 +114,10 @@ try {
           assert.equal(state.target, "_blank", context);
           assert.ok(state.rel.includes("noreferrer"), context);
           if (item.href) assert.equal(state.href, item.href, context);
-          assert.ok(state.link.top >= state.meta.bottom + 7, context + ": follows metadata");
-          assert.ok(state.link.left >= state.identity.left + 10 && state.link.right <= state.identity.right - 10, context);
+          assert.ok(state.link.top >= state.meta.bottom + (state.expanded ? 3 : 7), context + ": follows metadata");
+          const inset = state.expanded ? 0 : 10;
+          assert.ok(state.link.left >= state.identity.left + inset - 1 && state.link.right <= state.identity.right - inset + 1,
+            context + ": action stays on the identity text axis");
           assert.ok(state.link.bottom <= state.identity.bottom && state.link.height >= 24, context);
           assert.ok(state.link.top >= 0 && state.link.bottom <= state.viewportHeight,
             context + ": the destination is visible on opening");
@@ -158,8 +167,16 @@ try {
       // https://support.apple.com/guide/safari/cpsh003/mac
       const nextLinkKey = engine === "webkit" && process.platform === "darwin" ? "Alt+Tab" : "Tab";
       await page.keyboard.press(nextLinkKey);
+      assert.equal(await page.locator('.case-scroll').evaluate((element) => element === document.activeElement), true,
+        "The reading region follows the fixed close control and supports keyboard scrolling.");
+      await page.keyboard.press(nextLinkKey);
+      if (width > 900) {
+        assert.equal(await page.locator('[data-case-pause]').evaluate((element) => element === document.activeElement), true,
+          "Desktop media control follows the visible left-to-right reading order.");
+        await page.keyboard.press(nextLinkKey);
+      }
       assert.equal(await link.evaluate((element) => element === document.activeElement && element.matches(":focus-visible")), true,
-        "The destination is the first keyboard action after close.");
+        "The external destination follows the reading-region and media controls.");
       const popupPromise = page.waitForEvent("popup");
       await page.keyboard.press("Enter");
       const popup = await popupPromise;
