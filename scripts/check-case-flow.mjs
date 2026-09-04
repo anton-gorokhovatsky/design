@@ -29,7 +29,9 @@ const clickVisiblePlaybackControl=async(page)=>{
     const stableSince=stableSamples?previous.stableSince:performance.now();
     const stableFor=performance.now()-stableSince;
     window.__casePlaybackControl={signature,stableSamples,stableSince,stableFor};
-    return stableSamples>=3&&stableFor>=290;
+    // A delayed callback is not motion: require elapsed stability, not a frame
+    // or timer cadence. At least two identical measurements span 300 ms.
+    return stableSamples>0&&stableFor>=300;
   },undefined,{polling:100});
   const state=await page.locator('[data-case-pause]').evaluate(button=>{
     const box=button.getBoundingClientRect();
