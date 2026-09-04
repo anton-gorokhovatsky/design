@@ -12,34 +12,25 @@ const origin=process.env.PORTFOLIO_CASE_ORIGIN||local.origin;
 const dir=(process.env.PORTFOLIO_UI_ARTIFACT_DIR||fileURLToPath(new URL('../.qa-artifacts/case-view/',import.meta.url)))+'/';
 mkdirSync(dir,{recursive:true});
 const report=[];
-// WebKitGTK's scrollIntoView protocol can stall for a visible sticky media
-// caption during playback. Use a real pointer after explicit actionability and
-// hit-test checks; never force a click or invoke the DOM click handler directly.
+// Software WebKitGTK can deliver fewer than three animation frames in five
+// seconds during native video playback, despite unchanged button geometry.
+// Sample with a timer, then use a real pointer after actionability/hit tests.
+// Never force a click or invoke the DOM click handler directly.
 const clickVisiblePlaybackControl=async(page)=>{
   await page.evaluate(()=>{
     delete window.__casePlaybackControl;
-    const probe={started:performance.now(),frames:0,samples:[]};
-    const frame=()=>{probe.frames++;probe.raf=requestAnimationFrame(frame);};
-    probe.raf=requestAnimationFrame(frame);
-    probe.timer=setInterval(()=>{
-      const button=document.querySelector('[data-case-pause]');
-      const video=document.querySelector('.case-media video');
-      probe.samples.push({ms:Math.round(performance.now()-probe.started),frames:probe.frames,
-        box:button?.getBoundingClientRect().toJSON(),hidden:document.hidden,
-        videoTime:video?.currentTime,paused:video?.paused});
-      if(probe.samples.length>60)probe.samples.shift();
-    },100);
-    window.__casePlaybackProbe=probe;
   });
   await page.waitForFunction(()=>{
     const button=document.querySelector('[data-case-pause]');
     if(!button)return false;
     const signature=JSON.stringify(button.getBoundingClientRect().toJSON());
     const previous=window.__casePlaybackControl;
-    const frames=previous?.signature===signature?previous.frames+1:0;
-    window.__casePlaybackControl={signature,frames};
-    return frames>=3;
-  });
+    const stableSamples=previous?.signature===signature?previous.stableSamples+1:0;
+    const stableSince=stableSamples?previous.stableSince:performance.now();
+    const stableFor=performance.now()-stableSince;
+    window.__casePlaybackControl={signature,stableSamples,stableSince,stableFor};
+    return stableSamples>=3&&stableFor>=290;
+  },undefined,{polling:100});
   const state=await page.locator('[data-case-pause]').evaluate(button=>{
     const box=button.getBoundingClientRect();
     const clip=button.closest('.case-scroll').getBoundingClientRect();
@@ -49,11 +40,11 @@ const clickVisiblePlaybackControl=async(page)=>{
       visible:style.display!=='none'&&style.visibility==='visible'&&Number(style.opacity)>0&&box.width>0&&box.height>0,
       enabled:!button.disabled&&!button.closest('[inert]'),
       inside:box.left>=Math.max(0,clip.left)&&box.right<=Math.min(innerWidth,clip.right)&&box.top>=Math.max(0,clip.top)&&box.bottom<=Math.min(innerHeight,clip.bottom),
-      hit:button.contains(document.elementFromPoint(x,y))};
+      hit:button.contains(document.elementFromPoint(x,y)),
+      stability:window.__casePlaybackControl};
   });
   assert.ok(state.visible&&state.enabled&&state.inside&&state.hit,JSON.stringify(state));
   await page.mouse.click(state.x,state.y);
-  await page.evaluate(()=>{const p=window.__casePlaybackProbe;clearInterval(p.timer);cancelAnimationFrame(p.raf);});
   return state;
 };
 try {
@@ -162,17 +153,17 @@ for(const engine of [process.argv[2]||'chromium']) {
     await page.emulateMedia({reducedMotion:'no-preference'});
     // preload=metadata must not be required to decode a frame before playback.
     // Include public transfer time only after the setting permits video to play.
-    await page.waitForFunction(()=>{const v=document.querySelector('.case-media video');return !v.paused&&v.currentTime>.15},undefined,{timeout:15000});
+    await page.waitForFunction(()=>{const v=document.querySelector('.case-media video');return !v.paused&&v.currentTime>.15},undefined,{timeout:15000,polling:100});
     result.playbackControls=[await clickVisiblePlaybackControl(page)];
-    await page.waitForFunction(()=>document.querySelector('.case-media video').paused);
+    await page.waitForFunction(()=>document.querySelector('.case-media video').paused,undefined,{polling:100});
     const pausedAt=await page.locator('.case-media video').evaluate(v=>v.currentTime);
     await page.waitForTimeout(250);
     assert.equal(await page.locator('.case-media video').evaluate(v=>v.paused),true);
     assert.ok(Math.abs(await page.locator('.case-media video').evaluate(v=>v.currentTime)-pausedAt)<.03);
     result.playbackControls.push(await clickVisiblePlaybackControl(page));
-    await page.waitForFunction(time=>{const v=document.querySelector('.case-media video');return !v.paused&&Math.abs(v.currentTime-time)>.1;},pausedAt);
+    await page.waitForFunction(time=>{const v=document.querySelector('.case-media video');return !v.paused&&Math.abs(v.currentTime-time)>.1;},pausedAt,{polling:100});
     result.playbackControls.push(await clickVisiblePlaybackControl(page));
-    await page.waitForFunction(()=>document.querySelector('.case-media video').paused);
+    await page.waitForFunction(()=>document.querySelector('.case-media video').paused,undefined,{polling:100});
     await page.setViewportSize({width:1440,height:900});
     await page.locator('.case-scroll').evaluate(el=>el.scrollTop=0);
     await page.waitForTimeout(180);
@@ -194,7 +185,6 @@ for(const engine of [process.argv[2]||'chromium']) {
       scroll:document.querySelector('.case-scroll')?.scrollTop,
       keyRegionFocused:document.activeElement===document.querySelector('.case-scroll'),
       playbackControl:window.__casePlaybackControl,
-      playbackProbe:window.__casePlaybackProbe,
     })).catch(()=>null);
     console.log('Case failure state:',JSON.stringify(result.lastState));
     await page.screenshot({path:dir+engine+'-flow-FAIL.jpg',type:'jpeg',quality:84}).catch(()=>{});
