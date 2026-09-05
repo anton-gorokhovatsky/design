@@ -322,8 +322,7 @@ const getTimeLayout = (item) => {
   };
 };
 
-// Keep the semantic layout while clearing the route entry and desktop consoles.
-// The same resolved coordinates drive nodes, labels, arrows and route steps.
+// Shared layout clears the route entry and desktop consoles.
 let mapFieldBounds;
 let mapConsoleBounds = [];
 const mapClearancePositions = new Map();
@@ -779,7 +778,6 @@ const renderObservationShowcase = ({ itemId, showcaseId } = {}) => {
     return;
   }
 
-  // Hidden route planes should not compete with the first map render.
   loadObservationShowcaseImages();
 
   observationShowcase.querySelectorAll("[data-observation-showcase-id]")
@@ -1590,6 +1588,7 @@ if (mapLinksRoot) {
   let mapLinksResizeFrame = 0;
   let mapLinksSettleTimer = 0;
   scheduleMapLinksRender = () => {
+    mapLinksRoot.dataset.layoutPending = "";
     window.cancelAnimationFrame(mapLinksResizeFrame);
     window.clearTimeout(mapLinksSettleTimer);
     mapLinksResizeFrame = window.requestAnimationFrame(() => {
@@ -1599,6 +1598,7 @@ if (mapLinksRoot) {
     mapLinksSettleTimer = window.setTimeout(() => {
       applyMapLayout();
       renderMapLinks();
+      delete mapLinksRoot.dataset.layoutPending;
     }, 940);
   };
 

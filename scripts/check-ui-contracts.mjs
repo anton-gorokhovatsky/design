@@ -446,7 +446,9 @@ const navigate = async (client, url) => {
   await delay(360);
 };
 
-const readReactiveRelationsContract = async (client, mapId) => evaluate(
+const readReactiveRelationsContract = async (client, mapId) => {
+  await waitForExpression(client, `!document.querySelector('[data-map-links][data-layout-pending]')`);
+  return evaluate(
   client,
   `((mapId) => new Promise((resolve) => {
     const paths = [...document.querySelectorAll("[data-map-links] path")];
@@ -511,6 +513,7 @@ const readReactiveRelationsContract = async (client, mapId) => evaluate(
   }))(${JSON.stringify(mapId)})`,
   true,
 );
+};
 
 const pressTab = async (client, { shift = false } = {}) => {
   const modifiers = shift ? 8 : 0;

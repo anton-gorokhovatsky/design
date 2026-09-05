@@ -491,6 +491,7 @@ const routeAudit = async (page, mapId, expectedCount) => {
       .every(element => element.getAnimations().every(animation => (
         animation.playState !== "running"
       )))
+    && !document.querySelector('[data-map-links][data-layout-pending]')
     && !document.querySelector('[data-map-links] [data-relation-morphing="true"]')
   ), null, { polling: 50, timeout: 5000 });
   await page.evaluate(() => {
@@ -653,6 +654,9 @@ const reducedMotionRelationsAudit = async (browser) => {
   });
   await page.evaluate(() => document.fonts?.ready);
   await waitForLayout(page, 500);
+  await page.waitForFunction(() => !document.querySelector(
+    '[data-map-links][data-layout-pending]',
+  ), null, { polling: 50, timeout: 5000 });
 
   const state = await page.evaluate(() => new Promise((resolve) => {
     const paths = Array.from(document.querySelectorAll("[data-map-links] path"));
@@ -701,6 +705,9 @@ const childRelationsAudit = async (browser) => {
   });
   await page.evaluate(() => document.fonts?.ready);
   await waitForLayout(page, 500);
+  await page.waitForFunction(() => !document.querySelector(
+    '[data-map-links][data-layout-pending]',
+  ), null, { polling: 50, timeout: 5000 });
 
   const state = await page.evaluate(() => new Promise((resolve) => {
     const paths = Array.from(document.querySelectorAll("[data-map-links] path"));
