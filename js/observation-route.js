@@ -1,4 +1,4 @@
-// Runtime module 5/9: observation route controller for timing, controls, keyboard flow, and URL state.
+// Runtime module 5/9: guided overview timing and controls.
 import { trackPortfolioEvent } from "./analytics.js";
 import { mapItems } from "./map-data.js";
 import { reducedMotion } from "./preferences.js";
@@ -8,7 +8,7 @@ const observationSteps = [
   {
     id: "origin",
     kind: "МАРШРУТ / 01",
-    title: "Обзор работ за минуту",
+    title: "Обзор работ за 90 секунд",
     meta: "8 ОСТАНОВОК / РАБОТЫ И ПОДХОД",
     description: "Покажу работу в Музее «Гараж», несколько самостоятельных проектов и один из моих принципов. Маршрут можно поставить на паузу или закончить в любой момент.",
     showcaseId: "garage-site",
@@ -53,7 +53,7 @@ const createObservationRoute = ({
   const observationPause = document.querySelector("[data-observation-pause]");
   const observationNext = document.querySelector("[data-observation-next]");
   const observationStatus = document.querySelector("[data-observation-status]");
-  const stepDuration = 7500;
+  const stepDuration = 90000 / (observationSteps.length - 1);
   let active = false;
   let paused = false;
   let stepIndex = 0;

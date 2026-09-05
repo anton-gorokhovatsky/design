@@ -36,7 +36,7 @@ the central constellation rather than to the label. The running light uses the
 `--running-dusk` token sampled from SATISFY's Dusk Space-O™ Singlet. YouTube uses
 the same sphere geometry at about half the visible area, with its own red accent
 (`--youtube-red`); its approved position is `72 / 82`.
-`МАРШРУТ / 60 СЕК` remains a small coordinate label inside the field, not a separate
+`Обзор работ за 90 секунд` remains a small coordinate label inside the field, not a separate
 logo card. It is also the explicit start control for the optional observation
 route.
 
@@ -51,9 +51,10 @@ route.
 - A card's primary external link sits inside its heading fragment, below the
   metadata and before the story. It shares the existing text-link style, with no
   nested material. Labels name the destination; related map points remain last.
-- `РАБОТЫ / 60 СЕК` is an optional eight-stop, roughly sixty-second route
-  through the same map and inspector. It never autostarts, never captures
-  focus, and supports previous, pause/resume, next, arrow keys, and Escape.
+- `Обзор работ за 90 секунд` is an optional eight-stop route through the same
+  map and inspector. Seven automatic transitions take 90 seconds, then the final
+  contact screen stays paused. It never autostarts and supports previous,
+  pause/resume, next, arrow keys, and Escape.
 - `ПОКАЗАТЬ ХРОНОЛОГИЮ` gives the radar rings a chronological meaning. Only
   nodes with supported dates enter the year orbits; undated principles remain
   visibly outside the chronology rather than receiving guessed dates.
