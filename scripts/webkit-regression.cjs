@@ -841,12 +841,39 @@ const relationshipCascadeAudit = async (page) => {
   });
 
   await input.fill("");
-  await input.press("Escape");
-  await waitForLayout(page, 220);
+  const searchFocused = await input.evaluate((element) => (
+    document.activeElement === element
+    && element.getAttribute("aria-expanded") === "true"
+  ));
+  if (!searchFocused) {
+    throw new Error("Search must be open and focused before keyboard dismissal");
+  }
+  // Escape is not a navigation. Send the real key to the already focused
+  // input, without locator.press's extra focus/navigation-signal barrier.
+  // Observe the actual dismissed state instead of trusting key delivery.
+  console.log("WebKit relationship cascade: focused search → Escape");
+  await page.keyboard.press("Escape");
+  const dismissed = await (await page.waitForFunction(() => {
+    const field = document.querySelector("[data-command-input]");
+    const results = document.querySelector("[data-command-results]");
+    const form = field?.closest("form");
+    const state = {
+      blurred: document.activeElement !== field,
+      collapsed: field?.getAttribute("aria-expanded") === "false",
+      noActiveOption: !field?.hasAttribute("aria-activedescendant"),
+      hidden: results?.getAttribute("aria-hidden") === "true",
+      inert: Boolean(results?.inert),
+      closed: Boolean(form) && !form.classList.contains("is-open")
+        && !results?.classList.contains("is-open"),
+    };
+    return Object.values(state).every(Boolean) && state;
+  }, null, { polling: 100 })).jsonValue();
+  console.log("WebKit relationship cascade: search dismissed", dismissed);
 
   return {
     filtered,
     search,
+    dismissed,
     failure: filtered.failure || search.failure,
   };
 };
