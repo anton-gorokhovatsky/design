@@ -484,6 +484,15 @@ const stackAudit = async (
 };
 
 const routeAudit = async (page, mapId, expectedCount) => {
+  // Pointer parallax lasts 820 ms, so a fixed 420/620 ms pause can compare
+  // different camera geometry. Wait for the real transforms and SVG morphs.
+  const waitForRoutes = () => page.waitForFunction(() => (
+    [...document.querySelectorAll(".map-camera, .map-nodes, .map-links")]
+      .every(element => element.getAnimations().every(animation => (
+        animation.playState !== "running"
+      )))
+    && !document.querySelector('[data-map-links] [data-relation-morphing="true"]')
+  ), null, { polling: 50, timeout: 5000 });
   await page.evaluate(() => {
     document.querySelector(".content-panel.is-open [data-close-panel]")?.click();
     document.querySelector(".map-inspector.is-open [data-close-inspector]")?.click();
@@ -492,7 +501,7 @@ const routeAudit = async (page, mapId, expectedCount) => {
     )?.click();
   });
   await page.mouse.move(1, 1);
-  await waitForLayout(page, 420);
+  await waitForRoutes();
 
   const baselinePaths = await page.evaluate(() => (
     Array.from(document.querySelectorAll("[data-map-links] path"))
@@ -532,9 +541,15 @@ const routeAudit = async (page, mapId, expectedCount) => {
     const active = paths
       .filter((path) => path.classList.contains("is-active-relation"))
       .filter((path) => Number(getComputedStyle(path).opacity) > 0);
-    const changed = paths.filter((path, index) => (
-      path.getAttribute("d") !== baseline[index]
-    ));
+    // Runtime stores SVG coordinates to three decimals. A translated WebKit
+    // rect may round either way at that final digit without changing the curve.
+    const changed = paths.filter((path, index) => {
+      const coordinates = data => data?.match(/-?\d+(?:\.\d+)?/g)?.map(Number) || [];
+      const before = coordinates(baseline[index]);
+      const after = coordinates(path.getAttribute("d"));
+      return before.length !== 8 || after.length !== 8
+        || after.some((value, coordinate) => Math.abs(value - before[coordinate]) > 0.00101);
+    });
     const badPaths = active.filter((path) => {
       const data = path.getAttribute("d") || "";
       return !data || /NaN|undefined|Infinity/.test(data);
@@ -575,6 +590,9 @@ const routeAudit = async (page, mapId, expectedCount) => {
       changedCount: changed.length,
       changedActiveCount,
       changedInactiveCount,
+      changedInactive: changed.filter(path => !path.classList.contains("is-active-relation"))
+        .map(path => ({ key: path.dataset.relationKey,
+          before: baseline[paths.indexOf(path)], after: path.getAttribute("d") })),
       minimumActiveDeflection,
       pendingAnimations: paths.reduce((total, path) => (
         total
@@ -600,15 +618,15 @@ const routeAudit = async (page, mapId, expectedCount) => {
   });
 
   await page.locator(`[data-map-id="${mapId}"]`).hover({ force: true });
-  await waitForLayout(page, 620);
+  await waitForRoutes();
   const hover = await readRouteState("hover");
 
   await page.mouse.move(1, 1);
-  await waitForLayout(page, 620);
+  await waitForRoutes();
   await page.evaluate((id) => {
     document.querySelector(`[data-map-id="${id}"]`)?.click();
   }, mapId);
-  await waitForLayout(page, 620);
+  await waitForRoutes();
   const click = await readRouteState("click");
   click.failure = click.failure || click.stateId !== mapId;
 
@@ -852,7 +870,21 @@ const relationshipCascadeAudit = async (page) => {
   // input, without locator.press's extra focus/navigation-signal barrier.
   // Observe the actual dismissed state instead of trusting key delivery.
   console.log("WebKit relationship cascade: focused search → Escape");
-  await page.keyboard.press("Escape");
+  // Release the physical key without waiting on WebKit's keyDown acknowledgement.
+  // A stalled driver command must fail here, not consume the CI job's 20 minutes.
+  let escapeDeadline;
+  try {
+    await Promise.race([
+      Promise.all([page.keyboard.down("Escape"), page.keyboard.up("Escape")]),
+      new Promise((_, reject) => {
+        escapeDeadline = setTimeout(() => reject(new Error(
+          "WebKit did not acknowledge the Escape key pair within 5 seconds",
+        )), 5000);
+      }),
+    ]);
+  } finally {
+    clearTimeout(escapeDeadline);
+  }
   const dismissed = await (await page.waitForFunction(() => {
     const field = document.querySelector("[data-command-input]");
     const results = document.querySelector("[data-command-results]");
