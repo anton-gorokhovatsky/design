@@ -447,7 +447,9 @@ const navigate = async (client, url) => {
 };
 
 const readReactiveRelationsContract = async (client, mapId) => {
-  await waitForExpression(client, `!document.querySelector('[data-map-links][data-layout-pending]')`);
+  if (!await waitForExpression(client, `!document.querySelector('[data-map-links][data-layout-pending]')`)) {
+    throw new Error(`Map layout did not settle before checking ${mapId} relations`);
+  }
   return evaluate(
   client,
   `((mapId) => new Promise((resolve) => {
@@ -489,7 +491,15 @@ const readReactiveRelationsContract = async (client, mapId) => {
     window.setTimeout(() => {
       window.cancelAnimationFrame(opacityFrame);
       const active = paths.filter((path) => path.classList.contains("is-active-relation"));
-      const changed = paths.filter((path, index) => path.getAttribute("d") !== initial[index]);
+      // Match the three-decimal SVG precision used by the WebKit contracts.
+      const changed = paths.filter((path, index) => {
+        const coordinates = data => (data || "").replace(/[MC]/g, " ").trim().split(/[, ]+/).map(Number);
+        const before = coordinates(initial[index]);
+        const after = coordinates(path.getAttribute("d"));
+        return before.length !== 8 || after.length !== 8
+          || !before.concat(after).every(Number.isFinite)
+          || after.some((value, coordinate) => Math.abs(value - before[coordinate]) > 0.00101);
+      });
       resolve({
         relationshipId: document.querySelector("[data-map-links]")?.dataset.relationshipId || "",
         activeCount: active.length,
@@ -503,6 +513,9 @@ const readReactiveRelationsContract = async (client, mapId) => {
           ? Math.min(...active.map(getMaximumCurveDeflection))
           : 0,
         minimumActiveOpacity,
+        changedInactive: changed.filter(path => !path.classList.contains("is-active-relation"))
+          .map(path => ({ key: path.dataset.relationKey,
+            before: initial[paths.indexOf(path)], after: path.getAttribute("d") })),
         pendingAnimations: paths.reduce((count, path) => (
           count
           + path.querySelectorAll("animate").length

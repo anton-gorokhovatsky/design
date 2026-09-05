@@ -484,16 +484,32 @@ const stackAudit = async (
 };
 
 const routeAudit = async (page, mapId, expectedCount) => {
-  // Pointer parallax lasts 820 ms, so a fixed 420/620 ms pause can compare
-  // different camera geometry. Wait for the real transforms and SVG morphs.
-  const waitForRoutes = () => page.waitForFunction(() => (
-    [...document.querySelectorAll(".map-camera, .map-nodes, .map-links")]
-      .every(element => element.getAnimations().every(animation => (
-        animation.playState !== "running"
-      )))
-    && !document.querySelector('[data-map-links][data-layout-pending]')
-    && !document.querySelector('[data-map-links] [data-relation-morphing="true"]')
-  ), null, { polling: 50, timeout: 5000 });
+  // The camera and individual nodes can finish in different frames.
+  // Only geometry transitions affect the SVG; decorative motion is unrelated.
+  const waitForRoutes = async () => {
+    try {
+      await page.waitForFunction(() => (
+        [...document.querySelectorAll(".map-camera, .map-nodes, .map-links, .map-node")]
+          .every(element => element.getAnimations().every(animation => (
+            !["top", "left", "transform"].includes(animation.transitionProperty)
+            || animation.playState !== "running"
+          )))
+        && !document.querySelector('[data-map-links][data-layout-pending]')
+        && !document.querySelector('[data-map-links] [data-relation-morphing="true"]')
+      ), null, { polling: 50, timeout: 5000 });
+    } catch (error) {
+      const pending = await page.evaluate(() => ({
+        layout: Boolean(document.querySelector('[data-map-links][data-layout-pending]')),
+        morphs: [...document.querySelectorAll('[data-relation-morphing="true"]')]
+          .map(path => path.dataset.relationKey),
+        transitions: [...document.querySelectorAll(".map-camera, .map-nodes, .map-links, .map-node")]
+          .flatMap(element => element.getAnimations().filter(a => a.playState === "running")
+            .map(a => ({ element: element.dataset.mapId || element.className.baseVal || element.className,
+              property: a.transitionProperty, time: a.currentTime, duration: a.effect.getTiming().duration }))),
+      }));
+      throw new Error(`${mapId} routes did not settle: ${JSON.stringify(pending)}`, { cause: error });
+    }
+  };
   await page.evaluate(() => {
     document.querySelector(".content-panel.is-open [data-close-panel]")?.click();
     document.querySelector(".map-inspector.is-open [data-close-inspector]")?.click();
@@ -664,9 +680,14 @@ const reducedMotionRelationsAudit = async (browser) => {
     document.querySelector('[data-map-id="garage"]')?.click();
     window.setTimeout(() => {
       const active = paths.filter((path) => path.classList.contains("is-active-relation"));
-      const changed = paths.filter((path, index) => (
-        path.getAttribute("d") !== baseline[index]
-      ));
+      const changed = paths.filter((path, index) => {
+        const coordinates = data => (data || "").replace(/[MC]/g, " ").trim().split(/[, ]+/).map(Number);
+        const before = coordinates(baseline[index]);
+        const after = coordinates(path.getAttribute("d"));
+        return before.length !== 8 || after.length !== 8
+          || !before.concat(after).every(Number.isFinite)
+          || after.some((value, coordinate) => Math.abs(value - before[coordinate]) > 0.00101);
+      });
       resolve({
         selectedId: document.querySelector("[data-signal-field]")?.dataset.selectedId || "",
         activeCount: active.length,
@@ -732,9 +753,14 @@ const childRelationsAudit = async (browser) => {
     document.querySelector('[data-map-id="narkomfin"]')?.click();
     const readState = () => {
       const active = paths.filter((path) => path.classList.contains("is-active-relation"));
-      const changed = paths.filter((path, index) => (
-        path.getAttribute("d") !== baseline[index]
-      ));
+      const changed = paths.filter((path, index) => {
+        const coordinates = data => (data || "").replace(/[MC]/g, " ").trim().split(/[, ]+/).map(Number);
+        const before = coordinates(baseline[index]);
+        const after = coordinates(path.getAttribute("d"));
+        return before.length !== 8 || after.length !== 8
+          || !before.concat(after).every(Number.isFinite)
+          || after.some((value, coordinate) => Math.abs(value - before[coordinate]) > 0.00101);
+      });
       return {
         selectedId: document.querySelector("[data-signal-field]")?.dataset.selectedId || "",
         activeCount: active.length,

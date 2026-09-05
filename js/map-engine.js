@@ -848,9 +848,7 @@ const showReelMosaic = (item, posterPath) => {
     if (reducedMotion.matches) {
       video.pause();
     } else {
-      video.play().catch(() => {
-        // A segment can remain paused when autoplay is blocked.
-      });
+      video.play().catch(() => {});
     }
   });
 };
@@ -938,9 +936,7 @@ const showMapPreview = (item) => {
   if (reducedMotion.matches) {
     mapPreviewVideo.pause();
   } else {
-    mapPreviewVideo.play().catch(() => {
-      // The receiver can remain paused when autoplay is blocked.
-    });
+    mapPreviewVideo.play().catch(() => {});
   }
 
   previewShowFrame = window.requestAnimationFrame(() => {
@@ -987,9 +983,7 @@ mapPreviewVideo?.addEventListener("timeupdate", () => {
     && mapPreviewVideo.currentTime >= previewStart + activePreviewItem.previewDuration
   ) {
     mapPreviewVideo.currentTime = previewStart;
-    mapPreviewVideo.play().catch(() => {
-      // The preview can remain paused when playback is blocked.
-    });
+    mapPreviewVideo.play().catch(() => {});
   }
 });
 
@@ -1002,13 +996,9 @@ reducedMotion.addEventListener?.("change", () => {
     mapPreviewVideo.pause();
     pauseReelMosaic();
   } else if (mapPreview?.classList.contains("is-visible")) {
-    mapPreviewVideo.play().catch(() => {
-      // The preview can remain paused when autoplay is blocked.
-    });
+    mapPreviewVideo.play().catch(() => {});
     reelMosaicVideos.forEach((video) => {
-      video.play().catch(() => {
-        // A segment can remain paused when autoplay is blocked.
-      });
+      video.play().catch(() => {});
     });
   }
 });
@@ -1586,20 +1576,25 @@ if (mapLinksRoot) {
   };
 
   let mapLinksResizeFrame = 0;
-  let mapLinksSettleTimer = 0;
+  let mapLinksLayoutVersion = 0;
   scheduleMapLinksRender = () => {
+    const version = ++mapLinksLayoutVersion;
     mapLinksRoot.dataset.layoutPending = "";
     window.cancelAnimationFrame(mapLinksResizeFrame);
-    window.clearTimeout(mapLinksSettleTimer);
-    mapLinksResizeFrame = window.requestAnimationFrame(() => {
+    mapLinksResizeFrame = window.requestAnimationFrame(async () => {
       applyMapLayout();
       renderMapLinks();
-    });
-    mapLinksSettleTimer = window.setTimeout(() => {
-      applyMapLayout();
+      // Finish camera and node movement before measuring SVG; discard stale resizes.
+      for (let stage = 0; stage < 2; stage++) {
+        const transitions = mapNodesRoot.parentElement.getAnimations({ subtree: true })
+          .filter(a => ["top", "left", "transform"].includes(a.transitionProperty));
+        await Promise.all(transitions.map(a => a.finished.catch(() => {})));
+        if (version !== mapLinksLayoutVersion) return;
+        if (stage === 0) applyMapLayout();
+      }
       renderMapLinks();
       delete mapLinksRoot.dataset.layoutPending;
-    }, 940);
+    });
   };
 
   renderMapLinks();
