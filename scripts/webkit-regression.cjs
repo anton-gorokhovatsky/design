@@ -565,18 +565,13 @@ const routeAudit = async (page, mapId, expectedCount) => {
     const active = paths
       .filter((path) => path.classList.contains("is-active-relation"))
       .filter((path) => Number(getComputedStyle(path).opacity) > 0);
-    // Runtime stores SVG coordinates to three decimals. A translated WebKit
-    // rect may round either way at that final digit without changing the curve.
-    const changed = paths.filter((path, index) => {
-      const coordinates = data => data?.match(/-?\d+(?:\.\d+)?/g)?.map(Number) || [];
-      const before = coordinates(baseline[index]);
-      const after = coordinates(path.getAttribute("d"));
-      return before.length !== 8 || after.length !== 8
-        || after.some((value, coordinate) => Math.abs(value - before[coordinate]) > 0.00101);
-    });
-    const badPaths = active.filter((path) => {
+    // Reflow may update neutral geometry. Compare each path with its current
+    // base curve, not a snapshot from a different camera/layout frame.
+    const changed = paths.filter(path => path.getAttribute("d") !== path.dataset.baseD);
+    const badPaths = paths.filter((path) => {
       const data = path.getAttribute("d") || "";
-      return !data || /NaN|undefined|Infinity/.test(data);
+      const base = path.dataset.baseD || "";
+      return !data || !base || /NaN|undefined|Infinity/.test(data + base);
     });
     const stateId = phase === "hover"
       ? field?.dataset.focusId || ""
@@ -687,14 +682,7 @@ const reducedMotionRelationsAudit = async (browser) => {
     document.querySelector('[data-map-id="garage"]')?.click();
     window.setTimeout(() => {
       const active = paths.filter((path) => path.classList.contains("is-active-relation"));
-      const changed = paths.filter((path, index) => {
-        const coordinates = data => (data || "").replace(/[MC]/g, " ").trim().split(/[, ]+/).map(Number);
-        const before = coordinates(baseline[index]);
-        const after = coordinates(path.getAttribute("d"));
-        return before.length !== 8 || after.length !== 8
-          || !before.concat(after).every(Number.isFinite)
-          || after.some((value, coordinate) => Math.abs(value - before[coordinate]) > 0.00101);
-      });
+      const changed = paths.filter(path => path.getAttribute("d") !== path.dataset.baseD);
       resolve({
         selectedId: document.querySelector("[data-signal-field]")?.dataset.selectedId || "",
         activeCount: active.length,
@@ -760,14 +748,7 @@ const childRelationsAudit = async (browser) => {
     document.querySelector('[data-map-id="narkomfin"]')?.click();
     const readState = () => {
       const active = paths.filter((path) => path.classList.contains("is-active-relation"));
-      const changed = paths.filter((path, index) => {
-        const coordinates = data => (data || "").replace(/[MC]/g, " ").trim().split(/[, ]+/).map(Number);
-        const before = coordinates(baseline[index]);
-        const after = coordinates(path.getAttribute("d"));
-        return before.length !== 8 || after.length !== 8
-          || !before.concat(after).every(Number.isFinite)
-          || after.some((value, coordinate) => Math.abs(value - before[coordinate]) > 0.00101);
-      });
+      const changed = paths.filter(path => path.getAttribute("d") !== path.dataset.baseD);
       return {
         selectedId: document.querySelector("[data-signal-field]")?.dataset.selectedId || "",
         activeCount: active.length,

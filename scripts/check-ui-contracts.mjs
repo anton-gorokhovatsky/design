@@ -491,15 +491,8 @@ const readReactiveRelationsContract = async (client, mapId) => {
     window.setTimeout(() => {
       window.cancelAnimationFrame(opacityFrame);
       const active = paths.filter((path) => path.classList.contains("is-active-relation"));
-      // Match the three-decimal SVG precision used by the WebKit contracts.
-      const changed = paths.filter((path, index) => {
-        const coordinates = data => (data || "").replace(/[MC]/g, " ").trim().split(/[, ]+/).map(Number);
-        const before = coordinates(initial[index]);
-        const after = coordinates(path.getAttribute("d"));
-        return before.length !== 8 || after.length !== 8
-          || !before.concat(after).every(Number.isFinite)
-          || after.some((value, coordinate) => Math.abs(value - before[coordinate]) > 0.00101);
-      });
+      // Only deformation away from the current base curve is a hover reaction.
+      const changed = paths.filter(path => path.getAttribute("d") !== path.dataset.baseD);
       resolve({
         relationshipId: document.querySelector("[data-map-links]")?.dataset.relationshipId || "",
         activeCount: active.length,

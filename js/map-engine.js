@@ -168,7 +168,7 @@ const setMapLinkReactiveState = (path, isReactive) => {
   const startedAt = window.performance.now();
   const duration = shouldMorph ? 440 : 320;
 
-  // Keep SVG paths alive; SMIL can expose empty frames in WebKit.
+  // Keep SVG paths alive to avoid empty WebKit frames.
   path.dataset.relationMorphing = "true";
   const renderFrame = (timestamp) => {
     if (!path.isConnected) {
@@ -1541,6 +1541,7 @@ if (mapLinksRoot) {
           + ` ${reactiveControl2X.toFixed(3)} ${reactiveControl2Y.toFixed(3)}`
           + ` ${targetX.toFixed(3)} ${targetY.toFixed(3)}`;
 
+        path.dataset.baseD = baseD;
         const existingGeometry = mapLinkGeometries.get(path);
         const preserveReactiveShape = Boolean(existingGeometry?.isReactive);
         const nextD = preserveReactiveShape ? reactiveD : baseD;
