@@ -484,6 +484,13 @@ const stackAudit = async (
 };
 
 const routeAudit = async (page, mapId, expectedCount) => {
+  // Each relation contract starts with a neutral map. Camera transitions from
+  // the contact/stack scenarios belong to those scenarios, not this baseline.
+  await page.mouse.move(1, 1);
+  const routeUrl = new URL(baseUrl);
+  routeUrl.searchParams.set("qa-relation", mapId);
+  await page.goto(routeUrl.href, { waitUntil: "networkidle" });
+  await page.evaluate(() => document.fonts.ready);
   // The camera and individual nodes can finish in different frames.
   // Only geometry transitions affect the SVG; decorative motion is unrelated.
   const waitForRoutes = async () => {
@@ -1785,11 +1792,6 @@ const accessibilityAcceptanceAudit = async (browser) => {
       });
       const contact = await contactAudit(page, viewport.width);
       const garage = await routeAudit(page, "garage", 9);
-      await page.keyboard.press("Escape");
-      await waitForLayout(page, 300);
-      await page.reload({ waitUntil: "networkidle" });
-      await page.evaluate(() => document.fonts?.ready);
-      await waitForLayout(page, 500);
       const privatePractice = await routeAudit(page, "private-practice", 9);
       const relationshipCascade = await relationshipCascadeAudit(page);
       const material = await materialAudit(page);

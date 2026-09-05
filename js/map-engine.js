@@ -168,8 +168,7 @@ const setMapLinkReactiveState = (path, isReactive) => {
   const startedAt = window.performance.now();
   const duration = shouldMorph ? 440 : 320;
 
-  // Keep the existing SVG path alive throughout the transition. Replacing it or
-  // delegating `d` to SMIL can expose an empty intermediate frame in WebKit.
+  // Keep SVG paths alive; SMIL can expose empty frames in WebKit.
   path.dataset.relationMorphing = "true";
   const renderFrame = (timestamp) => {
     if (!path.isConnected) {
@@ -848,7 +847,9 @@ const showReelMosaic = (item, posterPath) => {
     if (reducedMotion.matches) {
       video.pause();
     } else {
-      video.play().catch(() => {});
+      video.play().catch(() => {
+        // A segment can remain paused when autoplay is blocked.
+      });
     }
   });
 };
@@ -936,7 +937,9 @@ const showMapPreview = (item) => {
   if (reducedMotion.matches) {
     mapPreviewVideo.pause();
   } else {
-    mapPreviewVideo.play().catch(() => {});
+    mapPreviewVideo.play().catch(() => {
+      // The receiver can remain paused when autoplay is blocked.
+    });
   }
 
   previewShowFrame = window.requestAnimationFrame(() => {
@@ -983,7 +986,9 @@ mapPreviewVideo?.addEventListener("timeupdate", () => {
     && mapPreviewVideo.currentTime >= previewStart + activePreviewItem.previewDuration
   ) {
     mapPreviewVideo.currentTime = previewStart;
-    mapPreviewVideo.play().catch(() => {});
+    mapPreviewVideo.play().catch(() => {
+      // The preview can remain paused when playback is blocked.
+    });
   }
 });
 
@@ -996,9 +1001,13 @@ reducedMotion.addEventListener?.("change", () => {
     mapPreviewVideo.pause();
     pauseReelMosaic();
   } else if (mapPreview?.classList.contains("is-visible")) {
-    mapPreviewVideo.play().catch(() => {});
+    mapPreviewVideo.play().catch(() => {
+      // The preview can remain paused when autoplay is blocked.
+    });
     reelMosaicVideos.forEach((video) => {
-      video.play().catch(() => {});
+      video.play().catch(() => {
+        // A segment can remain paused when autoplay is blocked.
+      });
     });
   }
 });
@@ -1576,31 +1585,28 @@ if (mapLinksRoot) {
   };
 
   let mapLinksResizeFrame = 0;
-  let mapLinksLayoutVersion = 0;
+  let mapLinksSettleTimer = 0;
   scheduleMapLinksRender = () => {
-    const version = ++mapLinksLayoutVersion;
     mapLinksRoot.dataset.layoutPending = "";
     window.cancelAnimationFrame(mapLinksResizeFrame);
-    mapLinksResizeFrame = window.requestAnimationFrame(async () => {
+    window.clearTimeout(mapLinksSettleTimer);
+    mapLinksResizeFrame = window.requestAnimationFrame(() => {
       applyMapLayout();
       renderMapLinks();
-      // Finish camera and node movement before measuring SVG; discard stale resizes.
-      for (let stage = 0; stage < 2; stage++) {
-        const transitions = mapNodesRoot.parentElement.getAnimations({ subtree: true })
-          .filter(a => ["top", "left", "transform"].includes(a.transitionProperty));
-        await Promise.all(transitions.map(a => a.finished.catch(() => {})));
-        if (version !== mapLinksLayoutVersion) return;
-        if (stage === 0) applyMapLayout();
-      }
+    });
+    mapLinksSettleTimer = window.setTimeout(() => {
+      applyMapLayout();
       renderMapLinks();
       delete mapLinksRoot.dataset.layoutPending;
-    });
+    }, 940);
   };
 
   renderMapLinks();
   reducedMotion.addEventListener?.("change", () => syncMapRelationships());
-  mapLinksRoot.addEventListener("transitionend", (event) => {
-    if (event.target === mapLinksRoot && event.propertyName === "transform") {
+  mapNodesRoot.parentElement.addEventListener("transitionend", (event) => {
+    if ((event.propertyName === "transform"
+      && [mapLinksRoot, mapNodesRoot.parentElement].includes(event.target))
+      || (["top", "left"].includes(event.propertyName) && event.target.matches(".map-node"))) {
       renderMapLinks();
     }
   });
