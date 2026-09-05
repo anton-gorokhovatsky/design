@@ -321,14 +321,15 @@ const getTimeLayout = (item) => {
   };
 };
 
-// Shared layout clears the route entry and desktop consoles.
+// Keep map points clear of controls.
 let mapFieldBounds;
 let mapConsoleBounds = [];
 const mapClearancePositions = new Map();
 const measureMapClearance = () => {
   mapFieldBounds = mapNodesRoot?.getBoundingClientRect();
-  const selectors = [".origin-marker__label"];
-  if (window.innerWidth > 680) selectors.push(".map-controls", ".map-control > span", ".display-control", ".control-console", ".site-header");
+  const selectors = [".origin-marker__label", ".site-header"];
+  if (window.innerWidth > 680) selectors.push(".map-controls", ".map-control > span", ".display-control", ".control-console");
+  else selectors.push(".command-dock", ".system-dock");
   mapConsoleBounds = [...document.querySelectorAll(selectors.join(","))]
     .map(element => element.getBoundingClientRect())
     .filter(rect => rect.width && rect.height);
@@ -359,8 +360,7 @@ const clearMapConsoles = (item, position) => {
     [obstacle.left - radius, y], [obstacle.right + radius, y],
     [x, obstacle.top - radius], [x, obstacle.bottom + radius],
   ].filter(isFree);
-  // At enlarged text sizes an edge can already be occupied by another point.
-  // Search the nearest free ring, keeping unaffected semantic coordinates.
+  // Find the nearest free ring when the edges are occupied.
   for (let distance = 12; !candidates.length && distance < Math.max(innerWidth, innerHeight); distance += 12) {
     for (let step = 0; step < 24; step++) {
       const angle = step * Math.PI / 12;
