@@ -48,6 +48,7 @@ const mapEvidence = document.querySelector("[data-map-evidence]");
 const mapEvidenceTask = document.querySelector("[data-map-evidence-task]");
 const mapEvidenceRole = document.querySelector("[data-map-evidence-role]");
 const mapEvidenceResult = document.querySelector("[data-map-evidence-result]");
+const mapEvidenceFeature = document.querySelector("[data-map-evidence-feature]");
 const mapEvidenceById = JSON.parse(
   document.querySelector("#map-evidence-data")?.textContent || "{}",
 );
@@ -321,7 +322,60 @@ const getTimeLayout = (item) => {
   };
 };
 
-const resolveMapLayout = (item) => {
+// Keep the semantic layout while clearing the route entry and desktop consoles.
+// The same resolved coordinates drive nodes, labels, arrows and route steps.
+let mapFieldBounds;
+let mapConsoleBounds = [];
+const mapClearancePositions = new Map();
+const measureMapClearance = () => {
+  mapFieldBounds = mapNodesRoot?.getBoundingClientRect();
+  const selectors = [".origin-marker__label"];
+  if (window.innerWidth > 680) selectors.push(".map-controls", ".map-control > span", ".display-control", ".control-console", ".site-header");
+  mapConsoleBounds = [...document.querySelectorAll(selectors.join(","))]
+    .map(element => element.getBoundingClientRect())
+    .filter(rect => rect.width && rect.height);
+  mapItems.forEach(item => mapClearancePositions.set(item.id, getMapLayout(item)));
+  mapItems.forEach(item => mapClearancePositions.set(item.id, clearMapConsoles(item, mapClearancePositions.get(item.id))));
+};
+const clearMapConsoles = (item, position) => {
+  if (!mapFieldBounds?.width || !mapConsoleBounds.length) return position;
+  const { left, top, width, height } = mapFieldBounds;
+  const radius = Math.max(24, item.size) * width / mapNodesRoot.clientWidth / 2 + 8;
+  const point = [left + position.x * width / 100, top + position.y * height / 100];
+  const covers = ([x, y], rect) => x > rect.left - radius && x < rect.right + radius
+    && y > rect.top - radius && y < rect.bottom + radius;
+  const obstacle = mapConsoleBounds.find(rect => covers(point, rect));
+  if (!obstacle) return position;
+  const [x, y] = point;
+  const isFree = candidate => candidate[0] >= radius && candidate[0] <= innerWidth - radius
+    && candidate[1] >= radius && candidate[1] <= innerHeight - radius
+    && !mapConsoleBounds.some(rect => covers(candidate, rect))
+    && !mapItems.some(other => {
+      if (other.id === item.id) return false;
+      const position = mapClearancePositions.get(other.id);
+      const clearance = radius + Math.max(24, other.size) * width / mapNodesRoot.clientWidth / 2;
+      return Math.abs(candidate[0] - left - position.x * width / 100) < clearance
+        && Math.abs(candidate[1] - top - position.y * height / 100) < clearance;
+    });
+  const candidates = [
+    [obstacle.left - radius, y], [obstacle.right + radius, y],
+    [x, obstacle.top - radius], [x, obstacle.bottom + radius],
+  ].filter(isFree);
+  // At enlarged text sizes an edge can already be occupied by another point.
+  // Search the nearest free ring, keeping unaffected semantic coordinates.
+  for (let distance = 12; !candidates.length && distance < Math.max(innerWidth, innerHeight); distance += 12) {
+    for (let step = 0; step < 24; step++) {
+      const angle = step * Math.PI / 12;
+      const candidate = [x + Math.cos(angle) * distance, y + Math.sin(angle) * distance];
+      if (isFree(candidate)) candidates.push(candidate);
+    }
+  }
+  candidates.sort((a, b) => Math.hypot(a[0] - x, a[1] - y) - Math.hypot(b[0] - x, b[1] - y));
+  const target = candidates[0] || point;
+  return { x: (target[0] - left) / width * 100, y: (target[1] - top) / height * 100 };
+};
+
+const getMapLayout = (item) => {
   const viewportWidth = window.innerWidth;
   let x = item.x;
   let y = item.y;
@@ -348,6 +402,7 @@ const resolveMapLayout = (item) => {
     if (item.id === "garage-site") {
       x = viewportWidth <= 360 ? 63 : 60;
     }
+    if (item.id === "doronin") x = 86;
   }
 
   if (viewportWidth <= 360) {
@@ -402,8 +457,10 @@ const resolveMapLayout = (item) => {
 
   return { x, y };
 };
+const resolveMapLayout = item => mapClearancePositions.get(item.id) || getMapLayout(item);
 
 const applyMapLayout = () => {
+  measureMapClearance();
   mapItems.forEach((item) => {
     const position = resolveMapLayout(item);
     const button = mapButtons.get(item.id);
@@ -695,6 +752,18 @@ if (
   mapPreviewMedia.append(mosaic);
 }
 
+const loadObservationShowcaseImages = () => {
+  if (!observationShowcase?.classList.contains("is-visible")
+    || getComputedStyle(observationShowcase).display === "none") return;
+  observationShowcase.querySelectorAll("img[data-src]").forEach(image => {
+    image.src = image.dataset.src;
+    delete image.dataset.src;
+  });
+};
+if (observationShowcase) {
+  new ResizeObserver(loadObservationShowcaseImages).observe(observationShowcase);
+}
+
 const renderObservationShowcase = ({ itemId, showcaseId } = {}) => {
   const activeId = showcaseId || itemId;
   const progress = observationShowcaseProgress[activeId];
@@ -709,6 +778,9 @@ const renderObservationShowcase = ({ itemId, showcaseId } = {}) => {
   if (!isVisible) {
     return;
   }
+
+  // Hidden route planes should not compete with the first map render.
+  loadObservationShowcaseImages();
 
   observationShowcase.querySelectorAll("[data-observation-showcase-id]")
     .forEach((plane, index) => {
@@ -948,6 +1020,7 @@ const setMapEvidence = (evidence = null) => {
     [mapEvidenceTask, evidence?.task],
     [mapEvidenceRole, evidence?.role],
     [mapEvidenceResult, evidence?.result],
+    [mapEvidenceFeature, evidence?.feature],
   ];
   const hasEvidence = entries.some(([, value]) => Boolean(value));
 
@@ -1130,6 +1203,7 @@ const sphereTurnSeconds = new Map([
 ]);
 
 if (mapNodesRoot) {
+  measureMapClearance();
   mapItems.forEach((item) => {
     const button = document.createElement("button");
     const glyph = document.createElement("span");
@@ -1536,6 +1610,11 @@ if (mapLinksRoot) {
     }
   });
   window.addEventListener("resize", scheduleMapLinksRender, { passive: true });
+  document.fonts?.ready.then(scheduleMapLinksRender);
+  const clearanceResize = new ResizeObserver(scheduleMapLinksRender);
+  clearanceResize.observe(mapNodesRoot);
+  document.querySelectorAll(".origin-marker__label, .map-controls, .display-control, .control-console, .site-header")
+    .forEach(element => clearanceResize.observe(element));
 }
 
 const seededRandom = (seed) => {

@@ -774,38 +774,28 @@ const validateAnnotationHierarchy = (hierarchy) => {
   const approximatelyEqual = (first, second, tolerance = 0.5) => (
     Math.abs(first - second) <= tolerance
   );
-  const matchesRoute = (axis) => (
-    axis.exists
-    && approximatelyEqual(axis.height, route.height)
-    && sharedProperties.every((property) => (
-      axis.properties?.[property] === route.properties?.[property]
-    ))
-  );
-  const routeMatchesAxes = (
-    route.exists
-    && axes.length === 4
-    && axes.every(matchesRoute)
-  );
-  const garageIsLarger = (
-    garage.exists
-    && garage.height >= route.height + 6
-    && Number.parseFloat(garage.properties?.paddingTop || "0")
-      > Number.parseFloat(route.properties?.paddingTop || "0")
-    && Number.parseFloat(garage.properties?.paddingRight || "0")
-      > Number.parseFloat(route.properties?.paddingRight || "0")
-  );
+  const referenceAxis = axes[0];
+  const axesMatch = axes.length === 4 && axes.every(axis => axis.exists
+    && approximatelyEqual(axis.height, referenceAxis.height)
+    && sharedProperties.every(property => axis.properties?.[property] === referenceAxis.properties?.[property]));
+  const routeKeepsMaterialGeometry = route.exists && axesMatch
+    && sharedProperties.filter(property => !/^(font|lineHeight|padding)/.test(property))
+      .every(property => route.properties?.[property] === referenceAxis.properties?.[property]);
+  const routeIsProminent = route.height >= 36
+    && Number.parseFloat(route.properties?.fontSize || "0") > Number.parseFloat(referenceAxis?.properties?.fontSize || "0")
+    && Number.parseFloat(route.properties?.paddingRight || "0") > Number.parseFloat(referenceAxis?.properties?.paddingRight || "0");
+  const garageIsLarger = garage.exists && axesMatch
+    && garage.height >= referenceAxis.height + 6
+    && Number.parseFloat(garage.properties?.paddingTop || "0") > Number.parseFloat(referenceAxis.properties?.paddingTop || "0")
+    && Number.parseFloat(garage.properties?.paddingRight || "0") > Number.parseFloat(referenceAxis.properties?.paddingRight || "0");
 
-  if (
-    routeMatchesAxes
-    && garageIsLarger
-    && hierarchy.overflowX === 0
-  ) {
+  if (routeKeepsMaterialGeometry && routeIsProminent && garageIsLarger && hierarchy.overflowX === 0) {
     return [];
   }
 
   return [{
     id: "annotation-hierarchy",
-    message: "route and axis labels diverge, or Garage loses its larger object-label hierarchy",
+    message: "the route entry loses prominence or shared geometry, axes differ, or Garage loses its object-label hierarchy",
     details: hierarchy,
   }];
 };

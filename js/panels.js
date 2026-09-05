@@ -488,7 +488,8 @@ window.visualViewport?.addEventListener("resize", invalidateContentStack, { pass
 document.fonts?.ready.then(invalidateContentStack);
 
 contentPanelBody?.addEventListener("focusin", (event) => {
-  if (!compactContentStack.matches) {
+  if (!compactContentStack.matches
+    || document.documentElement.dataset.focusModality !== "keyboard") {
     return;
   }
 
@@ -771,10 +772,10 @@ const commandViews = [
   {
     type: "action",
     id: "observation",
-    title: "ЗНАКОМСТВО С РАБОТАМИ",
-    meta: "ОКОЛО 60 СЕКУНД / 8 ОСТАНОВОК",
+    title: "Обзор работ за минуту",
+    meta: "8 ОСТАНОВОК / РАБОТЫ И ПОДХОД",
     intents: "сеанс наблюдения обзор экскурсия маршрут",
-    keywords: "сеанс наблюдение маршрут обзор экскурсия 60 секунд",
+    keywords: "сеанс наблюдение маршрут обзор экскурсия 60 секунд минута",
   },
   {
     type: "action",

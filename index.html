@@ -124,7 +124,7 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=146750509b42">
+    <link rel="stylesheet" href="styles.css?v=2bd4cb5bd18c">
     <style>
       .map-evidence [data-map-evidence-role-label]{font-family:var(--font-author);font-size:.6rem;font-weight:400;letter-spacing:0}
     </style>
@@ -136,12 +136,12 @@
           "./js/analytics.js": "./js/analytics.js?v=420bb229d6c0",
           "./js/signal-field.js": "./js/signal-field.js?v=e249b2dc021a",
           "./js/map-data.js": "./js/map-data.js?v=65039558ac43",
-          "./js/observation-route.js": "./js/observation-route.js?v=9484044902ab",
+          "./js/observation-route.js": "./js/observation-route.js?v=2437341ff207",
           "./js/personal-media.js": "./js/personal-media.js?v=9910a8959dd2",
           "./js/sphere-surfaces.js": "./js/sphere-surfaces.js?v=4cf52ae3e8a0",
-          "./js/map-engine.js": "./js/map-engine.js?v=368c86d2c91c",
+          "./js/map-engine.js": "./js/map-engine.js?v=e796b945b3a5",
           "./js/viewport-ui.js": "./js/viewport-ui.js?v=789d6b79afd7",
-          "./js/panels.js": "./js/panels.js?v=fa31f9f868d5",
+          "./js/panels.js": "./js/panels.js?v=d79b6eedc9ba",
           "./js/case-view.js": "./js/case-view.js?v=8a177d816eb1",
           "./js/favicon.js": "./js/favicon.js?v=3aa23538dc2d"
         }
@@ -153,12 +153,12 @@
     <script type="module" src="js/analytics.js?v=420bb229d6c0"></script>
     <script type="module" src="js/signal-field.js?v=e249b2dc021a"></script>
     <script type="module" src="js/map-data.js?v=65039558ac43"></script>
-    <script type="module" src="js/observation-route.js?v=9484044902ab"></script>
+    <script type="module" src="js/observation-route.js?v=2437341ff207"></script>
     <script type="module" src="js/personal-media.js?v=9910a8959dd2"></script>
     <script type="module" src="js/sphere-surfaces.js?v=4cf52ae3e8a0"></script>
-    <script type="module" src="js/map-engine.js?v=368c86d2c91c"></script>
+    <script type="module" src="js/map-engine.js?v=e796b945b3a5"></script>
     <script type="module" src="js/viewport-ui.js?v=789d6b79afd7"></script>
-    <script type="module" src="js/panels.js?v=fa31f9f868d5"></script>
+    <script type="module" src="js/panels.js?v=d79b6eedc9ba"></script>
     <script type="module" src="js/case-view.js?v=8a177d816eb1"></script>
     <script type="module" src="js/favicon.js?v=3aa23538dc2d"></script>
     <script type="application/ld+json">
@@ -286,8 +286,8 @@
           проекты справа, личное снизу и принципы слева. Чем ближе точки друг
           к другу, тем ближе их смысловая связь; размер точки показывает личный
           вес опыта, форма — тип объекта. Перемещайтесь между точками стрелками или
-          воспользуйтесь фильтрами и поиском. Кнопка «РАБОТЫ / 60 СЕК» запускает
-          короткое знакомство с работами; режим «Время»
+          воспользуйтесь фильтрами и поиском. Кнопка «Обзор работ за минуту» запускает
+          короткий маршрут по проектам; режим «Время»
           перестраивает датированные точки по годовым орбитам.
         </p>
         <div
@@ -368,7 +368,7 @@
               data-observation-showcase-id="garage-site"
             >
               <img
-                src="assets/reel-posters/garage-site.jpg?v=79b071503bf0"
+                data-src="assets/reel-posters/garage-site.jpg?v=79b071503bf0"
                 alt=""
                 decoding="async"
                 loading="eager"
@@ -380,10 +380,10 @@
               data-observation-overview
             >
               <img
-                src="assets/reel-posters/narkomfin.jpg?v=a612d43dea12"
+                data-src="assets/reel-posters/narkomfin.jpg?v=a612d43dea12"
                 alt=""
                 decoding="async"
-                loading="lazy"
+                loading="eager"
               >
             </figure>
             <figure
@@ -392,10 +392,10 @@
               data-observation-overview
             >
               <img
-                src="assets/reel-posters/11111.jpg?v=cb3ffc3a8d94"
+                data-src="assets/reel-posters/11111.jpg?v=cb3ffc3a8d94"
                 alt=""
                 decoding="async"
-                loading="lazy"
+                loading="eager"
               >
             </figure>
             <figure
@@ -404,10 +404,10 @@
               data-observation-overview
             >
               <img
-                src="assets/reel-posters/shirokostup.jpg?v=74222ef366e9"
+                data-src="assets/reel-posters/shirokostup.jpg?v=74222ef366e9"
                 alt=""
                 decoding="async"
-                loading="lazy"
+                loading="eager"
               >
             </figure>
           </div>
@@ -440,8 +440,8 @@
             data-start-observation
             data-material-surface="origin-label"
             data-material-active="always"
-            aria-label="Познакомиться с работами за 60 секунд"
-          >РАБОТЫ / 60 СЕК</button>
+            aria-label="Обзор работ за минуту"
+          >Обзор работ за минуту</button>
 
           <aside
             class="map-hover-preview"
@@ -532,6 +532,10 @@
               <div>
                 <dt>РЕЗУЛЬТАТ</dt>
                 <dd data-map-evidence-result></dd>
+              </div>
+              <div>
+                <dt>ПАЛИТРА</dt>
+                <dd data-map-evidence-feature></dd>
               </div>
             </dl>
           </div>
@@ -711,7 +715,8 @@
             "hotline-camp": {
               "task": "Собрать ясный и убедительный сайт финальной недели подготовки к IRONSTAR 2026 — с серьёзностью тренеров и местным контекстом Сочи.",
               "role": "Концепция, структура, визуальная система, доступность, разработка и запуск.",
-              "result": "Запущен адаптивный сайт с программой, профилями тренеров и заявкой; палитра мягко следует сочинскому времени суток, а ручная тема и спокойный статический резерв сохраняют контроль пользователя."
+              "result": "Запущен адаптивный сайт с программой, профилями тренеров и заявкой; палитра мягко следует сочинскому времени суток, а ручная тема и спокойный статический резерв сохраняют контроль пользователя.",
+              "feature": "Мокрый известняк и чёрный сланец. Магнолия и голубой эвкалипт. Бирюза осеннего моря, олеандр и мягкий папоротниковый оранжевый. Палитра сайта меняется вслед за солнцем над Сочи."
             },
             "eleven": {
               "task": "Рассказать о Викторе, его прошлом опыте и подготовке к первому в мире 31-дневному ультратриатлону в декабре 2026 года — и привлечь к проекту партнёров.",

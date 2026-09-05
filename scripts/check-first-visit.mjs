@@ -17,7 +17,8 @@ const capture = (page, name) => page.screenshot({ path: join(directory, `${engin
 try {
   for (const theme of ["light", "dark"]) {
     for (const [name, width, height, scale] of [
-      ["desktop", 1440, 900, 1], ["tablet", 1024, 768, 1],
+      ["desktop", 1440, 900, 1], ["short", 1440, 650, 1],
+      ["tablet", 1024, 768, 1], ["middle", 900, 700, 1],
       ["narrow", 720, 700, 1], ["mobile", 390, 844, 1],
       ["compact", 320, 568, 1], ["reflow", 720, 700, 2],
     ]) {
@@ -27,7 +28,13 @@ try {
       await page.goto(origin, { waitUntil: "load" });
       await page.evaluate((scale) => { document.documentElement.style.fontSize = `${16 * scale}px`; }, scale);
       await page.evaluate(() => document.fonts.ready);
+      assert.equal(await page.locator("[data-observation-showcase] img[src]").count(), 0, "Hidden route posters wait for the route to become visible.");
       await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
+      // Font and camera reflow are asynchronous; measure the settled input surface.
+      await page.waitForFunction(() => [...document.querySelectorAll(".map-node")].every(node => {
+        const rect = node.getBoundingClientRect();
+        return document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2)?.closest(".map-node") === node;
+      }), null, { timeout: 5000 });
       const state = await page.evaluate(() => {
         const box = (e) => e.getBoundingClientRect().toJSON();
         const visible = (e) => { const s = getComputedStyle(e); return s.display !== "none" && s.visibility !== "hidden" && Number(s.opacity) > 0; };
@@ -44,7 +51,13 @@ try {
           overflow: document.documentElement.scrollWidth - innerWidth,
           selected: document.querySelector("[data-map-inspector]").getAttribute("aria-hidden"),
           route: document.querySelector("[data-start-observation]").textContent,
+          routeName: document.querySelector("[data-start-observation]").getAttribute("aria-label"),
           nodes: [...document.querySelectorAll(".map-node")].map(box),
+          blockedTargets: [...document.querySelectorAll(".map-node")].flatMap((node) => {
+            const rect = node.getBoundingClientRect();
+            const hit = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
+            return hit?.closest(".map-node") === node ? [] : [{ id: node.dataset.mapId, hit: hit?.closest(".map-node")?.dataset.mapId || hit?.className }];
+          }),
           nav: [...document.querySelectorAll(".constellation-nav__item > .constellation-nav__label")].map((e) => ({ box: box(e), visible: visible(e), text: e.textContent })),
           search: box(document.querySelector("[data-command-form]")),
         };
@@ -54,7 +67,10 @@ try {
       assert.equal(state.overflow, 0, JSON.stringify({ name, theme, state }));
       assert.ok(state.authorVisible && state.author.left >= 0 && state.author.right <= width + 1);
       assert.equal(state.selected, "true");
-      assert.equal(state.route.trim(), "РАБОТЫ / 60 СЕК");
+      assert.equal(state.nodes.length, 49, "The whole map remains present.");
+      assert.deepEqual(state.blockedTargets, [], `${name} ${theme}: each point must receive input at its own center.`);
+      assert.equal(state.route.trim().replace(/\s+/g, " "), "Обзор работ за минуту");
+      assert.equal(state.routeName, state.route.trim(), "The accessible name matches the visible overview label.");
       assert.ok(!state.nodes.some((node) => state.authorLines.some((line) => overlaps(node, line))), "Authorship must not collide with a map target: " + JSON.stringify({ name, state }));
       if (width > 680) {
         assert.ok(state.nav.every((item) => item.visible && item.box.width > 0));
@@ -81,7 +97,19 @@ try {
         })));
         assert.ok(scopes.every((item) => item.size >= 13 && item.overflow <= 1), "Project descriptions remain readable and inside their cards.");
         if (width <= 680) {
-          await page.locator(".work-row").last().scrollIntoViewIfNeeded();
+          // Pointer focus must not scroll the card away between down and up.
+          await page.locator(".work-row").first().click();
+          await page.waitForFunction(() => document.body.hasAttribute("data-case-open"));
+          assert.equal(await page.locator("[data-map-inspector]").getAttribute("data-selected-map-id"), "garage-site");
+          await page.locator("[data-close-inspector]").click();
+          await page.waitForFunction(() => !document.body.hasAttribute("data-case-open"));
+          await page.locator("[data-constellation-nav-toggle]").click();
+          await page.locator('.constellation-nav__item[data-open-panel="work"]').click();
+          await page.locator(".work-row").first().focus();
+          // WebKit follows the host default: Option+Tab includes links.
+          const nextLinkKey = engine === "webkit" ? "Alt+Tab" : "Tab";
+          for (let index = 1; index < 8; index++) await page.keyboard.press(nextLinkKey);
+          assert.equal(await page.locator(".work-row").last().evaluate((element) => element === document.activeElement), true, "Keyboard navigation reaches the final case.");
           await capture(page, `work-end-${name}-${theme}`);
           const last = await page.locator(".work-row").last().boundingBox();
           assert.ok(last.y >= 0 && last.y + last.height <= height + 1, "The last case is fully reachable.");

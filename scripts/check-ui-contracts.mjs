@@ -686,8 +686,9 @@ const readObservationShowcaseContract = (client) => evaluate(client, `(() => {
   const activeBounds = active?.getBoundingClientRect();
   const inspectorBounds = document.querySelector('.map-inspector')
     ?.getBoundingClientRect();
-  const originLabelBounds = document.querySelector('.origin-marker__label')
-    ?.getBoundingClientRect();
+  const originLabel = document.querySelector('.origin-marker__label');
+  const originLabelVisible = Boolean(originLabel
+    && getComputedStyle(originLabel).visibility !== 'hidden');
   const railBounds = document.querySelector('.map-controls')
     ?.getBoundingClientRect();
   const mapNativeTargets = Array.from(document.querySelectorAll(
@@ -767,9 +768,7 @@ const readObservationShowcaseContract = (client) => evaluate(client, `(() => {
     activeInspectorOverlapRatio: activeArea > 0
       ? intersectionArea / activeArea
       : 1,
-    activeOriginGap: activeBounds && originLabelBounds
-      ? originLabelBounds.left - activeBounds.right
-      : -1,
+    originLabelVisible,
     activeRailGap: activeBounds && railBounds
       ? activeBounds.left - railBounds.right
       : -1,
@@ -1161,7 +1160,7 @@ const auditBrowser = async (client, origin) => {
     originShowcase.activeId !== "garage-site"
     || originShowcase.activePlaneId !== "garage-site"
     || originShowcase.routeProgress !== "01 / 08"
-    || originShowcase.activeOriginGap < 24
+    || originShowcase.originLabelVisible
     || originShowcase.activeRailGap < 24
   ) {
     fail(
@@ -1206,7 +1205,7 @@ const auditBrowser = async (client, origin) => {
     || !narkomfinShowcase.activeFilter.includes("blur(0px)")
     || !narkomfinShowcase.activeInsideViewport
     || narkomfinShowcase.activeInspectorOverlapRatio > 0.14
-    || narkomfinShowcase.activeOriginGap < 24
+    || narkomfinShowcase.originLabelVisible
   ) {
     fail(
       "observation-showcase: Narkomfin does not enter one accessible focal plane.",
@@ -1291,7 +1290,7 @@ const auditBrowser = async (client, origin) => {
     || elevenShowcase.routeProgress !== "05 / 08"
     || !elevenShowcase.activeInsideViewport
     || elevenShowcase.activeInspectorOverlapRatio > 0.14
-    || elevenShowcase.activeOriginGap < 24
+    || elevenShowcase.originLabelVisible
     || elevenShowcase.activeRailGap < 24
   ) {
     fail(
@@ -1351,6 +1350,12 @@ const auditBrowser = async (client, origin) => {
     mobile: false,
     theme: "light",
   });
+
+  await waitForExpression(client, `(() => {
+    const stage = document.querySelector('[data-observation-showcase]');
+    return getComputedStyle(stage).display !== 'none'
+      && [...stage.querySelectorAll('img')].every(image => image.complete && image.naturalWidth > 0);
+  })()`);
 
   await navigate(client, `${origin}/?qa=ui-contracts-reactive-relations`);
   await client.send("Input.dispatchMouseEvent", {

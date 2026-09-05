@@ -59,18 +59,20 @@ for (const engine of [process.argv[2] || 'chromium']) {
       result.start = await measure();
       result.type = await page.evaluate(() => {
         const size = selector => parseFloat(getComputedStyle(document.querySelector(selector)).fontSize);
-        const inspector = getComputedStyle(document.querySelector('.is-case-view'));
         return {
           labels: ['[data-map-meta]', '.map-evidence dt', '.map-related__header > span', '.case-media figcaption span'].map(size),
           body: size('.map-evidence dd'),
           role: size('[data-map-evidence-role]'),
-          opticalScale: Number(inspector.getPropertyValue('--case-author-optical-scale')),
+          roleFamily: getComputedStyle(document.querySelector("[data-map-evidence-role]")).fontFamily,
+          roleLabelFamily: getComputedStyle(document.querySelector("[data-map-evidence-role-label]")).fontFamily,
           mediaCount: document.querySelectorAll('.case-media video').length,
         };
       });
       assert.ok(result.type.labels.every(size => Math.abs(size-result.type.labels[0])<.02),'Service labels share one type role');
       assert.ok(result.type.body >= 16,'Reading text retains the browser default size or larger');
-      assert.ok(Math.abs(result.type.role-result.type.body*result.type.opticalScale)<.02,'Author face follows its explicit optical correction');
+      assert.ok(Math.abs(result.type.role-result.type.body)<.02,'The long role uses the shared reading size');
+      assert.match(result.type.roleFamily,/Golos/,'Long role copy uses Golos');
+      assert.match(result.type.roleLabelFamily,/Rene/,'The role label retains the author face');
       assert.equal(result.type.mediaCount,1,'The case uses the original single video');
       assert.equal(await page.locator('.map-axis-label,.map-node-label,.origin-marker__label').evaluateAll(elements=>elements.every(el=>getComputedStyle(el).visibility==='hidden')),true,'Backdrop labels cannot collide with case edges');
       await page.screenshot({path:dir+engine+'-'+name+'-top.jpg',type:'jpeg',quality:86});

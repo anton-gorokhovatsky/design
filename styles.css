@@ -4357,8 +4357,8 @@ body.has-content-panel .system-dock {
 
 .control-console .constellation-nav__item.is-current .constellation-nav__shape {
   border-color: var(--signal);
-  background: transparent;
-  color: var(--signal);
+  background: var(--signal);
+  color: var(--bg);
 }
 
 .control-console .command-dock {
@@ -5067,6 +5067,26 @@ body:has(.command-dock.is-open) .origin-marker__label {
   .content-panel .approach-intro {
     width: min(760px, 100%);
     justify-self: start;
+  }
+
+  .content-panel .work-section {
+    padding-top: 24px;
+  }
+
+  .content-panel .work-intro {
+    display: grid;
+    grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
+    align-items: start;
+    gap: 24px;
+  }
+
+  .content-panel .work-intro h2 {
+    margin: 0;
+    font-size: clamp(1.75rem, calc(1.25rem + 1vw), 2rem);
+  }
+
+  .content-panel .work-intro p {
+    max-width: none;
   }
 
   .content-panel .contact-copy {
@@ -6127,14 +6147,10 @@ body:has(.command-dock.is-open) .map-links.has-active-relation {
   position: relative;
 }
 
-.control-console .constellation-nav__item[data-nav-view="cv"] .constellation-nav__shape {
-  border: 0;
-}
-
 .constellation-nav__shape--external::before {
   box-sizing: border-box;
-  width: 11px;
-  height: 14px;
+  width: 12px;
+  height: 16px;
   border: 1.25px solid currentColor;
   border-radius: 2px;
   content: "";
@@ -6486,7 +6502,7 @@ body:has(.command-dock.is-open) .map-links.has-active-relation {
   .control-console .constellation-nav__item,
   .control-console .constellation-nav__item[data-nav-view] {
     --nav-size: 26px;
-    height: 40px;
+    height: 44px;
     grid-template-columns: 30px minmax(0, 1fr);
     gap: 8px;
     padding: 0 8px;
@@ -6506,9 +6522,9 @@ body:has(.command-dock.is-open) .map-links.has-active-relation {
   }
 
   .control-console .constellation-nav__item.is-current .constellation-nav__shape {
-    background: transparent;
+    background: var(--signal);
     box-shadow: none;
-    color: var(--signal);
+    color: var(--bg);
   }
 
   .control-console .constellation-nav__item.is-current {
@@ -6969,6 +6985,17 @@ html[data-theme="light"] .map-node--company .map-node__glyph {
     inset -8px -11px 17px rgba(0, 0, 0, 0.42),
     inset 4px 4px 9px rgba(255, 255, 255, 0.075),
     0 10px 24px rgba(14, 15, 11, 0.18);
+}
+
+/* Dark institutions keep their black body, with enough light to read its volume. */
+html[data-theme="dark"] .map-node--company .map-node__glyph {
+  background:
+    radial-gradient(circle at 28% 20%, rgba(244, 250, 225, .28) 0, rgba(244, 250, 225, .065) 13%, transparent 32%),
+    radial-gradient(circle at 37% 30%, #555b4d 0, #30362a 28%, #171c13 58%, #080c06 84%, #14190f 100%);
+  box-shadow:
+    inset -8px -11px 17px rgba(0, 0, 0, .3),
+    inset 3px 3px 8px rgba(226, 236, 207, .13),
+    inset 0 0 0 1px rgba(193, 208, 169, .16);
 }
 
 html[data-theme="dark"]
@@ -7899,7 +7926,11 @@ html[data-reduce-motion="true"] .observation-showcase {
 
 .origin-marker__label {
   appearance: none;
+  min-height: 36px;
+  padding: 10px 12px;
   color: var(--content-ink);
+  font-size: clamp(0.8rem, calc(0.76rem + 0.16vw), 0.9rem);
+  font-weight: 600;
   cursor: pointer;
   pointer-events: auto;
 }
@@ -8008,7 +8039,7 @@ html[data-reduce-motion="true"] .observation-showcase {
   line-height: 1.35;
 }
 
-[data-map-evidence-role],body:has(.practice-map:is([data-selected-kind=personal],[data-selected-kind=practice])) [data-map-title]{font-family:var(--font-author);font-weight:400}
+body:has(.practice-map:is([data-selected-kind=personal],[data-selected-kind=practice])) [data-map-title]{font-family:var(--font-author);font-weight:400}
 
 .observation-controls {
   position: static;
@@ -8078,6 +8109,11 @@ html[data-reduce-motion="true"] .observation-showcase {
       0
     )
     scale(1.055);
+}
+
+.practice-map[data-observation-active] .origin-marker__label {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .practice-map[data-observation-active] .origin-marker__label::after {
@@ -8587,9 +8623,7 @@ html[data-theme="light"]
   background: var(--node-accent);
 }
 
-.origin-marker__label,
 .map-axis-label {
-  color: var(--content-ink);
   font-size: clamp(0.68rem, calc(0.64rem + 0.12vw), 0.78rem);
 }
 
@@ -8903,7 +8937,7 @@ html[data-theme="light"]
     height: auto;
   }
   .control-console .constellation-nav { flex: 0 1 auto; max-width: 100%; }
-  .control-console .constellation-nav__orbit { display: flex; flex-wrap: wrap; row-gap: 8px; }
+  .control-console .constellation-nav__orbit { display: flex; flex-wrap: wrap; gap: 8px; }
   .control-console .command-dock { flex: 1 1 180px; width: auto; }
   .control-console .constellation-nav__item {
     width: auto;
@@ -8911,15 +8945,18 @@ html[data-theme="light"]
     height: auto;
     min-height: 48px;
     padding-inline: 6px;
+    border-radius: 12px;
+    corner-shape: var(--corner-card-shape);
     grid-template-rows: 28px auto;
-    gap: 4px;
+    gap: 6px;
   }
   .control-console .constellation-nav__item::after { content: none; }
   .control-console .constellation-nav__item .constellation-nav__label {
     position: static;
     grid-row: 2;
     justify-self: center;
-    font-size: clamp(.625rem, calc(.59rem + .1vw), .75rem);
+    font-size: clamp(.5625rem, calc(.53rem + .085vw), .6875rem);
+    font-weight: 400;
     line-height: 1.2;
     color: var(--content-muted);
     opacity: 1;
@@ -8931,6 +8968,31 @@ html[data-theme="light"]
     color: var(--content-ink);
   }
   .control-console .constellation-nav__item.is-current .constellation-nav__label { color: var(--signal); }
+}
+
+/* One selected symbol across layouts; keyboard focus includes its label. */
+.control-console .constellation-nav__item:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+
+.control-console .constellation-nav__item:focus-visible .constellation-nav__shape {
+  outline: none;
+  transform: none;
+}
+
+@media (forced-colors: active) {
+  .control-console .constellation-nav__shape {
+    border-color: CanvasText;
+    color: CanvasText;
+    forced-color-adjust: none;
+  }
+
+  .control-console .constellation-nav__item.is-current .constellation-nav__shape {
+    border-color: Highlight;
+    background: Highlight;
+    color: HighlightText;
+  }
 }
 
 @media (min-width: 681px) and (max-width: 900px) {
@@ -9784,7 +9846,7 @@ html[data-analytics="allowed"]
   }
 
   .control-console .constellation-nav.is-open {
-    height: 334px;
+    height: 354px;
   }
 
   .constellation-nav__utilities {
@@ -10925,10 +10987,10 @@ body[data-case-open] :is(.map-axis-label, .map-labels, .map-node-label, .origin-
 .is-case-view .map-evidence [data-map-evidence-role-label] {
   font-size: calc(var(--case-label-size) * var(--case-author-optical-scale));
 }
-.is-case-view .map-evidence [data-map-evidence-role] {
-  font-size: calc(var(--case-body-size) * var(--case-author-optical-scale));
+.map-evidence [data-map-evidence-role] {
+  font-family: var(--font-sans);
+  font-weight: 400;
   color: var(--content-ink);
-  line-height: 1.6;
 }
 .is-case-view .map-related { padding: var(--case-pad); gap: var(--case-space-medium); }
 .is-case-view .map-related__header > span { font-size: var(--case-label-size); line-height: 1.45; }

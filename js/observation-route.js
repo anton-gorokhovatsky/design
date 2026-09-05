@@ -8,8 +8,8 @@ const observationSteps = [
   {
     id: "origin",
     kind: "МАРШРУТ / 01",
-    title: "ЗНАКОМСТВО С РАБОТАМИ",
-    meta: "ОКОЛО 60 СЕКУНД / 8 ОСТАНОВОК",
+    title: "Обзор работ за минуту",
+    meta: "8 ОСТАНОВОК / РАБОТЫ И ПОДХОД",
     description: "Покажу работу в Музее «Гараж», несколько самостоятельных проектов и один из моих принципов. Маршрут можно поставить на паузу или закончить в любой момент.",
     showcaseId: "garage-site",
     x: 50,
@@ -144,7 +144,7 @@ const createObservationRoute = ({
     updateControls();
 
     if (observationStatus) {
-      observationStatus.textContent = `Сеанс наблюдения: шаг ${stepIndex + 1} из ${observationSteps.length}. ${step.title || mapItems.find((item) => item.id === step.itemId)?.title || ""}`;
+      observationStatus.textContent = `Обзор работ: шаг ${stepIndex + 1} из ${observationSteps.length}. ${step.title || mapItems.find((item) => item.id === step.itemId)?.title || ""}`;
     }
 
     if (updateHistory) {
@@ -233,6 +233,7 @@ const createObservationRoute = ({
     }
 
     renderStep(step, { updateHistory: true });
+    if (updateHistory) observationPause?.focus({ preventScroll: true });
   };
 
   observationStart?.addEventListener("click", () => {

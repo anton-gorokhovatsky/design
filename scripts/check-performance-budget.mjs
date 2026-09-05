@@ -26,7 +26,8 @@ const eagerMedia = [
 const budgets = {
   // Accepted expanded case: +8 KiB CSS and +12 KiB dependency-free runtime.
   css: 230 * 1024,
-  runtime: 226 * 1024,
+  // +4 KiB for measured control clearance and deferred route posters (5 September).
+  runtime: 230 * 1024,
   fonts: 160 * 1024,
   initialSource: 600 * 1024,
 };

@@ -666,9 +666,11 @@ requireContract(
       coordinateLabelGeometryRule,
     )
     && /line-height:\s*1/.test(coordinateLabelGeometryRule)
-    && !originLabelRules.some((rule) => /min-height:/.test(rule)),
+    && originLabelRules.some((rule) => /min-height:\s*36px/.test(rule)
+      && /padding:\s*10px 12px/.test(rule)
+      && /font-weight:\s*600/.test(rule)),
   "coordinate-label-geometry",
-  "The observation route must keep the same small coordinate silhouette as the axis labels.",
+  "The route entry keeps the coordinate material and gains a readable, distinct input surface.",
 );
 
 const controlConsoleStart = indexSource.indexOf('class="control-console"');
