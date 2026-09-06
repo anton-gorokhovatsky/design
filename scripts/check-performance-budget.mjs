@@ -28,7 +28,8 @@ const budgets = {
   css: 230 * 1024,
   // +4 KiB for measured control clearance and deferred route posters (5 September).
   // +2 KiB for Clayton Young copy and personal map connections (6 September).
-  runtime: 232 * 1024,
+  // +2 KiB for two running channel records; no new runtime logic or media.
+  runtime: 234 * 1024,
   fonts: 160 * 1024,
   initialSource: 600 * 1024,
 };
