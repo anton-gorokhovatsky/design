@@ -1034,7 +1034,7 @@ const setMapEvidence = (evidence = null) => {
 };
 
 const renderMapRelatedItems=(item=null)=>{
-  const peers=mapItems.filter((candidate)=>candidate.kind==="project"&&candidate.parent===item?.parent&&candidate!==item);
+  const peers=item?.kind==="project"?mapItems.filter((candidate)=>candidate.kind==="project"&&candidate.parent===item.parent&&candidate!==item):[];
   const start=peers.indexOf(item)+1;
   const personalLinks=item?.kind==="personal"?item.relatedTo:null;
   const ids=personalLinks||(item?.id==="hotline-camp"?["eleven","dd-camp","dusty"]:null);
