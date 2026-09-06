@@ -631,8 +631,8 @@ const mapItems = [
     href: "https://www.youtube.com/@Acrosstheruniverse",
     linkLabel: "СМОТРЕТЬ КАНАЛ",
     kindLabel: "ЛИЧНОЕ / БЕГ И YOUTUBE",
-    x: 72,
-    y: 73,
+    x: 78,
+    y: 88,
     size: 12,
   },
   {
