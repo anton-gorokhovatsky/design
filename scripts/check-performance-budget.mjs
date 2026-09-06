@@ -27,7 +27,8 @@ const budgets = {
   // Accepted expanded case: +8 KiB CSS and +12 KiB dependency-free runtime.
   css: 230 * 1024,
   // +4 KiB for measured control clearance and deferred route posters (5 September).
-  runtime: 230 * 1024,
+  // +2 KiB for Clayton Young copy and personal map connections (6 September).
+  runtime: 232 * 1024,
   fonts: 160 * 1024,
   initialSource: 600 * 1024,
 };

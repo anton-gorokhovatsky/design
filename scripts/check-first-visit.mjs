@@ -67,7 +67,7 @@ try {
       assert.equal(state.overflow, 0, JSON.stringify({ name, theme, state }));
       assert.ok(state.authorVisible && state.author.left >= 0 && state.author.right <= width + 1);
       assert.equal(state.selected, "true");
-      assert.equal(state.nodes.length, 49, "The whole map remains present.");
+      assert.equal(state.nodes.length, 50, "The whole map remains present.");
       assert.deepEqual(state.blockedTargets, [], `${name} ${theme}: each point must receive input at its own center.`);
       assert.equal(state.route.trim().replace(/\s+/g, " "), "Обзор работ за 90 секунд");
       assert.equal(state.routeName, state.route.trim(), "The accessible name matches the visible overview label.");

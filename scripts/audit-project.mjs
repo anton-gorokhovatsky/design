@@ -319,6 +319,15 @@ requireContract(
 );
 
 for (const item of mapItems) {
+  if (item.relatedTo !== undefined) {
+    requireContract(
+      Array.isArray(item.relatedTo)
+        && item.relatedTo.every((id) => ids.has(id) && id !== item.id && id !== item.parent)
+        && new Set(item.relatedTo).size === item.relatedTo.length,
+      "map-related-points",
+      `Map item "${item.id}" needs distinct, existing related points.`,
+    );
+  }
   if (!item.parent) {
     continue;
   }
@@ -1173,7 +1182,8 @@ const report = {
     countsByKind: kindCounts,
     garageSize: garage?.size ?? null,
     maximumSize,
-    connections: mapItems.filter((item) => item.parent).length,
+    connections: mapItems.reduce((total, item) => total + Number(Boolean(item.parent))
+      + (Array.isArray(item.relatedTo) ? item.relatedTo.length : 0), 0),
   },
   reels: {
     files: reelFiles,
