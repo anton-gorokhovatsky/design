@@ -13,8 +13,12 @@ jobs:
   static-contracts:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    outputs:
+      mode: ${{ steps.scope.outputs.mode }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - uses: pnpm/action-setup@v6
         with:
           version: 11.9.0
@@ -23,14 +27,22 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Select checks from the complete unpublished diff
+        id: scope
+        env:
+          SCOPE_BASE: ${{ github.event.pull_request.base.sha || 'origin/gh-pages' }}
+        run: node scripts/release-scope.mjs --base "$SCOPE_BASE" --target HEAD
       - name: Install FFmpeg
+        if: steps.scope.outputs.mode == 'full'
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg
-      - run: node scripts/check-project.mjs --scope=static
+      - run: node scripts/check-project.mjs --scope=${{ steps.scope.outputs.mode == 'copy' && 'copy' || 'static' }}
 
   browser-contracts:
     name: browser-contracts (${{ matrix.artifact }})
+    needs: static-contracts
+    if: needs.static-contracts.outputs.mode == 'full'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
@@ -106,10 +118,18 @@ jobs:
     name: browser-contracts (webkit)
     runs-on: ubuntu-latest
     timeout-minutes: 2
-    needs: browser-contracts
+    needs: [static-contracts, browser-contracts]
     if: always()
     steps:
-      - name: Require every browser shard
+      - name: Require the selected checks
         env:
+          SCOPE: ${{ needs.static-contracts.outputs.mode }}
+          STATIC_RESULT: ${{ needs.static-contracts.result }}
           BROWSER_RESULT: ${{ needs.browser-contracts.result }}
-        run: test "$BROWSER_RESULT" = success
+        run: |
+          test "$STATIC_RESULT" = success
+          case "$SCOPE" in
+            copy) test "$BROWSER_RESULT" = skipped ;;
+            full) test "$BROWSER_RESULT" = success ;;
+            *) exit 1 ;;
+          esac

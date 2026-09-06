@@ -6,6 +6,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { waitForQuality } from "./release-quality.mjs";
+import { planRelease } from "./release-scope.mjs";
 import {
   syncRuntimeAssetVersions,
   verifyRuntimeAssetVersions,
@@ -376,8 +377,15 @@ try {
     ["push", "--dry-run", "origin", "HEAD:main", "HEAD:gh-pages"],
     { label: "Verify the real GitHub push path" },
   );
-  await run(process.execPath, ["scripts/check-project.mjs"], {
-    label: "Run the parallel production gate",
+  await run("git", ["fetch", "origin", "gh-pages:refs/remotes/origin/gh-pages"], {
+    label: "Read the published baseline for release scope selection",
+  });
+  const plan = planRelease({ projectRoot });
+  console.log(`\nRelease checks: ${plan.mode}. ${plan.reason}`);
+  // Full browser coverage runs once in Quality. Local work includes a focused
+  // render of the actual change; repeating the entire CI matrix adds no evidence.
+  await run(process.execPath, ["scripts/check-project.mjs", "--scope=copy"], {
+    label: "Run the short local preflight; Quality selects copy or full coverage",
   });
   verifyRuntimeAssetVersions(projectRoot);
   console.log("\n✓ CSS/JS references match their current content hashes.");

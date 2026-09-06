@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Static spatial portfolio and its reproducible quality gates.",
   "engines": {
-    "node": ">=20"
+    "node": ">=20.19"
   },
   "packageManager": "pnpm@11.9.0",
   "scripts": {
@@ -23,6 +23,8 @@
     "release": "node scripts/release.mjs"
   },
   "devDependencies": {
+    "acorn": "8.18.0",
+    "parse5": "8.0.1",
     "playwright": "1.61.1"
   }
 }

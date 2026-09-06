@@ -350,15 +350,33 @@ The site uses static HTML, CSS, and JavaScript and publishes from the
 repository's `gh-pages` branch.
 
 `pnpm release -- --message "…" --file <path> …` is the single production
-lane. Before validation it derives SHA-256 cache keys for the stylesheet and
+command. Before validation it derives SHA-256 cache keys for the stylesheet and
 all native modules, updates the managed import map, and automatically
 adds that `index.html` change to the release scope. It then verifies the real
-Git push credential path, runs the local Chromium and WebKit contracts,
-stages only the approved files, and pushes a candidate to `main`. Production
+Git push credential path, runs a short static preflight, stages only the approved
+files, and pushes a candidate to `main`. Quality uses `scripts/release-scope.mjs`
+to compare the entire unpublished change against `origin/gh-pages`:
+
+- **Copy:** existing display strings in `commandViews`, `mapItems` and
+  `observationSteps`, text and accessible labels in `index.html`, case evidence
+  text, generated runtime cache keys, and existing README/docs text. Syntax,
+  structural, asset, budget and publication checks run without installing
+  browsers or FFmpeg. Check the affected screen before release and on production.
+- **Full:** changes to behavior, styles, markup structure, destinations, media,
+  dependencies, release tooling, unknown files, or an unavailable baseline.
+  The full Chromium/WebKit matrix runs **once in CI**; do not repeat it locally
+  as a release ritual. Use `pnpm check` locally when investigating a related failure.
+
+The choice is automatic; there is no force-copy or skip-tests switch.
+`node scripts/release-scope.mjs` explains the current choice, and
+`node scripts/check-project.mjs --scope=copy` runs the short local preflight.
+Production
 stays unchanged until the exact commit's GitHub Quality push run succeeds.
 Only then does the script advance `gh-pages` and verify the public HTML and
-byte-identical runtime assets. Failed, cancelled, skipped or timed-out runs
-cannot publish. If interrupted after commit, `node scripts/release.mjs --resume <full-SHA>`
+byte-identical runtime assets. Failed, cancelled, skipped or timed-out Quality
+runs cannot publish. In copy mode only the unrelated browser jobs are skipped;
+the static checks and final result must succeed. If interrupted after commit,
+`node scripts/release.mjs --resume <full-SHA>`
 resumes this barrier from a clean checkout without a second commit
 or a blind rerun of Quality.
 

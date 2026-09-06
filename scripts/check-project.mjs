@@ -12,7 +12,7 @@ const scopeArgument = argumentsToCheck.find((argument) => (
   argument.startsWith("--scope=")
 ));
 const checkScope = scopeArgument?.slice("--scope=".length) || "all";
-const supportedScopes = new Set(["all", "static", "chromium", "webkit"]);
+const supportedScopes = new Set(["all", "copy", "static", "chromium", "webkit"]);
 const suiteArgument = argumentsToCheck.find((argument) => (
   argument.startsWith("--browser-suite=")
 ));
@@ -27,7 +27,7 @@ if (
 ) {
   console.error(
     "Usage: node scripts/check-project.mjs "
-    + "[--scope=all|static|chromium|webkit] [--browser-suite=all|core|components]",
+    + "[--scope=all|copy|static|chromium|webkit] [--browser-suite=all|core|components]",
   );
   process.exit(2);
 }
@@ -52,6 +52,8 @@ const contractScripts = [
   "scripts/release.mjs",
   "scripts/release-quality.mjs",
   "scripts/check-release-quality.mjs",
+  "scripts/release-scope.mjs",
+  "scripts/check-release-scope.mjs",
   "scripts/check-ui-contracts.mjs",
   "scripts/webkit-regression.cjs",
 ];
@@ -75,6 +77,11 @@ const syntaxSteps = [
 ];
 
 const staticContractSteps = [
+  {
+    label: "Release scope selection",
+    command: process.execPath,
+    args: ["scripts/check-release-scope.mjs"],
+  },
   {
     label: "Quality publication barrier",
     command: process.execPath,
@@ -308,14 +315,14 @@ const scopeLabel = checkScope === "all"
   ? "Project check"
   : `Project ${checkScope} check`;
 
-if (checkScope === "all" || checkScope === "static") {
+if (["all", "static", "copy"].includes(checkScope)) {
   const syntaxResults = await runPhase("Syntax gate", syntaxSteps);
   failures.push(...syntaxResults.filter(recordsFailure));
 
   if (failures.length === 0) {
     const scopedStaticSteps = checkScope === "all"
       ? [...staticContractSteps, ...chromiumReelSteps, gitWhitespaceStep]
-      : [...staticContractSteps, gitWhitespaceStep];
+      : [...staticContractSteps.filter((step) => checkScope !== "copy" || step.label !== "Reel contracts"), gitWhitespaceStep];
     const staticContractResults = await runPhase(
       "Static release gate",
       scopedStaticSteps,
@@ -332,7 +339,7 @@ if (failures.length === 0 && checkScope === "chromium" && browserSuite !== "comp
   failures.push(...reelResults.filter(recordsFailure));
 }
 
-if (failures.length === 0 && checkScope !== "static") {
+if (failures.length === 0 && !["static", "copy"].includes(checkScope)) {
   const scopedBrowserSteps = browserContractSteps.filter((step) => (
     (checkScope === "all" || step.scope === checkScope)
     && (browserSuite === "all" || (step.suite || "components") === browserSuite)
