@@ -1036,11 +1036,12 @@ const setMapEvidence = (evidence = null) => {
 const renderMapRelatedItems=(item=null)=>{
   const peers=mapItems.filter((candidate)=>candidate.kind==="project"&&candidate.parent===item?.parent&&candidate!==item);
   const start=peers.indexOf(item)+1;
-  const ids=item?.relatedTo||(item?.id==="hotline-camp"?["eleven","dd-camp","dusty"]:null);
+  const personalLinks=item?.kind==="personal"?item.relatedTo:null;
+  const ids=personalLinks||(item?.id==="hotline-camp"?["eleven","dd-camp","dusty"]:null);
   const items=signalField?.hasAttribute("data-observation-active")?[]:(ids?ids.map((id)=>mapItems.find((candidate)=>candidate.id===id)):[...peers.slice(start),...peers.slice(0,start)]).slice(0,3);
   mapRelated.hidden=!items.length;
-  mapRelated.dataset.relatedKind=item?.relatedTo?"personal":"project";
-  mapRelated.setAttribute("aria-label", item?.relatedTo ? "Связанные точки" : "Следующие кейсы");
+  mapRelated.dataset.relatedKind=personalLinks?"personal":"project";
+  mapRelated.setAttribute("aria-label", personalLinks ? "Связанные точки" : "Следующие кейсы");
   mapRelatedTrack.innerHTML=items.map(({id,label,timeLabel,timeYear,kind})=>`<a class="map-related__item" href="?point=${id}" role="listitem"><strong>${label}</strong><span>${kind==="personal"?"ЛИЧНОЕ":"ПРОЕКТ"}${timeLabel||timeYear?` / ${timeLabel||timeYear}`:""}</span></a>`).join("");
 };
 const setInspectorOpen = (isOpen) => {
@@ -1396,8 +1397,8 @@ if (mapLinksRoot) {
   const childrenByParent = new Map();
 
   mapItems.forEach((item) => {
-    // Personal interests can connect to several subjects without acquiring a
-    // professional parent or inheriting its chronology/layout rules.
+    // Cross-subject relationships supplement the professional parent without
+    // changing the point's chronology or layout rules.
     const connections = new Set([item.parent, ...(item.relatedTo || [])].filter(Boolean));
     connections.forEach((id) => {
       if (id === item.id || !itemById.has(id)) return;

@@ -374,6 +374,7 @@ const mapItems = [
   {
     id: "hotline-camp",
     parent: "private-practice",
+    relatedTo: ["running"],
     kind: "project",
     label: "HOTLINE CAMP",
     mapLabel: "Сайт предстартового кэмпа по триатлону Hotline Camp",
@@ -394,6 +395,7 @@ const mapItems = [
   {
     id: "dusty",
     parent: "private-practice",
+    relatedTo: ["running"],
     kind: "project",
     label: "DUSTY MERCH",
     mapLabel: "Интернет-магазин мерча бегового клуба Dusty\u00a0Dumbbells",
@@ -413,6 +415,7 @@ const mapItems = [
   {
     id: "dd-camp",
     parent: "private-practice",
+    relatedTo: ["running"],
     kind: "project",
     label: "DD CAMP",
     mapLabel: "Сайт осеннего кэмпа Dusty\u00a0Dumbbells",
@@ -432,6 +435,7 @@ const mapItems = [
   {
     id: "eleven",
     parent: "private-practice",
+    relatedTo: ["running"],
     kind: "project",
     label: "11 111",
     mapLabel: "Сайт проекта «11 111» Виктора Доронина",
@@ -471,6 +475,7 @@ const mapItems = [
   {
     id: "doronin",
     parent: "private-practice",
+    relatedTo: ["running"],
     kind: "project",
     label: "ДОРОНИН В ДЕЛЕ",
     mapLabel: "Интернет-магазин «Доронин в деле»",
@@ -494,7 +499,7 @@ const mapItems = [
     label: "БЕГ",
     title: "БЕГ",
     meta: "ЛИЧНЫЙ ЦЕНТР / ДИСТАНЦИЯ / РИТМ",
-    description: "Бег — личный центр притяжения: он возвращает ритм, собранность и ощущение движения вперёд — на дистанции и вне её.",
+    description: "Бег — личный центр притяжения: он возвращает ритм, собранность и ощущение движения вперёд — на дистанции и вне её. Через бег я познакомился с людьми, для которых потом сделал Hotline Camp, DD Camp, Dusty Merch, «11 111» и doronin.store.",
     href: "https://www.instagram.com/stories/highlights/18054491965888038/",
     linkLabel: "БЕГ В\u00a0INSTAGRAM",
     kindLabel: "ЛИЧНОЕ / ЦЕНТР ПРИТЯЖЕНИЯ",
