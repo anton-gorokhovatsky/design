@@ -105,6 +105,9 @@ try {
           await page.waitForFunction(() => !document.body.hasAttribute("data-case-open"));
           await page.locator("[data-constellation-nav-toggle]").click();
           await page.locator('.constellation-nav__item[data-open-panel="work"]').click();
+          // openContentPanel assigns initial focus on the next animation frame.
+          // Start the keyboard sequence only after that assignment has finished.
+          await page.waitForFunction(() => document.activeElement === document.querySelector("[data-close-panel]"));
           await page.locator(".work-row").first().focus();
           // WebKit follows the host default: Option+Tab includes links.
           const nextLinkKey = engine === "webkit" ? "Alt+Tab" : "Tab";
