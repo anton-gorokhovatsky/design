@@ -10984,6 +10984,7 @@ body[data-case-open] :is(.map-axis-label, .map-labels, .map-node-label, .origin-
 .is-case-view .map-evidence > div { grid-template-columns: 5.5rem minmax(0, 1fr); gap: var(--case-space-medium); }
 .is-case-view .map-evidence dt { font-size: var(--case-label-size); line-height: 1.45; }
 .is-case-view .map-evidence dd { font-size: var(--case-body-size); line-height: 1.5; overflow-wrap: anywhere; }
+.map-evidence [data-map-evidence-feature] { white-space: pre-line; }
 .is-case-view .map-evidence [data-map-evidence-role-label] {
   font-size: calc(var(--case-label-size) * var(--case-author-optical-scale));
 }

@@ -124,7 +124,7 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=2bd4cb5bd18c">
+    <link rel="stylesheet" href="styles.css?v=c99cbee0be96">
     <style>
       .map-evidence [data-map-evidence-role-label]{font-family:var(--font-author);font-size:.6rem;font-weight:400;letter-spacing:0}
     </style>
@@ -135,7 +135,7 @@
           "./js/preferences.js": "./js/preferences.js?v=75ec5c85331d",
           "./js/analytics.js": "./js/analytics.js?v=420bb229d6c0",
           "./js/signal-field.js": "./js/signal-field.js?v=e249b2dc021a",
-          "./js/map-data.js": "./js/map-data.js?v=65039558ac43",
+          "./js/map-data.js": "./js/map-data.js?v=2fbed26304c3",
           "./js/observation-route.js": "./js/observation-route.js?v=55ec1e85d2a1",
           "./js/personal-media.js": "./js/personal-media.js?v=9910a8959dd2",
           "./js/sphere-surfaces.js": "./js/sphere-surfaces.js?v=4cf52ae3e8a0",
@@ -152,7 +152,7 @@
     <script type="module" src="js/preferences.js?v=75ec5c85331d"></script>
     <script type="module" src="js/analytics.js?v=420bb229d6c0"></script>
     <script type="module" src="js/signal-field.js?v=e249b2dc021a"></script>
-    <script type="module" src="js/map-data.js?v=65039558ac43"></script>
+    <script type="module" src="js/map-data.js?v=2fbed26304c3"></script>
     <script type="module" src="js/observation-route.js?v=55ec1e85d2a1"></script>
     <script type="module" src="js/personal-media.js?v=9910a8959dd2"></script>
     <script type="module" src="js/sphere-surfaces.js?v=4cf52ae3e8a0"></script>
@@ -534,7 +534,7 @@
                 <dd data-map-evidence-result></dd>
               </div>
               <div>
-                <dt>ПАЛИТРА</dt>
+                <dt>СВЯЗЬ С МЕСТОМ</dt>
                 <dd data-map-evidence-feature></dd>
               </div>
             </dl>
@@ -715,8 +715,8 @@
             "hotline-camp": {
               "task": "Собрать ясный и убедительный сайт финальной недели подготовки к IRONSTAR 2026 — с серьёзностью тренеров и местным контекстом Сочи.",
               "role": "Концепция, структура, визуальная система, доступность, разработка и запуск.",
-              "result": "Запущен адаптивный сайт с программой, профилями тренеров и заявкой; палитра мягко следует сочинскому времени суток, а ручная тема и спокойный статический резерв сохраняют контроль пользователя.",
-              "feature": "Мокрый известняк и чёрный сланец. Магнолия и голубой эвкалипт. Бирюза осеннего моря, олеандр и мягкий папоротниковый оранжевый. Палитра сайта меняется вслед за солнцем над Сочи."
+              "result": "Запущен адаптивный сайт с программой, профилями тренеров и заявкой. Посетитель может «прожить день в Сочи», перемещая ползунок времени в футере, а затем вернуться к текущему состоянию.",
+              "feature": "Мокрый известняк и чёрный сланец. Магнолия и голубой эвкалипт. Бирюза осеннего моря, олеандр и мягкий папоротниковый оранжевый. Палитра сайта собрана из цветов Сочи.\n\nПо местному времени, восходу и закату сайт плавно переходит между утренней, дневной, вечерней и ночной палитрами. Цветовой цикл учитывает сезон и работает в светлой и тёмной темах.\n\nUV-индекс меняет насыщенность палитры. Дождь и влажность смягчают фотографию первого экрана, ветер усиливает рябь на воде и воздушный след в графике программы. Текст и элементы управления сохраняют чёткость.\n\nНасыщенность трёх базовых цветов — поверхности, акцента и глубины — меняется в OKLCH с сохранением оттенка и светлоты. Актуальные погодные данные поступают из Open‑Meteo, UV — из модели CAMS.\n\nПолзунок моделирует только время суток; погодные эффекты опираются на последние полученные данные. Без них сохраняется базовое оформление, а при отключённой анимации графика остаётся неподвижной."
             },
             "eleven": {
               "task": "Рассказать о Викторе, его прошлом опыте и подготовке к первому в мире 31-дневному ультратриатлону в декабре 2026 года — и привлечь к проекту партнёров.",
