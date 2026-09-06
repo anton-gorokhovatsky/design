@@ -349,7 +349,7 @@ computed styles, runtime state coverage, and matched before/after renders.
 The site uses static HTML, CSS, and JavaScript and publishes from the
 repository's `gh-pages` branch.
 
-`pnpm release -- --message "…" --file <path> …` is the single production
+`pnpm release --message "…" --file <path> …` is the single production
 command. Before validation it derives SHA-256 cache keys for the stylesheet and
 all native modules, updates the managed import map, and automatically
 adds that `index.html` change to the release scope. It then verifies the real
@@ -370,8 +370,10 @@ to compare the entire unpublished change against `origin/gh-pages`:
 The choice is automatic; there is no force-copy or skip-tests switch.
 `node scripts/release-scope.mjs` explains the current choice, and
 `node scripts/check-project.mjs --scope=copy` runs the short local preflight.
-Production
-stays unchanged until the exact commit's GitHub Quality push run succeeds.
+`node scripts/check-release-scope.mjs` tests the choice itself, including mixed
+unpublished commits and the final CI gate for both paths.
+
+Production stays unchanged until the exact commit's GitHub Quality push run succeeds.
 Only then does the script advance `gh-pages` and verify the public HTML and
 byte-identical runtime assets. Failed, cancelled, skipped or timed-out Quality
 runs cannot publish. In copy mode only the unrelated browser jobs are skipped;
