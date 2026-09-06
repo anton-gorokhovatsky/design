@@ -24,7 +24,7 @@ const keyOf = (property) => !property.computed && (property.key?.name ?? propert
 const isString = (node) => node?.type === "Literal" && typeof node.value === "string";
 const maskRanges = (source, ranges) => ranges
   .sort((a, b) => b[0] - a[0])
-  .reduce((text, [start, end]) => text.slice(0, start) + "__COPY__" + text.slice(end), source);
+  .reduce((text, [start, end]) => text.slice(0, start) + "\0COPY\0" + text.slice(end), source);
 const displayRanges = (object, fields, offset = 0) => object?.type === "ObjectExpression"
   ? object.properties.flatMap((property) => (
     property.type === "Property" && property.kind === "init" && !property.method
@@ -84,7 +84,7 @@ const maskHtmlCopy = (source) => {
   let masked = maskRanges(source, ranges);
   for (const path of cacheVersionFiles) {
     const escaped = path.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    masked = masked.replace(new RegExp(`(["'](?:\\./)?${escaped}\\?v=)[a-f0-9]{12}(?=["'])`, "g"), "$1__HASH__");
+    masked = masked.replace(new RegExp(`(["'](?:\\./)?${escaped}\\?v=)[a-f0-9]{12}(?=["'])`, "g"), "$1\0HASH\0");
   }
   return masked;
 };
@@ -92,6 +92,8 @@ const maskHtmlCopy = (source) => {
 export const isCopyOnly = (path, before, after) => {
   if (before === after) return true;
   if (path === "README.md" || /^docs\/[^\n]+\.md$/.test(path)) return true;
+  // Mask tokens cannot collide with a source expression or literal URL.
+  if (before.includes("\0") || after.includes("\0")) return false;
   try {
     if (copyArrays[path]) return maskJavaScriptCopy(path, before) === maskJavaScriptCopy(path, after);
     if (path === "index.html") return maskHtmlCopy(before) === maskHtmlCopy(after);

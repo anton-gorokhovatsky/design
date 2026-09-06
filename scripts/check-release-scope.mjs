@@ -32,6 +32,8 @@ change("index.html", html, /\.\/js\/panels\.js\?v=[a-f0-9]{12}/.exec(html)[0], "
 change("js/observation-route.js", route, "90000 /", "60000 /", false);
 change("js/panels.js", panels, 'id: "observation"', 'id: "time"', false);
 change("js/panels.js", panels, 'title: "ОБЗОР РАБОТ ЗА 90 СЕКУНД"', 'title: getTitle()', false);
+change("js/panels.js", panels, 'title: "ОБЗОР РАБОТ ЗА 90 СЕКУНД"', 'title: __COPY__', false);
+change("js/panels.js", panels, 'title: "ОБЗОР РАБОТ ЗА 90 СЕКУНД"', 'title: \0COPY\0', false);
 change("js/panels.js", panels, 'title: "ОБЗОР РАБОТ ЗА 90 СЕКУНД"', 'title: `Text ${run()}`', false);
 change("js/panels.js", panels, 'title: "ОБЗОР РАБОТ ЗА 90 СЕКУНД"', 'get title() { return "Text"; }', false);
 change("js/panels.js", panels, '"[data-constellation-nav]"', '"[data-other-nav]"', false);
