@@ -627,7 +627,7 @@ const mapItems = [
     label: "ACROSS THE RUNIVERSE",
     title: "ACROSS THE RUNIVERSE",
     meta: "БЕГ / ЛЁГКАЯ АТЛЕТИКА / КОСТЯ КАН",
-    description: "Бег изнутри: сборы, тренировки, соревнования. С удовольствием смотрю, как Костя Кан показывает жизнь атлетов.",
+    description: "Бег изнутри: сборы, тренировки, соревнования. С удовольствием смотрю, как Костя Кан показывает жизнь атлетов. Срыв — легенда!",
     href: "https://www.youtube.com/@Acrosstheruniverse",
     linkLabel: "СМОТРЕТЬ КАНАЛ",
     kindLabel: "ЛИЧНОЕ / БЕГ И YOUTUBE",
