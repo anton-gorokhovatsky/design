@@ -3094,7 +3094,17 @@ const auditBrowser = async (client, origin) => {
       ?.dispatchEvent(new PointerEvent("pointerenter"));
     return true;
   })()`);
-  await delay(80);
+  const filterSettled = await waitForExpression(client, `(() => (
+    ["wave", "garage"].every(id => {
+      const node = document.querySelector('[data-map-id="' + id + '"]');
+      if (!node) return false;
+      getComputedStyle(node).opacity;
+      return node.getAnimations().every(animation => (
+        animation.transitionProperty !== "opacity"
+        || (!animation.pending && animation.playState !== "running")
+      ));
+    })
+  ))()`, { timeout: 2500 });
   const filterHover = await evaluate(client, `(() => {
     const map = document.querySelector("[data-practice-map]");
     const wave = document.querySelector('[data-map-id="wave"]');
@@ -3109,7 +3119,8 @@ const auditBrowser = async (client, origin) => {
     };
   })()`);
   if (
-    filterHover.activeKinds !== "personal"
+    !filterSettled
+    || filterHover.activeKinds !== "personal"
     || filterHover.focusId !== "wave"
     || filterHover.waveOpacity < 0.95
     || !filterHover.garageMiss

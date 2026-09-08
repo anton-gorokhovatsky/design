@@ -204,7 +204,22 @@ for(const engine of [process.argv[2]||'chromium']) {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto(origin + '/#contact');
     await page.locator('[data-command-input]').fill('Хотлайн');
-    await page.getByRole('option', { name: /HOTLINE CAMP/ }).click();
+    const searchResult = page.getByRole('option', { name: /HOTLINE CAMP/ });
+    await searchResult.waitFor({ state: 'visible' });
+    await page.locator('[data-command-results]').evaluate(element => Promise.all(
+      element.getAnimations().map(animation => animation.finished.catch(() => {})),
+    ));
+    // WebKitGTK can stall inside locator.click's frame-based scroll wait.
+    // Check the actual hit target, then send an ordinary pointer click.
+    const target = await searchResult.evaluate(button => {
+      const box = button.getBoundingClientRect();
+      const x = box.x + box.width / 2, y = box.y + box.height / 2;
+      return { x, y, enabled: !button.disabled && !button.closest('[inert]'),
+        inside: box.left >= 0 && box.right <= innerWidth && box.top >= 0 && box.bottom <= innerHeight,
+        hit: button.contains(document.elementFromPoint(x, y)) };
+    });
+    assert.ok(target.enabled && target.inside && target.hit, JSON.stringify(target));
+    await page.mouse.click(target.x, target.y);
     await page.waitForFunction(() => document.body.hasAttribute('data-case-open')
       && document.querySelector('[data-map-inspector]').dataset.selectedMapId === 'hotline-camp');
     await page.locator('[data-close-inspector]').click();
