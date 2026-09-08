@@ -10,17 +10,23 @@ const observationSteps = [
     kind: "МАРШРУТ / 01",
     title: "Обзор работ за 90 секунд",
     meta: "8 ОСТАНОВОК / РАБОТЫ И ПОДХОД",
-    description: "Покажу работу в Музее «Гараж», несколько самостоятельных проектов и один из моих принципов. Маршрут можно поставить на паузу или закончить в любой момент.",
+    description: "Восемь остановок: работы и подход. Обзор можно поставить на паузу, а любой кейс — открыть отдельно.",
     showcaseId: "garage-site",
     x: 50,
     y: 54,
   },
-  { id: "garage", itemId: "garage", showcaseId: "garage-site" },
-  { id: "narkomfin", itemId: "narkomfin" },
-  { id: "private-practice", itemId: "private-practice" },
-  { id: "eleven", itemId: "eleven" },
-  { id: "shirokostup", itemId: "shirokostup" },
-  { id: "principle", itemId: "principle-design-engineering" },
+  { id: "garage", itemId: "garage", showcaseId: "garage-site",
+    description: "Почти четыре года развивал цифровые проекты Музея «Гараж»: от исследований и интерфейсов до координации разработки и релизов." },
+  { id: "narkomfin", itemId: "narkomfin",
+    description: "Радикальный для своего времени архитектурный замысел стал основой сайта: в центре — интерактивная модель Дома Наркомфина." },
+  { id: "private-practice", itemId: "private-practice",
+    description: "Помогаю независимым командам пройти путь от первого разговора до работающего сайта: придумать, спроектировать, собрать и запустить." },
+  { id: "eleven", itemId: "eleven",
+    description: "Опыт Виктора Доронина, дневник подготовки к ультратриатлону и приглашение партнёров — три части одной истории на сайте «11 111»." },
+  { id: "shirokostup", itemId: "shirokostup",
+    description: "Кураторская практика и архив Ольги Широкоступ. Сайт и инфраструктуру подготовили так, чтобы дальше она могла вести его сама." },
+  { id: "principle", itemId: "principle-design-engineering",
+    description: "Когда идея требует проверки, сам проектирую интерфейс и пишу код. Рабочий прототип помогает увидеть, что получилось на деле." },
   {
     id: "contact",
     kind: "ФИНАЛ / 08",
@@ -136,6 +142,7 @@ const createObservationRoute = ({
       selectMapItem(step.itemId, {
         reveal: true,
         updateHistory: false,
+        overview: step,
       });
     } else {
       renderSyntheticStep(step);

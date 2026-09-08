@@ -19,7 +19,7 @@ const copyArrays = {
     name: "observationSteps", fields: ["title", "meta", "description"],
   },
 };
-const evidenceFields = new Set(["task", "role", "result", "feature"]);
+const evidenceFields = new Set(["task", "role", "idea", "result", "feature", "details"]);
 const keyOf = (property) => !property.computed && (property.key?.name ?? property.key?.value);
 const isString = (node) => node?.type === "Literal" && typeof node.value === "string";
 const maskRanges = (source, ranges) => ranges

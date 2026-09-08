@@ -25,11 +25,13 @@ const eagerMedia = [
 ].map((match) => match[1]);
 const budgets = {
   // Accepted expanded case: +8 KiB CSS and +12 KiB dependency-free runtime.
-  css: 230 * 1024,
+  // +1 KiB for the compact mobile overview and native case disclosure.
+  css: 231 * 1024,
   // +4 KiB for measured control clearance and deferred route posters (5 September).
   // +2 KiB for Clayton Young copy and personal map connections (6 September).
   // +2 KiB for two running channel records; no new runtime logic or media.
-  runtime: 234 * 1024,
+  // +3 KiB for short route copy, on-demand mobile posters and native case details.
+  runtime: 237 * 1024,
   fonts: 160 * 1024,
   initialSource: 600 * 1024,
 };

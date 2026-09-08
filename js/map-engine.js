@@ -22,6 +22,8 @@ const mapLabelsRoot = document.querySelector("[data-map-labels]");
 const mapSpecksRoot = document.querySelector("[data-map-specks]");
 const mapLinksRoot = document.querySelector("[data-map-links]");
 const observationShowcase = document.querySelector("[data-observation-showcase]");
+const observationPreview = document.querySelector("[data-observation-preview]");
+const inlineObservation = window.matchMedia("(max-width: 900px)");
 const observationShowcaseProgress = {
   "garage-site": 0,
   narkomfin: 1,
@@ -47,8 +49,10 @@ const mapPreviewMeta = document.querySelector("[data-map-preview-meta]");
 const mapEvidence = document.querySelector("[data-map-evidence]");
 const mapEvidenceTask = document.querySelector("[data-map-evidence-task]");
 const mapEvidenceRole = document.querySelector("[data-map-evidence-role]");
+const mapEvidenceIdea = document.querySelector("[data-map-evidence-idea]");
 const mapEvidenceResult = document.querySelector("[data-map-evidence-result]");
 const mapEvidenceFeature = document.querySelector("[data-map-evidence-feature]");
+const mapEvidenceDetails = document.querySelector("[data-map-evidence-details]");
 const mapEvidenceById = JSON.parse(
   document.querySelector("#map-evidence-data")?.textContent || "{}",
 );
@@ -762,6 +766,17 @@ if (observationShowcase) {
   new ResizeObserver(loadObservationShowcaseImages).observe(observationShowcase);
 }
 
+const syncObservationPreview = () => {
+  const id = observationShowcase?.dataset.activeId;
+  const poster = observationShowcase?.querySelector(`[data-observation-showcase-id="${id === "private-practice" ? "eleven" : id}"] img`);
+  observationPreview.hidden = !inlineObservation.matches || !poster;
+  if (!observationPreview.hidden) {
+    observationPreview.src = poster.dataset.src || poster.src;
+    observationPreview.alt = `Фрагмент сайта: ${mapItems.find(item => item.id === (id === "private-practice" ? "eleven" : id))?.title || ""}`;
+  }
+};
+inlineObservation.addEventListener("change", syncObservationPreview);
+
 const renderObservationShowcase = ({ itemId, showcaseId } = {}) => {
   const activeId = showcaseId || itemId;
   const progress = observationShowcaseProgress[activeId];
@@ -772,6 +787,7 @@ const renderObservationShowcase = ({ itemId, showcaseId } = {}) => {
   if (observationShowcase) {
     observationShowcase.dataset.activeId = isVisible ? activeId : "";
   }
+  syncObservationPreview();
 
   if (!isVisible) {
     return;
@@ -1016,6 +1032,7 @@ const setMapEvidence = (evidence = null) => {
   const entries = [
     [mapEvidenceTask, evidence?.task],
     [mapEvidenceRole, evidence?.role],
+    [mapEvidenceIdea, evidence?.idea],
     [mapEvidenceResult, evidence?.result],
     [mapEvidenceFeature, evidence?.feature],
   ];
@@ -1031,6 +1048,10 @@ const setMapEvidence = (evidence = null) => {
     if (row) row.hidden = !value;
     element.textContent = value ? typographUiText(value) : "";
   });
+
+  mapEvidenceDetails.hidden = !evidence?.details;
+  mapEvidenceDetails.open = false;
+  mapEvidenceDetails.querySelector("p").textContent = typographUiText(evidence?.details || "");
 
   if (mapEvidenceRole && evidence?.role && evidence.roleSource) {
     const link = document.createElement("a");
@@ -1101,6 +1122,7 @@ const selectMapItem = (
     reveal = false,
     updateHistory = reveal,
     replaceHistory = false,
+    overview = null,
   } = {},
 ) => {
   const item = mapItems.find((candidate) => candidate.id === id);
@@ -1145,22 +1167,22 @@ const selectMapItem = (
   }
 
   if (mapDescription) {
-    mapDescription.textContent = typographUiText(item.description);
+    mapDescription.textContent = typographUiText(overview?.description || item.description);
   }
 
-  setMapEvidence(mapEvidenceById[item.id]);
+  setMapEvidence(overview ? null : mapEvidenceById[item.id]);
 
   if (mapLink) {
-    const itemHref = item.href || (item.kind === "practice" ? principlesSourceHref : "");
+    const itemHref = overview ? `?point=${item.id}` : item.href || (item.kind === "practice" ? principlesSourceHref : "");
 
     if (itemHref) {
       mapLink.hidden = false;
       mapLink.href = itemHref;
-      mapLink.textContent = item.linkLabel
+      mapLink.textContent = overview ? (["company", "project"].includes(item.kind) ? "ОТКРЫТЬ КЕЙС" : "ПОДРОБНЕЕ") : item.linkLabel
         || (item.kind === "practice" ? "ПРИНЦИПЫ В\u00a0NOTION" : "ОТКРЫТЬ САЙТ");
       mapLink.classList.remove("is-disabled");
       mapLink.removeAttribute("aria-disabled");
-      mapLink.target = "_blank";
+      mapLink.target = overview ? "_self" : "_blank";
       mapLink.rel = "noreferrer";
     } else {
       mapLink.removeAttribute("href");

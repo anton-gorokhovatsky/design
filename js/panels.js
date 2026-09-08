@@ -733,7 +733,10 @@ const getMapItemSearchFields = (item) => {
     item.description,
     evidence.task,
     evidence.role,
+    evidence.idea,
     evidence.result,
+    evidence.feature,
+    evidence.details,
     evidence.keywords,
   ];
 };

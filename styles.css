@@ -7824,6 +7824,18 @@ html[data-theme="dark"] .map-node--sphere .map-node__glyph {
   display: none;
 }
 
+.observation-preview { display: none; }
+
+@media (max-width: 900px) {
+  .observation-preview:not([hidden]) {
+    display: block;
+    width: 100%;
+    height: clamp(7rem, calc(50svh - 11rem), 12rem);
+    margin: 0 0 12px;
+    object-fit: contain;
+  }
+}
+
 @media (min-width: 901px) {
   .observation-showcase {
     position: absolute;
@@ -8336,12 +8348,39 @@ html[data-theme="dark"] .signal-constellation {
   }
 
   .map-inspector:has(.observation-controls:not([hidden])) {
-    max-height: calc(100svh - 132px);
+    top: max(12px, env(safe-area-inset-top));
+    bottom: auto;
+    max-height: calc(100svh - max(12px, env(safe-area-inset-top)) - max(12px, env(safe-area-inset-bottom)));
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+  }
+
+  body:has(.practice-map[data-observation-active])
+    :is(.control-console, .system-dock) {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .map-inspector:has(.observation-controls:not([hidden]))
+    .map-readout__identity p {
+    display: none;
+  }
+
+  .map-inspector:has(.observation-controls:not([hidden]))
+    .map-readout__destination {
+    margin-top: 0;
   }
 
   .map-inspector:has(.observation-controls:not([hidden]))
     .map-readout__description {
-    max-height: clamp(132px, calc(100svh - 390px), 300px);
+    min-height: 0;
+    max-height: none;
+    align-self: stretch;
+  }
+
+  body:has(.practice-map:is([data-selected-kind=personal],[data-observation-active]))
+    [data-map-description] {
+    font-size: clamp(.9375rem, calc(.875rem + .3vw), 1rem);
+    line-height: 1.5;
   }
 
   .practice-map[data-observation-active]
@@ -9782,17 +9821,13 @@ html[data-focus-modality="keyboard"]
 }
 
 .display-control__accessibility button[aria-pressed="true"]
-  .display-control__glyph,
-.display-control__analytics[data-analytics-state="allowed"]
   .display-control__glyph {
   color: var(--signal);
 }
 
-html[data-analytics="allowed"]
-  .display-control__service
-  .display-control__analytics[data-analytics-state="allowed"] {
-  color: var(--signal);
-  font-weight: 600;
+.display-control__service .display-control__analytics {
+  color: var(--content-muted);
+  font-weight: 400;
 }
 
 .constellation-nav__utilities {
@@ -11009,6 +11044,21 @@ body[data-case-open] :is(.map-axis-label, .map-labels, .map-node-label, .origin-
 .is-case-view .map-evidence dd { font-size: var(--case-body-size); line-height: 1.5; overflow-wrap: anywhere; }
 .map-evidence dd .text-link { white-space: normal; }
 .map-evidence [data-map-evidence-feature] { white-space: pre-line; }
+.case-details { margin-top: var(--case-space-section); border-top: 1px solid var(--line-soft); }
+.case-details[hidden] { display: none; }
+.case-details summary {
+  padding: 14px 0;
+  color: var(--content-muted);
+  font-size: var(--case-label-size);
+  font-weight: 500;
+  line-height: 1.5;
+  cursor: pointer;
+}
+.case-details summary:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.case-details p { margin: 8px 0 0; font-size: var(--case-body-size); line-height: 1.5; white-space: pre-line; }
 .is-case-view .map-evidence [data-map-evidence-role-label] {
   font-size: calc(var(--case-label-size) * var(--case-author-optical-scale));
 }

@@ -22,10 +22,12 @@ const html = read("index.html");
 // The incident that prompted this lane: changing letter case inside runtime JS.
 change("js/panels.js", panels, "ОБЗОР РАБОТ ЗА 90 СЕКУНД", "Обзор работ за 90 секунд", true);
 change("js/map-data.js", map, "Самый важный профессиональный период:", "Профессиональный опыт:", true);
-change("js/observation-route.js", route, "Покажу работу в Музее", "Начнём с работы в Музее", true);
+change("js/observation-route.js", route, "Восемь остановок:", "Короткий маршрут:", true);
 change("index.html", html, ">МОЯ РОЛЬ<", ">МОЙ ВКЛАД<", true);
 change("index.html", html, 'aria-label="Обзор работ за 90 секунд"', 'aria-label="Новая подпись"', true);
 change("index.html", html, "Развивать цифровые продукты Музея", "Развивать цифровую среду Музея", true);
+change("index.html", html, "Визуальный язык связали", "Визуальное решение связали", true);
+change("index.html", html, "Цветовой цикл учитывает сезон", "Цветовой цикл следует сезону", true);
 change("index.html", html, /styles\.css\?v=[a-f0-9]{12}/.exec(html)[0], "styles.css?v=aaaaaaaaaaaa", true);
 change("index.html", html, /\.\/js\/panels\.js\?v=[a-f0-9]{12}/.exec(html)[0], "./js/panels.js?v=aaaaaaaaaaaa", true);
 
