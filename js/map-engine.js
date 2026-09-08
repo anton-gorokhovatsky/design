@@ -1031,6 +1031,16 @@ const setMapEvidence = (evidence = null) => {
     if (row) row.hidden = !value;
     element.textContent = value ? typographUiText(value) : "";
   });
+
+  if (mapEvidenceRole && evidence?.role && evidence.roleSource) {
+    const link = document.createElement("a");
+    link.className = "text-link";
+    link.href = evidence.roleSource.href;
+    link.textContent = evidence.roleSource.label;
+    link.target = "_blank";
+    link.rel = "noreferrer";
+    mapEvidenceRole.append(" ", link);
+  }
 };
 
 const renderMapRelatedItems=(item=null)=>{
