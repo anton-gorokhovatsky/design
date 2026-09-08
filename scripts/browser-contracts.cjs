@@ -106,7 +106,7 @@ const waitForCaseLayout = async (page) => {
     const signature = JSON.stringify([
       inspector.dataset.selectedMapId,
       getComputedStyle(document.documentElement).fontSize,
-      ...['.case-header', '.case-scroll', '.case-sheet', '[data-close-inspector]'].map(selector => {
+      ...['.case-header', '.case-header [data-map-kind]', '.case-scroll', '.case-sheet', '[data-close-inspector]'].map(selector => {
         const element = inspector.querySelector(selector);
         return [element.getBoundingClientRect().toJSON(), element.scrollWidth, element.scrollHeight];
       }),
@@ -115,7 +115,11 @@ const waitForCaseLayout = async (page) => {
     const stableSince = previous?.signature === signature ? previous.stableSince : performance.now();
     const stableFor = performance.now() - stableSince;
     window.__portfolioCaseLayout = { signature, stableSince, stableFor };
+    // WebKit can expose scaled label metrics before its flex row reflows.
+    const header = inspector.querySelector('.case-header').getBoundingClientRect();
+    const kind = inspector.querySelector('[data-map-kind]').getBoundingClientRect();
     return document.fonts.status === 'loaded' && stableFor >= 300
+      && header.height >= kind.height
       && style.opacity === '1' && style.transform === 'none'
       && inspector.getAnimations().every(animation => animation.playState === 'finished')
       && [...document.querySelectorAll('.map-axis-label,.map-node-label,.origin-marker__label')]
