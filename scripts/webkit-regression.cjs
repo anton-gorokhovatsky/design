@@ -936,7 +936,7 @@ const contactAudit = async (page, width) => {
     document.querySelector('[data-open-panel="contact"]')?.click();
   });
   await waitForLayout(page, 420);
-  const state = await page.evaluate((viewportWidth) => {
+  const state = await page.evaluate(() => {
     const card = document.querySelector(".contact-copy");
     const intro = document.querySelector(".contact-intro");
     const links = document.querySelector(".contact-links");
@@ -949,13 +949,10 @@ const contactAudit = async (page, width) => {
       return { top: rect.top, right: rect.right, bottom: rect.bottom, left: rect.left };
     });
     const linksStyle = getComputedStyle(links);
-    const twoColumns = viewportWidth > 360;
     const horizontallyCentered = Math.abs(
       (cardRect.left + cardRect.right) / 2 - innerWidth / 2,
     ) <= 1;
-    const dividerAligned = twoColumns
-      ? Math.abs(actionRects[0].top - actionRects[1].top) <= 1
-      : actionRects[1].top >= actionRects[0].bottom;
+    const dividerAligned = actionRects[1].top >= actionRects[0].bottom - 1;
 
     return {
       card: {
@@ -993,7 +990,7 @@ const contactAudit = async (page, width) => {
           document.documentElement.scrollWidth,
         ) > document.documentElement.clientWidth + 1,
     };
-  }, width);
+  });
   const resume = await page.evaluate(readMobileContactResumeExpression);
   const resumeFailures = validateMobileContactResume(resume);
   state.resume = resume;

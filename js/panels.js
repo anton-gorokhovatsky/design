@@ -368,6 +368,7 @@ const openContentPanel = (
   window.requestAnimationFrame(() => {
     contentPanelBody?.scrollTo({ top: position?.scrollTop || 0, behavior: "auto" });
     scheduleContentStackSync();
+    if (document.activeElement?.closest("[data-command-form], [data-command-results]")) return;
     const sourceRow = position?.pointId && contentPanelBody?.querySelector(
       `.work-row[data-map-point="${CSS.escape(position.pointId)}"]`,
     );

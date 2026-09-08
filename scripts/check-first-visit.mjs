@@ -103,12 +103,9 @@ try {
           assert.equal(await page.locator("[data-map-inspector]").getAttribute("data-selected-map-id"), "garage-site");
           await page.locator("[data-close-inspector]").click();
           await page.waitForFunction(() => !document.body.hasAttribute("data-case-open"));
-          await page.locator("[data-constellation-nav-toggle]").click();
-          await page.locator('.constellation-nav__item[data-open-panel="work"]').click();
-          // openContentPanel assigns initial focus on the next animation frame.
-          // Start the keyboard sequence only after that assignment has finished.
-          await page.waitForFunction(() => document.activeElement === document.querySelector("[data-close-panel]"));
-          await page.locator(".work-row").first().focus();
+          // Closing the case restores the list and its source row.
+          await page.waitForFunction(() => document.activeElement === document.querySelector(".work-row"));
+          assert.equal(await page.locator('[data-content-panel]').getAttribute('aria-hidden'), 'false');
           // WebKit follows the host default: Option+Tab includes links.
           const nextLinkKey = engine === "webkit" ? "Alt+Tab" : "Tab";
           for (let index = 1; index < 8; index++) await page.keyboard.press(nextLinkKey);
