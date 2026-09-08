@@ -22,6 +22,7 @@ import {
   selectMapItem,
   setApplyingUrlState,
   setInspectorOpen,
+  setInspectorReturnHandler,
   setMapFilter,
   setMapRovingId,
   setSearchRelationshipPreview,
@@ -265,6 +266,7 @@ const setPanelOpen = (isOpen) => {
     controlConsolePanelOffset = getConsoleOffset(controlConsole);
     setConsoleOffset(controlConsole, 0, 0);
     contentPanel.append(controlConsole);
+    contentPanel.append(commandResults, commandStatus);
   }
 
   contentPanel?.classList.toggle("is-open", isOpen);
@@ -290,6 +292,7 @@ const setPanelOpen = (isOpen) => {
 
   if (!isOpen && controlConsole && controlConsoleHome.parentNode) {
     controlConsoleHome.parentNode.insertBefore(controlConsole, controlConsoleHome.nextSibling);
+    commandResultsHome.after(commandResults, commandStatus);
 
     if (controlConsolePanelOffset) {
       setConsoleOffset(
@@ -308,6 +311,7 @@ const openContentPanel = (
   {
     updateHistory = true,
     replaceHistory = false,
+    position = null,
   } = {},
 ) => {
   const config = panelViews[view];
@@ -315,10 +319,14 @@ const openContentPanel = (
   if (!config) {
     return;
   }
+  if (position?.view !== view) position = null;
+  if (observationRoute.active) stopObservation({ updateHistory: false });
 
   activePanelView = view;
   contentStackOffsets = [];
-  lastPanelTrigger = trigger instanceof HTMLElement ? trigger : document.activeElement;
+  lastPanelTrigger = trigger instanceof HTMLElement ? trigger
+    : position ? panelOpenButtons.find(button => button.dataset.openPanel === view)
+      : document.activeElement;
   contentPanel?.setAttribute("data-view", view);
   signalField?.setAttribute("data-camera-view", view);
   setConstellationNavCurrent(view);
@@ -326,7 +334,7 @@ const openContentPanel = (
   panelSections.forEach((section) => {
     section.hidden = section.dataset.panelSection !== view;
   });
-  contentPanelBody?.scrollTo({ top: 0, behavior: "auto" });
+  contentPanelBody?.scrollTo({ top: position?.scrollTop || 0, behavior: "auto" });
 
   if (panelTitle) {
     panelTitle.textContent = typographUiText(config.title);
@@ -354,11 +362,16 @@ const openContentPanel = (
       },
       { replace: replaceHistory },
     );
+    window.history.replaceState({ ...history.state, panelPosition: position }, "", location.href);
   }
 
   window.requestAnimationFrame(() => {
+    contentPanelBody?.scrollTo({ top: position?.scrollTop || 0, behavior: "auto" });
     scheduleContentStackSync();
-    panelClose?.focus();
+    const sourceRow = position?.pointId && contentPanelBody?.querySelector(
+      `.work-row[data-map-point="${CSS.escape(position.pointId)}"]`,
+    );
+    (sourceRow || panelClose)?.focus({ preventScroll: true });
   });
 };
 
@@ -394,6 +407,31 @@ const closeContentPanel = (
     lastPanelTrigger.focus({ preventScroll: true });
   }
 };
+
+const openPointFromContentPanel = (pointId, sourceRow = null) => {
+  const origin = activePanelView ? {
+    view: activePanelView,
+    scrollTop: contentPanelBody?.scrollTop || 0,
+    pointId: sourceRow?.dataset.mapPoint || null,
+  } : null;
+  if (origin) {
+    window.history.replaceState({ ...history.state, panelPosition: origin }, "", location.href);
+    closeContentPanel({ restoreFocus: false, updateHistory: false });
+  }
+  setTimeMode(false, { updateHistory: false });
+  setMapFilter("all", { updateHistory: false });
+  selectMapItem(pointId, { reveal: true, updateHistory: false });
+  writeUrlState({ point: pointId, route: null, step: null, view: null, filter: null, hash: "#map" });
+  window.history.replaceState({ ...history.state, inspectorPanelOrigin: origin }, "", location.href);
+  window.requestAnimationFrame(() => inspectorClose?.focus());
+};
+
+setInspectorReturnHandler(() => {
+  const origin = window.history.state?.inspectorPanelOrigin;
+  if (!origin || !panelViews[origin.view]) return false;
+  openContentPanel(origin.view, null, { replaceHistory: true, position: origin });
+  return true;
+});
 
 panelOpenButtons.forEach((button) => {
   button.setAttribute("aria-controls", "content-panel");
@@ -465,15 +503,25 @@ contentPanelBody?.addEventListener("click", (event) => {
   }
 
   event.preventDefault();
-  closeContentPanel({ restoreFocus: false });
-  setMapFilter("all");
   trackPortfolioEvent("point_open", {
     point_id: pointId,
     source: "cases",
   });
-  selectMapItem(pointId, { reveal: true });
-  writeUrlState({ hash: "#map" }, { replace: true });
-  window.requestAnimationFrame(() => inspectorClose?.focus());
+  openPointFromContentPanel(pointId, caseLink);
+});
+
+mapInspector?.querySelector("[data-map-related]")?.addEventListener("click", (event) => {
+  const link = event.target.closest("a.map-related__item");
+  if (!link || event.defaultPrevented || event.button !== 0
+    || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  const pointId = new URL(link.href, location.href).searchParams.get("point");
+  if (!mapButtons.has(pointId)) return;
+  event.preventDefault();
+  setTimeMode(false, { updateHistory: false });
+  setMapFilter("all", { updateHistory: false });
+  selectMapItem(pointId, { reveal: true, updateHistory: false });
+  writeUrlState({ point: pointId, view: null, filter: null });
+  window.requestAnimationFrame(() => mapInspector.querySelector("[data-map-title]")?.focus({ preventScroll: true }));
 });
 
 if (typeof compactContentStack.addEventListener === "function") {
@@ -518,6 +566,8 @@ const commandForm = document.querySelector("[data-command-form]");
 const commandInput = document.querySelector("[data-command-input]");
 const commandResults = document.querySelector("[data-command-results]");
 const commandStatus = document.querySelector("[data-command-status]");
+const commandResultsHome = document.createComment("command-results-home");
+commandResults?.before(commandResultsHome);
 const commandSubmit = commandForm?.querySelector(".command-dock__submit");
 const syncCompactCommandDismiss = (isOpen) => {
   const usesNavigationToggle = Boolean(
@@ -1024,13 +1074,11 @@ const runCommandResult = (result) => {
   const hadSearchQuery = Boolean(normalizeSearch(commandInput?.value || ""));
 
   if (result.type === "node") {
-    setMapFilter("all");
     trackPortfolioEvent("point_open", {
       point_id: result.id,
       source: "search",
     });
-    selectMapItem(result.id, { reveal: true });
-    window.requestAnimationFrame(() => inspectorClose?.focus());
+    openPointFromContentPanel(result.id);
 
     if (commandInput) {
       commandInput.value = "";
@@ -1040,8 +1088,10 @@ const runCommandResult = (result) => {
   } else if (result.type === "panel") {
     openContentPanel(result.id, commandInput);
   } else if (result.id === "observation") {
+    closeContentPanel({ restoreFocus: false, updateHistory: false });
     startObservation({ source: "search" });
   } else if (result.id === "time") {
+    closeContentPanel({ restoreFocus: false, updateHistory: false });
     setTimeMode(true);
   } else if (result.id === "settings") {
     const settingsQuery = normalizeSearch(commandInput?.value || "");
@@ -1073,6 +1123,7 @@ const runCommandResult = (result) => {
 };
 
 commandInput?.addEventListener("focus", () => {
+  if (observationRoute.active) stopObservation();
   syncCommandFocusViewport();
   hideMapPreview({ immediate: true });
   setInspectorOpen(false);
@@ -1202,9 +1253,7 @@ document.addEventListener("keydown", (event) => {
   } else if (activePanelView) {
     closeContentPanel();
   } else if (mapInspector?.classList.contains("is-open")) {
-    const selectedButton = mapButtons.get(selectedMapId);
-    clearMapSelection({ updateHistory: true });
-    selectedButton?.focus();
+    inspectorClose?.click();
   } else {
     setCommandOpen(false);
     setCommandStatus("");
@@ -1241,6 +1290,7 @@ const applyUrlState = () => {
 
       openContentPanel(panelView, null, {
         updateHistory: false,
+        position: window.history.state?.panelPosition,
       });
       return;
     }

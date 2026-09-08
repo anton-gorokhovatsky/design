@@ -31,7 +31,8 @@ const budgets = {
   // +2 KiB for Clayton Young copy and personal map connections (6 September).
   // +2 KiB for two running channel records; no new runtime logic or media.
   // +3 KiB for short route copy, on-demand mobile posters and native case details.
-  runtime: 237 * 1024,
+  // +4 KiB for restoring section context and navigating existing map relations.
+  runtime: 241 * 1024,
   fonts: 160 * 1024,
   initialSource: 600 * 1024,
 };

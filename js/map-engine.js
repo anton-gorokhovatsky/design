@@ -228,7 +228,9 @@ const writeUrlState = (changes, { replace = false } = {}) => {
 
   const nextUrl = `${url.pathname}${url.search}${url.hash}`;
   const method = replace ? "replaceState" : "pushState";
-  window.history[method]({ ...window.history.state, ...changes }, "", nextUrl);
+  const state = { ...window.history.state, ...changes };
+  if (changes.point === null) state.inspectorPanelOrigin = null;
+  window.history[method](state, "", nextUrl);
 };
 
 const timeGroupSectors = {
@@ -1069,14 +1071,17 @@ const setMapEvidence = (evidence = null) => {
 
 const renderMapRelatedItems=(item=null)=>{
   const peers=item?.kind==="project"?mapItems.filter((candidate)=>candidate.kind==="project"&&candidate.parent===item.parent&&candidate!==item):[];
-  const start=peers.indexOf(item)+1;
-  const personalLinks=item?.kind==="personal"?item.relatedTo:null;
-  const ids=personalLinks||(item?.id==="hotline-camp"?["eleven","dd-camp","dusty"]:null);
-  const items=signalField?.hasAttribute("data-observation-active")?[]:(ids?ids.map((id)=>mapItems.find((candidate)=>candidate.id===id)):[...peers.slice(start),...peers.slice(0,start)]).slice(0,3);
+  const personalLinks=item?.kind==="personal";
+  const explicitIds=item?.relatedTo||[];
+  const incomingIds=personalLinks?mapItems.filter(candidate=>candidate.relatedTo?.includes(item.id)).map(candidate=>candidate.id):[];
+  const contextIds=item?.kind==="company"?mapItems.filter(candidate=>candidate.parent===item.id).map(candidate=>candidate.id):item?.parent?[item.parent]:[];
+  const nextIds=item?.id==="hotline-camp"?["eleven","dd-camp","dusty"]:peers.slice(0,3).map(candidate=>candidate.id);
+  const ids=[...new Set([...explicitIds,...incomingIds,...contextIds,...nextIds])];
+  const items=signalField?.hasAttribute("data-observation-active")?[]:ids.map(id=>mapItems.find(candidate=>candidate.id===id)).filter(Boolean);
   mapRelated.hidden=!items.length;
   mapRelated.dataset.relatedKind=personalLinks?"personal":"project";
   mapRelated.setAttribute("aria-label", personalLinks ? "Связанные точки" : "Следующие кейсы");
-  mapRelatedTrack.innerHTML=items.map(({id,label,timeLabel,timeYear,kind})=>`<a class="map-related__item" href="?point=${id}" role="listitem"><strong>${label}</strong><span>${kind==="personal"?"ЛИЧНОЕ":"ПРОЕКТ"}${timeLabel||timeYear?` / ${timeLabel||timeYear}`:""}</span></a>`).join("");
+  mapRelatedTrack.innerHTML=items.map(({id,label,timeLabel,timeYear,kind})=>`<a class="map-related__item" href="?point=${id}" role="listitem"><strong>${label}</strong><span>${kind==="personal"?"ЛИЧНОЕ":kind==="company"?"ОПЫТ":"ПРОЕКТ"}${timeLabel||timeYear?` / ${timeLabel||timeYear}`:""}</span></a>`).join("");
 };
 const setInspectorOpen = (isOpen) => {
   if (!mapInspector) {
@@ -1219,6 +1224,9 @@ const selectMapItem = (
   }
 };
 
+let inspectorReturnHandler = null;
+const setInspectorReturnHandler = (handler) => { inspectorReturnHandler = handler; };
+
 inspectorClose?.addEventListener("click", () => {
   if (observationRoute.active) {
     stopObservation();
@@ -1226,6 +1234,7 @@ inspectorClose?.addEventListener("click", () => {
     return;
   }
 
+  if (inspectorReturnHandler?.()) return;
   const selectedButton = mapButtons.get(selectedMapId);
   clearMapSelection({ updateHistory: true });
   selectedButton?.focus();
@@ -1905,7 +1914,7 @@ const setTimeMode = (
   if (nextEnabled === timeModeActive) {
     if (updateHistory) {
       writeUrlState(
-        { view: nextEnabled ? "time" : null },
+        { view: nextEnabled ? "time" : null, hash: "#map" },
         { replace: replaceHistory },
       );
     }
@@ -1946,6 +1955,7 @@ const setTimeMode = (
       {
         view: nextEnabled ? "time" : null,
         filter: serializeMapFilters(),
+        hash: "#map",
       },
       { replace: replaceHistory },
     );
@@ -2065,6 +2075,7 @@ export {
   selectMapItem,
   setApplyingUrlState,
   setInspectorOpen,
+  setInspectorReturnHandler,
   setMapFilter,
   setMapRovingId,
   setSearchRelationshipPreview,

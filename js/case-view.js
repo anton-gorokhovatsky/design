@@ -1,6 +1,6 @@
 // Expanded professional cases reuse the map inspector and its single video.
 import { mapItems } from "./map-data.js";
-import { mapInspector, selectMapItem, hideMapPreview, observationRoute } from "./map-engine.js";
+import { mapInspector, hideMapPreview, observationRoute } from "./map-engine.js";
 import { reducedMotion } from "./preferences.js";
 import { scrollRegionFromKey } from "./viewport-ui.js";
 import "./panels.js";
@@ -255,14 +255,6 @@ document.addEventListener("keydown", event => {
     }
   }
 }, true);
-related.addEventListener("click", event => {
-  const link = event.target.closest("a.map-related__item");
-  if (!activeId || !link || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-  const id = new URL(link.href).searchParams.get("point");
-  if (!items.has(id)) return;
-  event.preventDefault();
-  selectMapItem(id, { reveal: true });
-});
 new ResizeObserver(() => {
   header.style.paddingRight = (viewport.offsetWidth - viewport.clientWidth) + "px";
 }).observe(viewport);

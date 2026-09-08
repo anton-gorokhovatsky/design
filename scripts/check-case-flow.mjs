@@ -179,6 +179,47 @@ for(const engine of [process.argv[2]||'chromium']) {
     await page.waitForFunction(()=>!document.body.hasAttribute('data-case-open'));
     assert.equal(await page.locator('.map-inspector').evaluate(el=>getComputedStyle(el).opacity),'0','No flash of the old small readout on close');
     await page.screenshot({path:dir+engine+'-restored-map.jpg',type:'jpeg',quality:84});
+    // Check the route around a case, including the place the reader returns to.
+    for (const width of [1440, 390]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(origin + '/#work');
+      const row = page.locator('.work-row[data-map-point="ilmix"]');
+      await row.scrollIntoViewIfNeeded();
+      const scrollTop = await page.locator('.content-panel__body').evaluate(el => el.scrollTop);
+      await row.click();
+      await page.waitForFunction(() => document.body.hasAttribute('data-case-open'));
+      await page.locator('[data-close-inspector]').click();
+      await page.waitForFunction(() => document.activeElement.dataset.mapPoint === 'ilmix');
+      assert.equal(new URL(page.url()).hash, '#work');
+      assert.ok(Math.abs(await page.locator('.content-panel__body').evaluate(el => el.scrollTop) - scrollTop) < 2);
+      await row.click();
+      await page.waitForFunction(() => document.body.hasAttribute('data-case-open'));
+      await page.goBack();
+      await page.waitForFunction(top => Math.abs(document.querySelector('.content-panel__body').scrollTop - top) < 2, scrollTop);
+      await page.goForward();
+      await page.waitForFunction(() => document.body.hasAttribute('data-case-open'));
+      await page.keyboard.press('Escape');
+      await page.waitForFunction(() => document.activeElement.dataset.mapPoint === 'ilmix');
+    }
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(origin + '/#contact');
+    await page.locator('[data-command-input]').fill('Хотлайн');
+    await page.getByRole('option', { name: /HOTLINE CAMP/ }).click();
+    await page.waitForFunction(() => document.body.hasAttribute('data-case-open')
+      && document.querySelector('[data-map-inspector]').dataset.selectedMapId === 'hotline-camp');
+    await page.locator('[data-close-inspector]').click();
+    await page.waitForFunction(() => document.querySelector('[data-content-panel]').dataset.view === 'contact');
+    await page.goto(origin + '/?point=running');
+    await page.waitForFunction(() => document.querySelectorAll('[data-map-related] a').length === 8);
+    const documentStart = await page.evaluate(() => performance.timeOrigin);
+    await page.locator('[data-map-related] a[href="?point=hotline-camp"]').click();
+    await page.waitForFunction(() => document.body.hasAttribute('data-case-open'));
+    assert.equal(await page.evaluate(() => performance.timeOrigin), documentStart, 'Related points open without reloading the page');
+    await page.goto(origin + '/?route=observation&step=8');
+    await page.waitForFunction(() => document.querySelector('[data-observation-pause]').hidden);
+    assert.equal(await page.locator('[data-observation-pause]').isVisible(), false, 'The final step has no meaningless Continue action');
+    await page.locator('[data-observation-previous]').click();
+    assert.equal(await page.locator('[data-observation-pause]').isVisible(), true);
     assert.deepEqual(result.errors,[]);
   } catch(error) {
     result.status='FAIL';result.error=error.stack||error.message;

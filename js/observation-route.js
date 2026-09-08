@@ -80,6 +80,7 @@ const createObservationRoute = ({
   };
 
   const updateControls = () => {
+    const isLastStep = stepIndex === observationSteps.length - 1;
     if (observationProgress) {
       observationProgress.textContent = `${String(stepIndex + 1).padStart(2, "0")} / ${String(observationSteps.length).padStart(2, "0")}`;
     }
@@ -89,6 +90,8 @@ const createObservationRoute = ({
     }
 
     if (observationPause) {
+      if (isLastStep && document.activeElement === observationPause) observationNext?.focus();
+      observationPause.hidden = isLastStep;
       observationPause.textContent = paused ? "ПРОДОЛЖИТЬ" : "ПАУЗА";
       observationPause.setAttribute("aria-pressed", String(paused));
     }
@@ -235,12 +238,13 @@ const createObservationRoute = ({
           point: null,
           view: null,
           filter: null,
+          hash: "#map",
         },
       );
     }
 
     renderStep(step, { updateHistory: true });
-    if (updateHistory) observationPause?.focus({ preventScroll: true });
+    if (updateHistory) (observationPause?.hidden ? observationNext : observationPause)?.focus({ preventScroll: true });
   };
 
   observationStart?.addEventListener("click", () => {
