@@ -795,17 +795,9 @@ const commandViews = [
     type: "action",
     id: "settings",
     title: "НАСТРОЙКИ САЙТА",
-    meta: "ТЕМА / ДВИЖЕНИЕ / КОНТРАСТ",
-    intents: "настройки сайт экран тема движение контраст",
-    keywords: "светлая темная анимация доступность",
-  },
-  {
-    type: "action",
-    id: "analytics-settings",
-    title: "АНАЛИТИКА И\u00a0ПРИВАТНОСТЬ",
-    meta: "НАСТРОЙКИ / ЯНДЕКС МЕТРИКА",
-    intents: "аналитика приватность метрика",
-    keywords: "вебвизор cookie согласие",
+    meta: "ТЕМА / ДВИЖЕНИЕ / КОНТРАСТ / АНАЛИТИКА",
+    intents: "настройки сайт экран тема движение контраст аналитика приватность метрика",
+    keywords: "светлая темная анимация доступность яндекс вебвизор cookie согласие",
   },
   {
     type: "panel",
@@ -1059,16 +1051,13 @@ const runCommandResult = (result) => {
       settingsSection = "motion";
     } else if (settingsQuery.includes("контраст")) {
       settingsSection = "contrast";
+    } else if (/аналит|приват|метрик|яндекс|вебвизор|cookie|согласи/.test(settingsQuery)) {
+      settingsSection = "analytics";
     }
 
     openSettingsPanel({
       trigger: commandInput,
       section: settingsSection,
-    });
-  } else if (result.id === "analytics-settings") {
-    openSettingsPanel({
-      trigger: commandInput,
-      section: "analytics",
     });
   }
 
