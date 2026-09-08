@@ -3900,10 +3900,12 @@ const auditBrowser = async (client, origin) => {
     const launcher = document.querySelector(".display-control__analytics");
     const launcherMarker = launcher?.firstElementChild;
     const signal = marker ? getComputedStyle(marker).backgroundColor : "";
+    const muted = getComputedStyle(document.querySelector(".display-control [data-map-note]")).color;
     return signal && signal !== "rgba(0, 0, 0, 0)"
       && getComputedStyle(status).color === signal
-      && getComputedStyle(launcher).color === signal
-      && getComputedStyle(launcherMarker).color === signal;
+      && getComputedStyle(launcher).color === muted
+      && getComputedStyle(launcher).fontWeight === "400"
+      && getComputedStyle(launcherMarker).color === muted;
   })()`, { timeout: 1200, interval: 40 });
   const allowedPanelContract = await evaluate(client, `(() => {
     const marker = document.querySelector(".settings-panel__analytics-marker");
@@ -3923,6 +3925,8 @@ const auditBrowser = async (client, origin) => {
         document.querySelector("[data-analytics-preference]"),
       ).color,
       launcherColor: launcher ? getComputedStyle(launcher).color : "",
+      launcherWeight: launcher ? getComputedStyle(launcher).fontWeight : "",
+      mutedColor: getComputedStyle(document.querySelector(".display-control [data-map-note]")).color,
       launcherMarkerColor: launcherMarker
         ? getComputedStyle(launcherMarker).color
         : "",
@@ -3941,12 +3945,13 @@ const auditBrowser = async (client, origin) => {
       !== JSON.stringify(["ВЫКЛЮЧИТЬ АНАЛИТИКУ"])
     || allowedPanelContract.markerBackground === "rgba(0, 0, 0, 0)"
     || allowedPanelContract.statusColor !== allowedPanelContract.markerBackground
-    || allowedPanelContract.launcherColor !== allowedPanelContract.markerBackground
+    || allowedPanelContract.launcherColor !== allowedPanelContract.mutedColor
+    || allowedPanelContract.launcherWeight !== "400"
     || allowedPanelContract.launcherMarkerColor
-      !== allowedPanelContract.markerBackground
+      !== allowedPanelContract.mutedColor
     || allowedPanelContract.launcherMarkerSize !== "14px × 12px"
   ) {
-    fail("privacy: enabled analytics does not have one strong, consistent state.", {
+    fail("privacy: consent status must stay explicit and its map launcher quiet.", {
       ...allowedPanelContract,
     });
   }
