@@ -94,7 +94,8 @@ const mobileSearchViewport = {
 };
 
 // Case layout is committed asynchronously after mounting, font-size changes
-// and inherited enter transitions. Wait for geometry, not a fixed delay.
+// and inherited enter transitions. Require 300 ms of stable geometry; timer
+// polling also works when software WebKit stops delivering animation frames.
 const waitForCaseLayout = async (page) => {
   await page.evaluate(() => document.fonts.ready);
   await page.evaluate(() => { delete window.__portfolioCaseLayout; });
@@ -111,14 +112,15 @@ const waitForCaseLayout = async (page) => {
       }),
     ]);
     const previous = window.__portfolioCaseLayout;
-    const frames = previous?.signature === signature ? previous.frames + 1 : 0;
-    window.__portfolioCaseLayout = { signature, frames };
-    return document.fonts.status === 'loaded' && frames >= 3
+    const stableSince = previous?.signature === signature ? previous.stableSince : performance.now();
+    const stableFor = performance.now() - stableSince;
+    window.__portfolioCaseLayout = { signature, stableSince, stableFor };
+    return document.fonts.status === 'loaded' && stableFor >= 300
       && style.opacity === '1' && style.transform === 'none'
       && inspector.getAnimations().every(animation => animation.playState === 'finished')
       && [...document.querySelectorAll('.map-axis-label,.map-node-label,.origin-marker__label')]
         .every(element => getComputedStyle(element).visibility === 'hidden');
-  }, undefined, { timeout: 8000 });
+  }, undefined, { timeout: 8000, polling: 100 });
 };
 
 const mobileSafariSplitViewport = {

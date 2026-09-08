@@ -2855,7 +2855,7 @@ const auditBrowser = async (client, origin) => {
     };
   })()`);
   if (
-    !ilmixCopy.description.includes("Запускал и развивал digital-продукты")
+    !ilmixCopy.description.includes("Перезапустил шесть сайтов")
     || ilmixCopy.evidenceHidden
     || ilmixCopy.taskHidden
     || ilmixCopy.roleHidden
@@ -2864,7 +2864,7 @@ const auditBrowser = async (client, origin) => {
     || !ilmixCopy.result.includes("19 905")
     || !ilmixCopy.result.includes("48 835")
     || !ilmixCopy.result.includes("66,9 %")
-    || !ilmixCopy.meta.startsWith("5 ЛЕТ")
+    || !ilmixCopy.meta.replace(/\s+/g, " ").startsWith("ОКОЛО 5 ЛЕТ В СУММЕ")
   ) {
     fail("ilmix-copy: the accepted company copy or Notion metrics regressed.", ilmixCopy);
   }
@@ -3967,7 +3967,7 @@ const auditBrowser = async (client, origin) => {
     const input = document.querySelector("[data-command-input]");
     input?.focus();
     if (input) {
-      input.value = "материалов Tarski";
+      input.value = "сайт Tarski";
       input.dispatchEvent(new Event("input", { bubbles: true }));
     }
     document.querySelector('[data-result-id="tarski"]')?.click();
@@ -3995,7 +3995,7 @@ const auditBrowser = async (client, origin) => {
         Object.keys(parameters)
       )))],
       leakedValues: goals.flatMap(({ parameters }) => Object.values(parameters))
-        .filter((value) => /материалов tarski|anton|@|gmail|telegram\\.me/i.test(String(value))),
+        .filter((value) => /сайт tarski|anton|@|gmail|telegram\\.me/i.test(String(value))),
     };
   })()`);
   const decisionGoals = [
