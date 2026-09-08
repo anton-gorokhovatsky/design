@@ -111,20 +111,22 @@ jobs:
         continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
-          name: browser-contracts-${{ matrix.artifact }}
+          name: browser-contracts-${{ matrix.artifact }}-attempt-${{ github.run_attempt }}
           path: artifacts/${{ matrix.artifact }}
           if-no-files-found: ignore
           retention-days: 14
       # Retry only artifact delivery after a transient service failure;
       # never repeat or suppress the browser check itself.
       - if: always() && steps.artifacts.outcome == 'failure'
+        continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
-          name: browser-contracts-${{ matrix.artifact }}
+          name: browser-contracts-${{ matrix.artifact }}-attempt-${{ github.run_attempt }}-retry
           path: artifacts/${{ matrix.artifact }}
           if-no-files-found: ignore
           retention-days: 14
-          overwrite: true
+      # Artifact service availability is diagnostic only. The browser run
+      # above remains mandatory and retains its failure result.
       - name: Save Playwright ${{ matrix.browser }}
         if: >-
           always()

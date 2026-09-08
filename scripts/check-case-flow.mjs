@@ -55,6 +55,8 @@ for(const engine of [process.argv[2]||'chromium']) {
   const browser=await ({chromium,webkit})[engine].launch();
   const page=await browser.newPage({viewport:{width:1440,height:900},reducedMotion:'reduce'});
   page.setDefaultTimeout(5000);
+  // Cold browser/document startup in CI is separate from UI response time.
+  page.setDefaultNavigationTimeout(15000);
   const result={engine,status:'PASS',errors:[],cases:[]};
   page.on('pageerror',error=>result.errors.push(error.message));
   try {
