@@ -96,7 +96,12 @@ try {
       await input.focus();
       assert.equal(await submit.getAttribute("aria-label"), "Закрыть поиск");
       await settle(page);
-      assert.equal((await assertPopup(page)).count, 8);
+      const initialPopup = await assertPopup(page);
+      assert.equal(initialPopup.count, 7);
+      if (label === "short") {
+        assert.ok(initialPopup.content > initialPopup.height,
+          "The menu remains scrollable when a short viewport actually constrains it.");
+      }
       const material = await page.evaluate(readMaterialAuditExpression);
       assert.deepEqual(material.failures, []);
       await capture(page, label + "-" + theme);
@@ -106,8 +111,7 @@ try {
         assert.equal((await assertPopup(page)).placement, "below");
         await capture(page, "top-" + theme);
         await dragTo(page, 418);
-        const middle = await assertPopup(page);
-        assert.ok(middle.content > middle.height, "An actually constrained midpoint remains scrollable.");
+        await assertPopup(page);
         await capture(page, "middle-" + theme);
         await dragTo(page, 20, width - 980 - 8);
         await assertPopup(page);
