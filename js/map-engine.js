@@ -1050,8 +1050,11 @@ const setMapEvidence = (evidence = null) => {
   });
 
   mapEvidenceDetails.hidden = !evidence?.details;
-  mapEvidenceDetails.open = false;
-  mapEvidenceDetails.querySelector("p").textContent = typographUiText(evidence?.details || "");
+  mapEvidenceDetails.querySelectorAll("[data-case-copy]").forEach(element => {
+    const value = evidence?.[element.dataset.caseCopy];
+    element.closest(".case-details__part").hidden = !value;
+    element.textContent = typographUiText(value || "");
+  });
 
   if (mapEvidenceRole && evidence?.role && evidence.roleSource) {
     const link = document.createElement("a");

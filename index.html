@@ -124,7 +124,7 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=0e2a88ea4fed">
+    <link rel="stylesheet" href="styles.css?v=9802f0242190">
     <style>
       .map-evidence [data-map-evidence-role-label]{font-family:var(--font-author);font-size:.6rem;font-weight:400;letter-spacing:0}
     </style>
@@ -133,16 +133,16 @@
       {
         "imports": {
           "./js/preferences.js": "./js/preferences.js?v=75ec5c85331d",
-          "./js/analytics.js": "./js/analytics.js?v=420bb229d6c0",
+          "./js/analytics.js": "./js/analytics.js?v=b73ca5819a36",
           "./js/signal-field.js": "./js/signal-field.js?v=e249b2dc021a",
           "./js/map-data.js": "./js/map-data.js?v=0f6edf7487ca",
           "./js/observation-route.js": "./js/observation-route.js?v=4b5106c94a46",
           "./js/personal-media.js": "./js/personal-media.js?v=9910a8959dd2",
           "./js/sphere-surfaces.js": "./js/sphere-surfaces.js?v=4cf52ae3e8a0",
-          "./js/map-engine.js": "./js/map-engine.js?v=2e4380cb4322",
+          "./js/map-engine.js": "./js/map-engine.js?v=54f5c47eaf50",
           "./js/viewport-ui.js": "./js/viewport-ui.js?v=789d6b79afd7",
-          "./js/panels.js": "./js/panels.js?v=025047cd4a4d",
-          "./js/case-view.js": "./js/case-view.js?v=af2bc6642373",
+          "./js/panels.js": "./js/panels.js?v=ca53a61c5f67",
+          "./js/case-view.js": "./js/case-view.js?v=8a177d816eb1",
           "./js/favicon.js": "./js/favicon.js?v=3aa23538dc2d"
         }
       }
@@ -150,16 +150,16 @@
     <!-- runtime-import-map:end -->
     <!-- Native modules keep their dependencies explicit; see js/README.md. -->
     <script type="module" src="js/preferences.js?v=75ec5c85331d"></script>
-    <script type="module" src="js/analytics.js?v=420bb229d6c0"></script>
+    <script type="module" src="js/analytics.js?v=b73ca5819a36"></script>
     <script type="module" src="js/signal-field.js?v=e249b2dc021a"></script>
     <script type="module" src="js/map-data.js?v=0f6edf7487ca"></script>
     <script type="module" src="js/observation-route.js?v=4b5106c94a46"></script>
     <script type="module" src="js/personal-media.js?v=9910a8959dd2"></script>
     <script type="module" src="js/sphere-surfaces.js?v=4cf52ae3e8a0"></script>
-    <script type="module" src="js/map-engine.js?v=2e4380cb4322"></script>
+    <script type="module" src="js/map-engine.js?v=54f5c47eaf50"></script>
     <script type="module" src="js/viewport-ui.js?v=789d6b79afd7"></script>
-    <script type="module" src="js/panels.js?v=025047cd4a4d"></script>
-    <script type="module" src="js/case-view.js?v=af2bc6642373"></script>
+    <script type="module" src="js/panels.js?v=ca53a61c5f67"></script>
+    <script type="module" src="js/case-view.js?v=8a177d816eb1"></script>
     <script type="module" src="js/favicon.js?v=3aa23538dc2d"></script>
     <script type="application/ld+json">
       {
@@ -543,10 +543,25 @@
                 <dd data-map-evidence-feature></dd>
               </div>
             </dl>
-            <details class="case-details" data-map-evidence-details hidden>
-              <summary>КАК ЭТО УСТРОЕНО</summary>
-              <p data-map-evidence-details-copy></p>
-            </details>
+            <section class="case-details" data-map-evidence-details aria-labelledby="case-details-title" hidden>
+              <h3 id="case-details-title">КАК ЭТО УСТРОЕНО</h3>
+              <div class="case-details__part">
+                <h4>СВЕТ И ЦВЕТ</h4>
+                <p data-case-copy="details"></p>
+              </div>
+              <div class="case-details__part">
+                <h4>ПОГОДА</h4>
+                <p data-case-copy="weather"></p>
+              </div>
+              <div class="case-details__part">
+                <h4>ДЕНЬ В СОЧИ</h4>
+                <p data-case-copy="timePreview"></p>
+              </div>
+              <div class="case-details__part case-details__technical">
+                <h4>ТЕХНИЧЕСКОЕ ПРИМЕЧАНИЕ</h4>
+                <p data-case-copy="technical"></p>
+              </div>
+            </section>
           </div>
           <div
             class="observation-controls"
@@ -727,12 +742,16 @@
               "result": "Запущен интерактивный сайт с профильными разделами, медиархивом, подборками, партнёрствами и прямой записью."
             },
             "hotline-camp": {
+              "keywords": "хотлайн хотлайн-кэмп хотлайн-кемп",
               "task": "Представить программу, тренеров и условия финальной недели подготовки к IRONSTAR 2026 и передать атмосферу Сочи.",
               "role": "Концепция, структура, визуальная система, доступность, разработка и запуск.",
               "idea": "Я думал о спортсмене-любителе из Москвы, который решает, ехать ли на кэмп. Хотелось, чтобы природа Сочи проступала через веб и давала почувствовать место ещё до поездки. Поэтому мы связали оформление сайта с местным световым днём и погодой — в надежде, что это поможет человеку решиться на несколько дней сменить осеннюю Москву на ещё тёплый Сочи.",
               "result": "Запущен адаптивный сайт с программой, профилями тренеров и заявкой.",
               "feature": "Мокрый известняк и чёрный сланец. Магнолия и голубой эвкалипт. Бирюза осеннего моря, олеандр и мягкий папоротниковый оранжевый. Палитра сайта собрана из цветов Сочи.",
-              "details": "По местному времени, восходу и закату сайт плавно переходит между утренней, дневной, вечерней и ночной палитрами. Цветовой цикл учитывает сезон и работает в светлой и тёмной темах.\n\nUV-индекс меняет насыщенность палитры. Насыщенность трёх базовых цветов — поверхности, акцента и глубины — меняется в OKLCH с сохранением оттенка и светлоты.\n\nДождь и влажность смягчают фотографию первого экрана, ветер усиливает рябь на воде и воздушный след в графике программы. Текст и элементы управления сохраняют чёткость. Актуальные погодные данные поступают из Open‑Meteo, UV — из модели CAMS.\n\nПосетитель может «прожить день в Сочи», перемещая ползунок времени в футере, а затем вернуться к текущему состоянию. Ползунок моделирует только время суток; погодные эффекты опираются на последние полученные данные. Без них сохраняется базовое оформление, а при отключённой анимации графика остаётся неподвижной."
+              "details": "По местному времени, восходу и закату сайт плавно переходит между утренней, дневной, вечерней и ночной палитрами. Цветовой цикл учитывает сезон и работает в светлой и тёмной темах.",
+              "weather": "UV-индекс меняет насыщенность палитры. Дождь и влажность смягчают фотографию первого экрана, ветер усиливает рябь на воде и воздушный след в графике программы. Текст и элементы управления сохраняют чёткость.",
+              "timePreview": "В футере можно «прожить день в Сочи»: перемещать ползунок времени, наблюдать за сменой палитры и вернуться к текущему состоянию.",
+              "technical": "Насыщенность трёх базовых цветов — поверхности, акцента и глубины — регулируется в OKLCH с сохранением оттенка и светлоты. Погодные данные поступают из Open‑Meteo, UV — из модели CAMS. Ползунок моделирует только время суток; погодные эффекты опираются на последние полученные данные. Без них сохраняется базовое оформление, при отключённой анимации графика остаётся неподвижной."
             },
             "eleven": {
               "task": "Рассказать о Викторе, его прошлом опыте и подготовке к первому в мире 31-дневному ультратриатлону в декабре 2026 года — и привлечь к проекту партнёров.",
@@ -1402,14 +1421,8 @@
     >
       <div class="settings-panel__header">
         <div>
-          <p data-settings-eyebrow>
-            <span data-settings-copy="settings">САЙТ / НАСТРОЙКИ</span>
-            <span data-settings-copy="analytics">САЙТ / ПРИВАТНОСТЬ</span>
-          </p>
-          <h2 id="settings-panel-title" data-settings-title>
-            <span data-settings-copy="settings">НАСТРОЙКИ САЙТА</span>
-            <span data-settings-copy="analytics">АНАЛИТИКА И&nbsp;ПРИВАТНОСТЬ</span>
-          </h2>
+          <p data-settings-eyebrow>САЙТ / НАСТРОЙКИ</p>
+          <h2 id="settings-panel-title" data-settings-title>НАСТРОЙКИ САЙТА</h2>
         </div>
         <button
           class="settings-panel__close"
@@ -1421,14 +1434,8 @@
         </button>
       </div>
       <p class="settings-panel__intro" id="settings-panel-intro" data-settings-intro>
-        <span data-settings-copy="settings">
-          Настройки действуют только на&nbsp;этом сайте. Системные предпочтения
-          движения и&nbsp;контраста всегда имеют приоритет.
-        </span>
-        <span data-settings-copy="analytics">
-          Метрика загружается только после явного согласия. Выбор можно изменить
-          в&nbsp;любой момент.
-        </span>
+        Настройки действуют только на&nbsp;этом сайте. Системные предпочтения
+        движения и&nbsp;контраста всегда имеют приоритет.
       </p>
       <div class="settings-panel__body">
         <div class="settings-panel__screen" data-settings-screen-controls>

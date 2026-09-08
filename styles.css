@@ -10050,9 +10050,7 @@ body:has(.practice-map[data-active-kind="all"])
   }
 }
 
-/* Site preferences share one dialog shell. General settings expose every
-   preference; the analytics launcher switches the shell to a focused privacy
-   place so its destination matches the label that opened it. */
+/* All preferences share one dialog. Shortcuts scroll to the relevant section. */
 .settings-panel {
   position: fixed;
   top: 50%;
@@ -10086,6 +10084,7 @@ body:has(.practice-map[data-active-kind="all"])
   display: none;
 }
 
+body.has-settings-panel .site-header,
 body.has-settings-panel .control-console,
 body.has-settings-panel .system-dock,
 body.has-settings-panel .display-control {
@@ -10181,16 +10180,6 @@ html[data-focus-modality="keyboard"] .settings-panel__close:focus-visible {
   display: none;
   width: 0;
   height: 0;
-}
-
-.settings-panel [data-settings-copy="analytics"],
-.settings-panel[data-settings-mode="analytics"] [data-settings-copy="settings"],
-.settings-panel[data-settings-mode="analytics"] .settings-panel__screen {
-  display: none;
-}
-
-.settings-panel[data-settings-mode="analytics"] [data-settings-copy="analytics"] {
-  display: block;
 }
 
 .settings-panel__row {
@@ -10609,17 +10598,20 @@ html[data-focus-modality="keyboard"]
   }
 
   .settings-panel__privacy > div {
-    display: grid;
-    grid-template-columns: 78px minmax(0, 1fr);
-    gap: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 12px;
     align-items: baseline;
   }
 
   .settings-panel__privacy dt {
+    flex: 0 0 auto;
+    min-width: 78px;
     font-size: 0.54rem;
   }
 
   .settings-panel__privacy dd {
+    flex: 1 1 9rem;
     margin-top: 0;
     font-size: 0.68rem;
   }
@@ -11044,21 +11036,20 @@ body[data-case-open] :is(.map-axis-label, .map-labels, .map-node-label, .origin-
 .is-case-view .map-evidence dd { font-size: var(--case-body-size); line-height: 1.5; overflow-wrap: anywhere; }
 .map-evidence dd .text-link { white-space: normal; }
 .map-evidence [data-map-evidence-feature] { white-space: pre-line; }
-.case-details { margin-top: var(--case-space-section); border-top: 1px solid var(--line-soft); }
-.case-details[hidden] { display: none; }
-.case-details summary {
-  padding: 14px 0;
+.case-details { display: grid; gap: var(--case-space-section); margin-top: var(--case-space-section); padding-top: var(--case-space-section); border-top: 1px solid var(--line-soft); }
+.case-details[hidden], .case-details__part[hidden] { display: none; }
+.case-details h3, .case-details h4 {
+  margin: 0;
   color: var(--content-muted);
   font-size: var(--case-label-size);
   font-weight: 500;
   line-height: 1.5;
-  cursor: pointer;
 }
-.case-details summary:focus-visible {
-  outline: 2px solid var(--signal);
-  outline-offset: 2px;
-}
-.case-details p { margin: 8px 0 0; font-size: var(--case-body-size); line-height: 1.5; white-space: pre-line; }
+.case-details h3 { color: var(--content-ink); font-size: var(--case-body-size); }
+.case-details__part { display: grid; gap: 12px; }
+.case-details p { margin: 0; font-size: var(--case-body-size); line-height: 1.5; }
+.case-details__technical { padding-top: var(--case-space-section); border-top: 1px solid var(--line-soft); }
+.case-details__technical p { color: var(--content-muted); font-size: 1rem; }
 .is-case-view .map-evidence [data-map-evidence-role-label] {
   font-size: calc(var(--case-label-size) * var(--case-author-optical-scale));
 }

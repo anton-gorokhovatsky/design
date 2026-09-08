@@ -1233,6 +1233,9 @@ const analyticsConsentAudit = async (page, viewport, label) => {
   const result = await page.evaluate(() => {
     const consent = document.querySelector("[data-analytics-consent]");
     const rect = consent?.getBoundingClientRect();
+    const body = consent?.querySelector(".settings-panel__body");
+    const bodyRect = body?.getBoundingClientRect();
+    const activeRect = document.activeElement?.getBoundingClientRect();
     const analyticsActions = consent
       ?.querySelector(".settings-panel__analytics-actions")
       ?.getBoundingClientRect();
@@ -1261,6 +1264,16 @@ const analyticsConsentAudit = async (page, viewport, label) => {
     return {
       visible: Boolean(consent && !consent.hidden && consent.classList.contains("is-open")),
       inert: consent?.inert ?? true,
+      mode: consent?.dataset.settingsMode,
+      focusSection: consent?.dataset.focusSection,
+      title: consent?.querySelector("[data-settings-title]")?.innerText.trim(),
+      screenControlsVisible: Boolean(
+        consent?.querySelector("[data-settings-screen-controls]")?.getClientRects().length,
+      ),
+      actionFocused: document.activeElement?.matches("[data-analytics-allow], [data-analytics-deny]"),
+      focusedActionVisible: Boolean(activeRect && bodyRect
+        && activeRect.top >= bodyRect.top - 1
+        && activeRect.bottom <= bodyRect.bottom + 1),
       focusInside: Boolean(consent?.contains(document.activeElement)),
       role: consent?.getAttribute("role") || "",
       modal: consent?.getAttribute("aria-modal") || "",
@@ -1369,6 +1382,9 @@ const analyticsConsentAudit = async (page, viewport, label) => {
 
     return {
       mode: panel?.dataset.settingsMode || "",
+      focusSection: panel?.dataset.focusSection,
+      scrollTop: body?.scrollTop,
+      themeFocused: document.activeElement?.hasAttribute("data-theme-toggle"),
       title: panel?.querySelector("[data-settings-title]")?.innerText.trim() || "",
       screenControlsVisible: Boolean(
         panel?.querySelector("[data-settings-screen-controls]")?.getClientRects().length,
@@ -1440,6 +1456,12 @@ const analyticsConsentAudit = async (page, viewport, label) => {
     verticallyBalanced,
     failure: !result.visible
       || result.inert
+      || result.mode !== "settings"
+      || result.focusSection !== "analytics"
+      || result.title !== "НАСТРОЙКИ САЙТА"
+      || !result.screenControlsVisible
+      || !result.actionFocused
+      || !result.focusedActionVisible
       || !result.focusInside
       || result.role !== "dialog"
       || result.modal !== "true"
@@ -1487,6 +1509,9 @@ const analyticsConsentAudit = async (page, viewport, label) => {
       || !withinViewport
       || !verticallyBalanced
       || generalSettings.mode !== "settings"
+      || generalSettings.focusSection !== "settings"
+      || generalSettings.scrollTop !== 0
+      || !generalSettings.themeFocused
       || generalSettings.title !== "НАСТРОЙКИ САЙТА"
       || !generalSettings.screenControlsVisible
       || generalSettings.overflowX !== 0

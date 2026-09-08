@@ -115,7 +115,7 @@ const openSettingsPanel = ({
     : activeElement instanceof HTMLElement && !settingsPanel.contains(activeElement)
       ? activeElement
       : lastSettingsTrigger;
-  settingsPanel.dataset.settingsMode = section === "analytics" ? "analytics" : "settings";
+  settingsPanel.dataset.settingsMode = "settings";
   if (!settingsPanel.open) {
     document.body.classList.add("has-settings-panel");
     settingsPanel.hidden = false;
@@ -125,21 +125,28 @@ const openSettingsPanel = ({
   }
   settingsPanel.dataset.focusSection = section;
 
-  if (focus) {
-    window.requestAnimationFrame(() => {
-      let target = settingsPanel.querySelector("[data-theme-toggle]") || settingsClose;
+  window.requestAnimationFrame(() => {
+    const body = settingsPanel.querySelector(".settings-panel__body");
+    const target = section === "analytics"
+      ? (analyticsPreference === "allowed" ? analyticsDeny : analyticsAllow)
+      : settingsPanel.querySelector({
+        motion: "[data-motion-toggle]",
+        contrast: "[data-contrast-toggle]",
+      }[section] || "[data-theme-toggle]") || settingsClose;
 
-      if (section === "analytics") {
-        target = analyticsPreference === "allowed" ? analyticsDeny : analyticsAllow;
-      } else if (section === "motion") {
-        target = settingsPanel.querySelector("[data-motion-toggle]");
-      } else if (section === "contrast") {
-        target = settingsPanel.querySelector("[data-contrast-toggle]");
-      }
-
-      (target?.disabled ? settingsClose : target)?.focus({ preventScroll: true });
-    });
-  }
+    if (body) body.scrollTop = 0;
+    if (section !== "settings") {
+      const destination = section === "analytics"
+        ? settingsPanel.querySelector('[data-settings-section="analytics"]')
+        : target?.closest(".settings-panel__row");
+      destination?.scrollIntoView({ block: "start", behavior: "instant" });
+    }
+    if (focus) {
+      const control = target?.disabled ? settingsClose : target;
+      control?.focus({ preventScroll: true });
+      control?.scrollIntoView({ block: "nearest", behavior: "instant" });
+    }
+  });
 };
 
 const openAnalyticsConsent = (options = {}) => openSettingsPanel({

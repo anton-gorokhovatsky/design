@@ -28,6 +28,9 @@ change("index.html", html, 'aria-label="Обзор работ за 90 секу
 change("index.html", html, "Развивать цифровые продукты Музея", "Развивать цифровую среду Музея", true);
 change("index.html", html, "Визуальный язык связали", "Визуальное решение связали", true);
 change("index.html", html, "Цветовой цикл учитывает сезон", "Цветовой цикл следует сезону", true);
+change("index.html", html, "UV-индекс меняет насыщенность палитры", "UV-индекс влияет на насыщенность палитры", true);
+change("index.html", html, "В футере можно «прожить день в Сочи»", "Внизу сайта можно «прожить день в Сочи»", true);
+change("index.html", html, "регулируется в OKLCH", "меняется в OKLCH", true);
 change("index.html", html, /styles\.css\?v=[a-f0-9]{12}/.exec(html)[0], "styles.css?v=aaaaaaaaaaaa", true);
 change("index.html", html, /\.\/js\/panels\.js\?v=[a-f0-9]{12}/.exec(html)[0], "./js/panels.js?v=aaaaaaaaaaaa", true);
 

@@ -737,6 +737,9 @@ const getMapItemSearchFields = (item) => {
     evidence.result,
     evidence.feature,
     evidence.details,
+    evidence.weather,
+    evidence.timePreview,
+    evidence.technical,
     evidence.keywords,
   ];
 };
@@ -800,7 +803,7 @@ const commandViews = [
     type: "action",
     id: "analytics-settings",
     title: "АНАЛИТИКА И\u00a0ПРИВАТНОСТЬ",
-    meta: "ЯНДЕКС МЕТРИКА",
+    meta: "НАСТРОЙКИ / ЯНДЕКС МЕТРИКА",
     intents: "аналитика приватность метрика",
     keywords: "вебвизор cookie согласие",
   },

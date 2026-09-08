@@ -2381,6 +2381,8 @@ const auditBrowser = async (client, origin) => {
   await waitForExpression(client, `(() => (
     !document.querySelector("[data-settings-panel]")?.hidden
     && document.querySelector("[data-settings-panel]")?.dataset.settingsMode
+      === "settings"
+    && document.querySelector("[data-settings-panel]")?.dataset.focusSection
       === "analytics"
     && document.activeElement?.matches(
       "[data-analytics-allow], [data-analytics-deny]",
@@ -2393,19 +2395,21 @@ const auditBrowser = async (client, origin) => {
     screenControlsDisplay: getComputedStyle(
       document.querySelector("[data-settings-screen-controls]"),
     ).display,
+    focusSection: document.querySelector("[data-settings-panel]")?.dataset.focusSection,
     focusedAnalyticsAction: document.activeElement?.matches(
       "[data-analytics-allow], [data-analytics-deny]",
     ),
   }))()`);
   if (
     !analyticsSearchRouteContract.visible
-    || analyticsSearchRouteContract.mode !== "analytics"
-    || analyticsSearchRouteContract.title !== "АНАЛИТИКА И\u00a0ПРИВАТНОСТЬ"
-    || analyticsSearchRouteContract.screenControlsDisplay !== "none"
+    || analyticsSearchRouteContract.mode !== "settings"
+    || analyticsSearchRouteContract.title !== "НАСТРОЙКИ САЙТА"
+    || analyticsSearchRouteContract.screenControlsDisplay === "none"
+    || analyticsSearchRouteContract.focusSection !== "analytics"
     || !analyticsSearchRouteContract.focusedAnalyticsAction
   ) {
     fail(
-      "search-intent: analytics query opens broader settings instead of privacy.",
+      "search-intent: analytics query does not focus its section in shared settings.",
       analyticsSearchRouteContract,
     );
   }
@@ -3463,17 +3467,17 @@ const auditBrowser = async (client, origin) => {
     !analyticsConsentContract.visible
     || analyticsConsentContract.inert
     || !analyticsConsentContract.focusInside
-    || analyticsConsentContract.mode !== "analytics"
+    || analyticsConsentContract.mode !== "settings"
     || analyticsConsentContract.role !== "dialog"
     || analyticsConsentContract.modal !== "true"
     || !analyticsConsentContract.closeExists
     || analyticsConsentContract.closeLabel !== "Закрыть"
-    || analyticsConsentContract.eyebrow !== "САЙТ / ПРИВАТНОСТЬ"
-    || analyticsConsentContract.title !== "АНАЛИТИКА И\u00a0ПРИВАТНОСТЬ"
+    || analyticsConsentContract.eyebrow !== "САЙТ / НАСТРОЙКИ"
+    || analyticsConsentContract.title !== "НАСТРОЙКИ САЙТА"
     || analyticsConsentContract.intro
-      !== "Метрика загружается только после явного согласия. Выбор можно изменить в любой момент."
-    || analyticsConsentContract.screenControlsDisplay !== "none"
-    || analyticsConsentContract.visibleScreenControls !== 0
+      !== "Настройки действуют только на этом сайте. Системные предпочтения движения и контраста всегда имеют приоритет."
+    || analyticsConsentContract.screenControlsDisplay === "none"
+    || analyticsConsentContract.visibleScreenControls !== 3
     || analyticsConsentContract.preferenceLabel !== "РЕШЕНИЕ НЕ ПРИНЯТО"
     || analyticsConsentContract.stateCopy !== "До выбора Метрика не загружается."
     || !analyticsConsentContract.open
@@ -3635,9 +3639,9 @@ const auditBrowser = async (client, origin) => {
   }))()`);
   if (
     !reopenedContract.visible
-    || reopenedContract.mode !== "analytics"
-    || reopenedContract.title !== "АНАЛИТИКА И\u00a0ПРИВАТНОСТЬ"
-    || reopenedContract.screenControlsDisplay !== "none"
+    || reopenedContract.mode !== "settings"
+    || reopenedContract.title !== "НАСТРОЙКИ САЙТА"
+    || reopenedContract.screenControlsDisplay === "none"
     || reopenedContract.focusedAction !== "allow"
     || reopenedContract.preferenceLabel !== "АНАЛИТИКА ВЫКЛЮЧЕНА"
     || reopenedContract.stateCopy !== "Метрика не загружается."

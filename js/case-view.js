@@ -244,7 +244,7 @@ document.addEventListener("keydown", event => {
     event.stopImmediatePropagation();
     close.click();
   } else if (event.key === "Tab") {
-    const focusable = [...mapInspector.querySelectorAll('button, a[href], summary, [tabindex="0"]')]
+    const focusable = [...mapInspector.querySelectorAll('button, a[href], [tabindex="0"]')]
       .filter(element => !element.hidden && !element.disabled && element.getClientRects().length);
     const first = focusable[0];
     const last = focusable.at(-1);
