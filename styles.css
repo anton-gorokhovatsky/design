@@ -10910,6 +10910,7 @@ body[data-case-open] :is(.map-axis-label, .map-labels, .map-node-label, .origin-
   line-height: 1.4;
 }
 .map-inspector.is-case-view .case-header .overlay-close {
+  align-self: flex-start;
   flex: 0 0 44px;
   width: 44px;
   height: 44px;
