@@ -226,10 +226,13 @@ for(const engine of [process.argv[2]||'chromium']) {
     await page.waitForFunction(() => document.querySelector('[data-content-panel]').dataset.view === 'contact');
     await page.goto(origin + '/?point=running');
     await page.waitForFunction(() => document.querySelectorAll('[data-map-related] a').length === 8);
-    const documentStart = await page.evaluate(() => performance.timeOrigin);
+    // Compare the document itself: WebKit can round timeOrigin differently
+    // between reads, which is not evidence of a document navigation.
+    const sourceDocument = await page.evaluateHandle(() => document);
     await page.locator('[data-map-related] a[href="?point=hotline-camp"]').click();
     await page.waitForFunction(() => document.body.hasAttribute('data-case-open'));
-    assert.equal(await page.evaluate(() => performance.timeOrigin), documentStart, 'Related points open without reloading the page');
+    assert.equal(await sourceDocument.evaluate(node => node === document), true, 'Related points open without reloading the page');
+    await sourceDocument.dispose();
     await page.goto(origin + '/?route=observation&step=8');
     await page.waitForFunction(() => document.querySelector('[data-observation-pause]').hidden);
     assert.equal(await page.locator('[data-observation-pause]').isVisible(), false, 'The final step has no meaningless Continue action');

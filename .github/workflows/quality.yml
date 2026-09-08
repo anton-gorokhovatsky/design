@@ -96,7 +96,7 @@ jobs:
         id: playwright-cache
         uses: actions/cache/restore@v6
         with:
-          path: ~/.cache/ms-playwright
+          path: ${{ runner.os == 'macOS' && '~/Library/Caches/ms-playwright' || '~/.cache/ms-playwright' }}
           key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ matrix.browser }}-${{ hashFiles('pnpm-lock.yaml') }}
       - name: Install Playwright ${{ matrix.browser }}
         id: playwright-install
@@ -107,12 +107,24 @@ jobs:
           pnpm exec playwright install --with-deps ${{ matrix.browser }}
       - run: node scripts/check-project.mjs --scope=${{ matrix.browser }} --browser-suite=${{ matrix.suite }}
       - if: always()
+        id: artifacts
+        continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
           name: browser-contracts-${{ matrix.artifact }}
           path: artifacts/${{ matrix.artifact }}
           if-no-files-found: ignore
           retention-days: 14
+      # Retry only artifact delivery after a transient service failure;
+      # never repeat or suppress the browser check itself.
+      - if: always() && steps.artifacts.outcome == 'failure'
+        uses: actions/upload-artifact@v7
+        with:
+          name: browser-contracts-${{ matrix.artifact }}
+          path: artifacts/${{ matrix.artifact }}
+          if-no-files-found: ignore
+          retention-days: 14
+          overwrite: true
       - name: Save Playwright ${{ matrix.browser }}
         if: >-
           always()
@@ -120,7 +132,7 @@ jobs:
           && steps.playwright-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v6
         with:
-          path: ~/.cache/ms-playwright
+          path: ${{ runner.os == 'macOS' && '~/Library/Caches/ms-playwright' || '~/.cache/ms-playwright' }}
           key: ${{ steps.playwright-cache.outputs.cache-primary-key }}
 
   webkit-contracts:
