@@ -35,8 +35,11 @@ jobs:
       - name: Install FFmpeg
         if: steps.scope.outputs.mode == 'full'
         run: |
+          if [ -f /etc/apt/apt-mirrors.txt ]; then
+            printf '%s\n' 'https://archive.ubuntu.com/ubuntu' | sudo tee /etc/apt/apt-mirrors.txt > /dev/null
+          fi
           sudo apt-get update
-          sudo apt-get install -y ffmpeg
+          sudo apt-get install -y --no-install-recommends ffmpeg
       - run: node scripts/check-project.mjs --scope=${{ steps.scope.outputs.mode == 'copy' && 'copy' || 'static' }}
 
   browser-contracts:
@@ -95,7 +98,11 @@ jobs:
           key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ matrix.browser }}-${{ hashFiles('pnpm-lock.yaml') }}
       - name: Install Playwright ${{ matrix.browser }}
         id: playwright-install
-        run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
+        run: |
+          if [ -f /etc/apt/apt-mirrors.txt ]; then
+            printf '%s\n' 'https://archive.ubuntu.com/ubuntu' | sudo tee /etc/apt/apt-mirrors.txt > /dev/null
+          fi
+          pnpm exec playwright install --with-deps ${{ matrix.browser }}
       - run: node scripts/check-project.mjs --scope=${{ matrix.browser }} --browser-suite=${{ matrix.suite }}
       - if: always()
         uses: actions/upload-artifact@v7
