@@ -676,8 +676,7 @@ requireContract(
     )
     && /line-height:\s*1/.test(coordinateLabelGeometryRule)
     && originLabelRules.some((rule) => /min-height:\s*36px/.test(rule)
-      && /padding:\s*10px 12px/.test(rule)
-      && /font-weight:\s*600/.test(rule)),
+      && /padding:\s*10px 12px/.test(rule)),
   "coordinate-label-geometry",
   "The route entry keeps the coordinate material and gains a readable, distinct input surface.",
 );

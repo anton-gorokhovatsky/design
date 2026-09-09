@@ -7967,7 +7967,7 @@ html[data-reduce-motion="true"] .observation-showcase {
   padding: 10px 12px;
   color: var(--content-ink);
   font-size: clamp(0.8rem, calc(0.76rem + 0.16vw), 0.9rem);
-  font-weight: 600;
+  font-weight: 400;
   cursor: pointer;
   pointer-events: auto;
 }
