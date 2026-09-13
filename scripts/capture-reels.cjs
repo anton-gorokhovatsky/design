@@ -87,8 +87,8 @@ const projects = {
   },
   "11111": {
     url: "https://11111.life/",
-    outputDuration: 11.8,
-    finalHold: 2800,
+    outputDuration: 18.7,
+    finalHold: 2400,
   },
   "ks-fish": {
     url: "https://ks.fish/",
@@ -140,58 +140,44 @@ const smoothScroll = async (page, duration = 6500) => {
 };
 
 const runElevenCaptureMotion = async (page) => {
+  // Drive the public range control and its normal input handler. The last
+  // sweep keeps the wordmark in view; no light/weather values are mocked.
+  const scrubTime = async (from, to, duration) => {
+    await page.locator("#dubai-time").evaluate(async (input, range) => {
+      if (input.disabled) throw new Error("Start-day preview must be active");
+      const startedAt = performance.now();
+      await new Promise((resolve) => {
+        const frame = (now) => {
+          const progress = Math.min(1, (now - startedAt) / range.duration);
+          input.value = String(Math.round(range.from + (range.to - range.from) * progress));
+          input.dispatchEvent(new Event("input", { bubbles: true }));
+          if (progress < 1) requestAnimationFrame(frame);
+          else {
+            input.dispatchEvent(new Event("change", { bubbles: true }));
+            resolve();
+          }
+        };
+        requestAnimationFrame(frame);
+      });
+    }, { from, to, duration });
+  };
+
   await page.waitForTimeout(1400);
-
-  const diaryLink = page.locator('#top a[href="#diary"]');
-
-  if (await diaryLink.count() !== 1) {
-    throw new Error("The 11 111 diary entry point must be unique");
-  }
-
-  await diaryLink.click();
-  await page.waitForTimeout(2000);
-
-  const archiveLink = page.locator('#diary a[href="#diary-archive"]');
-
-  if (await archiveLink.count() !== 1) {
-    throw new Error("The 11 111 diary archive entry point must be unique");
-  }
-
-  await archiveLink.click();
+  await page.locator("details.nav-shell > summary").click();
   await page.waitForTimeout(1500);
-
-  const previousEntry = page.locator("#diary-tab-2026-05-09");
-
-  if (await previousEntry.count() !== 1) {
-    throw new Error("The 11 111 diary chapter control must be unique");
-  }
-
-  await previousEntry.click();
-  await page.waitForTimeout(700);
-
-  const menuToggle = page.locator("details.nav-shell > summary");
-
-  if (await menuToggle.count() !== 1) {
-    throw new Error("The 11 111 menu toggle must be unique");
-  }
-
-  await menuToggle.click();
-  await page.waitForTimeout(700);
-
-  const darkTheme = page.locator(
-    'details.nav-shell [data-theme-option="dark"]',
-  );
-
-  if (await darkTheme.count() !== 1) {
-    throw new Error("The 11 111 dark-theme control must be unique");
-  }
-
-  await darkTheme.click();
-  await page.waitForTimeout(700);
-  await menuToggle.click();
+  await page.locator('details.nav-shell a[href="#dubai-forecast"]').click();
   await page.waitForTimeout(800);
-  await smoothScrollBy(page, 360, 1400);
-  await page.waitForTimeout(200);
+  await smoothScrollTo(page, "#dubai-light", 500, 0.14);
+  await page.locator('[data-dubai-mode="preview"]').click();
+  await scrubTime(420, 420, 1);
+  await page.waitForTimeout(800);
+  await scrubTime(420, 720, 1800);
+  await page.waitForTimeout(700);
+  await smoothScrollTo(page, ".site-footer__wordmark", 1000, 0.14);
+  await scrubTime(720, 1035, 3500);
+  await page.waitForTimeout(1100);
+  await scrubTime(1035, 1260, 2300);
+  await page.waitForTimeout(700);
 };
 
 const smoothScrollTo = async (

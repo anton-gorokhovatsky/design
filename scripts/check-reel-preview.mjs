@@ -15,7 +15,7 @@ const expectedById = new Map([
     artifactId: "11111",
     index: "15 / 17",
     titleFragments: ["11 111", "Виктора Доронина"],
-    meta: "ИСТОРИЯ, ЦЕЛЬ И МАСШТАБ / 00:12",
+    meta: "ПАЛИТРА, ПОГОДА И ВРЕМЯ / 00:19",
     videoPath: "/assets/reels/11111.mp4",
     posterPath: "/assets/reel-posters/11111.jpg",
     chapterPaths: [
@@ -24,7 +24,7 @@ const expectedById = new Map([
     ],
     width: 900,
     height: 600,
-    duration: { min: 11.5, max: 12.1 },
+    duration: { min: 18.4, max: 19 },
   }],
   ["narkomfin", {
     mapId: "narkomfin",

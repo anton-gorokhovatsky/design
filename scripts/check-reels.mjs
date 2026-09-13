@@ -50,7 +50,7 @@ const reelSpecs = new Map(
     },
   ]),
 );
-reelSpecs.get("11111.mp4").duration = { min: 11.5, max: 12.1 };
+reelSpecs.get("11111.mp4").duration = { min: 18.4, max: 19 };
 reelSpecs.get("garage-archives.mp4").duration = { min: 11.5, max: 12.1 };
 reelSpecs.get("garage-endowment.mp4").duration = { min: 10.5, max: 11.1 };
 reelSpecs.get("garage-institutions.mp4").duration = { min: 11.3, max: 11.9 };

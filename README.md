@@ -106,10 +106,10 @@ route.
   walkthroughs of characteristic live states: full-page scrolls, meaningful
   inner routes, theme changes, or distinctive interface controls. A longer
   editorial pass is allowed when a real interaction needs legible dwell time;
-  the current `11 111` reel uses 11.8 seconds for its bicycle-challenge hero,
-  preparation diary, archive, a real diary-entry switch and the site's dark-theme
-  control. Its secondary loops separate the light hero-to-diary route from the
-  selected diary entry in dark mode. Tarski
+  the current `11 111` reel uses 18.7 seconds for its bicycle-challenge hero,
+  weather menu, start-day slider, and the large footer wordmark as its shadow
+  lengthens at sunset and disappears at night. Its secondary loops show the
+  hero and weather menu, then the wordmark's day-to-night transition. Tarski
   uses 12.4 seconds for its light editorial route, a real theme
   switch, the dark artist network, and an artist dossier; its secondary loops
   keep one light editorial chapter and one dark network/dossier chapter.
