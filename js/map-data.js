@@ -447,6 +447,7 @@ const mapItems = [
     kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
     previewVideo: "assets/reels/11111.mp4?v=d5bae9bff1d6",
     previewPoster: "assets/reel-posters/11111.jpg?v=f4fcb946c093",
+    previewDuration: 18.7,
     previewOrientation: "landscape",
     previewMeta: "ПАЛИТРА, ПОГОДА И ВРЕМЯ / 00:19",
     x: 74,
