@@ -52,7 +52,7 @@ function resumeBackground() {
   backgroundState = [];
 }
 const caseLens = observeScrollLens(viewport, () => viewport.querySelectorAll(
-  ".map-readout__identity h2, .map-readout__identity p, .case-inline-media video, [data-map-description], .map-evidence, .case-details, .map-related__header",
+  ".map-readout__identity h2, .map-readout__identity p, .case-inline-media video, [data-map-description], .map-evidence dt, .map-evidence dd, .case-details h3, .case-details h4, .case-details p, .map-related__header",
 ), { owner: mapInspector });
 
 function mount() {

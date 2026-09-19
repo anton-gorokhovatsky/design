@@ -16,29 +16,36 @@ const scrollRegionFromKey = (event, region, reduceMotion) => {
 // Optical refraction belongs to foreground content, never to a material surface.
 // Video remains clipped by its original, stationary media frame. No layout nodes move.
 const scrollLensControllers = new Map();
-let scrollLensMaps;
 let scrollLensId = 0;
 const lensNamespace = "http://www.w3.org/2000/svg";
 const lensForcedColors = matchMedia("(forced-colors: active)");
-const getScrollLensMaps = () => scrollLensMaps ||= [true, false].map(top => {
-  const canvas = document.createElement("canvas");
-  canvas.width = 512;
-  canvas.height = 192;
+// The map fills the whole foreground box. Its displacement reaches zero at the
+// left and right edges, so refraction cannot move an image's visible perimeter.
+const drawScrollLensMap = (record, height, top, bottom, fade) => {
+  const canvas = record.canvas;
+  const rows = Math.min(256, Math.max(16, Math.ceil(height)));
+  if (canvas.height !== rows) canvas.height = rows;
   const context = canvas.getContext("2d");
-  const pixels = context.createImageData(canvas.width, canvas.height);
-  for (let y = 0; y < canvas.height; y++) for (let x = 0; x < canvas.width; x++) {
-    const t = top ? 1 - y / 191 : y / 191;
-    const u = -.12 + x / 511 * 1.24;
-    const shift = (u - .5) * (1 / (1 + .24 * t ** 3) - 1);
-    const offset = (y * canvas.width + x) * 4;
-    pixels.data[offset] = 128 + shift / .28 * 255;
-    pixels.data[offset + 1] = 255 * t ** 2;
-    pixels.data[offset + 2] = 255 * (1 - .95 * t ** 6);
-    pixels.data[offset + 3] = 255;
+  const pixels = context.createImageData(canvas.width, rows);
+  for (let y = 0; y < rows; y++) {
+    const position = y / (rows - 1) * height;
+    const t = Math.max(0, top === null ? 0 : 1 - (position - top) / 64,
+      bottom === null ? 0 : 1 - (bottom - position) / 64);
+    const depth = Math.min(1, t);
+    for (let x = 0; x < canvas.width; x++) {
+      const u = x / (canvas.width - 1);
+      const shift = (u - .5) * (1 / (1 + .24 * depth ** 3) - 1)
+        * Math.sin(Math.PI * u) ** 2;
+      const offset = (y * canvas.width + x) * 4;
+      pixels.data[offset] = 128 + shift / .08 * 255;
+      pixels.data[offset + 1] = 255 * depth ** 2;
+      pixels.data[offset + 2] = fade ? 255 * (1 - .95 * depth ** 6) : 255;
+      pixels.data[offset + 3] = 255;
+    }
   }
   context.putImageData(pixels, 0, 0);
-  return canvas.toDataURL();
-});
+  record.image.setAttribute("href", canvas.toDataURL());
+};
 const clearScrollLenses = region => scrollLensControllers.get(region)?.reset();
 const observeScrollLens = (region, targets, { owner = region, enabled = () => true } = {}) => {
   if (!region) return;
@@ -71,29 +78,23 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
     const id = `scroll-ink-${++scrollLensId}`;
     const filter = document.createElementNS(lensNamespace, "filter");
     for (const [key, value] of Object.entries({ id, filterUnits: "objectBoundingBox",
-      primitiveUnits: "objectBoundingBox", x: "-.12", y: "0", width: "1.24", height: "1",
+      primitiveUnits: "objectBoundingBox", x: "0", y: "0", width: "1", height: "1",
       "color-interpolation-filters": "sRGB" })) filter.setAttribute(key, value);
-    const maps = getScrollLensMaps();
-    filter.innerHTML = `<feFlood flood-color="rgb(128,0,255)" result="neutral"/>
-      <feImage href="${maps[0]}" preserveAspectRatio="none" result="top"/>
-      <feImage href="${maps[1]}" preserveAspectRatio="none" result="bottom"/>
-      <feMerge result="bands"><feMergeNode in="top"/><feMergeNode in="bottom"/></feMerge>
-      <feMerge result="map"><feMergeNode in="neutral"/><feMergeNode in="bands"/></feMerge>
+    filter.innerHTML = `<feImage x="0" y="0" width="1" height="1" preserveAspectRatio="none" result="map"/>
       <feComponentTransfer in="map" result="offset"><feFuncR type="linear" intercept="-.0019607843"/><feFuncB type="linear" slope="0" intercept=".5"/></feComponentTransfer>
-      <feDisplacementMap in="SourceGraphic" in2="offset" scale=".28" xChannelSelector="R" yChannelSelector="B" result="warped"/>
-      <feGaussianBlur in="warped" result="blurred"/>
+      <feDisplacementMap in="SourceGraphic" in2="offset" scale=".08" xChannelSelector="R" yChannelSelector="B" result="warped"/>
+      <feGaussianBlur in="warped" edgeMode="duplicate" result="blurred"/>
       <feColorMatrix in="map" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 1 0 0 0" result="haze"/>
       <feComposite in="warped" in2="haze" operator="out" result="sharp"/>
       <feComposite in="blurred" in2="haze" operator="in" result="soft"/>
-      <feMerge result="frost"><feMergeNode in="sharp"/><feMergeNode in="soft"/></feMerge>
+      <feComposite in="sharp" in2="soft" operator="arithmetic" k2="1" k3="1" result="frost"/>
       <feColorMatrix in="map" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 1 0 0" result="fade"/>
-      <feComposite in="frost" in2="fade" operator="in" result="faded"/>
-      <feComposite in="faded" in2="bands" operator="in" result="edges"/>
-      <feComposite in="SourceGraphic" in2="bands" operator="out" result="middle"/>
-      <feMerge><feMergeNode in="middle"/><feMergeNode in="edges"/></feMerge>`;
+      <feComposite in="frost" in2="fade" operator="in"/>`;
     svg.append(filter);
-    const record = { id, filter, original: element.style.filter,
-      images: filter.querySelectorAll("feImage"), blur: filter.querySelector("feGaussianBlur") };
+    const canvas = document.createElement("canvas");
+    canvas.width = 64;
+    const record = { id, filter, canvas, original: element.style.filter,
+      image: filter.querySelector("feImage"), blur: filter.querySelector("feGaussianBlur") };
     records.set(element, record);
     resize.observe(element);
     return record;
@@ -128,14 +129,11 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
         continue;
       }
       record ||= makeRecord(element);
-      for (let index = 0; index < 2; index++) {
-        const y = (index === 0 ? (port.top - rect.top) / scale
-          : (port.bottom - rect.top) / scale - depths[1]) / height;
-        for (const [key, value] of Object.entries({ x: -.12, y, width: 1.24, height: depths[index] / height })) {
-          record.images[index].setAttribute(key, value);
-        }
-      }
-      record.blur.setAttribute("stdDeviation", `${2.4 / width} ${2.4 / height}`);
+      drawScrollLensMap(record, height,
+        depths[0] ? (port.top - rect.top) / scale : null,
+        depths[1] ? (port.bottom - rect.top) / scale : null,
+        !element.matches("video, img"));
+      record.blur.setAttribute("stdDeviation", `${3.2 / width} ${3.2 / height}`);
       element.style.filter = `url(#${record.id})`;
     }
   };
@@ -161,7 +159,7 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
 };
 const lensInspector = document.querySelector("[data-map-inspector]");
 observeScrollLens(lensInspector, () => lensInspector.querySelectorAll(
-  ".map-readout__identity h2, .map-readout__identity p, [data-map-description], .map-evidence, .case-details, .observation-preview, .map-related__header",
+  ".map-readout__identity h2, .map-readout__identity p, [data-map-description], .map-evidence dt, .map-evidence dd, .case-details h3, .case-details h4, .case-details p, .observation-preview, .map-related__header",
 ), { enabled: () => !lensInspector.classList.contains("is-case-view") });
 const lensPanel = document.querySelector(".content-panel__body");
 observeScrollLens(lensPanel, () => lensPanel.querySelectorAll(
