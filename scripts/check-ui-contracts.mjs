@@ -2239,7 +2239,7 @@ const auditBrowser = async (client, origin) => {
     results.dispatchEvent(new Event("scroll"));
     return true;
   })()`);
-  await delay(40);
+  await waitForSearchPlacement(client);
   const searchOverflowEndContract = await evaluate(client, `(() => {
     const results = document.querySelector("[data-command-results]");
     const bounds = results.getBoundingClientRect();

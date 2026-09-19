@@ -98,7 +98,12 @@ const attachRuntimeLog = (page, label) => {
   });
   page.on("requestfailed", (request) => {
     const failure = request.failure();
-    const isIntentionalMediaCancellation = request.resourceType() === "media"
+    const url = new URL(request.url());
+    // A cancelled video range can be reported as "other" by WebKit. Keep the
+    // existing cancellation exception limited to media and our own reel files.
+    const ownReel = url.origin === new URL(baseUrl).origin
+      && /^\/assets\/reels\/[^/]+\.mp4$/.test(url.pathname);
+    const isIntentionalMediaCancellation = (request.resourceType() === "media" || ownReel)
       && /aborted|cancelled/i.test(failure?.errorText || "");
     if (isIntentionalMediaCancellation) {
       return;
