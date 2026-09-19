@@ -43,6 +43,10 @@ const artifactDir = process.env.PORTFOLIO_AUDIT_DIR
 const projectRoot = path.resolve(__dirname, "..");
 const waitForLayout = async (page, milliseconds = 220) => {
   await page.waitForTimeout(milliseconds);
+  await page.waitForFunction(() => document.getAnimations().every(animation => (
+    animation.animationName !== "window-reveal"
+    || (!animation.pending && animation.playState !== "running")
+  )), undefined, { polling: 50 });
   await page.evaluate(() => new Promise((resolve) => {
     requestAnimationFrame(() => requestAnimationFrame(resolve));
   }));

@@ -10887,7 +10887,7 @@ html[data-focus-modality="keyboard"]
 .personal-media:not([hidden]),
 .map-hover-preview.is-visible,
 .content-panel.is-open .content-panel__header,
-.content-panel.is-open [data-panel-section]:not([hidden]) {
+.content-panel.is-open .content-panel__body {
   animation: window-reveal 360ms var(--motion-enter);
 }
 
@@ -10931,13 +10931,13 @@ html[data-focus-modality="keyboard"]
 html[data-reduce-motion="true"] :is(
   .map-inspector, .settings-panel, .command-results, .command-status,
   .personal-media, .map-hover-preview, .content-panel__header,
-  [data-panel-section], .constellation-nav__orbit
+  .content-panel__body, .constellation-nav__orbit
 ) { animation: none; }
 
 @media (prefers-reduced-motion: reduce) {
   :is(.map-inspector, .settings-panel, .command-results, .command-status,
     .personal-media, .map-hover-preview, .content-panel__header,
-    [data-panel-section], .constellation-nav__orbit) { animation: none; }
+    .content-panel__body, .constellation-nav__orbit) { animation: none; }
 }
 
 @media (forced-colors: active) {

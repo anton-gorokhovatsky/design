@@ -185,6 +185,10 @@ for(const engine of [process.argv[2]||'chromium']) {
     for (const width of [1440, 390]) {
       await page.setViewportSize({ width, height: 900 });
       await page.goto(origin + '/#work');
+      await page.waitForFunction(() => document.getAnimations().every(animation =>
+        animation.animationName !== 'window-reveal'
+        || (!animation.pending && animation.playState !== 'running')),
+      undefined, {polling:50});
       const row = page.locator('.work-row[data-map-point="ilmix"]');
       await row.scrollIntoViewIfNeeded();
       const scrollTop = await page.locator('.content-panel__body').evaluate(el => el.scrollTop);
