@@ -124,7 +124,7 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=75417981cf42">
+    <link rel="stylesheet" href="styles.css?v=c90662a5634e">
     <style>
       .map-evidence [data-map-evidence-role-label]{font-family:var(--font-author);font-size:.6rem;font-weight:400;letter-spacing:0}
     </style>
@@ -140,9 +140,9 @@
           "./js/personal-media.js": "./js/personal-media.js?v=9910a8959dd2",
           "./js/sphere-surfaces.js": "./js/sphere-surfaces.js?v=4cf52ae3e8a0",
           "./js/map-engine.js": "./js/map-engine.js?v=9501089d3397",
-          "./js/viewport-ui.js": "./js/viewport-ui.js?v=06294a56bacb",
-          "./js/panels.js": "./js/panels.js?v=d5f25d7711fd",
-          "./js/case-view.js": "./js/case-view.js?v=ac53a46885bd",
+          "./js/viewport-ui.js": "./js/viewport-ui.js?v=f38ce45177c3",
+          "./js/panels.js": "./js/panels.js?v=75510ffdeaec",
+          "./js/case-view.js": "./js/case-view.js?v=c5b81e148c98",
           "./js/favicon.js": "./js/favicon.js?v=3aa23538dc2d"
         }
       }
@@ -157,9 +157,9 @@
     <script type="module" src="js/personal-media.js?v=9910a8959dd2"></script>
     <script type="module" src="js/sphere-surfaces.js?v=4cf52ae3e8a0"></script>
     <script type="module" src="js/map-engine.js?v=9501089d3397"></script>
-    <script type="module" src="js/viewport-ui.js?v=06294a56bacb"></script>
-    <script type="module" src="js/panels.js?v=d5f25d7711fd"></script>
-    <script type="module" src="js/case-view.js?v=ac53a46885bd"></script>
+    <script type="module" src="js/viewport-ui.js?v=f38ce45177c3"></script>
+    <script type="module" src="js/panels.js?v=75510ffdeaec"></script>
+    <script type="module" src="js/case-view.js?v=c5b81e148c98"></script>
     <script type="module" src="js/favicon.js?v=3aa23538dc2d"></script>
     <script type="application/ld+json">
       {
@@ -1165,6 +1165,7 @@
             <span aria-hidden="true">×</span>
           </button>
         </header>
+        <div class="content-panel__frame" data-material-surface="content-window" data-material-active="always">
         <div
           class="content-panel__body"
           tabindex="0"
@@ -1180,8 +1181,6 @@
 
         <div
           class="work-intro"
-          data-material-surface="work-intro"
-          data-material-active="always"
         >
           <h2 id="work-title">КЛЮЧЕВЫЕ <span>КЕЙСЫ</span></h2>
           <p>
@@ -1194,8 +1193,6 @@
         <div class="work-list">
           <a
             class="work-row"
-            data-material-surface="work-01"
-            data-material-active="always"
             href="?point=garage-site#map"
             data-map-point="garage-site"
           >
@@ -1207,8 +1204,6 @@
 
           <a
             class="work-row"
-            data-material-surface="work-02"
-            data-material-active="always"
             href="?point=narkomfin#map"
             data-map-point="narkomfin"
           >
@@ -1220,8 +1215,6 @@
 
           <a
             class="work-row"
-            data-material-surface="work-03"
-            data-material-active="always"
             href="?point=shirokostup#map"
             data-map-point="shirokostup"
           >
@@ -1233,8 +1226,6 @@
 
           <a
             class="work-row"
-            data-material-surface="work-04"
-            data-material-active="always"
             href="?point=tarski#map"
             data-map-point="tarski"
           >
@@ -1246,8 +1237,6 @@
 
           <a
             class="work-row"
-            data-material-surface="work-05"
-            data-material-active="always"
             href="?point=eleven#map"
             data-map-point="eleven"
           >
@@ -1259,8 +1248,6 @@
 
           <a
             class="work-row"
-            data-material-surface="work-06"
-            data-material-active="always"
             href="?point=herman#map"
             data-map-point="herman"
           >
@@ -1272,8 +1259,6 @@
 
           <a
             class="work-row"
-            data-material-surface="work-07"
-            data-material-active="always"
             href="?point=optimal#map"
             data-map-point="optimal"
           >
@@ -1285,8 +1270,6 @@
 
           <a
             class="work-row"
-            data-material-surface="work-08"
-            data-material-active="always"
             href="?point=ilmix#map"
             data-map-point="ilmix"
           >
@@ -1308,8 +1291,6 @@
 
         <div
           class="approach-intro"
-          data-material-surface="approach-intro"
-          data-material-active="always"
         >
           <h2 id="approach-title">СЛОЖНОЕ СТАНОВИТСЯ ПОНЯТНЫМ ПО&nbsp;ЧАСТЯМ.</h2>
           <p>
@@ -1320,22 +1301,22 @@
         </div>
 
         <ol class="approach-grid">
-          <li data-material-surface="approach-01" data-material-active="always">
+          <li>
             <span>01 / ИССЛЕДОВАНИЕ</span>
             <h3>Разобраться</h3>
             <p>Понять контекст, людей, ограничения и&nbsp;то, как задача устроена на&nbsp;самом деле.</p>
           </li>
-          <li data-material-surface="approach-02" data-material-active="always">
+          <li>
             <span>02 / ФОРМА</span>
             <h3>Придать форму</h3>
             <p>Собрать концепцию, требования и&nbsp;прототип, с&nbsp;которым уже можно работать.</p>
           </li>
-          <li data-material-surface="approach-03" data-material-active="always">
+          <li>
             <span>03 / КООРДИНАЦИЯ</span>
             <h3>Соединить</h3>
             <p>Согласовать команды, сроки, бюджет и&nbsp;документацию; зафиксировать решения.</p>
           </li>
-          <li data-material-surface="approach-04" data-material-active="always">
+          <li>
             <span>04 / РЕАЛИЗАЦИЯ</span>
             <h3>Подключиться</h3>
             <p>Когда нужно — рисовать, верстать, тестировать и&nbsp;доводить до&nbsp;первой рабочей версии.</p>
@@ -1352,8 +1333,6 @@
 
         <div
           class="contact-copy"
-          data-material-surface="contact"
-          data-material-active="always"
         >
           <div class="contact-intro">
             <p class="contact-status">
@@ -1401,6 +1380,7 @@
           </div>
         </div>
       </section>
+        </div>
         </div>
       </div>
     </main>

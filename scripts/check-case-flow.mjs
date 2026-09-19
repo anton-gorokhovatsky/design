@@ -35,7 +35,7 @@ const clickVisiblePlaybackControl=async(page)=>{
   },undefined,{polling:100});
   const state=await page.locator('[data-case-pause]').evaluate(button=>{
     const box=button.getBoundingClientRect();
-    const clip=button.closest('.case-scroll').getBoundingClientRect();
+    const clip=button.closest('.case-scroll, .case-layout').getBoundingClientRect();
     const style=getComputedStyle(button);
     const x=box.x+box.width/2,y=box.y+box.height/2;
     return {x,y,box:box.toJSON(),label:button.textContent,
@@ -149,7 +149,8 @@ for(const engine of [process.argv[2]||'chromium']) {
     assert.equal(await page.locator('[data-practice-map]').evaluate(el=>el.inert),false);
     await page.goto(origin+'/?point=youtube',{waitUntil:'domcontentloaded'});
     await page.waitForFunction(()=>document.querySelector('[data-map-inspector]').dataset.selectedMapId);
-    assert.equal(await page.locator('.is-case-view').count(),0,'Personal view is the unmodified baseline');
+    assert.equal(await page.locator('.is-case-view').count(),0,'Personal view retains its compact layout');
+    assert.equal(await page.locator('.has-reading-frame .case-sheet').count(),1,'Personal readouts use the same fixed rounded shell');
     assert.equal(await page.locator('[data-map-title]').textContent(),'YOUTUBE');
     await page.goto(origin+'/?point=garage-site',{waitUntil:'domcontentloaded'});
     await page.waitForFunction(()=>document.querySelector('[data-map-inspector]').dataset.selectedMapId);

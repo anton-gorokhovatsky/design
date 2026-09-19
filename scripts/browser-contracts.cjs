@@ -843,7 +843,41 @@ const validateMobileMetricGroups = (metricGroups) => {
   }];
 };
 
+// WebKit hit testing includes the rectangular border box even where overflow
+// clips its rounded corners. Compare rendered corner pixels against the same
+// background with the shell hidden; a CSS radius alone cannot prove this.
+const readRenderedFrameCorners = async (page, selector) => {
+  const shell = page.locator(selector);
+  const clip = await shell.boundingBox();
+  const visible = await page.screenshot({ clip });
+  const previous = await shell.evaluate(e => {
+    const value = e.style.visibility;
+    e.style.visibility = 'hidden';
+    return value;
+  });
+  let background;
+  try { background = await page.screenshot({ clip }); }
+  finally { await shell.evaluate((e,value) => e.style.visibility=value,previous); }
+  return page.evaluate(async ([before, after]) => {
+    const read = async source => {
+      const image = new Image();
+      image.src = 'data:image/png;base64,' + source;
+      await image.decode();
+      const canvas = document.createElement('canvas');
+      canvas.width=image.width; canvas.height=image.height;
+      const ctx=canvas.getContext('2d'); ctx.drawImage(image,0,0);
+      return {width:image.width,height:image.height,pixels:ctx.getImageData(0,0,image.width,image.height).data};
+    };
+    const a=await read(before),b=await read(after);
+    return [[1,1],[a.width-2,1],[1,a.height-2],[a.width-2,a.height-2]].map(([x,y]) => {
+      const offset=(y*a.width+x)*4;
+      return Math.max(...[0,1,2].map(c=>Math.abs(a.pixels[offset+c]-b.pixels[offset+c])));
+    });
+  }, [visible.toString('base64'), background.toString('base64')]);
+};
+
 module.exports = {
+  readRenderedFrameCorners,
   waitForCaseLayout,
   chromiumScenarioCatalog,
   clickMobileSearchDismissExpression,

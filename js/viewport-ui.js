@@ -160,7 +160,7 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
 const lensInspector = document.querySelector("[data-map-inspector]");
 observeScrollLens(lensInspector, () => lensInspector.querySelectorAll(
   ".map-readout__identity h2, .map-readout__identity p, [data-map-description], .map-evidence dt, .map-evidence dd, .case-details h3, .case-details h4, .case-details p, .observation-preview, .map-related__header",
-), { enabled: () => !lensInspector.classList.contains("is-case-view") });
+), { enabled: () => !lensInspector.classList.contains("has-reading-frame") });
 const lensPanel = document.querySelector(".content-panel__body");
 observeScrollLens(lensPanel, () => lensPanel.querySelectorAll(
   ".work-intro > *, .approach-intro > *, .work-row > *, .approach-grid li > *, .contact-intro > :not(.contact-resume), .contact-links a > *",
@@ -202,7 +202,7 @@ const observeScrollEdges = (region, { owner = region } = {}) => {
 observeScrollEdges(document.querySelector(".settings-panel__body"), {
   owner: document.querySelector("[data-settings-panel]"),
 });
-observeScrollEdges(document.querySelector("[data-command-results]"));
+observeScrollEdges(lensPanel, { owner: document.querySelector("[data-content-panel]") });
 const compactCommandViewport = window.matchMedia("(max-width: 680px)");
 const commandViewportProperties = [
   "--command-focus-left",

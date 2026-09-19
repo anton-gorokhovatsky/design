@@ -1,8 +1,8 @@
-// Expanded professional cases reuse the map inspector and its single video.
+// Every readout keeps a stationary rounded frame and a single inner scroller.
 import { mapItems } from "./map-data.js";
 import { mapInspector, hideMapPreview, observationRoute } from "./map-engine.js";
 import { reducedMotion } from "./preferences.js";
-import { scrollRegionFromKey, observeScrollLens, clearScrollLenses } from "./viewport-ui.js";
+import { scrollRegionFromKey, observeScrollLens, clearScrollLenses, observeScrollEdges } from "./viewport-ui.js";
 import "./panels.js";
 
 const items = new Map(mapItems.map(item => [item.id, item]));
@@ -11,15 +11,13 @@ const originalChildren = [...mapInspector.children];
 const close = mapInspector.querySelector("[data-close-inspector]");
 const kind = mapInspector.querySelector("[data-map-kind]");
 const identity = mapInspector.querySelector(".map-readout__identity");
-const description = mapInspector.querySelector(".map-readout__description");
-const related = mapInspector.querySelector("[data-map-related]");
 const header = document.createElement("div");
 header.className = "case-header";
 const viewport = document.createElement("div");
 viewport.className = "case-scroll";
 viewport.tabIndex = 0;
 viewport.setAttribute("role", "region");
-viewport.setAttribute("aria-label", "Содержимое кейса");
+viewport.setAttribute("aria-label", "Содержимое карточки");
 // Match the existing panel keyboard pattern when the region itself is focused.
 // Do not steal keys from links/buttons or selection; wheel and touch stay native.
 viewport.addEventListener("keydown", (event) => {
@@ -29,6 +27,12 @@ viewport.addEventListener("keydown", (event) => {
 });
 const layout = document.createElement("div");
 layout.className = "case-layout";
+layout.addEventListener("wheel", event => {
+  if (viewport.contains(event.target) || event.ctrlKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
+  const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? viewport.clientHeight : 1;
+  viewport.scrollBy({ top: event.deltaY * unit, behavior: "instant" });
+  event.preventDefault();
+}, { passive: false });
 const story = document.createElement("div");
 story.className = "case-story";
 const sheet = document.createElement("div");
@@ -39,6 +43,8 @@ const inlineSlot = document.createElement("div");
 inlineSlot.className = "case-inline-media";
 const inlineMedia = matchMedia("(max-width: 900px)");
 let activeId = null;
+let caseMode = false;
+const frameMaterials = new Map();
 let backgroundState = [];
 
 function suspendBackground() {
@@ -55,34 +61,54 @@ const caseLens = observeScrollLens(viewport, () => viewport.querySelectorAll(
   ".map-readout__identity h2, .map-readout__identity p, .case-inline-media video, [data-map-description], .map-evidence dt, .map-evidence dd, .case-details h3, .case-details h4, .case-details p, .map-related__header",
 ), { owner: mapInspector });
 
-function mount() {
-  clearScrollLenses(mapInspector);
-  header.append(kind, close);
-  for (const element of [identity, description]) {
+// The material belongs to a stationary frame; only its transparent child scrolls.
+// Preserve and restore existing fragments when returning to the unmounted readout.
+function restoreFrameMaterial(element, attributes) {
+  element.classList.remove("reading-content");
+  for (const [name, value] of attributes) element.setAttribute(name, value);
+  frameMaterials.delete(element);
+}
+function syncFrameMaterials() {
+  for (const [element, attributes] of frameMaterials) {
+    if (!sheet.contains(element)) restoreFrameMaterial(element, attributes);
+  }
+  for (const element of story.querySelectorAll("[data-material-surface]")) {
+    if (!frameMaterials.has(element)) frameMaterials.set(element,
+      ["data-material-surface", "data-material-active"].map(name => [name, element.getAttribute(name)]));
     element.removeAttribute("data-material-surface");
     element.removeAttribute("data-material-active");
+    element.classList.add("reading-content");
   }
-  sheet.append(identity, inlineSlot, description);
-  story.append(sheet, related);
-  layout.append(story);
-  viewport.append(layout);
-  mapInspector.append(header, viewport);
-  mapInspector.classList.add("is-case-view");
-  mapInspector.setAttribute("role", "dialog");
-  mapInspector.setAttribute("aria-modal", "true");
-  body.setAttribute("data-case-open", "");
-  suspendBackground();
+}
+new MutationObserver(syncFrameMaterials).observe(story, { childList: true, subtree: true });
+observeScrollEdges(viewport, { owner: mapInspector });
+function mount(large) {
+  clearScrollLenses(mapInspector);
+  header.append(kind, close);
+  story.append(...originalChildren.filter(element => element !== kind && element !== close));
+  identity.after(inlineSlot);
+  viewport.append(story);
+  sheet.append(viewport);
+  layout.append(sheet);
+  mapInspector.append(header, layout);
+  syncFrameMaterials();
+  mapInspector.classList.add("has-reading-frame");
+  if (large) {
+    mapInspector.classList.add("is-case-view");
+    mapInspector.setAttribute("role", "dialog");
+    mapInspector.setAttribute("aria-modal", "true");
+    body.setAttribute("data-case-open", "");
+    suspendBackground();
+  }
 }
 function unmount() {
   caseLens.reset();
   resumeBackground();
   originalChildren.forEach(element => mapInspector.append(element));
+  for (const [element, attributes] of frameMaterials) restoreFrameMaterial(element, attributes);
   header.remove();
-  viewport.remove();
-  identity.dataset.materialSurface = "inspector-identity";
-  description.dataset.materialSurface = "inspector-description";
-  for (const element of [identity, description]) element.dataset.materialActive = "always";
-  mapInspector.classList.remove("is-case-view");
+  layout.remove();
+  mapInspector.classList.remove("is-case-view", "has-reading-frame");
   mapInspector.removeAttribute("role");
   mapInspector.removeAttribute("aria-modal");
   body.removeAttribute("data-case-open");
@@ -160,7 +186,7 @@ reducedMotion.addEventListener("change", () => {
 function placeReel() {
   if (!pinnedItem) return;
   const parent = inlineMedia.matches ? inlineSlot : layout;
-  if (reel.parentElement !== parent) moveMedia(parent, reel, inlineMedia.matches ? null : story);
+  if (reel.parentElement !== parent) moveMedia(parent, reel, inlineMedia.matches ? null : sheet);
 }
 function pinReel(item) {
   if (!item?.previewVideo) {
@@ -206,35 +232,36 @@ inlineMedia.addEventListener("change", placeReel);
 window.addEventListener("pagehide", () => { wantsPlayback = false; video.pause(); });
 
 function reflect() {
-  const selected = items.get(mapInspector.dataset.selectedMapId);
-  const eligible = mapInspector.classList.contains("is-open")
-    && !body.classList.contains("has-content-panel") && !observationRoute.active
-    && ["company", "project"].includes(selected?.kind);
-  const nextId = eligible ? selected.id : null;
-  if (nextId === activeId) return;
-  if (nextId) {
-    if (!activeId) mount();
-    hideMapPreview({ immediate: true });
-    mapInspector.dataset.caseMedia = selected.previewVideo ? "true" : "false";
-    viewport.scrollTop = 0;
-    mapInspector.scrollTop = 0;
-    pinReel(selected);
-    requestAnimationFrame(() => identity.querySelector("h2").focus({ preventScroll: true }));
-  } else {
+  const selectedId = mapInspector.dataset.selectedMapId;
+  const selected = items.get(selectedId);
+  const open = mapInspector.classList.contains("is-open")
+    && !body.classList.contains("has-content-panel") && Boolean(selectedId);
+  const nextId = open ? selectedId : null;
+  const large = open && !observationRoute.active && ["company", "project"].includes(selected?.kind);
+  if (nextId === activeId && large === caseMode) return;
+  if (activeId) {
+    const closing = !mapInspector.classList.contains("is-open");
+    if (closing) mapInspector.style.transition = "none";
     pinReel(null);
-    if (activeId) {
-      const closing = !mapInspector.classList.contains("is-open");
-      // Commit the closed state before restoring the small native readout.
-      // Otherwise its old geometry flashes during the inherited opacity exit.
-      if (closing) mapInspector.style.transition = "none";
-      unmount();
-      if (closing) {
-        void mapInspector.offsetHeight;
-        mapInspector.style.removeProperty("transition");
-      }
+    unmount();
+    if (closing) {
+      void mapInspector.offsetHeight;
+      mapInspector.style.removeProperty("transition");
     }
   }
+  if (nextId) {
+    mount(large);
+    if (large) {
+      hideMapPreview({ immediate: true });
+      mapInspector.dataset.caseMedia = selected.previewVideo ? "true" : "false";
+      pinReel(selected);
+    }
+    viewport.scrollTop = 0;
+    mapInspector.scrollTop = 0;
+    requestAnimationFrame(() => identity.querySelector("h2").focus({ preventScroll: true }));
+  }
   activeId = nextId;
+  caseMode = large;
 }
 new MutationObserver(reflect).observe(mapInspector, {
   attributes: true, attributeFilter: ["class", "data-selected-map-id", "aria-hidden"],
@@ -244,7 +271,7 @@ new MutationObserver(reflect).observe(body, { attributes: true, attributeFilter:
 // Restore the map BEFORE the existing close handler returns focus to its node.
 close.addEventListener("click", resumeBackground, true);
 document.addEventListener("keydown", event => {
-  if (!activeId || document.querySelector("dialog[open]")) return;
+  if (!activeId || !caseMode || document.querySelector("dialog[open]")) return;
   if (event.key === "Escape") {
     event.preventDefault();
     event.stopImmediatePropagation();

@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 const require = createRequire(import.meta.url);
 const { chromium, webkit } = require('playwright');
-const { startStaticServer, readMaterialAuditExpression, waitForCaseLayout } = require('./browser-contracts.cjs');
+const { startStaticServer, readMaterialAuditExpression, waitForCaseLayout, readRenderedFrameCorners } = require('./browser-contracts.cjs');
 const projectRoot = resolve(fileURLToPath(new URL('../', import.meta.url)));
 const local = process.env.PORTFOLIO_CASE_ORIGIN ? null : await startStaticServer({ projectRoot });
 const origin = process.env.PORTFOLIO_CASE_ORIGIN || local.origin;
@@ -48,9 +48,13 @@ for (const engine of [process.argv[2] || 'chromium']) {
         const scroll = document.querySelector('.case-scroll');
         const description = document.querySelector('.map-readout__description');
         const b = document.querySelector('.case-sheet').getBoundingClientRect();
+        const frame = document.querySelector('.case-sheet');
+        const corners = [[b.left+1,b.top+1],[b.right-1,b.top+1],[b.left+1,b.bottom-1],[b.right-1,b.bottom-1]];
         const media = document.querySelector('.case-media').getBoundingClientRect();
         return {top:scroll.scrollTop,client:scroll.clientHeight,total:scroll.scrollHeight,
           sheet:{x:b.x,y:b.y,right:b.right,bottom:b.bottom},media:{x:media.x,y:media.y},
+          rounded:parseFloat(getComputedStyle(frame).borderRadius)>=20 && getComputedStyle(frame).overflow==='hidden',
+          cornerLeaks:corners.filter(([x,y])=>frame.contains(document.elementFromPoint(x,y))).length,
           nestedOverflow:description.scrollHeight-description.clientHeight,
           copyOverflow:description.scrollWidth-description.clientWidth,
           scrollbar:getComputedStyle(scroll).scrollbarWidth,
@@ -83,6 +87,7 @@ for (const engine of [process.argv[2] || 'chromium']) {
       assert.ok(result.start.copyOverflow <= 1,'No text extends into the sheet padding at enlarged font sizes');
       assert.equal(result.start.scrollbar,'none','The case hides the native scrollbar without disabling scrolling');
       assert.ok(result.start.nestedOverflow <= 1,'No nested description scroller');
+      assert.ok(result.start.rounded && (engine==='webkit' || result.start.cornerLeaks===0),'The complete visible frame has four clipped round corners');
       if (width>900) assert.ok(Math.abs(result.start.media.y-result.start.sheet.y)<2,'Media and story share a top axis');
       const material = await page.evaluate(readMaterialAuditExpression);
       assert.deepEqual(material.failures,[],'Shared material contract');
@@ -92,9 +97,18 @@ for (const engine of [process.argv[2] || 'chromium']) {
         assert.ok(result.start.total>result.start.client+20,'Long content really requires scrolling in this fixture');
       }
       await page.mouse.move(b.x+b.width*.78,b.y+Math.min(b.height*.6,420));
+      await scroll.evaluate(e=>e.scrollTop=(e.scrollHeight-e.clientHeight)/2);
+      result.middle = await measure();
+      assert.deepEqual(result.middle.sheet,result.start.sheet,'The outer frame stays stationary in the middle of a read');
+      assert.ok(result.middle.rounded && (engine==='webkit' || result.middle.cornerLeaks===0),'No straight frame cut appears in mid-scroll');
+      result.cornerPixels = await readRenderedFrameCorners(page,'.case-sheet');
+      assert.ok(result.cornerPixels.every(delta=>delta<12), 'Rendered corners reveal the background; a rectangular fill must not cover them: '+result.cornerPixels);
+      if (name==='desktop-light'||name==='mobile-dark') await page.screenshot({path:dir+engine+'-'+name+'-middle.jpg',type:'jpeg',quality:90});
       await scrollBy(12000);
       await page.waitForFunction(() => { const s=document.querySelector('.case-scroll'); return s.scrollTop+s.clientHeight>=s.scrollHeight-2; });
       result.bottom = await measure();
+      assert.deepEqual(result.bottom.sheet,result.start.sheet,'All four outer frame corners stay on screen at the end');
+      assert.ok(result.bottom.rounded && (engine==='webkit' || result.bottom.cornerLeaks===0),'The rounded silhouette survives scrolling to the end');
       if (result.start.total>result.start.client+2) assert.ok(result.bottom.top>0,'Input actually moved the content');
       const lastLink = await page.locator('.case-story .map-related__item').last().boundingBox();
       assert.ok(lastLink.y>=b.y && lastLink.y+lastLink.height<=height-8,'The last related case is fully reachable');

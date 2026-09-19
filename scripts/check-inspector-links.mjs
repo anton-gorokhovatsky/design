@@ -92,7 +92,7 @@ try {
             surface: link.getAttribute("data-material-surface"), count: document.querySelectorAll("[data-map-link]").length,
             link: box(link), identity: box(identity), description: box(description),
             inspector: box(inspector), scrollTop: (inspector.querySelector('.case-scroll') || inspector).scrollTop,
-            expanded: inspector.classList.contains('is-case-view'), viewportHeight: innerHeight,
+            expanded: inspector.classList.contains('is-case-view'), framed: inspector.classList.contains('has-reading-frame'), viewportHeight: innerHeight,
             related: related.hidden ? null : box(related), meta: box(document.querySelector("[data-map-meta]")),
             fill: style.backgroundColor, blur: style.backdropFilter, underline: style.textDecorationLine,
             overflow: document.documentElement.scrollWidth - innerWidth };
@@ -115,7 +115,7 @@ try {
           assert.ok(state.rel.includes("noreferrer"), context);
           if (item.href) assert.equal(state.href, item.href, context);
           assert.ok(state.link.top >= state.meta.bottom + (state.expanded ? 3 : 7), context + ": follows metadata");
-          const inset = state.expanded ? 0 : 10;
+          const inset = state.framed ? 0 : 10;
           assert.ok(state.link.left >= state.identity.left + inset - 1 && state.link.right <= state.identity.right - inset + 1,
             context + ": action stays on the identity text axis");
           assert.ok(state.link.bottom <= state.identity.bottom && state.link.height >= 24, context);
@@ -138,19 +138,19 @@ try {
       if (label === "compact" || label === "reflow") {
         await select(page, "principle-wings");
         if (label === "reflow") {
-          await page.locator("[data-map-inspector]").hover();
+          await page.locator(".case-scroll").hover();
           await page.mouse.wheel(0, 280);
         } else {
           // Playwright mobile WebKit has no wheel API; test scroll reachability
           // and reset without presenting this as a physical touch gesture.
-          await page.locator("[data-map-inspector]").evaluate((element) => {
+          await page.locator(".case-scroll").evaluate((element) => {
             element.scrollTop = element.scrollHeight;
           });
         }
-        await page.waitForFunction(() => document.querySelector("[data-map-inspector]").scrollTop > 0);
+        await page.waitForFunction(() => document.querySelector(".case-scroll").scrollTop > 0);
         assert.equal(await page.evaluate(() => scrollY), 0, "Only the inspector scrolls.");
         await select(page, "wave");
-        assert.equal(await page.locator("[data-map-inspector]").evaluate((element) => element.scrollTop), 0,
+        assert.equal(await page.locator(".case-scroll").evaluate((element) => element.scrollTop), 0,
           "Selecting another point returns to its heading and destination.");
       }
       await select(page, "narkomfin");
@@ -167,14 +167,14 @@ try {
       // https://support.apple.com/guide/safari/cpsh003/mac
       const nextLinkKey = engine === "webkit" && process.platform === "darwin" ? "Alt+Tab" : "Tab";
       await page.keyboard.press(nextLinkKey);
-      assert.equal(await page.locator('.case-scroll').evaluate((element) => element === document.activeElement), true,
-        "The reading region follows the fixed close control and supports keyboard scrolling.");
-      await page.keyboard.press(nextLinkKey);
       if (width > 900) {
         assert.equal(await page.locator('[data-case-pause]').evaluate((element) => element === document.activeElement), true,
           "Desktop media control follows the visible left-to-right reading order.");
         await page.keyboard.press(nextLinkKey);
       }
+      assert.equal(await page.locator('.case-scroll').evaluate((element) => element === document.activeElement), true,
+        "The reading region follows the fixed close/media controls and supports keyboard scrolling.");
+      await page.keyboard.press(nextLinkKey);
       assert.equal(await link.evaluate((element) => element === document.activeElement && element.matches(":focus-visible")), true,
         "The external destination follows the reading-region and media controls.");
       const popupPromise = page.waitForEvent("popup");

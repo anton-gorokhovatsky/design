@@ -127,6 +127,13 @@ const panelClose = document.querySelector("[data-close-panel]");
 const panelTitle = document.querySelector("[data-panel-title]");
 const panelIndex = document.querySelector("[data-panel-index]");
 const contentPanelBody = document.querySelector(".content-panel__body");
+const contentPanelHeader = document.querySelector(".content-panel__header");
+const placeContentFrame = () => {
+  const top = Math.ceil(contentPanelHeader.getBoundingClientRect().bottom + 12);
+  contentPanel.style.setProperty("--panel-frame-top", `${top}px`);
+};
+new ResizeObserver(placeContentFrame).observe(contentPanelHeader);
+window.addEventListener("resize", placeContentFrame, { passive: true });
 const panelSections = Array.from(document.querySelectorAll("[data-panel-section]"));
 const panelOpenButtons = Array.from(document.querySelectorAll("[data-open-panel]"));
 const controlConsole = document.querySelector(".control-console");
@@ -142,114 +149,6 @@ const panelBackgroundRoots = [
 ].filter(Boolean);
 let activePanelView = null;
 let lastPanelTrigger = null;
-const compactContentStack = window.matchMedia("(max-width: 680px)");
-const contentStackGroups = {
-  work: [
-    document.querySelector(".work-intro"),
-    ...document.querySelectorAll(".work-list .work-row"),
-  ].filter(Boolean),
-  approach: [
-    document.querySelector(".approach-intro"),
-    ...document.querySelectorAll(".approach-grid li"),
-  ].filter(Boolean),
-};
-let contentStackFrame = 0;
-let contentStackOffsets = [];
-
-const clearContentStackState = () => {
-  Object.values(contentStackGroups).flat().forEach((surface) => {
-    surface.classList.remove(
-      "is-content-stack-active",
-      "is-content-stack-behind",
-      "is-content-stack-hidden",
-    );
-    surface.style.removeProperty("--content-stack-order");
-  });
-};
-
-const measureContentStackOffsets = (surfaces) => {
-  if (!contentPanel || !contentPanelBody) {
-    return [];
-  }
-
-  const scrollTop = contentPanelBody.scrollTop;
-  contentPanel.classList.add("is-measuring-content-stack");
-  const bodyRect = contentPanelBody.getBoundingClientRect();
-  const measurements = surfaces.map((surface) => {
-    const rect = surface.getBoundingClientRect();
-    return {
-      height: rect.height,
-      offset: rect.top - bodyRect.top + scrollTop,
-    };
-  });
-  contentPanel.classList.remove("is-measuring-content-stack");
-  if (Math.abs(contentPanelBody.scrollTop - scrollTop) > 0.5) {
-    contentPanelBody.scrollTo({ top: scrollTop, behavior: "auto" });
-  }
-
-  return measurements.map(({ offset }) => offset);
-};
-
-const syncContentStack = () => {
-  contentStackFrame = 0;
-
-  if (!compactContentStack.matches || !activePanelView) {
-    clearContentStackState();
-    return;
-  }
-
-  const surfaces = contentStackGroups[activePanelView] || [];
-
-  if (contentStackOffsets.length !== surfaces.length) {
-    contentStackOffsets = measureContentStackOffsets(surfaces);
-  }
-
-  const stackLead = 10;
-  let activeIndex = 0;
-
-  for (let index = 1; index < contentStackOffsets.length; index += 1) {
-    const nextTop = contentStackOffsets[index] - contentPanelBody.scrollTop;
-    const nextStackTop = Number.parseFloat(
-      getComputedStyle(surfaces[index]).getPropertyValue("--content-stack-top"),
-    ) || 8;
-
-    if (nextTop <= nextStackTop + stackLead) {
-      activeIndex = index;
-    } else {
-      break;
-    }
-  }
-
-  surfaces.forEach((surface, index) => {
-    const layer = activeIndex - index;
-    const isActive = index === activeIndex;
-    const isBehind = layer > 0 && layer <= 2;
-    const isHidden = layer > 2;
-
-    surface.classList.toggle("is-content-stack-active", isActive);
-    surface.classList.toggle("is-content-stack-behind", isBehind);
-    surface.classList.toggle("is-content-stack-hidden", isHidden);
-    surface.style.setProperty("--content-stack-order", String(index));
-  });
-};
-
-const scheduleContentStackSync = () => {
-  if (contentStackFrame) {
-    return;
-  }
-
-  contentStackFrame = window.requestAnimationFrame(syncContentStack);
-};
-
-const invalidateContentStack = () => {
-  contentStackOffsets = [];
-  scheduleContentStackSync();
-};
-
-contentPanelBody?.addEventListener("animationend", (event) => {
-  if (event.animationName === "window-reveal") invalidateContentStack();
-});
-
 const panelViews = {
   work: {
     index: "01 / КЕЙСЫ",
@@ -328,7 +227,6 @@ const openContentPanel = (
   if (observationRoute.active) stopObservation({ updateHistory: false });
 
   activePanelView = view;
-  contentStackOffsets = [];
   lastPanelTrigger = trigger instanceof HTMLElement ? trigger
     : position ? panelOpenButtons.find(button => button.dataset.openPanel === view)
       : document.activeElement;
@@ -372,7 +270,6 @@ const openContentPanel = (
 
   window.requestAnimationFrame(() => {
     contentPanelBody?.scrollTo({ top: position?.scrollTop || 0, behavior: "auto" });
-    scheduleContentStackSync();
     if (document.activeElement?.closest("[data-command-form], [data-command-results]")) return;
     const sourceRow = position?.pointId && contentPanelBody?.querySelector(
       `.work-row[data-map-point="${CSS.escape(position.pointId)}"]`,
@@ -392,7 +289,6 @@ const closeContentPanel = (
   }
 
   setPanelOpen(false);
-  clearContentStackState();
   activePanelView = null;
   contentPanel?.removeAttribute("data-view");
   signalField?.removeAttribute("data-camera-view");
@@ -485,7 +381,6 @@ contentPanelBody?.addEventListener("keydown", (event) => {
 
 panelClose?.addEventListener("click", () => closeContentPanel());
 panelScrim?.addEventListener("click", () => closeContentPanel());
-contentPanelBody?.addEventListener("scroll", scheduleContentStackSync, { passive: true });
 
 contentPanelBody?.addEventListener("click", (event) => {
   const caseLink = event.target.closest?.(".work-row[data-map-point]");
@@ -530,35 +425,6 @@ mapInspector?.querySelector("[data-map-related]")?.addEventListener("click", (ev
   window.requestAnimationFrame(() => mapInspector.querySelector("[data-map-title]")?.focus({ preventScroll: true }));
 });
 
-if (typeof compactContentStack.addEventListener === "function") {
-  compactContentStack.addEventListener("change", invalidateContentStack);
-} else {
-  compactContentStack.addListener(invalidateContentStack);
-}
-
-window.addEventListener("resize", invalidateContentStack, { passive: true });
-window.addEventListener("pageshow", invalidateContentStack, { passive: true });
-window.visualViewport?.addEventListener("resize", invalidateContentStack, { passive: true });
-document.fonts?.ready.then(invalidateContentStack);
-
-contentPanelBody?.addEventListener("focusin", (event) => {
-  if (!compactContentStack.matches
-    || document.documentElement.dataset.focusModality !== "keyboard") {
-    return;
-  }
-
-  const focusedCard = event.target.closest(".work-row");
-
-  if (!focusedCard) {
-    return;
-  }
-
-  focusedCard.scrollIntoView({
-    block: "start",
-    behavior: reducedMotion.matches ? "auto" : "smooth",
-  });
-  scheduleContentStackSync();
-});
 constellationNavHome?.addEventListener("click", () => {
   if (activePanelView) {
     closeContentPanel({ restoreFocus: false });

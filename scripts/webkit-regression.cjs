@@ -11,6 +11,7 @@ const {
   readAnnotationHierarchyExpression,
   readCompactAuthorshipExpression,
   readMaterialAuditExpression,
+  readRenderedFrameCorners,
   readMobileContactResumeExpression,
   readMobileMetricGroupsExpression,
   readMobileSearchArrowExpression,
@@ -116,380 +117,44 @@ const attachRuntimeLog = (page, label) => {
 
 const materialAudit = async (page) => page.evaluate(readMaterialAuditExpression);
 
-const readStackState = (page, panelName, expectedScroll, inputMode) => {
-  const selector = panelName === "work"
-    ? ".work-intro, .work-list .work-row"
-    : ".approach-intro, .approach-grid li";
-
-  return page.evaluate(({
-    surfaceSelector,
-    expectedScrollTop,
-    mode,
-  }) => {
-    const body = document.querySelector(".content-panel__body");
-    const bodyRect = body.getBoundingClientRect();
-    const bodyStyle = getComputedStyle(body);
-    const surfaces = Array.from(document.querySelectorAll(surfaceSelector));
-    const geometry = surfaces.map((surface, index) => {
-      const rect = surface.getBoundingClientRect();
-      const style = getComputedStyle(surface);
-      const childOpacities = Array.from(surface.children)
-        .filter((child) => getComputedStyle(child).display !== "none")
-        .map((child) => Number(getComputedStyle(child).opacity));
-      return {
-        index,
-        active: surface.classList.contains("is-content-stack-active"),
-        behind: surface.classList.contains("is-content-stack-behind"),
-        hidden: surface.classList.contains("is-content-stack-hidden"),
-        position: style.position,
-        zIndex: Number(style.zIndex) || 0,
-        childOpacities,
-        stackTop: Number.parseFloat(
-          style.getPropertyValue("--content-stack-top"),
-        ) || 0,
-        inlineStackTop: surface.style.getPropertyValue("--content-stack-top"),
-        clipPath: style.clipPath,
-        top: rect.top,
-        topOffset: rect.top - bodyRect.top,
-        right: rect.right,
-        bottom: rect.bottom,
-        left: rect.left,
-        width: rect.width,
-        height: rect.height,
-      };
-    });
-    const activeIndex = geometry.findIndex((item) => item.active);
-    const active = geometry[activeIndex] || null;
-    const next = geometry[activeIndex + 1] || null;
-    const activeText = active
-      ? surfaces[activeIndex].innerText.trim()
-      : "";
-    const overlap = active && next
-      ? Math.max(0, active.bottom - next.top)
-      : 0;
-    const centerX = Math.round((bodyRect.left + bodyRect.right) / 2);
-    const centerY = Math.round((bodyRect.top + bodyRect.bottom) / 2);
-    const hit = document.elementFromPoint(centerX, centerY);
-    const hitInsideBody = Boolean(hit && body.contains(hit));
-
-    return {
-      inputMode: mode,
-      expectedScroll: expectedScrollTop,
-      actualScroll: body.scrollTop,
-      interaction: {
-        pointerEvents: bodyStyle.pointerEvents,
-        touchAction: bodyStyle.touchAction,
-        hitInsideBody,
-      },
-      body: {
-        top: bodyRect.top,
-        right: bodyRect.right,
-        bottom: bodyRect.bottom,
-        left: bodyRect.left,
-      },
-      activeIndex,
-      activeCount: geometry.filter((item) => item.active).length,
-      behindCount: geometry.filter((item) => item.behind).length,
-      hiddenCount: geometry.filter((item) => item.hidden).length,
-      geometry,
-      active,
-      next,
-      activeText,
-      overlap,
-      failures: [
-        ...(geometry.filter((item) => item.active).length !== 1
-          ? ["stack must have exactly one active surface"]
-          : []),
-        ...(geometry.filter((item) => item.behind).length > 2
-          ? ["stack exposes more than two quiet shoulders"]
-          : []),
-        ...(!active || !activeText
-          ? ["active surface is missing or unreadable"]
-          : []),
-        ...(active && (
-          active.topOffset < active.stackTop - 2
-          || active.left < bodyRect.left - 1
-          || active.right > bodyRect.right + 1
-        )
-          ? ["active surface is clipped outside the scroll viewport"]
-          : []),
-        ...(overlap > 0 && next.zIndex <= active.zIndex
-          ? ["incoming surface is layered below the active surface"]
-          : []),
-        ...(active && active.childOpacities.some((opacity) => opacity < 0.99)
-          ? ["active surface copy is faded or unreadable"]
-          : []),
-        ...(geometry.some((item) => item.clipPath !== "none")
-          ? ["stack surfaces must not be reshaped by a scrolling clip"]
-          : []),
-        ...(geometry.some((item) => item.inlineStackTop)
-          ? ["runtime rewrites a stack surface plane"]
-          : []),
-        ...(overlap > 0
-          && next.childOpacities.some((opacity) => opacity < 0.99)
-          ? ["incoming surface copy is faded or unreadable"]
-          : []),
-        ...(geometry
-          .filter((item) => item.behind || item.hidden)
-          .some((item) => item.childOpacities.some((opacity) => opacity > 0.01))
-          ? ["quiet or hidden stack layers expose competing copy"]
-          : []),
-        ...(bodyStyle.pointerEvents === "none"
-          ? ["scroll viewport rejects pointer input"]
-          : []),
-        ...(!bodyStyle.touchAction.includes("pan-y")
-          ? ["scroll viewport does not expose native pan-y"]
-          : []),
-        ...(!hitInsideBody
-          ? ["scroll viewport loses the center hit test"]
-          : []),
-      ],
-    };
-  }, {
-    surfaceSelector: selector,
-    expectedScrollTop: expectedScroll,
-    mode: inputMode,
-  });
-};
-
-const stackAudit = async (
-  page,
-  panelName,
-  captureLabel,
-  { nativeWheel = true } = {},
-) => {
-  await page.evaluate((name) => {
-    document.querySelector(`[data-open-panel="${name}"]`)?.click();
-  }, panelName);
+// A fixed material shell owns the corners; its transparent child owns scrolling.
+const stackAudit = async (page, panelName, captureLabel, { nativeWheel = true } = {}) => {
+  await page.evaluate(name => document.querySelector(`[data-open-panel="${name}"]`).click(), panelName);
   await waitForLayout(page, 400);
-
-  const maxScroll = await page.locator(".content-panel__body").evaluate(
-    (element) => Math.max(0, element.scrollHeight - element.clientHeight),
-  );
-  const surfaceSelector = panelName === "work"
-    ? ".work-intro, .work-list .work-row"
-    : ".approach-intro, .approach-grid li";
-  const overlapStops = await page.evaluate(({ selector, maximum }) => {
-    const body = document.querySelector(".content-panel__body");
-    const bodyRect = body.getBoundingClientRect();
-    const scrollTop = body.scrollTop;
-    const overlapInset = Math.max(
-      72,
-      Math.min(112, Math.round(body.clientHeight * 0.14)),
-    );
-    return Array.from(document.querySelectorAll(selector))
-      .slice(1)
-      .map((surface) => (
-        surface.getBoundingClientRect().top
-        - bodyRect.top
-        + scrollTop
-        - overlapInset
-      ))
-      .map((stop) => Math.max(0, Math.min(maximum, Math.round(stop))));
-  }, { selector: surfaceSelector, maximum: maxScroll });
-  const stops = Array.from(new Set([
-    0,
-    Math.round(maxScroll * 0.25),
-    Math.round(maxScroll * 0.5),
-    Math.round(maxScroll * 0.75),
-    maxScroll,
-    ...overlapStops,
-  ])).sort((a, b) => a - b);
-  const scrollSequence = [
-    ...stops,
-    ...stops.slice(0, -1).reverse(),
-  ];
+  const viewport = page.locator('.content-panel__body');
+  const shell = page.locator('.content-panel__frame');
+  const initial = await shell.boundingBox();
+  const maxScroll = await viewport.evaluate(e => e.scrollHeight - e.clientHeight);
+  const failures = [];
   const states = [];
-  let capturedMidOverlap = false;
-
-  for (const scrollTop of scrollSequence) {
-    await page.locator(".content-panel__body").evaluate((element, top) => {
-      element.scrollTop = top;
-      element.dispatchEvent(new Event("scroll"));
-    }, scrollTop);
+  for (const fraction of [0, .5, 1, .5, 0]) {
+    await viewport.evaluate((e, top) => e.scrollTop = top, maxScroll * fraction);
     await waitForLayout(page);
-    const state = await readStackState(
-      page,
-      panelName,
-      scrollTop,
-      "programmatic",
-    );
+    const state = await shell.evaluate(e => {
+      const r = e.getBoundingClientRect(), css = getComputedStyle(e);
+      const inset = 1;
+      const corners = [[r.left+inset,r.top+inset],[r.right-inset,r.top+inset],
+        [r.left+inset,r.bottom-inset],[r.right-inset,r.bottom-inset]];
+      return { x:r.x,y:r.y,width:r.width,height:r.height,radius:parseFloat(css.borderRadius),
+        overflow:css.overflow, scroll:e.firstElementChild.scrollTop,
+        cornerLeaks:corners.filter(([x,y]) => e.contains(document.elementFromPoint(x,y))).length };
+    });
+    state.cornerPixels = await readRenderedFrameCorners(page,'.content-panel__frame');
+    if (state.cornerPixels.some(delta=>delta>=12)) failures.push('Rendered frame corners cover their background: '+state.cornerPixels);
     states.push(state);
-    if (!capturedMidOverlap && state.overlap > 0) {
-      capturedMidOverlap = true;
-      await page.screenshot({
-        path: path.join(
-          artifactDir,
-          `${captureLabel}-${panelName}-mid-overlap.png`,
-        ),
-        fullPage: false,
-      });
-    }
+    if (['x','y','width','height'].some(k => Math.abs(state[k]-initial[k]) > 1)) failures.push('The outer frame moved during scrolling');
+    if (state.radius < 20 || state.overflow !== 'hidden') failures.push('The visible frame lost a rounded corner');
+    if (fraction !== .5) await page.screenshot({path:path.join(artifactDir, `${captureLabel}-${panelName}-frame-${fraction}.png`)});
   }
-
-  const finalProgrammaticState = states.at(-1);
-  if (!capturedMidOverlap && finalProgrammaticState) {
-    finalProgrammaticState.failures.push(
-      "stack sequence never captured a real incoming-card overlap",
-    );
+  if (maxScroll > 1 && nativeWheel) {
+    await page.mouse.move(initial.x + initial.width / 2, initial.y + initial.height / 2);
+    await page.mouse.wheel(0, 240);
+    await waitForLayout(page, 300);
+    if (await viewport.evaluate(e => e.scrollTop) < 1) failures.push('Native wheel did not scroll the content');
   }
-  if (
-    finalProgrammaticState
-    && (
-      finalProgrammaticState.actualScroll > 1
-      || finalProgrammaticState.activeIndex !== 0
-    )
-  ) {
-    finalProgrammaticState.failures.push(
-      "reverse stack sequence did not fully restore the initial state",
-    );
-  }
-
-  const physicalInvariantFailures = [];
-  const forwardStates = states.slice(0, stops.length);
-  const reverseStates = states.slice(stops.length);
-  const surfaceCount = forwardStates[0]?.geometry.length || 0;
-
-  for (let surfaceIndex = 0; surfaceIndex < surfaceCount; surfaceIndex += 1) {
-    const samples = states.map((state) => state.geometry[surfaceIndex]);
-    const heightSpread = Math.max(...samples.map((item) => item.height))
-      - Math.min(...samples.map((item) => item.height));
-    const planeSpread = Math.max(...samples.map((item) => item.stackTop))
-      - Math.min(...samples.map((item) => item.stackTop));
-
-    if (heightSpread > 1) {
-      physicalInvariantFailures.push(
-        `surface ${surfaceIndex} changes height while other cards arrive`,
-      );
-    }
-    if (planeSpread > 0.1) {
-      physicalInvariantFailures.push(
-        `surface ${surfaceIndex} changes its fixed stack plane`,
-      );
-    }
-
-    for (let index = 1; index < forwardStates.length; index += 1) {
-      const previous = forwardStates[index - 1].geometry[surfaceIndex];
-      const current = forwardStates[index].geometry[surfaceIndex];
-      if (current.topOffset > previous.topOffset + 1) {
-        physicalInvariantFailures.push(
-          `surface ${surfaceIndex} rises again during forward travel`,
-        );
-        break;
-      }
-      if (current.topOffset < current.stackTop - 2) {
-        physicalInvariantFailures.push(
-          `surface ${surfaceIndex} crosses above its fixed stack plane`,
-        );
-        break;
-      }
-    }
-
-    for (const reverseState of reverseStates) {
-      const matchingForward = forwardStates.find(
-        (state) => state.expectedScroll === reverseState.expectedScroll,
-      );
-      if (!matchingForward) {
-        continue;
-      }
-      const forward = matchingForward.geometry[surfaceIndex];
-      const reverse = reverseState.geometry[surfaceIndex];
-      if (
-        Math.abs(forward.topOffset - reverse.topOffset) > 1
-        || Math.abs(forward.height - reverse.height) > 1
-      ) {
-        physicalInvariantFailures.push(
-          `surface ${surfaceIndex} does not return to the same geometry`,
-        );
-        break;
-      }
-    }
-  }
-
-  await page.locator(".content-panel__body").evaluate((element) => {
-    element.scrollTop = 0;
-  });
-  await waitForLayout(page, 320);
-  const bodyBox = await page.locator(".content-panel__body").boundingBox();
-  const nativeStates = [];
-
-  if (nativeWheel && bodyBox) {
-    nativeStates.push(
-      await readStackState(page, panelName, 0, "native-wheel"),
-    );
-    await page.mouse.move(
-      bodyBox.x + bodyBox.width / 2,
-      bodyBox.y + Math.min(bodyBox.height - 24, bodyBox.height * 0.62),
-    );
-    for (let index = 0; index < 3; index += 1) {
-      await page.mouse.wheel(0, Math.max(180, Math.round(bodyBox.height * 0.42)));
-      await waitForLayout(page, 300);
-      nativeStates.push(await readStackState(
-        page,
-        panelName,
-        null,
-        "native-wheel",
-      ));
-    }
-    for (let index = 0; index < 2; index += 1) {
-      await page.mouse.wheel(
-        0,
-        -Math.max(180, Math.round(bodyBox.height * 0.42)),
-      );
-      await waitForLayout(page, 300);
-      nativeStates.push(await readStackState(
-        page,
-        panelName,
-        null,
-        "native-wheel-reverse",
-      ));
-    }
-  }
-
-  const maximumNativeScroll = nativeStates.length
-    ? Math.max(...nativeStates.map((state) => state.actualScroll))
-    : 0;
-  const nativeMoved = !nativeWheel
-    || maximumNativeScroll > 0;
-  if (nativeWheel && !nativeMoved && nativeStates.length) {
-    nativeStates.at(-1).failures.push(
-      "native WebKit wheel input did not move the scroll viewport",
-    );
-  }
-  const nativeReturned = !nativeWheel
-    || (
-      nativeStates.length > 1
-      && nativeStates.at(-1).actualScroll < maximumNativeScroll
-    );
-  if (nativeWheel && !nativeReturned && nativeStates.length) {
-    nativeStates.at(-1).failures.push(
-      "reverse WebKit wheel input did not move the scroll viewport upward",
-    );
-  }
-
-  await page.screenshot({
-    path: path.join(artifactDir, `${captureLabel}-${panelName}-stack.png`),
-    fullPage: false,
-  });
-  await page.keyboard.press("Escape");
+  await page.keyboard.press('Escape');
   await waitForLayout(page, 420);
-  return {
-    panelName,
-    maxScroll,
-    states,
-    nativeStates,
-    physicalInvariantFailures,
-    failures: [
-      ...physicalInvariantFailures.map(
-        (failure) => `${panelName}/physical-invariant: ${failure}`,
-      ),
-      ...[...states, ...nativeStates].flatMap((state) => (
-        state.failures.map(
-          (failure) => `${panelName}/${state.inputMode}@${state.actualScroll}: ${failure}`,
-        )
-      )),
-    ],
-  };
+  return {panelName,maxScroll,states,failures};
 };
 
 const routeAudit = async (page, mapId, expectedCount) => {
