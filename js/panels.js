@@ -324,6 +324,7 @@ const openContentPanel = (
     return;
   }
   if (position?.view !== view) position = null;
+  contentPanel?.classList.toggle("is-restoring-position", Boolean(position));
   if (observationRoute.active) stopObservation({ updateHistory: false });
 
   activePanelView = view;

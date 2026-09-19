@@ -10897,6 +10897,10 @@ html[data-focus-modality="keyboard"]
   animation-duration: 280ms;
 }
 
+/* Returning to a reading position keeps that content still; only its header
+   reappears. A fresh section continues to use the full entrance. */
+.content-panel.is-restoring-position .content-panel__body { animation: none; }
+
 @media (max-width: 680px) {
   .constellation-nav.is-open .constellation-nav__orbit {
     animation: window-reveal 280ms var(--motion-enter);

@@ -250,6 +250,9 @@ for(const engine of [process.argv[2]||'chromium']) {
     result.lastState=await page.evaluate(()=>({
       active:document.activeElement?.outerHTML.slice(0,240),
       scroll:document.querySelector('.case-scroll')?.scrollTop,
+      panelScroll:document.querySelector('.content-panel__body')?.scrollTop,
+      panelPosition:history.state?.panelPosition,
+      panelAnimation:getComputedStyle(document.querySelector('.content-panel__body')).animationName,
       keyRegionFocused:document.activeElement===document.querySelector('.case-scroll'),
       playbackControl:window.__casePlaybackControl,
     })).catch(()=>null);
