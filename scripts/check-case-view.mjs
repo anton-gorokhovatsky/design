@@ -87,7 +87,11 @@ for (const engine of [process.argv[2] || 'chromium']) {
       assert.ok(result.start.copyOverflow <= 1,'No text extends into the sheet padding at enlarged font sizes');
       assert.equal(result.start.scrollbar,'none','The case hides the native scrollbar without disabling scrolling');
       assert.ok(result.start.nestedOverflow <= 1,'No nested description scroller');
-      assert.ok(result.start.rounded && (engine==='webkit' || result.start.cornerLeaks===0),'The complete visible frame has four clipped round corners');
+      assert.ok(result.start.rounded,'The complete visible frame has four clipped round corners');
+      // Accelerated video can hit-test outside its painted clip in Chromium too.
+      // Compare rendered corner pixels instead of treating hit testing as the silhouette.
+      result.startCornerPixels=await readRenderedFrameCorners(page,'.case-sheet');
+      assert.ok(result.startCornerPixels.every(delta=>delta<12),'Start corners show the background');
       if (width>900) assert.ok(Math.abs(result.start.media.y-result.start.sheet.y)<2,'Media and story share a top axis');
       else assert.ok(Math.abs(result.start.media.x-result.start.sheet.x)<2
         && Math.abs(result.start.media.width-(result.start.sheet.right-result.start.sheet.x))<2,
@@ -103,7 +107,7 @@ for (const engine of [process.argv[2] || 'chromium']) {
       await scroll.evaluate(e=>e.scrollTop=(e.scrollHeight-e.clientHeight)/2);
       result.middle = await measure();
       assert.deepEqual(result.middle.sheet,result.start.sheet,'The outer frame stays stationary in the middle of a read');
-      assert.ok(result.middle.rounded && (engine==='webkit' || result.middle.cornerLeaks===0),'No straight frame cut appears in mid-scroll');
+      assert.ok(result.middle.rounded,'The stationary frame retains its rounded clipping');
       result.cornerPixels = await readRenderedFrameCorners(page,'.case-sheet');
       assert.ok(result.cornerPixels.every(delta=>delta<12), 'Rendered corners reveal the background; a rectangular fill must not cover them: '+result.cornerPixels);
       if (name==='desktop-light'||name==='mobile-dark') await page.screenshot({path:dir+engine+'-'+name+'-middle.jpg',type:'jpeg',quality:90});
@@ -111,7 +115,9 @@ for (const engine of [process.argv[2] || 'chromium']) {
       await page.waitForFunction(() => { const s=document.querySelector('.case-scroll'); return s.scrollTop+s.clientHeight>=s.scrollHeight-2; });
       result.bottom = await measure();
       assert.deepEqual(result.bottom.sheet,result.start.sheet,'All four outer frame corners stay on screen at the end');
-      assert.ok(result.bottom.rounded && (engine==='webkit' || result.bottom.cornerLeaks===0),'The rounded silhouette survives scrolling to the end');
+      assert.ok(result.bottom.rounded,'The rounded silhouette survives scrolling to the end');
+      result.bottomCornerPixels=await readRenderedFrameCorners(page,'.case-sheet');
+      assert.ok(result.bottomCornerPixels.every(delta=>delta<12),'End corners show the background');
       if (result.start.total>result.start.client+2) assert.ok(result.bottom.top>0,'Input actually moved the content');
       const lastLink = await page.locator('.case-story .map-related__item').last().boundingBox();
       assert.ok(lastLink.y>=b.y && lastLink.y+lastLink.height<=height-8,'The last related case is fully reachable');
@@ -135,8 +141,10 @@ for (const engine of [process.argv[2] || 'chromium']) {
         // Computed filter:url() is not evidence that Safari paints filtered video.
         // Compare actual edge pixels against the same paused frame without the lens.
         await page.emulateMedia({reducedMotion:'no-preference'});
-        await page.waitForFunction(()=>!document.querySelector('.case-media video').paused);
+        await page.waitForFunction(()=>!document.querySelector('.case-media video').paused
+          && document.querySelector('[data-case-pause]').textContent==='Пауза');
         await page.locator('[data-case-pause]').click();
+        await page.waitForFunction(()=>document.querySelector('.case-media video').paused);
         await scroll.evaluate(s=>{
           const v=s.querySelector('video');
           s.scrollTop+=v.getBoundingClientRect().top-s.getBoundingClientRect().top+24;
@@ -148,9 +156,9 @@ for (const engine of [process.argv[2] || 'chromium']) {
         const port=await scroll.boundingBox();
         const clip={x:media.x+12,y:port.y+8,width:media.width-24,height:60};
         const painted=await page.screenshot({clip});
-        const original=await lens.evaluate(c=>{const value=c.style.filter;c.style.filter='none';return value;});
+        await lens.evaluate(c=>{c.style.visibility='hidden';c.previousElementSibling.style.opacity='1';});
         const plain=await page.screenshot({clip});
-        await lens.evaluate((c,value)=>c.style.filter=value,original);
+        await lens.evaluate(c=>{c.style.visibility='';c.previousElementSibling.style.opacity='0';});
         result.videoLensPixelDelta=await page.evaluate(async sources=>{
           const read=async source=>{const i=new Image();i.src='data:image/png;base64,'+source;await i.decode();
             const c=document.createElement('canvas');c.width=i.width;c.height=i.height;

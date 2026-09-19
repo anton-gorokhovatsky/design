@@ -129,6 +129,7 @@ const pause = reel.querySelector("button");
 let pinnedItem = null;
 let wantsPlayback = false;
 let deliberatelyPaused = false;
+let playbackRequest = 0;
 let pendingMediaTime = null;
 let hoverHandoff = null;
 function moveMedia(parent, node, before = null) {
@@ -141,10 +142,12 @@ function moveMedia(parent, node, before = null) {
 }
 function syncPlayback() {
   if (!pinnedItem) return;
+  const request = ++playbackRequest;
   const playing = wantsPlayback && !document.hidden;
   pause.textContent = playing ? "Пауза" : "Смотреть фрагмент";
   pause.setAttribute("aria-label", playing ? "Приостановить видео проекта" : "Воспроизвести видео проекта");
   if (playing) video.play().catch(() => {
+    if (request !== playbackRequest) return;
     wantsPlayback = false;
     pause.textContent = "Смотреть фрагмент";
     pause.setAttribute("aria-label", "Воспроизвести видео проекта");
@@ -190,6 +193,7 @@ function placeReel() {
 }
 function pinReel(item) {
   if (!item?.previewVideo) {
+    playbackRequest++;
     pinnedItem = null;
     wantsPlayback = false;
     reel.hidden = true;

@@ -21,7 +21,7 @@ const lensNamespace = "http://www.w3.org/2000/svg";
 const lensForcedColors = matchMedia("(forced-colors: active)");
 const lensDepth = 96;
 const lensBleed = 32;
-// Refraction narrows foreground content as it enters the matte edge. Keep
+// Refraction enlarges foreground content as it enters the matte edge. Keep
 // baselines intact: vertical displacement clips glyphs in browser SVG pipelines.
 const drawScrollLensMap = (record, width, height, top, bottom) => {
   const canvas = record.canvas;
@@ -37,8 +37,8 @@ const drawScrollLensMap = (record, width, height, top, bottom) => {
     const depth = Math.max(upper, lower);
     for (let x = 0; x < canvas.width; x++) {
       const u = x / (canvas.width - 1);
-      // No horizontal displacement at either side of a media frame.
-      const shift = (u - .5) * Math.min(width * .3, 130) * depth ** 2
+      // Video geometry is sampled directly below; text keeps its baselines.
+      const shift = record.video ? 0 : -(u - .5) * Math.min(width * .3, 130) * depth ** 2
         * Math.sin(Math.PI * u) ** 2;
       const offset = (y * canvas.width + x) * 4;
       pixels.data[offset] = 128 + shift / 64 * 255;
@@ -57,7 +57,9 @@ const drawScrollLensMap = (record, width, height, top, bottom) => {
     primitive.setAttribute("height", extent / height);
   }
   record.displaceX.setAttribute("scale", 64 / width);
-  record.blur.setAttribute("stdDeviation", `${4.5 / width} ${4.5 / height}`);
+  const blur = record.video ? 2.2 : 4.5;
+  record.blur.setAttribute("stdDeviation", `${blur / width} ${blur / height}`);
+  record.fade.setAttribute("amplitude", record.video ? ".28" : "1");
   record.image.setAttribute("href", canvas.toDataURL());
 };
 
@@ -70,7 +72,11 @@ const createLensVideo = video => {
   canvas.setAttribute("aria-hidden", "true");
   const context = canvas.getContext("2d");
   if (!context) return null;
+  const source = document.createElement("canvas");
+  const sourceContext = source.getContext("2d");
+  if (!sourceContext) return null;
   const opacity = video.style.opacity;
+  let top = null, bottom = null;
   let callback = 0;
   let disposed = false;
   const draw = (resizeOnly = false) => {
@@ -79,15 +85,40 @@ const createLensVideo = video => {
     const width = Math.round(video.clientWidth * density);
     const height = Math.round(video.clientHeight * density);
     if (!width || !height) return;
-    if (resizeOnly && canvas.width === width && canvas.height === height && canvas.isConnected) return;
-    if (canvas.width !== width || canvas.height !== height) {
+    const resized = canvas.width !== width || canvas.height !== height;
+    if (resized) {
       canvas.width = width;
       canvas.height = height;
+      source.width = width;
+      source.height = height;
     }
-    context.clearRect(0, 0, width, height);
     const scale = Math.min(width / video.videoWidth, height / video.videoHeight);
     const w = video.videoWidth * scale, h = video.videoHeight * scale;
-    context.drawImage(video, (width - w) / 2, 0, w, h);
+    if (!resizeOnly || resized || !canvas.isConnected) {
+      sourceContext.clearRect(0, 0, width, height);
+      sourceContext.drawImage(video, (width - w) / 2, 0, w, h);
+    }
+    context.clearRect(0, 0, width, height);
+    context.drawImage(source, 0, 0);
+    // Optical sampling bends the picture inside its untouched frame. Moving
+    // towards an edge magnifies it sideways and draws it into a vertical arc.
+    // Sample a cached frame, not the decoder hundreds of times per repaint.
+    const depthAt = (position, edge, upper) => edge === null ? 0
+      : Math.max(0, Math.min(1, 1 - (upper ? position - edge : edge - position) / lensDepth));
+    const sampleY = position => position + 38 * (
+      depthAt(position, top, true) ** 2 - depthAt(position, bottom, false) ** 2);
+    for (let y = 0; y < height; y++) {
+      const position = (y + .5) / density;
+      const depth = Math.max(depthAt(position, top, true), depthAt(position, bottom, false));
+      if (!depth) continue;
+      const zoom = 1 + .7 * depth ** 2;
+      const sy = Math.max(0, Math.min(height - 1, sampleY(y / density) * density));
+      const sh = Math.max(.1, Math.min(height - sy,
+        sampleY((y + 1) / density) * density - sy));
+      context.clearRect(0, y, width, 1);
+      context.drawImage(source, (width - width / zoom) / 2, sy, width / zoom, sh,
+        0, y, width, 1);
+    }
     if (!canvas.isConnected) video.after(canvas);
     video.style.opacity = "0";
   };
@@ -101,7 +132,7 @@ const createLensVideo = video => {
   const refresh = () => { draw(); if (!callback) tick(); };
   for (const event of ["loadeddata", "seeked", "play"]) video.addEventListener(event, refresh);
   refresh();
-  return { canvas, draw, dispose() {
+  return { canvas, draw, setEdges(upper, lower) { top = upper; bottom = lower; }, dispose() {
     disposed = true;
     if (video.cancelVideoFrameCallback) video.cancelVideoFrameCallback(callback);
     else cancelAnimationFrame(callback);
@@ -162,6 +193,7 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
     const record = { id, filter, canvas, original: element.style.filter,
       image: filter.querySelector("feImage"),
       displaceX: filter.querySelector("feDisplacementMap"), blur: filter.querySelector("feGaussianBlur"),
+      fade: filter.querySelector('[result="fade"] feFuncA'),
       video: element.matches("video") ? createLensVideo(element) : null };
     records.set(element, record);
     resize.observe(element);
@@ -199,6 +231,8 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
       record ||= makeRecord(element);
       drawScrollLensMap(record, width, height,
         depths[0] ? (port.top - rect.top) / scale : null,
+        depths[1] ? (port.bottom - rect.top) / scale : null);
+      record.video?.setEdges(depths[0] ? (port.top - rect.top) / scale : null,
         depths[1] ? (port.bottom - rect.top) / scale : null);
       record.video?.draw(true);
       (record.video?.canvas || element).style.filter = `url(#${record.id})`;
