@@ -124,6 +124,14 @@ const readStackState = (page, panelName, expectedScroll, inputMode) => {
     const geometry = surfaces.map((surface, index) => {
       const rect = surface.getBoundingClientRect();
       const style = getComputedStyle(surface);
+      const roundedClip = /^inset\(([^)]+) round ([\d.]+)px\)$/.exec(style.clipPath);
+      const insets = roundedClip?.[1].split(/\s+/).map(Number.parseFloat) || [];
+      const [clipTop = 0, clipRight = clipTop, clipBottom = clipTop, clipLeft = clipRight] = insets;
+      const scrollEdgeClip = surface.hasAttribute("data-scroll-fold") && Boolean(roundedClip)
+        && clipTop + clipBottom > .5 && clipRight === 0 && clipLeft === 0
+        && Math.abs(clipTop - Math.max(0, bodyRect.top - rect.top)) <= 1
+        && Math.abs(clipBottom - Math.max(0, rect.bottom - bodyRect.bottom)) <= 1
+        && Number(roundedClip[2]) > 0 && Number(roundedClip[2]) <= 30;
       const childOpacities = Array.from(surface.children)
         .filter((child) => getComputedStyle(child).display !== "none")
         .map((child) => Number(getComputedStyle(child).opacity));
@@ -140,6 +148,7 @@ const readStackState = (page, panelName, expectedScroll, inputMode) => {
         ) || 0,
         inlineStackTop: surface.style.getPropertyValue("--content-stack-top"),
         clipPath: style.clipPath,
+        scrollEdgeClip,
         top: rect.top,
         topOffset: rect.top - bodyRect.top,
         right: rect.right,
@@ -210,8 +219,8 @@ const readStackState = (page, panelName, expectedScroll, inputMode) => {
         ...(active && active.childOpacities.some((opacity) => opacity < 0.99)
           ? ["active surface copy is faded or unreadable"]
           : []),
-        ...(geometry.some((item) => item.clipPath !== "none")
-          ? ["stack surfaces must remain complete shapes without clipping"]
+        ...(geometry.some((item) => item.clipPath !== "none" && !item.scrollEdgeClip)
+          ? ["stack clipping must follow the rounded scroll viewport boundary"]
           : []),
         ...(geometry.some((item) => item.inlineStackTop)
           ? ["runtime rewrites a stack surface plane"]

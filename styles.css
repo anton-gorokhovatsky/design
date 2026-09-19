@@ -5277,8 +5277,8 @@ body:has(.command-dock.is-open) .origin-marker__label {
   display: grid;
   grid-column: 1 / -1;
   min-width: 0;
-  gap: 10px;
-  padding: 12px 13px 13px;
+  gap: 12px;
+  padding: var(--case-pad, 20px);
   overflow: hidden;
   border-radius: 22px;
   background: var(--material-01);
@@ -5306,19 +5306,21 @@ body:has(.command-dock.is-open) .origin-marker__label {
 }
 
 .map-related__header > span {
-  font-size: 0.58rem;
+  font-size: .75rem;
+  font-weight: 400;
+  line-height: 1.4;
 }
 
 
 .map-related__track {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
   min-width: 0;
   gap: 8px;
-  overflow-x: auto;
+  overflow: visible;
   overscroll-behavior-inline: contain;
   scrollbar-width: none;
   scroll-behavior: smooth;
-  scroll-snap-type: inline mandatory;
 }
 
 .map-related__track::-webkit-scrollbar {
@@ -5328,9 +5330,10 @@ body:has(.command-dock.is-open) .origin-marker__label {
 .map-related__item {
   display: grid;
   flex: 0 0 min(72%, 252px);
-  min-height: 82px;
-  align-content: space-between;
-  gap: 14px;
+  min-width: 0;
+  min-height: 44px;
+  align-content: start;
+  gap: 6px;
   padding: 12px;
   overflow: hidden;
   border: 1px solid var(--line-soft);
@@ -5351,35 +5354,17 @@ body:has(.command-dock.is-open) .origin-marker__label {
 }
 
 .map-related__item > strong {
-  display: -webkit-box;
-  overflow: hidden;
-  font-size: clamp(0.76rem, calc(0.7rem + 0.18vw), 0.88rem);
-  line-height: 1.08;
+  display: block;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
   text-wrap: balance;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
 }
 
 .map-related__item > span {
-  font-size: 0.55rem;
-}
-
-.map-related[data-related-kind="personal"] {
-  gap: 6px;
-  padding: 8px;
-}
-
-.map-related[data-related-kind="personal"] .map-related__track {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  overflow: visible;
-}
-
-.map-related[data-related-kind="personal"] .map-related__item {
-  min-width: 0;
-  min-height: 44px;
-  align-content: center;
-  padding: 8px 12px;
+  font-size: .6875rem;
+  line-height: 1.4;
 }
 
 .map-related[data-related-kind="personal"] .map-related__item > span {
@@ -8315,17 +8300,6 @@ html[data-theme="dark"] .signal-constellation {
     max-height: clamp(120px, calc(100svh - 520px), 250px);
   }
 
-  .map-related {
-    padding: 11px 12px 12px;
-    border-radius: 21px;
-  }
-
-
-  .map-related__item {
-    flex-basis: 82%;
-    min-height: 86px;
-  }
-
   .map-evidence {
     gap: 8px;
     margin-top: 11px;
@@ -10893,6 +10867,78 @@ html[data-focus-modality="keyboard"]
   }
 }
 
+/* Every popup arrives with the same short, soft expansion. Individual transform
+   properties preserve each window's existing anchor and responsive geometry. */
+@keyframes window-reveal {
+  from { opacity: 0; translate: 0 14px; scale: .97; }
+  to { opacity: 1; translate: 0 0; scale: 1; }
+}
+
+.map-inspector.is-open,
+.settings-panel[open],
+.command-results.is-open,
+.command-status:not([hidden]),
+.personal-media:not([hidden]),
+.map-hover-preview.is-visible,
+.content-panel.is-open .content-panel__header,
+.content-panel.is-open [data-panel-section]:not([hidden]) {
+  animation: window-reveal 360ms var(--motion-enter);
+}
+
+.command-results.is-open,
+.command-status:not([hidden]),
+.map-hover-preview.is-visible {
+  animation-duration: 280ms;
+}
+
+@media (max-width: 680px) {
+  .constellation-nav.is-open .constellation-nav__orbit {
+    animation: window-reveal 280ms var(--motion-enter);
+  }
+}
+
+/* Inner text lists fade only where more content exists. Floating sheets use
+   the rounded, scroll-relative clip from viewport-ui.js instead. */
+.settings-panel__body,
+.command-results {
+  mask-image: linear-gradient(to bottom, transparent, #000 var(--scroll-fade-top, 0px),
+    #000 calc(100% - var(--scroll-fade-bottom, 0px)), transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 var(--scroll-fade-top, 0px),
+    #000 calc(100% - var(--scroll-fade-bottom, 0px)), transparent);
+  scroll-padding-block: 18px;
+}
+
+.map-inspector:not(.is-case-view) .map-readout__description {
+  max-height: none;
+  overflow: visible;
+  padding-inline: 20px;
+}
+
+.map-inspector:not(.is-case-view) .map-inspector__close {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+}
+
+.map-inspector > .map-related { grid-row: auto; margin-top: 8px; }
+
+html[data-reduce-motion="true"] :is(
+  .map-inspector, .settings-panel, .command-results, .command-status,
+  .personal-media, .map-hover-preview, .content-panel__header,
+  [data-panel-section], .constellation-nav__orbit
+) { animation: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  :is(.map-inspector, .settings-panel, .command-results, .command-status,
+    .personal-media, .map-hover-preview, .content-panel__header,
+    [data-panel-section], .constellation-nav__orbit) { animation: none; }
+}
+
+@media (forced-colors: active) {
+  [data-scroll-fold] { clip-path: none !important; }
+  .settings-panel__body, .command-results { mask-image: none; -webkit-mask-image: none; }
+}
+
 /* Only the open professional case changes; the map retains its release layout. */
 body[data-case-open] :is(.site-header, .system-dock, .display-control, .control-console, .map-note) {
   visibility: hidden;
@@ -11062,12 +11108,6 @@ body[data-case-open] :is(.map-axis-label, .map-labels, .map-node-label, .origin-
   font-weight: 400;
   color: var(--content-ink);
 }
-.is-case-view .map-related { padding: var(--case-pad); gap: var(--case-space-medium); }
-.is-case-view .map-related__header > span { font-size: var(--case-label-size); line-height: 1.45; }
-.is-case-view .map-related__track { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr)); overflow: visible; }
-.is-case-view .map-related__item { min-height: 0; align-content: start; gap: var(--case-space-small); padding: var(--case-space-medium); }
-.is-case-view .map-related__item > strong { font-size: var(--case-body-size); line-height: 1.25; }
-.is-case-view .map-related__item > span { font-size: var(--case-label-size); line-height: 1.45; }
 .case-media {
   position: sticky;
   top: 0;
@@ -11088,7 +11128,6 @@ body[data-case-open] :is(.map-axis-label, .map-labels, .map-node-label, .origin-
 .map-inspector.is-case-view[data-case-media="false"] { max-width: 840px; }
 .is-case-view[data-case-media="false"] .case-layout { grid-template-columns: minmax(0, 1fr); }
 .is-case-view[data-case-media="false"] .case-sheet { grid-template-columns: minmax(0, 1fr); }
-.is-case-view[data-case-media="false"] .map-related__track { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
 @media (max-width: 1100px) {
   .map-inspector.is-case-view { --case-pad: 24px; --case-gap: 24px; }
@@ -11102,12 +11141,10 @@ body[data-case-open] :is(.map-axis-label, .map-labels, .map-node-label, .origin-
   .case-media, .case-media[data-orientation="portrait"] { position: static; width: 100%; }
   .case-media[data-orientation="portrait"] { max-width: 440px; }
   .case-media .map-hover-preview__mosaic-main { border-radius: 18px; }
-  .is-case-view[data-case-media="false"] .map-related__track { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 480px) {
   .map-inspector.is-case-view { --case-pad: 20px; inset: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom)); gap: 12px; }
   .case-sheet { border-radius: 25px; }
-  .is-case-view .map-related__track, .is-case-view[data-case-media="false"] .map-related__track { grid-template-columns: minmax(0, 1fr); }
 }
 
 @media (forced-colors: active) {

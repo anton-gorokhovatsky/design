@@ -246,6 +246,10 @@ const invalidateContentStack = () => {
   scheduleContentStackSync();
 };
 
+contentPanelBody?.addEventListener("animationend", (event) => {
+  if (event.animationName === "window-reveal") invalidateContentStack();
+});
+
 const panelViews = {
   work: {
     index: "01 / КЕЙСЫ",
