@@ -5306,7 +5306,7 @@ body:has(.command-dock.is-open) .origin-marker__label {
 }
 
 .map-related__header > span {
-  font-size: .75rem;
+  font-size: var(--case-label-size, .75rem);
   font-weight: 400;
   line-height: 1.4;
 }
