@@ -2,7 +2,7 @@
 import { mapItems } from "./map-data.js";
 import { mapInspector, hideMapPreview, observationRoute } from "./map-engine.js";
 import { reducedMotion } from "./preferences.js";
-import { observeScrollEdges, scrollRegionFromKey } from "./viewport-ui.js";
+import { scrollRegionFromKey } from "./viewport-ui.js";
 import "./panels.js";
 
 const items = new Map(mapItems.map(item => [item.id, item]));
@@ -20,7 +20,6 @@ viewport.className = "case-scroll";
 viewport.tabIndex = 0;
 viewport.setAttribute("role", "region");
 viewport.setAttribute("aria-label", "Содержимое кейса");
-observeScrollEdges(viewport, { surfaces: ".case-sheet, .case-story > .map-related", owner: mapInspector });
 // Match the existing panel keyboard pattern when the region itself is focused.
 // Do not steal keys from links/buttons or selection; wheel and touch stay native.
 viewport.addEventListener("keydown", (event) => {

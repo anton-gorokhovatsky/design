@@ -10907,8 +10907,7 @@ html[data-focus-modality="keyboard"]
   }
 }
 
-/* Inner text lists fade only where more content exists. Floating sheets use
-   the rounded, scroll-relative clip from viewport-ui.js instead. */
+/* Inner text lists fade only where more content exists. */
 .settings-panel__body,
 .command-results {
   mask-image: linear-gradient(to bottom, transparent, #000 var(--scroll-fade-top, 0px),
@@ -10945,7 +10944,6 @@ html[data-reduce-motion="true"] :is(
 }
 
 @media (forced-colors: active) {
-  [data-scroll-fold] { clip-path: none !important; }
   .settings-panel__body, .command-results { mask-image: none; -webkit-mask-image: none; }
 }
 

@@ -11,42 +11,17 @@ const scrollRegionFromKey = (event, region, reduceMotion) => {
   region.scrollTo({ top: Math.max(0, Math.min(maximum, top)), behavior: reduceMotion ? "auto" : "smooth" });
 };
 
-// Give the visible part of each floating sheet its own rounded edge. Clipping
-// follows native scrolling; the content, hit areas and scroll range never move.
-const observeScrollEdges = (region, { surfaces = "", owner = region, enabled = () => true } = {}) => {
+// Keep a short continuation cue inside text lists without reshaping cards.
+const observeScrollEdges = (region, { owner = region } = {}) => {
   if (!region) return;
   let frame = 0;
-  let folded = new Set();
-  const clear = (element) => {
-    element.style.removeProperty("clip-path");
-    element.removeAttribute("data-scroll-fold");
-  };
   const update = () => {
     frame = 0;
-    const bounds = region.getBoundingClientRect();
-    const active = enabled() && bounds.height > 0 && region.scrollHeight > region.clientHeight + 1;
+    const active = region.clientHeight > 0 && region.scrollHeight > region.clientHeight + 1;
     const top = active ? Math.max(0, region.scrollTop) : 0;
     const bottom = active ? Math.max(0, region.scrollHeight - region.clientHeight - top) : 0;
     region.style.setProperty("--scroll-fade-top", Math.min(14, top) + "px");
     region.style.setProperty("--scroll-fade-bottom", Math.min(14, bottom) + "px");
-    const next = new Set();
-    const clips = active && surfaces ? [...region.querySelectorAll(surfaces)].map(element => {
-      const rect = element.getBoundingClientRect();
-      const scale = rect.height / element.offsetHeight || 1;
-      const cutTop = Math.max(0, (bounds.top - rect.top) / scale);
-      const cutBottom = Math.max(0, (rect.bottom - bounds.bottom) / scale);
-      const visible = element.offsetHeight - cutTop - cutBottom;
-      if (visible <= 0 || cutTop + cutBottom < .5) return null;
-      const radius = Math.min(30, visible / 2, rect.width / scale / 2);
-      return { element, clip: `inset(${cutTop.toFixed(2)}px 0 ${cutBottom.toFixed(2)}px round ${radius.toFixed(2)}px)` };
-    }).filter(Boolean) : [];
-    for (const { element, clip } of clips) {
-      element.style.clipPath = clip;
-      element.setAttribute("data-scroll-fold", "");
-      next.add(element);
-    }
-    for (const element of folded) if (!next.has(element)) clear(element);
-    folded = next;
   };
   const schedule = () => {
     if (!frame) frame = requestAnimationFrame(update);
@@ -62,21 +37,13 @@ const observeScrollEdges = (region, { surfaces = "", owner = region, enabled = (
   });
   contents.observe(region, { childList: true, subtree: true, attributes: true, attributeFilter: ["hidden"] });
   new MutationObserver(schedule).observe(owner, {
-    attributes: true, attributeFilter: ["class", "open", "hidden", "data-selected-map-id"],
+    attributes: true, attributeFilter: ["class", "open", "hidden"],
   });
   for (const child of region.children) resize.observe(child);
   window.addEventListener("resize", schedule, { passive: true });
   schedule();
 };
 
-observeScrollEdges(document.querySelector(".content-panel__body"), {
-  owner: document.querySelector("[data-content-panel]"),
-  surfaces: ".work-intro, .approach-intro, .work-row, .approach-grid li, .contact-copy",
-});
-observeScrollEdges(document.querySelector("[data-map-inspector]"), {
-  surfaces: ":scope > .map-readout__identity, :scope > .map-readout__description, :scope > .map-related",
-  enabled: () => !document.querySelector("[data-map-inspector]").classList.contains("is-case-view"),
-});
 observeScrollEdges(document.querySelector(".settings-panel__body"), {
   owner: document.querySelector("[data-settings-panel]"),
 });
