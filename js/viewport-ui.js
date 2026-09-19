@@ -38,7 +38,7 @@ const drawScrollLensMap = (record, width, height, top, bottom) => {
     for (let x = 0; x < canvas.width; x++) {
       const u = x / (canvas.width - 1);
       // Video geometry is sampled directly below; text keeps its baselines.
-      const shift = record.video ? 0 : -(u - .5) * Math.min(width * .3, 130) * depth ** 2
+      const shift = record.video ? 0 : -(u - .5) * Math.min(width * .42, 168) * depth ** 2
         * Math.sin(Math.PI * u) ** 2;
       const offset = (y * canvas.width + x) * 4;
       pixels.data[offset] = 128 + shift / 64 * 255;
@@ -57,9 +57,10 @@ const drawScrollLensMap = (record, width, height, top, bottom) => {
     primitive.setAttribute("height", extent / height);
   }
   record.displaceX.setAttribute("scale", 64 / width);
-  const blur = record.video ? 2.2 : 4.5;
+  const blur = record.video ? 2.2 : 2.6;
   record.blur.setAttribute("stdDeviation", `${blur / width} ${blur / height}`);
-  record.fade.setAttribute("amplitude", record.video ? ".28" : "1");
+  record.fade.setAttribute("amplitude", record.video ? ".28" : ".72");
+  record.fade.setAttribute("exponent", record.video ? "2.4" : "3.4");
   record.image.setAttribute("href", canvas.toDataURL());
 };
 
