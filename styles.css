@@ -10907,6 +10907,17 @@ html[data-focus-modality="keyboard"]
   }
 }
 
+/* Paper bends independently of native text and pointer geometry. */
+.scroll-surface { isolation: isolate; }
+:is(.content-panel, .map-inspector) .scroll-surface { transition: none; }
+[data-scroll-backdrop] {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  corner-shape: var(--corner-card-shape);
+}
+
 /* Inner text lists fade only where more content exists. */
 .settings-panel__body,
 .command-results {
