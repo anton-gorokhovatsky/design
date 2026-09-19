@@ -2,7 +2,7 @@
 import { mapItems } from "./map-data.js";
 import { mapInspector, hideMapPreview, observationRoute } from "./map-engine.js";
 import { reducedMotion } from "./preferences.js";
-import { scrollRegionFromKey } from "./viewport-ui.js";
+import { scrollRegionFromKey, observeScrollLens, clearScrollLenses } from "./viewport-ui.js";
 import "./panels.js";
 
 const items = new Map(mapItems.map(item => [item.id, item]));
@@ -51,7 +51,12 @@ function resumeBackground() {
   for (const [element, inert] of backgroundState) element.inert = inert;
   backgroundState = [];
 }
+const caseLens = observeScrollLens(viewport, () => viewport.querySelectorAll(
+  ".map-readout__identity h2, .map-readout__identity p, .case-inline-media video, [data-map-description], .map-evidence, .case-details, .map-related__header",
+), { owner: mapInspector });
+
 function mount() {
+  clearScrollLenses(mapInspector);
   header.append(kind, close);
   for (const element of [identity, description]) {
     element.removeAttribute("data-material-surface");
@@ -69,6 +74,7 @@ function mount() {
   suspendBackground();
 }
 function unmount() {
+  caseLens.reset();
   resumeBackground();
   originalChildren.forEach(element => mapInspector.append(element));
   header.remove();

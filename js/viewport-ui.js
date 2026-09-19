@@ -1,3 +1,5 @@
+import { reducedMotion } from "./preferences.js";
+
 // Runtime module 7/9: viewport UI for detached command geometry and draggable desktop consoles.
 // Both ordinary panels and expanded cases use the same focused reading keys.
 // This changes keyboard input only; scrolling still belongs to the native region.
@@ -10,6 +12,161 @@ const scrollRegionFromKey = (event, region, reduceMotion) => {
   event.preventDefault();
   region.scrollTo({ top: Math.max(0, Math.min(maximum, top)), behavior: reduceMotion ? "auto" : "smooth" });
 };
+
+// Optical refraction belongs to foreground content, never to a material surface.
+// Video remains clipped by its original, stationary media frame. No layout nodes move.
+const scrollLensControllers = new Map();
+let scrollLensMaps;
+let scrollLensId = 0;
+const lensNamespace = "http://www.w3.org/2000/svg";
+const lensForcedColors = matchMedia("(forced-colors: active)");
+const getScrollLensMaps = () => scrollLensMaps ||= [true, false].map(top => {
+  const canvas = document.createElement("canvas");
+  canvas.width = 512;
+  canvas.height = 192;
+  const context = canvas.getContext("2d");
+  const pixels = context.createImageData(canvas.width, canvas.height);
+  for (let y = 0; y < canvas.height; y++) for (let x = 0; x < canvas.width; x++) {
+    const t = top ? 1 - y / 191 : y / 191;
+    const u = -.12 + x / 511 * 1.24;
+    const shift = (u - .5) * (1 / (1 + .24 * t ** 3) - 1);
+    const offset = (y * canvas.width + x) * 4;
+    pixels.data[offset] = 128 + shift / .28 * 255;
+    pixels.data[offset + 1] = 255 * t ** 2;
+    pixels.data[offset + 2] = 255 * (1 - .95 * t ** 6);
+    pixels.data[offset + 3] = 255;
+  }
+  context.putImageData(pixels, 0, 0);
+  return canvas.toDataURL();
+});
+const clearScrollLenses = region => scrollLensControllers.get(region)?.reset();
+const observeScrollLens = (region, targets, { owner = region, enabled = () => true } = {}) => {
+  if (!region) return;
+  const records = new Map();
+  let frame = 0;
+  let svg;
+  const remove = (element, record) => {
+    if (element.style.filter.includes(record.id)) {
+      if (record.original) element.style.filter = record.original;
+      else element.style.removeProperty("filter");
+    }
+    record.filter.remove();
+    resize.unobserve(element);
+    records.delete(element);
+  };
+  const reset = () => {
+    for (const [element, record] of records) remove(element, record);
+    svg?.remove();
+    svg = null;
+  };
+  const makeRecord = element => {
+    if (!svg) {
+      svg = document.createElementNS(lensNamespace, "svg");
+      svg.setAttribute("width", "0");
+      svg.setAttribute("height", "0");
+      svg.setAttribute("aria-hidden", "true");
+      svg.style.position = "absolute";
+      document.body.append(svg);
+    }
+    const id = `scroll-ink-${++scrollLensId}`;
+    const filter = document.createElementNS(lensNamespace, "filter");
+    for (const [key, value] of Object.entries({ id, filterUnits: "objectBoundingBox",
+      primitiveUnits: "objectBoundingBox", x: "-.12", y: "0", width: "1.24", height: "1",
+      "color-interpolation-filters": "sRGB" })) filter.setAttribute(key, value);
+    const maps = getScrollLensMaps();
+    filter.innerHTML = `<feFlood flood-color="rgb(128,0,255)" result="neutral"/>
+      <feImage href="${maps[0]}" preserveAspectRatio="none" result="top"/>
+      <feImage href="${maps[1]}" preserveAspectRatio="none" result="bottom"/>
+      <feMerge result="bands"><feMergeNode in="top"/><feMergeNode in="bottom"/></feMerge>
+      <feMerge result="map"><feMergeNode in="neutral"/><feMergeNode in="bands"/></feMerge>
+      <feComponentTransfer in="map" result="offset"><feFuncR type="linear" intercept="-.0019607843"/><feFuncB type="linear" slope="0" intercept=".5"/></feComponentTransfer>
+      <feDisplacementMap in="SourceGraphic" in2="offset" scale=".28" xChannelSelector="R" yChannelSelector="B" result="warped"/>
+      <feGaussianBlur in="warped" result="blurred"/>
+      <feColorMatrix in="map" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 1 0 0 0" result="haze"/>
+      <feComposite in="warped" in2="haze" operator="out" result="sharp"/>
+      <feComposite in="blurred" in2="haze" operator="in" result="soft"/>
+      <feMerge result="frost"><feMergeNode in="sharp"/><feMergeNode in="soft"/></feMerge>
+      <feColorMatrix in="map" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 1 0 0" result="fade"/>
+      <feComposite in="frost" in2="fade" operator="in" result="faded"/>
+      <feComposite in="faded" in2="bands" operator="in" result="edges"/>
+      <feComposite in="SourceGraphic" in2="bands" operator="out" result="middle"/>
+      <feMerge><feMergeNode in="middle"/><feMergeNode in="edges"/></feMerge>`;
+    svg.append(filter);
+    const record = { id, filter, original: element.style.filter,
+      images: filter.querySelectorAll("feImage"), blur: filter.querySelector("feGaussianBlur") };
+    records.set(element, record);
+    resize.observe(element);
+    return record;
+  };
+  const update = () => {
+    frame = 0;
+    if (!region.isConnected || owner.hidden || owner.getAttribute("aria-hidden") === "true"
+      || !enabled() || reducedMotion.matches || lensForcedColors.matches) { reset(); return; }
+    const port = region.getBoundingClientRect();
+    if (!port.height || region.scrollHeight <= region.clientHeight + 1) { reset(); return; }
+    const active = new Set(targets());
+    for (const [element, record] of records) if (!active.has(element)) remove(element, record);
+    const scale = port.height / region.offsetHeight || 1;
+    const top = region.scrollTop > 1;
+    const bottom = region.scrollTop + region.clientHeight < region.scrollHeight - 1;
+    const selection = document.getSelection();
+    for (const element of active) {
+      const rect = element.getBoundingClientRect();
+      const height = element.offsetHeight, width = element.offsetWidth;
+      const selected = selection && !selection.isCollapsed
+        && (element.contains(selection.anchorNode) || element.contains(selection.focusNode));
+      const depths = [top && rect.top < port.top + 64 * scale && rect.bottom > port.top ? 64 : 0,
+        bottom && rect.bottom > port.bottom - 64 * scale && rect.top < port.bottom ? 64 : 0];
+      let record = records.get(element);
+      // Materials, controls and live keyboard selection retain their native rendering.
+      const focused = element.contains(document.activeElement)
+        || element.closest("a, button") === document.activeElement;
+      if (!width || !height || !depths.some(Boolean) || selected || focused
+        || element.matches("[data-material-surface], a, button, input, select, textarea")
+        || element.querySelector("[data-material-surface], a, button, input, select, textarea")) {
+        if (record) remove(element, record);
+        continue;
+      }
+      record ||= makeRecord(element);
+      for (let index = 0; index < 2; index++) {
+        const y = (index === 0 ? (port.top - rect.top) / scale
+          : (port.bottom - rect.top) / scale - depths[1]) / height;
+        for (const [key, value] of Object.entries({ x: -.12, y, width: 1.24, height: depths[index] / height })) {
+          record.images[index].setAttribute(key, value);
+        }
+      }
+      record.blur.setAttribute("stdDeviation", `${2.4 / width} ${2.4 / height}`);
+      element.style.filter = `url(#${record.id})`;
+    }
+  };
+  const schedule = () => { if (!frame) frame = requestAnimationFrame(update); };
+  const resize = new ResizeObserver(schedule);
+  resize.observe(region);
+  region.addEventListener("scroll", schedule, { passive: true });
+  region.addEventListener("focusin", schedule);
+  region.addEventListener("focusout", schedule);
+  owner.addEventListener("animationend", schedule);
+  document.addEventListener("selectionchange", schedule);
+  window.addEventListener("resize", schedule, { passive: true });
+  reducedMotion.addEventListener("change", schedule);
+  lensForcedColors.addEventListener("change", schedule);
+  new MutationObserver(schedule).observe(region, { childList: true, subtree: true,
+    attributes: true, attributeFilter: ["hidden"] });
+  new MutationObserver(schedule).observe(owner, { attributes: true,
+    attributeFilter: ["class", "open", "hidden", "aria-hidden"] });
+  const controller = { reset, schedule };
+  scrollLensControllers.set(region, controller);
+  schedule();
+  return controller;
+};
+const lensInspector = document.querySelector("[data-map-inspector]");
+observeScrollLens(lensInspector, () => lensInspector.querySelectorAll(
+  ".map-readout__identity h2, .map-readout__identity p, [data-map-description], .map-evidence, .case-details, .observation-preview, .map-related__header",
+), { enabled: () => !lensInspector.classList.contains("is-case-view") });
+const lensPanel = document.querySelector(".content-panel__body");
+observeScrollLens(lensPanel, () => lensPanel.querySelectorAll(
+  ".work-intro > *, .approach-intro > *, .work-row > *, .approach-grid li > *, .contact-intro > :not(.contact-resume), .contact-links a > *",
+), { owner: document.querySelector("[data-content-panel]") });
 
 // Keep a short continuation cue inside text lists without reshaping cards.
 const observeScrollEdges = (region, { owner = region } = {}) => {
@@ -305,6 +462,8 @@ floatingConsoleMedia.addEventListener?.("change", syncFloatingConsoleBounds);
 
 export {
   observeScrollEdges,
+  observeScrollLens,
+  clearScrollLenses,
   scrollRegionFromKey,
   clearCommandViewportPosition,
   compactCommandViewport,

@@ -169,6 +169,7 @@ const readMaterialAuditExpression = `(() => {
         backdrop: style.backdropFilter || style.webkitBackdropFilter,
         border: style.border,
         shadow: style.boxShadow,
+        filter: style.filter,
       };
     });
 
@@ -179,6 +180,7 @@ const readMaterialAuditExpression = `(() => {
       surface.background !== expectedBackground
       || !surface.backdrop.includes("blur(24px)")
       || surface.shadow !== "none"
+      || surface.filter !== "none"
       || !surface.border.startsWith("0px")
     )),
   };

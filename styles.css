@@ -11176,3 +11176,9 @@ body[data-case-open] :is(.map-axis-label, .map-labels, .map-node-label, .origin-
     -webkit-backdrop-filter: none;
   }
 }
+
+/* Preferences suppress optical content effects even before the next scroll frame. */
+html[data-reduce-motion="true"] [style*="scroll-ink-"] { filter: none !important; }
+@media (prefers-reduced-motion: reduce), (forced-colors: active) {
+  [style*="scroll-ink-"] { filter: none !important; }
+}
