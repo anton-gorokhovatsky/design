@@ -117,10 +117,6 @@ const waitForSearchPlacement = async (client) => {
     const shell = form.closest("[data-floating-console]").getBoundingClientRect();
     const popup = results.getBoundingClientRect();
     const style = getComputedStyle(results);
-    const overflowing = results.scrollHeight > results.clientHeight + 1;
-    const fadeTop = overflowing ? Math.min(14, Math.max(0, results.scrollTop)) : 0;
-    const fadeBottom = overflowing
-      ? Math.min(14, Math.max(0, results.scrollHeight - results.clientHeight - results.scrollTop)) : 0;
     const gap = results.dataset.placement === "below"
       ? popup.top - shell.bottom : shell.top - popup.bottom;
     return shell.top >= 7.5 && shell.bottom <= innerHeight - 7.5
@@ -128,8 +124,8 @@ const waitForSearchPlacement = async (client) => {
       && Math.abs(gap - 8) < 0.6
       && Math.abs(popup.left - form.getBoundingClientRect().left) < 0.6
       && Math.abs(popup.right - shell.right) < 0.6
-      && Math.abs(parseFloat(style.getPropertyValue("--scroll-fade-top")) - fadeTop) < .1
-      && Math.abs(parseFloat(style.getPropertyValue("--scroll-fade-bottom")) - fadeBottom) < .1;
+      && parseFloat(style.borderRadius) >= 20
+      && (style.maskImage || style.webkitMaskImage || "none") === "none";
   })()`, { timeout: 4000, interval: 40 });
   if (!positioned) fail("search: popup did not follow the clamped console.");
 };
@@ -2220,16 +2216,15 @@ const auditBrowser = async (client, origin) => {
       }),
       scrollbarWidth: style.scrollbarWidth,
       maskImage: style.maskImage || style.webkitMaskImage || "none",
-      fadeTop: parseFloat(style.getPropertyValue("--scroll-fade-top")),
-      fadeBottom: parseFloat(style.getPropertyValue("--scroll-fade-bottom")),
+      radius: parseFloat(style.borderRadius),
+      frame: { x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height },
     };
   })()`);
   if (!searchOverflowStartContract.canScroll || !searchOverflowStartContract.showsNextRow
     || searchOverflowStartContract.scrollbarWidth !== "none"
-    || searchOverflowStartContract.maskImage === "none"
-    || searchOverflowStartContract.fadeTop !== 0
-    || !(searchOverflowStartContract.fadeBottom > 0 && searchOverflowStartContract.fadeBottom <= 14)) {
-    fail("search-overflow: a constrained viewport must reveal the next row with a bounded edge fade.", searchOverflowStartContract);
+    || searchOverflowStartContract.maskImage !== "none"
+    || searchOverflowStartContract.radius < 20) {
+    fail("search-overflow: a constrained viewport must reveal the next row inside an unfaded rounded shell.", searchOverflowStartContract);
   }
   await saveElementScreenshot(client, "crop-short-search-overflow-cue", ".command-results");
 
@@ -2250,14 +2245,14 @@ const auditBrowser = async (client, origin) => {
         return row.top < bounds.top - 8 && row.bottom > bounds.top + 8;
       }),
       scrollTop: results.scrollTop,
-      fadeTop: parseFloat(style.getPropertyValue("--scroll-fade-top")),
-      fadeBottom: parseFloat(style.getPropertyValue("--scroll-fade-bottom")),
+      radius: parseFloat(style.borderRadius),
+      frame: { x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height },
     };
   })()`);
   if (!searchOverflowEndContract.showsPreviousRow || searchOverflowEndContract.scrollTop <= 0
-    || searchOverflowEndContract.fadeBottom !== 0
-    || !(searchOverflowEndContract.fadeTop > 0 && searchOverflowEndContract.fadeTop <= 14)) {
-    fail("search-overflow: the end of the list must reveal the previous row with a bounded edge fade.", searchOverflowEndContract);
+    || searchOverflowEndContract.radius < 20
+    || JSON.stringify(searchOverflowEndContract.frame) !== JSON.stringify(searchOverflowStartContract.frame)) {
+    fail("search-overflow: reaching the end must preserve the same rounded shell and reveal the previous row.", searchOverflowEndContract);
   }
   await setViewport(client, { ...searchRegularViewport, mobile: false });
   await waitForSearchPlacement(client);
@@ -3165,6 +3160,7 @@ const auditBrowser = async (client, origin) => {
   const principleVerbatim = await evaluate(client, `(() => {
     const inspector = document.querySelector("[data-map-inspector]");
     const descriptionShell = document.querySelector(".map-readout__description");
+    const reading = inspector.querySelector(".case-scroll");
     const description = document.querySelector("[data-map-description]")?.textContent || "";
     const link = document.querySelector("[data-map-link]");
     const bounds = inspector?.getBoundingClientRect();
@@ -3175,9 +3171,9 @@ const auditBrowser = async (client, origin) => {
       scrollHeight: descriptionShell?.scrollHeight,
       clientHeight: descriptionShell?.clientHeight,
       overflowY: descriptionShell ? getComputedStyle(descriptionShell).overflowY : "",
-      inspectorOverflowY: getComputedStyle(inspector).overflowY,
+      inspectorOverflowY: getComputedStyle(reading).overflowY,
       descriptionReachable: descriptionShell.getBoundingClientRect().bottom
-        <= bounds.bottom + inspector.scrollHeight - inspector.clientHeight + 1,
+        <= reading.getBoundingClientRect().bottom + reading.scrollHeight - reading.clientHeight + 1,
       linkText: link?.textContent || "",
       linkHidden: link?.hidden,
       inspector: bounds ? {

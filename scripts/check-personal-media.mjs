@@ -154,6 +154,14 @@ try {
       for (const keyboard of [false, true]) {
         const cardClose = await closeStyles("[data-close-inspector]", keyboard);
         const playerClose = await closeStyles("[data-close-personal-media]", keyboard);
+        if (geometry.inline) {
+          // The inline player is already inside the readout's material shell.
+          // Its close button keeps the same shape/focus without nested glass.
+          assert.equal(playerClose.backgroundColor, "rgba(0, 0, 0, 0)");
+          assert.equal(playerClose.backdropFilter, "none");
+          cardClose.backgroundColor = "rgba(0, 0, 0, 0)";
+          cardClose.backdropFilter = "none";
+        }
         assert.deepEqual(playerClose, cardClose,
           "Card and player close controls share hover and keyboard focus.");
         assert.equal(await player.isVisible(), true, "The style probe must not leave the card.");
