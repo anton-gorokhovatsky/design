@@ -52,7 +52,7 @@ for (const engine of [process.argv[2] || 'chromium']) {
         const corners = [[b.left+1,b.top+1],[b.right-1,b.top+1],[b.left+1,b.bottom-1],[b.right-1,b.bottom-1]];
         const media = document.querySelector('.case-media').getBoundingClientRect();
         return {top:scroll.scrollTop,client:scroll.clientHeight,total:scroll.scrollHeight,
-          sheet:{x:b.x,y:b.y,right:b.right,bottom:b.bottom},media:{x:media.x,y:media.y},
+          sheet:{x:b.x,y:b.y,right:b.right,bottom:b.bottom},media:{x:media.x,y:media.y,width:media.width},
           rounded:parseFloat(getComputedStyle(frame).borderRadius)>=20 && getComputedStyle(frame).overflow==='hidden',
           cornerLeaks:corners.filter(([x,y])=>frame.contains(document.elementFromPoint(x,y))).length,
           nestedOverflow:description.scrollHeight-description.clientHeight,
@@ -89,6 +89,9 @@ for (const engine of [process.argv[2] || 'chromium']) {
       assert.ok(result.start.nestedOverflow <= 1,'No nested description scroller');
       assert.ok(result.start.rounded && (engine==='webkit' || result.start.cornerLeaks===0),'The complete visible frame has four clipped round corners');
       if (width>900) assert.ok(Math.abs(result.start.media.y-result.start.sheet.y)<2,'Media and story share a top axis');
+      else assert.ok(Math.abs(result.start.media.x-result.start.sheet.x)<2
+        && Math.abs(result.start.media.width-(result.start.sheet.right-result.start.sheet.x))<2,
+      'Inline video spans the full frame while text retains its inset');
       const material = await page.evaluate(readMaterialAuditExpression);
       assert.deepEqual(material.failures,[],'Shared material contract');
       const b = await scroll.boundingBox();
@@ -128,6 +131,44 @@ for (const engine of [process.argv[2] || 'chromium']) {
       await page.locator('[data-map-id="garage-site"]').click();
       await page.waitForFunction(() => document.body.hasAttribute('data-case-open'));
       assert.equal((await measure()).top,0,'Reopening starts at the beginning');
+      if (name==='mobile-light') {
+        // Computed filter:url() is not evidence that Safari paints filtered video.
+        // Compare actual edge pixels against the same paused frame without the lens.
+        await page.emulateMedia({reducedMotion:'no-preference'});
+        await page.waitForFunction(()=>!document.querySelector('.case-media video').paused);
+        await page.locator('[data-case-pause]').click();
+        await scroll.evaluate(s=>{
+          const v=s.querySelector('video');
+          s.scrollTop+=v.getBoundingClientRect().top-s.getBoundingClientRect().top+24;
+        });
+        const lens=page.locator('.scroll-lens-video');
+        await lens.waitFor({state:'visible'});
+        const frameBefore=await page.locator('.case-sheet').boundingBox();
+        const media=await page.locator('.case-media video').boundingBox();
+        const port=await scroll.boundingBox();
+        const clip={x:media.x+12,y:port.y+8,width:media.width-24,height:60};
+        const painted=await page.screenshot({clip});
+        const original=await lens.evaluate(c=>{const value=c.style.filter;c.style.filter='none';return value;});
+        const plain=await page.screenshot({clip});
+        await lens.evaluate((c,value)=>c.style.filter=value,original);
+        result.videoLensPixelDelta=await page.evaluate(async sources=>{
+          const read=async source=>{const i=new Image();i.src='data:image/png;base64,'+source;await i.decode();
+            const c=document.createElement('canvas');c.width=i.width;c.height=i.height;
+            const x=c.getContext('2d');x.drawImage(i,0,0);return x.getImageData(0,0,c.width,c.height).data;};
+          const [a,b]=await Promise.all(sources.map(read));let delta=0;
+          for(let n=0;n<a.length;n++)if(n%4!==3)delta+=Math.abs(a[n]-b[n]);
+          return delta/(a.length*.75);
+        },[painted.toString('base64'),plain.toString('base64')]);
+        assert.ok(result.videoLensPixelDelta>4,'The video edge is visibly refracted in this engine');
+        await page.screenshot({path:dir+engine+'-video-lens.png'});
+        assert.equal(await page.locator('.case-media video').count(),1,'No duplicate video decoder');
+        assert.equal(await page.locator('.case-media video').evaluate(v=>v.paused),true,'The lens preserves manual pause');
+        assert.deepEqual(await page.locator('.case-sheet').boundingBox(),frameBefore,'The effect cannot reshape its outer frame');
+        await page.emulateMedia({reducedMotion:'reduce'});
+        await lens.waitFor({state:'detached'});
+        assert.equal(await page.locator('.case-media video').evaluate(v=>v.style.opacity),'','Reduced motion restores native video immediately');
+        assert.equal(await page.locator('filter[id^="scroll-ink"]').count(),0,'Reduced motion removes optical filters');
+      }
       await page.keyboard.press('Escape');
       await page.waitForFunction(() => !document.body.hasAttribute('data-case-open'));
       assert.deepEqual(result.errors,[]);

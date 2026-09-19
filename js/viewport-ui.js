@@ -19,32 +19,96 @@ const scrollLensControllers = new Map();
 let scrollLensId = 0;
 const lensNamespace = "http://www.w3.org/2000/svg";
 const lensForcedColors = matchMedia("(forced-colors: active)");
-// The map fills the whole foreground box. Its displacement reaches zero at the
-// left and right edges, so refraction cannot move an image's visible perimeter.
-const drawScrollLensMap = (record, height, top, bottom, fade) => {
+const lensDepth = 96;
+const lensBleed = 32;
+// Refraction narrows foreground content as it enters the matte edge. Keep
+// baselines intact: vertical displacement clips glyphs in browser SVG pipelines.
+const drawScrollLensMap = (record, width, height, top, bottom) => {
   const canvas = record.canvas;
-  const rows = Math.min(256, Math.max(16, Math.ceil(height)));
+  const extent = height + lensBleed * 2;
+  const rows = Math.min(512, Math.max(32, Math.ceil(extent)));
   if (canvas.height !== rows) canvas.height = rows;
   const context = canvas.getContext("2d");
   const pixels = context.createImageData(canvas.width, rows);
   for (let y = 0; y < rows; y++) {
-    const position = y / (rows - 1) * height;
-    const t = Math.max(0, top === null ? 0 : 1 - (position - top) / 64,
-      bottom === null ? 0 : 1 - (bottom - position) / 64);
-    const depth = Math.min(1, t);
+    const position = y / (rows - 1) * extent - lensBleed;
+    const upper = top === null ? 0 : Math.max(0, Math.min(1, 1 - (position - top) / lensDepth));
+    const lower = bottom === null ? 0 : Math.max(0, Math.min(1, 1 - (bottom - position) / lensDepth));
+    const depth = Math.max(upper, lower);
     for (let x = 0; x < canvas.width; x++) {
       const u = x / (canvas.width - 1);
-      const shift = (u - .5) * (1 / (1 + .24 * depth ** 3) - 1)
+      // No horizontal displacement at either side of a media frame.
+      const shift = (u - .5) * Math.min(width * .3, 130) * depth ** 2
         * Math.sin(Math.PI * u) ** 2;
       const offset = (y * canvas.width + x) * 4;
-      pixels.data[offset] = 128 + shift / .08 * 255;
-      pixels.data[offset + 1] = 255 * depth ** 2;
-      pixels.data[offset + 2] = fade ? 255 * (1 - .95 * depth ** 6) : 255;
+      pixels.data[offset] = 128 + shift / 64 * 255;
+      pixels.data[offset + 1] = 128;
+      pixels.data[offset + 2] = 255 * depth;
       pixels.data[offset + 3] = 255;
     }
   }
   context.putImageData(pixels, 0, 0);
+  // Give displaced glyphs room beyond their paragraph's own border box.
+  // Explicit primitive bounds also keep Safari from clipping at the old box.
+  for (const primitive of [record.filter, ...record.filter.children]) {
+    primitive.setAttribute("x", "0");
+    primitive.setAttribute("y", -lensBleed / height);
+    primitive.setAttribute("width", "1");
+    primitive.setAttribute("height", extent / height);
+  }
+  record.displaceX.setAttribute("scale", 64 / width);
+  record.blur.setAttribute("stdDeviation", `${4.5 / width} ${4.5 / height}`);
   record.image.setAttribute("href", canvas.toDataURL());
+};
+
+// Safari drops SVG filters on accelerated video layers (WebKit 322588).
+// Paint the existing decoder's current frame into a 2D canvas only while it
+// intersects the lens. No second video, network request or playback clock.
+const createLensVideo = video => {
+  const canvas = document.createElement("canvas");
+  canvas.className = "scroll-lens-video";
+  canvas.setAttribute("aria-hidden", "true");
+  const context = canvas.getContext("2d");
+  if (!context) return null;
+  const opacity = video.style.opacity;
+  let callback = 0;
+  let disposed = false;
+  const draw = (resizeOnly = false) => {
+    if (disposed || video.readyState < 2) return;
+    const density = Math.min(devicePixelRatio || 1, 2);
+    const width = Math.round(video.clientWidth * density);
+    const height = Math.round(video.clientHeight * density);
+    if (!width || !height) return;
+    if (resizeOnly && canvas.width === width && canvas.height === height && canvas.isConnected) return;
+    if (canvas.width !== width || canvas.height !== height) {
+      canvas.width = width;
+      canvas.height = height;
+    }
+    context.clearRect(0, 0, width, height);
+    const scale = Math.min(width / video.videoWidth, height / video.videoHeight);
+    const w = video.videoWidth * scale, h = video.videoHeight * scale;
+    context.drawImage(video, (width - w) / 2, 0, w, h);
+    if (!canvas.isConnected) video.after(canvas);
+    video.style.opacity = "0";
+  };
+  const tick = () => {
+    callback = 0;
+    if (disposed) return;
+    if (!document.hidden) draw();
+    if (video.requestVideoFrameCallback) callback = video.requestVideoFrameCallback(tick);
+    else if (!video.paused) callback = requestAnimationFrame(tick);
+  };
+  const refresh = () => { draw(); if (!callback) tick(); };
+  for (const event of ["loadeddata", "seeked", "play"]) video.addEventListener(event, refresh);
+  refresh();
+  return { canvas, draw, dispose() {
+    disposed = true;
+    if (video.cancelVideoFrameCallback) video.cancelVideoFrameCallback(callback);
+    else cancelAnimationFrame(callback);
+    for (const event of ["loadeddata", "seeked", "play"]) video.removeEventListener(event, refresh);
+    video.style.opacity = opacity;
+    canvas.remove();
+  } };
 };
 const clearScrollLenses = region => scrollLensControllers.get(region)?.reset();
 const observeScrollLens = (region, targets, { owner = region, enabled = () => true } = {}) => {
@@ -53,7 +117,8 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
   let frame = 0;
   let svg;
   const remove = (element, record) => {
-    if (element.style.filter.includes(record.id)) {
+    if (record.video) record.video.dispose();
+    else if (element.style.filter.includes(record.id)) {
       if (record.original) element.style.filter = record.original;
       else element.style.removeProperty("filter");
     }
@@ -81,20 +146,23 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
       primitiveUnits: "objectBoundingBox", x: "0", y: "0", width: "1", height: "1",
       "color-interpolation-filters": "sRGB" })) filter.setAttribute(key, value);
     filter.innerHTML = `<feImage x="0" y="0" width="1" height="1" preserveAspectRatio="none" result="map"/>
-      <feComponentTransfer in="map" result="offset"><feFuncR type="linear" intercept="-.0019607843"/><feFuncB type="linear" slope="0" intercept=".5"/></feComponentTransfer>
-      <feDisplacementMap in="SourceGraphic" in2="offset" scale=".08" xChannelSelector="R" yChannelSelector="B" result="warped"/>
+      <feComponentTransfer in="map" result="offset"><feFuncR type="linear" intercept="-.0019607843"/><feFuncG type="linear" slope="0" intercept=".5"/></feComponentTransfer>
+      <feDisplacementMap in="SourceGraphic" in2="offset" xChannelSelector="R" yChannelSelector="G" result="warped"/>
       <feGaussianBlur in="warped" edgeMode="duplicate" result="blurred"/>
-      <feColorMatrix in="map" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 1 0 0 0" result="haze"/>
+      <feColorMatrix in="map" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 1 0 0" result="depth"/>
+      <feComponentTransfer in="depth" result="haze"><feFuncA type="gamma" exponent="1.5"/></feComponentTransfer>
       <feComposite in="warped" in2="haze" operator="out" result="sharp"/>
       <feComposite in="blurred" in2="haze" operator="in" result="soft"/>
       <feComposite in="sharp" in2="soft" operator="arithmetic" k2="1" k3="1" result="frost"/>
-      <feColorMatrix in="map" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 1 0 0" result="fade"/>
-      <feComposite in="frost" in2="fade" operator="in"/>`;
+      <feComponentTransfer in="depth" result="fade"><feFuncA type="gamma" exponent="2.4"/></feComponentTransfer>
+      <feComposite in="frost" in2="fade" operator="out"/>`;
     svg.append(filter);
     const canvas = document.createElement("canvas");
     canvas.width = 64;
     const record = { id, filter, canvas, original: element.style.filter,
-      image: filter.querySelector("feImage"), blur: filter.querySelector("feGaussianBlur") };
+      image: filter.querySelector("feImage"),
+      displaceX: filter.querySelector("feDisplacementMap"), blur: filter.querySelector("feGaussianBlur"),
+      video: element.matches("video") ? createLensVideo(element) : null };
     records.set(element, record);
     resize.observe(element);
     return record;
@@ -116,8 +184,8 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
       const height = element.offsetHeight, width = element.offsetWidth;
       const selected = selection && !selection.isCollapsed
         && (element.contains(selection.anchorNode) || element.contains(selection.focusNode));
-      const depths = [top && rect.top < port.top + 64 * scale && rect.bottom > port.top ? 64 : 0,
-        bottom && rect.bottom > port.bottom - 64 * scale && rect.top < port.bottom ? 64 : 0];
+      const depths = [top && rect.top < port.top + lensDepth * scale && rect.bottom > port.top,
+        bottom && rect.bottom > port.bottom - lensDepth * scale && rect.top < port.bottom];
       let record = records.get(element);
       // Materials, controls and live keyboard selection retain their native rendering.
       const focused = element.contains(document.activeElement)
@@ -129,12 +197,11 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
         continue;
       }
       record ||= makeRecord(element);
-      drawScrollLensMap(record, height,
+      drawScrollLensMap(record, width, height,
         depths[0] ? (port.top - rect.top) / scale : null,
-        depths[1] ? (port.bottom - rect.top) / scale : null,
-        !element.matches("video, img"));
-      record.blur.setAttribute("stdDeviation", `${3.2 / width} ${3.2 / height}`);
-      element.style.filter = `url(#${record.id})`;
+        depths[1] ? (port.bottom - rect.top) / scale : null);
+      record.video?.draw(true);
+      (record.video?.canvas || element).style.filter = `url(#${record.id})`;
     }
   };
   const schedule = () => { if (!frame) frame = requestAnimationFrame(update); };

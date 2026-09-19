@@ -10894,7 +10894,8 @@ body[data-case-open] :is(.map-axis-label, .map-labels, .map-node-label, .origin-
   align-self: start;
 }
 .case-media[data-orientation="portrait"] { width: min(100%, calc((100svh - 140px) * .8)); }
-.case-media .map-hover-preview__mosaic-main { display: block; width: 100%; aspect-ratio: 3 / 2; overflow: hidden; border-radius: 24px; }
+.case-media .map-hover-preview__mosaic-main { position: relative; display: block; width: 100%; aspect-ratio: 3 / 2; overflow: hidden; border-radius: 24px; }
+.scroll-lens-video { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .case-media[data-orientation="portrait"] .map-hover-preview__mosaic-main { aspect-ratio: 4 / 5; }
 .case-media video { display: block; width: 100%; height: 100%; object-fit: contain; }
 .case-media figcaption { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0 var(--case-space-medium); color: var(--content-muted); }
@@ -10916,6 +10917,8 @@ body[data-case-open] :is(.map-axis-label, .map-labels, .map-node-label, .origin-
   .is-case-view[data-case-media="false"] .case-sheet { grid-template-columns: minmax(0, 1fr); }
   .case-media, .case-media[data-orientation="portrait"] { position: static; width: 100%; }
   .case-media[data-orientation="portrait"] { max-width: 440px; }
+  .case-inline-media { margin-inline: calc(-1 * var(--case-pad)); }
+  .case-inline-media figcaption { padding-inline: var(--case-pad); }
   .case-media .map-hover-preview__mosaic-main { border-radius: 18px; }
 }
 @media (max-width: 480px) {
