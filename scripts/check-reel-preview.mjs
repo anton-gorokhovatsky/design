@@ -10,6 +10,19 @@ const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(scriptDirectory, "..");
 const reelId = process.argv[2] || "eleven";
 const expectedById = new Map([
+  ["ks-fish", {
+    mapId: "ks-fish",
+    artifactId: "ks-fish",
+    index: "16 / 17",
+    titleFragments: ["Сайт «Рыбной лавки капитана Селёдкина»"],
+    meta: "ГЛАВНАЯ, ЖУРНАЛ И КАТАЛОГ / 00:14",
+    videoPath: "/assets/reels/ks-fish.mp4",
+    posterPath: "/assets/reel-posters/ks-fish.jpg",
+    chapterPaths: ["/assets/reel-chapters/ks-fish-01.mp4", "/assets/reel-chapters/ks-fish-02.mp4"],
+    width: 900,
+    height: 600,
+    duration: { min: 14, max: 14.4 },
+  }],
   ["eleven", {
     mapId: "eleven",
     artifactId: "11111",

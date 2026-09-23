@@ -21,7 +21,7 @@ const selectedFrames = new Map([
   ["garage-webzine", 0.6],
   ["herman", 2.2],
   ["hotline-camp", 0.7],
-  ["ks-fish", 1.45],
+  ["ks-fish", 0.7],
   ["narkomfin", 0.75],
   ["shirokostup", 0.6],
   ["tarski", 1.45],

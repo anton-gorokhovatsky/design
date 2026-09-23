@@ -128,8 +128,8 @@ export const reelChapterSpecs = [
     itemId: "ks-fish",
     master: "ks-fish.mp4",
     chapters: [
-      { label: "hero-story", start: 0.1, duration: 2.6 },
-      { label: "products-prices", start: 2.9, duration: 4.6 },
+      { label: "sea-journal-assortment", start: 0.1, duration: 4.6 },
+      { label: "catalog-seafood", start: 7.4, duration: 6.3 },
     ],
   },
   {

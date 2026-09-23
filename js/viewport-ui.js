@@ -13,8 +13,7 @@ const scrollRegionFromKey = (event, region, reduceMotion) => {
   region.scrollTo({ top: Math.max(0, Math.min(maximum, top)), behavior: reduceMotion ? "auto" : "smooth" });
 };
 
-// Optical refraction belongs to foreground content, never to a material surface.
-// Pictures can flare into the reading frame's corners; its silhouette stays fixed.
+// Refract foreground content inside a fixed material frame.
 const scrollLensControllers = new Map();
 let scrollLensId = 0;
 const lensNamespace = "http://www.w3.org/2000/svg";
@@ -47,8 +46,7 @@ const drawScrollLensMap = (record, width, height, top, bottom) => {
     }
   }
   context.putImageData(pixels, 0, 0);
-  // Give displaced glyphs room beyond their paragraph's own border box.
-  // Explicit primitive bounds also keep Safari from clipping at the old box.
+  // Keep displaced glyphs inside the Safari filter bounds.
   for (const primitive of [record.filter, ...record.filter.children]) {
     primitive.setAttribute("x", "0");
     primitive.setAttribute("y", -lensBleed / height);
@@ -68,17 +66,21 @@ const lensDepthAt = (position, edge, upper) => edge === null ? 0
 const lensRow = (g, y) => {
   const upper = lensDepthAt(y, g.top, true), lower = lensDepthAt(y, g.bottom, false);
   const bend = Math.max(upper, lower) ** 2;
+  // Meet the frame vertically before its corner begins: no angled join or ear.
+  const t = Math.min(1, Math.max(upper, lower) * lensDepth / (lensDepth - g.frameRadius));
+  const flare = t * t * (3 - 2 * t);
   const r = Math.min(g.radius, g.width / 2, g.height / 2);
   const dy = Math.max(0, r - Math.min(y, g.height - y));
-  const corner = (r - Math.sqrt(Math.max(0, r*r - dy*dy))) * (1 - bend);
+  const corner = r - Math.sqrt(Math.max(0, r*r - dy*dy));
   return { bend, sample: y + 22 * (upper ** 2 - lower ** 2),
-    left: g.left * (1 - bend) + corner,
-    right: g.left + g.width + (g.portWidth - g.left - g.width) * bend - corner };
+    left: g.left * (1 - flare) + corner,
+    right: g.left + g.width + (g.portWidth - g.left - g.width) * flare - corner };
 };
 // Paint only the existing first-party picture/decoder. The transparent canvas
 // spans the reading viewport so refracted content can fill its rounded corners.
 const createLensMedia = (video, region) => {
   const moving = video.matches("video");
+  const background = getComputedStyle(video.closest(".personal-media__screen") || video.parentElement).backgroundColor;
   const canvas = document.createElement("canvas");
   canvas.className = "scroll-lens-video";
   canvas.setAttribute("aria-hidden", "true");
@@ -101,6 +103,8 @@ const createLensMedia = (video, region) => {
       const nh = moving ? video.videoHeight : video.naturalHeight;
       const scale = Math.min(width/nw,height/nh), w=nw*scale, h=nh*scale;
       sourceContext.clearRect(0,0,width,height);
+      sourceContext.fillStyle=background;
+      sourceContext.fillRect(0,0,width,height);
       sourceContext.drawImage(video,(width-w)/2,moving?0:(height-h)/2,w,h);
     }
     context.clearRect(0,0,pw,ph);
@@ -135,9 +139,8 @@ const createLensMedia = (video, region) => {
     canvas.remove();
   } };
 };
-// A cross-origin player cannot be sampled into canvas. WebKit also loses its
-// accelerated layer under an SVG URL filter (222757). Project the one live
-// browsing context through the same flared contour; native hit testing follows it.
+// Project the live iframe: cross-origin pixels cannot be sampled, and WebKit
+// loses accelerated video under SVG URL filters (222757).
 const createLensPlayer = element => {
   const transform = element.style.transform, origin = element.style.transformOrigin;
   const screen = element.parentElement, overflow = screen.style.overflow, clip = screen.style.clipPath;
@@ -155,8 +158,7 @@ const createLensPlayer = element => {
     const span = y1 - y0, z0 = 1 + .35 * upper ** 2, z1 = 1 + .35 * lower ** 2;
     const s0 = y0 + Math.min(22 * upper ** 2, span * .3);
     const s1 = y1 - Math.min(22 * lower ** 2, span * .3);
-    // One continuous projection also covers short windows with both edges active.
-    // The bounded source offsets keep it invertible at the last visible pixel.
+    // Bounded offsets keep the two-edge projection invertible.
     const c = (z1 - z0) / span, d = z0 - c * y0;
     const a = (s1 * z1 - s0 * z0) / span, b = s0 * z0 - a * y0;
     element.style.transform = `matrix3d(${a*d-b*c},0,0,0,0,${d},0,${-c},0,0,1,0,0,${-b},0,${a})`;
@@ -284,6 +286,7 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
       if (record.player || record.media) {
         const geometry = { width, height, left: (rect.left-port.left)/scale,
           y: (rect.top-port.top)/scale, portWidth: region.clientWidth, portHeight: region.clientHeight,
+          frameRadius: Math.min(40, parseFloat(getComputedStyle(region).borderTopLeftRadius) || 0),
           top: top ? (port.top-rect.top)/scale : null, bottom: bottom ? (port.bottom-rect.top)/scale : null,
           radius: parseFloat(getComputedStyle(element.closest(".personal-media__screen, .map-hover-preview__mosaic-main")).borderTopLeftRadius) || 0 };
         if (record.player) { record.player.draw(geometry); continue; }

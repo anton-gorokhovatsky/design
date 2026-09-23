@@ -57,6 +57,7 @@ reelSpecs.get("garage-institutions.mp4").duration = { min: 11.3, max: 11.9 };
 reelSpecs.get("garage-webzine.mp4").duration = { min: 12.1, max: 12.7 };
 reelSpecs.get("herman.mp4").duration = { min: 14.5, max: 15.1 };
 reelSpecs.get("hotline-camp.mp4").duration = { min: 13.7, max: 14.1 };
+reelSpecs.get("ks-fish.mp4").duration = { min: 14, max: 14.4 };
 reelSpecs.get("narkomfin.mp4").duration = { min: 12.9, max: 13.5 };
 reelSpecs.get("shirokostup.mp4").duration = { min: 12.5, max: 13.1 };
 reelSpecs.get("tarski.mp4").duration = { min: 12.1, max: 12.7 };

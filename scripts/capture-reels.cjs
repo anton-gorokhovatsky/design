@@ -92,7 +92,9 @@ const projects = {
   },
   "ks-fish": {
     url: "https://ks.fish/",
-    dismissSelectors: [".t-popup__close"],
+    captureBrowser: chromium.executablePath(),
+    outputDuration: 14.2,
+    finalHold: 3500,
   },
   doronin: {
     url: "https://doronin.store/",
@@ -847,6 +849,25 @@ const keepOverlaysDismissed = async (page, selectors = [], duration = 7600) => {
 };
 
 const runCaptureMotion = async (page, id, source) => {
+  if (id === "ks-fish") {
+    await page.waitForTimeout(1500);
+    await page.locator('[data-hero-journal-next]').click();
+    await page.waitForTimeout(1100);
+    await smoothScrollTo(page, "#assortment", 1200, .04);
+    await page.waitForTimeout(1000);
+    await smoothScrollTo(page, "#prices", 850, .12);
+    await page.waitForTimeout(900);
+    await page.locator('#prices a[href="catalog/"]').click();
+    await page.waitForLoadState("domcontentloaded");
+    await page.evaluate(() => document.fonts.ready);
+    await applyCaptureStyles(page);
+    await page.waitForTimeout(1000);
+    await page.locator('button[data-category="seafood"]').click();
+    await page.waitForTimeout(700);
+    await smoothScrollTo(page, "#category-seafood", 900, .12);
+    await page.waitForTimeout(1400);
+    return;
+  }
   if (id === "garage-archives") {
     await runArchivesCaptureMotion(page);
     return;
@@ -914,7 +935,7 @@ const runCaptureMotion = async (page, id, source) => {
 
   const browser = await chromium.launch({
     headless: true,
-    executablePath: chromePath,
+    executablePath: project.captureBrowser || chromePath,
     args: [
       "--autoplay-policy=no-user-gesture-required",
       "--force-color-profile=srgb",

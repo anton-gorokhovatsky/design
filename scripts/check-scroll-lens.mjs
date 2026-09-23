@@ -139,6 +139,30 @@ try {
         }
         await page.screenshot({path:dir+engine+'-'+name+'-'+edge+'.png'});
       }
+      if(type==='image') {
+        // A picture that ends inside the viewport must retain its own rounded
+        // corner. The earlier contour collapsed that radius into pointed ears.
+        result.innerCorners=[];
+        for(const edge of ['top','bottom']) {
+          await align(page,selector,edge,-18);
+          const corner=await page.locator(selector).evaluate((picture,edge)=>{
+            const c=picture.closest('.case-scroll').querySelector('.scroll-lens-video');
+            const r=picture.getBoundingClientRect(),p=c.getBoundingClientRect(),d=c.width/p.width;
+            const end=edge==='top'?r.top-p.top:r.bottom-p.top;
+            const scan=distance=>{
+              const y=Math.floor((end+(edge==='top'?distance:-distance))*d);
+              const row=c.getContext('2d').getImageData(0,y,c.width,1).data;
+              const x=[];for(let n=3;n<row.length;n+=4)if(row[n]>200)x.push((n-3)/4/d);
+              return [x[0],x.at(-1)];
+            };
+            const tip=scan(1),body=scan(16);
+            return {left:tip[0]-body[0],right:body[1]-tip[1],background:getComputedStyle(picture.parentElement).backgroundColor};
+          },edge);
+          assert.ok(corner.left>8 && corner.right>8,'The '+edge+' picture corners stay rounded: '+JSON.stringify(corner));
+          assert.equal(corner.background,'rgba(0, 0, 0, 0)','No straight background remains behind the flared picture');
+          result.innerCorners.push({edge,...corner});
+        }
+      }
       if(type==='links') {
         await page.locator(target).evaluate(e=>{const s=document.getSelection();s.removeAllRanges();const r=document.createRange();r.selectNodeContents(e);s.addRange(r);});
         await settle(page);
