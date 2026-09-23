@@ -181,6 +181,23 @@ for (const engine of [process.argv[2] || 'chromium']) {
         assert.equal(await page.locator('.case-media video').evaluate(v=>v.style.opacity),'','Reduced motion restores native video immediately');
         assert.equal(await page.locator('filter[id^="scroll-ink"]').count(),0,'Reduced motion removes optical filters');
       }
+      // A project without evidence still needs the full height of its lead.
+      // Short mobile viewports exposed an old cap that let copy overlap links.
+      await page.goto(origin+'/?point=ks-fish',{waitUntil:'domcontentloaded'});
+      await page.evaluate(() => document.fonts.ready);
+      if (text) await page.evaluate(() => document.documentElement.style.fontSize='200%');
+      await waitForCaseLayout(page);
+      await page.locator('.case-scroll').evaluate(e=>e.scrollTop=e.scrollHeight);
+      result.projectCopy = await page.evaluate(() => {
+        const rect = selector => document.querySelector(selector).getBoundingClientRect();
+        const copy=rect('[data-map-description]');
+        const block=rect('.map-readout__description');
+        const related=rect('.map-related');
+        return {uncontained:copy.bottom-block.bottom,gap:related.top-copy.bottom};
+      });
+      assert.ok(result.projectCopy.uncontained<=1,'The complete project description contributes to layout height');
+      assert.ok(result.projectCopy.gap>=16,'Related links follow the last line with a visible gap');
+      await page.screenshot({path:dir+engine+'-'+name+'-project-copy.jpg',type:'jpeg',quality:86});
       await page.keyboard.press('Escape');
       await page.waitForFunction(() => !document.body.hasAttribute('data-case-open'));
       assert.deepEqual(result.errors,[]);

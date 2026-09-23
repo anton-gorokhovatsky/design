@@ -8208,10 +8208,6 @@ html[data-theme="dark"] .signal-constellation {
     max-height: min(45vh, 300px);
   }
 
-  .map-inspector:has(.map-related[data-related-kind="project"]:not([hidden])) .map-readout__description {
-    max-height: clamp(120px, calc(100svh - 520px), 250px);
-  }
-
   .map-evidence {
     gap: 8px;
     margin-top: 11px;
