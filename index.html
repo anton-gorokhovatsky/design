@@ -124,7 +124,7 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=06a08aa05ef0">
+    <link rel="stylesheet" href="styles.css?v=ef7c9cf84936">
     <style>
       .map-evidence [data-map-evidence-role-label]{font-family:var(--font-author);font-size:.6rem;font-weight:400;letter-spacing:0}
     </style>
@@ -137,9 +137,9 @@
           "./js/signal-field.js": "./js/signal-field.js?v=e249b2dc021a",
           "./js/map-data.js": "./js/map-data.js?v=e1610191446c",
           "./js/observation-route.js": "./js/observation-route.js?v=c0036c773139",
-          "./js/personal-media.js": "./js/personal-media.js?v=9910a8959dd2",
+          "./js/personal-media.js": "./js/personal-media.js?v=524375a4d005",
           "./js/sphere-surfaces.js": "./js/sphere-surfaces.js?v=4cf52ae3e8a0",
-          "./js/map-engine.js": "./js/map-engine.js?v=9501089d3397",
+          "./js/map-engine.js": "./js/map-engine.js?v=58e387443a2d",
           "./js/viewport-ui.js": "./js/viewport-ui.js?v=bf6e26b6ad5c",
           "./js/panels.js": "./js/panels.js?v=75510ffdeaec",
           "./js/case-view.js": "./js/case-view.js?v=89d36878299d",
@@ -154,9 +154,9 @@
     <script type="module" src="js/signal-field.js?v=e249b2dc021a"></script>
     <script type="module" src="js/map-data.js?v=e1610191446c"></script>
     <script type="module" src="js/observation-route.js?v=c0036c773139"></script>
-    <script type="module" src="js/personal-media.js?v=9910a8959dd2"></script>
+    <script type="module" src="js/personal-media.js?v=524375a4d005"></script>
     <script type="module" src="js/sphere-surfaces.js?v=4cf52ae3e8a0"></script>
-    <script type="module" src="js/map-engine.js?v=9501089d3397"></script>
+    <script type="module" src="js/map-engine.js?v=58e387443a2d"></script>
     <script type="module" src="js/viewport-ui.js?v=bf6e26b6ad5c"></script>
     <script type="module" src="js/panels.js?v=75510ffdeaec"></script>
     <script type="module" src="js/case-view.js?v=89d36878299d"></script>
@@ -587,14 +587,12 @@
           ></p>
           <div class="personal-media-slot" data-personal-media-slot hidden></div>
           <button
-            class="map-readout__link"
+            class="text-link personal-media-reopen"
             type="button"
             data-open-personal-media
-            data-material-surface="personal-media-launch"
-            data-material-active="always"
             aria-controls="personal-media"
             hidden
-          >ВКЛЮЧИТЬ СТРИМ</button>
+          >Показать стрим</button>
           <nav
             class="map-related"
             data-map-related
@@ -606,11 +604,11 @@
             <div class="map-related__header">
               <span>ДАЛЬШЕ ПО КАРТЕ</span>
             </div>
-            <div
+            <ul
               class="map-related__track"
               data-map-related-track
               role="list"
-            ></div>
+            ></ul>
           </nav>
         </aside>
 

@@ -94,6 +94,8 @@ try {
       const poster = page.locator("[data-play-personal-media]");
       const screen = page.locator("[data-personal-media-screen]");
       assert.equal(await poster.isVisible(), true);
+      assert.equal(await page.locator("[data-open-personal-media]").isVisible(), false,
+        "The visible preview has one playback action, on the poster.");
       assert.equal(await player.locator("iframe").count(), 0);
       assert.deepEqual(thirdParty, [], "Selecting YouTube must remain first-party.");
       assert.equal(await page.locator("[data-personal-media-poster]").evaluate((image) => (

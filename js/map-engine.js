@@ -1081,7 +1081,7 @@ const renderMapRelatedItems=(item=null)=>{
   mapRelated.hidden=!items.length;
   mapRelated.dataset.relatedKind=personalLinks?"personal":"project";
   mapRelated.setAttribute("aria-label", personalLinks ? "Связанные точки" : "Следующие кейсы");
-  mapRelatedTrack.innerHTML=items.map(({id,label,timeLabel,timeYear,kind})=>`<a class="map-related__item" href="?point=${id}" role="listitem"><strong>${label}</strong><span>${kind==="personal"?"ЛИЧНОЕ":kind==="company"?"ОПЫТ":"ПРОЕКТ"}${timeLabel||timeYear?` / ${timeLabel||timeYear}`:""}</span></a>`).join("");
+  mapRelatedTrack.innerHTML=items.map(({id,label,timeLabel,timeYear,kindLabel})=>`<li><a class="map-related__item" href="?point=${id}"><strong>${label}</strong><span>${kindLabel.split(" / ")[0]}${timeLabel||timeYear?` / ${timeLabel||timeYear}`:""}</span><i class="map-related__arrow" aria-hidden="true"></i></a></li>`).join("");
 };
 const setInspectorOpen = (isOpen) => {
   if (!mapInspector) {

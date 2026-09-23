@@ -5189,7 +5189,6 @@ body:has(.command-dock.is-open) .origin-marker__label {
   min-width: 0;
   gap: 12px;
   padding: var(--case-pad, 20px);
-  overflow: hidden;
   border-radius: 22px;
   background: var(--material-01);
   corner-shape: var(--corner-card-shape);
@@ -5224,61 +5223,62 @@ body:has(.command-dock.is-open) .origin-marker__label {
 
 .map-related__track {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
   min-width: 0;
-  gap: 8px;
-  overflow: visible;
-  overscroll-behavior-inline: contain;
-  scrollbar-width: none;
-  scroll-behavior: smooth;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.map-related__track::-webkit-scrollbar {
-  display: none;
+.map-related__track > li + li {
+  border-top: 1px solid var(--line-soft);
 }
 
 .map-related__item {
   display: grid;
-  flex: 0 0 min(72%, 252px);
+  grid-template-columns: minmax(0, 1fr) 16px;
   min-width: 0;
-  min-height: 44px;
-  align-content: start;
-  gap: 6px;
-  padding: 12px;
-  overflow: hidden;
-  border: 1px solid var(--line-soft);
-  border-radius: 16px;
+  min-height: 52px;
+  align-content: center;
+  gap: 4px 16px;
+  padding: 12px 0;
+  border-radius: 4px;
   background: transparent;
   color: var(--content-ink);
-  scroll-snap-align: start;
   text-decoration: none;
-  transition:
-    border-color 180ms var(--ease-out),
-    color 180ms var(--ease-out);
+  transition: color 180ms var(--motion-shift);
 }
 
 .map-related__item:is(:hover, :focus-visible) {
-  border-color: var(--signal);
   color: var(--signal);
-  outline: none;
+}
+
+.map-related__item:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 4px;
 }
 
 .map-related__item > strong {
   display: block;
+  grid-column: 1;
   font-size: 1rem;
-  font-weight: 500;
-  line-height: 1.25;
+  font-weight: 400;
+  line-height: 1.4;
   overflow-wrap: anywhere;
-  text-wrap: balance;
 }
 
 .map-related__item > span {
+  grid-column: 1;
   font-size: .6875rem;
   line-height: 1.4;
 }
 
-.map-related[data-related-kind="personal"] .map-related__item > span {
-  display: none;
+.map-related__arrow {
+  position: relative;
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  width: 16px;
+  height: 16px;
+  align-self: center;
 }
 
 .map-inspector:has(.map-related[data-related-kind="personal"]:not([hidden])) .map-readout__description {
@@ -6240,7 +6240,8 @@ body:has(.command-dock.is-open) .map-links.has-active-relation {
   height: 12px;
 }
 
-.command-dock__submit-mark::before {
+.command-dock__submit-mark::before,
+.map-related__arrow::before {
   position: absolute;
   top: 50%;
   right: 1px;
@@ -6251,7 +6252,8 @@ body:has(.command-dock.is-open) .map-links.has-active-relation {
   transform: translateY(-50%);
 }
 
-.command-dock__submit-mark::after {
+.command-dock__submit-mark::after,
+.map-related__arrow::after {
   position: absolute;
   top: 50%;
   right: 1px;
@@ -10464,6 +10466,14 @@ html[data-focus-modality="keyboard"]
 .personal-media__poster[hidden],
 [data-open-personal-media][hidden] {
   display: none;
+}
+
+.personal-media-reopen {
+  justify-self: start;
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
 }
 
 .personal-media__head {

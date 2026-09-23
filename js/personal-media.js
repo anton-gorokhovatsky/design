@@ -24,10 +24,7 @@ export const createPersonalMedia = ({ inspector, returnFocus }) => {
   const sync = () => {
     const visible = !root.hidden;
     slot.hidden = !visible || !inlineLayout.matches;
-    launch.hidden = !selectedItem?.youtube || (visible && (inlineLayout.matches || Boolean(iframe)));
-    launch.textContent = !visible
-      ? "ПОКАЗАТЬ СТРИМ"
-      : "ВКЛЮЧИТЬ СТРИМ";
+    launch.hidden = !selectedItem?.youtube || visible;
     launch.setAttribute("aria-expanded", String(visible));
     if (selectedItem?.youtube && mapLink) mapLink.hidden = true;
   };
@@ -133,12 +130,8 @@ export const createPersonalMedia = ({ inspector, returnFocus }) => {
   };
 
   launch.addEventListener("click", () => {
-    if (root.hidden) {
-      show();
-      poster.focus({ preventScroll: true });
-    } else {
-      play();
-    }
+    show();
+    poster.focus({ preventScroll: true });
   });
   poster.addEventListener("click", play);
   closeButton?.addEventListener("click", () => close({ restoreFocus: true }));
