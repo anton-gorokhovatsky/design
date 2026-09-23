@@ -57,7 +57,10 @@ try {
       await page.evaluate(()=>document.fonts.ready);
       await page.waitForFunction(()=>document.querySelector('.case-scroll')?.clientHeight>0
         && document.querySelector('[data-map-inspector]').getAnimations().every(a=>a.playState!=='running'));
-      if(type==='image') await page.locator(selector).evaluate(i=>i.decode());
+      if(type==='image') {
+        await page.locator(selector).evaluate(i=>i.decode());
+        assert.equal(await page.locator('.personal-media__play').evaluate(e=>getComputedStyle(e,'::after').backgroundColor),'rgb(255, 255, 255)','The play glyph remains legible on the same dark poster in both themes');
+      }
       if(type==='player') {
         await page.locator('[data-play-personal-media]').click();
         await page.locator('iframe').contentFrame().locator('video').evaluate(async v=>{await v.play();v.autoplay=false;v.removeAttribute('autoplay');v.pause();});
@@ -121,6 +124,11 @@ try {
         // Hit testing follows the projected browsing context, not an invisible copy.
         await page.locator('iframe').contentFrame().locator('button').click();
         assert.equal(await page.locator('iframe').contentFrame().locator('button').textContent(),'Clicked');
+        await page.locator('[data-close-personal-media]').focus();
+        await page.keyboard.press('Tab');
+        await settle(page);
+        assert.equal(await page.locator('iframe').evaluate(f=>f===document.activeElement),true,'Keyboard enters the original player');
+        assert.equal(await page.locator('iframe').evaluate(f=>f.style.transform),'','Keyboard playback controls remain undistorted');
       }
       if(type==='video') assert.equal(await page.locator(selector).evaluate(v=>v.paused),true,'Manual pause survives both edges');
       // Exercise the site's real motion control while an effect is mounted.

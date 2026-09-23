@@ -10561,6 +10561,10 @@ html[data-focus-modality="keyboard"]
   transition: background-color 180ms var(--motion-enter);
 }
 
+@media (forced-colors: none) {
+  .personal-media__play.reading-content { color: #fff; }
+}
+
 .personal-media__play::after {
   width: 18px;
   height: 20px;

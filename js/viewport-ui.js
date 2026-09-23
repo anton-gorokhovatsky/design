@@ -266,6 +266,8 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
       // Materials, controls and live keyboard selection retain their native rendering.
       const control = element.closest("a, button, iframe");
       const focused = control ? control.matches(":focus-visible")
+        || (element.matches("iframe") && element === document.activeElement
+          && document.documentElement.dataset.focusModality === "keyboard")
         : element.contains(document.activeElement);
       if (!width || !height || !depths.some(Boolean) || selected || focused
         || element.matches("[data-material-surface], a, button, input, select, textarea")
