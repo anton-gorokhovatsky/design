@@ -14,7 +14,7 @@ const scrollRegionFromKey = (event, region, reduceMotion) => {
 };
 
 // Optical refraction belongs to foreground content, never to a material surface.
-// Video remains clipped by its original, stationary media frame. No layout nodes move.
+// Pictures can flare into the reading frame's corners; its silhouette stays fixed.
 const scrollLensControllers = new Map();
 let scrollLensId = 0;
 const lensNamespace = "http://www.w3.org/2000/svg";
@@ -63,110 +63,113 @@ const drawScrollLensMap = (record, width, height, top, bottom) => {
   record.image.setAttribute("href", canvas.toDataURL());
 };
 
-// Safari drops SVG filters on accelerated video layers (WebKit 322588).
-// Paint the existing decoder's current frame into a 2D canvas only while it
-// intersects the lens. No second video, network request or playback clock.
-const createLensMedia = video => {
+const lensDepthAt = (position, edge, upper) => edge === null ? 0
+  : Math.max(0, Math.min(1, 1 - (upper ? position - edge : edge - position) / lensDepth));
+const lensRow = (g, y) => {
+  const upper = lensDepthAt(y, g.top, true), lower = lensDepthAt(y, g.bottom, false);
+  const bend = Math.max(upper, lower) ** 2;
+  const r = Math.min(g.radius, g.width / 2, g.height / 2);
+  const dy = Math.max(0, r - Math.min(y, g.height - y));
+  const corner = (r - Math.sqrt(Math.max(0, r*r - dy*dy))) * (1 - bend);
+  return { bend, sample: y + 22 * (upper ** 2 - lower ** 2),
+    left: g.left * (1 - bend) + corner,
+    right: g.left + g.width + (g.portWidth - g.left - g.width) * bend - corner };
+};
+// Paint only the existing first-party picture/decoder. The transparent canvas
+// spans the reading viewport so refracted content can fill its rounded corners.
+const createLensMedia = (video, region) => {
   const moving = video.matches("video");
   const canvas = document.createElement("canvas");
   canvas.className = "scroll-lens-video";
   canvas.setAttribute("aria-hidden", "true");
-  const context = canvas.getContext("2d");
-  if (!context) return null;
-  const source = document.createElement("canvas");
+  const context = canvas.getContext("2d"), source = document.createElement("canvas");
   const sourceContext = source.getContext("2d");
-  if (!sourceContext) return null;
+  if (!context || !sourceContext) return null;
   const opacity = video.style.opacity;
-  let top = null, bottom = null;
-  let callback = 0;
-  let disposed = false;
+  let geometry, callback = 0, disposed = false;
   const draw = (resizeOnly = false) => {
-    if (disposed || (moving ? video.readyState < 2 : !video.complete || !video.naturalWidth)) return;
-    const density = Math.min(devicePixelRatio || 1, 2);
-    const width = Math.round(video.clientWidth * density);
-    const height = Math.round(video.clientHeight * density);
-    if (!width || !height) return;
-    const resized = canvas.width !== width || canvas.height !== height;
-    if (resized) {
-      canvas.width = width;
-      canvas.height = height;
-      source.width = width;
-      source.height = height;
-    }
-    const nativeWidth = moving ? video.videoWidth : video.naturalWidth;
-    const nativeHeight = moving ? video.videoHeight : video.naturalHeight;
-    const scale = Math.min(width / nativeWidth, height / nativeHeight);
-    const w = nativeWidth * scale, h = nativeHeight * scale;
+    if (disposed || !geometry || (moving ? video.readyState < 2 : !video.complete || !video.naturalWidth)) return;
+    const g = geometry, density = Math.min(devicePixelRatio || 1, 2);
+    const width = Math.round(g.width*density), height = Math.round(g.height*density);
+    const pw = Math.round(g.portWidth*density), ph = Math.round(g.portHeight*density);
+    if (!width || !height || !pw || !ph) return;
+    if (canvas.width !== pw || canvas.height !== ph) { canvas.width=pw; canvas.height=ph; }
+    const resized = source.width !== width || source.height !== height;
+    if (resized) { source.width=width; source.height=height; }
     if (!resizeOnly || resized || !canvas.isConnected) {
-      sourceContext.clearRect(0, 0, width, height);
-      sourceContext.drawImage(video, (width - w) / 2, moving ? 0 : (height - h) / 2, w, h);
+      const nw = moving ? video.videoWidth : video.naturalWidth;
+      const nh = moving ? video.videoHeight : video.naturalHeight;
+      const scale = Math.min(width/nw,height/nh), w=nw*scale, h=nh*scale;
+      sourceContext.clearRect(0,0,width,height);
+      sourceContext.drawImage(video,(width-w)/2,moving?0:(height-h)/2,w,h);
     }
-    context.clearRect(0, 0, width, height);
-    context.drawImage(source, 0, 0);
-    // Optical sampling bends the picture inside its untouched frame. Moving
-    // towards an edge magnifies it sideways and draws it into a vertical arc.
-    // Sample a cached frame, not the decoder hundreds of times per repaint.
-    const depthAt = (position, edge, upper) => edge === null ? 0
-      : Math.max(0, Math.min(1, 1 - (upper ? position - edge : edge - position) / lensDepth));
-    const sampleY = position => position + 38 * (
-      depthAt(position, top, true) ** 2 - depthAt(position, bottom, false) ** 2);
-    for (let y = 0; y < height; y++) {
-      const position = (y + .5) / density;
-      const depth = Math.max(depthAt(position, top, true), depthAt(position, bottom, false));
-      if (!depth) continue;
-      const zoom = 1 + .7 * depth ** 2;
-      const sy = Math.max(0, Math.min(height - 1, sampleY(y / density) * density));
-      const sh = Math.max(.1, Math.min(height - sy,
-        sampleY((y + 1) / density) * density - sy));
-      context.clearRect(0, y, width, 1);
-      context.drawImage(source, (width - width / zoom) / 2, sy, width / zoom, sh,
-        0, y, width, 1);
+    context.clearRect(0,0,pw,ph);
+    for (let row=Math.max(0,Math.ceil(g.y*density)); row<Math.min(ph,(g.y+g.height)*density); row++) {
+      const y=(row+.5)/density-g.y, edge=lensRow(g,y);
+      const dw=(edge.right-edge.left)*density;
+      if (dw<=0) continue;
+      const sw=Math.min(width,dw/(1+.35*edge.bend));
+      const sy=Math.max(0,Math.min(height-1,edge.sample*density));
+      const sh=Math.max(.1,Math.min(height-sy,lensRow(g,y+1/density).sample*density-sy));
+      context.drawImage(source,(width-sw)/2,sy,sw,sh,edge.left*density,row,dw,1);
     }
-    if (!canvas.isConnected) video.after(canvas);
-    video.style.opacity = "0";
+    canvas.style.top=region.scrollTop+"px";
+    if (!canvas.isConnected) region.append(canvas);
+    video.style.opacity="0";
   };
   const tick = () => {
-    callback = 0;
+    callback=0;
     if (disposed || !moving) return;
     if (!document.hidden) draw();
-    if (video.requestVideoFrameCallback) callback = video.requestVideoFrameCallback(tick);
-    else if (!video.paused) callback = requestAnimationFrame(tick);
+    if (video.requestVideoFrameCallback) callback=video.requestVideoFrameCallback(tick);
+    else if (!video.paused) callback=requestAnimationFrame(tick);
   };
   const refresh = () => { draw(); if (!callback) tick(); };
-  for (const event of ["load", "loadeddata", "seeked", "play"]) video.addEventListener(event, refresh);
-  refresh();
-  return { canvas, draw, setEdges(upper, lower) { top = upper; bottom = lower; }, dispose() {
-    disposed = true;
+  for (const event of ["load","loadeddata","seeked","play"]) video.addEventListener(event,refresh);
+  return { canvas, draw, setGeometry(value) { geometry=value; if (!callback) tick(); }, dispose() {
+    disposed=true;
     if (video.cancelVideoFrameCallback) video.cancelVideoFrameCallback(callback);
     else cancelAnimationFrame(callback);
-    for (const event of ["load", "loadeddata", "seeked", "play"]) video.removeEventListener(event, refresh);
-    video.style.opacity = opacity;
+    for (const event of ["load","loadeddata","seeked","play"]) video.removeEventListener(event,refresh);
+    video.style.opacity=opacity;
     canvas.remove();
   } };
 };
 // A cross-origin player cannot be sampled into canvas. WebKit also loses its
 // accelerated layer under an SVG URL filter (222757). Project the one live
-// browsing context inside its fixed clip instead; native hit testing follows it.
+// browsing context through the same flared contour; native hit testing follows it.
 const createLensPlayer = element => {
   const transform = element.style.transform, origin = element.style.transformOrigin;
+  const screen = element.parentElement, overflow = screen.style.overflow, clip = screen.style.clipPath;
   const frost = document.createElement("span");
   frost.className = "scroll-lens-frost";
   frost.setAttribute("aria-hidden", "true");
   element.after(frost);
   element.style.transformOrigin = "50% 0";
-  return { draw(top, bottom, height) {
+  return { draw(g) {
+    const {top, bottom, height} = g;
     const strength = edge => edge === null ? 0 : Math.max(0, Math.min(1, 1 + Math.min(0, edge) / lensDepth));
     const upper = strength(top), lower = strength(bottom === null ? null : height - bottom);
     const y0 = top === null ? 0 : Math.max(0, Math.min(height - 1, top));
     const y1 = bottom === null ? height : Math.max(y0 + 1, Math.min(height, bottom));
-    const span = y1 - y0, z0 = 1 + .7 * upper ** 2, z1 = 1 + .7 * lower ** 2;
-    const s0 = y0 + Math.min(38 * upper ** 2, span * .3);
-    const s1 = y1 - Math.min(38 * lower ** 2, span * .3);
+    const span = y1 - y0, z0 = 1 + .35 * upper ** 2, z1 = 1 + .35 * lower ** 2;
+    const s0 = y0 + Math.min(22 * upper ** 2, span * .3);
+    const s1 = y1 - Math.min(22 * lower ** 2, span * .3);
     // One continuous projection also covers short windows with both edges active.
     // The bounded source offsets keep it invertible at the last visible pixel.
     const c = (z1 - z0) / span, d = z0 - c * y0;
     const a = (s1 * z1 - s0 * z0) / span, b = s0 * z0 - a * y0;
     element.style.transform = `matrix3d(${a*d-b*c},0,0,0,0,${d},0,${-c},0,0,1,0,0,${-b},0,${a})`;
+    const left = [], right = [], rows = Math.ceil(height / 4);
+    for (let n = 0; n <= rows; n++) {
+      const y = n / rows * height, row = lensRow(g, y);
+      left.push(`${row.left-g.left}px ${y}px`);
+      right.unshift(`${row.right-g.left}px ${y}px`);
+    }
+    screen.style.overflow = "visible";
+    screen.style.clipPath = `polygon(${[...left,...right].join(",")})`;
+    frost.style.left = -g.left + "px";
+    frost.style.width = g.portWidth + "px";
     const masks = [];
     if (top !== null) masks.push(`linear-gradient(#000 ${top}px, transparent ${top+lensDepth}px)`);
     if (bottom !== null) masks.push(`linear-gradient(transparent ${bottom-lensDepth}px, #000 ${bottom}px)`);
@@ -175,6 +178,8 @@ const createLensPlayer = element => {
   }, dispose() {
     element.style.transform = transform;
     element.style.transformOrigin = origin;
+    screen.style.overflow = overflow;
+    screen.style.clipPath = clip;
     frost.remove();
   } };
 };
@@ -238,7 +243,7 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
       image: filter.querySelector("feImage"),
       displaceX: filter.querySelector("feDisplacementMap"), blur: filter.querySelector("feGaussianBlur"),
       fade: filter.querySelector('[result="fade"] feFuncA'),
-      media: element.matches("img, video") ? createLensMedia(element) : null };
+      media: element.matches("img, video") ? createLensMedia(element, region) : null };
     records.set(element, record);
     resize.observe(element);
     return record;
@@ -276,17 +281,17 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
         continue;
       }
       record ||= makeRecord(element);
-      if (record.player) {
-        record.player.draw(depths[0] ? (port.top - rect.top) / scale : null,
-          depths[1] ? (port.bottom - rect.top) / scale : null, height);
-        continue;
-      }
-      drawScrollLensMap(record, width, height,
-        depths[0] ? (port.top - rect.top) / scale : null,
-        depths[1] ? (port.bottom - rect.top) / scale : null);
-      record.media?.setEdges(depths[0] ? (port.top - rect.top) / scale : null,
-        depths[1] ? (port.bottom - rect.top) / scale : null);
-      record.media?.draw(true);
+      if (record.player || record.media) {
+        const geometry = { width, height, left: (rect.left-port.left)/scale,
+          y: (rect.top-port.top)/scale, portWidth: region.clientWidth, portHeight: region.clientHeight,
+          top: top ? (port.top-rect.top)/scale : null, bottom: bottom ? (port.bottom-rect.top)/scale : null,
+          radius: parseFloat(getComputedStyle(element.closest(".personal-media__screen, .map-hover-preview__mosaic-main")).borderTopLeftRadius) || 0 };
+        if (record.player) { record.player.draw(geometry); continue; }
+        record.media.setGeometry(geometry);
+        record.media.draw(true);
+        drawScrollLensMap(record,region.clientWidth,region.clientHeight,top?0:null,bottom?region.clientHeight:null);
+      } else drawScrollLensMap(record,width,height,
+        depths[0] ? (port.top-rect.top)/scale : null, depths[1] ? (port.bottom-rect.top)/scale : null);
       (record.media?.canvas || element).style.filter = `url(#${record.id})`;
     }
   };

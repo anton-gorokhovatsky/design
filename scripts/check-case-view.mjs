@@ -141,6 +141,10 @@ for (const engine of [process.argv[2] || 'chromium']) {
         // Computed filter:url() is not evidence that Safari paints filtered video.
         // Compare actual edge pixels against the same paused frame without the lens.
         await page.emulateMedia({reducedMotion:'no-preference'});
+        // Verify the system preference on entry: after screenshots Chromium can
+        // update matchMedia without notifying the document's existing listeners.
+        await page.reload({waitUntil:'load'});
+        await waitForCaseLayout(page);
         await page.waitForFunction(()=>!document.querySelector('.case-media video').paused
           && document.querySelector('[data-case-pause]').textContent==='Пауза');
         await page.locator('[data-case-pause]').click();
@@ -156,9 +160,9 @@ for (const engine of [process.argv[2] || 'chromium']) {
         const port=await scroll.boundingBox();
         const clip={x:media.x+12,y:port.y+8,width:media.width-24,height:60};
         const painted=await page.screenshot({clip});
-        await lens.evaluate(c=>{c.style.visibility='hidden';c.previousElementSibling.style.opacity='1';});
+        await lens.evaluate(c=>{c.style.visibility='hidden';document.querySelector('.case-inline-media video').style.opacity='1';});
         const plain=await page.screenshot({clip});
-        await lens.evaluate(c=>{c.style.visibility='';c.previousElementSibling.style.opacity='0';});
+        await lens.evaluate(c=>{c.style.visibility='';document.querySelector('.case-inline-media video').style.opacity='0';});
         result.videoLensPixelDelta=await page.evaluate(async sources=>{
           const read=async source=>{const i=new Image();i.src='data:image/png;base64,'+source;await i.decode();
             const c=document.createElement('canvas');c.width=i.width;c.height=i.height;
@@ -172,7 +176,7 @@ for (const engine of [process.argv[2] || 'chromium']) {
         assert.equal(await page.locator('.case-media video').count(),1,'No duplicate video decoder');
         assert.equal(await page.locator('.case-media video').evaluate(v=>v.paused),true,'The lens preserves manual pause');
         assert.deepEqual(await page.locator('.case-sheet').boundingBox(),frameBefore,'The effect cannot reshape its outer frame');
-        await page.emulateMedia({reducedMotion:'reduce'});
+        await page.locator('[data-motion-toggle]').first().evaluate(e=>e.click());
         await lens.waitFor({state:'detached'});
         assert.equal(await page.locator('.case-media video').evaluate(v=>v.style.opacity),'','Reduced motion restores native video immediately');
         assert.equal(await page.locator('filter[id^="scroll-ink"]').count(),0,'Reduced motion removes optical filters');

@@ -84,24 +84,59 @@ try {
           width:Math.min(bounds.width,port.width)-16,height:60};
         const affected=type==='player'?'iframe':['video','image'].includes(type)?'.scroll-lens-video':target;
         await page.waitForFunction(sel=>{const e=document.querySelector(sel);return e&&(e.style.filter.includes('scroll-ink')||e.style.transform.includes('matrix3d'));},affected);
+        // Compare the former side padding, not just pixels inside the picture.
+        // An in-place stretch can pass the latter while missing the reference.
+        const gap=bounds.x-port.x, flareClips=type!=='links' && gap>=12 ? [
+          {x:port.x+gap-10,y:edge==='top'?port.y+18:port.y+port.height-34,width:8,height:16},
+          {x:port.x+port.width-gap+2,y:edge==='top'?port.y+18:port.y+port.height-34,width:8,height:16},
+        ] : [];
+        const flared=[];
+        for(const clip of flareClips) flared.push(await page.screenshot({clip}));
         const visible=await page.screenshot({clip});
         await page.locator(affected).evaluate(e=>{
           e.dataset.lensStyle=e.getAttribute('style')||'';e.style.filter='none';e.style.transform='none';
-          if(e.matches('canvas')) {e.style.visibility='hidden';e.previousElementSibling.style.opacity='1';}
+          if(e.matches('canvas')) {e.style.visibility='hidden';e.closest('.case-scroll').querySelector('video, [data-personal-media-poster]').style.opacity='1';}
           const frost=e.parentElement.querySelector('.scroll-lens-frost');if(frost)frost.style.visibility='hidden';
         });
         const plain=await page.screenshot({clip});
+        const padding=[];
+        for(const clip of flareClips) padding.push(await page.screenshot({clip}));
         await page.locator(affected).evaluate(e=>{
           e.setAttribute('style',e.dataset.lensStyle);delete e.dataset.lensStyle;
-          if(e.matches('canvas'))e.previousElementSibling.style.opacity='0';
+          if(e.matches('canvas'))e.closest('.case-scroll').querySelector('video, [data-personal-media-poster]').style.opacity='0';
           const frost=e.parentElement.querySelector('.scroll-lens-frost');if(frost)frost.style.visibility='';
         });
         const difference=await delta(page,visible,plain);
         assert.ok(difference>1.2,'The '+edge+' edge changes actual pixels: '+difference);
+        const flare=[];
+        for(let i=0;i<flared.length;i++) {
+          flare.push(await delta(page,flared[i],padding[i]));
+          // The original poster's near-black sides meet a near-black dark theme.
+          // Verify painted coverage too, instead of requiring an invented contrast.
+          if(type==='image') {
+            const coverage=await page.locator(affected).evaluate((c,r)=>{
+              const b=c.getBoundingClientRect(),x=c.width/b.width,y=c.height/b.height;
+              const pixels=c.getContext('2d').getImageData(Math.round((r.x-b.x)*x),Math.round((r.y-b.y)*y),Math.round(r.width*x),Math.round(r.height*y)).data;
+              let painted=0;for(let n=3;n<pixels.length;n+=4)if(pixels[n]>200)painted++;
+              return painted/(pixels.length/4);
+            },flareClips[i]);
+            assert.ok(coverage>.7,'Image pixels occupy the former side padding: '+coverage);
+          }
+          assert.ok(flare[i]>(type==='image'?2:10),'The picture fills the former '+(i?'right':'left')+' padding at the '+edge+' edge: '+flare[i]);
+        }
         const corners=await readRenderedFrameCorners(page,'.case-sheet');
         assert.ok(corners.every(n=>n<12),'All four rendered corners reveal the backdrop: '+corners);
         assert.deepEqual(await page.locator('.case-sheet').boundingBox(),sheet,'The outside frame stays fixed');
-        result.edges[edge]={difference,corners};
+        result.edges[edge]={difference,flare,corners};
+        if(type==='image') {
+          const play=page.locator('.personal-media__play'), b=await play.boundingBox();
+          const glyph={x:b.x+b.width/2-8,y:b.y+b.height/2-10,width:18,height:20};
+          const shown=await page.screenshot({clip:glyph});
+          await play.evaluate(e=>e.style.visibility='hidden');
+          const underneath=await page.screenshot({clip:glyph});
+          await play.evaluate(e=>e.style.visibility='');
+          assert.ok(await delta(page,shown,underneath)>30,'The play glyph is painted above the refracted picture');
+        }
         await page.screenshot({path:dir+engine+'-'+name+'-'+edge+'.png'});
       }
       if(type==='links') {

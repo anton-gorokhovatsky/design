@@ -37,7 +37,8 @@ const budgets = {
   // +4 KiB for one native-scroll edge observer shared by all window families.
   // +9 KiB for dependency-free content refraction and progressive matte edges.
   // +3 KiB for first-party poster sampling and one live iframe projection.
-  runtime: 257 * 1024,
+  // +1 KiB for the shared flared image contour at the reading frame's corners.
+  runtime: 258 * 1024,
   fonts: 160 * 1024,
   initialSource: 600 * 1024,
 };
