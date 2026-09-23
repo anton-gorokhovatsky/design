@@ -128,6 +128,34 @@ const panelTitle = document.querySelector("[data-panel-title]");
 const panelIndex = document.querySelector("[data-panel-index]");
 const contentPanelBody = document.querySelector(".content-panel__body");
 const contentPanelHeader = document.querySelector(".content-panel__header");
+const panelMore = document.querySelector(".content-panel__more");
+const syncPanelMore = () => {
+  // Subtract the control's own space when deciding whether the list needs it.
+  const overflow = contentPanelBody.scrollHeight - contentPanelBody.clientHeight;
+  panelMore.hidden = contentPanel.dataset.view !== "work"
+    || overflow <= (panelMore.hidden ? 0 : panelMore.offsetHeight + 8) + 1;
+  if (panelMore.hidden) {
+    if (document.activeElement === panelMore) contentPanelBody.focus({ preventScroll: true });
+    return;
+  }
+  const end = contentPanelBody.scrollTop + contentPanelBody.clientHeight >= contentPanelBody.scrollHeight - 2;
+  panelMore.dataset.direction = end ? "up" : "down";
+  panelMore.firstElementChild.textContent = end ? "К началу" : "Ещё кейсы";
+};
+let moreFrame = 0;
+const schedulePanelMore = () => {
+  if (moreFrame) return;
+  moreFrame = requestAnimationFrame(() => { moreFrame = 0; syncPanelMore(); });
+};
+const moreResize = new ResizeObserver(schedulePanelMore);
+moreResize.observe(contentPanelBody);
+moreResize.observe(document.querySelector(".work-section"));
+contentPanelBody.addEventListener("scroll", schedulePanelMore, { passive: true });
+panelMore.addEventListener("click", () => contentPanelBody.scrollTo({
+  top: panelMore.dataset.direction === "up" ? 0
+    : contentPanelBody.scrollTop + contentPanelBody.clientHeight * .8,
+  behavior: reducedMotion.matches ? "auto" : "smooth",
+}));
 const placeContentFrame = () => {
   const top = Math.ceil(contentPanelHeader.getBoundingClientRect().bottom + 12);
   contentPanel.style.setProperty("--panel-frame-top", `${top}px`);
@@ -270,6 +298,7 @@ const openContentPanel = (
 
   window.requestAnimationFrame(() => {
     contentPanelBody?.scrollTo({ top: position?.scrollTop || 0, behavior: "auto" });
+    syncPanelMore();
     if (document.activeElement?.closest("[data-command-form], [data-command-results]")) return;
     const sourceRow = position?.pointId && contentPanelBody?.querySelector(
       `.work-row[data-map-point="${CSS.escape(position.pointId)}"]`,

@@ -190,6 +190,16 @@ for(const engine of [process.argv[2]||'chromium']) {
         animation.animationName !== 'window-reveal'
         || (!animation.pending && animation.playState !== 'running')),
       undefined, {polling:50});
+      const continuation = page.getByRole('button', { name: 'Ещё кейсы', exact: true });
+      await continuation.waitFor({ state: 'visible' });
+      await continuation.focus();
+      await page.keyboard.press('Enter');
+      await page.waitForFunction(() => document.querySelector('.content-panel__body').scrollTop > 20);
+      assert.equal(new URL(page.url()).hash, '#work', 'Continuation scrolls the existing list');
+      await page.locator('.content-panel__body').focus();
+      await page.keyboard.press('End');
+      await page.getByRole('button', { name: 'К началу', exact: true }).click();
+      await page.waitForFunction(() => document.querySelector('.content-panel__body').scrollTop === 0);
       const row = page.locator('.work-row[data-map-point="ilmix"]');
       await row.scrollIntoViewIfNeeded();
       const scrollTop = await page.locator('.content-panel__body').evaluate(el => el.scrollTop);
@@ -210,6 +220,7 @@ for(const engine of [process.argv[2]||'chromium']) {
     }
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto(origin + '/#contact');
+    assert.equal(await page.locator('.content-panel__more').isVisible(), false, 'No work continuation in other sections');
     await page.locator('[data-command-input]').fill('Хотлайн');
     const searchResult = page.getByRole('option', { name: /HOTLINE CAMP/ });
     await searchResult.waitFor({ state: 'visible' });

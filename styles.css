@@ -10366,6 +10366,31 @@ html[data-focus-modality="keyboard"]
   .content-panel .approach-grid h3, .content-panel .approach-grid p { grid-column: 2; }
 }
 
+.content-panel[data-view="work"] .content-panel__frame { flex-direction: column; }
+.content-panel[data-view="work"] .content-panel__body { min-height: 0; }
+.content-panel__more {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 48px;
+  margin: 0 28px 8px;
+  padding: 8px 12px;
+  border: 0;
+  border-top: 1px solid var(--line-soft);
+  background: none;
+  color: var(--content-ink);
+  font: inherit;
+  font-size: .875rem;
+  cursor: pointer;
+}
+.content-panel__more:hover { color: var(--signal); }
+.content-panel__more[hidden] { display: none; }
+.content-panel__more:focus-visible { outline: 2px solid var(--signal); outline-offset: -2px; }
+.content-panel__more .map-related__arrow { transform: rotate(90deg); }
+.content-panel__more[data-direction="up"] .map-related__arrow { transform: rotate(-90deg); }
+
 /* MATERIAL / 01 CASCADE CONTRACT
    The registry controls the rendered material. Component rules may define
    geometry and type, but cannot substitute a local fill, border, shadow, or

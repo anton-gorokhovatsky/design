@@ -28,7 +28,8 @@ const budgets = {
   // +1 KiB for the compact mobile overview and native case disclosure.
   // +1 KiB for shared popup motion and rounded scroll-edge presentation.
   // +1 KiB for immediate accessibility suppression of content-only optical effects.
-  css: 233 * 1024,
+  // +1 KiB for the fixed work-list continuation control.
+  css: 234 * 1024,
   // +4 KiB for measured control clearance and deferred route posters (5 September).
   // +2 KiB for Clayton Young copy and personal map connections (6 September).
   // +2 KiB for two running channel records; no new runtime logic or media.
@@ -39,7 +40,8 @@ const budgets = {
   // +3 KiB for first-party poster sampling and one live iframe projection.
   // +1 KiB for the shared flared image contour at the reading frame's corners.
   // +1 KiB for the approved KS Fish project description.
-  runtime: 259 * 1024,
+  // +1 KiB for work-list overflow detection and native scroll navigation.
+  runtime: 260 * 1024,
   fonts: 160 * 1024,
   initialSource: 600 * 1024,
 };
