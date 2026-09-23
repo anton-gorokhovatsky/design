@@ -45,6 +45,7 @@ const contractScripts = [
   "scripts/check-personal-media.mjs",
   "scripts/check-inspector-links.mjs",
   "scripts/check-case-view.mjs",
+  "scripts/check-scroll-lens.mjs",
   "scripts/check-case-flow.mjs",
   "scripts/check-command-placement.mjs",
   "scripts/check-first-visit.mjs",
@@ -237,6 +238,10 @@ browserContractSteps.push(...["chromium", "webkit"].map((scope) => ({
 
 browserContractSteps.push(...["chromium", "webkit"].map((scope) => ({
   scope, label: "Expanded case view: " + scope, command: process.execPath, args: ["scripts/check-case-view.mjs", scope],
+})));
+browserContractSteps.push(...["chromium", "webkit"].map((scope) => ({
+  scope, label: "Rendered scroll lenses: " + scope, command: process.execPath,
+  args: ["scripts/check-scroll-lens.mjs", scope],
 })));
 // Exercise the integrated reading/playback path before the broader matrices.
 // Coverage and failure policy are unchanged; a broken lifecycle now fails fast.

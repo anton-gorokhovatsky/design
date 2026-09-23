@@ -326,11 +326,19 @@ if (fixMode && redundantRanges.length > 0) {
 }
 
 const fixedPixelFonts = [...source.matchAll(/font-size:\s*[0-9.]+px\s*;/g)];
-const backdropValues = [
-  ...source.matchAll(/(?:-webkit-)?backdrop-filter:\s*([^;]+);/g),
-].map((match) => match[1].replace(/\s+/g, " ").trim());
-const unexpectedBackdropValues = [...new Set(backdropValues)]
-  .filter((value) => !["blur(24px)", "none"].includes(value));
+// The player edge is a temporary, transparent optical layer, not MATERIAL / 01.
+// Keep its 2.2px content blur scoped; every interface surface still uses 24px.
+const unexpectedBackdropValues = rules.flatMap((rule) => {
+  const values = Object.fromEntries(rule.declarations.map(({ property, value }) => [property, value]));
+  const optical = rule.selector === ".scroll-lens-frost"
+    && values.position === "absolute" && values["pointer-events"] === "none"
+    && !rule.declarations.some(({ property }) => /^(background|border|box-shadow)/.test(property));
+  return rule.declarations.filter(({ property, value }) =>
+    /^(?:-webkit-)?backdrop-filter$/.test(property)
+      && !["blur(24px)", "none"].includes(value)
+      && !(optical && value === "blur(2.2px)"))
+    .map(({ value }) => `${rule.selector}: ${value}`);
+});
 const failures = [];
 
 if (emptyRanges.length > 0) {

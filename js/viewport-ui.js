@@ -37,9 +37,8 @@ const drawScrollLensMap = (record, width, height, top, bottom) => {
     const depth = Math.max(upper, lower);
     for (let x = 0; x < canvas.width; x++) {
       const u = x / (canvas.width - 1);
-      // Video geometry is sampled directly below; text keeps its baselines.
-      const shift = record.video ? 0 : -(u - .5) * Math.min(width * .42, 168) * depth ** 2
-        * Math.sin(Math.PI * u) ** 2;
+      const shift = record.media ? 0 : -(u - .5) * Math.min(width * .42, 168)
+        * depth ** 2 * Math.sin(Math.PI * u) ** 2;
       const offset = (y * canvas.width + x) * 4;
       pixels.data[offset] = 128 + shift / 64 * 255;
       pixels.data[offset + 1] = 128;
@@ -57,17 +56,18 @@ const drawScrollLensMap = (record, width, height, top, bottom) => {
     primitive.setAttribute("height", extent / height);
   }
   record.displaceX.setAttribute("scale", 64 / width);
-  const blur = record.video ? 2.2 : 2.6;
+  const blur = record.media ? 2.2 : 2.6;
   record.blur.setAttribute("stdDeviation", `${blur / width} ${blur / height}`);
-  record.fade.setAttribute("amplitude", record.video ? ".28" : ".72");
-  record.fade.setAttribute("exponent", record.video ? "2.4" : "3.4");
+  record.fade.setAttribute("amplitude", record.media ? ".28" : ".72");
+  record.fade.setAttribute("exponent", record.media ? "2.4" : "3.4");
   record.image.setAttribute("href", canvas.toDataURL());
 };
 
 // Safari drops SVG filters on accelerated video layers (WebKit 322588).
 // Paint the existing decoder's current frame into a 2D canvas only while it
 // intersects the lens. No second video, network request or playback clock.
-const createLensVideo = video => {
+const createLensMedia = video => {
+  const moving = video.matches("video");
   const canvas = document.createElement("canvas");
   canvas.className = "scroll-lens-video";
   canvas.setAttribute("aria-hidden", "true");
@@ -81,7 +81,7 @@ const createLensVideo = video => {
   let callback = 0;
   let disposed = false;
   const draw = (resizeOnly = false) => {
-    if (disposed || video.readyState < 2) return;
+    if (disposed || (moving ? video.readyState < 2 : !video.complete || !video.naturalWidth)) return;
     const density = Math.min(devicePixelRatio || 1, 2);
     const width = Math.round(video.clientWidth * density);
     const height = Math.round(video.clientHeight * density);
@@ -93,11 +93,13 @@ const createLensVideo = video => {
       source.width = width;
       source.height = height;
     }
-    const scale = Math.min(width / video.videoWidth, height / video.videoHeight);
-    const w = video.videoWidth * scale, h = video.videoHeight * scale;
+    const nativeWidth = moving ? video.videoWidth : video.naturalWidth;
+    const nativeHeight = moving ? video.videoHeight : video.naturalHeight;
+    const scale = Math.min(width / nativeWidth, height / nativeHeight);
+    const w = nativeWidth * scale, h = nativeHeight * scale;
     if (!resizeOnly || resized || !canvas.isConnected) {
       sourceContext.clearRect(0, 0, width, height);
-      sourceContext.drawImage(video, (width - w) / 2, 0, w, h);
+      sourceContext.drawImage(video, (width - w) / 2, moving ? 0 : (height - h) / 2, w, h);
     }
     context.clearRect(0, 0, width, height);
     context.drawImage(source, 0, 0);
@@ -125,21 +127,55 @@ const createLensVideo = video => {
   };
   const tick = () => {
     callback = 0;
-    if (disposed) return;
+    if (disposed || !moving) return;
     if (!document.hidden) draw();
     if (video.requestVideoFrameCallback) callback = video.requestVideoFrameCallback(tick);
     else if (!video.paused) callback = requestAnimationFrame(tick);
   };
   const refresh = () => { draw(); if (!callback) tick(); };
-  for (const event of ["loadeddata", "seeked", "play"]) video.addEventListener(event, refresh);
+  for (const event of ["load", "loadeddata", "seeked", "play"]) video.addEventListener(event, refresh);
   refresh();
   return { canvas, draw, setEdges(upper, lower) { top = upper; bottom = lower; }, dispose() {
     disposed = true;
     if (video.cancelVideoFrameCallback) video.cancelVideoFrameCallback(callback);
     else cancelAnimationFrame(callback);
-    for (const event of ["loadeddata", "seeked", "play"]) video.removeEventListener(event, refresh);
+    for (const event of ["load", "loadeddata", "seeked", "play"]) video.removeEventListener(event, refresh);
     video.style.opacity = opacity;
     canvas.remove();
+  } };
+};
+// A cross-origin player cannot be sampled into canvas. WebKit also loses its
+// accelerated layer under an SVG URL filter (222757). Project the one live
+// browsing context inside its fixed clip instead; native hit testing follows it.
+const createLensPlayer = element => {
+  const transform = element.style.transform, origin = element.style.transformOrigin;
+  const frost = document.createElement("span");
+  frost.className = "scroll-lens-frost";
+  frost.setAttribute("aria-hidden", "true");
+  element.after(frost);
+  element.style.transformOrigin = "50% 0";
+  return { draw(top, bottom, height) {
+    const strength = edge => edge === null ? 0 : Math.max(0, Math.min(1, 1 + Math.min(0, edge) / lensDepth));
+    const upper = strength(top), lower = strength(bottom === null ? null : height - bottom);
+    const y0 = top === null ? 0 : Math.max(0, Math.min(height - 1, top));
+    const y1 = bottom === null ? height : Math.max(y0 + 1, Math.min(height, bottom));
+    const span = y1 - y0, z0 = 1 + .7 * upper ** 2, z1 = 1 + .7 * lower ** 2;
+    const s0 = y0 + Math.min(38 * upper ** 2, span * .3);
+    const s1 = y1 - Math.min(38 * lower ** 2, span * .3);
+    // One continuous projection also covers short windows with both edges active.
+    // The bounded source offsets keep it invertible at the last visible pixel.
+    const c = (z1 - z0) / span, d = z0 - c * y0;
+    const a = (s1 * z1 - s0 * z0) / span, b = s0 * z0 - a * y0;
+    element.style.transform = `matrix3d(${a*d-b*c},0,0,0,0,${d},0,${-c},0,0,1,0,0,${-b},0,${a})`;
+    const masks = [];
+    if (top !== null) masks.push(`linear-gradient(#000 ${top}px, transparent ${top+lensDepth}px)`);
+    if (bottom !== null) masks.push(`linear-gradient(transparent ${bottom-lensDepth}px, #000 ${bottom}px)`);
+    frost.style.maskImage = masks.join(",");
+    frost.style.webkitMaskImage = masks.join(",");
+  }, dispose() {
+    element.style.transform = transform;
+    element.style.transformOrigin = origin;
+    frost.remove();
   } };
 };
 const clearScrollLenses = region => scrollLensControllers.get(region)?.reset();
@@ -149,12 +185,13 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
   let frame = 0;
   let svg;
   const remove = (element, record) => {
-    if (record.video) record.video.dispose();
+    if (record.player) record.player.dispose();
+    else if (record.media) record.media.dispose();
     else if (element.style.filter.includes(record.id)) {
       if (record.original) element.style.filter = record.original;
       else element.style.removeProperty("filter");
     }
-    record.filter.remove();
+    record.filter?.remove();
     resize.unobserve(element);
     records.delete(element);
   };
@@ -164,6 +201,12 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
     svg = null;
   };
   const makeRecord = element => {
+    if (element.matches("iframe")) {
+      const record = { player: createLensPlayer(element) };
+      records.set(element, record);
+      resize.observe(element);
+      return record;
+    }
     if (!svg) {
       svg = document.createElementNS(lensNamespace, "svg");
       svg.setAttribute("width", "0");
@@ -195,7 +238,7 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
       image: filter.querySelector("feImage"),
       displaceX: filter.querySelector("feDisplacementMap"), blur: filter.querySelector("feGaussianBlur"),
       fade: filter.querySelector('[result="fade"] feFuncA'),
-      video: element.matches("video") ? createLensVideo(element) : null };
+      media: element.matches("img, video") ? createLensMedia(element) : null };
     records.set(element, record);
     resize.observe(element);
     return record;
@@ -213,7 +256,7 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
     const bottom = region.scrollTop + region.clientHeight < region.scrollHeight - 1;
     const selection = document.getSelection();
     for (const element of active) {
-      const rect = element.getBoundingClientRect();
+      const rect = (element.matches("iframe") ? element.parentElement : element).getBoundingClientRect();
       const height = element.offsetHeight, width = element.offsetWidth;
       const selected = selection && !selection.isCollapsed
         && (element.contains(selection.anchorNode) || element.contains(selection.focusNode));
@@ -221,8 +264,9 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
         bottom && rect.bottom > port.bottom - lensDepth * scale && rect.top < port.bottom];
       let record = records.get(element);
       // Materials, controls and live keyboard selection retain their native rendering.
-      const focused = element.contains(document.activeElement)
-        || element.closest("a, button") === document.activeElement;
+      const control = element.closest("a, button, iframe");
+      const focused = control ? control.matches(":focus-visible")
+        : element.contains(document.activeElement);
       if (!width || !height || !depths.some(Boolean) || selected || focused
         || element.matches("[data-material-surface], a, button, input, select, textarea")
         || element.querySelector("[data-material-surface], a, button, input, select, textarea")) {
@@ -230,13 +274,18 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
         continue;
       }
       record ||= makeRecord(element);
+      if (record.player) {
+        record.player.draw(depths[0] ? (port.top - rect.top) / scale : null,
+          depths[1] ? (port.bottom - rect.top) / scale : null, height);
+        continue;
+      }
       drawScrollLensMap(record, width, height,
         depths[0] ? (port.top - rect.top) / scale : null,
         depths[1] ? (port.bottom - rect.top) / scale : null);
-      record.video?.setEdges(depths[0] ? (port.top - rect.top) / scale : null,
+      record.media?.setEdges(depths[0] ? (port.top - rect.top) / scale : null,
         depths[1] ? (port.bottom - rect.top) / scale : null);
-      record.video?.draw(true);
-      (record.video?.canvas || element).style.filter = `url(#${record.id})`;
+      record.media?.draw(true);
+      (record.media?.canvas || element).style.filter = `url(#${record.id})`;
     }
   };
   const schedule = () => { if (!frame) frame = requestAnimationFrame(update); };
@@ -261,7 +310,7 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
 };
 const lensInspector = document.querySelector("[data-map-inspector]");
 observeScrollLens(lensInspector, () => lensInspector.querySelectorAll(
-  ".map-readout__identity h2, .map-readout__identity p, [data-map-description], .map-evidence dt, .map-evidence dd, .case-details h3, .case-details h4, .case-details p, .observation-preview, .map-related__header",
+  ".map-readout__identity h2, .map-readout__identity p, [data-map-description], .map-evidence dt, .map-evidence dd, .case-details h3, .case-details h4, .case-details p, .observation-preview, .map-related__header, .map-related__item > *",
 ), { enabled: () => !lensInspector.classList.contains("has-reading-frame") });
 const lensPanel = document.querySelector(".content-panel__body");
 observeScrollLens(lensPanel, () => lensPanel.querySelectorAll(
