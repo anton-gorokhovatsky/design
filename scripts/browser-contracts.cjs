@@ -849,15 +849,37 @@ const validateMobileMetricGroups = (metricGroups) => {
 const readRenderedFrameCorners = async (page, selector) => {
   const shell = page.locator(selector);
   const clip = await shell.boundingBox();
-  const visible = await page.screenshot({ clip });
-  const previous = await shell.evaluate(e => {
-    const value = e.style.visibility;
-    e.style.visibility = 'hidden';
-    return value;
+  // Both photographs must contain the same background. Otherwise a moving blue
+  // constellation glyph can be mistaken for a square corner between captures.
+  const fieldVisibility = await page.evaluate(() => {
+    const field = document.querySelector('[data-signal-constellation]');
+    if (!field) return null;
+    const still = field.cloneNode();
+    still.removeAttribute('data-signal-constellation');
+    still.setAttribute('data-corner-backdrop', '');
+    still.getContext('2d').drawImage(field, 0, 0);
+    field.after(still);
+    const visibility = field.style.visibility;
+    field.style.visibility = 'hidden';
+    return visibility;
   });
-  let background;
-  try { background = await page.screenshot({ clip }); }
-  finally { await shell.evaluate((e,value) => e.style.visibility=value,previous); }
+  let visible, background;
+  try {
+    visible = await page.screenshot({ clip });
+    const previous = await shell.evaluate(e => {
+      const value = e.style.visibility;
+      e.style.visibility = 'hidden';
+      return value;
+    });
+    try { background = await page.screenshot({ clip }); }
+    finally { await shell.evaluate((e,value) => e.style.visibility=value,previous); }
+  } finally {
+    await page.evaluate(visibility => {
+      document.querySelector('[data-corner-backdrop]')?.remove();
+      const field = document.querySelector('[data-signal-constellation]');
+      if (field && visibility !== null) field.style.visibility = visibility;
+    }, fieldVisibility);
+  }
   return page.evaluate(async ([before, after]) => {
     const read = async source => {
       const image = new Image();
