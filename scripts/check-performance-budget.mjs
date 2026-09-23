@@ -38,7 +38,8 @@ const budgets = {
   // +9 KiB for dependency-free content refraction and progressive matte edges.
   // +3 KiB for first-party poster sampling and one live iframe projection.
   // +1 KiB for the shared flared image contour at the reading frame's corners.
-  runtime: 258 * 1024,
+  // +1 KiB for the approved KS Fish project description.
+  runtime: 259 * 1024,
   fonts: 160 * 1024,
   initialSource: 600 * 1024,
 };
