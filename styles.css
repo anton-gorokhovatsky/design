@@ -10926,6 +10926,11 @@ body[data-case-open] :is(.map-axis-label, .map-labels, .map-node-label, .origin-
   .case-inline-media { margin-inline: calc(-1 * var(--case-pad)); }
   .case-inline-media figcaption { padding-inline: var(--case-pad); }
   .case-media .map-hover-preview__mosaic-main { border-radius: 18px; }
+  .has-reading-frame .personal-media__screen {
+    width: calc(100% + var(--case-pad) * 2);
+    margin-inline: calc(-1 * var(--case-pad));
+    border-radius: 18px;
+  }
 }
 @media (max-width: 480px) {
   .map-inspector.is-case-view { --case-pad: 20px; inset: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom)); gap: 12px; }

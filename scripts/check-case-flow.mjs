@@ -192,6 +192,11 @@ for(const engine of [process.argv[2]||'chromium']) {
       undefined, {polling:50});
       const continuation = page.getByRole('button', { name: 'Ещё кейсы', exact: true });
       await continuation.waitFor({ state: 'visible' });
+      await page.locator('.content-panel').evaluate(element => Promise.all(
+        element.getAnimations({ subtree: true })
+          .filter(animation => animation.effect?.getTiming().iterations !== Infinity)
+          .map(animation => animation.finished.catch(() => {})),
+      ));
       await continuation.focus();
       await page.keyboard.press('Enter');
       await page.waitForFunction(() => document.querySelector('.content-panel__body').scrollTop > 20);

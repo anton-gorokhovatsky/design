@@ -114,6 +114,7 @@ try {
         return {
           player: box("[data-personal-media]"),
           screen: box("[data-personal-media-screen]"),
+          sheet: box(".case-sheet"),
           inspector: box("[data-map-inspector]"),
           inline: document.querySelector("[data-personal-media-slot]")
             .contains(document.querySelector("[data-personal-media]")),
@@ -126,6 +127,11 @@ try {
       assert.ok(geometry.inspector.y >= 0, "Inspector header stays reachable.");
       assert.ok(geometry.inspector.bottom <= height, "Inspector scrolls within the viewport.");
       assert.equal(geometry.inline, width <= 1024);
+      if (width <= 900) {
+        assert.ok(Math.abs(geometry.screen.x - geometry.sheet.x) < 1
+          && Math.abs(geometry.screen.width - geometry.sheet.width) < 1,
+        "Mobile stream fills the rounded reading window, like inline case reels.");
+      }
       if (width > 1024) {
         assert.ok(geometry.inspector.right + 12 <= geometry.player.x,
           "Desktop card and player must have a real gap.");

@@ -265,8 +265,6 @@ const openContentPanel = (
   panelSections.forEach((section) => {
     section.hidden = section.dataset.panelSection !== view;
   });
-  contentPanelBody?.scrollTo({ top: position?.scrollTop || 0, behavior: "auto" });
-
   if (panelTitle) {
     panelTitle.textContent = typographUiText(config.title);
   }
@@ -278,6 +276,9 @@ const openContentPanel = (
   hideMapPreview({ immediate: true });
   clearMapSelection();
   setPanelOpen(true);
+  // Restore against the final reading height, including the continuation row.
+  syncPanelMore();
+  contentPanelBody?.scrollTo({ top: position?.scrollTop || 0, behavior: "auto" });
 
   if (updateHistory) {
     trackPortfolioEvent("panel_open", {
@@ -297,8 +298,8 @@ const openContentPanel = (
   }
 
   window.requestAnimationFrame(() => {
-    contentPanelBody?.scrollTo({ top: position?.scrollTop || 0, behavior: "auto" });
     syncPanelMore();
+    contentPanelBody?.scrollTo({ top: position?.scrollTop || 0, behavior: "auto" });
     if (document.activeElement?.closest("[data-command-form], [data-command-results]")) return;
     const sourceRow = position?.pointId && contentPanelBody?.querySelector(
       `.work-row[data-map-point="${CSS.escape(position.pointId)}"]`,
