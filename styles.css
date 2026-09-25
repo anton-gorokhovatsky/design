@@ -10471,9 +10471,10 @@ html[data-theme="dark"] .whoop-field {
   .site-header .brand__role { font-size: .6875rem; line-height: 1.35; }
   .whoop-readout { margin-top: .875rem; padding-right: 1.125rem; }
   .whoop-heading, .whoop-foot { display: none; }
-  .whoop-metrics { grid-template-columns: 1.25fr 1fr 1fr; gap: .4375rem; }
+  .whoop-metrics { grid-template-columns: 1.5fr 1fr 1fr; gap: .4375rem; }
   .whoop-metrics dd { font-size: 1.3125rem; }
   .whoop-metrics dt, .whoop-metrics dd small { font-size: .625rem; }
+  .whoop-level { display: inline; margin-left: .375rem; font-size: .625rem; }
   .whoop-compact-trigger { display: block; position: absolute; inset: 0; width: 100%; height: 100%; border-radius: inherit; background: none; cursor: pointer; }
   .whoop-compact-trigger::after { content: ''; position: absolute; right: 0; top: calc(50% - 3px); width: 7px; height: 7px; border: solid currentColor; border-width: 1px 1px 0 0; transform: rotate(45deg); }
   .whoop-compact-trigger:focus-visible { border-radius: inherit; outline-offset: 3px; }
