@@ -1115,10 +1115,24 @@ const analyticsConsentAudit = async (page, viewport, label) => {
     path: path.join(artifactDir, `${label}-settings-panel.png`),
     fullPage: false,
   });
+  // General settings now include the WHOOP explanation. Validate that the
+  // privacy footer is reachable by scrolling, rather than requiring the
+  // entire settings document to fit in its initial viewport.
+  await page.locator(".settings-panel__details").scrollIntoViewIfNeeded();
+  const settingsEnd = await page.evaluate(() => {
+    const panel = document.querySelector("[data-settings-panel]");
+    const body = panel.querySelector(".settings-panel__body").getBoundingClientRect();
+    const tail = panel.querySelector(".settings-panel__details").getBoundingClientRect();
+    return {
+      tailVisible: tail.top >= body.top - 1 && tail.bottom <= body.bottom + 1,
+      trailingGap: panel.getBoundingClientRect().bottom - tail.bottom,
+    };
+  });
 
   return {
     ...result,
     generalSettings,
+    settingsEnd,
     generalWithinViewport,
     generalVerticallyBalanced,
     materialFailures,
@@ -1188,19 +1202,10 @@ const analyticsConsentAudit = async (page, viewport, label) => {
       || generalSettings.overflowX !== 0
       || !generalWithinViewport
       || !generalVerticallyBalanced
-      || (viewport.height >= 800 && (
-        generalSettings.trailingGap === null
-        || generalSettings.trailingGap < 12
-        || generalSettings.trailingGap > 40
-        || generalSettings.bodyScrollable
-      ))
+      || !settingsEnd.tailVisible
+      || settingsEnd.trailingGap < 12
+      || settingsEnd.trailingGap > 40
       || (viewport.width <= 320 && !generalSettings.bodyScrollable)
-      || (viewport.width >= 390 && viewport.height >= 650 && (
-        generalSettings.actionHeight === null
-        || generalSettings.actionVisibleHeight === null
-        || generalSettings.actionVisibleHeight
-          < generalSettings.actionHeight - 1
-      ))
       || materialFailures.length > 0,
   };
 };

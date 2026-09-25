@@ -43,7 +43,8 @@ const budgets = {
   // +1 KiB for the approved KS Fish project description.
   // +1 KiB for work-list overflow detection and native scroll navigation.
   // +7 KiB (2.8 KiB gzip) for the daily feed and palette; no client dependencies.
-  runtime: 267 * 1024,
+  // +1 KiB to keep the map and requested settings section aligned after data arrives.
+  runtime: 268 * 1024,
   fonts: 160 * 1024,
   initialSource: 600 * 1024,
 };

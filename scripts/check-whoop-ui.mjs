@@ -72,6 +72,31 @@ try {
     console.log(`PASS ${engine} WHOOP ${width} ${theme}: metrics, map targets, settings, preference, stale and unavailable.`);
     await page.close();
   }
+  const latePage = await browser.newPage({ viewport: { width: 320, height: 568 }, reducedMotion: "reduce" });
+  let deliver;
+  const pendingFeed = new Promise(done => { deliver = done; });
+  await latePage.route("**/__qa/whoop-day.json", async route => {
+    await pendingFeed;
+    await route.fulfill({ response: await route.fetch() });
+  });
+  await latePage.goto(`${origin}/?analytics-consent=show`, { waitUntil: "domcontentloaded" });
+  await latePage.waitForFunction(() => document.activeElement?.matches("[data-analytics-allow]"));
+  deliver();
+  await latePage.waitForFunction(() => document.querySelector("[data-whoop-recovery]").textContent.includes("77"));
+  await latePage.waitForFunction(() => {
+    const body = document.querySelector(".settings-panel__body").getBoundingClientRect();
+    const action = document.querySelector("[data-analytics-allow]").getBoundingClientRect();
+    const tail = document.querySelector(".settings-panel__details").getBoundingClientRect();
+    return action.top >= body.top && action.bottom <= body.bottom && tail.bottom <= body.bottom + 1;
+  });
+  await latePage.keyboard.press("Escape");
+  await latePage.waitForFunction(() => {
+    const header = document.querySelector(".site-header").getBoundingClientRect();
+    const camera = document.querySelector(".map-camera").getBoundingClientRect();
+    return Math.abs(camera.top - header.bottom - 14) < 1;
+  });
+  await latePage.close();
+  console.log(`PASS ${engine} delayed WHOOP: analytics stays visible; mobile map follows the card.`);
   assert.deepEqual(errors, []);
 } finally {
   await browser.close();

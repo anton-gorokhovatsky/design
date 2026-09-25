@@ -33,6 +33,24 @@ const analyticsGoalParameters = new Map([
 let analyticsPreference = null;
 let analyticsLoaded = false;
 let lastSettingsTrigger = null;
+let settingsScrollAnchor = null;
+
+const alignSettingsSection = () => {
+  if (!settingsPanel?.open || !settingsScrollAnchor) return;
+  const { destination, control } = settingsScrollAnchor;
+  const body = settingsPanel.querySelector(".settings-panel__body");
+  if (body && destination) body.scrollTop += destination.getBoundingClientRect().top - body.getBoundingClientRect().top;
+  control?.scrollIntoView({ block: "nearest", behavior: "instant" });
+};
+// Late WHOOP data and fonts can resize the preceding section in WebKit.
+// Keep an explicitly requested section in view until the visitor takes over.
+const settingsResize = new ResizeObserver(alignSettingsSection);
+settingsPanel?.querySelectorAll(".settings-panel__body > *").forEach(
+  (section) => settingsResize.observe(section),
+);
+for (const event of ["wheel", "touchstart", "pointerdown", "keydown"]) {
+  settingsPanel?.addEventListener(event, () => { settingsScrollAnchor = null; }, { passive: true });
+}
 
 try {
   const storedAnalyticsPreference = window.localStorage.getItem(analyticsPreferenceKey);
@@ -90,6 +108,7 @@ const closeSettingsPanel = ({ restoreFocus = true } = {}) => {
   }
 
   settingsPanel.close();
+  settingsScrollAnchor = null;
   settingsPanel.hidden = true;
   settingsPanel.inert = true;
   settingsPanel.classList.remove("is-open");
@@ -124,6 +143,7 @@ const openSettingsPanel = ({
     settingsPanel.classList.add("is-open");
   }
   settingsPanel.dataset.focusSection = section;
+  settingsScrollAnchor = null;
 
   window.requestAnimationFrame(() => {
     const body = settingsPanel.querySelector(".settings-panel__body");
@@ -140,7 +160,8 @@ const openSettingsPanel = ({
       const destination = ["analytics", "whoop"].includes(section)
         ? settingsPanel.querySelector(`[data-settings-section="${section}"]`)
         : target?.closest(".settings-panel__row");
-      destination?.scrollIntoView({ block: "start", behavior: "instant" });
+      settingsScrollAnchor = { destination, control: target };
+      alignSettingsSection();
     }
     if (focus) {
       const control = target?.disabled ? settingsClose : target;

@@ -643,6 +643,8 @@ window.addEventListener("pageshow", syncMobileMapFrame, { passive: true });
 window.visualViewport?.addEventListener("resize", syncMobileMapFrame, {
   passive: true,
 });
+const authorship = document.querySelector(".site-header");
+if (authorship) new ResizeObserver(syncMobileMapFrame).observe(authorship);
 document.fonts?.ready.then(syncMobileMapFrame);
 syncMobileMapFrame();
 
