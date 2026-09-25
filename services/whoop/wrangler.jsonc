@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/cloudflare/workers-sdk/main/packages/wrangler/config-schema.json",
+  "name": "portfolio-whoop",
+  "account_id": "e11552ffb1412c83318b286da7b53657",
+  "main": "worker.js",
+  "compatibility_date": "2026-09-25",
+  "workers_dev": true,
+  "preview_urls": false,
+  "observability": { "enabled": false },
+  "durable_objects": { "bindings": [{ "name": "DAY", "class_name": "WhoopDay" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["WhoopDay"] }],
+  "triggers": { "crons": ["7,22,37,52 * * * *"] },
+  "vars": { "PUBLIC_ORIGIN": "https://gorokhovatsky.tech" }
+}

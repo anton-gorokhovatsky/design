@@ -30,6 +30,17 @@ const startStaticServer = async ({
     const pathname = decodeURIComponent(
       new URL(request.url || "/", "http://127.0.0.1").pathname,
     );
+    // Browser contracts use a deterministic fixture, never the author's live API.
+    if (pathname === "/__qa/whoop-day.json") {
+      const now = Date.now();
+      response.writeHead(200, { "content-type": "application/json", "cache-control": "no-store" });
+      response.end(JSON.stringify({ schema: 1, source: "WHOOP", fetched_at: new Date(now).toISOString(),
+        recovery: { value: 77, updated_at: new Date(now - 9 * 3600000).toISOString() },
+        sleep: { minutes: 362, ended_at: new Date(now - 9 * 3600000).toISOString() },
+        strain: { value: 12.9, updated_at: new Date(now - 3600000).toISOString() },
+      }));
+      return;
+    }
     const relativePath = pathname === "/" ? "index.html" : pathname.slice(1);
     const absolutePath = path.resolve(projectRoot, path.normalize(relativePath));
     const isInsideRoot = absolutePath === projectRoot
@@ -72,6 +83,12 @@ const startStaticServer = async ({
       "content-type": staticAssetMimeTypes[path.extname(absolutePath)]
         || "application/octet-stream",
     });
+    if (relativePath === "index.html") {
+      response.end(fs.readFileSync(absolutePath, "utf8").replace(
+        /name="whoop-feed" content="[^"]*"/, 'name="whoop-feed" content="/__qa/whoop-day.json"',
+      ));
+      return;
+    }
     fs.createReadStream(absolutePath).pipe(response);
   });
 

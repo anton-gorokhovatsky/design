@@ -355,6 +355,7 @@ const geometryExpression = String.raw`(() => {
     display: ".display-control",
     navigation: ".control-console",
     brand: ".brand",
+    header: ".site-header",
     search: ".command-dock",
     searchMark: ".command-dock__mark",
     searchInput: ".command-dock input",
@@ -596,8 +597,8 @@ const auditGeometry = (label, state) => {
     } else if (
       geometry.mapCamera.left < -2
       || geometry.mapCamera.right > viewport.width + 2
-      || geometry.mapCamera.top - geometry.brand.bottom < 8
-      || geometry.mapCamera.top - geometry.brand.bottom > 24
+      || geometry.mapCamera.top - geometry.header.bottom < 8
+      || geometry.mapCamera.top - geometry.header.bottom > 24
       || geometry.mapCamera.bottom > viewport.height
       || geometry.mapCamera.height < (viewport.height - geometry.mapCamera.top) * 0.72
     ) {

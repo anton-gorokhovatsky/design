@@ -132,12 +132,13 @@ const openSettingsPanel = ({
       : settingsPanel.querySelector({
         motion: "[data-motion-toggle]",
         contrast: "[data-contrast-toggle]",
+        whoop: "[data-whoop-toggle]",
       }[section] || "[data-theme-toggle]") || settingsClose;
 
     if (body) body.scrollTop = 0;
     if (section !== "settings") {
-      const destination = section === "analytics"
-        ? settingsPanel.querySelector('[data-settings-section="analytics"]')
+      const destination = ["analytics", "whoop"].includes(section)
+        ? settingsPanel.querySelector(`[data-settings-section="${section}"]`)
         : target?.closest(".settings-panel__row");
       destination?.scrollIntoView({ block: "start", behavior: "instant" });
     }

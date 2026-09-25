@@ -11,6 +11,7 @@
     <meta name="author" content="Антон Гороховатский">
     <meta name="theme-color" content="#eeede7">
     <meta name="color-scheme" content="light dark">
+    <meta name="whoop-feed" content="https://portfolio-whoop.portfolio-whoop-service.workers.dev/day.json">
     <meta name="robots" content="index, follow, max-image-preview:large">
     <link
       id="site-favicon"
@@ -124,7 +125,7 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=84a7803a919a">
+    <link rel="stylesheet" href="styles.css?v=47c787e3e61c">
     <style>
       .map-evidence [data-map-evidence-role-label]{font-family:var(--font-author);font-size:.6rem;font-weight:400;letter-spacing:0}
     </style>
@@ -133,13 +134,14 @@
       {
         "imports": {
           "./js/preferences.js": "./js/preferences.js?v=75ec5c85331d",
-          "./js/analytics.js": "./js/analytics.js?v=b73ca5819a36",
+          "./js/whoop-day.js": "./js/whoop-day.js?v=ce576583698d",
+          "./js/analytics.js": "./js/analytics.js?v=aa68c52aa73e",
           "./js/signal-field.js": "./js/signal-field.js?v=e249b2dc021a",
           "./js/map-data.js": "./js/map-data.js?v=ec5824e6adbd",
           "./js/observation-route.js": "./js/observation-route.js?v=c0036c773139",
           "./js/personal-media.js": "./js/personal-media.js?v=524375a4d005",
           "./js/sphere-surfaces.js": "./js/sphere-surfaces.js?v=4cf52ae3e8a0",
-          "./js/map-engine.js": "./js/map-engine.js?v=58e387443a2d",
+          "./js/map-engine.js": "./js/map-engine.js?v=9a88b2f3ef28",
           "./js/viewport-ui.js": "./js/viewport-ui.js?v=f11ba04e891d",
           "./js/panels.js": "./js/panels.js?v=b6b5b984a770",
           "./js/case-view.js": "./js/case-view.js?v=c7eeb5a33054",
@@ -150,13 +152,14 @@
     <!-- runtime-import-map:end -->
     <!-- Native modules keep their dependencies explicit; see js/README.md. -->
     <script type="module" src="js/preferences.js?v=75ec5c85331d"></script>
-    <script type="module" src="js/analytics.js?v=b73ca5819a36"></script>
+    <script type="module" src="js/whoop-day.js?v=ce576583698d"></script>
+    <script type="module" src="js/analytics.js?v=aa68c52aa73e"></script>
     <script type="module" src="js/signal-field.js?v=e249b2dc021a"></script>
     <script type="module" src="js/map-data.js?v=ec5824e6adbd"></script>
     <script type="module" src="js/observation-route.js?v=c0036c773139"></script>
     <script type="module" src="js/personal-media.js?v=524375a4d005"></script>
     <script type="module" src="js/sphere-surfaces.js?v=4cf52ae3e8a0"></script>
-    <script type="module" src="js/map-engine.js?v=58e387443a2d"></script>
+    <script type="module" src="js/map-engine.js?v=9a88b2f3ef28"></script>
     <script type="module" src="js/viewport-ui.js?v=f11ba04e891d"></script>
     <script type="module" src="js/panels.js?v=b6b5b984a770"></script>
     <script type="module" src="js/case-view.js?v=c7eeb5a33054"></script>
@@ -266,11 +269,22 @@
       Открыть ключевые кейсы
     </button>
 
-    <header class="site-header">
+    <header class="site-header" data-material-surface="whoop-readout" data-material-active="always">
       <p class="brand">
-        <span class="brand__name">АНТОН ГОРОХОВАТСКИЙ © 2026</span>
-        <span class="brand__role">РАБОТЫ И ИНТЕРЕСЫ</span>
+        <span class="brand__name">Антон Гороховатский <small>© 2026</small></span>
+        <span class="brand__role">Придумываю, разрабатываю и веду веб‑проекты.</span>
       </p>
+      <section class="whoop-readout" aria-label="Мой день: показатели WHOOP" data-whoop-readout hidden>
+        <p class="whoop-heading"><strong>Сегодня</strong><time data-whoop-date>WHOOP</time></p>
+        <dl class="whoop-metrics">
+          <div><dt>Восстановление</dt><dd data-whoop-recovery>—</dd></div>
+          <div><dt>Сон</dt><dd data-whoop-sleep>—</dd></div>
+          <div><dt>Нагрузка</dt><dd data-whoop-strain>—</dd></div>
+        </dl>
+        <div class="whoop-foot"><span data-whoop-status>Получаем данные</span><button type="button" data-open-settings data-settings-focus="whoop">О данных и цвете</button></div>
+        <span class="whoop-stamp" data-whoop-stamp></span>
+        <button class="whoop-compact-trigger" type="button" aria-label="Показатели WHOOP и цвет дня" data-open-settings data-settings-focus="whoop"></button>
+      </section>
     </header>
 
     <main>
@@ -297,6 +311,7 @@
           data-active-kind="all"
           data-active-kinds="company,project,personal,practice"
         >
+          <div class="whoop-field" aria-hidden="true"></div>
           <div class="share-heading" aria-hidden="true">
             <span class="share-heading__eyebrow">ПОРТФОЛИО / МОСКВА</span>
             <strong>АНТОН ГОРОХОВАТСКИЙ</strong>
@@ -1449,6 +1464,18 @@
             </button>
           </div>
         </div>
+        <section class="settings-whoop" data-settings-section="whoop" aria-labelledby="settings-whoop-title">
+          <div class="settings-panel__row">
+            <div>
+              <h3 id="settings-whoop-title">ЦВЕТ МОЕГО ДНЯ</h3>
+              <p>Оформление по данным WHOOP.</p>
+            </div>
+            <button type="button" data-whoop-toggle aria-pressed="true" aria-label="Цвет дня по данным WHOOP"><span data-whoop-toggle-label>ВКЛЮЧЁН</span></button>
+          </div>
+          <p class="settings-whoop__copy">Каждое утро WHOOP оценивает моё восстановление после сна. Эта оценка задаёт палитру карты: тёплую, лиловую или зелёную. Нагрузка накапливается в течение дня — вместе с ней цвет становится насыщеннее и занимает больше пространства.</p>
+          <p class="settings-whoop__copy">Сон — время, которое я действительно спал прошедшей ночью. Он показан рядом с другими значениями, но не меняет оформление. Цвета — моя интерпретация данных.</p>
+          <p class="settings-whoop__copy settings-whoop__source" data-whoop-provenance>Получаем данные WHOOP.</p>
+        </section>
         <section
           class="settings-panel__analytics"
           data-settings-section="analytics"

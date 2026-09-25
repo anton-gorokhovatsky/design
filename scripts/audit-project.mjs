@@ -469,6 +469,7 @@ const materialThemeDefinitions = materialDefinitions.filter((value) => (
 const materialAccessibilityDefinitions = materialDefinitions.filter((value) => value === "Canvas");
 const materialUsages = (styleSource.match(/var\(--material-01\)/g) || []).length;
 const requiredMaterialSurfaces = [
+  "whoop-readout",
   "axis-north",
   "axis-east",
   "axis-south",
@@ -873,7 +874,7 @@ requireContract(
   navigationIndices,
 );
 requireContract(
-  /<p class="brand"[^>]*>[\s\S]*ANTON GOROKHOVATSKY © 2026[\s\S]*<\/p>/.test(indexSource)
+  /<p class="brand"[^>]*>(?:(?!<\/p>)[\s\S])*Антон Гороховатский(?:(?!<\/p>)[\s\S])*© 2026(?:(?!<\/p>)[\s\S])*<\/p>/.test(indexSource)
     && !/<a class="brand"/.test(indexSource),
   "brand-authorship",
   "The authorship mark must remain a non-interactive signature with the current year.",

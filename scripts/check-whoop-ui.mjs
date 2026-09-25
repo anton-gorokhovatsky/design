@@ -1,0 +1,80 @@
+import assert from "node:assert/strict";
+import { mkdirSync } from "node:fs";
+import { createRequire } from "node:module";
+import { chromium, webkit } from "playwright";
+
+const { startStaticServer } = createRequire(import.meta.url)("./browser-contracts.cjs");
+const engine = process.argv[2] || "chromium";
+assert.ok(["chromium", "webkit"].includes(engine));
+const { server, origin } = await startStaticServer({ projectRoot: process.cwd() });
+const browser = await ({ chromium, webkit })[engine].launch();
+const directory = process.env.PORTFOLIO_UI_ARTIFACT_DIR || ".qa-artifacts/whoop";
+mkdirSync(directory, { recursive: true });
+const errors = [];
+try {
+  for (const width of [1440, 320]) for (const theme of ["light", "dark"]) {
+    const page = await browser.newPage({ viewport: { width, height: width === 320 ? 568 : 900 },
+      colorScheme: theme, reducedMotion: "reduce", isMobile: width === 320, hasTouch: width === 320 });
+    page.on("pageerror", error => errors.push(error.message));
+    const open = async () => {
+      await page.goto(origin, { waitUntil: "load" });
+      await page.evaluate(() => document.fonts.ready);
+    };
+    await open();
+    await page.waitForFunction(() => document.querySelector("[data-whoop-recovery]").textContent.includes("77"));
+    const values = await page.locator(".whoop-metrics").innerText();
+    assert.match(values, /77/);
+    assert.match(values, /02/);
+    assert.match(values, /12,9/);
+    assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--day-enabled").trim()), "1");
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0);
+    await page.waitForFunction(() => [...document.querySelectorAll(".map-node")].every(node => {
+      const r = node.getBoundingClientRect();
+      return document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)?.closest(".map-node") === node;
+    }), null, { timeout: 6000 });
+    if (width === 320) assert.ok((await page.locator("[data-whoop-readout]").boundingBox()).height < 72);
+    await page.screenshot({ path: `${directory}/${engine}-${width}-${theme}.png` });
+    await page.locator(".site-header").screenshot({ path: `${directory}/${engine}-${width}-${theme}-readout.png` });
+    const trigger = page.locator(width === 320 ? ".whoop-compact-trigger" : ".whoop-foot button");
+    await trigger.click();
+    await page.waitForFunction(() => document.activeElement === document.querySelector("[data-whoop-toggle]"));
+    const toggle = page.locator("[data-whoop-toggle]");
+    await toggle.click();
+    assert.equal(await toggle.getAttribute("aria-pressed"), "false");
+    assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--day-enabled").trim()), "0");
+    await page.keyboard.press("Escape");
+    await page.waitForFunction(() => !document.querySelector("[data-settings-panel]").open, null, { timeout: 3000 });
+    await page.waitForFunction(selector => document.activeElement === document.querySelector(selector), width === 320 ? ".whoop-compact-trigger" : ".whoop-foot button", { timeout: 3000 });
+    assert.equal(await page.evaluate(selector => document.activeElement === document.querySelector(selector), width === 320 ? ".whoop-compact-trigger" : ".whoop-foot button"), true,
+      `Focus state ${JSON.stringify(await page.evaluate(() => ({ active: document.activeElement.outerHTML.slice(0,350), body:document.body.className, header: getComputedStyle(document.querySelector('.site-header')).visibility, inert:document.querySelector('.site-header').inert, preview:document.querySelector('.map-hover-preview').className, inspector:document.querySelector('[data-map-inspector]').className })))}`);
+    await open();
+    await page.waitForFunction(() => document.querySelector("[data-whoop-recovery]").textContent.includes("77"));
+    assert.equal(await toggle.getAttribute("aria-pressed"), "false", "Colour preference survives reload.");
+    await trigger.click();
+    await toggle.click();
+    await page.keyboard.press("Escape");
+
+    await page.route("**/__qa/whoop-day.json", async route => {
+      const data = await (await route.fetch()).json();
+      data.fetched_at = new Date(Date.now() - 3 * 3600000).toISOString();
+      await route.fulfill({ json: data });
+    });
+    await open();
+    await page.waitForFunction(() => document.querySelector("[data-whoop-readout]").dataset.stale === "true");
+    assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--day-enabled").trim()), "0");
+    await page.screenshot({ path: `${directory}/${engine}-${width}-${theme}-stale.png` });
+    await page.unroute("**/__qa/whoop-day.json");
+    await page.route("**/__qa/whoop-day.json", route => route.fulfill({ status: 503, json: { error: "Unavailable" } }));
+    await open();
+    await page.waitForFunction(() => document.querySelector("[data-whoop-status]").textContent.includes("недоступен"));
+    assert.equal(await page.locator("[data-whoop-recovery]").innerText(), "—");
+    assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--day-enabled").trim()), "0");
+    console.log(`PASS ${engine} WHOOP ${width} ${theme}: metrics, map targets, settings, preference, stale and unavailable.`);
+    await page.close();
+  }
+  assert.deepEqual(errors, []);
+} finally {
+  await browser.close();
+  server.closeAllConnections();
+  await new Promise(done => server.close(done));
+}

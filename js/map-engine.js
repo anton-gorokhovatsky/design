@@ -358,7 +358,9 @@ const clearMapConsoles = (item, position) => {
     && !mapItems.some(other => {
       if (other.id === item.id) return false;
       const position = mapClearancePositions.get(other.id);
-      const clearance = radius + Math.max(24, other.size) * width / mapNodesRoot.clientWidth / 2;
+      // Controls keep an extra 8 px margin; adjacent point hit areas need only
+      // their actual half sizes. Compact headers otherwise exhaust free space.
+      const clearance = radius - 8 + Math.max(24, other.size) * width / mapNodesRoot.clientWidth / 2;
       return Math.abs(candidate[0] - left - position.x * width / 100) < clearance
         && Math.abs(candidate[1] - top - position.y * height / 100) < clearance;
     });

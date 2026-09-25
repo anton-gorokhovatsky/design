@@ -1,0 +1,7 @@
+{
+  "name": "portfolio-whoop-service",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "node --test worker.test.js", "deploy": "wrangler deploy", "dev": "wrangler dev" },
+  "devDependencies": { "wrangler": "4.140.0" }
+}

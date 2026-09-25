@@ -49,6 +49,7 @@ const contractScripts = [
   "scripts/check-case-flow.mjs",
   "scripts/check-command-placement.mjs",
   "scripts/check-first-visit.mjs",
+  "scripts/check-whoop-ui.mjs",
   "scripts/check-sphere-motion.mjs",
   "scripts/release.mjs",
   "scripts/release-quality.mjs",
@@ -78,6 +79,16 @@ const syntaxSteps = [
 ];
 
 const staticContractSteps = [
+  {
+    label: "WHOOP service authorization and publication",
+    command: process.execPath,
+    args: ["--test", "services/whoop/worker.test.js"],
+  },
+  {
+    label: "WHOOP daily states",
+    command: process.execPath,
+    args: ["scripts/check-whoop-day.mjs"],
+  },
   {
     label: "Release scope selection",
     command: process.execPath,
@@ -214,6 +225,13 @@ const browserContractSteps = [
     args: ["scripts/check-inspector-links.mjs", "webkit"],
   },
 ];
+
+browserContractSteps.push(...["chromium", "webkit"].map((scope) => ({
+  scope,
+  label: "WHOOP daily UI: " + scope,
+  command: process.execPath,
+  args: ["scripts/check-whoop-ui.mjs", scope],
+})));
 
 browserContractSteps.push(...["chromium", "webkit"].map((scope) => ({
   scope,
