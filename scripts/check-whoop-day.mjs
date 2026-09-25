@@ -17,7 +17,10 @@ assert.equal(normalizeDay({ ...day, recovery: { value: "77" }, strain: { value: 
 assert.equal(normalizeDay({ ...day, strain: { value: 22 } }, now).strain, null);
 assert.equal(normalizeDay({ ...day, sleep: { ...day.sleep, minutes: -1 } }, now).sleep, null);
 assert.equal(normalizeDay({ ...day, access_token: "must not propagate", hrv: 50 }, now).access_token, undefined);
-for (const score of [0, 33, 50, 66, 75, 100]) assert.ok(dayPalette(score, 0).rgb.split(",").every(value => Number.isFinite(Number(value))));
-assert.notEqual(dayPalette(25, 12.9).rgb, dayPalette(77, 12.9).rgb);
-assert.ok(dayPalette(77, 18).strength > dayPalette(77, 5).strength);
+for (const [scores, label] of [[[0, 33, 33.49], "Низкое"], [[33.5, 34, 50, 66, 66.49], "Среднее"], [[66.5, 67, 77, 100], "Высокое"]]) {
+  for (const score of scores) assert.equal(dayPalette(score).label, label, `Zone agrees with the displayed ${Math.round(score)}%.`);
+  assert.ok(dayPalette(scores[0]).rgb.split(",").every(value => Number.isFinite(Number(value))));
+}
+assert.equal(new Set([25, 50, 77].map(score => dayPalette(score).rgb)).size, 3);
+assert.deepEqual(dayPalette(77, 18), dayPalette(77, 5), "Accumulated strain cannot change the recovery palette.");
 console.log("WHOOP day: valid zero, partial data, source timestamps, stale fallback and palette boundaries passed.");

@@ -19,17 +19,12 @@ export function normalizeDay(data, now = Date.now()) {
   };
 }
 
-export function dayPalette(recovery, strain) {
-  const value = Math.max(0, Math.min(100, recovery));
-  const anchors = [[0, [190, 102, 64]], [33, [182, 112, 100]], [50, [141, 107, 184]],
-    [66, [115, 105, 182]], [75, [83, 148, 107]], [100, [55, 151, 103]]];
-  const index = anchors.findIndex((entry, i) => i > 0 && value <= entry[0]);
-  const [lo, hi] = [anchors[index - 1], anchors[index]];
-  const t = (value - lo[0]) / (hi[0] - lo[0]);
-  // Decorative intensity, not a percentage of WHOOP's nonlinear strain scale.
-  const level = Math.max(0, Math.min(21, strain ?? 0)) / 21;
-  return { rgb: lo[1].map((v, i) => Math.round(v + (hi[1][i] - v) * t)).join(","),
-    strength: .28 + level * .52, spread: `${38 + level * 52}%` };
+export function dayPalette(recovery) {
+  // WHOOP's recovery zones, rounded exactly like the visible score.
+  const score = Math.round(recovery);
+  if (score < 34) return { rgb: "185,101,83", label: "Низкое" };
+  if (score < 67) return { rgb: "175,143,60", label: "Среднее" };
+  return { rgb: "83,142,103", label: "Высокое" };
 }
 
 function startDay() {
@@ -51,15 +46,13 @@ function startDay() {
 
   function render() {
     const day = snapshot ? normalizeDay(snapshot) : null;
-    const palette = dayPalette(day?.recovery ?? 50, day?.strain);
+    const palette = dayPalette(day?.recovery ?? 50);
     root.style.setProperty("--day-rgb", palette.rgb);
-    root.style.setProperty("--day-strength", String(palette.strength));
-    root.style.setProperty("--day-spread", palette.spread);
     root.style.setProperty("--day-enabled", enabled && day?.colour ? "1" : "0");
     select("toggle").setAttribute("aria-pressed", String(enabled));
     select("toggle-label").textContent = enabled ? "ВКЛЮЧЁН" : "ВЫКЛЮЧЕН";
     readout.dataset.stale = String(Boolean(day?.stale));
-    select("recovery").innerHTML = day?.recovery != null ? `${Math.round(day.recovery)}<small> %</small>` : "—";
+    select("recovery").innerHTML = day?.recovery != null ? `${Math.round(day.recovery)}<small> %</small><span class="whoop-level">${palette.label}</span>` : "—";
     select("sleep").innerHTML = day?.sleep != null ? `${Math.floor(day.sleep / 60)}<small> ч </small>${String(day.sleep % 60).padStart(2, "0")}<small> м</small>` : "—";
     select("strain").innerHTML = day?.strain != null ? `${number.format(day.strain)}<small> / 21</small>` : "—";
     select("date").textContent = day?.ended ? date.format(new Date(day.ended)) : "WHOOP";

@@ -24,10 +24,17 @@ try {
     await page.waitForFunction(() => document.querySelector("[data-whoop-recovery]").textContent.includes("77"));
     const values = await page.locator(".whoop-metrics").innerText();
     assert.match(values, /77/);
+    assert.match(values, /Высокое/);
     assert.match(values, /02/);
     assert.match(values, /12,9/);
     assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--day-enabled").trim()), "1");
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0);
+    if (width > 680) {
+      const header = await page.locator(".site-header").boundingBox();
+      const console = await page.locator(".control-console").boundingBox();
+      assert.equal(header.x - console.x - console.width, 16, "One gap separates the bottom panels.");
+      assert.equal(header.y + header.height, console.y + console.height, "Bottom panels share a baseline.");
+    }
     await page.waitForFunction(() => [...document.querySelectorAll(".map-node")].every(node => {
       const r = node.getBoundingClientRect();
       return document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)?.closest(".map-node") === node;

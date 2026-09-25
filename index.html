@@ -125,7 +125,7 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=47c787e3e61c">
+    <link rel="stylesheet" href="styles.css?v=006722903900">
     <style>
       .map-evidence [data-map-evidence-role-label]{font-family:var(--font-author);font-size:.6rem;font-weight:400;letter-spacing:0}
     </style>
@@ -134,7 +134,7 @@
       {
         "imports": {
           "./js/preferences.js": "./js/preferences.js?v=75ec5c85331d",
-          "./js/whoop-day.js": "./js/whoop-day.js?v=ce576583698d",
+          "./js/whoop-day.js": "./js/whoop-day.js?v=5d7572ef896e",
           "./js/analytics.js": "./js/analytics.js?v=c3ea8f220c9f",
           "./js/signal-field.js": "./js/signal-field.js?v=e249b2dc021a",
           "./js/map-data.js": "./js/map-data.js?v=ec5824e6adbd",
@@ -152,7 +152,7 @@
     <!-- runtime-import-map:end -->
     <!-- Native modules keep their dependencies explicit; see js/README.md. -->
     <script type="module" src="js/preferences.js?v=75ec5c85331d"></script>
-    <script type="module" src="js/whoop-day.js?v=ce576583698d"></script>
+    <script type="module" src="js/whoop-day.js?v=5d7572ef896e"></script>
     <script type="module" src="js/analytics.js?v=c3ea8f220c9f"></script>
     <script type="module" src="js/signal-field.js?v=e249b2dc021a"></script>
     <script type="module" src="js/map-data.js?v=ec5824e6adbd"></script>
@@ -1472,8 +1472,8 @@
             </div>
             <button type="button" data-whoop-toggle aria-pressed="true" aria-label="Цвет дня по данным WHOOP"><span data-whoop-toggle-label>ВКЛЮЧЁН</span></button>
           </div>
-          <p class="settings-whoop__copy">Каждое утро WHOOP оценивает моё восстановление после сна. Эта оценка задаёт палитру карты: тёплую, лиловую или зелёную. Нагрузка накапливается в течение дня — вместе с ней цвет становится насыщеннее и занимает больше пространства.</p>
-          <p class="settings-whoop__copy">Сон — время, которое я действительно спал прошедшей ночью. Он показан рядом с другими значениями, но не меняет оформление. Цвета — моя интерпретация данных.</p>
+          <p class="settings-whoop__copy">Каждое утро WHOOP оценивает моё восстановление после сна. От&nbsp;этой оценки зависит цвет карты: при низком восстановлении (0–33&nbsp;%) — терракотовый, при среднем (34–66&nbsp;%) — охристый, при высоком (67–100&nbsp;%) — зелёный.</p>
+          <p class="settings-whoop__copy">Рядом показаны время сна за&nbsp;прошедшую ночь и&nbsp;нагрузка, накопленная за&nbsp;день. Они не&nbsp;влияют на&nbsp;цвет. Шкала соответствует зонам WHOOP, а&nbsp;оттенки подобраны для&nbsp;сайта.</p>
           <p class="settings-whoop__copy settings-whoop__source" data-whoop-provenance>Получаем данные WHOOP.</p>
         </section>
         <section
