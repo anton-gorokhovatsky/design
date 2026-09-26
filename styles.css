@@ -5206,11 +5206,7 @@ body:has(.command-dock.is-open) .origin-marker__label {
   }
 
   .system-dock {
-
-
-
-
-    padding: 4px;
+    padding: 4px 0;
   }
 
   .system-dock .map-controls {
@@ -5224,7 +5220,6 @@ body:has(.command-dock.is-open) .origin-marker__label {
 
   .system-dock .map-control {
 
-    min-width: 0;
 
 
     border-radius: 14px;
@@ -9000,6 +8995,7 @@ html[data-focus-modality="keyboard"]
 
   .system-dock .map-control {
     width: auto;
+    min-width: 32px;
     height: 52px;
     min-height: 52px;
     flex: 1 1 auto;

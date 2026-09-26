@@ -120,7 +120,9 @@ try {
         await page.waitForFunction(() => {
           const shell = document.querySelector('[data-floating-console="navigation"]').getBoundingClientRect();
           const popup = document.querySelector("[data-command-results]").getBoundingClientRect();
-          return shell.top >= 8 && shell.right <= innerWidth - 7.5
+          // A clamped CSS transform can land at 7.998px in WebKit. Use the
+          // same half-pixel paint tolerance as the other viewport edges.
+          return shell.top >= 7.5 && shell.right <= innerWidth - 7.5
             && Math.abs(popup.top - shell.bottom - 8) < 0.6
             && Math.abs(popup.right - shell.right) < 0.6;
         }, null, { timeout: 3000 });
