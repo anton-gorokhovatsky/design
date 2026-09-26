@@ -2772,7 +2772,7 @@ const auditBrowser = async (client, origin) => {
   }
   await saveScreenshot(client, "mobile-compact-authorship");
   await evaluate(client, openMobileSearchExpression);
-  await delay(140);
+  await waitForGeometryTransition(client, "[data-command-results]");
   const mobileSearchFocused = await evaluate(
     client,
     readMobileSearchFocusedExpression,
