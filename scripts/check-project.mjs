@@ -49,6 +49,7 @@ const contractScripts = [
   "scripts/check-case-flow.mjs",
   "scripts/check-command-placement.mjs",
   "scripts/check-first-visit.mjs",
+  "scripts/check-accessibility.mjs",
   "scripts/check-whoop-ui.mjs",
   "scripts/check-sphere-motion.mjs",
   "scripts/release.mjs",
@@ -225,6 +226,13 @@ const browserContractSteps = [
     args: ["scripts/check-inspector-links.mjs", "webkit"],
   },
 ];
+
+browserContractSteps.push(...["chromium", "webkit"].map(scope => ({
+  scope,
+  label: "Accessibility, painted contrast and text reflow: " + scope,
+  command: process.execPath,
+  args: ["scripts/check-accessibility.mjs", scope],
+})));
 
 browserContractSteps.push(...["chromium", "webkit"].map((scope) => ({
   scope,

@@ -1,10 +1,11 @@
 # Runtime modules
 
-The portfolio has no build step, framework, or production dependency. Twelve
+The portfolio has no build step, framework, or production dependency. Thirteen
 native ES modules use explicit `import`/`export` edges and keep their top-level
 names out of the browser global scope:
 
-1. `preferences.js` — preferences, typography, theme, and clock; no imports.
+1. `preferences.js` — preferences, typography, theme, clock and the shared
+   visible-tab-stop query for modal controllers; no imports.
 2. `analytics.js` — consent and delayed analytics; imports preferences.
 3. `signal-field.js` — decorative canvas and depth grid; imports preferences.
 4. `map-data.js` — deterministic portfolio data; no imports.
@@ -31,7 +32,10 @@ names out of the browser global scope:
     pinned media receiver, focus and background isolation. Reuses the preview
     video instead of creating a second decoder; imports map-engine and panels.
 
+13. `whoop-day.js` — the public daily snapshot, recovery palette, freshness and
+    colour preference; no OAuth credentials or external runtime dependencies.
+
 `scripts/runtime-files.mjs` is the authoritative runtime manifest. `index.html`
-loads the same twelve module URLs and contains a generated import map so every
+loads the same thirteen module URLs and contains a generated import map so every
 direct and transitive request uses its own `?v=<content-hash>`. The release
 command updates that managed block before validation and commit.

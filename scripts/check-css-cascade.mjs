@@ -347,6 +347,9 @@ if (emptyRanges.length > 0) {
 if (redundantRanges.length > 0) {
   failures.push(`${redundantRanges.length} identical cascade declarations remain.`);
 }
+if (overriddenRanges.length > 0) {
+  failures.push(`${overriddenRanges.length} declarations are superseded for the same selector and condition; consolidate the component instead of appending an override.`);
+}
 if (fixedPixelFonts.length > 0) {
   failures.push(`${fixedPixelFonts.length} fixed px font-size declarations remain.`);
 }

@@ -1,7 +1,7 @@
 // Every readout keeps a stationary rounded frame and a single inner scroller.
 import { mapItems } from "./map-data.js";
 import { mapInspector, hideMapPreview, observationRoute } from "./map-engine.js";
-import { reducedMotion } from "./preferences.js";
+import { getTabStops, reducedMotion } from "./preferences.js";
 import { scrollRegionFromKey, observeScrollLens, clearScrollLenses, observeScrollEdges } from "./viewport-ui.js";
 import "./panels.js";
 
@@ -281,8 +281,7 @@ document.addEventListener("keydown", event => {
     event.stopImmediatePropagation();
     close.click();
   } else if (event.key === "Tab") {
-    const focusable = [...mapInspector.querySelectorAll('button, a[href], [tabindex="0"]')]
-      .filter(element => !element.hidden && !element.disabled && element.getClientRects().length);
+    const focusable = getTabStops(mapInspector);
     const first = focusable[0];
     const last = focusable.at(-1);
     if (event.shiftKey && (document.activeElement === first || document.activeElement === identity.querySelector("h2"))) {

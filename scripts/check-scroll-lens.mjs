@@ -43,6 +43,7 @@ try {
   ]) {
     if(process.env.LENS_CASES && !process.env.LENS_CASES.split(',').includes(name)) continue;
     const page=await browser.newPage({viewport:{width,height},colorScheme:theme,reducedMotion:'no-preference'});
+    await page.clock.install();
     page.setDefaultTimeout(8000);
     const result={engine,name,status:'PASS',errors:[],edges:{}};
     page.on('pageerror',e=>result.errors.push(e.message));
@@ -84,6 +85,15 @@ try {
           width:Math.min(bounds.width,port.width)-16,height:60};
         const affected=type==='player'?'iframe':['video','image'].includes(type)?'.scroll-lens-video':target;
         await page.waitForFunction(sel=>{const e=document.querySelector(sel);return e&&(e.style.filter.includes('scroll-ink')||e.style.transform.includes('matrix3d'));},affected);
+        // Wait for the actual displacement map to decode. Then freeze the same
+        // frame for both captures: background animation or a queued lens update
+        // must not be counted as an optical difference (or restore the filter).
+        await page.evaluate(() => Promise.all([...document.querySelectorAll('filter feImage')].map(async e => {
+          const image = new Image(); image.src = e.getAttribute('href') || e.getAttribute('xlink:href');
+          if (image.src) await image.decode();
+        })));
+        await settle(page);
+        await page.clock.pauseAt(await page.evaluate(() => Date.now()) + 100);
         // Compare the former side padding, not just pixels inside the picture.
         // An in-place stretch can pass the latter while missing the reference.
         const gap=bounds.x-port.x, flareClips=type!=='links' && gap>=12 ? [
@@ -106,6 +116,7 @@ try {
           if(e.matches('canvas'))e.closest('.case-scroll').querySelector('video, [data-personal-media-poster]').style.opacity='0';
           const frost=e.parentElement.querySelector('.scroll-lens-frost');if(frost)frost.style.visibility='';
         });
+        await page.clock.resume();
         const difference=await delta(page,visible,plain);
         assert.ok(difference>1.2,'The '+edge+' edge changes actual pixels: '+difference);
         const flare=[];

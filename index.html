@@ -125,7 +125,7 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=73bc66d30caa">
+    <link rel="stylesheet" href="styles.css?v=b4b6f1e7d0b9">
     <style>
       .map-evidence [data-map-evidence-role-label]{font-family:var(--font-author);font-size:.6rem;font-weight:400;letter-spacing:0}
     </style>
@@ -133,7 +133,7 @@
     <script type="importmap" data-runtime-import-map>
       {
         "imports": {
-          "./js/preferences.js": "./js/preferences.js?v=75ec5c85331d",
+          "./js/preferences.js": "./js/preferences.js?v=a80697d7b0cd",
           "./js/whoop-day.js": "./js/whoop-day.js?v=5d7572ef896e",
           "./js/analytics.js": "./js/analytics.js?v=c3ea8f220c9f",
           "./js/signal-field.js": "./js/signal-field.js?v=e249b2dc021a",
@@ -143,15 +143,15 @@
           "./js/sphere-surfaces.js": "./js/sphere-surfaces.js?v=4cf52ae3e8a0",
           "./js/map-engine.js": "./js/map-engine.js?v=9a88b2f3ef28",
           "./js/viewport-ui.js": "./js/viewport-ui.js?v=f11ba04e891d",
-          "./js/panels.js": "./js/panels.js?v=de5f8be88be2",
-          "./js/case-view.js": "./js/case-view.js?v=c7eeb5a33054",
+          "./js/panels.js": "./js/panels.js?v=89b4c5577c93",
+          "./js/case-view.js": "./js/case-view.js?v=40b27efceaab",
           "./js/favicon.js": "./js/favicon.js?v=3aa23538dc2d"
         }
       }
     </script>
     <!-- runtime-import-map:end -->
     <!-- Native modules keep their dependencies explicit; see js/README.md. -->
-    <script type="module" src="js/preferences.js?v=75ec5c85331d"></script>
+    <script type="module" src="js/preferences.js?v=a80697d7b0cd"></script>
     <script type="module" src="js/whoop-day.js?v=5d7572ef896e"></script>
     <script type="module" src="js/analytics.js?v=c3ea8f220c9f"></script>
     <script type="module" src="js/signal-field.js?v=e249b2dc021a"></script>
@@ -161,8 +161,8 @@
     <script type="module" src="js/sphere-surfaces.js?v=4cf52ae3e8a0"></script>
     <script type="module" src="js/map-engine.js?v=9a88b2f3ef28"></script>
     <script type="module" src="js/viewport-ui.js?v=f11ba04e891d"></script>
-    <script type="module" src="js/panels.js?v=de5f8be88be2"></script>
-    <script type="module" src="js/case-view.js?v=c7eeb5a33054"></script>
+    <script type="module" src="js/panels.js?v=89b4c5577c93"></script>
+    <script type="module" src="js/case-view.js?v=40b27efceaab"></script>
     <script type="module" src="js/favicon.js?v=3aa23538dc2d"></script>
     <script type="application/ld+json">
       {
@@ -487,7 +487,7 @@
 
         </div>
 
-        <aside
+        <div
           id="map-inspector"
           class="map-readout map-inspector"
           data-map-inspector
@@ -625,7 +625,7 @@
               role="list"
             ></ul>
           </nav>
-        </aside>
+        </div>
 
         <aside
           class="personal-media"
@@ -1378,7 +1378,7 @@
             >
               <span class="contact-link__index" aria-hidden="true">01</span>
               <span class="contact-link__channel">ЭЛ. ПОЧТА</span>
-              <span class="contact-link__action">anton.gorokhovatsky@gmail.com</span>
+              <span class="contact-link__action">Написать письмо</span>
             </a>
             <a
               href="https://t.me/gorokhovatsky"
@@ -1388,7 +1388,7 @@
             >
               <span class="contact-link__index" aria-hidden="true">02</span>
               <span class="contact-link__channel">TELEGRAM</span>
-              <span class="contact-link__action">@gorokhovatsky</span>
+              <span class="contact-link__action">Открыть чат</span>
             </a>
           </div>
         </div>
@@ -1472,7 +1472,7 @@
             </div>
             <button type="button" data-whoop-toggle aria-pressed="true" aria-label="Цвет дня по данным WHOOP"><span data-whoop-toggle-label>ВКЛЮЧЁН</span></button>
           </div>
-          <p class="settings-whoop__copy">Каждое утро WHOOP оценивает моё восстановление после сна. От&nbsp;этой оценки зависит цвет карты: при низком восстановлении (0–33&nbsp;%) — терракотовый, при среднем (34–66&nbsp;%) — охристый, при высоком (67–100&nbsp;%) — зелёный.</p>
+          <p class="settings-whoop__copy">Каждое утро WHOOP оценивает моё восстановление после сна. От&nbsp;этой оценки зависит оттенок мягкого свечения рядом с&nbsp;моей карточкой: при низком восстановлении (0–33&nbsp;%) — терракотовый, при среднем (34–66&nbsp;%) — охристый, при высоком (67–100&nbsp;%) — зелёный.</p>
           <p class="settings-whoop__copy">Рядом показаны время сна за&nbsp;прошедшую ночь и&nbsp;нагрузка, накопленная за&nbsp;день. Они не&nbsp;влияют на&nbsp;цвет. Шкала соответствует зонам WHOOP, а&nbsp;оттенки подобраны для&nbsp;сайта.</p>
           <p class="settings-whoop__copy settings-whoop__source" data-whoop-provenance>Получаем данные WHOOP.</p>
         </section>

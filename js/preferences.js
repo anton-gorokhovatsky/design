@@ -266,3 +266,11 @@ export {
   root,
   typographUiText,
 };
+// Shared by modal controllers: layout rectangles alone include invisible controls.
+export const getTabStops = (root) => Array.from(root.querySelectorAll(
+  'a[href], button, input, select, textarea, iframe, [tabindex]',
+)).filter(element => element.tabIndex >= 0
+  && !element.matches(':disabled')
+  && !element.closest('[hidden], [inert]')
+  && element.getClientRects().length > 0
+  && getComputedStyle(element).visibility === 'visible');

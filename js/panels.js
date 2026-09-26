@@ -34,6 +34,7 @@ import {
   writeUrlState,
 } from "./map-engine.js";
 import {
+  getTabStops,
   reducedMotion,
   typographUiText,
 } from "./preferences.js";
@@ -383,14 +384,7 @@ contentPanel?.addEventListener("keydown", (event) => {
     return;
   }
 
-  const focusableElements = Array.from(contentPanel.querySelectorAll(
-    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
-  )).filter((element) => (
-    !element.hidden
-    && !element.closest("[hidden]")
-    && !element.closest("[inert]")
-    && element.getClientRects().length > 0
-  ));
+  const focusableElements = getTabStops(contentPanel);
   const firstFocusable = focusableElements[0];
   const lastFocusable = focusableElements.at(-1);
 
