@@ -3,7 +3,6 @@ import { trackPortfolioEvent } from "./analytics.js";
 import { mapItems } from "./map-data.js";
 import { reducedMotion } from "./preferences.js";
 import { signalField } from "./signal-field.js";
-import { createObservationArt } from "./observation-art.js";
 
 const observationSteps = [
   {
@@ -60,16 +59,13 @@ const createObservationRoute = ({
   const observationPause = document.querySelector("[data-observation-pause]");
   const observationNext = document.querySelector("[data-observation-next]");
   const observationStatus = document.querySelector("[data-observation-status]");
-  const art = createObservationArt();
-  const introDuration = 3000;
-  const stepDuration = (90000 - introDuration) / (observationSteps.length - 2);
+  const stepDuration = 90000 / (observationSteps.length - 1);
   let active = false;
   let paused = false;
   let stepIndex = 0;
   let timer = 0;
   let deadline = 0;
-  let remaining = introDuration;
-  let withIntro = false;
+  let remaining = stepDuration;
 
   const clearTimer = () => {
     if (timer) remaining = Math.max(0, deadline - performance.now());
@@ -106,7 +102,7 @@ const createObservationRoute = ({
     if (observationNext) {
       observationNext.textContent = stepIndex === observationSteps.length - 1
         ? "ЗАВЕРШИТЬ"
-        : withIntro && stepIndex === 0 ? "ПРОПУСТИТЬ" : "ДАЛЬШЕ";
+        : "ДАЛЬШЕ";
     }
 
     signalField?.style.setProperty(
@@ -117,7 +113,6 @@ const createObservationRoute = ({
 
   const scheduleStep = () => {
     clearTimer();
-    art.sync(active && !paused);
 
     if (!active || paused || document.hidden) {
       return;
@@ -141,15 +136,13 @@ const createObservationRoute = ({
       return;
     }
 
-    const previousIndex = stepIndex;
     clearTimer();
-    art.clear();
     stepIndex = Math.max(
       0,
       Math.min(observationSteps.length - 1, Number(index) || 0),
     );
     const step = observationSteps[stepIndex];
-    remaining = stepIndex === 0 ? introDuration : stepDuration;
+    remaining = stepDuration;
 
     setCamera(step);
     renderShowcase(step);
@@ -163,10 +156,6 @@ const createObservationRoute = ({
     } else {
       renderSyntheticStep(step);
     }
-
-    if (withIntro && stepIndex === 0) art.intro();
-    else if (!paused && stepIndex === previousIndex + 1
-      && ["private-practice", "principle"].includes(step.id)) art.chapter(step.id);
 
     updateControls();
 
@@ -196,7 +185,6 @@ const createObservationRoute = ({
     } = {},
   ) => {
     clearTimer();
-    art.clear();
     active = false;
     paused = false;
     observationControls?.setAttribute("hidden", "");
@@ -241,7 +229,6 @@ const createObservationRoute = ({
     hideMapPreview({ immediate: true });
     active = true;
     paused = !autoplay || reducedMotion.matches;
-    withIntro = updateHistory && Number(step) === 0;
     signalField?.setAttribute("data-observation-active", "");
 
     if (observationControls) {
@@ -298,7 +285,6 @@ const createObservationRoute = ({
 
     paused = true;
     clearTimer();
-    art.sync(false);
     updateControls();
   });
 

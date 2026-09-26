@@ -7119,86 +7119,13 @@ html[data-theme="dark"] .map-node--sphere .map-node__glyph {
    existing map and MATERIAL / 01 system. They add meaning, not another UI
    family. */
 
-.observation-title-card {
-  position: absolute;
-  z-index: var(--map-layer-media);
-  top: 50%;
-  left: 4%;
-  width: 53%;
-  margin: 0;
-  aspect-ratio: 1200 / 630;
-  overflow: hidden;
-  border-radius: var(--radius-panel, 24px);
-  corner-shape: var(--corner-card-shape);
-  background: #f0f0e9;
-  color: #292e27;
-  container-type: inline-size;
-  transform: translateY(-50%);
-  pointer-events: none;
-}
-.observation-title-card[hidden] { display: none; }
-.observation-title-card :is(img, video, svg) {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.observation-title-card__atlas {
-  opacity: .72;
-  mask-image: linear-gradient(90deg, transparent 30%, #000 78%);
-}
-.observation-title-card video { visibility: hidden; }
-.observation-title-card.has-atlas-frame video { visibility: visible; }
-.observation-title-card.has-atlas-frame [data-atlas-poster] { visibility: hidden; }
-.observation-title-card figcaption {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: clamp(.75rem, 4cqi, 3rem);
-  padding: 4.2% 6%;
-  min-height: 100%;
-  aspect-ratio: 1200 / 630;
-}
-.observation-title-card__eyebrow {
-  display: block;
-  font-size: clamp(.75rem, calc(.5rem + 1cqi), 1.125rem);
-  letter-spacing: .04em;
-  text-transform: uppercase;
-}
-.observation-title-card strong {
-  font-size: clamp(1.375rem, calc(.75rem + 5.5cqi), 4.75rem);
-  line-height: 1.03;
-  letter-spacing: -.04em;
-  font-weight: 500;
-}
-.observation-title-card__caption {
-  max-width: 52%;
-  font-size: clamp(.75rem, calc(.5rem + 1.2cqi), 1.5rem);
-  line-height: 1.35;
-}
-.observation-title-card:not([data-scene="chapter"]) :is(.observation-title-card__filament, svg) { display: none; }
-.observation-title-card[data-scene="chapter"] { background: #10120f; color: #e8e9e0; }
-.observation-title-card[data-scene="chapter"] .observation-title-card__atlas { display: none; }
-.observation-title-card__filament { opacity: .18; }
-.observation-title-card__lines path { fill: none; stroke: #959fff; stroke-width: 1.5; stroke-dasharray: 1; }
-body:has(.observation-title-card:not([hidden])) .observation-showcase { visibility: hidden; opacity: 0; transition: none; }
-body:has(.observation-title-card:not([hidden])) .observation-preview { display: none; }
 @media (max-width: 900px) {
-  .observation-title-card { position: relative; top: auto; left: auto; width: 100%; transform: none; margin-bottom: .75rem; border-radius: 16px; }
-  .observation-title-card__caption { max-width: 90%; }
   .observation-controls > div { flex-wrap: wrap; }
   body:has(.practice-map[data-observation-active]) :is(.control-console, .system-dock) { visibility: hidden; pointer-events: none; }
 }
 @media (min-width: 681px) and (max-width: 900px) {
   .map-inspector:has(.observation-controls:not([hidden])) { left: 16px; right: 16px; width: auto; max-width: none; }
   .observation-controls { grid-template-columns: 1fr; }
-}
-@media (forced-colors: active) {
-  .observation-title-card { background: Canvas; color: CanvasText; }
-  .observation-title-card :is(img, video, svg) { visibility: hidden; }
 }
 
 .observation-showcase {
@@ -8246,11 +8173,11 @@ html[data-theme="light"]
   .brand__role { font-size: .5625rem; }
 }
 
-body.has-content-panel .site-header,
-body.has-command-focus .site-header,
-body.has-constellation-nav .site-header,
-body:has(.map-inspector.is-open) .site-header,
-body:has(.practice-map[data-observation-active]) .site-header {
+body.has-content-panel :is(.site-header, .whoop-field),
+body.has-command-focus :is(.site-header, .whoop-field),
+body.has-constellation-nav :is(.site-header, .whoop-field),
+body:has(.map-inspector.is-open) :is(.site-header, .whoop-field),
+body:has(.practice-map[data-observation-active]) :is(.site-header, .whoop-field) {
   opacity: 0;
   visibility: hidden;
 }
@@ -9329,7 +9256,7 @@ body:has(.practice-map[data-active-kind="all"])
   display: none;
 }
 
-body.has-settings-panel .site-header,
+body.has-settings-panel :is(.site-header, .whoop-field),
 body.has-settings-panel .control-console,
 body.has-settings-panel .system-dock,
 body.has-settings-panel .display-control {
@@ -10400,7 +10327,7 @@ html[data-reduce-motion="true"] :is(
 }
 
 /* Only the open professional case changes; the map retains its release layout. */
-body[data-case-open] :is(.site-header, .system-dock, .display-control, .control-console, .map-note) {
+body[data-case-open] :is(.site-header, .whoop-field, .system-dock, .display-control, .control-console, .map-note) {
   visibility: hidden;
   pointer-events: none;
 }

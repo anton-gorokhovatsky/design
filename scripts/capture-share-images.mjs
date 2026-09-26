@@ -78,35 +78,52 @@ try {
     });
     await page.evaluate(() => document.fonts?.ready);
     if (capture.id === "site") {
-      // Capture the same Atlas composition used by the live route, without video.
+      // A build-only cover: it adds no title card, styles or video to the live route.
       await page.evaluate(async () => {
         document.documentElement.dataset.theme = "light";
-        const card = document.querySelector("[data-observation-title-card]");
-        card.dataset.scene = "intro";
-        card.hidden = false;
-        const poster = card.querySelector("[data-atlas-poster]");
-        poster.src = poster.dataset.src;
-        await poster.decode();
-        const domain = document.createElement("span");
-        domain.className = "observation-share-domain";
-        domain.textContent = "gorokhovatsky.tech";
-        card.querySelector("figcaption").append(domain);
+        const card = document.createElement("figure");
+        card.className = "share-cover";
+        card.innerHTML = `<img src="assets/observation/atlas.svg" alt="">
+          <figcaption>
+            <span class="share-cover__eyebrow">Работы и интересы</span>
+            <strong>Антон<br>Гороховатский</strong>
+            <span class="share-cover__caption">Придумываю, разрабатываю<br>и веду веб-проекты.</span>
+            <span class="share-cover__domain">gorokhovatsky.tech</span>
+          </figcaption>`;
+        document.body.append(card);
+        await card.querySelector("img").decode();
       });
       await page.addStyleTag({ content: `
         html[data-capture="og"] .share-heading,
         html[data-capture="og"] .share-domain { visibility: hidden; }
-        html[data-capture="og"] .observation-title-card {
-          display: block; position: fixed; inset: 0; z-index: 30;
-          width: 1200px; height: 630px; transform: none; border-radius: 0;
+        .share-cover {
+          position: fixed; inset: 0; z-index: 30; width: 1200px; height: 630px;
+          margin: 0; overflow: hidden; background: #f0f0e9; color: #292e27;
+          container-type: inline-size;
         }
-        html[data-capture="og"] .observation-title-card__caption {
-          max-width: 430px; font-size: 1.5rem;
+        .share-cover img {
+          position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+          opacity: .72; mask-image: linear-gradient(90deg, transparent 30%, #000 78%);
         }
-        .observation-share-domain { font-size: 1.125rem; }
+        .share-cover figcaption {
+          position: relative; display: flex; flex-direction: column; align-items: flex-start;
+          justify-content: space-between; gap: clamp(.75rem, 4cqi, 3rem);
+          padding: 4.2% 6%; min-height: 100%; aspect-ratio: 1200 / 630;
+        }
+        .share-cover__eyebrow {
+          display: block; font-size: clamp(.75rem, calc(.5rem + 1cqi), 1.125rem);
+          letter-spacing: .04em; text-transform: uppercase;
+        }
+        .share-cover strong {
+          font-size: clamp(1.375rem, calc(.75rem + 5.5cqi), 4.75rem);
+          line-height: 1.03; letter-spacing: -.04em; font-weight: 500;
+        }
+        .share-cover__caption { max-width: 430px; font-size: 1.5rem; line-height: 1.35; }
+        .share-cover__domain { font-size: 1.125rem; }
       ` });
     }
     await page.locator(
-      capture.id === "site" ? ".observation-title-card" : ".map-inspector.is-open",
+      capture.id === "site" ? ".share-cover" : ".map-inspector.is-open",
     ).waitFor({
       state: "visible",
       timeout: 10000,

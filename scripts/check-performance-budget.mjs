@@ -46,13 +46,12 @@ const budgets = {
   // +1 KiB to keep the map and requested settings section aligned after data arrives.
   // +4 KiB (1.1 KiB gzip) for hover previews clearing the four persistent consoles.
   // +2 KiB for the accepted Cipher grid; no third-party renderer.
-  // +6 KiB for route artwork, measured placement and pause-preserving timing.
-  // The title-card video is fetched only after the visitor starts the overview.
-  runtime: 280 * 1024,
+  // +1 KiB for pause-preserving route timing; decorative artwork was removed.
+  runtime: 275 * 1024,
   fonts: 160 * 1024,
   // Akt preloads all weights in one 110 KiB variable font. The complete family
   // is smaller than four Golos files; the initial two-weight preload was smaller.
-  initialSource: 624 * 1024,
+  initialSource: 619 * 1024,
 };
 const failures = [];
 

@@ -55,16 +55,13 @@ route.
   map and inspector. Seven automatic transitions take 90 seconds, then the final
   contact screen stays paused. It never autostarts and supports previous,
   pause/resume, next, arrow keys, and Escape.
-  Starting it opens a three-second animated Atlas title card; «Пропустить» goes
-  straight to the museum. Six subsequent 14.5-second stops preserve the 90-second
-  total. Filament joins the museum/private-practice and practice/approach chapters
-  inside that time. Pause and background tabs preserve the remaining time;
-  reduced motion starts paused on a still frame. Restored step URLs resume the
-  route without replaying the title card. Media loads only on entering its scene.
-  Artwork: `assets/observation/atlas.svg`, `assets/observation/atlas.mp4`,
-  `assets/observation/filament.svg`. Parameters and sources are recorded in
-  [the artwork notes](docs/observation-art.md). The site share image captures
-  the same Atlas composition with `node scripts/capture-share-images.mjs site`.
+  The first stop immediately shows the museum project; subsequent stops show
+  their content directly, without decorative title cards or chapter transitions.
+  Pause and background tabs preserve the remaining time; reduced motion starts
+  paused. Restored step URLs open the selected stop directly.
+  The static site share cover uses `assets/observation/atlas.svg`; its template
+  belongs only to `scripts/capture-share-images.mjs site`, not the live route.
+  Sources and export settings are recorded in [the artwork notes](docs/observation-art.md).
 - `ПОКАЗАТЬ ХРОНОЛОГИЮ` gives the radar rings a chronological meaning. Only
   nodes with supported dates enter the year orbits; undated principles remain
   visibly outside the chronology rather than receiving guessed dates.
