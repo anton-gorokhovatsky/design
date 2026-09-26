@@ -34,7 +34,7 @@ change("index.html", html, "регулируется в OKLCH", "меняетс�
 change("index.html", html, /styles\.css\?v=[a-f0-9]{12}/.exec(html)[0], "styles.css?v=aaaaaaaaaaaa", true);
 change("index.html", html, /\.\/js\/panels\.js\?v=[a-f0-9]{12}/.exec(html)[0], "./js/panels.js?v=aaaaaaaaaaaa", true);
 
-change("js/observation-route.js", route, "90000 /", "60000 /", false);
+change("js/observation-route.js", route, "90000", "60000", false);
 change("js/panels.js", panels, 'id: "observation"', 'id: "time"', false);
 change("js/panels.js", panels, 'title: "ОБЗОР РАБОТ ЗА 90 СЕКУНД"', 'title: getTitle()', false);
 change("js/panels.js", panels, 'title: "ОБЗОР РАБОТ ЗА 90 СЕКУНД"', 'title: __COPY__', false);
@@ -87,7 +87,7 @@ try {
   writeFileSync(join(directory, "unexpected.txt"), "new file");
   assert.equal(plan().mode, "full", "Untracked files cannot evade preflight");
   rmSync(join(directory, "unexpected.txt"));
-  writeFileSync(join(directory, "js/observation-route.js"), route.replace("90000 /", "60000 /"));
+  writeFileSync(join(directory, "js/observation-route.js"), route.replace("90000", "60000"));
   git("add", "."); git("commit", "-m", "unpublished timing");
   writeFileSync(join(directory, "js/panels.js"), panels);
   git("add", "."); git("commit", "-m", "another copy edit");

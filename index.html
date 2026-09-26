@@ -39,18 +39,18 @@
     <meta property="og:url" content="https://gorokhovatsky.tech/">
     <meta
       property="og:image"
-      content="https://gorokhovatsky.tech/assets/og-signal.jpg?v=049686a0a4ac"
+      content="https://gorokhovatsky.tech/assets/og-signal.jpg?v=5d1911e08c24"
     >
     <meta
       property="og:image:secure_url"
-      content="https://gorokhovatsky.tech/assets/og-signal.jpg?v=049686a0a4ac"
+      content="https://gorokhovatsky.tech/assets/og-signal.jpg?v=5d1911e08c24"
     >
     <meta property="og:image:type" content="image/jpeg">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta
       property="og:image:alt"
-      content="Антон Гороховатский. Придумываю, разрабатываю и веду веб-проекты. Светлая карта работ и интересов с проектными узлами и созвездием."
+      content="Антон Гороховатский. Придумываю, разрабатываю и веду веб-проекты. Работы и интересы: имя на фоне рельефа из точек и крестов."
     >
     <meta name="twitter:card" content="summary_large_image">
     <meta
@@ -63,11 +63,11 @@
     >
     <meta
       name="twitter:image"
-      content="https://gorokhovatsky.tech/assets/og-signal.jpg?v=049686a0a4ac"
+      content="https://gorokhovatsky.tech/assets/og-signal.jpg?v=5d1911e08c24"
     >
     <meta
       name="twitter:image:alt"
-      content="Антон Гороховатский. Придумываю, разрабатываю и веду веб-проекты. Светлая карта работ и интересов с проектными узлами и созвездием."
+      content="Антон Гороховатский. Придумываю, разрабатываю и веду веб-проекты. Работы и интересы: имя на фоне рельефа из точек и крестов."
     >
     <link rel="canonical" href="https://gorokhovatsky.tech/">
     <script>
@@ -118,7 +118,7 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=a91a86c7c33a">
+    <link rel="stylesheet" href="styles.css?v=88f2718a4f3d">
     <style>
       .map-evidence [data-map-evidence-role-label]{font-family:var(--font-author);font-size:.6rem;font-weight:400;letter-spacing:0}
     </style>
@@ -132,7 +132,8 @@
           "./js/cipher-field.js": "./js/cipher-field.js?v=646034d9be18",
           "./js/signal-field.js": "./js/signal-field.js?v=e59af2b0e792",
           "./js/map-data.js": "./js/map-data.js?v=ec5824e6adbd",
-          "./js/observation-route.js": "./js/observation-route.js?v=c0036c773139",
+          "./js/observation-route.js": "./js/observation-route.js?v=6b4c324570f9",
+          "./js/observation-art.js": "./js/observation-art.js?v=f527bfc82e8c",
           "./js/personal-media.js": "./js/personal-media.js?v=524375a4d005",
           "./js/sphere-surfaces.js": "./js/sphere-surfaces.js?v=4cf52ae3e8a0",
           "./js/map-engine.js": "./js/map-engine.js?v=d1503472b6ee",
@@ -151,7 +152,8 @@
     <script type="module" src="js/cipher-field.js?v=646034d9be18"></script>
     <script type="module" src="js/signal-field.js?v=e59af2b0e792"></script>
     <script type="module" src="js/map-data.js?v=ec5824e6adbd"></script>
-    <script type="module" src="js/observation-route.js?v=c0036c773139"></script>
+    <script type="module" src="js/observation-art.js?v=f527bfc82e8c"></script>
+    <script type="module" src="js/observation-route.js?v=6b4c324570f9"></script>
     <script type="module" src="js/personal-media.js?v=524375a4d005"></script>
     <script type="module" src="js/sphere-surfaces.js?v=4cf52ae3e8a0"></script>
     <script type="module" src="js/map-engine.js?v=d1503472b6ee"></script>
@@ -214,12 +216,12 @@
           {
             "@type": "ImageObject",
             "@id": "https://gorokhovatsky.tech/#share-image",
-            "url": "https://gorokhovatsky.tech/assets/og-signal.jpg?v=049686a0a4ac",
-            "contentUrl": "https://gorokhovatsky.tech/assets/og-signal.jpg?v=049686a0a4ac",
+            "url": "https://gorokhovatsky.tech/assets/og-signal.jpg?v=5d1911e08c24",
+            "contentUrl": "https://gorokhovatsky.tech/assets/og-signal.jpg?v=5d1911e08c24",
             "encodingFormat": "image/jpeg",
             "width": 1200,
             "height": 630,
-            "caption": "Антон Гороховатский. Придумываю, разрабатываю и веду веб-проекты. Светлая карта работ и интересов с проектными узлами и созвездием."
+            "caption": "Антон Гороховатский. Придумываю, разрабатываю и веду веб-проекты. Работы и интересы: имя на фоне рельефа из точек и крестов."
           }
         ]
       }
@@ -367,6 +369,17 @@
             </div>
           </div>
 
+          <figure class="observation-title-card" data-observation-title-card hidden>
+            <img class="observation-title-card__atlas" data-atlas-poster data-src="assets/observation/atlas.svg" alt="" aria-hidden="true">
+            <video class="observation-title-card__atlas" data-atlas-video muted playsinline loop preload="none" aria-hidden="true"></video>
+            <img class="observation-title-card__filament" data-filament-poster data-src="assets/observation/filament.svg" alt="" aria-hidden="true">
+            <svg class="observation-title-card__lines" viewBox="0 0 1200 630" aria-hidden="true" data-filament-lines></svg>
+            <figcaption>
+              <span class="observation-title-card__eyebrow" data-observation-card-eyebrow>Работы и интересы</span>
+              <strong data-observation-card-title>Антон<br>Гороховатский</strong>
+              <span class="observation-title-card__caption" data-observation-card-caption>Придумываю, разрабатываю<br>и веду веб-проекты.</span>
+            </figcaption>
+          </figure>
           <div
             class="observation-showcase"
             data-observation-showcase

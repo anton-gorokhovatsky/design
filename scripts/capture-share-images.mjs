@@ -78,47 +78,35 @@ try {
     });
     await page.evaluate(() => document.fonts?.ready);
     if (capture.id === "site") {
-      // The social cover has its own editorial scale; no website UI is changed.
-      await page.evaluate(() => {
+      // Capture the same Atlas composition used by the live route, without video.
+      await page.evaluate(async () => {
         document.documentElement.dataset.theme = "light";
-        document.querySelector(".share-heading__eyebrow").textContent = "Работы и интересы";
-        document.querySelector(".share-heading strong").textContent = "Антон\nГороховатский";
-        document.querySelector(".share-heading__role").textContent = "Придумываю, разрабатываю и\u00a0веду веб-проекты.";
-        document.querySelector(".share-domain").textContent = "gorokhovatsky.tech";
+        const card = document.querySelector("[data-observation-title-card]");
+        card.dataset.scene = "intro";
+        card.hidden = false;
+        const poster = card.querySelector("[data-atlas-poster]");
+        poster.src = poster.dataset.src;
+        await poster.decode();
+        const domain = document.createElement("span");
+        domain.className = "observation-share-domain";
+        domain.textContent = "gorokhovatsky.tech";
+        card.querySelector("figcaption").append(domain);
       });
       await page.addStyleTag({ content: `
-        html[data-capture="og"] { --bg: #eeede7; }
-        html[data-capture="og"] .practice-map::after {
-          content: ""; position: absolute; inset: 0; z-index: 18;
-          background: linear-gradient(90deg, #eeede7 0%, #eeede7 37%, rgba(238,237,231,.96) 45%, rgba(238,237,231,.3) 62%, transparent 77%);
-          pointer-events: none;
+        html[data-capture="og"] .share-heading,
+        html[data-capture="og"] .share-domain { visibility: hidden; }
+        html[data-capture="og"] .observation-title-card {
+          display: block; position: fixed; inset: 0; z-index: 30;
+          width: 1200px; height: 630px; transform: none; border-radius: 0;
         }
-        html[data-capture="og"] .map-camera { transform: translateX(220px) scale(1.04); }
-        html[data-capture="og"] .share-heading {
-          top: 61px; left: 64px; width: 630px; max-width: none; gap: 0;
-          color: #222521;
+        html[data-capture="og"] .observation-title-card__caption {
+          max-width: 430px; font-size: 1.5rem;
         }
-        html[data-capture="og"] .share-heading__eyebrow {
-          display: block; margin-bottom: 46px; font-size: 1.125rem;
-          font-weight: 400; letter-spacing: .05em; text-transform: uppercase; color: #63665f;
-        }
-        html[data-capture="og"] .share-heading__eyebrow::before { display: none; }
-        html[data-capture="og"] .share-heading strong {
-          white-space: pre-line; font-size: 4.5rem; line-height: 1.04;
-          letter-spacing: -.045em; font-weight: 600;
-        }
-        html[data-capture="og"] .share-heading__role {
-          max-width: 470px; margin-top: 29px; font-size: 1.875rem;
-          line-height: 1.3; letter-spacing: -.02em; font-weight: 400; color: #53564f;
-        }
-        html[data-capture="og"] .share-domain {
-          top: auto; right: auto; left: 64px; bottom: 49px;
-          font-size: 1.25rem; font-weight: 400; letter-spacing: 0; color: #304cff;
-        }
+        .observation-share-domain { font-size: 1.125rem; }
       ` });
     }
     await page.locator(
-      capture.id === "site" ? ".share-heading" : ".map-inspector.is-open",
+      capture.id === "site" ? ".observation-title-card" : ".map-inspector.is-open",
     ).waitFor({
       state: "visible",
       timeout: 10000,
@@ -140,7 +128,7 @@ try {
     if (capture.id === "site") {
       const version = createHash("sha256").update(readFileSync(capture.outputPath)).digest("hex").slice(0, 12);
       const indexPath = join(projectRoot, "index.html");
-      const alt = "Антон Гороховатский. Придумываю, разрабатываю и веду веб-проекты. Светлая карта работ и интересов с проектными узлами и созвездием.";
+      const alt = "Антон Гороховатский. Придумываю, разрабатываю и веду веб-проекты. Работы и интересы: имя на фоне рельефа из точек и крестов.";
       const html = readFileSync(indexPath, "utf8")
         .replaceAll(/og-signal\.jpg\?v=[a-f0-9]{12}/g, `og-signal.jpg?v=${version}`)
         .replace(/(<meta\s+(?:property="og:image:alt"|name="twitter:image:alt")\s+content=")[^"]*(")/g, `$1${alt}$2`)

@@ -7119,6 +7119,88 @@ html[data-theme="dark"] .map-node--sphere .map-node__glyph {
    existing map and MATERIAL / 01 system. They add meaning, not another UI
    family. */
 
+.observation-title-card {
+  position: absolute;
+  z-index: var(--map-layer-media);
+  top: 50%;
+  left: 4%;
+  width: 53%;
+  margin: 0;
+  aspect-ratio: 1200 / 630;
+  overflow: hidden;
+  border-radius: var(--radius-panel, 24px);
+  corner-shape: var(--corner-card-shape);
+  background: #f0f0e9;
+  color: #292e27;
+  container-type: inline-size;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.observation-title-card[hidden] { display: none; }
+.observation-title-card :is(img, video, svg) {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.observation-title-card__atlas {
+  opacity: .72;
+  mask-image: linear-gradient(90deg, transparent 30%, #000 78%);
+}
+.observation-title-card video { visibility: hidden; }
+.observation-title-card.has-atlas-frame video { visibility: visible; }
+.observation-title-card.has-atlas-frame [data-atlas-poster] { visibility: hidden; }
+.observation-title-card figcaption {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: clamp(.75rem, 4cqi, 3rem);
+  padding: 4.2% 6%;
+  min-height: 100%;
+  aspect-ratio: 1200 / 630;
+}
+.observation-title-card__eyebrow {
+  display: block;
+  font-size: clamp(.75rem, calc(.5rem + 1cqi), 1.125rem);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.observation-title-card strong {
+  font-size: clamp(1.375rem, calc(.75rem + 5.5cqi), 4.75rem);
+  line-height: 1.03;
+  letter-spacing: -.04em;
+  font-weight: 500;
+}
+.observation-title-card__caption {
+  max-width: 52%;
+  font-size: clamp(.75rem, calc(.5rem + 1.2cqi), 1.5rem);
+  line-height: 1.35;
+}
+.observation-title-card:not([data-scene="chapter"]) :is(.observation-title-card__filament, svg) { display: none; }
+.observation-title-card[data-scene="chapter"] { background: #10120f; color: #e8e9e0; }
+.observation-title-card[data-scene="chapter"] .observation-title-card__atlas { display: none; }
+.observation-title-card__filament { opacity: .18; }
+.observation-title-card__lines path { fill: none; stroke: #959fff; stroke-width: 1.5; stroke-dasharray: 1; }
+body:has(.observation-title-card:not([hidden])) .observation-showcase { visibility: hidden; opacity: 0; transition: none; }
+body:has(.observation-title-card:not([hidden])) .observation-preview { display: none; }
+@media (max-width: 900px) {
+  .observation-title-card { position: relative; top: auto; left: auto; width: 100%; transform: none; margin-bottom: .75rem; border-radius: 16px; }
+  .observation-title-card__caption { max-width: 90%; }
+  .observation-controls > div { flex-wrap: wrap; }
+  body:has(.practice-map[data-observation-active]) :is(.control-console, .system-dock) { visibility: hidden; pointer-events: none; }
+}
+@media (min-width: 681px) and (max-width: 900px) {
+  .map-inspector:has(.observation-controls:not([hidden])) { left: 16px; right: 16px; width: auto; max-width: none; }
+  .observation-controls { grid-template-columns: 1fr; }
+}
+@media (forced-colors: active) {
+  .observation-title-card { background: Canvas; color: CanvasText; }
+  .observation-title-card :is(img, video, svg) { visibility: hidden; }
+}
+
 .observation-showcase {
   display: none;
 }
@@ -9901,7 +9983,9 @@ html[data-focus-modality="keyboard"]
 .content-panel__more:hover { color: var(--signal); }
 .content-panel__more[hidden] { display: none; }
 .content-panel__more:focus-visible { outline: 2px solid var(--signal); outline-offset: -2px; }
-.content-panel__more .map-related__arrow { transform: rotate(90deg); }
+.content-panel__more .map-related__arrow { width: .75rem; height: .75rem; transform: rotate(90deg); }
+.content-panel__more .map-related__arrow::before { display: none; }
+.content-panel__more .map-related__arrow::after { right: .1875rem; width: .375rem; height: .375rem; }
 .content-panel__more[data-direction="up"] .map-related__arrow { transform: rotate(-90deg); }
 
 /* WHOOP colours the field beneath the shared material, never the UI signal. */

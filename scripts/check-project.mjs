@@ -286,6 +286,10 @@ browserContractSteps.push(...["chromium", "webkit"].map((scope) => ({
   args: ["scripts/check-scroll-lens.mjs", scope],
 })));
 // Exercise the integrated reading/playback path before the broader matrices.
+browserContractSteps.push(...["chromium", "webkit"].map(scope => ({
+  scope, label: "Overview artwork and timing: " + scope, command: process.execPath,
+  args: ["scripts/check-observation-art.mjs", scope],
+})));
 // Coverage and failure policy are unchanged; a broken lifecycle now fails fast.
 browserContractSteps.unshift(...["chromium", "webkit"].map((scope) => ({
   scope, label: "Case reading lifecycle: " + scope, command: process.execPath, args: ["scripts/check-case-flow.mjs", scope],
