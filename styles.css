@@ -8095,7 +8095,7 @@ html[data-theme="light"]
     position: static;
     grid-row: 2;
     justify-self: center;
-    font-size: clamp(.75rem, calc(.71rem + .085vw), .8125rem);
+    font-size: clamp(.5625rem, calc(.53rem + .085vw), .6875rem);
     font-weight: 400;
     line-height: 1.2;
     color: var(--content-muted);
