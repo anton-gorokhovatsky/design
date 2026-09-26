@@ -39,7 +39,7 @@ const assetFiles = walkFiles(assetsRoot)
   .sort();
 const sourceOnlyAssets = new Set([
   "assets/favicon.svg",
-  "assets/fonts/OFL-GolosText.txt",
+  "assets/fonts/OFL-Akt.txt",
 ]);
 const derivedAssets = new Set(
   [...source.matchAll(/assets\/reels\/([a-zA-Z0-9_-]+)\.mp4/g)]

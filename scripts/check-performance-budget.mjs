@@ -45,9 +45,12 @@ const budgets = {
   // +7 KiB (2.8 KiB gzip) for the daily feed and palette; no client dependencies.
   // +1 KiB to keep the map and requested settings section aligned after data arrives.
   // +4 KiB (1.1 KiB gzip) for hover previews clearing the four persistent consoles.
-  runtime: 272 * 1024,
+  // +2 KiB for the accepted Cipher grid; no third-party renderer.
+  runtime: 274 * 1024,
   fonts: 160 * 1024,
-  initialSource: 600 * 1024,
+  // Akt preloads all weights in one 110 KiB variable font. The complete family
+  // is smaller than four Golos files; the initial two-weight preload was smaller.
+  initialSource: 616 * 1024,
 };
 const failures = [];
 

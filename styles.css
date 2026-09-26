@@ -1,7 +1,4 @@
-@font-face{font-family:"Golos Text";src:url(assets/fonts/GolosText-Regular.woff2);font-weight:400;font-display:swap;}
-@font-face{font-family:"Golos Text";src:url(assets/fonts/GolosText-Medium.woff2);font-weight:500;font-display:swap;}
-@font-face{font-family:"Golos Text";src:url(assets/fonts/GolosText-SemiBold.woff2);font-weight:600;font-display:swap;}
-@font-face{font-family:"Golos Text";src:url(assets/fonts/GolosText-Bold.woff2);font-weight:700;font-display:swap;}
+@font-face{font-family:Akt;src:url(assets/fonts/Akt-Variable.woff2) format("woff2");font-weight:100 900;font-display:swap;}
 @font-face{font-family:Rene;src:url(assets/fonts/Rene-Regular.woff2);font-display:swap;}
 
 :root {
@@ -28,9 +25,9 @@
   --tone-practice: #6e9484;
   --header-height: 52px;
   --gutter: 12px;
-  --font-sans: "Golos Text", Arial, Helvetica, sans-serif;
-  --font-mono: "Golos Text", Arial, Helvetica, sans-serif;
-  --font-serif: "Golos Text", Arial, Helvetica, sans-serif;
+  --font-sans: Akt, Arial, Helvetica, sans-serif;
+  --font-mono: var(--font-sans);
+  --font-serif: var(--font-sans);
   --font-ascii: var(--font-sans);
   --font-author:Rene,var(--font-sans);
   --motion-enter: cubic-bezier(0.16, 1, 0.3, 1);
@@ -3687,7 +3684,7 @@ body.has-content-panel .constellation-nav {
   }
 }
 
-/* Golos Text carries interface, content, and independently positioned canvas glyphs.
+/* Akt carries interface, content, and independently positioned canvas glyphs.
    One local glass material remains shared across every interface surface. */
 
 .map-hover-preview,

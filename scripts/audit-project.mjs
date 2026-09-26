@@ -768,40 +768,37 @@ warnContract(
   rawBezierValues,
 );
 
-for (const token of ["font-sans", "font-mono", "font-serif"]) {
+requireContract(
+  /--font-sans:\s*Akt,\s*Arial,\s*Helvetica,\s*sans-serif/.test(styleSource),
+  "font-contract",
+  "The shared text family must resolve to self-hosted Akt with system fallbacks.",
+);
+for (const token of ["font-mono", "font-serif"]) {
   requireContract(
     new RegExp(
-      `--${token}:\\s*"Golos Text",\\s*Arial,\\s*Helvetica,\\s*sans-serif`,
+      `--${token}:\\s*var\\(--font-sans\\)`,
     ).test(styleSource),
     "font-contract",
-    `${token} must resolve to the self-hosted Golos Text family with system fallbacks.`,
+    `${token} must inherit the shared Akt token.`,
   );
 }
 requireContract(
   /--font-ascii:\s*var\(--font-sans\)/.test(styleSource),
   "font-ascii",
-  "Canvas glyphs must inherit the shared Golos Text token.",
+  "Canvas glyphs must inherit the shared Akt token.",
 );
 
-for (const weight of [400, 500, 600, 700]) {
-  requireContract(
-    new RegExp(
-      `@font-face\\s*\\{[^}]*font-family:\\s*"Golos Text";`
-        + `[^}]*font-weight:\\s*${weight};`
-        + `[^}]*font-display:\\s*swap;`,
-      "s",
-    ).test(styleSource),
-    "font-face-golos",
-    `Golos Text weight ${weight} must be declared locally with font-display: swap.`,
-  );
-}
+requireContract(
+  /@font-face\s*\{[^}]*font-family:\s*Akt;[^}]*src:\s*url\(assets\/fonts\/Akt-Variable\.woff2\)[^}]*font-weight:\s*100 900;[^}]*font-display:\s*swap;/.test(styleSource),
+  "font-face-akt",
+  "Akt must declare its local variable font, weight range, and font-display: swap.",
+);
 
 requireContract(
-  /signalContext\.font\s*=\s*`\$\{fontSize\}px "Golos Text", Arial, Helvetica, sans-serif`/.test(
-    scriptSource,
-  ),
+  /getPropertyValue\("--font-ascii"\)/.test(scriptSource)
+    && /signalContext\.font\s*=\s*`\$\{fontSize\}px \$\{signalFont\}`/.test(scriptSource),
   "font-canvas",
-  "The canvas constellation must use Golos Text with the shared system fallbacks.",
+  "The canvas constellation must read the shared typography token.",
 );
 
 requireContract(

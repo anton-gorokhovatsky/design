@@ -204,7 +204,7 @@ route.
   and rearranged inside the viewport without changing the behavior of their
   controls. Consistency means predictable principles, not identical shapes.
   Crisp strokes remain reserved for active controls and focus.
-- Self-hosted Golos Text carries every textual interface, content layer, and
+- Self-hosted variable Akt carries every textual interface, content layer, and
   the central point constellation in weights 400/500/600/700.
 
 ## Recruiter and share routes
@@ -382,5 +382,5 @@ the static checks and final result must succeed. If interrupted after commit,
 resumes this barrier from a clean checkout without a second commit
 or a blind rerun of Quality.
 
-Golos Text font files are self-hosted under the SIL Open Font License 1.1; the
-license is included at `assets/fonts/OFL-GolosText.txt`.
+Akt is self-hosted under the SIL Open Font License 1.1; the
+license is included at `assets/fonts/OFL-Akt.txt`.

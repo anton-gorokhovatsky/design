@@ -4,6 +4,7 @@ import {
   reducedMotion,
   root,
 } from "./preferences.js";
+import { composeCipher } from "./cipher-field.js";
 
 const asciiCharacters = " .·:+*#%@";
 const createSignal = (columns, rows, phase = 0, seed = 0) => {
@@ -334,7 +335,9 @@ const drawSignalConstellation = (time = performance.now()) => {
   const pointStep = isCompact ? 2 : 1;
   const fieldScale = Math.min(width * 0.82, height * 0.92);
   const breathing = 1 + Math.sin(elapsed * 0.0008) * 0.018;
-  const signalColor = getComputedStyle(root).getPropertyValue("--signal").trim() || "#2448ed";
+  const signalStyle = getComputedStyle(root);
+  const signalColor = signalStyle.getPropertyValue("--signal").trim() || "#2448ed";
+  const signalFont = signalStyle.getPropertyValue("--font-ascii").trim();
   const signalAlphaBoost = root.dataset.theme === "dark" ? 1.28 : 0.9;
   const glyphSize = Math.max(6, Math.min(10.5, fieldScale / 64));
   const cameraDistance = fieldScale * 1.42;
@@ -436,7 +439,7 @@ const drawSignalConstellation = (time = performance.now()) => {
   signalContext.fillStyle = signalColor;
   signalContext.textAlign = "center";
   signalContext.textBaseline = "middle";
-  signalContext.shadowBlur = (isCompact ? 1.5 : 2.5) * signalAlphaBoost;
+  signalContext.shadowBlur = 0;
   signalContext.shadowColor = signalColor;
 
   const projectedPoints = [];
@@ -467,11 +470,12 @@ const drawSignalConstellation = (time = performance.now()) => {
     });
   }
 
-  projectedPoints.sort((pointA, pointB) => pointA.z - pointB.z);
+  const renderedPoints = composeCipher(projectedPoints, fieldScale);
+  renderedPoints.sort((pointA, pointB) => pointA.z - pointB.z);
 
   let currentFontSize = 0;
 
-  for (const point of projectedPoints) {
+  for (const point of renderedPoints) {
     const depthTone = clampSignal(
       (point.z / (fieldScale * 0.58) + 1) / 2,
       0,
@@ -483,7 +487,7 @@ const drawSignalConstellation = (time = performance.now()) => {
 
     if (fontSize !== currentFontSize) {
       currentFontSize = fontSize;
-      signalContext.font = `${fontSize}px "Golos Text", Arial, Helvetica, sans-serif`;
+      signalContext.font = `${fontSize}px ${signalFont}`;
     }
 
     signalContext.globalAlpha = clampSignal(

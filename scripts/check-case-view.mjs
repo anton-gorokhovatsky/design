@@ -75,7 +75,7 @@ for (const engine of [process.argv[2] || 'chromium']) {
       assert.ok(result.type.labels.every(size => Math.abs(size-result.type.labels[0])<.02),'Service labels share one type role');
       assert.ok(result.type.body >= 16,'Reading text retains the browser default size or larger');
       assert.ok(Math.abs(result.type.role-result.type.body)<.02,'The long role uses the shared reading size');
-      assert.match(result.type.roleFamily,/Golos/,'Long role copy uses Golos');
+      assert.match(result.type.roleFamily,/Akt/,'Long role copy uses Akt');
       assert.match(result.type.roleLabelFamily,/Rene/,'The role label retains the author face');
       assert.equal(result.type.mediaCount,1,'The case uses the original single video');
       assert.equal(await page.locator('.map-axis-label,.map-node-label,.origin-marker__label').evaluateAll(elements=>elements.every(el=>getComputedStyle(el).visibility==='hidden')),true,'Backdrop labels cannot collide with case edges');
