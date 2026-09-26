@@ -93,7 +93,11 @@ try {
           if (image.src) await image.decode();
         })));
         await settle(page);
-        await page.clock.pauseAt(await page.evaluate(() => Date.now()) + 100);
+        // Freeze wall time first: a slow protocol round trip must not make the
+        // pause target land in the past. Timers stop on the following call.
+        const captureTime = await page.evaluate(() => Date.now());
+        await page.clock.setFixedTime(captureTime);
+        await page.clock.pauseAt(captureTime);
         // Compare the former side padding, not just pixels inside the picture.
         // An in-place stretch can pass the latter while missing the reference.
         const gap=bounds.x-port.x, flareClips=type!=='links' && gap>=12 ? [
@@ -116,6 +120,7 @@ try {
           if(e.matches('canvas'))e.closest('.case-scroll').querySelector('video, [data-personal-media-poster]').style.opacity='0';
           const frost=e.parentElement.querySelector('.scroll-lens-frost');if(frost)frost.style.visibility='';
         });
+        await page.clock.setSystemTime(captureTime);
         await page.clock.resume();
         const difference=await delta(page,visible,plain);
         assert.ok(difference>1.2,'The '+edge+' edge changes actual pixels: '+difference);
