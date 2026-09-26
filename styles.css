@@ -4734,8 +4734,8 @@ body:has(.command-dock.is-open) .origin-marker__label {
 
   .control-console .constellation-nav {
     position: fixed;
-    top: 8px;
-    right: 8px;
+    top: calc(max(12px, env(safe-area-inset-top)) + 4px);
+    right: 20px;
     bottom: auto;
     left: auto;
 
@@ -6413,16 +6413,16 @@ body:has(.command-dock.is-open) .map-links.has-active-relation {
   }
 
   .control-console .constellation-nav {
-    width: 42px;
-    height: 42px;
+    width: 44px;
+    height: 44px;
     overflow: hidden;
     border: 0;
     border-radius: 21px;
-    background: var(--material-01);
+    background: transparent;
     box-shadow: none;
     corner-shape: superellipse(1.7);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
     transition:
       width 260ms var(--motion-shift),
       height 260ms var(--motion-shift),
@@ -6444,8 +6444,8 @@ body:has(.command-dock.is-open) .map-links.has-active-relation {
     z-index: 2;
     top: 0;
     right: 0;
-    width: 42px;
-    height: 42px;
+    width: 44px;
+    height: 44px;
     border: 0;
     background: transparent;
     box-shadow: none;

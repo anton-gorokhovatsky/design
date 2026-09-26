@@ -516,7 +516,7 @@ const unexpectedMaterialSurfaces = materialSurfaceNames.filter(
   (name) => !requiredMaterialSurfaces.includes(name),
 );
 const invalidMaterialModes = materialSurfaceTags.filter(
-  ({ mode }) => !["always", "desktop", "mobile"].includes(mode),
+  ({ mode }) => !["always", "desktop", "mobile", "none"].includes(mode),
 );
 const dynamicMaterialSurfaces = [
   {

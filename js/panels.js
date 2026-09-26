@@ -60,6 +60,10 @@ const compactConstellationNav = window.matchMedia("(max-width: 680px)");
 let isConstellationNavOpen = false;
 
 const syncConstellationNavInteractivity = () => {
+  if (constellationNav) {
+    constellationNav.dataset.materialActive = constellationNav.matches(".is-open, .is-command-close")
+      ? "mobile" : "none";
+  }
   if (constellationNavOrbit) {
     constellationNavOrbit.inert = compactConstellationNav.matches && !isConstellationNavOpen;
   }
@@ -484,6 +488,7 @@ const syncCompactCommandDismiss = (isOpen) => {
     "is-command-close",
     usesNavigationToggle,
   );
+  syncConstellationNavInteractivity();
 
   if (constellationNavToggle) {
     constellationNavToggle.setAttribute(
