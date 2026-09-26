@@ -42,6 +42,28 @@ try {
     if (width === 320) assert.ok((await page.locator("[data-whoop-readout]").boundingBox()).height < 72);
     await page.screenshot({ path: `${directory}/${engine}-${width}-${theme}.png` });
     await page.locator(".site-header").screenshot({ path: `${directory}/${engine}-${width}-${theme}-readout.png` });
+    if (width > 680) {
+      const card = page.locator(".site-header"), before = await card.boundingBox();
+      await page.mouse.move(before.x + before.width / 2, before.y + 8);
+      await page.mouse.down();
+      await page.mouse.move(before.x + before.width / 2 - 200, before.y - 142, { steps: 8 });
+      await page.mouse.up();
+      const after = await card.boundingBox();
+      assert.ok(Math.abs(after.x - before.x + 200) < 1 && Math.abs(after.y - before.y + 150) < 1,
+        "The author card moves with its free surface.");
+      const copy = await page.locator(".brand__role").boundingBox();
+      await page.mouse.move(copy.x + 2, copy.y + 6);
+      await page.mouse.down();
+      await page.mouse.move(copy.x + 100, copy.y + 6, { steps: 8 });
+      await page.mouse.up();
+      assert.ok((await page.evaluate(() => getSelection().toString())).length > 0, "Author copy remains selectable.");
+      assert.deepEqual(await card.boundingBox(), after, "Selecting text does not drag the card.");
+      await page.screenshot({ path: `${directory}/${engine}-${theme}-author-moved.png` });
+      await page.setViewportSize({ width: 320, height: 568 });
+      assert.equal(await card.getAttribute("data-drag-x"), "0.00", "Mobile resets desktop offsets.");
+      assert.ok(Math.abs((await card.boundingBox()).x - 12) < 1);
+      await page.setViewportSize({ width, height: 900 });
+    }
     const trigger = page.locator(width === 320 ? ".whoop-compact-trigger" : ".whoop-foot button");
     await trigger.click();
     await page.waitForFunction(() => document.activeElement === document.querySelector("[data-whoop-toggle]"));

@@ -65,8 +65,13 @@ function startDay() {
     if (!day) {
       select("provenance").textContent = "Данные пока недоступны. Карта сохраняет исходное оформление.";
     } else {
-      const strainDate = day.strainUpdated ? `${date.format(new Date(day.strainUpdated))}, ${time.format(new Date(day.strainUpdated))} мск` : "ещё не рассчитана";
-      select("provenance").textContent = `${dayLabel}. Получены ${date.format(new Date(day.fetched))} в ${time.format(new Date(day.fetched))} мск. Запись нагрузки в WHOOP: ${strainDate}. Обновление зависит от синхронизации браслета и подключения к WHOOP.${day.stale ? " Новых данных пока нет, поэтому карта сохраняет исходную палитру." : ""}`;
+      const stamp = value => {
+        const instant = new Date(value), label = date.format(instant);
+        const key = value => new Date(value).toLocaleDateString("ru-RU", { timeZone: "Europe/Moscow" });
+        return `${day.ended && key(value) === key(day.ended) ? "" : `${label} `}в ${time.format(instant)} мск`;
+      };
+      const strainDate = day.strainUpdated ? `обновлена ${stamp(day.strainUpdated)}` : "ещё не рассчитана";
+      select("provenance").textContent = `${dayLabel}. Получены ${stamp(day.fetched)}. Нагрузка в WHOOP ${strainDate}. Обновления поступают после синхронизации браслета с WHOOP.${day.stale ? " Новых данных пока нет, поэтому карта сохраняет исходную палитру." : ""}`;
     }
     select("readout").querySelector(".whoop-compact-trigger").setAttribute("aria-label", `${dayLabel}. Показатели WHOOP и цвет дня`);
   }

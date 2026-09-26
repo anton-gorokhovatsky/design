@@ -479,9 +479,10 @@ const readReactiveRelationsContract = async (client, mapId) => {
       opacityFrame = window.requestAnimationFrame(sampleActiveOpacity);
     };
     opacityFrame = window.requestAnimationFrame(sampleActiveOpacity);
-    const getMaximumCurveDeflection = (path) => {
+    const getRelativeCurveDeflection = (path) => {
+      const bounds = path.ownerSVGElement.getBoundingClientRect();
       const numbers = (path.getAttribute("d") || "")
-        .match(/-?\\d+(?:\\.\\d+)?/g)?.map(Number) || [];
+        .match(/-?\\d+(?:\\.\\d+)?/g)?.map((value, index) => Number(value) * (index % 2 ? bounds.height : bounds.width) / 100) || [];
       if (numbers.length !== 8) return 0;
       const [startX, startY, control1X, control1Y, control2X, control2Y, endX, endY]
         = numbers;
@@ -494,7 +495,7 @@ const readReactiveRelationsContract = async (client, mapId) => {
       return Math.max(
         distanceFromChord(control1X, control1Y),
         distanceFromChord(control2X, control2Y),
-      );
+      ) / length;
     };
     window.setTimeout(() => {
       window.cancelAnimationFrame(opacityFrame);
@@ -510,8 +511,8 @@ const readReactiveRelationsContract = async (client, mapId) => {
           !path.classList.contains("is-active-relation")
         )).length,
         connectedCount: paths.filter((path) => path.isConnected).length,
-        minimumActiveDeflection: active.length
-          ? Math.min(...active.map(getMaximumCurveDeflection))
+        minimumRelativeDeflection: active.length
+          ? Math.min(...active.map(getRelativeCurveDeflection))
           : 0,
         minimumActiveOpacity,
         changedInactive: changed.filter(path => !path.classList.contains("is-active-relation"))
@@ -1389,7 +1390,7 @@ const auditBrowser = async (client, origin) => {
     || reactiveGarageContract.changedActiveCount !== 9
     || reactiveGarageContract.changedInactiveCount !== 0
     || reactiveGarageContract.connectedCount !== 29
-    || reactiveGarageContract.minimumActiveDeflection < 0.8
+    || reactiveGarageContract.minimumRelativeDeflection < 0.02
     || reactiveGarageContract.minimumActiveOpacity < 0.2
     || reactiveGarageContract.pendingAnimations !== 0
   ) {
@@ -1414,7 +1415,7 @@ const auditBrowser = async (client, origin) => {
     || reactiveChildContract.changedActiveCount !== 1
     || reactiveChildContract.changedInactiveCount !== 0
     || reactiveChildContract.connectedCount !== 29
-    || reactiveChildContract.minimumActiveDeflection < 0.8
+    || reactiveChildContract.minimumRelativeDeflection < 0.02
     || reactiveChildContract.minimumActiveOpacity < 0.2
     || reactiveChildContract.pendingAnimations !== 0
   ) {

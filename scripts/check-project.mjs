@@ -51,6 +51,7 @@ const contractScripts = [
   "scripts/check-first-visit.mjs",
   "scripts/check-accessibility.mjs",
   "scripts/check-whoop-ui.mjs",
+  "scripts/check-map-routes.mjs",
   "scripts/check-sphere-motion.mjs",
   "scripts/release.mjs",
   "scripts/release-quality.mjs",
@@ -232,6 +233,13 @@ browserContractSteps.push(...["chromium", "webkit"].map(scope => ({
   label: "Accessibility, painted contrast and text reflow: " + scope,
   command: process.execPath,
   args: ["scripts/check-accessibility.mjs", scope],
+})));
+
+browserContractSteps.push(...["chromium", "webkit"].map((scope) => ({
+  scope,
+  label: "Map route geometry: " + scope,
+  command: process.execPath,
+  args: ["scripts/check-map-routes.mjs", scope],
 })));
 
 browserContractSteps.push(...["chromium", "webkit"].map((scope) => ({

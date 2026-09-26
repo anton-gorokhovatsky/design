@@ -4894,7 +4894,7 @@ body:has(.command-dock.is-open) .origin-marker__label {
   height: 42px;
 }
 
-/* Three edge modules can be spatially arranged like instruments. Their
+/* Edge modules can be spatially arranged like instruments. Their
    controls stay clickable; only free material around them starts a drag. */
 
 .control-console,
@@ -4955,6 +4955,16 @@ body:has(.command-dock.is-open) .origin-marker__label {
 }
 
 @media (min-width: 681px) and (hover: hover) and (pointer: fine) {
+  .site-header[data-floating-console] {
+    pointer-events: auto;
+    transform: translate3d(var(--console-drag-x, 0px), var(--console-drag-y, 0px), 0);
+  }
+
+  [data-floating-console] [data-console-text] {
+    pointer-events: auto;
+    cursor: text;
+  }
+
   [data-floating-console] {
     cursor: grab;
     touch-action: none;

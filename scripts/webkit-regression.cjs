@@ -250,9 +250,10 @@ const routeAudit = async (page, mapId, expectedCount) => {
     const stateId = phase === "hover"
       ? field?.dataset.focusId || ""
       : field?.dataset.selectedId || "";
-    const getMaximumCurveDeflection = (path) => {
+    const getRelativeCurveDeflection = (path) => {
+      const bounds = path.ownerSVGElement.getBoundingClientRect();
       const numbers = (path.getAttribute("d") || "")
-        .match(/-?\d+(?:\.\d+)?/g)?.map(Number) || [];
+        .match(/-?\d+(?:\.\d+)?/g)?.map((value, index) => Number(value) * (index % 2 ? bounds.height : bounds.width) / 100) || [];
       if (numbers.length !== 8) return 0;
       const [startX, startY, control1X, control1Y, control2X, control2Y, endX, endY]
         = numbers;
@@ -265,10 +266,10 @@ const routeAudit = async (page, mapId, expectedCount) => {
       return Math.max(
         distanceFromChord(control1X, control1Y),
         distanceFromChord(control2X, control2Y),
-      );
+      ) / length;
     };
-    const minimumActiveDeflection = active.length
-      ? Math.min(...active.map(getMaximumCurveDeflection))
+    const minimumRelativeDeflection = active.length
+      ? Math.min(...active.map(getRelativeCurveDeflection))
       : 0;
     const changedActiveCount = active.filter((path) => changed.includes(path)).length;
     const changedInactiveCount = changed.filter((path) => (
@@ -286,7 +287,7 @@ const routeAudit = async (page, mapId, expectedCount) => {
       changedInactive: changed.filter(path => !path.classList.contains("is-active-relation"))
         .map(path => ({ key: path.dataset.relationKey,
           before: baseline[paths.indexOf(path)], after: path.getAttribute("d") })),
-      minimumActiveDeflection,
+      minimumRelativeDeflection,
       pendingAnimations: paths.reduce((total, path) => (
         total
         + path.querySelectorAll("animate").length
@@ -297,7 +298,7 @@ const routeAudit = async (page, mapId, expectedCount) => {
         || changedActiveCount !== count
         || (requiresExactRelationshipFamily && changed.length !== count)
         || (requiresExactRelationshipFamily && changedInactiveCount !== 0)
-        || minimumActiveDeflection < 0.8
+        || minimumRelativeDeflection < 0.02
         || paths.some((path) => (
           path.querySelector("animate") || path.dataset.relationMorphing === "true"
         ))
@@ -402,9 +403,10 @@ const childRelationsAudit = async (browser) => {
   const state = await page.evaluate(() => new Promise((resolve) => {
     const paths = Array.from(document.querySelectorAll("[data-map-links] path"));
     const baseline = paths.map((path) => path.getAttribute("d"));
-    const getMaximumCurveDeflection = (path) => {
+    const getRelativeCurveDeflection = (path) => {
+      const bounds = path.ownerSVGElement.getBoundingClientRect();
       const numbers = (path.getAttribute("d") || "")
-        .match(/-?\d+(?:\.\d+)?/g)?.map(Number) || [];
+        .match(/-?\d+(?:\.\d+)?/g)?.map((value, index) => Number(value) * (index % 2 ? bounds.height : bounds.width) / 100) || [];
       if (numbers.length !== 8) return 0;
       const [startX, startY, control1X, control1Y, control2X, control2Y, endX, endY]
         = numbers;
@@ -417,7 +419,7 @@ const childRelationsAudit = async (browser) => {
       return Math.max(
         distanceFromChord(control1X, control1Y),
         distanceFromChord(control2X, control2Y),
-      );
+      ) / length;
     };
     document.querySelector('[data-map-id="narkomfin"]')?.click();
     const readState = () => {
@@ -431,8 +433,8 @@ const childRelationsAudit = async (browser) => {
         changedInactiveCount: changed.filter((path) => (
           !path.classList.contains("is-active-relation")
         )).length,
-        minimumActiveDeflection: active.length
-          ? Math.min(...active.map(getMaximumCurveDeflection))
+        minimumRelativeDeflection: active.length
+          ? Math.min(...active.map(getRelativeCurveDeflection))
           : 0,
         pendingAnimations: paths.reduce((total, path) => (
           total
@@ -449,7 +451,7 @@ const childRelationsAudit = async (browser) => {
         && nextState.changedCount === 1
         && nextState.changedActiveCount === 1
         && nextState.changedInactiveCount === 0
-        && nextState.minimumActiveDeflection >= 0.8
+        && nextState.minimumRelativeDeflection >= 0.02
         && nextState.pendingAnimations === 0;
       if (ready || performance.now() - startedAt >= 5000) {
         resolve(nextState);
@@ -468,7 +470,7 @@ const childRelationsAudit = async (browser) => {
       || state.changedCount !== 1
       || state.changedActiveCount !== 1
       || state.changedInactiveCount !== 0
-      || state.minimumActiveDeflection < 0.8
+      || state.minimumRelativeDeflection < 0.02
       || state.pendingAnimations !== 0,
   };
 };

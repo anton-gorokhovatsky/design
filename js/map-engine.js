@@ -1514,13 +1514,21 @@ if (mapLinksRoot) {
       const portStart = firstAngle - portPadding;
       const portEnd = lastAngle + portPadding;
 
-      measuredChildren.forEach(({ item, geometry }, index) => {
+      measuredChildren.forEach(({ item, geometry, angle }, index) => {
         const portProgress = measuredChildren.length > 1
           ? index / (measuredChildren.length - 1)
           : 0.5;
-        const portAngle = portStart + (portEnd - portStart) * portProgress;
         const parentRadius = parentGeometry.radius + 3;
         const childRadius = geometry.radius + 2;
+        const fanAngle = portStart + (portEnd - portStart) * portProgress;
+        // Keep each port facing its child, especially when the gap is tiny.
+        const gap = Math.max(0, Math.hypot(
+          geometry.centerX - parentGeometry.centerX,
+          geometry.centerY - parentGeometry.centerY,
+        ) - parentRadius - childRadius);
+        const portLimit = Math.min(Math.PI / 12, gap / (parentRadius * 3));
+        const portShift = Math.atan2(Math.sin(fanAngle - angle), Math.cos(fanAngle - angle));
+        const portAngle = angle + Math.max(-portLimit, Math.min(portLimit, portShift));
         const relationKey = `${parentId}:${item.id}`;
         const path = mapLinksRoot.querySelector(
           `path[data-relation-key="${relationKey}"]`,
@@ -1543,22 +1551,19 @@ if (mapLinksRoot) {
         const distance = Math.hypot(deltaX, deltaY) || 1;
         const targetDirectionX = deltaX / distance;
         const targetDirectionY = deltaY / distance;
-        const sourceLead = Math.min(48, Math.max(18, distance * 0.24));
-        const targetLead = Math.min(38, Math.max(14, distance * 0.2));
+        const sourceLead = Math.min(48, distance * 0.24);
+        const targetLead = Math.min(38, distance * 0.2);
         const control1PixelX = sourcePixelX + Math.cos(portAngle) * sourceLead;
         const control1PixelY = sourcePixelY + Math.sin(portAngle) * sourceLead;
         const control2PixelX = targetPixelX - targetDirectionX * targetLead;
         const control2PixelY = targetPixelY - targetDirectionY * targetLead;
         const toViewBoxX = (value) => (value / bounds.width) * 100;
         const toViewBoxY = (value) => (value / bounds.height) * 100;
-        const sourceX = toViewBoxX(sourcePixelX);
-        const sourceY = toViewBoxY(sourcePixelY);
-        const targetX = toViewBoxX(targetPixelX);
-        const targetY = toViewBoxY(targetPixelY);
-        const control1X = toViewBoxX(control1PixelX);
-        const control1Y = toViewBoxY(control1PixelY);
-        const control2X = toViewBoxX(control2PixelX);
-        const control2Y = toViewBoxY(control2PixelY);
+        const curve = (x1, y1, x2, y2) => formatMapLinkCurve([
+          toViewBoxX(sourcePixelX), toViewBoxY(sourcePixelY),
+          toViewBoxX(x1), toViewBoxY(y1), toViewBoxX(x2), toViewBoxY(y2),
+          toViewBoxX(targetPixelX), toViewBoxY(targetPixelY),
+        ]);
         const normalPixelX = -deltaY / distance;
         const normalPixelY = deltaX / distance;
         const relationSpread = measuredChildren.length > 1
@@ -1569,28 +1574,15 @@ if (mapLinksRoot) {
           : 1;
         const relationTension = Math.min(
           30,
-          Math.max(14, distance * (0.09 + Math.abs(relationSpread) * 0.025)),
+          distance * (0.09 + Math.abs(relationSpread) * 0.025),
         );
-        const reactiveControl1X = toViewBoxX(
+        const baseD = curve(control1PixelX, control1PixelY, control2PixelX, control2PixelY);
+        const reactiveD = curve(
           control1PixelX + normalPixelX * relationTension * relationDirection,
-        );
-        const reactiveControl1Y = toViewBoxY(
           control1PixelY + normalPixelY * relationTension * relationDirection,
-        );
-        const reactiveControl2X = toViewBoxX(
           control2PixelX - normalPixelX * relationTension * relationDirection,
-        );
-        const reactiveControl2Y = toViewBoxY(
           control2PixelY - normalPixelY * relationTension * relationDirection,
         );
-        const baseD = `M${sourceX.toFixed(3)} ${sourceY.toFixed(3)}`
-          + `C${control1X.toFixed(3)} ${control1Y.toFixed(3)}`
-          + ` ${control2X.toFixed(3)} ${control2Y.toFixed(3)}`
-          + ` ${targetX.toFixed(3)} ${targetY.toFixed(3)}`;
-        const reactiveD = `M${sourceX.toFixed(3)} ${sourceY.toFixed(3)}`
-          + `C${reactiveControl1X.toFixed(3)} ${reactiveControl1Y.toFixed(3)}`
-          + ` ${reactiveControl2X.toFixed(3)} ${reactiveControl2Y.toFixed(3)}`
-          + ` ${targetX.toFixed(3)} ${targetY.toFixed(3)}`;
 
         path.dataset.baseD = baseD;
         const existingGeometry = mapLinkGeometries.get(path);

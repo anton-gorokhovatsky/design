@@ -501,6 +501,7 @@ const consoleInteractiveSelector = [
   "select",
   "label",
   "form",
+  "[data-console-text]",
   "[contenteditable='true']",
 ].join(",");
 
