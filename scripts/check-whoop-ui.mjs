@@ -60,6 +60,7 @@ try {
       assert.deepEqual(await card.boundingBox(), after, "Selecting text does not drag the card.");
       await page.screenshot({ path: `${directory}/${engine}-${theme}-author-moved.png` });
       await page.setViewportSize({ width: 320, height: 568 });
+      await page.waitForFunction(() => document.querySelector('.site-header').dataset.dragX === '0.00', null, { timeout: 2000 });
       assert.equal(await card.getAttribute("data-drag-x"), "0.00", "Mobile resets desktop offsets.");
       assert.ok(Math.abs((await card.boundingBox()).x - 12) < 1);
       await page.setViewportSize({ width, height: 900 });
