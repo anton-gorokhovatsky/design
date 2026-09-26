@@ -7745,9 +7745,9 @@ html[data-theme="dark"] {
     ),
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--signal) 11%, var(--bg)) 0,
-      color-mix(in srgb, var(--signal) 6%, var(--bg)) 38%,
-      var(--bg) 100%
+      color-mix(in srgb, var(--signal) 11%, transparent) 0,
+      color-mix(in srgb, var(--signal) 6%, transparent) 38%,
+      transparent 100%
     );
   box-shadow:
     0 -1px 0 color-mix(in srgb, var(--signal) 15%, transparent),
@@ -7758,6 +7758,7 @@ html[data-theme="dark"] {
 
 html[data-theme="dark"] .orbital-horizon {
   border-top-color: color-mix(in srgb, var(--signal) 18%, transparent);
+  /* The plane adds its own light, while the daily field continues beneath it. */
   background:
     radial-gradient(
       ellipse at 22% 6%,
@@ -7771,9 +7772,9 @@ html[data-theme="dark"] .orbital-horizon {
     ),
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--signal-dark) 22%, var(--bg)) 0,
-      color-mix(in srgb, var(--signal) 4%, var(--bg)) 42%,
-      var(--bg) 100%
+      color-mix(in srgb, var(--signal-dark) 22%, transparent) 0,
+      color-mix(in srgb, var(--signal) 4%, transparent) 42%,
+      transparent 100%
     );
   box-shadow:
     0 -1px 0 color-mix(in srgb, var(--signal) 12%, transparent),
