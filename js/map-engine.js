@@ -894,6 +894,76 @@ const hideMapPreview = ({ immediate = false } = {}) => {
   }
 };
 
+// Hover is a transient preview inside the map; the four persistent consoles
+// keep their place. Choose the nearest clear position using the actual frames.
+const placeMapPreview = () => {
+  const gap = 16;
+  const consoles = [...document.querySelectorAll('[data-floating-console]')]
+    .filter(element => getComputedStyle(element).visibility !== 'hidden')
+    .map(element => element.getBoundingClientRect()).filter(rect => rect.width && rect.height);
+  for (const property of ['--preview-offset-x', '--preview-offset-y', '--preview-fit-width']) mapPreview.style.removeProperty(property);
+  mapPreview.classList.remove('is-compact-preview');
+  // Measure the final layout, independently of the entrance animation.
+  mapPreview.style.animation = 'none';
+  mapPreview.style.transition = 'none';
+  mapPreview.style.transform = 'translate(-50%, -50%)';
+  const naturalWidth = mapPreview.getBoundingClientRect().width;
+  const frames = () => [...mapPreview.querySelectorAll(mapPreview.classList.contains('has-reel-mosaic')
+    ? '.map-hover-preview__mosaic-main, .map-hover-preview__mosaic-slot, .map-hover-preview__readout'
+    : '.map-hover-preview__media, .map-hover-preview__readout')]
+    .map(element => element.getBoundingClientRect()).filter(rect => rect.width && rect.height);
+  const findPosition = () => {
+    const boxes = frames(), xs = new Set([0]), ys = new Set([0]);
+    for (const box of boxes) {
+      xs.add(gap - box.left); xs.add(innerWidth - gap - box.right);
+      ys.add(gap - box.top); ys.add(innerHeight - gap - box.bottom);
+      for (const obstacle of consoles) {
+        xs.add(obstacle.left - gap - box.right); xs.add(obstacle.right + gap - box.left);
+        ys.add(obstacle.top - gap - box.bottom); ys.add(obstacle.bottom + gap - box.top);
+      }
+    }
+    let best = null;
+    for (const x of xs) for (const y of ys) {
+      if (best && x*x + y*y >= best.distance) continue;
+      if (boxes.some(box => box.left+x < gap-.5 || box.right+x > innerWidth-gap+.5
+        || box.top+y < gap-.5 || box.bottom+y > innerHeight-gap+.5
+        || consoles.some(obstacle => box.left+x < obstacle.right+gap-.5 && box.right+x > obstacle.left-gap+.5
+          && box.top+y < obstacle.bottom+gap-.5 && box.bottom+y > obstacle.top-gap+.5))) continue;
+      best = { x, y, distance: x*x + y*y };
+    }
+    return best;
+  };
+  let position = findPosition();
+  if (!position) {
+    mapPreview.classList.add('is-compact-preview');
+    const starts = [gap, ...consoles.map(rect => rect.right + gap)];
+    const ends = [innerWidth - gap, ...consoles.map(rect => rect.left - gap)];
+    const widths = new Set(starts.flatMap(left => ends.map(right => Math.min(naturalWidth, right - left))));
+    for (let width = naturalWidth; width >= 176; width = Math.floor(width * .86)) widths.add(width);
+    for (const width of [...widths].filter(width => width >= 176).sort((a, b) => b - a)) {
+      mapPreview.style.setProperty('--preview-fit-width', `${width}px`);
+      position = findPosition();
+      if (position) break;
+    }
+  }
+  if (position) {
+    mapPreview.style.setProperty('--preview-offset-x', `${position.x}px`);
+    mapPreview.style.setProperty('--preview-offset-y', `${position.y}px`);
+  }
+  for (const property of ['animation', 'transition', 'transform']) mapPreview.style.removeProperty(property);
+  return Boolean(position);
+};
+let previewLayoutFrame = 0;
+const scheduleMapPreviewPlacement = () => {
+  cancelAnimationFrame(previewLayoutFrame);
+  if (mapPreview?.classList.contains('is-visible')) previewLayoutFrame = requestAnimationFrame(() => {
+    if (!placeMapPreview()) hideMapPreview({ immediate: true });
+  });
+};
+window.addEventListener('resize', scheduleMapPreviewPlacement, { passive: true });
+const previewConsoleResize = new ResizeObserver(scheduleMapPreviewPlacement);
+document.querySelectorAll('[data-floating-console]').forEach(element => previewConsoleResize.observe(element));
+
 const showMapPreview = (item) => {
   if (
     !mapPreview
@@ -966,7 +1036,8 @@ const showMapPreview = (item) => {
     previewShowFrame = 0;
 
     if (!mapInspector?.classList.contains("is-open")) {
-      mapPreview.classList.add("is-visible");
+      if (placeMapPreview()) mapPreview.classList.add("is-visible");
+      else hideMapPreview({ immediate: true });
     }
   });
 };

@@ -44,7 +44,8 @@ const budgets = {
   // +1 KiB for work-list overflow detection and native scroll navigation.
   // +7 KiB (2.8 KiB gzip) for the daily feed and palette; no client dependencies.
   // +1 KiB to keep the map and requested settings section aligned after data arrives.
-  runtime: 268 * 1024,
+  // +4 KiB (1.1 KiB gzip) for hover previews clearing the four persistent consoles.
+  runtime: 272 * 1024,
   fonts: 160 * 1024,
   initialSource: 600 * 1024,
 };

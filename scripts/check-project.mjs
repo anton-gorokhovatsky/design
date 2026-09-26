@@ -51,6 +51,7 @@ const contractScripts = [
   "scripts/check-first-visit.mjs",
   "scripts/check-accessibility.mjs",
   "scripts/check-whoop-ui.mjs",
+  "scripts/check-hover-layout.mjs",
   "scripts/check-map-routes.mjs",
   "scripts/check-sphere-motion.mjs",
   "scripts/release.mjs",
@@ -240,6 +241,13 @@ browserContractSteps.push(...["chromium", "webkit"].map((scope) => ({
   label: "Map route geometry: " + scope,
   command: process.execPath,
   args: ["scripts/check-map-routes.mjs", scope],
+})));
+
+browserContractSteps.push(...["chromium", "webkit"].map((scope) => ({
+  scope,
+  label: "Hover preview and persistent consoles: " + scope,
+  command: process.execPath,
+  args: ["scripts/check-hover-layout.mjs", scope],
 })));
 
 browserContractSteps.push(...["chromium", "webkit"].map((scope) => ({

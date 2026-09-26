@@ -2098,13 +2098,17 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
   bottom: 24px;
 }
 
+.map-hover-preview,
+.map-hover-preview * { transition-property: opacity; }
+
 .map-hover-preview {
   position: absolute;
   z-index: var(--map-layer-media);
-  top: 50%;
-  left: 50%;
+  top: calc(50% + var(--preview-offset-y, 0px));
+  left: calc(50% + var(--preview-offset-x, 0px));
   display: grid;
   width: clamp(210px, 20vw, 340px);
+  max-width: var(--preview-fit-width, none);
   grid-template-rows: 1fr;
 
   border: 0;
@@ -2116,9 +2120,7 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
   pointer-events: none;
   transform: translate(-50%, -47%) scale(0.96);
   transform-origin: center;
-  transition:
-    opacity 180ms var(--ease-out),
-    transform 300ms var(--ease-move);
+  transition: opacity 180ms var(--ease-out);
 }
 
 .practice-map:has(.map-hover-preview.is-visible) .signal-constellation {
@@ -6788,6 +6790,20 @@ html[data-theme="dark"] .map-node--sphere .map-node__glyph {
   justify-self: center;
 }
 
+/* Keep the complete main reel when the surrounding consoles leave no room
+   for its two supplementary chapters. */
+.map-hover-preview.is-compact-preview .map-hover-preview__mosaic { display: none; }
+.map-hover-preview.is-compact-preview .map-hover-preview__media { aspect-ratio: auto; }
+.map-hover-preview.is-compact-preview .map-hover-preview__media > .map-hover-preview__mosaic-main {
+  position: relative;
+  top: auto;
+  left: auto;
+  width: 100%;
+}
+.map-hover-preview.is-compact-preview .map-hover-preview__readout { width: 100%; grid-template-columns: minmax(0, 1fr); }
+.map-hover-preview.is-compact-preview .map-hover-preview__index { display: none; }
+.map-hover-preview.is-compact-preview .map-hover-preview__readout > :is(strong, span:last-child) { grid-column: 1; }
+
 /* Section changes move the map camera and tint only the field beneath the
    common material. The surfaces themselves keep the exact shared recipe. */
 
@@ -8154,7 +8170,6 @@ body.has-content-panel .site-header,
 body.has-command-focus .site-header,
 body.has-constellation-nav .site-header,
 body:has(.map-inspector.is-open) .site-header,
-body:has(.map-hover-preview.is-visible) .site-header,
 body:has(.practice-map[data-observation-active]) .site-header {
   opacity: 0;
   visibility: hidden;
@@ -10220,6 +10235,13 @@ html[data-contrast="true"] .whoop-field { display: none; }
   to { translate: 0 0; scale: 1; }
 }
 
+/* A placed hover preview expands inside its reserved bounds. Translating the
+   whole group during entrance would cross a neighbouring console again. */
+@keyframes map-preview-reveal {
+  from { transform: translate(-50%, -50%) scale(.96); }
+  to { transform: translate(-50%, -50%) scale(1); }
+}
+
 /* Opacity on a container would turn it into a backdrop root and leave its
    glass children unblurred for the duration of the entrance. */
 .map-inspector.is-open,
@@ -10242,6 +10264,8 @@ html[data-contrast="true"] .whoop-field { display: none; }
 .map-hover-preview.is-visible {
   animation-duration: 280ms;
 }
+
+.map-hover-preview.is-visible { animation-name: map-preview-reveal; }
 
 /* Returning to a reading position keeps that content still; only its header
    reappears. A fresh section continues to use the full entrance. */
