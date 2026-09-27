@@ -9915,25 +9915,27 @@ html[data-focus-modality="keyboard"]
 .content-panel__more .map-related__arrow::after { right: .1875rem; width: .375rem; height: .375rem; }
 .content-panel__more[data-direction="up"] .map-related__arrow { transform: rotate(-90deg); }
 
-/* WHOOP colours the field beneath the shared material, never the UI signal. */
+/* A local Atlas relief follows its author card beneath the shared material. */
 :root { --day-rgb: 83, 142, 103; --day-enabled: 0; --author-card-width: min(21.75rem, max(272px, calc(100vw - 1028px))); }
 .whoop-field {
-  --day-x: 82%;
-  --day-y: 86%;
-  --day-width: 48%;
-  --day-height: 42%;
-  --day-glow: .38;
   position: absolute;
   z-index: -1;
-  inset: 0;
+  width: 0;
+  height: 0;
   pointer-events: none;
-  background: radial-gradient(ellipse var(--day-width) var(--day-height) at var(--day-x) var(--day-y),
-    rgba(var(--day-rgb), var(--day-glow)), rgba(var(--day-rgb), .12) 45%, transparent 85%);
+  mask-image: radial-gradient(ellipse at 58% 56%, #000 30%, transparent 72%);
   opacity: var(--day-enabled);
-  transition: opacity 650ms var(--motion-shift);
+  transition: opacity 180ms var(--motion-shift);
 }
-html[data-theme="dark"] .whoop-field {
-  --day-glow: .26;
+.whoop-field::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgb(var(--day-rgb));
+  mask: url("assets/atlas-terrain.svg") center / cover no-repeat;
+}
+html[data-theme="dark"] .whoop-field::before {
+  background: color-mix(in srgb, rgb(var(--day-rgb)) 80%, white);
 }
 .site-header[data-material-surface="whoop-readout"],
 .site-header[data-material-surface="whoop-readout"] * { transition-property: none; }
@@ -9990,7 +9992,6 @@ html[data-theme="dark"] .whoop-field {
   }
 }
 @media (max-width: 680px) {
-  .whoop-field { --day-x: 72%; --day-y: 8%; --day-width: 82%; --day-height: 40%; }
   .site-header[data-material-surface="whoop-readout"] { width: calc(100vw - 24px); max-width: none; padding: .75rem 1rem; border-radius: 18px; }
   .site-header .brand { padding-right: 38px; font-size: .8125rem; gap: .25rem; }
   .site-header .brand__name { gap: .3125rem; }

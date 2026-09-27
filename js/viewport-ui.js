@@ -510,11 +510,22 @@ const getConsoleOffset = (module) => ({
   y: Number.parseFloat(module.dataset.dragY || "0") || 0,
 });
 
+const authorCard = document.querySelector('.site-header');
+const authorField = document.querySelector('.whoop-field');
+const syncAuthorField = () => {
+  if (!authorCard || !authorField) return;
+  const card = authorCard.getBoundingClientRect();
+  const map = authorField.parentElement.getBoundingClientRect();
+  authorField.style.cssText = `left:${card.left-map.left-112}px;top:${card.top-map.top-96}px;width:${card.width+208}px;height:${card.height+192}px`;
+};
+if (authorCard) new ResizeObserver(syncAuthorField).observe(authorCard);
+
 const setConsoleOffset = (module, x, y) => {
   module.dataset.dragX = x.toFixed(2);
   module.dataset.dragY = y.toFixed(2);
   module.style.setProperty("--console-drag-x", `${x.toFixed(2)}px`);
   module.style.setProperty("--console-drag-y", `${y.toFixed(2)}px`);
+  if (module === authorCard) syncAuthorField();
 };
 
 const clampConsoleOffset = (module, desiredX, desiredY, basePosition = null) => {

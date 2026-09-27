@@ -44,11 +44,18 @@ try {
     await page.locator(".site-header").screenshot({ path: `${directory}/${engine}-${width}-${theme}-readout.png` });
     if (width > 680) {
       const card = page.locator(".site-header"), before = await card.boundingBox();
+      const terrainBefore = await page.locator(".whoop-field").boundingBox();
+      assert.ok(terrainBefore.width < before.width + 220 && terrainBefore.height < before.height + 200,
+        "Recovery terrain stays local to its card.");
       await page.mouse.move(before.x + before.width / 2, before.y + 8);
       await page.mouse.down();
       await page.mouse.move(before.x + before.width / 2 - 200, before.y - 142, { steps: 8 });
       await page.mouse.up();
       const after = await card.boundingBox();
+      const terrainAfter = await page.locator(".whoop-field").boundingBox();
+      assert.ok(Math.abs((terrainAfter.x - terrainBefore.x) - (after.x - before.x)) < 1
+        && Math.abs((terrainAfter.y - terrainBefore.y) - (after.y - before.y)) < 1,
+        "Atlas follows its owner while dragging.");
       assert.ok(Math.abs(after.x - before.x + 200) < 1 && Math.abs(after.y - before.y + 150) < 1,
         "The author card moves with its free surface.");
       const copy = await page.locator(".brand__role").boundingBox();
@@ -68,6 +75,8 @@ try {
     const trigger = page.locator(width === 320 ? ".whoop-compact-trigger" : ".whoop-foot button");
     await trigger.click();
     await page.waitForFunction(() => document.activeElement === document.querySelector("[data-whoop-toggle]"));
+    assert.equal(await page.locator(".whoop-field").evaluate(node => getComputedStyle(node).visibility), "hidden",
+      "Settings hide the card and its terrain together.");
     const toggle = page.locator("[data-whoop-toggle]");
     await toggle.click();
     assert.equal(await toggle.getAttribute("aria-pressed"), "false");

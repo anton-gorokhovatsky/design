@@ -6,7 +6,7 @@
     <title>Точка не найдена — Антон Гороховатский</title>
     <meta
       name="description"
-      content="Такого адреса на карте опыта Антона Гороховатского нет. Вернитесь на карту или перейдите к поиску."
+      content="Такого адреса на карте опыта Антона Гороховатского нет. Вернитесь на карту работ и интересов."
     >
     <meta name="author" content="Антон Гороховатский">
     <meta name="robots" content="noindex, follow">
@@ -41,302 +41,139 @@
     </script>
     <link rel="preload" href="/assets/fonts/Akt-Variable.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="/assets/fonts/Rene-Regular.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="stylesheet" href="/styles.css?v=88f2718a4f3d">
+    <link rel="stylesheet" href="/styles.css?v=66ea30074bb4">
     <style>
-      html,
-      body {
-        min-height: 100%;
-      }
-
-      body {
-        min-height: 100svh;
-      }
-
+      html, body { min-height: 100%; }
+      body { height: auto; overflow-y: auto; }
       .not-found {
         position: relative;
         isolation: isolate;
-        display: grid;
+        display: flex;
+        align-items: center;
+        height: auto;
         min-height: 100svh;
-        place-items: center;
         overflow: hidden;
-        padding: clamp(24px, 5vw, 72px);
+        padding: clamp(24px, 8vw, 144px);
       }
-
       .not-found__map {
-        position: fixed;
-        z-index: var(--map-layer-field);
+        position: absolute;
+        z-index: -1;
         inset: 0;
-        height: 100svh;
-        min-height: 100%;
-        border: 0;
         pointer-events: none;
+        background-image: linear-gradient(var(--line) 1px, transparent 1px),
+          linear-gradient(90deg, var(--line) 1px, transparent 1px);
+        background-size: 12.5vw 12.5vw;
+        mask-image: radial-gradient(ellipse at 75% 50%, #000, transparent 80%);
       }
-
-      .not-found__map .map-camera,
-      .not-found__map .map-grid,
-      .not-found__map .orbital-radar {
-        transform: none;
-        transition: none;
+      .not-found__terrain {
+        position: absolute;
+        z-index: -1;
+        top: 50%;
+        right: -8%;
+        width: min(88vw, 1260px);
+        height: min(90svh, 800px);
+        transform: translateY(-50%);
+        pointer-events: none;
+        mask-image: radial-gradient(ellipse at 65% 48%, #000 16%, transparent 70%);
       }
-
-      .not-found__map .map-grid {
-        opacity: 0.62;
+      .not-found__terrain::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: var(--signal);
+        opacity: .55;
+        mask: url("/assets/atlas-terrain.svg") center / cover no-repeat;
       }
-
-      .not-found__map .orbital-radar {
-        mask-image: linear-gradient(transparent 2%, #000 16% 82%, transparent 98%);
-        -webkit-mask-image: linear-gradient(transparent 2%, #000 16% 82%, transparent 98%);
-      }
-
       .not-found__card {
         position: relative;
-        z-index: var(--map-layer-controls);
-        width: min(1040px, calc(100vw - 48px));
-        min-width: 0;
-        max-width: 100%;
-        padding: clamp(32px, 4.5vw, 64px);
-        border-radius: clamp(32px, 4vw, 48px);
+        width: min(100%, 36rem);
+        padding: clamp(28px, 4vw, 56px);
+        border-radius: 32px;
         corner-shape: var(--corner-card-shape);
+        color: var(--content-ink);
       }
-
       .not-found__meta {
         display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin: 0 0 clamp(28px, 3vw, 40px);
-        color: var(--muted);
-        font-size: 0.86rem;
-        font-weight: 600;
-        letter-spacing: 0.08em;
-        line-height: 1;
-        text-transform: uppercase;
+        align-items: baseline;
+        gap: 1rem;
+        margin: 0 0 clamp(32px, 4vw, 56px);
+        color: var(--content-muted);
       }
-
-      .not-found__meta-label {
-        display: inline-flex;
-        gap: 10px;
-        align-items: center;
+      .not-found__code {
+        font: 400 2rem/1 var(--font-author);
+        color: var(--content-ink);
       }
-
-      .not-found__meta-label::before {
-        width: 8px;
-        aspect-ratio: 1;
-        flex: 0 0 auto;
-        border-radius: 50%;
-        background: var(--pulse);
-        box-shadow: 0 0 0 6px color-mix(in srgb, var(--pulse) 12%, transparent);
-        content: "";
-      }
-
+      .not-found__meta-label { font-size: .75rem; }
       .not-found__title {
-        max-width: 100%;
         margin: 0;
-        font-family: var(--font-author);
-        font-size: clamp(4rem, 6.1vw, 6rem);
-        font-weight: 400;
-        letter-spacing: -0.045em;
-        line-height: 0.84;
-        text-transform: uppercase;
+        font-size: clamp(2rem, calc(1.5rem + 2.8vw), 4rem);
+        font-weight: 500;
+        line-height: 1.02;
+        letter-spacing: -.04em;
       }
-
-      .not-found__title-line {
-        display: block;
-      }
-
-      .not-found__title-phrase {
-        display: flex;
-        flex-wrap: nowrap;
-        gap: 0.18em;
-      }
-
-      .not-found__title-word {
-        white-space: nowrap;
-      }
-
+      .not-found__title-line { display: block; }
       .not-found__copy {
-        max-width: 640px;
-        margin: clamp(28px, 3vw, 40px) 0 0;
-        color: var(--muted);
-        font-size: clamp(1.05rem, 1.35vw, 1.3rem);
-        line-height: 1.45;
+        max-width: 26rem;
+        margin: 1.75rem 0 0;
+        color: var(--content-muted);
+        font-size: 1rem;
+        line-height: 1.5;
         text-wrap: pretty;
       }
-
-      .not-found__actions {
-        margin-top: clamp(28px, 3.4vw, 44px);
-      }
-
+      .not-found__actions { margin-top: 2rem; }
       .not-found__action {
         display: inline-flex;
-        min-height: 44px;
-        gap: 14px;
         align-items: center;
-        padding-block: 10px;
-        font-size: 0.88rem;
-        font-weight: 600;
-        letter-spacing: 0.045em;
-        line-height: 1.2;
-        text-transform: uppercase;
-        transition: color 160ms var(--motion-shift);
+        gap: 1rem;
+        min-height: 44px;
+        color: var(--content-ink);
+        font-size: .9375rem;
+        text-decoration: underline;
+        text-underline-offset: 4px;
       }
-
       .not-found__action-arrow {
         position: relative;
         display: block;
-        width: 16px;
-        height: 12px;
-        transition: transform 160ms var(--motion-shift);
+        width: 20px;
+        height: 20px;
       }
-
       .not-found__action-arrow::before {
-        position: absolute;
-        top: 50%;
-        right: 1px;
-        left: 1px;
-        height: 1px;
-        background: currentColor;
         content: "";
-        transform: translateY(-50%);
-      }
-
-      .not-found__action-arrow::after {
         position: absolute;
-        top: 50%;
-        right: 1px;
-        width: 6px;
-        height: 6px;
+        top: 9px;
+        left: 0;
+        width: 18px;
         border-top: 1px solid currentColor;
-        border-right: 1px solid currentColor;
+      }
+      .not-found__action-arrow::after {
         content: "";
-        transform: translateY(-50%) rotate(45deg);
+        position: absolute;
+        top: 5px;
+        right: 2px;
+        width: 8px;
+        height: 8px;
+        border: solid currentColor;
+        border-width: 1px 1px 0 0;
+        transform: rotate(45deg);
       }
-
-      .not-found__action:hover {
-        color: var(--signal);
-      }
-
-      .not-found__action:hover .not-found__action-arrow {
-        transform: translateX(3px);
-      }
-
-      .not-found__action:focus-visible {
-        outline: 2px solid var(--signal);
-        outline-offset: 5px;
-      }
-
+      .not-found__action:hover { color: var(--signal); }
+      .not-found__action:focus-visible { outline: 2px solid var(--signal); outline-offset: 5px; }
       @media (max-width: 680px) {
-        .not-found {
-          align-items: start;
-          overflow-y: auto;
-          padding: 48px 12px;
-        }
-
-        .not-found__map .map-grid {
-          background-size: 25% 12.5%;
-        }
-
-        .not-found__map .orbital-radar i:nth-child(1) {
-          width: 45%;
-          height: 18%;
-        }
-
-        .not-found__map .orbital-radar i:nth-child(2) {
-          width: 82%;
-          height: 36%;
-        }
-
-        .not-found__map .orbital-radar i:nth-child(3) {
-          width: 122%;
-          height: 56%;
-        }
-
-        .not-found__map .orbital-radar i:nth-child(4) {
-          width: 168%;
-          height: 80%;
-        }
-
-        .not-found__card {
-          width: 100%;
-          padding: 28px 24px 12px;
-          border-radius: 32px;
-        }
-
-        .not-found__meta {
-          margin-bottom: 28px;
-        }
-
-        .not-found__title {
-          width: 100%;
-          font-size: clamp(1.75rem, calc(11vw - 7px), 2.5rem);
-          line-height: 0.86;
-        }
-
-        .not-found__title-phrase {
-          display: flex;
-          white-space: nowrap;
-        }
-
-        .not-found__copy {
-          margin-top: 28px;
-          font-size: 1.04rem;
-        }
-
-        .not-found__actions {
-          margin-top: 28px;
-        }
-
-        .not-found__action {
-          gap: 12px;
-        }
+        .not-found { padding: 24px 12px; }
+        .not-found__terrain { right: -70%; width: 160%; height: 90%; }
+        .not-found__card { padding: 32px 24px; border-radius: 24px; }
+        .not-found__meta { flex-wrap: wrap; gap: .75rem; }
+        .not-found__copy { font-size: .9375rem; }
       }
-
-      @media (max-height: 700px) and (min-width: 681px) {
-        .not-found {
-          padding-block: 24px;
-        }
-
-        .not-found__card {
-          padding-block: 32px;
-        }
-
-        .not-found__meta {
-          margin-bottom: 24px;
-        }
-
-        .not-found__copy {
-          margin-top: 24px;
-        }
-
-        .not-found__actions {
-          margin-top: 28px;
-        }
-      }
-
-      @media (forced-colors: active) {
-        .not-found__card {
-          border: 1px solid CanvasText;
-          backdrop-filter: none;
-          -webkit-backdrop-filter: none;
-        }
+      @media (forced-colors: active), (prefers-contrast: more) {
+        .not-found__terrain, .not-found__map { display: none; }
       }
     </style>
   </head>
   <body>
     <main class="not-found" id="content">
-      <div class="practice-map not-found__map" aria-hidden="true">
-        <div class="map-camera">
-          <div class="orbital-horizon"></div>
-          <div class="orbital-radar">
-            <i></i>
-            <i></i>
-            <i></i>
-            <i></i>
-          </div>
-          <div class="map-grid"></div>
-          <div class="map-axis map-axis--horizontal"></div>
-          <div class="map-axis map-axis--vertical"></div>
-        </div>
-      </div>
+      <div class="not-found__map" aria-hidden="true"></div>
+      <div class="not-found__terrain" aria-hidden="true"></div>
 
       <section
         class="not-found__card"
@@ -345,19 +182,16 @@
         aria-labelledby="not-found-title"
       >
         <p class="not-found__meta">
-          <span class="not-found__meta-label">Карта</span>
-          <span>404</span>
+          <span class="not-found__code">404</span>
+          <span class="not-found__meta-label">Неизвестный участок</span>
         </p>
         <h1 class="not-found__title" id="not-found-title">
           <span class="not-found__title-line">Точка</span>
-          <span class="not-found__title-line not-found__title-phrase">
-            <span class="not-found__title-word">не</span>
-            <span class="not-found__title-word">найдена</span>
-          </span>
+          <span class="not-found__title-line">не найдена</span>
         </h1>
         <p class="not-found__copy">
-          Этого адреса нет на карте опыта. Возможно, ссылка устарела
-          или в&nbsp;ней потерялась координата.
+          Такого адреса на&nbsp;карте нет. Возможно, ссылка устарела
+          или в&nbsp;ней опечатка.
         </p>
         <nav class="not-found__actions" aria-label="Дальнейшее действие">
           <a class="not-found__action" href="/#map">
