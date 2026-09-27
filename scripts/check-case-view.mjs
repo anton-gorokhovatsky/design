@@ -35,13 +35,34 @@ for (const engine of [process.argv[2] || 'chromium']) {
       assert.equal(response.status(), 200, 'The real production page is served');
       await page.waitForFunction(() => document.querySelector('.map-inspector.is-case-view'));
       await page.evaluate(() => document.fonts.ready);
-      if (text) await page.evaluate(() => document.documentElement.style.fontSize='200%');
+      const applyTextScale = async () => {
+        // Apply the visitor's text setting as a stylesheet, then verify both
+        // computed type and its laid-out box before recording a baseline.
+        // Inline root mutation on CI Chromium kept the old rem layout until
+        // the first scroll, so the old test compared 100% against 200%.
+        await page.addStyleTag({ content: 'html { font-size: 200% !important; }' });
+        await page.waitForFunction(() => {
+          const copy = document.querySelector('.map-evidence dd');
+          const label = document.querySelector('.case-header .map-readout__kind');
+          const css = getComputedStyle(label);
+          return parseFloat(getComputedStyle(copy).fontSize) >= 32
+            && label.getBoundingClientRect().height >= parseFloat(css.lineHeight)
+              + parseFloat(css.paddingTop) + parseFloat(css.paddingBottom) - .1;
+        });
+      };
+      if (text) await applyTextScale();
       await waitForCaseLayout(page);
       const close = page.locator('[data-close-inspector]');
       const scroll = page.locator('.case-scroll');
       const scrollBy = async delta => {
         if (mobileWebKit) await scroll.evaluate((element,value) => element.scrollBy(0,value),delta);
-        else await page.mouse.wheel(0,delta);
+        else {
+          // The corner-pixel probe temporarily hides the sheet. Refresh the
+          // real pointer target before wheel input (WebKit caches hit testing).
+          const bounds = await scroll.boundingBox();
+          await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+          await page.mouse.wheel(0,delta);
+        }
       };
       const before = await close.boundingBox();
       const measure = () => page.evaluate(() => {
@@ -74,6 +95,7 @@ for (const engine of [process.argv[2] || 'chromium']) {
       });
       assert.ok(result.type.labels.every(size => Math.abs(size-result.type.labels[0])<.02),'Service labels share one type role');
       assert.ok(result.type.body >= 16,'Reading text retains the browser default size or larger');
+      if (text) assert.ok(result.type.body >= 32, 'The 200% scenario really measures enlarged text.');
       assert.ok(Math.abs(result.type.role-result.type.body)<.02,'The long role uses the shared reading size');
       assert.match(result.type.roleFamily,/Akt/,'Long role copy uses Akt');
       assert.match(result.type.roleLabelFamily,/Rene/,'The role label retains the author face');
@@ -185,7 +207,7 @@ for (const engine of [process.argv[2] || 'chromium']) {
       // Short mobile viewports exposed an old cap that let copy overlap links.
       await page.goto(origin+'/?point=ks-fish',{waitUntil:'domcontentloaded'});
       await page.evaluate(() => document.fonts.ready);
-      if (text) await page.evaluate(() => document.documentElement.style.fontSize='200%');
+      if (text) await applyTextScale();
       await waitForCaseLayout(page);
       await page.locator('.case-scroll').evaluate(e=>e.scrollTop=e.scrollHeight);
       result.projectCopy = await page.evaluate(() => {
