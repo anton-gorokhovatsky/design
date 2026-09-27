@@ -48,11 +48,13 @@ const budgets = {
   // +2 KiB for the accepted Cipher grid; no third-party renderer.
   // +1 KiB for pause-preserving route timing; decorative artwork was removed.
   // +3 KiB for anonymous live presence with one reporting tab per browser.
-  runtime: 278 * 1024,
+  // +5 KiB for replaying the actual Atlas grid export, shared by card and 404.
+  // The 67 KiB gzip frame data loads only when motion and its owner are visible.
+  runtime: 283 * 1024,
   fonts: 160 * 1024,
   // Akt preloads all weights in one 110 KiB variable font. The complete family
   // is smaller than four Golos files; the initial two-weight preload was smaller.
-  initialSource: 623 * 1024,
+  initialSource: 628 * 1024,
 };
 const failures = [];
 

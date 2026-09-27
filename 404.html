@@ -41,7 +41,7 @@
     </script>
     <link rel="preload" href="/assets/fonts/Akt-Variable.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="/assets/fonts/Rene-Regular.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="stylesheet" href="/styles.css?v=484985a42f30">
+    <link rel="stylesheet" href="/styles.css?v=dbf00b6c73b9">
     <style>
       html, body { min-height: 100%; }
       body { height: auto; overflow-y: auto; }
@@ -74,14 +74,15 @@
         height: min(90svh, 800px);
         transform: translateY(-50%);
         pointer-events: none;
+        color: var(--signal);
+        opacity: .55;
         mask-image: radial-gradient(ellipse at 65% 48%, #000 16%, transparent 70%);
       }
       .not-found__terrain::before {
         content: "";
         position: absolute;
         inset: 0;
-        background: var(--signal);
-        opacity: .55;
+        background: currentColor;
         mask: url("/assets/atlas-terrain.svg") center / cover no-repeat;
       }
       .not-found__card {
@@ -176,7 +177,6 @@
         try { paused = localStorage.getItem('anton-signal-reduced-motion') === '1'; } catch {}
         const sync = () => {
           root.dataset.reduceMotion = String(paused || system.matches);
-          root.style.setProperty('--terrain-motion', document.hidden ? 'paused' : 'running');
           button.hidden = system.matches;
           button.textContent = paused ? 'Включить движение' : 'Остановить движение';
         };
@@ -190,5 +190,6 @@
         sync();
       })();
     </script>
+    <script type="module" src="/js/atlas-motion.js?v=6f9e27863aee"></script>
   </body>
 </html>

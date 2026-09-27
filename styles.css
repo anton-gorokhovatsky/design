@@ -9924,31 +9924,22 @@ html[data-focus-modality="keyboard"]
   height: 0;
   pointer-events: none;
   mask-image: radial-gradient(ellipse at 58% 56%, #000 30%, transparent 72%);
+  color: rgb(var(--day-rgb));
   opacity: var(--day-enabled);
   transition: opacity 180ms var(--motion-shift);
 }
 .whoop-field::before {
   content: "";
   position: absolute;
-  inset: -16px;
-  background: rgb(var(--day-rgb));
+  inset: 0;
+  background: currentColor;
   mask: url("assets/atlas-terrain.svg") center / cover no-repeat;
-  animation: atlas-drift 18s ease-in-out -6s infinite alternate;
-  animation-play-state: var(--day-motion, paused);
 }
-@keyframes atlas-drift {
-  from { transform: translate3d(-14px, 6px, 0); }
-  to { transform: translate3d(14px, -6px, 0); }
+html[data-theme="dark"] .whoop-field {
+  color: color-mix(in srgb, rgb(var(--day-rgb)) 80%, white);
 }
-.not-found__terrain::before {
-  animation: atlas-drift 24s ease-in-out -8s infinite alternate;
-  animation-play-state: var(--terrain-motion, paused);
-}
-body:is(.has-content-panel, .has-command-focus, .has-constellation-nav, .has-settings-panel, [data-case-open]) .whoop-field,
-body:has(.map-inspector.is-open, .practice-map[data-observation-active]) .whoop-field { --day-motion: paused; }
-html[data-theme="dark"] .whoop-field::before {
-  background: color-mix(in srgb, rgb(var(--day-rgb)) 80%, white);
-}
+.atlas-motion { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+[data-atlas-ready]::before { visibility: hidden; }
 .site-header[data-material-surface="whoop-readout"],
 .site-header[data-material-surface="whoop-readout"] * { transition-property: none; }
 .site-header[data-material-surface="whoop-readout"] {
@@ -10026,11 +10017,9 @@ html[data-theme="dark"] .whoop-field::before {
   .whoop-readout:is([data-stale="true"], [data-unavailable="true"]) .whoop-stamp { display: block; padding-top: .4rem; color: var(--content-muted); font-size: .625rem; }
 }
 html[data-reduce-motion="true"] .whoop-field { transition: none; }
-html[data-reduce-motion="true"] :is(.whoop-field, .not-found__terrain)::before { animation: none; }
 html[data-contrast="true"] .whoop-field { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .whoop-field { transition: none; }
-  :is(.whoop-field, .not-found__terrain)::before { animation: none; }
 }
 @media (forced-colors: active), (prefers-contrast: more) { .whoop-field { display: none; } }
 

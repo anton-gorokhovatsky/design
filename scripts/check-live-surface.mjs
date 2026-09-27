@@ -14,16 +14,22 @@ export async function checkLiveSurface(browser, origin, engine) {
   const page = await context.newPage();
   page.on('pageerror', e => errors.push(e.message));
   const state = (selector = '.whoop-field') => page.locator(selector).evaluate(node => {
-    const css = getComputedStyle(node, '::before');
-    return { transform: css.transform, play: css.animationPlayState, name: css.animationName, visibility: getComputedStyle(node).visibility };
+    return { pixels: node.querySelector('canvas')?.toDataURL(), visibility: getComputedStyle(node).visibility };
   });
+  const frozen = async (selector = '.whoop-field') => {
+    await page.waitForTimeout(80);
+    const before = await state(selector);
+    await page.waitForTimeout(400);
+    assert.equal((await state(selector)).pixels, before.pixels, 'The native frame pauses.');
+  };
   await page.goto(origin);
   await page.waitForFunction(() => document.querySelector('[data-whoop-recovery]').textContent.includes('77'));
   await page.waitForFunction(n => document.querySelector('[data-presence-count]').textContent === String(n), baseline + 1);
+  await page.waitForSelector('.whoop-field canvas', { state: 'attached' });
   const card = await page.locator('.site-header').boundingBox();
   const initial = await state();
   await page.waitForTimeout(700);
-  assert.notEqual((await state()).transform, initial.transform, 'Terrain visibly advances.');
+  assert.notEqual((await state()).pixels, initial.pixels, 'Native terrain cells change, not the image position.');
   assert.deepEqual(await page.locator('.site-header').boundingBox(), card, 'The author card stays fixed.');
   const link = page.locator('.whoop-foot .text-link');
   const linkState = () => link.evaluate(node => {
@@ -38,16 +44,15 @@ export async function checkLiveSurface(browser, origin, engine) {
   assert.equal(hover.thickness, '1px');
   await page.screenshot({ path: `${dir}/${engine}-desktop.png` });
   await link.click();
-  assert.equal((await state()).play, 'paused');
+  await frozen();
   await page.keyboard.press('Escape');
   await page.waitForFunction(() => !document.querySelector('[data-settings-panel]').open);
-  assert.equal((await state()).play, 'running');
   await page.locator('[data-start-observation]').first().click();
   assert.equal((await state()).visibility, 'hidden');
-  assert.equal((await state()).play, 'paused');
+  await frozen();
   await page.keyboard.press('Escape');
   await page.locator('.display-control [data-motion-toggle]').click();
-  assert.equal((await state()).name, 'none');
+  await frozen();
   await page.locator('.display-control [data-motion-toggle]').click();
   // Two tabs share the origin lock; another browser context is another visit.
   const tab = await context.newPage();
@@ -62,14 +67,15 @@ export async function checkLiveSurface(browser, origin, engine) {
   await other.close(); await tab.close();
   await page.goto(`${origin}/404.html`);
   await page.evaluate(() => document.fonts.ready);
+  await page.waitForSelector('.not-found__terrain canvas', { state: 'attached' });
   const start404 = await state('.not-found__terrain');
   await page.waitForTimeout(700);
-  assert.notEqual((await state('.not-found__terrain')).transform, start404.transform);
+  assert.notEqual((await state('.not-found__terrain')).pixels, start404.pixels);
   await page.locator('[data-terrain-motion]').click();
-  assert.equal((await state('.not-found__terrain')).name, 'none');
+  await frozen('.not-found__terrain');
   await page.locator('[data-terrain-motion]').click();
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  assert.equal((await state('.not-found__terrain')).name, 'none');
+  await frozen('.not-found__terrain');
   await page.keyboard.press('Tab');
   await page.locator('.not-found__action').focus();
   assert.equal(await page.locator('.not-found__action').evaluate(n => getComputedStyle(n).outlineStyle), 'solid');

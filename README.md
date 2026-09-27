@@ -59,6 +59,8 @@ route.
   their content directly, without decorative title cards or chapter transitions.
   Pause and background tabs preserve the remaining time; reduced motion starts
   paused. Restored step URLs open the selected stop directly.
+  The animated source export is retained in `assets/observation/atlas-loop.mp4`;
+  visitors receive only its compact vector frames, not the source video.
   The static site share cover uses `assets/observation/atlas.svg`; its template
   belongs only to `scripts/capture-share-images.mjs site`, not the live route.
   Sources and export settings are recorded in [the artwork notes](docs/observation-art.md).

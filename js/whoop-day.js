@@ -48,8 +48,7 @@ function startDay() {
     const day = snapshot ? normalizeDay(snapshot) : null;
     const palette = dayPalette(day?.recovery ?? 50);
     root.style.setProperty("--day-rgb", palette.rgb);
-  root.style.setProperty("--day-enabled", enabled && day?.colour ? "1" : "0");
-  root.style.setProperty("--day-motion", enabled && day?.colour && !document.hidden ? "running" : "paused");
+    root.style.setProperty("--day-enabled", enabled && day?.colour ? "1" : "0");
     select("toggle").setAttribute("aria-pressed", String(enabled));
     select("toggle-label").textContent = enabled ? "ВКЛЮЧЁН" : "ВЫКЛЮЧЕН";
     readout.dataset.stale = String(Boolean(day?.stale));

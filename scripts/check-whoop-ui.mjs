@@ -138,7 +138,10 @@ try {
   await latePage.close();
   console.log(`PASS ${engine} delayed WHOOP: analytics stays visible; mobile map follows the card.`);
   assert.deepEqual(errors, []);
-  await checkLiveSurface(browser, origin, engine);
+  // Separate ephemeral visit records from the preceding reload/error scenarios.
+  const surface = await startStaticServer({ projectRoot: process.cwd() });
+  try { await checkLiveSurface(browser, surface.origin, engine); }
+  finally { surface.server.closeAllConnections(); await new Promise(done => surface.server.close(done)); }
 } finally {
   await browser.close();
   server.closeAllConnections();

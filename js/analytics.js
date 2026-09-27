@@ -39,7 +39,17 @@ const alignSettingsSection = () => {
   if (!settingsPanel?.open || !settingsScrollAnchor) return;
   const { destination, control } = settingsScrollAnchor;
   const body = settingsPanel.querySelector(".settings-panel__body");
-  if (body && destination) body.scrollTop += destination.getBoundingClientRect().top - body.getBoundingClientRect().top;
+  if (body && destination) {
+    body.scrollTop += destination.getBoundingClientRect().top - body.getBoundingClientRect().top;
+    // If text wraps onto another line, keep the decision and its explanation
+    // together where possible without scrolling the focused control out of view.
+    if (control) {
+      const viewport = body.getBoundingClientRect();
+      const overflow = destination.getBoundingClientRect().bottom - viewport.bottom;
+      const room = control.getBoundingClientRect().top - viewport.top - 8;
+      body.scrollTop += Math.max(0, Math.min(overflow + 1, room));
+    }
+  }
   control?.scrollIntoView({ block: "nearest", behavior: "instant" });
 };
 // Late WHOOP data and fonts can resize the preceding section in WebKit.
