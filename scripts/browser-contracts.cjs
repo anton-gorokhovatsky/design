@@ -26,10 +26,26 @@ const startStaticServer = async ({
     throw new Error("startStaticServer requires projectRoot.");
   }
 
+  const visitors = new Map();
   const server = http.createServer((request, response) => {
     const pathname = decodeURIComponent(
       new URL(request.url || "/", "http://127.0.0.1").pathname,
     );
+    if (pathname === "/__qa/presence") {
+      let body = "";
+      request.on("data", chunk => { body += chunk; });
+      request.on("end", () => {
+        if (body) {
+          const { id, action } = JSON.parse(body);
+          if (action === "leave") visitors.delete(id);
+          else visitors.set(id, Date.now());
+        }
+        for (const [id, time] of visitors) if (Date.now() - time >= 90000) visitors.delete(id);
+        response.writeHead(200, { "content-type": "application/json", "cache-control": "no-store" });
+        response.end(JSON.stringify({ count: visitors.size, ttl: 90 }));
+      });
+      return;
+    }
     // Browser contracts use a deterministic fixture, never the author's live API.
     if (pathname === "/__qa/whoop-day.json") {
       const now = Date.now();
@@ -86,7 +102,7 @@ const startStaticServer = async ({
     if (relativePath === "index.html") {
       response.end(fs.readFileSync(absolutePath, "utf8").replace(
         /name="whoop-feed" content="[^"]*"/, 'name="whoop-feed" content="/__qa/whoop-day.json"',
-      ));
+      ).replace(/name="presence-feed" content="[^"]*"/, 'name="presence-feed" content="/__qa/presence"'));
       return;
     }
     fs.createReadStream(absolutePath).pipe(response);

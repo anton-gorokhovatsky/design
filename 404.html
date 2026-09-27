@@ -41,7 +41,7 @@
     </script>
     <link rel="preload" href="/assets/fonts/Akt-Variable.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="/assets/fonts/Rene-Regular.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="stylesheet" href="/styles.css?v=66ea30074bb4">
+    <link rel="stylesheet" href="/styles.css?v=484985a42f30">
     <style>
       html, body { min-height: 100%; }
       body { height: auto; overflow-y: auto; }
@@ -121,43 +121,9 @@
         text-wrap: pretty;
       }
       .not-found__actions { margin-top: 2rem; }
-      .not-found__action {
-        display: inline-flex;
-        align-items: center;
-        gap: 1rem;
-        min-height: 44px;
-        color: var(--content-ink);
-        font-size: .9375rem;
-        text-decoration: underline;
-        text-underline-offset: 4px;
-      }
-      .not-found__action-arrow {
-        position: relative;
-        display: block;
-        width: 20px;
-        height: 20px;
-      }
-      .not-found__action-arrow::before {
-        content: "";
-        position: absolute;
-        top: 9px;
-        left: 0;
-        width: 18px;
-        border-top: 1px solid currentColor;
-      }
-      .not-found__action-arrow::after {
-        content: "";
-        position: absolute;
-        top: 5px;
-        right: 2px;
-        width: 8px;
-        height: 8px;
-        border: solid currentColor;
-        border-width: 1px 1px 0 0;
-        transform: rotate(45deg);
-      }
-      .not-found__action:hover { color: var(--signal); }
-      .not-found__action:focus-visible { outline: 2px solid var(--signal); outline-offset: 5px; }
+      .not-found__action { display: inline-flex; align-items: center; min-height: 44px; font-size: .9375rem; }
+      .not-found__motion { display: block; min-height: 44px; margin-top: .5rem; font-size: .6875rem; }
+      .not-found__motion[hidden] { display: none; }
       @media (max-width: 680px) {
         .not-found { padding: 24px 12px; }
         .not-found__terrain { right: -70%; width: 160%; height: 90%; }
@@ -194,12 +160,35 @@
           или в&nbsp;ней опечатка.
         </p>
         <nav class="not-found__actions" aria-label="Дальнейшее действие">
-          <a class="not-found__action" href="/#map">
+          <a class="not-found__action text-link" href="/#map">
             <span>Вернуться на&nbsp;карту</span>
-            <span class="not-found__action-arrow" aria-hidden="true"></span>
           </a>
         </nav>
+        <button class="not-found__motion text-link" type="button" data-terrain-motion hidden>Остановить движение</button>
       </section>
     </main>
+    <script>
+      (() => {
+        const root = document.documentElement;
+        const button = document.querySelector('[data-terrain-motion]');
+        const system = matchMedia('(prefers-reduced-motion: reduce)');
+        let paused = false;
+        try { paused = localStorage.getItem('anton-signal-reduced-motion') === '1'; } catch {}
+        const sync = () => {
+          root.dataset.reduceMotion = String(paused || system.matches);
+          root.style.setProperty('--terrain-motion', document.hidden ? 'paused' : 'running');
+          button.hidden = system.matches;
+          button.textContent = paused ? 'Включить движение' : 'Остановить движение';
+        };
+        button.addEventListener('click', () => {
+          paused = !paused;
+          try { localStorage.setItem('anton-signal-reduced-motion', paused ? '1' : '0'); } catch {}
+          sync();
+        });
+        system.addEventListener('change', sync);
+        document.addEventListener('visibilitychange', sync);
+        sync();
+      })();
+    </script>
   </body>
 </html>

@@ -12,6 +12,7 @@
     <meta name="theme-color" content="#eeede7">
     <meta name="color-scheme" content="light dark">
     <meta name="whoop-feed" content="https://portfolio-whoop.portfolio-whoop-service.workers.dev/day.json">
+    <meta name="presence-feed" content="https://portfolio-whoop.portfolio-whoop-service.workers.dev/presence">
     <meta name="robots" content="index, follow, max-image-preview:large">
     <link
       id="site-favicon"
@@ -118,7 +119,7 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=66ea30074bb4">
+    <link rel="stylesheet" href="styles.css?v=484985a42f30">
     <style>
       .map-evidence [data-map-evidence-role-label]{font-family:var(--font-author);font-size:.6rem;font-weight:400;letter-spacing:0}
     </style>
@@ -127,7 +128,8 @@
       {
         "imports": {
           "./js/preferences.js": "./js/preferences.js?v=a80697d7b0cd",
-          "./js/whoop-day.js": "./js/whoop-day.js?v=b9d9bb929bd5",
+          "./js/whoop-day.js": "./js/whoop-day.js?v=222dc4cc1662",
+          "./js/presence.js": "./js/presence.js?v=1dc92c8b9245",
           "./js/analytics.js": "./js/analytics.js?v=c3ea8f220c9f",
           "./js/cipher-field.js": "./js/cipher-field.js?v=646034d9be18",
           "./js/signal-field.js": "./js/signal-field.js?v=e59af2b0e792",
@@ -146,7 +148,8 @@
     <!-- runtime-import-map:end -->
     <!-- Native modules keep their dependencies explicit; see js/README.md. -->
     <script type="module" src="js/preferences.js?v=a80697d7b0cd"></script>
-    <script type="module" src="js/whoop-day.js?v=b9d9bb929bd5"></script>
+    <script type="module" src="js/whoop-day.js?v=222dc4cc1662"></script>
+    <script type="module" src="js/presence.js?v=1dc92c8b9245"></script>
     <script type="module" src="js/analytics.js?v=c3ea8f220c9f"></script>
     <script type="module" src="js/cipher-field.js?v=646034d9be18"></script>
     <script type="module" src="js/signal-field.js?v=e59af2b0e792"></script>
@@ -276,7 +279,7 @@
           <div><dt>Сон</dt><dd data-whoop-sleep>—</dd></div>
           <div><dt>Нагрузка</dt><dd data-whoop-strain>—</dd></div>
         </dl>
-        <div class="whoop-foot"><span data-whoop-status data-console-text>Получаем данные</span><button type="button" data-open-settings data-settings-focus="whoop">О данных и цвете</button></div>
+        <div class="whoop-foot"><span data-whoop-status data-console-text>Получаем данные</span><button class="text-link" type="button" data-open-settings data-settings-focus="whoop">О данных и цвете</button></div>
         <span class="whoop-stamp" data-whoop-stamp></span>
         <button class="whoop-compact-trigger" type="button" aria-label="Показатели WHOOP и цвет дня" data-open-settings data-settings-focus="whoop"></button>
       </section>
@@ -1082,6 +1085,7 @@
                 <span class="display-control__value">МСК <span data-clock>--:--</span></span>
               </p>
             </div>
+            <p class="display-control__presence" data-presence hidden>Сейчас на&nbsp;сайте <span data-presence-count>—</span></p>
             <button
               class="theme-toggle"
               type="button"
@@ -1350,14 +1354,14 @@
             <h2 id="contact-title"><span>Привет!</span></h2>
             <p class="contact-lede">Для предложений о&nbsp;работе, рекомендаций и&nbsp;хороших наводок.</p>
             <p class="contact-resume">
-              <a
+              <a class="text-link"
                 href="https://hh.ru/resume/e469b9deff00850af10039ed1f736563726574?print=true"
                 target="_blank"
                 rel="noreferrer"
               >
                 Резюме на&nbsp;hh.ru
               </a>
-              <a
+              <a class="text-link"
                 href="https://gorokhovatsky.notion.site/digital-web-digital-f68fc13247614ccb9738d9a85acf29b4?pvs=74"
                 target="_blank"
                 rel="noreferrer"
@@ -1467,9 +1471,13 @@
             </div>
             <button type="button" data-whoop-toggle aria-pressed="true" aria-label="Цвет дня по данным WHOOP"><span data-whoop-toggle-label>ВКЛЮЧЁН</span></button>
           </div>
-          <p class="settings-whoop__copy">Каждое утро WHOOP оценивает моё восстановление после сна. От&nbsp;этой оценки зависит оттенок мягкого свечения рядом с&nbsp;моей карточкой: при низком восстановлении (0–33&nbsp;%) — терракотовый, при среднем (34–66&nbsp;%) — охристый, при высоком (67–100&nbsp;%) — зелёный.</p>
+          <p class="settings-whoop__copy">Каждое утро WHOOP оценивает моё восстановление после сна. От&nbsp;этой оценки зависит оттенок рельефа рядом с&nbsp;моей карточкой: при низком восстановлении (0–33&nbsp;%) — терракотовый, при среднем (34–66&nbsp;%) — охристый, при высоком (67–100&nbsp;%) — зелёный.</p>
           <p class="settings-whoop__copy">Рядом показаны время сна за&nbsp;прошедшую ночь и&nbsp;нагрузка, накопленная за&nbsp;день. Они не&nbsp;влияют на&nbsp;цвет. Шкала соответствует зонам WHOOP, а&nbsp;оттенки подобраны для&nbsp;сайта.</p>
           <p class="settings-whoop__copy settings-whoop__source" data-whoop-provenance>Получаем данные WHOOP.</p>
+        </section>
+        <section class="settings-presence" aria-label="Посетители сейчас">
+          <p data-presence hidden>Сейчас на&nbsp;сайте <strong data-presence-count>—</strong></p>
+          <p>Считаются активные браузеры. Несколько вкладок считаются за&nbsp;одно посещение; после ухода запись исчезает в&nbsp;течение полутора минут. Без&nbsp;файлов cookie и&nbsp;истории посещений.</p>
         </section>
         <section
           class="settings-panel__analytics"
@@ -1517,7 +1525,7 @@
             </div>
           </dl>
           <a
-            class="settings-panel__details"
+            class="settings-panel__details text-link"
             href="https://yandex.ru/support/metrica/ru/general/cookie-usage"
             target="_blank"
             rel="noreferrer"

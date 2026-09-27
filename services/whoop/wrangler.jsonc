@@ -7,8 +7,8 @@
   "workers_dev": true,
   "preview_urls": false,
   "observability": { "enabled": false },
-  "durable_objects": { "bindings": [{ "name": "DAY", "class_name": "WhoopDay" }] },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["WhoopDay"] }],
+  "durable_objects": { "bindings": [{ "name": "DAY", "class_name": "WhoopDay" }, { "name": "PRESENCE", "class_name": "Presence" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["WhoopDay"] }, { "tag": "v2", "new_sqlite_classes": ["Presence"] }],
   "triggers": { "crons": ["7,22,37,52 * * * *"] },
   "vars": { "PUBLIC_ORIGIN": "https://gorokhovatsky.tech" }
 }

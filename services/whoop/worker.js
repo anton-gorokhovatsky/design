@@ -1,4 +1,6 @@
 // This is a separate WHOOP application. Never import the local MCP's token set.
+import { presenceRequest } from "./presence.js";
+export { Presence } from "./presence.js";
 const API = "https://api.prod.whoop.com/developer/v2";
 const TOKEN = "https://api.prod.whoop.com/oauth/oauth2/token";
 const SCOPES = "read:recovery read:sleep read:cycles offline";
@@ -39,6 +41,7 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     try {
+      if (url.pathname === "/presence") return await presenceRequest(request, env);
       if (url.pathname === "/privacy" && request.method === "GET") {
         return new Response("Данные WHOOP на gorokhovatsky.tech\n\nЭто личное подключение Антона Гороховатского. Сайт показывает его восстановление, продолжительность сна и дневную нагрузку, а также даты получения и обновления данных. Цвет карты зависит от восстановления и нагрузки.\n\nСервис в Cloudflare получает записи recovery, sleep и cycles из WHOOP, выбирает из них эти три показателя и заменяет предыдущую сводку. Остальные физиологические показатели не сохраняются и не публикуются. История сводок не ведётся.\n\nКлючи подключения хранятся отдельно от публичной сводки в Cloudflare. Автор может отозвать подключение в WHOOP или удалить ключи и последнюю сводку через сервис. Посетителям сайта подключать свой WHOOP не предлагается; их данные WHOOP не запрашиваются.\n\nСвязаться с автором: anton.gorokhovatsky@gmail.com\n", { headers: {
           "content-type": "text/plain; charset=utf-8", "cache-control": "no-store", "x-content-type-options": "nosniff",

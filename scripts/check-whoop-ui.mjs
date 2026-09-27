@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { mkdirSync } from "node:fs";
 import { createRequire } from "node:module";
 import { chromium, webkit } from "playwright";
+import { checkLiveSurface } from "./check-live-surface.mjs";
 
 const { startStaticServer } = createRequire(import.meta.url)("./browser-contracts.cjs");
 const engine = process.argv[2] || "chromium";
@@ -137,6 +138,7 @@ try {
   await latePage.close();
   console.log(`PASS ${engine} delayed WHOOP: analytics stays visible; mobile map follows the card.`);
   assert.deepEqual(errors, []);
+  await checkLiveSurface(browser, origin, engine);
 } finally {
   await browser.close();
   server.closeAllConnections();

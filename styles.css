@@ -8243,8 +8243,6 @@ body:has(.practice-map[data-observation-active]) :is(.site-header, .whoop-field)
   align-items: center;
   min-height: 36px;
   padding-block: 6px;
-  text-decoration: underline;
-  text-underline-offset: 3px;
 }
 .contact-links { display: grid; min-width: 0; }
 .contact-links a {
@@ -8286,20 +8284,34 @@ body:has(.practice-map[data-observation-active]) :is(.site-header, .whoop-field)
   display: inline;
   min-width: 0;
   padding: 0;
-  color: inherit;
+  color: var(--content-ink);
   font: inherit;
   line-height: inherit;
   text-decoration: underline;
-  text-decoration-color: color-mix(in srgb, var(--signal) 58%, transparent);
-  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: .2em;
+  text-decoration-skip-ink: auto;
+  background: none;
+  border: 0;
+  cursor: pointer;
   transform: none;
-  white-space: nowrap;
+  white-space: normal;
 }
-.text-link:is(:hover, :focus-visible) {
+@media (hover: hover) {
+  .text-link:hover {
+    color: var(--signal);
+    text-decoration-color: currentColor;
+  }
+}
+.text-link:focus-visible {
   color: var(--signal);
-  outline-offset: 3px;
+  text-decoration-color: currentColor;
+  outline: 2px solid var(--signal);
+  outline-offset: 4px;
   transform: none;
 }
+.text-link:active { color: var(--signal); text-decoration-color: currentColor; }
 
 .map-inspector .map-readout__destination {
   display: inline-flex;
@@ -9536,16 +9548,9 @@ html[data-analytics="denied"] [data-analytics-action="denied"] {
   display: inline-flex;
   align-items: center;
   margin-top: 19px;
-  padding-bottom: 2px;
-  border-bottom: 1px solid currentColor;
-  color: var(--content-ink);
+  min-height: 44px;
   font-size: 0.74rem;
   line-height: 1.25;
-  text-decoration: none;
-}
-
-.settings-panel__details:hover {
-  color: var(--signal);
 }
 
 .settings-panel__analytics-actions {
@@ -9596,11 +9601,6 @@ html[data-focus-modality="keyboard"]
   .settings-panel__analytics-actions button:not(:disabled):focus-visible {
   outline: 2px solid var(--signal);
   outline-offset: -2px;
-}
-
-html[data-focus-modality="keyboard"] .settings-panel__details:focus-visible {
-  outline: none;
-  box-shadow: inset 0 -2px 0 var(--signal);
 }
 
 html[data-focus-modality="keyboard"]
@@ -9930,10 +9930,22 @@ html[data-focus-modality="keyboard"]
 .whoop-field::before {
   content: "";
   position: absolute;
-  inset: 0;
+  inset: -16px;
   background: rgb(var(--day-rgb));
   mask: url("assets/atlas-terrain.svg") center / cover no-repeat;
+  animation: atlas-drift 18s ease-in-out -6s infinite alternate;
+  animation-play-state: var(--day-motion, paused);
 }
+@keyframes atlas-drift {
+  from { transform: translate3d(-14px, 6px, 0); }
+  to { transform: translate3d(14px, -6px, 0); }
+}
+.not-found__terrain::before {
+  animation: atlas-drift 24s ease-in-out -8s infinite alternate;
+  animation-play-state: var(--terrain-motion, paused);
+}
+body:is(.has-content-panel, .has-command-focus, .has-constellation-nav, .has-settings-panel, [data-case-open]) .whoop-field,
+body:has(.map-inspector.is-open, .practice-map[data-observation-active]) .whoop-field { --day-motion: paused; }
 html[data-theme="dark"] .whoop-field::before {
   background: color-mix(in srgb, rgb(var(--day-rgb)) 80%, white);
 }
@@ -9969,12 +9981,18 @@ html[data-theme="dark"] .whoop-field::before {
 .whoop-level { display: inline; margin-left: .375rem; font-size: .625rem; letter-spacing: 0; color: var(--content-muted); }
 .whoop-foot { display: flex; flex-wrap: wrap; column-gap: .75rem; align-items: center; margin-top: .5rem; }
 .whoop-foot span { color: var(--content-muted); font-size: .6875rem; }
-.whoop-foot button { min-height: 30px; background: none; padding: .1875rem 0; cursor: pointer; font-size: .6875rem; text-decoration: underline; text-underline-offset: 3px; }
+.whoop-foot button { min-height: 30px; padding: .1875rem 0; font-size: .6875rem; }
 .whoop-compact-trigger, .whoop-stamp { display: none; }
-.whoop-readout button:focus-visible { outline: 2px solid var(--signal); outline-offset: 4px; border-radius: 3px; }
 .settings-whoop { padding-bottom: 1.25rem; }
 .settings-whoop__copy { padding-top: .875rem; font-size: .8125rem; line-height: 1.5; text-wrap: pretty; }
 .settings-whoop__source { color: var(--content-muted); font-size: .75rem; }
+.display-control__presence { margin: -2px 7px 8px 31px; color: var(--content-muted); font-size: .625rem; line-height: 1.4; }
+[data-presence-count] { color: var(--content-ink); font-variant-numeric: tabular-nums; }
+.display-control__presence [data-presence-count] { margin-left: .35em; }
+.settings-presence { padding-block: 0 1.25rem; }
+.settings-presence > p:first-child { display: flex; justify-content: space-between; gap: 1rem; font-size: .8125rem; }
+.settings-presence > p + p { margin-top: .625rem; font-size: .75rem; line-height: 1.5; color: var(--content-muted); }
+.settings-presence > [data-presence][hidden], [data-presence][hidden] { display: none; }
 @media (min-width: 681px) {
   .control-console { width: calc(100vw - var(--author-card-width) - 48px); bottom: 16px; }
   @container (max-width: 18rem) {
@@ -10004,12 +10022,16 @@ html[data-theme="dark"] .whoop-field::before {
   .whoop-metrics dt, .whoop-metrics dd small { font-size: .625rem; }
   .whoop-compact-trigger { display: block; position: absolute; inset: 0; width: 100%; height: 100%; border-radius: inherit; background: none; cursor: pointer; }
   .whoop-compact-trigger::after { content: ''; position: absolute; right: 0; top: calc(50% - 3px); width: 7px; height: 7px; border: solid currentColor; border-width: 1px 1px 0 0; transform: rotate(45deg); }
-  .whoop-compact-trigger:focus-visible { border-radius: inherit; outline-offset: 3px; }
+  .whoop-compact-trigger:focus-visible { border-radius: inherit; outline: 2px solid var(--signal); outline-offset: 3px; }
   .whoop-readout:is([data-stale="true"], [data-unavailable="true"]) .whoop-stamp { display: block; padding-top: .4rem; color: var(--content-muted); font-size: .625rem; }
 }
 html[data-reduce-motion="true"] .whoop-field { transition: none; }
+html[data-reduce-motion="true"] :is(.whoop-field, .not-found__terrain)::before { animation: none; }
 html[data-contrast="true"] .whoop-field { display: none; }
-@media (prefers-reduced-motion: reduce) { .whoop-field { transition: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .whoop-field { transition: none; }
+  :is(.whoop-field, .not-found__terrain)::before { animation: none; }
+}
 @media (forced-colors: active), (prefers-contrast: more) { .whoop-field { display: none; } }
 
 /* MATERIAL / 01 CASCADE CONTRACT

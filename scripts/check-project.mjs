@@ -85,7 +85,7 @@ const staticContractSteps = [
   {
     label: "WHOOP service authorization and publication",
     command: process.execPath,
-    args: ["--test", "services/whoop/worker.test.js"],
+    args: ["--test", "services/whoop/worker.test.js", "services/whoop/presence.test.js"],
   },
   {
     label: "WHOOP daily states",

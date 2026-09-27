@@ -48,7 +48,8 @@ function startDay() {
     const day = snapshot ? normalizeDay(snapshot) : null;
     const palette = dayPalette(day?.recovery ?? 50);
     root.style.setProperty("--day-rgb", palette.rgb);
-    root.style.setProperty("--day-enabled", enabled && day?.colour ? "1" : "0");
+  root.style.setProperty("--day-enabled", enabled && day?.colour ? "1" : "0");
+  root.style.setProperty("--day-motion", enabled && day?.colour && !document.hidden ? "running" : "paused");
     select("toggle").setAttribute("aria-pressed", String(enabled));
     select("toggle-label").textContent = enabled ? "ВКЛЮЧЁН" : "ВЫКЛЮЧЕН";
     readout.dataset.stale = String(Boolean(day?.stale));
@@ -113,7 +114,7 @@ function startDay() {
   render();
   refresh();
   setInterval(() => { if (!document.hidden) { render(); refresh(); } }, 5 * 60000);
-  document.addEventListener("visibilitychange", () => { if (!document.hidden) { render(); refresh(); } });
+document.addEventListener("visibilitychange", () => { render(); if (!document.hidden) refresh(); });
 }
 
 if (typeof document !== "undefined") startDay();

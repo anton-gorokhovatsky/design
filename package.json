@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Static spatial portfolio and its reproducible quality gates.",
   "engines": {
-    "node": ">=20.19"
+    "node": ">=22.13"
   },
   "packageManager": "pnpm@11.9.0",
   "scripts": {
