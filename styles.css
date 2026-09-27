@@ -10097,7 +10097,6 @@ html[data-contrast="true"] .whoop-field { display: none; }
   gap: 8px;
 }
 
-.personal-media__source,
 .personal-media__play {
   border: 0;
   background: var(--material-01);
@@ -10109,21 +10108,36 @@ html[data-contrast="true"] .whoop-field { display: none; }
 
 .personal-media__source {
   display: inline-flex;
-  min-height: 36px;
+  min-height: 44px;
   align-items: center;
-  padding: 8px 12px;
-  border-radius: 18px;
-  font-size: clamp(0.62rem, calc(0.58rem + 0.16vw), 0.72rem);
-  letter-spacing: 0.035em;
-  text-decoration: none;
-  transition: background-color 180ms var(--motion-enter);
+  font-size: clamp(.75rem, calc(.72rem + .1vw), .8125rem);
+  line-height: 1.4;
 }
+
+.personal-media__head {
+  padding-inline: 12px 4px;
+  border-radius: 24px;
+}
+
+.has-reading-frame .personal-media__head { padding: 0; }
+.has-reading-frame .personal-media { gap: 0; }
 
 .personal-media .overlay-close {
   position: static;
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.personal-media .overlay-close:is(:hover, :focus-visible) {
+  background: transparent;
+  color: var(--signal);
+  transform: none;
 }
 
 .personal-media__screen {
@@ -10189,14 +10203,12 @@ html[data-contrast="true"] .whoop-field { display: none; }
   content: "";
 }
 
-.personal-media__source:focus-visible,
 .personal-media__poster:focus-visible {
   outline: 2px solid var(--signal);
   outline-offset: -4px;
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .personal-media__source:hover,
   .personal-media__poster:hover .personal-media__play {
     background: color-mix(in srgb, var(--material-01) 88%, var(--ink) 12%);
     color: var(--ink);
@@ -10541,8 +10553,8 @@ body[data-case-open] :is(.map-axis-label, .map-labels, .map-node-label, .origin-
   backdrop-filter: blur(2.2px);
   -webkit-backdrop-filter: blur(2.2px);
 }
-.scroll-lens-video { position: absolute; z-index: 1; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-.case-scroll:has(.scroll-lens-video) .personal-media__screen { overflow: visible; background: transparent; }
+.scroll-lens-video { position: absolute; z-index: 1; top: 0; pointer-events: none; }
+.case-scroll :is(.personal-media__screen, .map-hover-preview__mosaic-main):has(.scroll-lens-video) { overflow: visible; background: transparent; }
 .case-media[data-orientation="portrait"] .map-hover-preview__mosaic-main { aspect-ratio: 4 / 5; }
 .case-media video { display: block; width: 100%; height: 100%; object-fit: contain; }
 .case-media figcaption { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0 var(--case-space-medium); color: var(--content-muted); }

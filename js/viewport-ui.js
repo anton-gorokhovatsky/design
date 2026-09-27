@@ -18,34 +18,43 @@ const scrollLensControllers = new Map();
 let scrollLensId = 0;
 const lensNamespace = "http://www.w3.org/2000/svg";
 const lensForcedColors = matchMedia("(forced-colors: active)");
-const lensDepth = 96;
+const lensDepth = 56;
 const lensBleed = 32;
 // Refraction enlarges foreground content as it enters the matte edge. Keep
 // baselines intact: vertical displacement clips glyphs in browser SVG pipelines.
 const drawScrollLensMap = (record, width, height, top, bottom) => {
-  const canvas = record.canvas;
   const extent = height + lensBleed * 2;
-  const rows = Math.min(512, Math.max(32, Math.ceil(extent)));
-  if (canvas.height !== rows) canvas.height = rows;
-  const context = canvas.getContext("2d");
-  const pixels = context.createImageData(canvas.width, rows);
-  for (let y = 0; y < rows; y++) {
-    const position = y / (rows - 1) * extent - lensBleed;
-    const upper = top === null ? 0 : Math.max(0, Math.min(1, 1 - (position - top) / lensDepth));
-    const lower = bottom === null ? 0 : Math.max(0, Math.min(1, 1 - (bottom - position) / lensDepth));
-    const depth = Math.max(upper, lower);
-    for (let x = 0; x < canvas.width; x++) {
-      const u = x / (canvas.width - 1);
-      const shift = record.media ? 0 : -(u - .5) * Math.min(width * .42, 168)
-        * depth ** 2 * Math.sin(Math.PI * u) ** 2;
-      const offset = (y * canvas.width + x) * 4;
-      pixels.data[offset] = 128 + shift / 64 * 255;
-      pixels.data[offset + 1] = 128;
-      pixels.data[offset + 2] = 255 * depth;
-      pixels.data[offset + 3] = 255;
+  const textureHeight = lensDepth + lensBleed;
+  // Decode each edge texture once. Replacing a PNG data URL on every scroll
+  // frame made WebKit alternate between the previous and newly decoded map.
+  if (record.textureWidth !== width) {
+    const canvas = record.canvas;
+    canvas.height = textureHeight;
+    const context = canvas.getContext("2d");
+    const pixels = context.createImageData(canvas.width, textureHeight);
+    for (let y = 0; y < textureHeight; y++) {
+      const depth = Math.max(0, Math.min(1, 1 - (y - lensBleed) / lensDepth));
+      for (let x = 0; x < canvas.width; x++) {
+        const u = x / (canvas.width - 1);
+        const shift = record.media ? 0 : -(u - .5) * Math.min(width * .42, 168)
+          * depth ** 2 * Math.sin(Math.PI * u) ** 2;
+        const offset = (y * canvas.width + x) * 4;
+        pixels.data[offset] = 128 + shift / 64 * 255;
+        pixels.data[offset + 1] = 128;
+        pixels.data[offset + 2] = 255 * depth;
+        pixels.data[offset + 3] = 255;
+      }
     }
+    context.putImageData(pixels, 0, 0);
+    record.images[0].setAttribute("href", canvas.toDataURL());
+    const flipped = context.createImageData(canvas.width, textureHeight);
+    const stride = canvas.width * 4;
+    for (let y = 0; y < textureHeight; y++) flipped.data.set(
+      pixels.data.subarray(y * stride, (y + 1) * stride), (textureHeight - y - 1) * stride);
+    context.putImageData(flipped, 0, 0);
+    record.images[1].setAttribute("href", canvas.toDataURL());
+    record.textureWidth = width;
   }
-  context.putImageData(pixels, 0, 0);
   // Keep displaced glyphs inside the Safari filter bounds.
   for (const primitive of [record.filter, ...record.filter.children]) {
     primitive.setAttribute("x", "0");
@@ -58,7 +67,16 @@ const drawScrollLensMap = (record, width, height, top, bottom) => {
   record.blur.setAttribute("stdDeviation", `${blur / width} ${blur / height}`);
   record.fade.setAttribute("amplitude", record.media ? ".28" : ".72");
   record.fade.setAttribute("exponent", record.media ? "2.4" : "3.4");
-  record.image.setAttribute("href", canvas.toDataURL());
+  record.images.forEach((image, index) => {
+    const edge = index ? bottom : top;
+    const start = edge - (index ? lensDepth : lensBleed);
+    const visible = edge !== null && start < height + lensBleed && start + textureHeight > -lensBleed;
+    // WebKit can discard the whole filter when a merged feImage lies entirely
+    // outside its bounds. Keep unused textures in bounds and merge transparency.
+    image.setAttribute("y", visible ? start / height : 0);
+    image.setAttribute("height", textureHeight / height);
+    record.mapLayers[index].setAttribute("in", visible ? (index ? "lower" : "upper") : "empty");
+  });
 };
 
 const lensDepthAt = (position, edge, upper) => edge === null ? 0
@@ -72,13 +90,14 @@ const lensRow = (g, y) => {
   const r = Math.min(g.radius, g.width / 2, g.height / 2);
   const dy = Math.max(0, r - Math.min(y, g.height - y));
   const corner = r - Math.sqrt(Math.max(0, r*r - dy*dy));
-  return { bend, sample: y + 22 * (upper ** 2 - lower ** 2),
+  return { bend, sample: y + 8 * (upper ** 2 - lower ** 2),
     left: g.left * (1 - flare) + corner,
     right: g.left + g.width + (g.portWidth - g.left - g.width) * flare - corner };
 };
-// Paint only the existing first-party picture/decoder. The transparent canvas
-// spans the reading viewport so refracted content can fill its rounded corners.
-const createLensMedia = (video, region) => {
+// Keep the raster attached to its picture so native/inertial scrolling moves
+// both together. A viewport-sized copy repositioned from scroll events lags
+// behind Safari's compositor and leaves torn bands at the frame boundary.
+const createLensMedia = video => {
   const moving = video.matches("video");
   const background = getComputedStyle(video.closest(".personal-media__screen") || video.parentElement).backgroundColor;
   const canvas = document.createElement("canvas");
@@ -93,7 +112,7 @@ const createLensMedia = (video, region) => {
     if (disposed || !geometry || (moving ? video.readyState < 2 : !video.complete || !video.naturalWidth)) return;
     const g = geometry, density = Math.min(devicePixelRatio || 1, 2);
     const width = Math.round(g.width*density), height = Math.round(g.height*density);
-    const pw = Math.round(g.portWidth*density), ph = Math.round(g.portHeight*density);
+    const pw = Math.round(g.portWidth*density), ph = height;
     if (!width || !height || !pw || !ph) return;
     if (canvas.width !== pw || canvas.height !== ph) { canvas.width=pw; canvas.height=ph; }
     const resized = source.width !== width || source.height !== height;
@@ -108,17 +127,37 @@ const createLensMedia = (video, region) => {
       sourceContext.drawImage(video,(width-w)/2,moving?0:(height-h)/2,w,h);
     }
     context.clearRect(0,0,pw,ph);
-    for (let row=Math.max(0,Math.ceil(g.y*density)); row<Math.min(ph,(g.y+g.height)*density); row++) {
-      const y=(row+.5)/density-g.y, edge=lensRow(g,y);
-      const dw=(edge.right-edge.left)*density;
-      if (dw<=0) continue;
-      const sw=Math.min(width,dw/(1+.35*edge.bend));
-      const sy=Math.max(0,Math.min(height-1,edge.sample*density));
-      const sh=Math.max(.1,Math.min(height-sy,lensRow(g,y+1/density).sample*density-sy));
-      context.drawImage(source,(width-sw)/2,sy,sw,sh,edge.left*density,row,dw,1);
+    // Copy the undistorted centre in one operation. Only the two narrow edge
+    // bands need row sampling, even when a tall reel scrolls past the window.
+    context.save();
+    context.beginPath();
+    context.roundRect(g.left*density,0,width,height,Math.min(g.radius*density,width/2,height/2));
+    context.clip();
+    context.drawImage(source,g.left*density,0);
+    context.restore();
+    const bands = [g.top === null ? null : [g.top-lensBleed,g.top+lensDepth],
+      g.bottom === null ? null : [g.bottom-lensDepth,g.bottom+lensBleed]]
+      .filter(Boolean).map(([from,to])=>[Math.max(0,Math.floor(from*density)),Math.min(ph,Math.ceil(to*density))])
+      .filter(([from,to])=>to>from);
+    if (bands.length===2 && bands[0][1]>=bands[1][0]) {
+      bands[0][1]=bands[1][1]; bands.pop();
     }
-    canvas.style.top=region.scrollTop+"px";
-    if (!canvas.isConnected) region.append(canvas);
+    for (const [from,to] of bands) {
+      context.clearRect(0,from,pw,to-from);
+      for (let row=from; row<to; row++) {
+        const y=(row+.5)/density, edge=lensRow(g,y);
+        const dw=(edge.right-edge.left)*density;
+        if (dw<=0) continue;
+        const sw=Math.min(width,dw/(1+.16*edge.bend));
+        const sy=Math.max(0,Math.min(height-1,edge.sample*density-.5));
+        // Complete source rows avoid subpixel raster gaps in WebKit.
+        context.drawImage(source,(width-sw)/2,sy,sw,1,edge.left*density,row,dw,1);
+      }
+    }
+    canvas.style.left=-g.left+"px";
+    canvas.style.width=g.portWidth+"px";
+    canvas.style.height=g.height+"px";
+    if (!canvas.isConnected) video.parentElement.append(canvas);
     video.style.opacity="0";
   };
   const tick = () => {
@@ -155,9 +194,9 @@ const createLensPlayer = element => {
     const upper = strength(top), lower = strength(bottom === null ? null : height - bottom);
     const y0 = top === null ? 0 : Math.max(0, Math.min(height - 1, top));
     const y1 = bottom === null ? height : Math.max(y0 + 1, Math.min(height, bottom));
-    const span = y1 - y0, z0 = 1 + .35 * upper ** 2, z1 = 1 + .35 * lower ** 2;
-    const s0 = y0 + Math.min(22 * upper ** 2, span * .3);
-    const s1 = y1 - Math.min(22 * lower ** 2, span * .3);
+    const span = y1 - y0, z0 = 1 + .16 * upper ** 2, z1 = 1 + .16 * lower ** 2;
+    const s0 = y0 + Math.min(8 * upper ** 2, span * .3);
+    const s1 = y1 - Math.min(8 * lower ** 2, span * .3);
     // Bounded offsets keep the two-edge projection invertible.
     const c = (z1 - z0) / span, d = z0 - c * y0;
     const a = (s1 * z1 - s0 * z0) / span, b = s0 * z0 - a * y0;
@@ -227,7 +266,11 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
     for (const [key, value] of Object.entries({ id, filterUnits: "objectBoundingBox",
       primitiveUnits: "objectBoundingBox", x: "0", y: "0", width: "1", height: "1",
       "color-interpolation-filters": "sRGB" })) filter.setAttribute(key, value);
-    filter.innerHTML = `<feImage x="0" y="0" width="1" height="1" preserveAspectRatio="none" result="map"/>
+    filter.innerHTML = `<feFlood flood-color="#808000" result="neutral"/>
+      <feFlood flood-opacity="0" result="empty"/>
+      <feImage x="0" y="0" width="1" height="1" preserveAspectRatio="none" result="upper"/>
+      <feImage x="0" y="0" width="1" height="1" preserveAspectRatio="none" result="lower"/>
+      <feMerge result="map"><feMergeNode in="neutral"/><feMergeNode in="upper"/><feMergeNode in="lower"/></feMerge>
       <feComponentTransfer in="map" result="offset"><feFuncR type="linear" intercept="-.0019607843"/><feFuncG type="linear" slope="0" intercept=".5"/></feComponentTransfer>
       <feDisplacementMap in="SourceGraphic" in2="offset" xChannelSelector="R" yChannelSelector="G" result="warped"/>
       <feGaussianBlur in="warped" edgeMode="duplicate" result="blurred"/>
@@ -242,10 +285,11 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
     const canvas = document.createElement("canvas");
     canvas.width = 64;
     const record = { id, filter, canvas, original: element.style.filter,
-      image: filter.querySelector("feImage"),
+      images: [...filter.querySelectorAll("feImage")],
+      mapLayers: [...filter.querySelectorAll('feMergeNode')].slice(1),
       displaceX: filter.querySelector("feDisplacementMap"), blur: filter.querySelector("feGaussianBlur"),
       fade: filter.querySelector('[result="fade"] feFuncA'),
-      media: element.matches("img, video") ? createLensMedia(element, region) : null };
+      media: element.matches("img, video") ? createLensMedia(element) : null };
     records.set(element, record);
     resize.observe(element);
     return record;
@@ -292,7 +336,7 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
         if (record.player) { record.player.draw(geometry); continue; }
         record.media.setGeometry(geometry);
         record.media.draw(true);
-        drawScrollLensMap(record,region.clientWidth,region.clientHeight,top?0:null,bottom?region.clientHeight:null);
+        drawScrollLensMap(record,region.clientWidth,height,geometry.top,geometry.bottom);
       } else drawScrollLensMap(record,width,height,
         depths[0] ? (port.top-rect.top)/scale : null, depths[1] ? (port.bottom-rect.top)/scale : null);
       (record.media?.canvas || element).style.filter = `url(#${record.id})`;

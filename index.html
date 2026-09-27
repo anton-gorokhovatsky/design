@@ -119,7 +119,7 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=0504835fb4af">
+    <link rel="stylesheet" href="styles.css?v=77ffe4dac9b8">
     <style>
       .map-evidence [data-map-evidence-role-label]{font-family:var(--font-author);font-size:.6rem;font-weight:400;letter-spacing:0}
     </style>
@@ -139,7 +139,7 @@
           "./js/personal-media.js": "./js/personal-media.js?v=524375a4d005",
           "./js/sphere-surfaces.js": "./js/sphere-surfaces.js?v=4cf52ae3e8a0",
           "./js/map-engine.js": "./js/map-engine.js?v=d1503472b6ee",
-          "./js/viewport-ui.js": "./js/viewport-ui.js?v=2d18526efae8",
+          "./js/viewport-ui.js": "./js/viewport-ui.js?v=a906f2b1cc32",
           "./js/panels.js": "./js/panels.js?v=89b4c5577c93",
           "./js/case-view.js": "./js/case-view.js?v=40b27efceaab",
           "./js/favicon.js": "./js/favicon.js?v=3aa23538dc2d"
@@ -160,7 +160,7 @@
     <script type="module" src="js/personal-media.js?v=524375a4d005"></script>
     <script type="module" src="js/sphere-surfaces.js?v=4cf52ae3e8a0"></script>
     <script type="module" src="js/map-engine.js?v=d1503472b6ee"></script>
-    <script type="module" src="js/viewport-ui.js?v=2d18526efae8"></script>
+    <script type="module" src="js/viewport-ui.js?v=a906f2b1cc32"></script>
     <script type="module" src="js/panels.js?v=89b4c5577c93"></script>
     <script type="module" src="js/case-view.js?v=40b27efceaab"></script>
     <script type="module" src="js/favicon.js?v=3aa23538dc2d"></script>
@@ -634,22 +634,18 @@
           aria-label="Любимый стрим"
           hidden
         >
-          <div class="personal-media__head">
+          <div class="personal-media__head" data-material-surface="personal-media-head" data-material-active="desktop">
             <a
-              class="personal-media__source"
+              class="text-link personal-media__source"
               data-personal-media-source
-              data-material-surface="personal-media-source"
-              data-material-active="always"
               href="https://www.youtube.com/watch?v=bkbJsunB5zY"
               target="_blank"
               rel="noopener noreferrer"
-            >СМОТРЕТЬ НА&nbsp;YOUTUBE</a>
+            >Смотреть на&nbsp;YouTube</a>
             <button
               class="overlay-close personal-media__close"
               type="button"
               data-close-personal-media
-              data-material-surface="personal-media-close"
-              data-material-active="always"
               aria-label="Закрыть и остановить стрим"
             ><span aria-hidden="true">×</span></button>
           </div>

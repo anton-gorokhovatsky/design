@@ -85,6 +85,22 @@ try {
           width:Math.min(bounds.width,port.width)-16,height:60};
         const affected=type==='player'?'iframe':['video','image'].includes(type)?'.scroll-lens-video':target;
         await page.waitForFunction(sel=>{const e=document.querySelector(sel);return e&&(e.style.filter.includes('scroll-ink')||e.style.transform.includes('matrix3d'));},affected);
+        if (type==='image' || type==='video') {
+          const attachment=await page.locator(target).evaluate(picture=>{
+            const region=picture.closest('.case-scroll'),canvas=picture.parentElement.querySelector('.scroll-lens-video');
+            if(!canvas) return null;
+            const offset=()=>canvas.getBoundingClientRect().top-picture.getBoundingClientRect().top;
+            const before=offset(),top=region.scrollTop;
+            // Read in this same task, before a scroll listener can repaint:
+            // compositor scrolling must carry the raster with its native media.
+            region.scrollTop+=top>12?-12:12;
+            const after=offset();
+            region.scrollTop=top;
+            return {before,after};
+          });
+          assert.ok(attachment,'The optical raster belongs to its picture');
+          assert.ok(Math.abs(attachment.after-attachment.before)<.1,'Scrolling cannot detach the raster before the next JS frame');
+        }
         // Wait for the actual displacement map to decode. Then freeze the same
         // frame for both captures: background animation or a queued lens update
         // must not be counted as an optical difference (or restore the filter).
@@ -107,12 +123,17 @@ try {
         const flared=[];
         for(const clip of flareClips) flared.push(await page.screenshot({clip}));
         const visible=await page.screenshot({clip});
+        const centreTop=Math.max(port.y+64,bounds.y+24),centreBottom=Math.min(port.y+port.height-64,bounds.y+bounds.height-24);
+        const centreClip=(type==='image'||type==='video')&&centreBottom-centreTop>16
+          ? {x:bounds.x+24,y:(centreTop+centreBottom)/2-8,width:bounds.width-48,height:16}:null;
+        const centre=centreClip?await page.screenshot({clip:centreClip}):null;
         await page.locator(affected).evaluate(e=>{
           e.dataset.lensStyle=e.getAttribute('style')||'';e.style.filter='none';e.style.transform='none';
           if(e.matches('canvas')) {e.style.visibility='hidden';e.closest('.case-scroll').querySelector('video, [data-personal-media-poster]').style.opacity='1';}
           const frost=e.parentElement.querySelector('.scroll-lens-frost');if(frost)frost.style.visibility='hidden';
         });
         const plain=await page.screenshot({clip});
+        const plainCentre=centreClip?await page.screenshot({clip:centreClip}):null;
         const padding=[];
         for(const clip of flareClips) padding.push(await page.screenshot({clip}));
         await page.locator(affected).evaluate(e=>{
@@ -124,6 +145,7 @@ try {
         await page.clock.resume();
         const difference=await delta(page,visible,plain);
         assert.ok(difference>1.2,'The '+edge+' edge changes actual pixels: '+difference);
+        if(centre) assert.ok(await delta(page,centre,plainCentre)<4,'The picture centre remains visible and unchanged outside the edge effect');
         const flare=[];
         for(let i=0;i<flared.length;i++) {
           flare.push(await delta(page,flared[i],padding[i]));
