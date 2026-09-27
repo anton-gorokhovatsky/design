@@ -9979,9 +9979,9 @@ html[data-theme="dark"] .whoop-field {
 .settings-whoop__source { color: var(--content-muted); font-size: .75rem; }
 .display-control__presence { margin: -2px 7px 8px 31px; color: var(--content-muted); font-size: .625rem; line-height: 1.4; }
 [data-presence-count] { color: var(--content-ink); font-variant-numeric: tabular-nums; }
-.display-control__presence [data-presence-count] { margin-left: .35em; }
+.presence-total { color: var(--content-ink); white-space: nowrap; }
 .settings-presence { padding-block: 0 1.25rem; }
-.settings-presence > p:first-child { display: flex; justify-content: space-between; gap: 1rem; font-size: .8125rem; }
+.settings-presence > p:first-child { font-size: .8125rem; }
 .settings-presence > p + p { margin-top: .625rem; font-size: .75rem; line-height: 1.5; color: var(--content-muted); }
 .settings-presence > [data-presence][hidden], [data-presence][hidden] { display: none; }
 @media (min-width: 681px) {

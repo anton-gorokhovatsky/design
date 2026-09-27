@@ -3,9 +3,13 @@ const endpoint = document.querySelector('meta[name="presence-feed"]')?.content;
 const views = [...document.querySelectorAll('[data-presence]')];
 const id = crypto.randomUUID();
 let releaseLock, acquiring = false, timer, busy = false, active = false;
+const visitorPlural = new Intl.PluralRules('ru');
+const visitorWords = { one: 'посетитель', few: 'посетителя', many: 'посетителей', other: 'посетителей' };
 const render = count => views.forEach(view => {
   view.hidden = false;
   view.querySelector('[data-presence-count]').textContent = count === null ? 'Нет связи' : String(count);
+  view.querySelector('[data-presence-unit]').textContent = count === null
+    ? '' : `\u00a0${visitorWords[visitorPlural.select(count)]}`;
 });
 const report = async () => {
   if (busy || document.hidden || !endpoint) return;

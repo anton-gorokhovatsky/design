@@ -119,7 +119,7 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=dbf00b6c73b9">
+    <link rel="stylesheet" href="styles.css?v=0504835fb4af">
     <style>
       .map-evidence [data-map-evidence-role-label]{font-family:var(--font-author);font-size:.6rem;font-weight:400;letter-spacing:0}
     </style>
@@ -129,7 +129,7 @@
         "imports": {
           "./js/preferences.js": "./js/preferences.js?v=a80697d7b0cd",
           "./js/whoop-day.js": "./js/whoop-day.js?v=d518f462e82a",
-          "./js/presence.js": "./js/presence.js?v=1dc92c8b9245",
+          "./js/presence.js": "./js/presence.js?v=fb9d34cf05fc",
           "./js/atlas-motion.js": "./js/atlas-motion.js?v=6f9e27863aee",
           "./js/analytics.js": "./js/analytics.js?v=8e40098015f7",
           "./js/cipher-field.js": "./js/cipher-field.js?v=646034d9be18",
@@ -151,7 +151,7 @@
     <script type="module" src="js/preferences.js?v=a80697d7b0cd"></script>
     <script type="module" src="js/whoop-day.js?v=d518f462e82a"></script>
     <script type="module" src="js/atlas-motion.js?v=6f9e27863aee"></script>
-    <script type="module" src="js/presence.js?v=1dc92c8b9245"></script>
+    <script type="module" src="js/presence.js?v=fb9d34cf05fc"></script>
     <script type="module" src="js/analytics.js?v=8e40098015f7"></script>
     <script type="module" src="js/cipher-field.js?v=646034d9be18"></script>
     <script type="module" src="js/signal-field.js?v=e59af2b0e792"></script>
@@ -1087,7 +1087,7 @@
                 <span class="display-control__value">МСК <span data-clock>--:--</span></span>
               </p>
             </div>
-            <p class="display-control__presence" data-presence hidden>Сейчас на&nbsp;сайте <span data-presence-count>—</span></p>
+            <p class="display-control__presence" data-presence hidden>Сейчас на&nbsp;сайте <span class="presence-total"><span data-presence-count>—</span><span data-presence-unit></span></span></p>
             <button
               class="theme-toggle"
               type="button"
@@ -1478,7 +1478,7 @@
           <p class="settings-whoop__copy settings-whoop__source" data-whoop-provenance>Получаем данные WHOOP.</p>
         </section>
         <section class="settings-presence" aria-label="Посетители сейчас">
-          <p data-presence hidden>Сейчас на&nbsp;сайте <strong data-presence-count>—</strong></p>
+          <p data-presence hidden>Сейчас на&nbsp;сайте <span class="presence-total"><span data-presence-count>—</span><span data-presence-unit></span></span></p>
           <p>Считаются активные браузеры. Несколько вкладок считаются за&nbsp;одно посещение; после ухода запись исчезает в&nbsp;течение полутора минут. Без&nbsp;файлов cookie и&nbsp;истории посещений.</p>
         </section>
         <section
