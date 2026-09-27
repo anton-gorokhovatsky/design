@@ -8,7 +8,11 @@ const {startStaticServer, readRenderedFrameCorners} = require('./browser-contrac
 const root = fileURLToPath(new URL('../', import.meta.url)).replace(/\/$/, '');
 const engine = process.argv[2] || 'chromium';
 assert.ok(['chromium','webkit'].includes(engine));
-const local = process.env.PORTFOLIO_LENS_ORIGIN ? null : await startStaticServer({projectRoot:root});
+// These optical captures freeze time and replace documents repeatedly. Keep the
+// unrelated presence heartbeat out of this fixture: WebKit can report its
+// keepalive from the retired document as a CORS pageerror during navigation.
+// Other browser suites retain the real presence lifecycle and its local endpoint.
+const local = process.env.PORTFOLIO_LENS_ORIGIN ? null : await startStaticServer({projectRoot:root,presence:false});
 const origin = process.env.PORTFOLIO_LENS_ORIGIN || local.origin;
 const dir = (process.env.PORTFOLIO_UI_ARTIFACT_DIR || root+'/.qa-artifacts/scroll-lens')+'/';
 mkdirSync(dir,{recursive:true});

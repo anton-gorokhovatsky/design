@@ -21,6 +21,7 @@ const staticAssetMimeTypes = {
 const startStaticServer = async ({
   projectRoot,
   onNotFound = () => {},
+  presence = true,
 } = {}) => {
   if (!projectRoot) {
     throw new Error("startStaticServer requires projectRoot.");
@@ -102,7 +103,8 @@ const startStaticServer = async ({
     if (relativePath === "index.html") {
       response.end(fs.readFileSync(absolutePath, "utf8").replace(
         /name="whoop-feed" content="[^"]*"/, 'name="whoop-feed" content="/__qa/whoop-day.json"',
-      ).replace(/name="presence-feed" content="[^"]*"/, 'name="presence-feed" content="/__qa/presence"'));
+      ).replace(/name="presence-feed" content="[^"]*"/,
+        'name="presence-feed" content="' + (presence ? '/__qa/presence' : '') + '"'));
       return;
     }
     fs.createReadStream(absolutePath).pipe(response);
