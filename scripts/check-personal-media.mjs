@@ -155,26 +155,28 @@ try {
         return target.evaluate((element) => {
           const style = getComputedStyle(element);
           return Object.fromEntries(["backgroundColor", "color", "transform",
-            "outlineColor", "outlineWidth", "outlineOffset", "borderRadius",
+            "outlineColor", "outlineWidth", "outlineStyle", "outlineOffset", "borderRadius",
             "boxShadow", "backdropFilter"].map((key) => [key, style[key]]));
         });
       };
       for (const keyboard of [false, true]) {
         const cardClose = await closeStyles("[data-close-inspector]", keyboard);
         const playerClose = await closeStyles("[data-close-personal-media]", keyboard);
-        if (geometry.inline) {
-          // The inline player is already inside the readout's material shell.
-          // Its close button keeps the same shape/focus without nested glass.
-          assert.equal(playerClose.backgroundColor, "rgba(0, 0, 0, 0)");
-          assert.equal(playerClose.backdropFilter, "none");
-          cardClose.backgroundColor = "rgba(0, 0, 0, 0)";
-          cardClose.backdropFilter = "none";
+        // Desktop source and close share one material bar; mobile inherits the
+        // reading window. Neither state creates a second glass island or rotates
+        // the small inline control. Keep the shared focus geometry in both layouts.
+        assert.equal(playerClose.backgroundColor, "rgba(0, 0, 0, 0)");
+        assert.equal(playerClose.backdropFilter, "none");
+        assert.equal(playerClose.transform, "none");
+        for (const key of ["outlineWidth", "outlineStyle", "outlineOffset", "borderRadius", "boxShadow"]) {
+          assert.equal(playerClose[key], cardClose[key], "Close controls share " + key);
         }
-        assert.deepEqual(playerClose, cardClose,
-          "Card and player close controls share hover and keyboard focus.");
         assert.equal(await player.isVisible(), true, "The style probe must not leave the card.");
-        if (keyboard) assert.equal(cardClose.outlineWidth, "2px",
-          "Both close controls visibly identify keyboard focus.");
+        if (keyboard) {
+          assert.equal(playerClose.outlineWidth, "2px",
+            "Both close controls visibly identify keyboard focus.");
+          assert.equal(playerClose.outlineStyle, "solid");
+        }
       }
       await page.locator("[data-close-personal-media]").evaluate((element) => element.blur());
       await page.mouse.move(0, 0);
