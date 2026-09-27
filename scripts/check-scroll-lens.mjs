@@ -22,14 +22,22 @@ const align = async (page, selector, edge, inset=18) => {
   },{edge,inset});
   await settle(page);
 };
-const delta = (page, a, b) => page.evaluate(async sources => {
+const delta = (page, a, b, blockSize = 1) => page.evaluate(async ({sources, blockSize}) => {
   const read = async source => {const i=new Image();i.src='data:image/png;base64,'+source;await i.decode();
     const c=document.createElement('canvas');c.width=i.width;c.height=i.height;
-    const x=c.getContext('2d');x.drawImage(i,0,0);return x.getImageData(0,0,c.width,c.height).data;};
-  const [x,y]=await Promise.all(sources.map(read));let d=0;
-  for(let n=0;n<x.length;n++) if(n%4!==3) d+=Math.abs(x[n]-y[n]);
-  return d/(x.length*.75);
-},[a.toString('base64'),b.toString('base64')]);
+    const x=c.getContext('2d');x.drawImage(i,0,0);return x.getImageData(0,0,c.width,c.height);};
+  const [x,y]=await Promise.all(sources.map(read));let d=0,channels=0;
+  for(let row=0;row<x.height;row+=blockSize) for(let col=0;col<x.width;col+=blockSize) {
+    const sum=[0,0,0];let count=0;
+    for(let r=row;r<Math.min(row+blockSize,x.height);r++) for(let c=col;c<Math.min(col+blockSize,x.width);c++) {
+      const p=(r*x.width+c)*4;
+      for(let channel=0;channel<3;channel++) sum[channel]+=x.data[p+channel]-y.data[p+channel];
+      count++;
+    }
+    for(const value of sum) {d+=Math.abs(value/count);channels++;}
+  }
+  return d/channels;
+},{sources:[a.toString('base64'),b.toString('base64')],blockSize});
 try {
   for(const [name,width,height,theme,point,selector,type] of [
     ['poster',390,568,'light','youtube','[data-personal-media-poster]','image'],
@@ -145,7 +153,14 @@ try {
         await page.clock.resume();
         const difference=await delta(page,visible,plain);
         assert.ok(difference>1.2,'The '+edge+' edge changes actual pixels: '+difference);
-        if(centre) assert.ok(await delta(page,centre,plainCentre)<4,'The picture centre remains visible and unchanged outside the edge effect');
+        if(centre) {
+          // Native images and a canvas resample on different subpixel phases,
+          // especially at fractional object-fit sizes. Compare colour structure
+          // with area averages: a missing picture fails, normal GPU smoothing does not.
+          // Do not resize via drawImage here: WebKit's downsampling has its own phase.
+          const centreDifference=await delta(page,centre,plainCentre,16);
+          assert.ok(centreDifference<4,'The picture centre remains visible and unchanged outside the edge effect: '+centreDifference);
+        }
         const flare=[];
         for(let i=0;i<flared.length;i++) {
           flare.push(await delta(page,flared[i],padding[i]));
