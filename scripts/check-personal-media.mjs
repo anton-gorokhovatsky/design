@@ -159,7 +159,12 @@ try {
             "boxShadow", "backdropFilter"].map((key) => [key, style[key]]));
         });
       };
-      for (const keyboard of [false, true]) {
+      if (geometry.inline) {
+        assert.equal(await page.locator("[data-close-personal-media]").isVisible(), false,
+          "Inline video belongs to its card and has no separate dismiss action.");
+        assert.equal(await page.locator("[data-open-personal-media]").isVisible(), false);
+      }
+      for (const keyboard of geometry.inline ? [] : [false, true]) {
         const cardClose = await closeStyles("[data-close-inspector]", keyboard);
         const playerClose = await closeStyles("[data-close-personal-media]", keyboard);
         // Desktop source and close share one material bar; mobile inherits the
@@ -221,6 +226,12 @@ try {
         await page.keyboard.press("Escape");
         assert.equal(await player.isVisible(), false);
       } else {
+        await page.locator("[data-personal-media-source]").focus();
+        await page.keyboard.press("Escape");
+        assert.equal(await player.isVisible(), false, "Escape closes the inline video with its card.");
+        assert.equal(await frame.count(), 0, "Closing the card stops inline playback.");
+        await select(page, "youtube");
+        assert.equal(await poster.isVisible(), true, "Reopening the card restores its poster directly.");
         await select(page, "coffee");
         assert.equal(await player.isVisible(), false, "Mobile playback belongs to its card.");
         assert.equal(await frame.count(), 0);

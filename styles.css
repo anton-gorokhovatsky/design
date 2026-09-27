@@ -10078,6 +10078,7 @@ html[data-contrast="true"] .whoop-field { display: none; }
 .personal-media[hidden],
 .personal-media-slot[hidden],
 .personal-media__poster[hidden],
+[data-close-personal-media][hidden],
 [data-open-personal-media][hidden] {
   display: none;
 }

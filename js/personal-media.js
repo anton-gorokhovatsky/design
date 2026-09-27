@@ -24,7 +24,8 @@ export const createPersonalMedia = ({ inspector, returnFocus }) => {
   const sync = () => {
     const visible = !root.hidden;
     slot.hidden = !visible || !inlineLayout.matches;
-    launch.hidden = !selectedItem?.youtube || visible;
+    launch.hidden = inlineLayout.matches || !selectedItem?.youtube || visible;
+    if (closeButton) closeButton.hidden = inlineLayout.matches;
     launch.setAttribute("aria-expanded", String(visible));
     if (selectedItem?.youtube && mapLink) mapLink.hidden = true;
   };
@@ -136,14 +137,16 @@ export const createPersonalMedia = ({ inspector, returnFocus }) => {
   poster.addEventListener("click", play);
   closeButton?.addEventListener("click", () => close({ restoreFocus: true }));
   root.addEventListener("keydown", (event) => {
-    if (event.key !== "Escape") return;
+    // Inline playback belongs to the card; Escape closes that card as a whole.
+    if (event.key !== "Escape" || inlineLayout.matches) return;
     event.preventDefault();
     event.stopPropagation();
     close({ restoreFocus: true });
   });
   inlineLayout.addEventListener("change", () => {
     if (!selectedItem?.youtube) close();
-    place();
+    if (inlineLayout.matches && selectedItem?.youtube) show(selectedItem);
+    else place();
   });
   // A content panel leaves the map. Do not keep an inaudible-to-find player
   // underneath it; persistence is intentionally limited to exploring map points.

@@ -240,7 +240,7 @@ try {
         // Hit testing follows the projected browsing context, not an invisible copy.
         await page.locator('iframe').contentFrame().locator('button').click();
         assert.equal(await page.locator('iframe').contentFrame().locator('button').textContent(),'Clicked');
-        await page.locator('[data-close-personal-media]').focus();
+        await page.locator('[data-personal-media-source]').focus();
         await page.keyboard.press('Tab');
         await settle(page);
         assert.equal(await page.locator('iframe').evaluate(f=>f===document.activeElement),true,'Keyboard enters the original player');
