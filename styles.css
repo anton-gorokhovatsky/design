@@ -9744,7 +9744,8 @@ html[data-theme="dark"] .whoop-field {
   text-wrap: pretty;
 }
 .settings-panel__screen > .settings-panel__note { padding-bottom: var(--space-5); }
-.settings-whoop { padding-bottom: var(--space-4); }
+.settings-whoop { padding-bottom: var(--space-5); }
+.settings-whoop > .settings-panel__note { margin-top: var(--space-4); }
 .settings-whoop__copy { font-size: var(--type-detail); line-height: var(--leading-body); text-wrap: pretty; }
 .settings-whoop__zones {
   display: grid;
@@ -9756,19 +9757,6 @@ html[data-theme="dark"] .whoop-field {
 }
 .settings-whoop__zones dt { font-weight: 600; font-variant-numeric: tabular-nums; }
 .settings-whoop__zones dd { margin: var(--space-1) 0 0; color: var(--content-muted); }
-.settings-panel__disclosure { margin-top: var(--space-2); }
-.settings-panel__disclosure > summary {
-  box-sizing: border-box;
-  display: list-item;
-  width: fit-content;
-  min-height: var(--control-target);
-  padding-block: var(--space-3);
-  font-size: var(--type-detail);
-  line-height: var(--leading-body);
-  list-style-position: inside;
-  cursor: pointer;
-}
-.settings-panel__disclosure > .settings-panel__note { padding-bottom: var(--space-2); }
 @media (max-width: 480px) {
   .settings-whoop__zones { grid-template-columns: 1fr; gap: var(--space-2); }
   .settings-whoop__zones > div { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); justify-content: space-between; }

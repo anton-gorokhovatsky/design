@@ -71,7 +71,7 @@ function startDay() {
         return `${day.ended && key(value) === key(day.ended) ? "" : `${label} `}в ${time.format(instant)} мск`;
       };
       const strainDate = day.strainUpdated ? `обновлена ${stamp(day.strainUpdated)}` : "ещё не рассчитана";
-      select("provenance").textContent = `${dayLabel}. Получены ${stamp(day.fetched)}. Нагрузка в WHOOP ${strainDate}. Обновления поступают после синхронизации браслета с WHOOP.${day.stale ? " Новых данных пока нет, поэтому карта сохраняет исходную палитру." : ""}`;
+      select("provenance").textContent = `${dayLabel}. Получены ${stamp(day.fetched)}; нагрузка в WHOOP ${strainDate}.${day.stale ? " Новых данных пока нет, поэтому карта сохраняет исходную палитру." : ""}`;
     }
     select("readout").querySelector(".whoop-compact-trigger").setAttribute("aria-label", `${dayLabel}. Показатели WHOOP и цвет дня`);
   }
