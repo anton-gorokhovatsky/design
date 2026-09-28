@@ -1154,7 +1154,7 @@ const analyticsConsentAudit = async (page, viewport, label) => {
       || result.modal !== "true"
       || !result.closeExists
       || result.preferenceLabel !== "РЕШЕНИЕ НЕ ПРИНЯТО"
-      || result.stateCopy !== "До выбора Метрика не загружается."
+      || result.stateCopy !== "Включится только с вашего разрешения."
       || !result.open
       || !result.searchPrivate
       || result.trackerScripts !== 0
@@ -1168,7 +1168,7 @@ const analyticsConsentAudit = async (page, viewport, label) => {
       || result.analyticsLauncherLabel !== "АНАЛИТИКА"
       || result.analyticsLauncherWhiteSpace !== "nowrap"
       || JSON.stringify(result.privacyRows) !== JSON.stringify([
-        "СТАТИСТИКА Обезличенная статистика посещений и действий на карте.",
+        "СТАТИСТИКА Посещения, переходы и записи взаимодействий с сайтом.",
         "ПОИСК Текст запросов в Метрику не передаётся.",
       ])
       || result.detailsLabel !== "Как Метрика использует файлы cookie"

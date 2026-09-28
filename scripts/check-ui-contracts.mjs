@@ -3425,8 +3425,6 @@ const auditBrowser = async (client, origin) => {
       closeExists: Boolean(consent?.querySelector("[data-close-settings]")),
       closeLabel: consent?.querySelector("[data-close-settings]")
         ?.getAttribute("aria-label"),
-      eyebrow: consent?.querySelector("[data-settings-eyebrow]")
-        ?.innerText.trim(),
       title: consent?.querySelector("[data-settings-title]")
         ?.innerText.trim(),
       intro: consent?.querySelector("[data-settings-intro]")
@@ -3521,14 +3519,13 @@ const auditBrowser = async (client, origin) => {
     || analyticsConsentContract.modal !== "true"
     || !analyticsConsentContract.closeExists
     || analyticsConsentContract.closeLabel !== "Закрыть"
-    || analyticsConsentContract.eyebrow !== "САЙТ / НАСТРОЙКИ"
     || analyticsConsentContract.title !== "НАСТРОЙКИ САЙТА"
     || analyticsConsentContract.intro
-      !== "Настройки действуют только на этом сайте. Системные предпочтения движения и контраста всегда имеют приоритет."
+      !== "Ваш выбор сохраняется в этом браузере."
     || analyticsConsentContract.screenControlsDisplay === "none"
     || analyticsConsentContract.visibleScreenControls !== 3
     || analyticsConsentContract.preferenceLabel !== "РЕШЕНИЕ НЕ ПРИНЯТО"
-    || analyticsConsentContract.stateCopy !== "До выбора Метрика не загружается."
+    || analyticsConsentContract.stateCopy !== "Включится только с вашего разрешения."
     || !analyticsConsentContract.open
     || !analyticsConsentContract.searchPrivate
     || analyticsConsentContract.trackerScripts !== 0
@@ -3548,7 +3545,7 @@ const auditBrowser = async (client, origin) => {
     || analyticsConsentContract.analyticsLauncherLabel !== "АНАЛИТИКА"
     || analyticsConsentContract.analyticsLauncherWhiteSpace !== "nowrap"
     || JSON.stringify(analyticsConsentContract.privacyRows) !== JSON.stringify([
-      ["СТАТИСТИКА", "Обезличенная статистика посещений и действий на карте."],
+      ["СТАТИСТИКА", "Посещения, переходы и записи взаимодействий с сайтом."],
       ["ПОИСК", "Текст запросов в Метрику не передаётся."],
     ])
     || analyticsConsentContract.detailsLabel !== "Как Метрика использует файлы cookie"
@@ -3693,7 +3690,7 @@ const auditBrowser = async (client, origin) => {
     || reopenedContract.screenControlsDisplay === "none"
     || reopenedContract.focusedAction !== "allow"
     || reopenedContract.preferenceLabel !== "АНАЛИТИКА ВЫКЛЮЧЕНА"
-    || reopenedContract.stateCopy !== "Метрика не загружается."
+    || reopenedContract.stateCopy !== "Данные о посещении не отправляются в Метрику."
     || JSON.stringify(reopenedContract.visibleActions)
       !== JSON.stringify(["ВКЛЮЧИТЬ АНАЛИТИКУ"])
     || reopenedContract.markerBackground !== "rgba(0, 0, 0, 0)"
@@ -3750,7 +3747,6 @@ const auditBrowser = async (client, origin) => {
       bodyHasSettings: document.body.classList.contains('has-settings-panel'),
       mode: document.querySelector('[data-settings-panel]')?.dataset.settingsMode,
       title: document.querySelector('[data-settings-title]')?.innerText.trim(),
-      eyebrow: document.querySelector('[data-settings-eyebrow]')?.innerText.trim(),
       screenControlsDisplay: getComputedStyle(
         document.querySelector('[data-settings-screen-controls]'),
       ).display,
@@ -3795,7 +3791,6 @@ const auditBrowser = async (client, origin) => {
     !mobileShortSettingsContract.bodyHasSettings
     || mobileShortSettingsContract.mode !== "settings"
     || mobileShortSettingsContract.title !== "НАСТРОЙКИ САЙТА"
-    || mobileShortSettingsContract.eyebrow !== "САЙТ / НАСТРОЙКИ"
     || mobileShortSettingsContract.screenControlsDisplay === "none"
     || !mobileShortSettingsContract.analyticsVisible
     || !mobileShortSettingsContract.dialog
@@ -3994,7 +3989,7 @@ const auditBrowser = async (client, origin) => {
   if (
     allowedPanelContract.preferenceLabel !== "АНАЛИТИКА ВКЛЮЧЕНА"
     || allowedPanelContract.stateCopy
-      !== "Метрика загружена и собирает обезличенную статистику."
+      !== "Статистика помогает мне улучшать навигацию и содержание."
     || JSON.stringify(allowedPanelContract.visibleActions)
       !== JSON.stringify(["ВЫКЛЮЧИТЬ АНАЛИТИКУ"])
     || allowedPanelContract.markerBackground === "rgba(0, 0, 0, 0)"

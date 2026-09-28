@@ -119,7 +119,7 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=4e1f70774052">
+    <link rel="stylesheet" href="styles.css?v=7877440ed0bc">
     <style>
       .map-evidence [data-map-evidence-role-label]{font-family:var(--font-author);font-size:.6rem;font-weight:400;letter-spacing:0}
     </style>
@@ -1415,7 +1415,6 @@
     >
       <div class="settings-panel__header">
         <div>
-          <p data-settings-eyebrow>САЙТ / НАСТРОЙКИ</p>
           <h2 id="settings-panel-title" data-settings-title>НАСТРОЙКИ САЙТА</h2>
         </div>
         <button
@@ -1428,8 +1427,7 @@
         </button>
       </div>
       <p class="settings-panel__intro" id="settings-panel-intro" data-settings-intro>
-        Настройки действуют только на&nbsp;этом сайте. Системные предпочтения
-        движения и&nbsp;контраста всегда имеют приоритет.
+        Ваш выбор сохраняется в&nbsp;этом браузере.
       </p>
       <div class="settings-panel__body">
         <div class="settings-panel__screen" data-settings-screen-controls>
@@ -1445,7 +1443,7 @@
           <div class="settings-panel__row">
             <div>
               <h3>ДВИЖЕНИЕ</h3>
-              <p>Уменьшает перемещение и&nbsp;морфинг.</p>
+              <p>Меньше анимации и&nbsp;перемещений.</p>
             </div>
             <button type="button" data-motion-toggle aria-pressed="false">
               <span data-motion-state>ОБЫЧНОЕ</span>
@@ -1454,28 +1452,38 @@
           <div class="settings-panel__row">
             <div>
               <h3>КОНТРАСТ</h3>
-              <p>Усиливает текст, линии и&nbsp;индикатор фокуса.</p>
+              <p>Более заметные текст, линии и&nbsp;выделение.</p>
             </div>
             <button type="button" data-contrast-toggle aria-pressed="false">
               <span data-contrast-state>ОБЫЧНЫЙ</span>
             </button>
           </div>
+          <p class="settings-panel__note">Уменьшение движения и&nbsp;повышенный контраст из&nbsp;настроек устройства имеют приоритет.</p>
         </div>
         <section class="settings-whoop" data-settings-section="whoop" aria-labelledby="settings-whoop-title">
           <div class="settings-panel__row">
             <div>
-              <h3 id="settings-whoop-title">ЦВЕТ МОЕГО ДНЯ</h3>
-              <p>Оформление по данным WHOOP.</p>
+              <h3 id="settings-whoop-title">ЦВЕТ ДНЯ</h3>
+              <p>Рисунок рядом с&nbsp;моей карточкой.</p>
             </div>
             <button type="button" data-whoop-toggle aria-pressed="true" aria-label="Цвет дня по данным WHOOP"><span data-whoop-toggle-label>ВКЛЮЧЁН</span></button>
           </div>
-          <p class="settings-whoop__copy">Каждое утро WHOOP оценивает моё восстановление после сна. От&nbsp;этой оценки зависит оттенок рельефа рядом с&nbsp;моей карточкой: при низком восстановлении (0–33&nbsp;%) — терракотовый, при среднем (34–66&nbsp;%) — охристый, при высоком (67–100&nbsp;%) — зелёный.</p>
-          <p class="settings-whoop__copy">Рядом показаны время сна за&nbsp;прошедшую ночь и&nbsp;нагрузка, накопленная за&nbsp;день. Они не&nbsp;влияют на&nbsp;цвет. Шкала соответствует зонам WHOOP, а&nbsp;оттенки подобраны для&nbsp;сайта.</p>
-          <p class="settings-whoop__copy settings-whoop__source" data-whoop-provenance>Получаем данные WHOOP.</p>
+          <p class="settings-whoop__copy">WHOOP оценивает моё восстановление после сна. Эта оценка задаёт цвет рисунка:</p>
+          <dl class="settings-whoop__zones">
+            <div><dt>0–33&nbsp;%</dt><dd>Терракотовый</dd></div>
+            <div><dt>34–66&nbsp;%</dt><dd>Охристый</dd></div>
+            <div><dt>67–100&nbsp;%</dt><dd>Зелёный</dd></div>
+          </dl>
+          <p class="settings-whoop__copy">В&nbsp;карточке также показаны сон и&nbsp;дневная нагрузка. На&nbsp;цвет они не&nbsp;влияют. Диапазоны взяты из&nbsp;WHOOP, оттенки подобраны для&nbsp;сайта.</p>
+          <details class="settings-panel__disclosure">
+            <summary class="text-link">Об&nbsp;обновлении данных</summary>
+            <p class="settings-panel__note" data-whoop-provenance>Получаем данные WHOOP.</p>
+          </details>
         </section>
-        <section class="settings-presence" aria-label="Посетители сейчас">
+        <section class="settings-presence" aria-labelledby="settings-presence-title">
+          <h3 id="settings-presence-title">ПОСЕТИТЕЛИ</h3>
           <p data-presence hidden>Сейчас на&nbsp;сайте <span class="presence-total"><span data-presence-count>—</span><span data-presence-unit></span></span></p>
-          <p>Считаются активные браузеры. Несколько вкладок считаются за&nbsp;одно посещение; после ухода запись исчезает в&nbsp;течение полутора минут. Без&nbsp;файлов cookie и&nbsp;истории посещений.</p>
+          <p>Примерное число тех, кто сейчас смотрит сайт. Один браузер считается один раз, даже с&nbsp;несколькими вкладками. Этот счётчик работает отдельно от&nbsp;Метрики, без&nbsp;cookie и&nbsp;истории посещений.</p>
         </section>
         <section
           class="settings-panel__analytics"
@@ -1491,13 +1499,13 @@
               <strong data-analytics-preference>РЕШЕНИЕ НЕ ПРИНЯТО</strong>
               <p>
                 <span data-analytics-state-copy="unset">
-                  До&nbsp;выбора Метрика не&nbsp;загружается.
+                  Включится только с&nbsp;вашего разрешения.
                 </span>
                 <span data-analytics-state-copy="allowed">
-                  Метрика загружена и&nbsp;собирает обезличенную статистику.
+                  Статистика помогает мне улучшать навигацию и&nbsp;содержание.
                 </span>
                 <span data-analytics-state-copy="denied">
-                  Метрика не&nbsp;загружается.
+                  Данные о&nbsp;посещении не&nbsp;отправляются в&nbsp;Метрику.
                 </span>
               </p>
             </div>
@@ -1515,7 +1523,7 @@
           <dl class="settings-panel__privacy">
             <div>
               <dt>СТАТИСТИКА</dt>
-              <dd>Обезличенная статистика посещений и&nbsp;действий на&nbsp;карте.</dd>
+              <dd>Посещения, переходы и&nbsp;записи взаимодействий с&nbsp;сайтом.</dd>
             </div>
             <div>
               <dt>ПОИСК</dt>
