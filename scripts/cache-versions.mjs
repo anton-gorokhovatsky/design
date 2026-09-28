@@ -102,44 +102,37 @@ export const buildVersionedIndexSource = (source, versions) => {
   return nextSource.replace(importMapPattern, renderImportMap(versions));
 };
 
-export const syncRuntimeAssetVersions = (
-  projectRoot = defaultProjectRoot,
-) => {
-  const absoluteIndexPath = resolve(projectRoot, indexPath);
-  const source = readFileSync(absoluteIndexPath, "utf8");
+const versionedPages = [indexPath, "404.html"];
+const versionPage = (path, source, versions) => path === indexPath
+  ? buildVersionedIndexSource(source, versions)
+  : replaceVersionedAttribute(source, {
+    attribute: "href", path: "/styles.css", version: versions.get(stylesheetPath),
+  });
+
+export const syncRuntimeAssetVersions = (projectRoot = defaultProjectRoot) => {
   const versions = getCacheVersions(projectRoot);
-  const nextSource = buildVersionedIndexSource(source, versions);
-  const changed = source !== nextSource;
-
-  if (changed) {
-    writeFileSync(absoluteIndexPath, nextSource);
+  const changedPaths = [];
+  for (const path of versionedPages) {
+    const absolutePath = resolve(projectRoot, path);
+    const source = readFileSync(absolutePath, "utf8");
+    const nextSource = versionPage(path, source, versions);
+    if (source !== nextSource) {
+      writeFileSync(absolutePath, nextSource);
+      changedPaths.push(path);
+    }
   }
-
-  return {
-    changed,
-    indexPath,
-    versions,
-  };
+  return { changed: changedPaths.length > 0, changedPaths, indexPath, versions };
 };
 
-export const verifyRuntimeAssetVersions = (
-  projectRoot = defaultProjectRoot,
-) => {
-  const source = readFileSync(resolve(projectRoot, indexPath), "utf8");
+export const verifyRuntimeAssetVersions = (projectRoot = defaultProjectRoot) => {
   const versions = getCacheVersions(projectRoot);
-  const expectedSource = buildVersionedIndexSource(source, versions);
-
-  if (source !== expectedSource) {
-    throw new Error(
-      "index.html has stale CSS/JS content hashes; run `pnpm cache` "
-      + "or let the release command update them.",
-    );
+  for (const path of versionedPages) {
+    const source = readFileSync(resolve(projectRoot, path), "utf8");
+    if (source !== versionPage(path, source, versions)) {
+      throw new Error(`${path} has stale CSS/JS content hashes; run pnpm cache.`);
+    }
   }
-
-  return {
-    indexPath,
-    versions,
-  };
+  return { indexPath, versions };
 };
 
 const isCommandLine = process.argv[1]
@@ -153,8 +146,8 @@ if (isCommandLine) {
       const result = syncRuntimeAssetVersions();
       console.log(
         result.changed
-          ? `Updated ${result.indexPath} with ${result.versions.size} content hashes.`
-          : `${result.indexPath} already has current content hashes.`,
+          ? `Updated ${result.changedPaths.join(", ")} with ${result.versions.size} content hashes.`
+          : "All pages already have current content hashes.",
       );
     } else if (mode === "--check") {
       const result = verifyRuntimeAssetVersions();

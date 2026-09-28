@@ -341,9 +341,11 @@ try {
   );
 }
 
-if (cacheUpdate.changed && !options.files.includes(cacheUpdate.indexPath)) {
-  options.files.push(cacheUpdate.indexPath);
-  console.log(`\n✓ Added automatic cache manifest update: ${cacheUpdate.indexPath}.`);
+for (const path of cacheUpdate.changedPaths) {
+  if (!options.files.includes(path)) {
+    options.files.push(path);
+    console.log(`\n✓ Added automatic cache manifest update: ${path}.`);
+  }
 }
 
 const statusLines = await readGitLines([

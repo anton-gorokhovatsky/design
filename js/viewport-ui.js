@@ -408,7 +408,7 @@ observeScrollEdges(document.querySelector(".settings-panel__body"), {
   owner: document.querySelector("[data-settings-panel]"),
 });
 observeScrollEdges(lensPanel, { owner: document.querySelector("[data-content-panel]") });
-const compactCommandViewport = window.matchMedia("(max-width: 680px)");
+const compactCommandViewport = window.matchMedia("(max-width: 900px)");
 const commandViewportProperties = [
   "--command-focus-left",
   "--command-focus-top",
@@ -535,7 +535,7 @@ window.addEventListener(
 
 const floatingConsoleModules = Array.from(document.querySelectorAll("[data-floating-console]"));
 const floatingConsoleMedia = window.matchMedia(
-  "(min-width: 681px) and (hover: hover) and (pointer: fine)",
+  "(min-width: 901px) and (hover: hover) and (pointer: fine)",
 );
 const consoleInteractiveSelector = [
   "a",

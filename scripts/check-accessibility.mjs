@@ -101,7 +101,7 @@ try {
     }
     await capture(page, `home-${name}`);
     await page.locator('.site-header').screenshot({ path: `${directory}/${engine}-author-${name}.png` });
-    if (width > 680) await page.locator('.control-console').screenshot({ path: `${directory}/${engine}-navigation-${name}.png` });
+    if (width > 900) await page.locator('.control-console').screenshot({ path: `${directory}/${engine}-navigation-${name}.png` });
     else {
       await page.locator('[data-constellation-nav-toggle]').click();
       await capture(page, `menu-${name}`);
@@ -120,7 +120,7 @@ try {
     await page.keyboard.press('Tab');
     assert.equal(await page.evaluate(() => document.hasFocus()
       && document.querySelector('[data-content-panel]').contains(document.activeElement)), true, `Contact forward focus ${name}`);
-    if (width <= 680) {
+    if (width <= 900) {
       assert.equal(await page.locator('[data-close-panel]').evaluate(e => e === document.activeElement), true);
       await page.keyboard.press('Shift+Tab');
       assert.equal(await last.evaluate(e => e === document.activeElement), true, `Contact backward focus ${name}`);

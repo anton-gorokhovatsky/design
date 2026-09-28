@@ -119,7 +119,7 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=6f3f8f108fb2">
+    <link rel="stylesheet" href="styles.css?v=2ddf1e9ca0b0">
     <style>
       .map-evidence [data-map-evidence-role-label]{font-family:var(--font-author);font-size:.6rem;font-weight:400;letter-spacing:0}
     </style>
@@ -138,9 +138,9 @@
           "./js/observation-route.js": "./js/observation-route.js?v=8e66f5c75403",
           "./js/personal-media.js": "./js/personal-media.js?v=17ff9574625b",
           "./js/sphere-surfaces.js": "./js/sphere-surfaces.js?v=4cf52ae3e8a0",
-          "./js/map-engine.js": "./js/map-engine.js?v=d1503472b6ee",
-          "./js/viewport-ui.js": "./js/viewport-ui.js?v=a906f2b1cc32",
-          "./js/panels.js": "./js/panels.js?v=89b4c5577c93",
+          "./js/map-engine.js": "./js/map-engine.js?v=034539d236ec",
+          "./js/viewport-ui.js": "./js/viewport-ui.js?v=bd2386807345",
+          "./js/panels.js": "./js/panels.js?v=1dd1239f96b6",
           "./js/case-view.js": "./js/case-view.js?v=40b27efceaab",
           "./js/favicon.js": "./js/favicon.js?v=3aa23538dc2d"
         }
@@ -159,9 +159,9 @@
     <script type="module" src="js/observation-route.js?v=8e66f5c75403"></script>
     <script type="module" src="js/personal-media.js?v=17ff9574625b"></script>
     <script type="module" src="js/sphere-surfaces.js?v=4cf52ae3e8a0"></script>
-    <script type="module" src="js/map-engine.js?v=d1503472b6ee"></script>
-    <script type="module" src="js/viewport-ui.js?v=a906f2b1cc32"></script>
-    <script type="module" src="js/panels.js?v=89b4c5577c93"></script>
+    <script type="module" src="js/map-engine.js?v=034539d236ec"></script>
+    <script type="module" src="js/viewport-ui.js?v=bd2386807345"></script>
+    <script type="module" src="js/panels.js?v=1dd1239f96b6"></script>
     <script type="module" src="js/case-view.js?v=40b27efceaab"></script>
     <script type="module" src="js/favicon.js?v=3aa23538dc2d"></script>
     <script type="application/ld+json">
@@ -496,7 +496,7 @@
           inert
         >
           <button
-            class="overlay-close map-inspector__close"
+            class="ui-close overlay-close map-inspector__close"
             type="button"
             data-close-inspector
             data-material-surface="inspector-close"
@@ -643,7 +643,7 @@
               rel="noopener noreferrer"
             >Смотреть на&nbsp;YouTube</a>
             <button
-              class="overlay-close personal-media__close"
+              class="ui-close overlay-close personal-media__close"
               type="button"
               data-close-personal-media
               aria-label="Закрыть и остановить стрим"
@@ -1162,10 +1162,10 @@
             data-material-active="always"
           >
             <p data-panel-index>01 / КЕЙСЫ</p>
-            <h2 id="content-panel-title" data-panel-title>КЛЮЧЕВЫЕ КЕЙСЫ</h2>
+            <h2 class="visually-hidden" id="content-panel-title" data-panel-title>КЛЮЧЕВЫЕ КЕЙСЫ</h2>
           </div>
           <button
-            class="overlay-close"
+            class="ui-close overlay-close"
             type="button"
             data-close-panel
             data-material-surface="panel-close"
@@ -1419,7 +1419,7 @@
           <h2 id="settings-panel-title" data-settings-title>НАСТРОЙКИ САЙТА</h2>
         </div>
         <button
-          class="settings-panel__close"
+          class="ui-close settings-panel__close"
           type="button"
           data-close-settings
           aria-label="Закрыть"

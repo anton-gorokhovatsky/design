@@ -660,7 +660,7 @@ requireContract(
       coordinateLabelGeometryRule,
     )
     && /line-height:\s*1/.test(coordinateLabelGeometryRule)
-    && originLabelRules.some((rule) => /min-height:\s*36px/.test(rule)
+    && originLabelRules.some((rule) => /min-height:\s*var\(--control-target\)/.test(rule)
       && /padding:\s*10px 12px/.test(rule)),
   "coordinate-label-geometry",
   "The route entry keeps the coordinate material and gains a readable, distinct input surface.",

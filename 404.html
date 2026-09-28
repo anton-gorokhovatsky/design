@@ -40,7 +40,7 @@
       })();
     </script>
     <link rel="preload" href="/assets/fonts/Akt-Variable.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="stylesheet" href="/styles.css?v=6f3f8f108fb2">
+    <link rel="stylesheet" href="/styles.css?v=2ddf1e9ca0b0">
     <style>
       html, body { min-height: 100%; }
       body { height: auto; overflow-y: auto; }
@@ -87,8 +87,8 @@
       .not-found__card {
         position: relative;
         width: min(100%, 30rem);
-        padding: clamp(24px, 3vw, 32px);
-        border-radius: 30px;
+        padding: var(--window-pad);
+        border-radius: var(--window-radius);
         corner-shape: var(--corner-card-shape);
         color: var(--content-ink);
       }
@@ -103,7 +103,7 @@
       }
       .not-found__title {
         margin: 0;
-        font-size: clamp(1.5rem, calc(1.25rem + 1vw), 2.25rem);
+        font-size: var(--type-title);
         font-weight: 500;
         line-height: 1.08;
         letter-spacing: -.025em;
@@ -113,12 +113,12 @@
         max-width: 26rem;
         margin: 1rem 0 0;
         color: var(--content-muted);
-        font-size: .9375rem;
+        font-size: var(--type-body);
         line-height: 1.5;
         text-wrap: pretty;
       }
       .not-found__actions { margin-top: 1.5rem; }
-      .not-found__action { display: inline-flex; align-items: center; min-height: 44px; font-size: .9375rem; }
+      .not-found__action { display: inline-flex; align-items: center; min-height: 44px; font-size: var(--type-body); }
       .not-found__motion {
         position: absolute;
         top: 1rem;
@@ -132,7 +132,7 @@
       @media (max-width: 680px) {
         .not-found { padding: 5.5rem 12px 2rem; }
         .not-found__terrain { right: -70%; width: 160%; height: 90%; }
-        .not-found__card { padding: 24px; border-radius: 24px; }
+        .not-found__card { border-radius: var(--window-radius); }
       }
       @media (forced-colors: active), (prefers-contrast: more) {
         .not-found__terrain, .not-found__map { display: none; }

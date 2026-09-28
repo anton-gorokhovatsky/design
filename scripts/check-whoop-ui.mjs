@@ -30,7 +30,7 @@ try {
     assert.match(values, /12,9/);
     assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--day-enabled").trim()), "1");
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0);
-    if (width > 680) {
+    if (width > 900) {
       const header = await page.locator(".site-header").boundingBox();
       const console = await page.locator(".control-console").boundingBox();
       assert.equal(header.x - console.x - console.width, 16, "One gap separates the bottom panels.");
@@ -43,7 +43,7 @@ try {
     if (width === 320) assert.ok((await page.locator("[data-whoop-readout]").boundingBox()).height < 72);
     await page.screenshot({ path: `${directory}/${engine}-${width}-${theme}.png` });
     await page.locator(".site-header").screenshot({ path: `${directory}/${engine}-${width}-${theme}-readout.png` });
-    if (width > 680) {
+    if (width > 900) {
       const card = page.locator(".site-header"), before = await card.boundingBox();
       const terrainBefore = await page.locator(".whoop-field").boundingBox();
       assert.ok(terrainBefore.width < before.width + 220 && terrainBefore.height < before.height + 200,

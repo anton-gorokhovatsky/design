@@ -57,7 +57,7 @@ const constellationNavOrbit = document.querySelector("[data-constellation-nav-or
 const constellationNavItems = Array.from(document.querySelectorAll("[data-nav-view]"));
 const constellationNavUtilities = Array.from(document.querySelectorAll("[data-nav-utility]"));
 const constellationNavHome = document.querySelector('[data-nav-view="map"]');
-const compactConstellationNav = window.matchMedia("(max-width: 680px)");
+const compactConstellationNav = window.matchMedia("(max-width: 900px)");
 let isConstellationNavOpen = false;
 
 const syncConstellationNavInteractivity = () => {
@@ -135,17 +135,15 @@ const contentPanelBody = document.querySelector(".content-panel__body");
 const contentPanelHeader = document.querySelector(".content-panel__header");
 const panelMore = document.querySelector(".content-panel__more");
 const syncPanelMore = () => {
-  // Subtract the control's own space when deciding whether the list needs it.
   const overflow = contentPanelBody.scrollHeight - contentPanelBody.clientHeight;
-  panelMore.hidden = contentPanel.dataset.view !== "work"
-    || overflow <= (panelMore.hidden ? 0 : panelMore.offsetHeight + 8) + 1;
+  panelMore.hidden = overflow <= (panelMore.hidden ? 0 : panelMore.offsetHeight + 8) + 1;
   if (panelMore.hidden) {
     if (document.activeElement === panelMore) contentPanelBody.focus({ preventScroll: true });
     return;
   }
   const end = contentPanelBody.scrollTop + contentPanelBody.clientHeight >= contentPanelBody.scrollHeight - 2;
   panelMore.dataset.direction = end ? "up" : "down";
-  panelMore.firstElementChild.textContent = end ? "К началу" : "Ещё кейсы";
+  panelMore.firstElementChild.textContent = end ? "К началу" : contentPanel.dataset.view === "work" ? "Ещё кейсы" : "Дальше";
 };
 let moreFrame = 0;
 const schedulePanelMore = () => {
@@ -162,7 +160,10 @@ panelMore.addEventListener("click", () => contentPanelBody.scrollTo({
   behavior: reducedMotion.matches ? "auto" : "smooth",
 }));
 const placeContentFrame = () => {
-  const top = Math.ceil(contentPanelHeader.getBoundingClientRect().bottom + 12);
+  const gap = parseFloat(getComputedStyle(contentPanelHeader).gap) || 12;
+  const top = Math.ceil(contentPanelHeader.offsetTop + contentPanelHeader.offsetHeight + gap);
+  const console = document.querySelector(".control-console").getBoundingClientRect();
+  contentPanel.style.setProperty("--section-console-clearance", `${console.height ? innerHeight - console.top + gap : gap}px`);
   contentPanel.style.setProperty("--panel-frame-top", `${top}px`);
 };
 new ResizeObserver(placeContentFrame).observe(contentPanelHeader);
@@ -281,7 +282,7 @@ const openContentPanel = (
   hideMapPreview({ immediate: true });
   clearMapSelection();
   setPanelOpen(true);
-  // Restore against the final reading height, including the continuation row.
+  placeContentFrame();
   syncPanelMore();
   contentPanelBody?.scrollTo({ top: position?.scrollTop || 0, behavior: "auto" });
 
@@ -303,6 +304,7 @@ const openContentPanel = (
   }
 
   window.requestAnimationFrame(() => {
+    placeContentFrame();
     syncPanelMore();
     contentPanelBody?.scrollTo({ top: position?.scrollTop || 0, behavior: "auto" });
     if (document.activeElement?.closest("[data-command-form], [data-command-results]")) return;
@@ -523,7 +525,7 @@ const syncCommandFocusViewport = () => {
 
   scheduleDetachedCommandResultsPosition();
 };
-const compactMapFrame = window.matchMedia("(max-width: 680px)");
+const compactMapFrame = window.matchMedia("(max-width: 900px)");
 let mobileMapFrame = 0;
 const syncMobileMapFrame = () => {
   window.cancelAnimationFrame(mobileMapFrame);

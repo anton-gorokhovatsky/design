@@ -349,7 +349,7 @@ const geometryExpression = String.raw`(() => {
     && item.width > 0
     && item.height > 0;
   const materialAudit = ${readMaterialAuditExpression};
-  const mobile = matchMedia("(max-width: 680px)").matches;
+  const mobile = matchMedia("(max-width: 900px)").matches;
   const selectors = {
     view: ".map-controls",
     display: ".display-control",
@@ -861,7 +861,7 @@ const auditBrowser = async (client, origin) => {
     // frame. Measure the settled composition, not an intermediate animation.
     const settled = await waitForExpression(client, `(() => {
       const map = document.querySelector("[data-signal-field]");
-      if (matchMedia("(max-width: 680px)").matches
+      if (matchMedia("(max-width: 900px)").matches
         && !map?.style.getPropertyValue("--mobile-horizon-top")) return false;
       const elements = [...document.querySelectorAll(
         ".map-camera, .orbital-horizon, .command-dock"
@@ -2542,7 +2542,7 @@ const auditBrowser = async (client, origin) => {
       hoverNone: matchMedia("(hover: none)").matches,
       pointerFine: matchMedia("(pointer: fine)").matches,
       pointerCoarse: matchMedia("(pointer: coarse)").matches,
-      compactMapViewport: matchMedia("(max-width: 680px)").matches,
+      compactMapViewport: matchMedia("(max-width: 900px)").matches,
       inspectorOpen: document.querySelector("[data-map-inspector]")
         ?.classList.contains("is-open") || false,
       targetExists: Boolean(target),

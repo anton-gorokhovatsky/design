@@ -179,7 +179,7 @@ const readMaterialAuditExpression = `(() => {
   const expectedBackground = getComputedStyle(probe).backgroundColor;
   probe.remove();
 
-  const mobile = matchMedia("(max-width: 680px)").matches;
+  const mobile = matchMedia("(max-width: 900px)").matches;
   const active = Array.from(document.querySelectorAll("[data-material-surface]"))
     .filter((element) => {
       const mode = element.dataset.materialActive;

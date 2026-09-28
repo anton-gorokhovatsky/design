@@ -61,7 +61,7 @@ const timeToggles = Array.from(document.querySelectorAll("[data-time-toggle]"));
 const observationStart = document.querySelector("[data-start-observation]");
 const reelItems = mapItems.filter((item) => item.previewVideo);
 const hoverCapable = window.matchMedia("(hover: hover) and (pointer: fine)");
-const compactMapViewport = window.matchMedia("(max-width: 680px)");
+const compactMapViewport = window.matchMedia("(max-width: 900px)");
 const reelMosaicQuery = new URLSearchParams(window.location.search);
 const reelMosaicMode = reelMosaicQuery.get("reel");
 const reelMosaicEnabled = reelMosaicMode !== "single";
@@ -313,7 +313,7 @@ const getTimeLayout = (item) => {
     : year >= 2015
       ? 25 + (2021 - year) * 1.33
       : 33 + Math.max(0, Math.min(1, (2015 - year) / 5)) * 8;
-  const compact = window.innerWidth <= 680;
+  const compact = window.innerWidth <= 900;
   const compactRadiusXScale = compact ? 1.35 : 1;
   const groupAngle = getTimeSectorAngle(item, compact);
   const rootAngles = timeRootAngles[item.id];
@@ -334,7 +334,7 @@ const mapClearancePositions = new Map();
 const measureMapClearance = () => {
   mapFieldBounds = mapNodesRoot?.getBoundingClientRect();
   const selectors = [".origin-marker__label", ".site-header"];
-  if (window.innerWidth > 680) selectors.push(".map-controls", ".map-control > span", ".display-control", ".control-console");
+  if (window.innerWidth > 900) selectors.push(".map-controls", ".map-control > span", ".display-control", ".control-console");
   else selectors.push(".command-dock", ".system-dock");
   mapConsoleBounds = [...document.querySelectorAll(selectors.join(","))]
     .map(element => element.getBoundingClientRect())
@@ -390,7 +390,7 @@ const getMapLayout = (item) => {
     return getTimeLayout(item);
   }
 
-  if (viewportWidth >= 821 && viewportWidth <= 1100) {
+  if (viewportWidth >= 901 && viewportWidth <= 1100) {
     const tabletOverrides = {
       ilmix: { x: 19 },
       "principle-system": { x: 18 },
@@ -400,11 +400,8 @@ const getMapLayout = (item) => {
 
     x = override?.x ?? x;
     y = override?.y ?? y;
-  } else if (viewportWidth >= 681 && viewportWidth <= 820) {
-    if (item.id === "ilmix") {
-      y = 33;
-    }
-  } else if (viewportWidth <= 680) {
+
+  } else if (viewportWidth <= 900) {
     if (item.id === "garage-site") {
       x = viewportWidth <= 360 ? 63 : 60;
     }
@@ -431,7 +428,7 @@ const getMapLayout = (item) => {
     y = override?.y ?? y;
   }
 
-  if (viewportWidth <= 680) {
+  if (viewportWidth <= 900) {
     const mobileYScale = Number.parseFloat(
       signalField?.style.getPropertyValue("--mobile-map-y-scale") || "1",
     );
