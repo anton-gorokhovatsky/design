@@ -30,7 +30,7 @@ const settle = async (page) => {
 const readPopup = (page, selector = "[data-command-results]") => page.evaluate((selector) => {
   const popup = document.querySelector(selector);
   const form = document.querySelector("[data-command-form]");
-  const surface = innerWidth <= 680 ? form : form.closest("[data-floating-console]");
+  const surface = innerWidth <= 900 ? form : form.closest("[data-floating-console]");
   const box = (element) => element.getBoundingClientRect().toJSON();
   return {
     popup: box(popup), form: box(form), surface: box(surface),
@@ -65,8 +65,17 @@ const capture = async (page, name) => {
 const dragTo = async (page, top, left) => {
   const shell = page.locator('[data-floating-console="navigation"]');
   const box = await shell.boundingBox();
-  const x = box.x + box.width - 5;
-  const y = box.y + box.height / 2;
+  const grip = await shell.evaluate(element => {
+    const r = element.getBoundingClientRect();
+    return [[r.right - 5, r.y + r.height / 2], [r.left + 5, r.y + r.height / 2],
+      [r.x + r.width / 2, r.top + 5], [r.x + r.width / 2, r.bottom - 5]].find(([x, y]) => {
+      const hit = document.elementFromPoint(x, y);
+      return hit?.closest('[data-floating-console]') === element
+        && !hit.closest('a,button,input,textarea,select,label,form,[data-console-text]');
+    });
+  });
+  assert.ok(grip, "A visible part of the console must remain available for dragging.");
+  const [x, y] = grip;
   await page.mouse.move(x, y);
   await page.mouse.down();
   await page.mouse.move(x + ((left ?? box.x) - box.x), y + top - box.y, { steps: 8 });
@@ -85,7 +94,7 @@ try {
     ]) {
       const page = await browser.newPage({
         viewport: { width, height }, colorScheme: theme, reducedMotion: "reduce",
-        hasTouch: width <= 680 || label === "tablet", isMobile: width <= 680,
+        hasTouch: width <= 900 || label === "tablet", isMobile: width <= 900,
       });
       page.on("pageerror", (error) => errors.push(error.message));
       await page.goto(origin, { waitUntil: "load" });
@@ -140,7 +149,8 @@ try {
         await capture(page, "empty-after-resize-" + theme);
         await input.fill("");
         await dragTo(page, 822, 16);
-        assert.equal((await assertPopup(page)).placement, "above");
+        const restoredPopup = await assertPopup(page);
+        assert.equal(restoredPopup.placement, "above", JSON.stringify(restoredPopup));
       }
 
       await input.press("ArrowUp");

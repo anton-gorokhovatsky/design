@@ -339,8 +339,9 @@ const measureMapClearance = () => {
   mapConsoleBounds = [...document.querySelectorAll(selectors.join(","))]
     .map(element => element.getBoundingClientRect())
     .filter(rect => rect.width && rect.height);
-  mapItems.forEach(item => mapClearancePositions.set(item.id, getMapLayout(item)));
-  mapItems.forEach(item => mapClearancePositions.set(item.id, clearMapConsoles(item, mapClearancePositions.get(item.id))));
+  mapClearancePositions.clear();
+  [...mapItems].sort((a, b) => b.size - a.size).forEach(item =>
+    mapClearancePositions.set(item.id, clearMapConsoles(item, getMapLayout(item))));
 };
 const clearMapConsoles = (item, position) => {
   if (!mapFieldBounds?.width || !mapConsoleBounds.length) return position;
@@ -350,7 +351,6 @@ const clearMapConsoles = (item, position) => {
   const covers = ([x, y], rect) => x > rect.left - radius && x < rect.right + radius
     && y > rect.top - radius && y < rect.bottom + radius;
   const obstacle = mapConsoleBounds.find(rect => covers(point, rect));
-  if (!obstacle) return position;
   const [x, y] = point;
   const isFree = candidate => candidate[0] >= radius && candidate[0] <= innerWidth - radius
     && candidate[1] >= radius && candidate[1] <= innerHeight - radius
@@ -358,16 +358,17 @@ const clearMapConsoles = (item, position) => {
     && !mapItems.some(other => {
       if (other.id === item.id) return false;
       const position = mapClearancePositions.get(other.id);
-      // Controls keep an extra 8 px margin; adjacent point hit areas need only
-      // their actual half sizes. Compact headers otherwise exhaust free space.
-      const clearance = radius - 8 + Math.max(24, other.size) * width / mapNodesRoot.clientWidth / 2;
+      if (!position) return false;
+      // Keep each point's center reachable even in a dense compact layout.
+      const clearance = Math.max(radius - 8, Math.max(24, other.size) * width / mapNodesRoot.clientWidth / 2) + 2;
       return Math.abs(candidate[0] - left - position.x * width / 100) < clearance
         && Math.abs(candidate[1] - top - position.y * height / 100) < clearance;
     });
-  const candidates = [
+  if (isFree(point)) return position;
+  const candidates = (obstacle ? [
     [obstacle.left - radius, y], [obstacle.right + radius, y],
     [x, obstacle.top - radius], [x, obstacle.bottom + radius],
-  ].filter(isFree);
+  ] : []).filter(isFree);
   // Find the nearest free ring when the edges are occupied.
   for (let distance = 12; !candidates.length && distance < Math.max(innerWidth, innerHeight); distance += 12) {
     for (let step = 0; step < 24; step++) {

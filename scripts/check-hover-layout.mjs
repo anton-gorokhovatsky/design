@@ -41,6 +41,14 @@ try {
       const target = page.locator(`[data-map-id="${item.id}"]`);
       if (index % 2) await target.focus();
       else await target.hover();
+      if (width <= 900) {
+        await page.evaluate(() => new Promise(requestAnimationFrame));
+        const result = await page.evaluate(inspect);
+        assert.equal(result.previewVisible, false, "Compact navigation opens media on selection, not hover.");
+        assert.ok(result.authorVisible, "Compact hover/focus retains the author card.");
+        assert.deepEqual(result.author, initial);
+        continue;
+      }
       await page.waitForFunction(id => {
         const preview = document.querySelector(".map-hover-preview");
         return preview.classList.contains("is-visible") && preview.querySelector("video").dataset.previewId === id;
@@ -58,13 +66,14 @@ try {
       }
     }
     await page.mouse.move(0, 0);
-    await page.locator(".whoop-foot button").focus();
+    const settingsTrigger = width <= 900 ? ".whoop-compact-trigger" : ".whoop-foot button";
+    await page.locator(settingsTrigger).focus();
     await page.waitForFunction(() => !document.querySelector(".map-hover-preview").classList.contains("is-visible"));
     await page.keyboard.press("Enter");
     await page.waitForFunction(() => document.activeElement === document.querySelector("[data-whoop-toggle]"));
     await page.keyboard.press("Escape");
-    await page.waitForFunction(() => document.activeElement === document.querySelector(".whoop-foot button"));
-    console.log(`PASS ${engine} ${width} ${theme}: 17 hover/focus previews, persistent card, clear consoles, settings.`);
+    await page.waitForFunction(selector => document.activeElement === document.querySelector(selector), settingsTrigger);
+    console.log(`PASS ${engine} ${width} ${theme}: 17 hover/focus targets, persistent card, clear consoles, settings.`);
     await page.close();
   }
   for (const [width, height] of [[1440, 900], [1024, 768], [720, 450]]) {
@@ -77,6 +86,7 @@ try {
     for (let frame = 0; frame < 24; frame++) {
       await page.evaluate(() => new Promise(requestAnimationFrame));
       const result = await page.evaluate(inspect);
+      if (width <= 900) assert.equal(result.previewVisible, false, "Compact hover does not start a preview.");
       assert.ok(result.authorVisible, "The author card must stay visible during preview entrance.");
       assert.deepEqual(result.collisions, [], `${width}: the entrance must stay within the reserved space.`);
     }

@@ -10657,7 +10657,7 @@ body:has(.practice-map:is([data-selected-kind=personal],[data-selected-kind=prac
   .settings-panel__row { grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr)); }
   .settings-panel__row > button { justify-self: start; }
   .site-header .brand__name { overflow-wrap: anywhere; }
-  .whoop-metrics { grid-template-columns: repeat(auto-fit, minmax(min(100%, 5.5rem), 1fr)); }
+  .whoop-metrics { grid-template-columns: repeat(auto-fit, minmax(min(100%, 4.5rem), 1fr)); }
   .whoop-metrics dd { white-space: normal; }
   .whoop-level { display: inline-block; }
   .site-header[data-material-surface="whoop-readout"] { max-height: calc(100svh - 200px); overflow-y: auto; }

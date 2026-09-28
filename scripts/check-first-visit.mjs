@@ -23,7 +23,7 @@ try {
       ["compact", 320, 568, 1], ["reflow", 720, 700, 2],
     ]) {
       const page = await browser.newPage({ viewport: { width, height }, colorScheme: theme,
-        reducedMotion: "reduce", hasTouch: width <= 680, isMobile: width <= 680 });
+        reducedMotion: "reduce", hasTouch: width <= 900, isMobile: width <= 900 });
       page.on("pageerror", (error) => errors.push(error.message));
       await page.goto(origin, { waitUntil: "load" });
       await page.evaluate((scale) => { document.documentElement.style.fontSize = `${16 * scale}px`; }, scale);
@@ -72,7 +72,7 @@ try {
       assert.equal(state.route.trim().replace(/\s+/g, " "), "Обзор работ за 90 секунд");
       assert.equal(state.routeName, state.route.trim(), "The accessible name matches the visible overview label.");
       assert.ok(!state.nodes.some((node) => state.authorLines.some((line) => overlaps(node, line))), "Authorship must not collide with a map target: " + JSON.stringify({ name, state }));
-      if (width > 680) {
+      if (width > 900) {
         assert.ok(state.nav.every((item) => item.visible && item.box.width > 0));
         assert.ok(state.search.right <= width + 1, "Search must stay inside the viewport.");
         assert.ok(state.nav.every((item) => !overlaps(item.box, state.search)), "Navigation labels must not overlap search.");
@@ -86,7 +86,7 @@ try {
         assert.equal(await page.locator("[data-constellation-nav-toggle]").getAttribute("aria-expanded"), "false");
       }
       if (["desktop", "mobile", "compact"].includes(name)) {
-        if (width <= 680) await page.locator("[data-constellation-nav-toggle]").click();
+        if (width <= 900) await page.locator("[data-constellation-nav-toggle]").click();
         await page.locator('.constellation-nav__item[data-open-panel="work"]').click();
         await capture(page, `work-${name}-${theme}`);
         assert.equal(await page.locator(".work-row").count(), 8);
@@ -96,7 +96,7 @@ try {
           overflow: element.scrollWidth - element.clientWidth,
         })));
         assert.ok(scopes.every((item) => item.size >= 13 && item.overflow <= 1), "Project descriptions remain readable and inside their cards.");
-        if (width <= 680) {
+        if (width <= 900) {
           // Pointer focus must not scroll the card away between down and up.
           await page.locator(".work-row").first().click();
           await page.waitForFunction(() => document.body.hasAttribute("data-case-open"));
