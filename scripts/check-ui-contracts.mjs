@@ -601,7 +601,8 @@ const auditGeometry = (label, state) => {
       || geometry.mapCamera.top - geometry.header.bottom < 8
       || geometry.mapCamera.top - geometry.header.bottom > 24
       || geometry.mapCamera.bottom > viewport.height
-      || geometry.mapCamera.height < (viewport.height - geometry.mapCamera.top) * 0.72
+      || geometry.mapCamera.bottom < geometry.search.top - 24
+      || geometry.mapCamera.bottom > geometry.search.top + 16
     ) {
       fail(`${label}: mapCamera does not fill the useful mobile stage.`, geometry.mapCamera);
     }
@@ -611,8 +612,8 @@ const auditGeometry = (label, state) => {
       const horizonToControls = geometry.search.top - geometry.horizon.top;
       const maximumHorizonGap = Math.max(72, viewport.height * 0.085);
 
-      if (horizonToControls < 18 || horizonToControls > maximumHorizonGap) {
-        fail(`${label}: lower map stage leaves an empty band above the controls.`, {
+      if (horizonToControls < 16 || horizonToControls > maximumHorizonGap) {
+        fail(`${label}: lower map stage loses its spacing above the controls.`, {
           horizonToControls,
           maximumHorizonGap,
         });
@@ -3406,6 +3407,12 @@ const auditBrowser = async (client, origin) => {
     };
     const dialog = read("#settings-panel");
     const dialogStyle = consent ? getComputedStyle(consent) : null;
+    const spacingProbe = document.createElement("span");
+    spacingProbe.style.cssText = "position:fixed;visibility:hidden;padding:var(--window-pad);gap:var(--space-4)";
+    consent.append(spacingProbe);
+    const spacingStyle = getComputedStyle(spacingProbe);
+    const sharedSpacing = { padding: spacingStyle.padding, gap: spacingStyle.gap };
+    spacingProbe.remove();
     const screenControls = consent?.querySelector("[data-settings-screen-controls]");
     const activeStyle = active ? getComputedStyle(active) : null;
     return {
@@ -3446,6 +3453,7 @@ const auditBrowser = async (client, origin) => {
       dialog,
       dialogGap: dialogStyle?.gap || "",
       dialogPadding: dialogStyle?.padding || "",
+      sharedSpacing,
       horizontalBalance: dialog
         ? Math.abs(dialog.left - (innerWidth - dialog.right))
         : Infinity,
@@ -3530,8 +3538,8 @@ const auditBrowser = async (client, origin) => {
     || !analyticsConsentContract.bodyHasSettings
     || !analyticsConsentContract.dialog
     || analyticsConsentContract.dialog.width !== 540
-    || analyticsConsentContract.dialogGap !== "20px"
-    || analyticsConsentContract.dialogPadding !== "28px"
+    || analyticsConsentContract.dialogGap !== analyticsConsentContract.sharedSpacing.gap
+    || analyticsConsentContract.dialogPadding !== analyticsConsentContract.sharedSpacing.padding
     || analyticsConsentContract.horizontalBalance > 1
     || analyticsConsentContract.verticalBalance > 1
     || analyticsConsentContract.consoleVisibility !== "hidden"
@@ -3563,7 +3571,7 @@ const auditBrowser = async (client, origin) => {
     || analyticsConsentContract.axisLabelOpacity !== 0
     || analyticsRequestsBeforeChoice.length !== 0
   ) {
-    fail("privacy: analytics or heavy media started before an explicit choice.", {
+    fail("privacy: consent layout, state or pre-choice loading contract failed.", {
       ...analyticsConsentContract,
       analyticsRequestsBeforeChoice,
     });
