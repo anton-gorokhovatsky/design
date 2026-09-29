@@ -367,20 +367,35 @@ files, and pushes a candidate to `main`. Quality uses `scripts/release-scope.mjs
 to compare the entire unpublished change against `origin/gh-pages`:
 
 - **Copy:** existing display strings in `commandViews`, `mapItems` and
-  `observationSteps`, text and accessible labels in `index.html`, case evidence
+  `observationSteps`, text and accessible labels in `index.html` / `404.html`, case evidence
   text, generated runtime cache keys, and existing README/docs text. Syntax,
   structural, asset, budget and publication checks run without installing
   browsers or FFmpeg. Check the affected screen before release and on production.
-- **Full:** changes to behavior, styles, markup structure, destinations, media,
-  dependencies, release tooling, unknown files, or an unavailable baseline.
-  The full Chromium/WebKit matrix runs **once in CI**; do not repeat it locally
-  as a release ritual. Use `pnpm check` locally when investigating a related failure.
+- **Components:** markup inside the existing settings dialog, CSS owned by
+  `.settings-panel*`, `.settings-whoop*` or `.settings-presence*`, and changes inside
+  `js/whoop-day.js` with unchanged module bindings. HTML/CSS parsers protect the
+  boundary; shared selectors, siblings and executable markup require full checks.
+  Settings run the existing core panel/consent/keyboard contracts, accessibility
+  and WHOOP checks in both engines. WHOOP also runs hover and first-visit checks.
+  Core currently contains some broader UI safeguards, retained intentionally.
+  Unrelated reel previews, route geometry, lenses and FFmpeg are not run.
+- **Full:** shared tokens, materials, typography, navigation, other modules,
+  media, dependencies, release tooling, unknown changes, or an unavailable baseline.
+  The complete Chromium/WebKit inventory runs **once in CI**, split into independent
+  jobs instead of a long serial component job. All four WebKit viewport/theme
+  profiles remain. Do not duplicate the full CI locally as a release ritual.
+
+`scripts/check-catalog.mjs` defines executable checks, component dependencies and
+CI shards in one place. Mixed changes union their coverage; a single full-scope
+change wins. Add a component lane only with an explicit ownership boundary and
+coverage of its interactions. Source classification, full inventory preservation
+and the final gate have regression checks.
 
 The choice is automatic; there is no force-copy or skip-tests switch.
 `node scripts/release-scope.mjs` explains the current choice, and
 `node scripts/check-project.mjs --scope=copy` runs the short local preflight.
 `node scripts/check-release-scope.mjs` tests the choice itself, including mixed
-unpublished commits and the final CI gate for both paths.
+unpublished commits, escaping component boundaries and the final CI gate for all three paths.
 
 Production stays unchanged until the exact commit's GitHub Quality push run succeeds.
 Only then does the script advance `gh-pages` and verify the public HTML and

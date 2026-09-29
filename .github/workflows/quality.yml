@@ -15,6 +15,7 @@ jobs:
     timeout-minutes: 10
     outputs:
       mode: ${{ steps.scope.outputs.mode }}
+      matrix: ${{ steps.scope.outputs.matrix }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -40,44 +41,19 @@ jobs:
           fi
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends ffmpeg
-      - run: node scripts/check-project.mjs --scope=${{ steps.scope.outputs.mode == 'copy' && 'copy' || 'static' }}
+      - run: node scripts/check-project.mjs --scope=${{ steps.scope.outputs.mode == 'full' && 'static' || 'copy' }}
 
   browser-contracts:
     name: browser-contracts (${{ matrix.artifact }})
     needs: static-contracts
-    if: needs.static-contracts.outputs.mode == 'full'
+    if: needs.static-contracts.outputs.mode != 'copy'
     # Exercise WebKit with macOS compositing and media support. Software
     # WebKitGTK stalls in frame/scroll waits and can terminate during playback.
     runs-on: ${{ matrix.browser == 'webkit' && 'macos-15' || 'ubuntu-latest' }}
     timeout-minutes: 20
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - browser: chromium
-            suite: all
-            artifact: chromium
-            scenario: ""
-          - browser: webkit
-            suite: core
-            artifact: webkit-390-light
-            scenario: 390x844-light
-          - browser: webkit
-            suite: core
-            artifact: webkit-390-dark
-            scenario: 390x844-dark
-          - browser: webkit
-            suite: core
-            artifact: webkit-320-light
-            scenario: 320x568-light
-          - browser: webkit
-            suite: core
-            artifact: webkit-320-dark
-            scenario: 320x568-dark
-          - browser: webkit
-            suite: components
-            artifact: webkit-components
-            scenario: ""
+      matrix: ${{ fromJSON(needs.static-contracts.outputs.matrix) }}
     env:
       PORTFOLIO_UI_ARTIFACT_DIR: artifacts/${{ matrix.artifact }}
       PORTFOLIO_AUDIT_DIR: artifacts/${{ matrix.artifact }}
@@ -105,7 +81,7 @@ jobs:
             printf '%s\n' 'https://archive.ubuntu.com/ubuntu' | sudo tee /etc/apt/apt-mirrors.txt > /dev/null
           fi
           pnpm exec playwright install --with-deps ${{ matrix.browser }}
-      - run: node scripts/check-project.mjs --scope=${{ matrix.browser }} --browser-suite=${{ matrix.suite }}
+      - run: node scripts/check-project.mjs --scope=${{ matrix.browser }} --checks=${{ matrix.checks }}
       - if: always()
         id: artifacts
         continue-on-error: true
@@ -153,6 +129,6 @@ jobs:
           test "$STATIC_RESULT" = success
           case "$SCOPE" in
             copy) test "$BROWSER_RESULT" = skipped ;;
-            full) test "$BROWSER_RESULT" = success ;;
+            components|full) test "$BROWSER_RESULT" = success ;;
             *) exit 1 ;;
           esac

@@ -7,6 +7,8 @@ import { fileURLToPath } from "node:url";
 import { parse as parseJs } from "acorn";
 import { parse as parseHtml } from "parse5";
 import { cacheVersionFiles } from "./cache-versions.mjs";
+import { affectedComponents } from "./component-scope.mjs";
+import { browserMatrix } from "./check-catalog.mjs";
 
 // Only display fields in these data arrays are copy. Selectors, destinations,
 // identifiers, search rules, expressions and every other byte remain protected.
@@ -84,7 +86,7 @@ const maskHtmlCopy = (source) => {
   let masked = maskRanges(source, ranges);
   for (const path of cacheVersionFiles) {
     const escaped = path.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    masked = masked.replace(new RegExp(`(["'](?:\\./)?${escaped}\\?v=)[a-f0-9]{12}(?=["'])`, "g"), "$1\0HASH\0");
+    masked = masked.replace(new RegExp(`(["'](?:\\./|/)?${escaped}\\?v=)[a-f0-9]{12}(?=["'])`, "g"), "$1\0HASH\0");
   }
   return masked;
 };
@@ -96,11 +98,17 @@ export const isCopyOnly = (path, before, after) => {
   if (before.includes("\0") || after.includes("\0")) return false;
   try {
     if (copyArrays[path]) return maskJavaScriptCopy(path, before) === maskJavaScriptCopy(path, after);
-    if (path === "index.html") return maskHtmlCopy(before) === maskHtmlCopy(after);
+    if (["index.html", "404.html"].includes(path)) return maskHtmlCopy(before) === maskHtmlCopy(after);
   } catch {
     // Syntax errors and unrecognised forms never opt out of full checks.
   }
   return false;
+};
+
+export const classifyChange = (path, before, after) => {
+  if (isCopyOnly(path, before, after)) return { mode: "copy", components: [] };
+  const components = affectedComponents(path, before, after, maskHtmlCopy);
+  return { mode: components ? "components" : "full", components: components || [] };
 };
 
 export const planRelease = ({ projectRoot, base = "origin/gh-pages", target } = {}) => {
@@ -114,26 +122,30 @@ export const planRelease = ({ projectRoot, base = "origin/gh-pages", target } = 
     const changes = [];
     for (let index = 0; index < entries.length; index += 2) {
       const [status, path] = entries.slice(index, index + 2);
-      let copy = false;
-      if (status === "M" && (copyArrays[path] || path === "index.html" || path === "README.md" || /^docs\/.*\.md$/.test(path))) {
+      let classification = { mode: "full", components: [] };
+      if (status === "M" && (copyArrays[path] || ["index.html", "404.html", "styles.css", "js/whoop-day.js", "README.md"].includes(path) || /^docs\/.*\.md$/.test(path))) {
         const before = git("show", `${baseSha}:${path}`);
         const after = targetSha ? git("show", `${targetSha}:${path}`) : readFileSync(resolve(projectRoot, path), "utf8");
-        copy = isCopyOnly(path, before, after);
+        classification = classifyChange(path, before, after);
       }
-      changes.push({ path, copy });
+      changes.push({ path, ...classification });
     }
     if (!targetSha) {
       changes.push(...git("ls-files", "--others", "--exclude-standard", "-z").split("\0").filter(Boolean)
-        .map((path) => ({ path, copy: false })));
+        .map((path) => ({ path, mode: "full", components: [] })));
     }
-    const fullPaths = changes.filter(({ copy }) => !copy).map(({ path }) => path);
+    const fullPaths = changes.filter(({ mode }) => mode === "full").map(({ path }) => path);
+    const components = [...new Set(changes.flatMap(({ components }) => components))].sort();
+    const mode = fullPaths.length ? "full" : components.length ? "components" : "copy";
     return {
-      mode: fullPaths.length ? "full" : "copy", base: baseSha,
-      reason: fullPaths.length ? `Changes beyond copy: ${fullPaths.join(", ")}` : "Only display text, generated cache keys or documentation changed.",
+      mode, base: baseSha, components, matrix: browserMatrix(mode, components),
+      reason: fullPaths.length ? `Shared or unclassified changes: ${fullPaths.join(", ")}`
+        : components.length ? `Affected components and their integration checks: ${components.join(", ")}`
+          : "Only display text, generated cache keys or documentation changed.",
       files: changes.map(({ path }) => path),
     };
   } catch (error) {
-    return { mode: "full", reason: `Cannot prove copy-only scope: ${error.message}`, files: [] };
+    return { mode: "full", components: [], matrix: browserMatrix("full"), reason: `Cannot prove a narrower scope: ${error.message}`, files: [] };
   }
 };
 
@@ -147,5 +159,6 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   }
   const plan = planRelease(options);
   console.log(JSON.stringify(plan, null, 2));
-  if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `mode=${plan.mode}\n`);
+  if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT,
+    `mode=${plan.mode}\nmatrix=${JSON.stringify(plan.matrix)}\n`);
 }

@@ -4,6 +4,7 @@ import { spawn } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { runtimeFiles } from "./runtime-files.mjs";
+import { browserSteps, checkIds } from "./check-catalog.mjs";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(scriptDirectory, "..");
@@ -18,16 +19,22 @@ const suiteArgument = argumentsToCheck.find((argument) => (
 ));
 const browserSuite = suiteArgument?.slice("--browser-suite=".length) || "all";
 const supportedSuites = new Set(["all", "core", "components"]);
+const checksArgument = argumentsToCheck.find((argument) => argument.startsWith("--checks="));
+const selectedChecks = checksArgument?.slice("--checks=".length).split(",");
 
 if (
-  argumentsToCheck.length !== Number(Boolean(scopeArgument)) + Number(Boolean(suiteArgument))
+  argumentsToCheck.length !== Number(Boolean(scopeArgument)) + Number(Boolean(suiteArgument)) + Number(Boolean(checksArgument))
+  || (selectedChecks && (suiteArgument || !["chromium", "webkit"].includes(checkScope)
+    || selectedChecks.some((id) => !checkIds.includes(id))
+    || new Set(selectedChecks).size !== selectedChecks.length
+    || (checkScope === "webkit" && selectedChecks.includes("reels"))))
   || !supportedScopes.has(checkScope)
   || !supportedSuites.has(browserSuite)
   || (browserSuite !== "all" && !["chromium", "webkit"].includes(checkScope))
 ) {
   console.error(
     "Usage: node scripts/check-project.mjs "
-    + "[--scope=all|copy|static|chromium|webkit] [--browser-suite=all|core|components]",
+    + "[--scope=all|copy|static|chromium|webkit] [--browser-suite=all|core|components | --checks=id,...]",
   );
   process.exit(2);
 }
@@ -58,6 +65,8 @@ const contractScripts = [
   "scripts/release-quality.mjs",
   "scripts/check-release-quality.mjs",
   "scripts/release-scope.mjs",
+  "scripts/component-scope.mjs",
+  "scripts/check-catalog.mjs",
   "scripts/check-release-scope.mjs",
   "scripts/check-ui-contracts.mjs",
   "scripts/webkit-regression.cjs",
@@ -188,112 +197,7 @@ const gitWhitespaceStep = {
   args: ["diff", "--check"],
 };
 
-const browserContractSteps = [
-  {
-    scope: "chromium",
-    suite: "core",
-    label: "Real-browser UI contracts",
-    command: process.execPath,
-    args: ["scripts/check-ui-contracts.mjs"],
-  },
-  {
-    scope: "webkit",
-    suite: "core",
-    label: "WebKit UI contracts",
-    command: process.execPath,
-    args: ["scripts/webkit-regression.cjs"],
-  },
-  {
-    scope: "chromium",
-    label: "Personal video lifecycle: Chromium",
-    command: process.execPath,
-    args: ["scripts/check-personal-media.mjs", "chromium"],
-  },
-  {
-    scope: "webkit",
-    label: "Personal video lifecycle: WebKit",
-    command: process.execPath,
-    args: ["scripts/check-personal-media.mjs", "webkit"],
-  },
-  {
-    scope: "chromium",
-    label: "Inspector destination links: Chromium",
-    command: process.execPath,
-    args: ["scripts/check-inspector-links.mjs", "chromium"],
-  },
-  {
-    scope: "webkit",
-    label: "Inspector destination links: WebKit",
-    command: process.execPath,
-    args: ["scripts/check-inspector-links.mjs", "webkit"],
-  },
-];
-
-browserContractSteps.push(...["chromium", "webkit"].map(scope => ({
-  scope,
-  label: "Accessibility, painted contrast and text reflow: " + scope,
-  command: process.execPath,
-  args: ["scripts/check-accessibility.mjs", scope],
-})));
-
-browserContractSteps.push(...["chromium", "webkit"].map((scope) => ({
-  scope,
-  label: "Map route geometry: " + scope,
-  command: process.execPath,
-  args: ["scripts/check-map-routes.mjs", scope],
-})));
-
-browserContractSteps.push(...["chromium", "webkit"].map((scope) => ({
-  scope,
-  label: "Hover preview and persistent consoles: " + scope,
-  command: process.execPath,
-  args: ["scripts/check-hover-layout.mjs", scope],
-})));
-
-browserContractSteps.push(...["chromium", "webkit"].map((scope) => ({
-  scope,
-  label: "WHOOP daily UI: " + scope,
-  command: process.execPath,
-  args: ["scripts/check-whoop-ui.mjs", scope],
-})));
-
-browserContractSteps.push(...["chromium", "webkit"].map((scope) => ({
-  scope,
-  label: "First visit and named navigation: " + scope,
-  command: process.execPath,
-  args: ["scripts/check-first-visit.mjs", scope],
-})));
-
-browserContractSteps.push(...["chromium", "webkit"].map((scope) => ({
-  scope,
-  label: "Command popup placement: " + scope,
-  command: process.execPath,
-  args: ["scripts/check-command-placement.mjs", scope],
-})));
-
-browserContractSteps.push(...["chromium", "webkit"].map((scope) => ({
-  scope,
-  label: "Sphere axial motion: " + scope,
-  command: process.execPath,
-  args: ["scripts/check-sphere-motion.mjs", scope],
-})));
-
-browserContractSteps.push(...["chromium", "webkit"].map((scope) => ({
-  scope, label: "Expanded case view: " + scope, command: process.execPath, args: ["scripts/check-case-view.mjs", scope],
-})));
-browserContractSteps.push(...["chromium", "webkit"].map((scope) => ({
-  scope, label: "Rendered scroll lenses: " + scope, command: process.execPath,
-  args: ["scripts/check-scroll-lens.mjs", scope],
-})));
-// Exercise the integrated reading/playback path before the broader matrices.
-browserContractSteps.push(...["chromium", "webkit"].map(scope => ({
-  scope, label: "Overview content and timing: " + scope, command: process.execPath,
-  args: ["scripts/check-observation-route.mjs", scope],
-})));
-// Coverage and failure policy are unchanged; a broken lifecycle now fails fast.
-browserContractSteps.unshift(...["chromium", "webkit"].map((scope) => ({
-  scope, label: "Case reading lifecycle: " + scope, command: process.execPath, args: ["scripts/check-case-flow.mjs", scope],
-})));
+const browserContractSteps = ["chromium", "webkit"].flatMap(browserSteps);
 
 const runStep = (step) => new Promise((resolveStep) => {
   const startedAt = performance.now();
@@ -382,7 +286,8 @@ if (["all", "static", "copy"].includes(checkScope)) {
   }
 }
 
-if (failures.length === 0 && checkScope === "chromium" && browserSuite !== "components") {
+if (failures.length === 0 && checkScope === "chromium"
+  && (selectedChecks ? selectedChecks.includes("reels") : browserSuite !== "components")) {
   const reelResults = await runPhase(
     "Chromium reel preview gate",
     chromiumReelSteps,
@@ -393,7 +298,8 @@ if (failures.length === 0 && checkScope === "chromium" && browserSuite !== "comp
 if (failures.length === 0 && !["static", "copy"].includes(checkScope)) {
   const scopedBrowserSteps = browserContractSteps.filter((step) => (
     (checkScope === "all" || step.scope === checkScope)
-    && (browserSuite === "all" || (step.suite || "components") === browserSuite)
+    && (selectedChecks ? selectedChecks.includes(step.id)
+      : browserSuite === "all" || (step.id === "core" ? "core" : "components") === browserSuite)
   ));
   console.log(
     `\nBrowser release gate: ${scopedBrowserSteps.length} serial task`

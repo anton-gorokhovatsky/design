@@ -4,7 +4,8 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { isCopyOnly, planRelease } from "./release-scope.mjs";
+import { classifyChange, isCopyOnly, planRelease } from "./release-scope.mjs";
+import { browserMatrix, browserSteps, componentCoverage } from "./check-catalog.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (path) => readFileSync(join(root, path), "utf8");
@@ -64,6 +65,78 @@ assert.equal(isCopyOnly("unknown.js", 'const title="one";', 'const title="two";'
 assert.equal(isCopyOnly("README.md", "old", "new"), true);
 assert.equal(isCopyOnly("AGENTS.md", "old", "new"), false);
 
+const scoped = (path, before, after, mode, components = []) => {
+  assert.deepEqual(classifyChange(path, before, after), { mode, components }, `${path}: ${after.slice(-180)}`);
+  checks += 1;
+};
+const styles = read("styles.css");
+scoped("styles.css", styles, styles + "\n.settings-panel__note { margin-top: 8px; }", "components", ["settings"]);
+scoped("styles.css", styles + "\n.settings-whoop__disclosure { color: red; }", styles, "components", ["settings"]);
+for (const selector of [
+  '.settings-panel :is(h2, h3, p)',
+  '.settings-panel__row > button:not(:disabled):hover',
+  'html[data-analytics="allowed"] .settings-panel__analytics-marker',
+  '.settings-whoop > .settings-panel__note, .settings-presence h3',
+]) scoped("styles.css", "", `${selector} { margin: 8px; }`, "components", ["settings"]);
+for (const selector of [
+  ':root', '.text-link', '.settings-panel, .map-node',
+  '.settings-panel + .site-header', '.settings-panel ~ .control-console',
+  ':is(.settings-panel, .map-node)', ':not(.settings-panel)',
+  'body:has(.settings-panel) .map-node', '.settings-panelish',
+]) scoped("styles.css", "", `${selector} { color: red; }`, "full");
+scoped("styles.css", "", "@media(max-width: 600px) {.settings-panel__note {margin: 8px}}", "components", ["settings"]);
+scoped("styles.css", "@media(min-width: 900px){.map-node {opacity: 1}}", "@media(min-width: 800px){.map-node {opacity: 1}}", "full");
+scoped("styles.css", "", "@layer ui { .settings-panel { margin: 8px; } }", "full");
+scoped("styles.css", "", "@keyframes show { from {opacity: 0} to {opacity: 1} }", "full");
+scoped("styles.css", "", '.settings-panel { & + .map-node {opacity: 0} }', "full");
+scoped("styles.css", "", '.settings-panel { color: "unclosed }', "full");
+scoped("styles.css", styles, styles + '\n.settings-panel { margin: 8px; }\n:root { --space-4: 99px; }', "full");
+
+const shell = '<!doctype html><html><head><title>Test</title></head><body><dialog data-settings-panel><p>Details</p></dialog><main>Map</main></body></html>';
+scoped("index.html", shell, shell.replace('<p>Details</p>', '<section class="settings-panel__note">New details</section>'), "components", ["settings"]);
+scoped("index.html", shell, shell.replace('<p>Details</p>', '<p>Details</p><button type="button" data-whoop-toggle>On</button>'), "components", ["settings"]);
+for (const content of ['<script>run()</script>', '<style>body {display: none}</style>', '<p onclick="run()">Details</p>', '<iframe src="x"></iframe>', '<x-component></x-component>', '<p style="--shared: 1">Details</p>']) {
+  scoped("index.html", shell, shell.replace('<p>Details</p>', content), "full");
+}
+scoped("index.html", shell, shell.replace('data-settings-panel', 'data-settings-panel open'), "full");
+scoped("index.html", shell, shell.replace('<main>Map</main>', '<section>Map</section>'), "full");
+scoped("index.html", shell, shell.replace('<p>Details</p>', '<p>Details</p></dialog><p>Outside</p>'), "full");
+scoped("index.html", shell, shell.replace('</body>', '<dialog data-settings-panel></dialog></body>'), "full");
+scoped("index.html", shell, shell.replace('<dialog data-settings-panel>', '<div data-settings-panel>').replace('</dialog>', '</div>'), "full");
+scoped("js/whoop-day.js", 'const interval = 1000;', 'const interval = 2000;', "components", ["whoop"]);
+scoped("js/whoop-day.js", 'const interval = 1000;', 'import "./map-engine.js"; const interval = 2000;', "full");
+scoped("js/whoop-day.js", 'const interval = 1000;', 'const interval = ;', "full");
+scoped("js/analytics.js", 'const enabled = false;', 'const enabled = true;', "full");
+scoped("404.html", '<link href="styles.css?v=aaaaaaaaaaaa">', '<link href="styles.css?v=bbbbbbbbbbbb">', "copy");
+scoped("404.html", '<link href="/styles.css?v=aaaaaaaaaaaa">', '<link href="/styles.css?v=bbbbbbbbbbbb">', "copy");
+scoped("404.html", '<link href="//styles.css?v=aaaaaaaaaaaa">', '<link href="//styles.css?v=bbbbbbbbbbbb">', "full");
+scoped("404.html", '<main>404</main>', '<section>404</section>', "full");
+
+// The complete old browser inventory remains mandatory, once per engine;
+// WebKit core retains all four viewport/theme profiles. No shard may disappear.
+const retainedChecks = ["case-flow", "personal-media", "inspector-links", "accessibility", "map-routes", "hover-layout", "whoop-ui", "first-visit", "command-placement", "sphere-motion", "case-view", "scroll-lens", "observation-route"];
+const fullMatrix = browserMatrix("full").include;
+assert.equal(new Set(fullMatrix.map(({ artifact }) => artifact)).size, fullMatrix.length);
+for (const browser of ["chromium", "webkit"]) {
+  const jobs = fullMatrix.filter((row) => row.browser === browser);
+  const executed = jobs.flatMap(({ checks }) => checks.split(","));
+  assert.deepEqual(executed.sort(), [...retainedChecks, ...Array(browser === "webkit" ? 4 : 1).fill("core"), ...(browser === "chromium" ? ["reels"] : [])].sort());
+  assert.deepEqual(browserSteps(browser).map(({ id }) => id).sort(), ["core", ...retainedChecks].sort());
+}
+assert.deepEqual(fullMatrix.filter(({ scenario }) => scenario).map(({ scenario }) => scenario).sort(), ["320x568-dark", "320x568-light", "390x844-dark", "390x844-light"]);
+for (const components of [["settings"], ["whoop"], ["settings", "whoop"]]) {
+  const matrix = browserMatrix("components", components).include;
+  const expected = new Set(components.flatMap((id) => componentCoverage[id]));
+  for (const browser of ["chromium", "webkit"]) {
+    assert.deepEqual(new Set(matrix.filter((row) => row.browser === browser).flatMap(({ checks }) => checks.split(","))), expected);
+  }
+  assert.ok(!matrix.some(({ checks }) => /reels|scroll-lens|map-routes|sphere-motion/.test(checks)));
+}
+assert.deepEqual(browserMatrix("copy"), { include: [] });
+assert.throws(() => browserMatrix("components", []));
+assert.throws(() => browserMatrix("components", ["unknown"]));
+assert.throws(() => browserMatrix("skip"));
+
 // Exercise actual git history: an innocent last commit must not hide an
 // unpublished behavior change, and staged/untracked changes count as well.
 const directory = mkdtempSync(join(tmpdir(), "portfolio-release-scope-"));
@@ -75,6 +148,9 @@ try {
   mkdirSync(join(directory, "js"));
   writeFileSync(join(directory, "js/panels.js"), panels);
   writeFileSync(join(directory, "js/observation-route.js"), route);
+  writeFileSync(join(directory, "index.html"), shell);
+  writeFileSync(join(directory, "styles.css"), '.map-node {color: black}');
+  writeFileSync(join(directory, "js/whoop-day.js"), 'const interval = 1000;');
   git("add", "."); git("commit", "-m", "published");
   const published = git("rev-parse", "HEAD");
   const plan = (options = {}) => planRelease({ projectRoot: directory, base: published, ...options });
@@ -87,6 +163,14 @@ try {
   writeFileSync(join(directory, "unexpected.txt"), "new file");
   assert.equal(plan().mode, "full", "Untracked files cannot evade preflight");
   rmSync(join(directory, "unexpected.txt"));
+  writeFileSync(join(directory, "styles.css"), '.map-node {color: black}\n.settings-panel__note {margin: 8px}');
+  writeFileSync(join(directory, "index.html"), shell.replace('<p>Details</p>', '<section>Details</section>'));
+  assert.equal(plan().mode, "components");
+  git("add", "."); git("commit", "-m", "settings layout");
+  writeFileSync(join(directory, "js/whoop-day.js"), 'const interval = 2000;');
+  git("add", "."); git("commit", "-m", "whoop refresh");
+  assert.deepEqual(plan({ target: "HEAD" }).components, ["settings", "whoop"], "Component coverage combines unpublished commits");
+  assert.deepEqual(plan({ target: "HEAD" }).matrix, browserMatrix("components", ["settings", "whoop"]));
   writeFileSync(join(directory, "js/observation-route.js"), route.replace("90000", "60000"));
   git("add", "."); git("commit", "-m", "unpublished timing");
   writeFileSync(join(directory, "js/panels.js"), panels);
@@ -100,7 +184,7 @@ try {
   rmSync(directory, { recursive: true, force: true });
 }
 
-// Run the actual aggregate shell from the workflow against both lanes and
+// Run the actual aggregate shell from the workflow against all lanes and
 // failed/skipped dependencies. A skipped browser matrix alone is never green.
 const workflow = read(".github/workflows/quality.yml");
 const gate = /- name: Require the selected checks[\s\S]*?        run: \|\n((?:          .*(?:\n|$))+)/.exec(workflow)?.[1]
@@ -112,6 +196,9 @@ for (const [scope, staticResult, browserResult, pass] of [
   ["copy", "skipped", "skipped", false], ["full", "success", "skipped", false],
   ["full", "success", "failure", false], ["full", "success", "cancelled", false],
   ["full", "failure", "success", false], ["", "success", "skipped", false],
+  ["components", "success", "success", true], ["components", "success", "skipped", false],
+  ["components", "success", "failure", false], ["components", "success", "cancelled", false],
+  ["components", "failure", "success", false], ["components", "skipped", "success", false],
 ]) {
   let passed = true;
   try {
@@ -122,4 +209,7 @@ for (const [scope, staticResult, browserResult, pass] of [
   } catch { passed = false; }
   assert.equal(passed, pass, `Quality gate: ${scope}/${staticResult}/${browserResult}`);
 }
-console.log(`PASS: ${checks} real-source copy/behavior changes; unsafe syntax, git history and both Quality lanes.`);
+assert.match(workflow, /matrix: \$\{\{ fromJSON\(needs.static-contracts.outputs.matrix\) \}\}/);
+assert.match(workflow, /--checks=\$\{\{ matrix.checks \}\}/);
+assert.match(workflow, /if: steps.scope.outputs.mode == 'full'/, "FFmpeg stays exclusive to the full lane");
+console.log(`PASS: ${checks} copy/component/global changes; unsafe syntax, combined git history, complete browser coverage and all Quality lanes.`);

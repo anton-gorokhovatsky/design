@@ -387,7 +387,7 @@ try {
   // Full browser coverage runs once in Quality. Local work includes a focused
   // render of the actual change; repeating the entire CI matrix adds no evidence.
   await run(process.execPath, ["scripts/check-project.mjs", "--scope=copy"], {
-    label: "Run the short local preflight; Quality selects copy or full coverage",
+    label: "Run the short local preflight; Quality selects copy, component or full coverage",
   });
   verifyRuntimeAssetVersions(projectRoot);
   console.log("\n✓ CSS/JS references match their current content hashes.");
