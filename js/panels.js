@@ -143,7 +143,7 @@ const syncPanelMore = () => {
   }
   const end = contentPanelBody.scrollTop + contentPanelBody.clientHeight >= contentPanelBody.scrollHeight - 2;
   panelMore.dataset.direction = end ? "up" : "down";
-  panelMore.firstElementChild.textContent = end ? "К началу" : contentPanel.dataset.view === "work" ? "Ещё кейсы" : "Дальше";
+  panelMore.firstElementChild.textContent = typographUiText(end ? "К началу" : contentPanel.dataset.view === "work" ? "Ещё кейсы" : "Дальше");
 };
 let moreFrame = 0;
 const schedulePanelMore = () => {

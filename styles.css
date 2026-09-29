@@ -7562,12 +7562,6 @@ html[data-theme="dark"] .signal-constellation {
     align-self: stretch;
   }
 
-  body:has(.practice-map:is([data-selected-kind=personal],[data-observation-active]))
-    [data-map-description] {
-    font-size: clamp(.9375rem, calc(.875rem + .3vw), 1rem);
-    line-height: 1.5;
-  }
-
   .practice-map[data-observation-active]
     :is(.map-camera, .observation-showcase) {
     transform:
@@ -10168,6 +10162,7 @@ body[data-case-open] :is(.map-axis-label, .map-labels, .map-node-label, .origin-
 .case-scroll:focus-visible { outline: 2px solid var(--signal); outline-offset: -2px; }
 .case-layout {
   display: grid;
+  width: 100%;
   grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
   align-items: start;
   gap: var(--case-gap);
@@ -10175,7 +10170,7 @@ body[data-case-open] :is(.map-axis-label, .map-labels, .map-node-label, .origin-
   min-height: 0;
   height: 100%;
 }
-.case-story { display: grid; gap: var(--case-space-section); min-width: 0; padding: var(--case-pad); }
+.case-story { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--case-space-section); min-width: 0; padding: var(--case-pad); overflow-wrap: break-word; }
 .case-sheet {
   display: flex;
   min-width: 0;
@@ -10549,6 +10544,9 @@ html[data-reduce-motion="true"] [style*="scroll-ink-"] { filter: none !important
 .map-inspector:not(.is-case-view) .map-readout__identity h2 {
   font-size: var(--type-title);
   line-height: var(--leading-title);
+  white-space: normal;
+  hyphens: auto;
+  overflow-wrap: anywhere;
 }
 body:has(.practice-map:is([data-selected-kind=personal],[data-selected-kind=practice])) [data-map-title] {
   font-size: var(--type-author);

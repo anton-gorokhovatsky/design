@@ -1237,7 +1237,7 @@ const selectMapItem = (
   }
 
   if (mapTitle) {
-    mapTitle.textContent = item.displayTitle || typographUiText(item.title);
+    mapTitle.textContent = typographUiText(item.displayTitle || item.title);
     mapTitle.setAttribute("aria-label", typographUiText(item.title));
   }
 
@@ -1257,8 +1257,8 @@ const selectMapItem = (
     if (itemHref) {
       mapLink.hidden = false;
       mapLink.href = itemHref;
-      mapLink.textContent = overview ? (["company", "project"].includes(item.kind) ? "ОТКРЫТЬ КЕЙС" : "ПОДРОБНЕЕ") : item.linkLabel
-        || (item.kind === "practice" ? "ПРИНЦИПЫ В\u00a0NOTION" : "ОТКРЫТЬ САЙТ");
+      mapLink.textContent = typographUiText(overview ? (["company", "project"].includes(item.kind) ? "ОТКРЫТЬ КЕЙС" : "ПОДРОБНЕЕ") : item.linkLabel
+        || (item.kind === "practice" ? "ПРИНЦИПЫ В\u00a0NOTION" : "ОТКРЫТЬ САЙТ"));
       mapLink.classList.remove("is-disabled");
       mapLink.removeAttribute("aria-disabled");
       mapLink.target = overview ? "_self" : "_blank";

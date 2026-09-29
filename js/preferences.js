@@ -26,12 +26,12 @@ const shortRussianUiWords = [
   "по", "под", "при", "с", "со", "у",
 ].join("|");
 const shortRussianUiWordPattern = new RegExp(
-  `(^|[\\s([«„\"'])(${shortRussianUiWords})[\\t \\r\\n]+(?=\\S)`,
+  `(?<=^|[\\s([«„\"'])(${shortRussianUiWords})[\\t \\r\\n]+(?=\\S)`,
   "giu",
 );
 const typographUiText = (value = "") => String(value).replace(
   shortRussianUiWordPattern,
-  "$1$2\u00a0",
+  "$1\u00a0",
 );
 const themeToggles = Array.from(document.querySelectorAll("[data-theme-toggle]"));
 const themeLabels = Array.from(document.querySelectorAll("[data-theme-label]"));
