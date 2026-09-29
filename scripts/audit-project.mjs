@@ -393,7 +393,8 @@ const authorialPrincipleDigest = createHash("sha256")
   .digest("hex");
 requireContract(
   authorialPrincipleDigest
-    === "3c86e5b032fd926f86179d5f2bc9898b4e2d571cf3cd9f0f7420ea79b71da687",
+    // Author approved nine spelling/spacing corrections on 2026-09-29.
+    === "8ba0d5aa4c846768414d4c4f3e475e6125521719be4b03448c06b657dc0a42b6",
   "principle-authorial-copy",
   "Principle descriptions are authorial source text and must stay verbatim; only headings and labels may be edited without an approved source-copy update.",
   { actual: authorialPrincipleDigest },

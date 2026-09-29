@@ -41,7 +41,9 @@ const claim = () => {
 };
 const leave = () => {
   if (active) {
-    fetch(endpoint, { method: 'POST', credentials: 'omit', keepalive: true, body: JSON.stringify({ id, action: 'leave' }), headers: { 'content-type': 'text/plain' } }).catch(() => {});
+    try {
+      fetch(endpoint, { method: 'POST', credentials: 'omit', keepalive: true, body: JSON.stringify({ id, action: 'leave' }), headers: { 'content-type': 'text/plain' } }).catch(() => {});
+    } catch {}
   }
   active = false;
   releaseLock?.();
