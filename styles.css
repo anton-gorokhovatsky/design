@@ -3649,7 +3649,7 @@ body.has-content-panel .constellation-nav {
   font-family: var(--font-sans);
 
   font-weight: 500;
-  letter-spacing: -0.035em;
+  letter-spacing: -0.015em;
 
 }
 
@@ -10213,7 +10213,6 @@ body[data-case-open] :is(.map-axis-label, .map-labels, .map-node-label, .origin-
 .map-inspector.is-case-view .map-readout__identity h2 {
   font-size: var(--case-title-size);
   line-height: 1.08;
-  letter-spacing: -.035em;
   margin-bottom: var(--case-space-small);
   text-wrap: balance;
   overflow-wrap: anywhere;
