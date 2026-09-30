@@ -7269,6 +7269,7 @@ html[data-reduce-motion="true"] .observation-showcase {
   font-size: 0.62rem;
   letter-spacing: 0.035em;
   line-height: 1.35;
+  overflow-wrap: normal;
 }
 
 .map-evidence dd {
@@ -10248,7 +10249,7 @@ body[data-case-open] :is(.map-axis-label, .map-labels, .map-node-label, .origin-
   padding: var(--case-space-section) 0 0;
   gap: var(--case-space-section);
 }
-.is-case-view .map-evidence > div { grid-template-columns: 5.5rem minmax(0, 1fr); gap: var(--case-space-medium); }
+.is-case-view .map-evidence > div { grid-template-columns: 6.5rem minmax(0, 1fr); gap: var(--case-space-medium); }
 .is-case-view .map-evidence dt { font-size: var(--case-label-size); line-height: 1.45; }
 .is-case-view .map-evidence dd { font-size: var(--case-body-size); line-height: 1.5; overflow-wrap: anywhere; }
 .map-evidence dd .text-link { white-space: normal; }
