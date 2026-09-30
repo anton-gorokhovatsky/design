@@ -520,7 +520,7 @@ const relationshipCascadeAudit = async (page) => {
       failure: filter !== "project"
         || activeKinds !== "project"
         || rootOpacity < 0.99
-        || active.length !== 9
+        || active.length !== 10
         || minimumActiveOpacity < 0.15
         || maximumActiveOpacity > 0.17
         || maximumHiddenOpacity > 0.01,
@@ -1476,7 +1476,7 @@ const accessibilityAcceptanceAudit = async (browser) => {
       });
       const contact = await contactAudit(page, viewport.width);
       const garage = await routeAudit(page, "garage", 9);
-      const privatePractice = await routeAudit(page, "private-practice", 9);
+      const privatePractice = await routeAudit(page, "private-practice", 10);
       const relationshipCascade = await relationshipCascadeAudit(page);
       const material = await materialAudit(page);
 

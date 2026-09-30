@@ -22,6 +22,7 @@ const selectedFrames = new Map([
   ["herman", 2.2],
   ["hotline-camp", 0.7],
   ["ks-fish", 0.7],
+  ["krainiuk", 0.7],
   ["narkomfin", 0.75],
   ["shirokostup", 0.6],
   ["tarski", 1.45],

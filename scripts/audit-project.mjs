@@ -361,6 +361,7 @@ const independentProjectIds = [
   "eleven",
   "ks-fish",
   "doronin",
+  "krainiuk",
 ];
 const missingProjectMapLabels = independentProjectIds.filter((id) => {
   const item = mapItems.find((candidate) => candidate.id === id);
@@ -427,9 +428,9 @@ const duplicatedReels = referencedReels.filter(
 );
 
 requireContract(
-  reelFiles.length === 17,
+  reelFiles.length === 18,
   "reel-count",
-  "The master reel set must contain 17 videos.",
+  "The master reel set must contain 18 videos.",
   { actual: reelFiles.length },
 );
 requireContract(

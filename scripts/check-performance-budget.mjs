@@ -52,7 +52,8 @@ const budgets = {
   // The 67 KiB gzip frame data loads only when motion and its owner are visible.
   // +2 KiB budget for cached edge maps and media-attached rasterization;
   // avoids PNG decoding each scroll frame and samples only the visible edges.
-  runtime: 285 * 1024,
+  // +2 KiB for the Krainiuk project copy and reel manifest; no new runtime logic.
+  runtime: 287 * 1024,
   fonts: 160 * 1024,
   // Akt preloads all weights in one 110 KiB variable font. The complete family
   // is smaller than four Golos files; the initial two-weight preload was smaller.

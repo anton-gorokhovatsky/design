@@ -140,6 +140,14 @@ export const reelChapterSpecs = [
       { label: "assortment", start: 2.6, duration: 4.9 },
     ],
   },
+  {
+    itemId: "krainiuk",
+    master: "krainiuk.mp4",
+    chapters: [
+      { label: "coach-running", start: 0.1, duration: 4.4 },
+      { label: "tarot-reveal", start: 7.2, duration: 6.8 },
+    ],
+  },
 ];
 
 export const getReelChapterFileName = (spec, chapterIndex) => (

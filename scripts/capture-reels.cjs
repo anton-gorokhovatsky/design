@@ -99,6 +99,12 @@ const projects = {
   doronin: {
     url: "https://doronin.store/",
   },
+  krainiuk: {
+    url: "https://anton-gorokhovatsky.github.io/ekaterinakrainiuk/",
+    captureBrowser: chromium.executablePath(),
+    outputDuration: 14.2,
+    finalHold: 4200,
+  },
 };
 
 const projectId = process.argv[2];
@@ -530,6 +536,26 @@ const prepareShirokostupCapture = async (page) => {
   }
 };
 
+const runKrainiukCaptureMotion = async (page) => {
+  await page.waitForTimeout(1800);
+  await page.locator('.portal[href="#run"]').click();
+  await page.waitForTimeout(2700);
+  await page.locator('.site-header a[href="#tarot"]').click();
+  await page.waitForTimeout(1400);
+  await smoothScrollTo(page, ".tarot-spread", 1000, 0.28);
+  await page.waitForTimeout(900);
+
+  const cards = page.locator(".tarot-card-toggle");
+  if (await cards.count() !== 3) {
+    throw new Error("The Krainiuk spread must contain three real card controls");
+  }
+  for (let index = 0; index < 3; index += 1) {
+    await activateControlWithoutScrolling(cards.nth(index), `Krainiuk card ${index + 1}`);
+    await page.waitForTimeout(index === 2 ? 800 : 950);
+  }
+  await page.locator('[data-tarot-deal]').filter({ hasText: "Ещё расклад" }).waitFor();
+};
+
 const runShirokostupCaptureMotion = async (page) => {
   await page.waitForTimeout(1800);
 
@@ -918,6 +944,11 @@ const runCaptureMotion = async (page, id, source) => {
 
   if (id === "shirokostup") {
     await runShirokostupCaptureMotion(page);
+    return;
+  }
+
+  if (id === "krainiuk") {
+    await runKrainiukCaptureMotion(page);
     return;
   }
 

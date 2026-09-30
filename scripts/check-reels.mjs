@@ -34,6 +34,7 @@ const landscapeReels = [
   "herman.mp4",
   "hotline-camp.mp4",
   "ks-fish.mp4",
+  "krainiuk.mp4",
   "narkomfin.mp4",
   "shirokostup.mp4",
   "tarski.mp4",
@@ -58,6 +59,7 @@ reelSpecs.get("garage-webzine.mp4").duration = { min: 12.1, max: 12.7 };
 reelSpecs.get("herman.mp4").duration = { min: 14.5, max: 15.1 };
 reelSpecs.get("hotline-camp.mp4").duration = { min: 13.7, max: 14.1 };
 reelSpecs.get("ks-fish.mp4").duration = { min: 14, max: 14.4 };
+reelSpecs.get("krainiuk.mp4").duration = { min: 14, max: 14.4 };
 reelSpecs.get("narkomfin.mp4").duration = { min: 12.9, max: 13.5 };
 reelSpecs.get("shirokostup.mp4").duration = { min: 12.5, max: 13.1 };
 reelSpecs.get("tarski.mp4").duration = { min: 12.1, max: 12.7 };

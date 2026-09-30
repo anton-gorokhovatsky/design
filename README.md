@@ -139,7 +139,7 @@ route.
   working interface.
   Nodes without recorded media do not open an empty or decorative
   media receiver.
-- A site reel is a window, not a crop: all 17 current sources are desktop
+- A site reel is a window, not a crop: all 18 current sources are desktop
   websites, so each uses square pixels and is captured from a `1200×800`
   viewport into a `900×600` / `3:2` master and matching landscape receiver.
   The receiver uses the same `MATERIAL / 01`, while the native video fills its
@@ -165,7 +165,7 @@ route.
   fallback. Regenerate every chapter with
   `node scripts/capture-reel-chapters.mjs`, or one pair with
   `node scripts/capture-reel-chapters.mjs <project-id>`; the command also
-  refreshes all 34 content hashes in the managed `map-data.js` manifest.
+  refreshes all 36 content hashes in the managed `map-data.js` manifest.
 - Touch devices keep the direct node-to-inspector interaction and do not render
   hover-only media.
 - Long-form content remains inside the same coordinate system. Key cases,

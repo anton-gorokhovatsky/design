@@ -2074,11 +2074,12 @@ const auditBrowser = async (client, origin) => {
     herman: 2026,
     "hotline-camp": 2026,
     "ks-fish": 2020,
+    krainiuk: 2026,
     shirokostup: 2026,
     tarski: 2026,
   };
   if (
-    chronologyPrivatePracticeContract.datedIds.length !== 9
+    chronologyPrivatePracticeContract.datedIds.length !== 10
     || chronologyPrivatePracticeContract.undatedIds.length !== 0
     || chronologyPrivatePracticeContract.activeIds.join("|")
       !== chronologyPrivatePracticeContract.datedIds.join("|")
