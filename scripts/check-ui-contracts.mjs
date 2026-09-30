@@ -1390,7 +1390,7 @@ const auditBrowser = async (client, origin) => {
     || reactiveGarageContract.changedCount !== 9
     || reactiveGarageContract.changedActiveCount !== 9
     || reactiveGarageContract.changedInactiveCount !== 0
-    || reactiveGarageContract.connectedCount !== 29
+    || reactiveGarageContract.connectedCount !== 31
     || reactiveGarageContract.minimumRelativeDeflection < 0.02
     || reactiveGarageContract.minimumActiveOpacity < 0.2
     || reactiveGarageContract.pendingAnimations !== 0
@@ -1415,7 +1415,7 @@ const auditBrowser = async (client, origin) => {
     || reactiveChildContract.changedCount !== 1
     || reactiveChildContract.changedActiveCount !== 1
     || reactiveChildContract.changedInactiveCount !== 0
-    || reactiveChildContract.connectedCount !== 29
+    || reactiveChildContract.connectedCount !== 31
     || reactiveChildContract.minimumRelativeDeflection < 0.02
     || reactiveChildContract.minimumActiveOpacity < 0.2
     || reactiveChildContract.pendingAnimations !== 0

@@ -248,7 +248,7 @@ for(const engine of [process.argv[2]||'chromium']) {
     await page.locator('[data-close-inspector]').click();
     await page.waitForFunction(() => document.querySelector('[data-content-panel]').dataset.view === 'contact');
     await page.goto(origin + '/?point=running');
-    await page.waitForFunction(() => document.querySelectorAll('[data-map-related] a').length === 8);
+    await page.waitForFunction(() => document.querySelectorAll('[data-map-related] a').length === 9);
     // Compare the document itself: WebKit can round timeOrigin differently
     // between reads, which is not evidence of a document navigation.
     const sourceDocument = await page.evaluateHandle(() => document);
