@@ -108,7 +108,7 @@ try {
       await page.keyboard.press('Escape');
     }
 
-    await page.locator('[data-open-panel="contact"]').evaluate(e => e.click());
+    await page.locator('.constellation-nav__item[data-open-panel="contact"]').evaluate(e => e.click());
     await settle(page);
     const contacts = await page.locator('.contact-resume a').evaluateAll(links => links.map(e => {
       const r = e.getBoundingClientRect(); return { text: e.textContent.trim(), width: r.width, height: r.height };

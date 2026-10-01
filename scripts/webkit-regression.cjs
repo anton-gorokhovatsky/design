@@ -119,7 +119,7 @@ const materialAudit = async (page) => page.evaluate(readMaterialAuditExpression)
 
 // A fixed material shell owns the corners; its transparent child owns scrolling.
 const stackAudit = async (page, panelName, captureLabel, { nativeWheel = true } = {}) => {
-  await page.evaluate(name => document.querySelector(`[data-open-panel="${name}"]`).click(), panelName);
+  await page.evaluate(name => document.querySelector(`.constellation-nav__item[data-open-panel="${name}"]`).click(), panelName);
   await waitForLayout(page, 400);
   const viewport = page.locator('.content-panel__body');
   const shell = page.locator('.content-panel__frame');
@@ -609,7 +609,7 @@ const relationshipCascadeAudit = async (page) => {
 
 const contactAudit = async (page, width) => {
   await page.evaluate(() => {
-    document.querySelector('[data-open-panel="contact"]')?.click();
+    document.querySelector('.constellation-nav__item[data-open-panel="contact"]')?.click();
   });
   await waitForLayout(page, 420);
   const state = await page.evaluate(() => {

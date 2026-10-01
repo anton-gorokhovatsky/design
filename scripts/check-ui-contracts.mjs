@@ -4033,7 +4033,7 @@ const auditBrowser = async (client, origin) => {
       next?.click();
     }
 
-    document.querySelector('[data-open-panel="contact"]')?.click();
+    document.querySelector('.constellation-nav__item[data-open-panel="contact"]')?.click();
     document.querySelector('.contact-links a[href^="mailto:"]')?.click();
     document.removeEventListener("click", preventContactNavigation, true);
 

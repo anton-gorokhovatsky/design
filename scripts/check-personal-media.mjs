@@ -183,7 +183,7 @@ try {
   assert.equal(await page.locator("[data-personal-media] iframe").getAttribute("data-retained"), "yes",
     "Resizing keeps the same inline player without restarting playback.");
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.locator('[data-open-panel="contact"]').click();
+  await page.locator('.constellation-nav__item[data-open-panel="contact"]').click();
   await page.waitForFunction(() => document.querySelector("[data-personal-media]").hidden);
   assert.equal(await page.locator("[data-personal-media] iframe").count(), 0,
     "A full-screen content panel cannot hide an active stream.");
