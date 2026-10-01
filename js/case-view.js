@@ -11,6 +11,8 @@ const originalChildren = [...mapInspector.children];
 const close = mapInspector.querySelector("[data-close-inspector]");
 const kind = mapInspector.querySelector("[data-map-kind]");
 const identity = mapInspector.querySelector(".map-readout__identity");
+const caseEntry = mapInspector.querySelector("[data-case-entry]");
+const caseInquiry = mapInspector.querySelector("[data-case-inquiry]");
 const header = document.createElement("div");
 header.className = "case-header";
 const viewport = document.createElement("div");
@@ -242,6 +244,9 @@ function reflect() {
     && !body.classList.contains("has-content-panel") && Boolean(selectedId);
   const nextId = open ? selectedId : null;
   const large = open && !observationRoute.active && ["company", "project"].includes(selected?.kind);
+  const showEntry = large && Boolean(selected?.caseEntry);
+  caseEntry.hidden = !showEntry;
+  caseInquiry.hidden = !showEntry;
   if (nextId === activeId && large === caseMode) return;
   if (activeId) {
     const closing = !mapInspector.classList.contains("is-open");

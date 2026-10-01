@@ -10127,6 +10127,20 @@ body[data-case-open] :is(.map-axis-label, .map-labels, .map-node-label, .origin-
   height: 100%;
 }
 .case-story { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--case-space-section); min-width: 0; padding: var(--case-pad); overflow-wrap: break-word; }
+.case-entry {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-5);
+  color: var(--content-muted);
+  font-size: var(--type-detail);
+  line-height: var(--leading-body);
+}
+.case-entry p { margin: 0; }
+.case-inquiry { font-size: var(--type-body); line-height: var(--leading-body); }
+.case-inquiry .text-link { display: inline-flex; align-items: center; min-height: var(--control-target); }
+.case-entry[hidden], .case-inquiry[hidden] { display: none; }
 .case-sheet {
   display: flex;
   min-width: 0;

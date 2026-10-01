@@ -261,7 +261,9 @@ const openContentPanel = (
   if (observationRoute.active) stopObservation({ updateHistory: false });
 
   activePanelView = view;
-  lastPanelTrigger = trigger instanceof HTMLElement ? trigger
+  lastPanelTrigger = trigger instanceof HTMLElement && mapInspector.contains(trigger)
+    ? constellationNavItems.find(item => item.dataset.navView === view)
+    : trigger instanceof HTMLElement ? trigger
     : position ? panelOpenButtons.find(button => button.dataset.openPanel === view)
       : document.activeElement;
   contentPanel?.setAttribute("data-view", view);
@@ -376,7 +378,9 @@ panelOpenButtons.forEach((button) => {
   button.setAttribute("aria-controls", "content-panel");
   button.setAttribute("aria-expanded", "false");
   button.setAttribute("aria-haspopup", "dialog");
-  button.addEventListener("click", () => {
+  button.addEventListener("click", (event) => {
+    if (button.matches("a") && (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)) return;
+    event.preventDefault();
     openContentPanel(button.dataset.openPanel, button);
   });
 });
