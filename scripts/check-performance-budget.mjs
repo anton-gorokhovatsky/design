@@ -54,12 +54,14 @@ const budgets = {
   // avoids PNG decoding each scroll frame and samples only the visible edges.
   // +2 KiB for the Krainiuk project copy and reel manifest; no new runtime logic.
   // +1 KiB for deferred related-item thumbnails, reusing the existing posters.
-  runtime: 288 * 1024,
+  // +8 KiB for native Aura generation and lifecycle under the author card.
+  // This replaces the home page's 67 KiB gzip Atlas frame-data request.
+  runtime: 296 * 1024,
   fonts: 160 * 1024,
   // Akt preloads all weights in one 110 KiB variable font. The complete family
   // is smaller than four Golos files; the initial two-weight preload was smaller.
   // +2 KiB for shared vector close icons and on-demand related previews.
-  initialSource: 630 * 1024,
+  initialSource: 638 * 1024,
 };
 const failures = [];
 

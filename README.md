@@ -64,6 +64,11 @@ route.
   The static site share cover uses `assets/observation/atlas.svg`; its template
   belongs only to `scripts/capture-share-images.mjs site`, not the live route.
   Sources and export settings are recorded in [the artwork notes](docs/observation-art.md).
+- The author's WHOOP card uses the native Aura Mesh / Flow field in
+  `js/whoop-aura.js`: an 18-second cycle, amplitude 0.6 and the recovery palette.
+  The field fades within its bounds, follows the card and pauses with motion
+  preferences or a hidden owner. The 404 retains Atlas and its static fallback
+  `assets/atlas-terrain.svg`; the home page no longer requests Atlas frame data.
 - `ПОКАЗАТЬ ХРОНОЛОГИЮ` gives the radar rings a chronological meaning. Only
   nodes with supported dates enter the year orbits; undated principles remain
   visibly outside the chronology rather than receiving guessed dates.

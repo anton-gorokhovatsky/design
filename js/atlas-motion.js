@@ -11,9 +11,8 @@ function loadFrames() {
     return response.json();
   });
 }
-for (const field of document.querySelectorAll('.whoop-field, .not-found__terrain')) {
-  // The author terrain is ambient; retain Atlas's timing ratios at a slower pace.
-  const playbackRate = field.matches('.whoop-field') ? 1 / 3 : 1;
+for (const field of document.querySelectorAll('.not-found__terrain')) {
+  const playbackRate = 1;
   const canvas = document.createElement('canvas');
   canvas.width = 1920; canvas.height = 1080;
   canvas.className = 'atlas-motion'; canvas.setAttribute('aria-hidden', 'true');
@@ -25,8 +24,7 @@ for (const field of document.querySelectorAll('.whoop-field, .not-found__terrain
   const paths = [];
   const allowed = () => !document.hidden && !reduced.matches && !contrast.matches
     && root.dataset.reduceMotion !== 'true'
-    && getComputedStyle(field).visibility !== 'hidden' && getComputedStyle(field).display !== 'none'
-    && (!field.matches('.whoop-field') || getComputedStyle(root).getPropertyValue('--day-enabled').trim() === '1');
+    && getComputedStyle(field).visibility !== 'hidden' && getComputedStyle(field).display !== 'none';
   function draw(index) {
     if (!paths[index]) {
       const bands = Array.from({ length: 8 }, () => new Path2D());

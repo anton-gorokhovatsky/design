@@ -29,7 +29,7 @@ export async function checkLiveSurface(browser, origin, engine) {
   const card = await page.locator('.site-header').boundingBox();
   const initial = await state();
   await page.waitForTimeout(700);
-  assert.notEqual((await state()).pixels, initial.pixels, 'Native terrain cells change, not the image position.');
+  assert.notEqual((await state()).pixels, initial.pixels, 'Native Aura changes within the stationary field.');
   assert.deepEqual(await page.locator('.site-header').boundingBox(), card, 'The author card stays fixed.');
   const link = page.locator('.whoop-foot .text-link');
   const linkState = () => link.evaluate(node => {
@@ -94,7 +94,7 @@ export async function checkLiveSurface(browser, origin, engine) {
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
   assert.deepEqual(errors, []);
   await context.close();
-  console.log(`PASS ${engine}: Atlas motion and pause, shared links, presence deduplication and outage, 404 themes and mobile.`);
+  console.log(`PASS ${engine}: Aura/Atlas motion and pause, shared links, presence deduplication and outage, 404 themes and mobile.`);
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {

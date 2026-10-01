@@ -4,6 +4,7 @@ import { join } from "node:path";
 export const runtimeFiles = [
   "js/preferences.js",
   "js/whoop-day.js",
+  "js/whoop-aura.js",
   "js/presence.js",
   "js/atlas-motion.js",
   "js/analytics.js",

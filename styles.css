@@ -9705,7 +9705,7 @@ html[data-focus-modality="keyboard"]
 .content-panel__more .map-related__arrow::after { right: .1875rem; width: .375rem; height: .375rem; }
 .content-panel__more[data-direction="up"] .map-related__arrow { transform: rotate(-90deg); }
 
-/* A local Atlas relief follows its author card beneath the shared material. */
+/* Aura follows its author card beneath the shared material. */
 :root { --day-rgb: 83, 142, 103; --day-enabled: 0; --author-card-width: min(21.75rem, max(272px, calc(100vw - 1028px))); }
 .whoop-field {
   position: absolute;
@@ -9713,20 +9713,19 @@ html[data-focus-modality="keyboard"]
   width: 0;
   height: 0;
   pointer-events: none;
-  mask-image: radial-gradient(ellipse at 58% 56%, #000 30%, transparent 72%);
-  color: rgb(var(--day-rgb));
+  /* Fade completely inside the bounds; never clip a still-visible colour. */
+  mask-image: radial-gradient(ellipse 50% 50% at 50% 50%,
+    #000 20%, rgba(0,0,0,.85) 40%, rgba(0,0,0,.4) 65%,
+    rgba(0,0,0,.1) 82%, transparent 98%);
   opacity: var(--day-enabled);
   transition: opacity 180ms var(--motion-shift);
 }
-.whoop-field::before {
-  content: "";
+.whoop-aura {
   position: absolute;
   inset: 0;
-  background: currentColor;
-  mask: url("assets/atlas-terrain.svg") center / cover no-repeat;
-}
-html[data-theme="dark"] .whoop-field {
-  color: color-mix(in srgb, rgb(var(--day-rgb)) 80%, white);
+  width: 100%;
+  height: 100%;
+  opacity: .8;
 }
 .atlas-motion { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 [data-atlas-ready]::before { visibility: hidden; }

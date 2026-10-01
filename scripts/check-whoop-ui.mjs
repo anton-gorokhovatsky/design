@@ -56,7 +56,7 @@ try {
       const terrainAfter = await page.locator(".whoop-field").boundingBox();
       assert.ok(Math.abs((terrainAfter.x - terrainBefore.x) - (after.x - before.x)) < 1
         && Math.abs((terrainAfter.y - terrainBefore.y) - (after.y - before.y)) < 1,
-        "Atlas follows its owner while dragging.");
+        "Aura follows its owner while dragging.");
       assert.ok(Math.abs(after.x - before.x + 200) < 1 && Math.abs(after.y - before.y + 150) < 1,
         "The author card moves with its free surface.");
       const copy = await page.locator(".brand__role").boundingBox();
