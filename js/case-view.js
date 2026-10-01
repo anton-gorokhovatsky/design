@@ -244,9 +244,8 @@ function reflect() {
     && !body.classList.contains("has-content-panel") && Boolean(selectedId);
   const nextId = open ? selectedId : null;
   const large = open && !observationRoute.active && ["company", "project"].includes(selected?.kind);
-  const showEntry = large && Boolean(selected?.caseEntry);
-  caseEntry.hidden = !showEntry;
-  caseInquiry.hidden = !showEntry;
+  caseEntry.hidden = !large;
+  caseInquiry.hidden = !large;
   if (nextId === activeId && large === caseMode) return;
   if (activeId) {
     const closing = !mapInspector.classList.contains("is-open");
