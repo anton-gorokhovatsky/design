@@ -240,8 +240,9 @@ try {
         // Hit testing follows the projected browsing context, not an invisible copy.
         await page.locator('iframe').contentFrame().locator('button').click();
         assert.equal(await page.locator('iframe').contentFrame().locator('button').textContent(),'Clicked');
+        // The source caption follows the screen in the shared media layout.
         await page.locator('[data-personal-media-source]').focus();
-        await page.keyboard.press('Tab');
+        await page.keyboard.press('Shift+Tab');
         await settle(page);
         assert.equal(await page.locator('iframe').evaluate(f=>f===document.activeElement),true,'Keyboard enters the original player');
         assert.equal(await page.locator('iframe').evaluate(f=>f.style.transform),'','Keyboard playback controls remain undistorted');
