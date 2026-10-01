@@ -13,17 +13,14 @@ export const createPersonalMedia = ({ inspector, returnFocus }) => {
     return { select: () => {} };
   }
 
-  const home = root.parentElement;
-  // A side-by-side card and player need more space than the mobile dock alone.
-  const inlineLayout = window.matchMedia("(max-width: 1024px)");
   let selectedItem = null;
   let mediaItem = null;
   let iframe = null;
 
   const sync = () => {
     const visible = !root.hidden;
-    slot.hidden = !visible || !inlineLayout.matches;
-    launch.hidden = inlineLayout.matches || !selectedItem?.youtube || visible;
+    slot.hidden = !visible;
+    launch.hidden = true;
     launch.setAttribute("aria-expanded", String(visible));
     if (selectedItem?.youtube && mapLink) mapLink.hidden = true;
   };
@@ -53,12 +50,7 @@ export const createPersonalMedia = ({ inspector, returnFocus }) => {
   };
 
   const place = () => {
-    const parent = inlineLayout.matches ? slot : home;
-    if (root.parentElement !== parent) {
-      // Reparenting an iframe can reload it. Never silently restart audio.
-      stop();
-      parent.append(root);
-    }
+    if (root.parentElement !== slot) slot.append(root);
     sync();
   };
 
@@ -133,11 +125,6 @@ export const createPersonalMedia = ({ inspector, returnFocus }) => {
     poster.focus({ preventScroll: true });
   });
   poster.addEventListener("click", play);
-  inlineLayout.addEventListener("change", () => {
-    if (!selectedItem?.youtube) close();
-    if (inlineLayout.matches && selectedItem?.youtube) show(selectedItem);
-    else place();
-  });
   // The stream belongs to the YouTube card and stops when that card closes.
   const panelObserver = new MutationObserver(() => {
     if (document.body.classList.contains("has-content-panel") && !root.hidden) {

@@ -126,16 +126,11 @@ try {
       assert.equal(geometry.overflow, 0);
       assert.ok(geometry.inspector.y >= 0, "Inspector header stays reachable.");
       assert.ok(geometry.inspector.bottom <= height, "Inspector scrolls within the viewport.");
-      assert.equal(geometry.inline, width <= 1024);
-      if (width <= 900) {
+      assert.equal(geometry.inline, true, "Personal video stays inside its reading card at every width.");
+      {
         assert.ok(Math.abs(geometry.screen.x - geometry.sheet.x) < 1
           && Math.abs(geometry.screen.width - geometry.sheet.width) < 1,
-        "Mobile stream fills the rounded reading window, like inline case reels.");
-      }
-      if (width > 1024) {
-        assert.ok(geometry.inspector.right + 12 <= geometry.player.x,
-          "Desktop card and player must have a real gap.");
-        assert.ok(geometry.player.bottom <= height - 100, "Player clears the dock.");
+        "Stream fills its rounded reading window, like inline case reels.");
       }
       assert.equal(await page.locator("[data-close-personal-media]").count(), 0,
         "The stream has no separate dismiss action in either layout.");
@@ -183,12 +178,11 @@ try {
   await page.goto(origin + "/?point=youtube", { waitUntil: "load" });
   await page.locator("[data-play-personal-media]").click();
   await page.locator("[data-personal-media] iframe").waitFor();
+  await page.locator("[data-personal-media] iframe").evaluate(frame => frame.dataset.retained = "yes");
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.waitForFunction(() => !document.querySelector("[data-personal-media] iframe"));
-  assert.equal(await page.locator("[data-play-personal-media]").isVisible(), true,
-    "Crossing the layout breakpoint never silently restarts playback.");
+  assert.equal(await page.locator("[data-personal-media] iframe").getAttribute("data-retained"), "yes",
+    "Resizing keeps the same inline player without restarting playback.");
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.locator("[data-play-personal-media]").click();
   await page.locator('[data-open-panel="contact"]').click();
   await page.waitForFunction(() => document.querySelector("[data-personal-media]").hidden);
   assert.equal(await page.locator("[data-personal-media] iframe").count(), 0,
