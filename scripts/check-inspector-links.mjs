@@ -175,8 +175,11 @@ try {
       assert.equal(await page.locator('.case-scroll').evaluate((element) => element === document.activeElement), true,
         "The reading region follows the fixed close/media controls and supports keyboard scrolling.");
       await page.keyboard.press(nextLinkKey);
+      assert.equal(await page.locator('[data-case-entry] a').evaluate((element) => element === document.activeElement && element.matches(":focus-visible")), true,
+        "Other works follows the reading region, matching the case entry's visual order.");
+      await page.keyboard.press(nextLinkKey);
       assert.equal(await link.evaluate((element) => element === document.activeElement && element.matches(":focus-visible")), true,
-        "The external destination follows the reading-region and media controls.");
+        "The external destination follows the case entry navigation.");
       const popupPromise = page.waitForEvent("popup");
       await page.keyboard.press("Enter");
       const popup = await popupPromise;
