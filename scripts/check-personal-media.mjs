@@ -167,8 +167,8 @@ try {
       for (const keyboard of geometry.inline ? [] : [false, true]) {
         const cardClose = await closeStyles("[data-close-inspector]", keyboard);
         const playerClose = await closeStyles("[data-close-personal-media]", keyboard);
-        // Desktop source and close share one material bar; mobile inherits the
-        // reading window. Neither state creates a second glass island or rotates
+        // Desktop source and close form a transparent caption; mobile inherits
+        // the reading window. Neither state creates a glass island or rotates
         // the small inline control. Keep the shared focus geometry in both layouts.
         assert.equal(playerClose.backgroundColor, "rgba(0, 0, 0, 0)");
         assert.equal(playerClose.backdropFilter, "none");

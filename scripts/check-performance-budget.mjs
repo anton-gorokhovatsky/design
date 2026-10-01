@@ -53,11 +53,13 @@ const budgets = {
   // +2 KiB budget for cached edge maps and media-attached rasterization;
   // avoids PNG decoding each scroll frame and samples only the visible edges.
   // +2 KiB for the Krainiuk project copy and reel manifest; no new runtime logic.
-  runtime: 287 * 1024,
+  // +1 KiB for deferred related-item thumbnails, reusing the existing posters.
+  runtime: 288 * 1024,
   fonts: 160 * 1024,
   // Akt preloads all weights in one 110 KiB variable font. The complete family
   // is smaller than four Golos files; the initial two-weight preload was smaller.
-  initialSource: 628 * 1024,
+  // +2 KiB for shared vector close icons and on-demand related previews.
+  initialSource: 630 * 1024,
 };
 const failures = [];
 

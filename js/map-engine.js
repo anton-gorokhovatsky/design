@@ -824,6 +824,9 @@ const pauseReelMosaic = () => {
   reelMosaicVideos.forEach((video) => video.pause());
 };
 
+const getMapPreviewPoster = item => item.relatedPoster || item.previewPoster || item.youtube?.poster
+  || item.previewVideo?.split("?")[0].replace("assets/reels/", "assets/reel-posters/").replace(/\.mp4$/i, ".jpg") || "";
+
 const showReelMosaic = (item, posterPath) => {
   const chapterSources = reelChapterSources.get(item.id) ?? [];
   const mosaicActive = reelMosaicEnabled
@@ -998,11 +1001,7 @@ const showMapPreview = (item) => {
     mapPreviewMeta.textContent = typographUiText(item.previewMeta);
   }
 
-  const posterPath = item.previewPoster
-    || item.previewVideo
-      .split("?")[0]
-      .replace("assets/reels/", "assets/reel-posters/")
-      .replace(/\.mp4$/i, ".jpg");
+  const posterPath = getMapPreviewPoster(item);
 
   showReelMosaic(item, posterPath);
 
@@ -1152,8 +1151,22 @@ const renderMapRelatedItems=(item=null)=>{
   mapRelated.hidden=!items.length;
   mapRelated.dataset.relatedKind=personalLinks?"personal":"project";
   mapRelated.setAttribute("aria-label", personalLinks ? "Связанные точки" : "Следующие кейсы");
-  mapRelatedTrack.innerHTML=items.map(({id,label,timeLabel,timeYear,kindLabel})=>`<li><a class="map-related__item" href="?point=${id}"><strong>${label}</strong><span>${kindLabel.split(" / ")[0]}${timeLabel||timeYear?` / ${timeLabel||timeYear}`:""}</span><i class="map-related__arrow" aria-hidden="true"></i></a></li>`).join("");
+  mapRelatedTrack.innerHTML=items.map(candidate=>{
+    const {id,label,timeLabel,timeYear,kindLabel}=candidate;
+    const poster=getMapPreviewPoster(candidate);
+    return `<li><a class="map-related__item" href="?point=${id}"><strong>${label}</strong><span>${kindLabel.split(" / ")[0]}${timeLabel||timeYear?` / ${timeLabel||timeYear}`:""}</span>${poster?`<img class="map-related__preview" data-preview-src="${poster}" alt="" decoding="async" width="72" height="48">`:""}</a></li>`;
+  }).join("");
 };
+const loadRelatedPreview = event => {
+  const link=event.target.closest(".map-related__item");
+  if (!link || !hoverCapable.matches || (event.type==="focusin" && !link.matches(":focus-visible"))) return;
+  const image=link.querySelector("[data-preview-src]");
+  if (!image || image.hasAttribute("src")) return;
+  image.addEventListener("load",()=>image.classList.add("is-ready"),{once:true});
+  image.src=image.dataset.previewSrc;
+};
+mapRelatedTrack.addEventListener("pointerover",loadRelatedPreview);
+mapRelatedTrack.addEventListener("focusin",loadRelatedPreview);
 const setInspectorOpen = (isOpen) => {
   if (!mapInspector) {
     return;

@@ -482,7 +482,6 @@ const requiredMaterialSurfaces = [
   "inspector-description",
   "inspector-observation",
   "inspector-related",
-  "personal-media-head",
   "personal-media-play",
   "desktop-console",
   "mobile-navigation",

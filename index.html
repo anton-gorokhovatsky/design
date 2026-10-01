@@ -119,7 +119,7 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=986e4e5011fb">
+    <link rel="stylesheet" href="styles.css?v=f056b8d1cb5b">
     <style>
       .map-evidence [data-map-evidence-role-label]{font-family:var(--font-author);font-size:.6rem;font-weight:400;letter-spacing:0}
     </style>
@@ -134,14 +134,14 @@
           "./js/analytics.js": "./js/analytics.js?v=8e40098015f7",
           "./js/cipher-field.js": "./js/cipher-field.js?v=646034d9be18",
           "./js/signal-field.js": "./js/signal-field.js?v=e59af2b0e792",
-          "./js/map-data.js": "./js/map-data.js?v=65e4339a528c",
+          "./js/map-data.js": "./js/map-data.js?v=cc3542532ee2",
           "./js/observation-route.js": "./js/observation-route.js?v=8e66f5c75403",
           "./js/personal-media.js": "./js/personal-media.js?v=17ff9574625b",
           "./js/sphere-surfaces.js": "./js/sphere-surfaces.js?v=4cf52ae3e8a0",
-          "./js/map-engine.js": "./js/map-engine.js?v=080bfa1f5693",
-          "./js/viewport-ui.js": "./js/viewport-ui.js?v=bd2386807345",
+          "./js/map-engine.js": "./js/map-engine.js?v=4e3fd1d04a25",
+          "./js/viewport-ui.js": "./js/viewport-ui.js?v=cf1afc89c3fb",
           "./js/panels.js": "./js/panels.js?v=b7dfe1becd86",
-          "./js/case-view.js": "./js/case-view.js?v=40b27efceaab",
+          "./js/case-view.js": "./js/case-view.js?v=1680f47d4c1f",
           "./js/favicon.js": "./js/favicon.js?v=3aa23538dc2d"
         }
       }
@@ -155,14 +155,14 @@
     <script type="module" src="js/analytics.js?v=8e40098015f7"></script>
     <script type="module" src="js/cipher-field.js?v=646034d9be18"></script>
     <script type="module" src="js/signal-field.js?v=e59af2b0e792"></script>
-    <script type="module" src="js/map-data.js?v=65e4339a528c"></script>
+    <script type="module" src="js/map-data.js?v=cc3542532ee2"></script>
     <script type="module" src="js/observation-route.js?v=8e66f5c75403"></script>
     <script type="module" src="js/personal-media.js?v=17ff9574625b"></script>
     <script type="module" src="js/sphere-surfaces.js?v=4cf52ae3e8a0"></script>
-    <script type="module" src="js/map-engine.js?v=080bfa1f5693"></script>
-    <script type="module" src="js/viewport-ui.js?v=bd2386807345"></script>
+    <script type="module" src="js/map-engine.js?v=4e3fd1d04a25"></script>
+    <script type="module" src="js/viewport-ui.js?v=cf1afc89c3fb"></script>
     <script type="module" src="js/panels.js?v=b7dfe1becd86"></script>
-    <script type="module" src="js/case-view.js?v=40b27efceaab"></script>
+    <script type="module" src="js/case-view.js?v=1680f47d4c1f"></script>
     <script type="module" src="js/favicon.js?v=3aa23538dc2d"></script>
     <script type="application/ld+json">
       {
@@ -503,7 +503,7 @@
             data-material-active="always"
             aria-label="Закрыть карточку"
           >
-            <span aria-hidden="true">×</span>
+            <svg class="ui-close__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 7 17 17M17 7 7 17"/></svg>
           </button>
           <p
             class="map-readout__kind"
@@ -634,7 +634,18 @@
           aria-label="Любимый стрим"
           hidden
         >
-          <div class="personal-media__head" data-material-surface="personal-media-head" data-material-active="desktop">
+          <div class="personal-media__screen" data-personal-media-screen>
+            <button class="personal-media__poster" type="button" data-play-personal-media>
+              <img data-personal-media-poster alt="" width="1280" height="720" decoding="async">
+              <span
+                class="personal-media__play"
+                data-material-surface="personal-media-play"
+                data-material-active="always"
+                aria-hidden="true"
+              ></span>
+            </button>
+          </div>
+          <div class="personal-media__controls">
             <a
               class="text-link personal-media__source"
               data-personal-media-source
@@ -647,18 +658,7 @@
               type="button"
               data-close-personal-media
               aria-label="Закрыть и остановить стрим"
-            ><span aria-hidden="true">×</span></button>
-          </div>
-          <div class="personal-media__screen" data-personal-media-screen>
-            <button class="personal-media__poster" type="button" data-play-personal-media>
-              <img data-personal-media-poster alt="" width="1280" height="720" decoding="async">
-              <span
-                class="personal-media__play"
-                data-material-surface="personal-media-play"
-                data-material-active="always"
-                aria-hidden="true"
-              ></span>
-            </button>
+            ><svg class="ui-close__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 7 17 17M17 7 7 17"/></svg></button>
           </div>
           <p class="visually-hidden" data-personal-media-status role="status" aria-live="polite"></p>
         </aside>
@@ -1178,7 +1178,7 @@
             data-material-active="always"
             aria-label="Закрыть раздел"
           >
-            <span aria-hidden="true">×</span>
+            <svg class="ui-close__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 7 17 17M17 7 7 17"/></svg>
           </button>
         </header>
         <div class="content-panel__frame" data-material-surface="content-window" data-material-active="always">
@@ -1429,7 +1429,7 @@
           data-close-settings
           aria-label="Закрыть"
         >
-          <span aria-hidden="true">×</span>
+          <svg class="ui-close__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 7 17 17M17 7 7 17"/></svg>
         </button>
       </div>
       <p class="settings-panel__intro" id="settings-panel-intro" data-settings-intro>

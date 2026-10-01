@@ -627,6 +627,7 @@ const mapItems = [
   {
     id: "clayton-young",
     kind: "personal",
+    relatedPoster: "assets/personal-previews/clayton-young.jpg",
     relatedTo: ["running", "youtube"],
     label: "КЛЕЙТОН ЯНГ",
     title: "КЛЕЙТОН ЯНГ",
@@ -642,6 +643,7 @@ const mapItems = [
   {
     id: "beg-vreden",
     kind: "personal",
+    relatedPoster: "assets/personal-previews/beg-vreden.jpg",
     relatedTo: ["running", "youtube"],
     label: "БЕГ ВРЕДЕН",
     title: "БЕГ ВРЕДЕН",
@@ -657,6 +659,7 @@ const mapItems = [
   {
     id: "across-the-runiverse",
     kind: "personal",
+    relatedPoster: "assets/personal-previews/across-the-runiverse.jpg",
     relatedTo: ["running", "youtube"],
     label: "ACROSS THE RUNIVERSE",
     title: "ACROSS THE RUNIVERSE",

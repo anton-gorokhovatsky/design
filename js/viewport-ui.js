@@ -364,7 +364,7 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
 };
 const lensInspector = document.querySelector("[data-map-inspector]");
 observeScrollLens(lensInspector, () => lensInspector.querySelectorAll(
-  ".map-readout__identity h2, .map-readout__identity p, [data-map-description], .map-evidence dt, .map-evidence dd, .case-details h3, .case-details h4, .case-details p, .observation-preview, .map-related__header, .map-related__item > *",
+  ".map-readout__identity h2, .map-readout__identity p, [data-map-description], .map-evidence dt, .map-evidence dd, .case-details h3, .case-details h4, .case-details p, .observation-preview, .map-related__header, .map-related__item > :is(strong, span)",
 ), { enabled: () => !lensInspector.classList.contains("has-reading-frame") });
 const lensPanel = document.querySelector(".content-panel__body");
 observeScrollLens(lensPanel, () => lensPanel.querySelectorAll(

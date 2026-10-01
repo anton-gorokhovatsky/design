@@ -4612,6 +4612,7 @@ body:has(.command-dock.is-open) .origin-marker__label {
   font-size: clamp(1.55rem, 8.8cqi, 2.35rem);
   line-height: 0.94;
   overflow-wrap: normal;
+  hyphens: manual;
   text-wrap: balance;
   white-space: pre-line;
 }
@@ -4756,7 +4757,7 @@ body:has(.command-dock.is-open) .origin-marker__label {
 
 .map-related__item {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 16px;
+  grid-template-columns: minmax(0, 1fr);
   min-width: 0;
   min-height: 52px;
   align-content: center;
@@ -4791,6 +4792,24 @@ body:has(.command-dock.is-open) .origin-marker__label {
   grid-column: 1;
 
   line-height: 1.4;
+}
+
+.map-related__preview {
+  display: none;
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  width: 4.5rem;
+  height: 3rem;
+  object-fit: contain;
+  border-radius: var(--space-2);
+  opacity: 0;
+  pointer-events: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .map-related__item:has(.map-related__preview) { grid-template-columns: minmax(0, 1fr) 4.5rem; }
+  .map-related__preview { display: block; }
+  .map-related__item:is(:hover, :focus-visible) .map-related__preview.is-ready { opacity: 1; }
 }
 
 .map-related__arrow {
@@ -9815,7 +9834,7 @@ html[data-contrast="true"] .whoop-field { display: none; }
   bottom: 112px;
   display: grid;
   width: var(--personal-media-width);
-  gap: 8px;
+  gap: 0;
 }
 
 .personal-media[hidden],
@@ -9834,11 +9853,11 @@ html[data-contrast="true"] .whoop-field { display: none; }
   cursor: pointer;
 }
 
-.personal-media__head {
+.personal-media__controls {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: var(--space-4);
 }
 
 .personal-media__play {
@@ -9857,14 +9876,6 @@ html[data-contrast="true"] .whoop-field { display: none; }
   font-size: clamp(.75rem, calc(.72rem + .1vw), .8125rem);
   line-height: 1.4;
 }
-
-.personal-media__head {
-  padding-inline: 12px 4px;
-  border-radius: 24px;
-}
-
-.has-reading-frame .personal-media__head { padding: 0; }
-.has-reading-frame .personal-media { gap: 0; }
 
 .personal-media .overlay-close {
   position: static;
@@ -10215,7 +10226,6 @@ body[data-case-open] :is(.map-axis-label, .map-labels, .map-node-label, .origin-
   line-height: 1.08;
   margin-bottom: var(--case-space-small);
   text-wrap: balance;
-  overflow-wrap: anywhere;
 }
 .map-inspector.is-case-view .map-readout__identity p {
   color: var(--content-muted);
@@ -10511,11 +10521,19 @@ html[data-reduce-motion="true"] [style*="scroll-ink-"] { filter: none !important
   border: 0;
   border-radius: 50%;
   color: var(--content-ink);
-  font: 400 var(--control-glyph)/1 var(--font-sans);
   cursor: pointer;
   place-items: center;
   transform: none;
   transition: color var(--duration-feedback) var(--motion-shift);
+}
+.ui-close__icon {
+  display: block;
+  width: var(--control-glyph);
+  height: var(--control-glyph);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: square;
 }
 .ui-close:is(:hover, :active, :focus-visible) { color: var(--signal); }
 .ui-close:focus-visible,
@@ -10545,8 +10563,6 @@ html[data-reduce-motion="true"] [style*="scroll-ink-"] { filter: none !important
   font-size: var(--type-title);
   line-height: var(--leading-title);
   white-space: normal;
-  hyphens: auto;
-  overflow-wrap: anywhere;
 }
 body:has(.practice-map:is([data-selected-kind=personal],[data-selected-kind=practice])) [data-map-title] {
   font-size: var(--type-author);
