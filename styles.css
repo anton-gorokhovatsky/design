@@ -7480,12 +7480,18 @@ body:has(.practice-map:is([data-selected-kind=personal],[data-selected-kind=prac
   opacity: 0.28;
 }
 
+.practice-map[data-time-view] .map-node-label[data-time-year] {
+  max-width: min(30rem, 48vw);
+}
+
 .practice-map[data-time-view] .map-node-label[data-time-year]::after {
+  flex-shrink: 0;
   margin-left: 7px;
   color: var(--content-muted);
   content: attr(data-time-label);
   font-family: var(--font-mono);
   font-size: 0.54rem;
+  white-space: nowrap;
 }
 
 .orbital-terminator {
