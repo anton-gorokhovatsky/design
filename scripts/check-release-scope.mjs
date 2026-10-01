@@ -23,7 +23,7 @@ const html = read("index.html");
 // The incident that prompted this lane: changing letter case inside runtime JS.
 change("js/panels.js", panels, "ОБЗОР РАБОТ ЗА 90 СЕКУНД", "Обзор работ за 90 секунд", true);
 change("js/map-data.js", map, "Самый важный профессиональный период:", "Профессиональный опыт:", true);
-change("js/observation-route.js", route, "Восемь остановок:", "Короткий маршрут:", true);
+change("js/observation-route.js", route, "Обзор можно поставить на паузу", "Обзор можно приостановить", true);
 change("index.html", html, ">МОЯ РОЛЬ<", ">МОЙ ВКЛАД<", true);
 change("index.html", html, 'aria-label="Обзор работ за 90 секунд"', 'aria-label="Новая подпись"', true);
 change("index.html", html, "Развивать цифровые продукты Музея", "Развивать цифровую среду Музея", true);
