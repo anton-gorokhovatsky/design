@@ -9,7 +9,6 @@ export const createPersonalMedia = ({ inspector, returnFocus }) => {
   const image = root?.querySelector("[data-personal-media-poster]");
   const source = root?.querySelector("[data-personal-media-source]");
   const status = root?.querySelector("[data-personal-media-status]");
-  const closeButton = root?.querySelector("[data-close-personal-media]");
   if (!root || !slot || !launch || !screen || !poster || !image || !source) {
     return { select: () => {} };
   }
@@ -25,7 +24,6 @@ export const createPersonalMedia = ({ inspector, returnFocus }) => {
     const visible = !root.hidden;
     slot.hidden = !visible || !inlineLayout.matches;
     launch.hidden = inlineLayout.matches || !selectedItem?.youtube || visible;
-    if (closeButton) closeButton.hidden = inlineLayout.matches;
     launch.setAttribute("aria-expanded", String(visible));
     if (selectedItem?.youtube && mapLink) mapLink.hidden = true;
   };
@@ -124,7 +122,7 @@ export const createPersonalMedia = ({ inspector, returnFocus }) => {
     selectedItem = item || null;
     if (item?.youtube) {
       show(item);
-    } else if (inlineLayout.matches || !iframe) {
+    } else {
       close();
     }
     sync();
@@ -135,21 +133,12 @@ export const createPersonalMedia = ({ inspector, returnFocus }) => {
     poster.focus({ preventScroll: true });
   });
   poster.addEventListener("click", play);
-  closeButton?.addEventListener("click", () => close({ restoreFocus: true }));
-  root.addEventListener("keydown", (event) => {
-    // Inline playback belongs to the card; Escape closes that card as a whole.
-    if (event.key !== "Escape" || inlineLayout.matches) return;
-    event.preventDefault();
-    event.stopPropagation();
-    close({ restoreFocus: true });
-  });
   inlineLayout.addEventListener("change", () => {
     if (!selectedItem?.youtube) close();
     if (inlineLayout.matches && selectedItem?.youtube) show(selectedItem);
     else place();
   });
-  // A content panel leaves the map. Do not keep an inaudible-to-find player
-  // underneath it; persistence is intentionally limited to exploring map points.
+  // The stream belongs to the YouTube card and stops when that card closes.
   const panelObserver = new MutationObserver(() => {
     if (document.body.classList.contains("has-content-panel") && !root.hidden) {
       close();

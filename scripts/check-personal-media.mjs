@@ -137,53 +137,8 @@ try {
           "Desktop card and player must have a real gap.");
         assert.ok(geometry.player.bottom <= height - 100, "Player clears the dock.");
       }
-      const closeStyles = async (selector, keyboard = false) => {
-        const target = page.locator(selector);
-        if (keyboard) {
-          await page.mouse.move(0, 0);
-          // Enter keyboard modality from the player, not from a map point:
-          // WebKit can Tab from the map into search, which closes the card.
-          await page.locator("[data-close-personal-media]").focus();
-          await page.keyboard.press("Shift+Tab");
-          await target.focus();
-        } else {
-          await target.hover();
-        }
-        await target.evaluate((element) => Promise.all(
-          element.getAnimations().map((animation) => animation.finished.catch(() => {}))
-        ));
-        return target.evaluate((element) => {
-          const style = getComputedStyle(element);
-          return Object.fromEntries(["backgroundColor", "color", "transform",
-            "outlineColor", "outlineWidth", "outlineStyle", "outlineOffset", "borderRadius",
-            "boxShadow", "backdropFilter"].map((key) => [key, style[key]]));
-        });
-      };
-      if (geometry.inline) {
-        assert.equal(await page.locator("[data-close-personal-media]").isVisible(), false,
-          "Inline video belongs to its card and has no separate dismiss action.");
-        assert.equal(await page.locator("[data-open-personal-media]").isVisible(), false);
-      }
-      for (const keyboard of geometry.inline ? [] : [false, true]) {
-        const cardClose = await closeStyles("[data-close-inspector]", keyboard);
-        const playerClose = await closeStyles("[data-close-personal-media]", keyboard);
-        // Desktop source and close form a transparent caption; mobile inherits
-        // the reading window. Neither state creates a glass island or rotates
-        // the small inline control. Keep the shared focus geometry in both layouts.
-        assert.equal(playerClose.backgroundColor, "rgba(0, 0, 0, 0)");
-        assert.equal(playerClose.backdropFilter, "none");
-        assert.equal(playerClose.transform, "none");
-        for (const key of ["outlineWidth", "outlineStyle", "outlineOffset", "borderRadius", "boxShadow"]) {
-          assert.equal(playerClose[key], cardClose[key], "Close controls share " + key);
-        }
-        assert.equal(await player.isVisible(), true, "The style probe must not leave the card.");
-        if (keyboard) {
-          assert.equal(playerClose.outlineWidth, "2px",
-            "Both close controls visibly identify keyboard focus.");
-          assert.equal(playerClose.outlineStyle, "solid");
-        }
-      }
-      await page.locator("[data-close-personal-media]").evaluate((element) => element.blur());
+      assert.equal(await page.locator("[data-close-personal-media]").count(), 0,
+        "The stream has no separate dismiss action in either layout.");
       await page.mouse.move(0, 0);
       await capture(page, label + "-" + theme + "-youtube-preview");
       await poster.scrollIntoViewIfNeeded();
@@ -205,37 +160,17 @@ try {
       assert.equal(url.searchParams.get("origin"), origin);
       assert.equal(await frame.getAttribute("referrerpolicy"), "strict-origin-when-cross-origin");
       assert.equal(await frame.getAttribute("allowfullscreen"), "");
-      if (width > 1024) {
-        await frame.evaluate((element) => { element.dataset.retained = "yes"; });
-        await select(page, "coffee");
-        assert.equal(await frame.getAttribute("data-retained"), "yes",
-          "Changing points retains the same browsing context.");
-        assert.equal(thirdParty.length, 1, "Changing points never restarts the stream.");
-        await page.locator("[data-close-personal-media]").click();
-        assert.equal(await player.isVisible(), false);
-        assert.equal(await frame.count(), 0, "Closing destroys the browsing context.");
-        assert.notEqual(await page.locator("[data-map-inspector]").getAttribute("data-selected-map-id"), "youtube",
-          "Closing must not select and reopen YouTube.");
-        await select(page, "youtube");
-        assert.equal(await poster.isVisible(), true);
-        await page.locator("[data-close-personal-media]").click();
-        assert.equal(await page.locator("[data-open-personal-media]").evaluate((e) => e === document.activeElement), true);
-        await page.locator("[data-open-personal-media]").click();
-        assert.equal(await poster.isVisible(), true, "Reopening returns to a silent poster.");
-        await page.locator("[data-close-personal-media]").focus();
-        await page.keyboard.press("Escape");
-        assert.equal(await player.isVisible(), false);
-      } else {
-        await page.locator("[data-personal-media-source]").focus();
-        await page.keyboard.press("Escape");
-        assert.equal(await player.isVisible(), false, "Escape closes the inline video with its card.");
-        assert.equal(await frame.count(), 0, "Closing the card stops inline playback.");
-        await select(page, "youtube");
-        assert.equal(await poster.isVisible(), true, "Reopening the card restores its poster directly.");
-        await select(page, "coffee");
-        assert.equal(await player.isVisible(), false, "Mobile playback belongs to its card.");
-        assert.equal(await frame.count(), 0);
-      }
+      await page.locator("[data-personal-media-source]").focus();
+      await page.keyboard.press("Escape");
+      assert.equal(await player.isVisible(), false, "Escape closes the video with its card.");
+      assert.equal(await frame.count(), 0, "Closing the card stops playback.");
+      await select(page, "youtube");
+      assert.equal(await poster.isVisible(), true, "Reopening the card restores its silent poster.");
+      await poster.click();
+      await frame.waitFor({ state: "visible" });
+      await select(page, "coffee");
+      assert.equal(await player.isVisible(), false, "Playback belongs to the selected card.");
+      assert.equal(await frame.count(), 0, "Changing cards stops playback.");
       console.log("PASS " + engine + " " + label + " " + theme);
       await page.close();
     }

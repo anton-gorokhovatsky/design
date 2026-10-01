@@ -4806,6 +4806,12 @@ body:has(.command-dock.is-open) .origin-marker__label {
   opacity: 0;
   pointer-events: none;
 }
+
+.map-related__preview--circle {
+  width: 3rem;
+  justify-self: end;
+  clip-path: circle(49%);
+}
 @media (hover: hover) and (pointer: fine) {
   .map-related__item:has(.map-related__preview) { grid-template-columns: minmax(0, 1fr) 4.5rem; }
   .map-related__preview { display: block; }
@@ -9840,7 +9846,6 @@ html[data-contrast="true"] .whoop-field { display: none; }
 .personal-media[hidden],
 .personal-media-slot[hidden],
 .personal-media__poster[hidden],
-[data-close-personal-media][hidden],
 [data-open-personal-media][hidden] {
   display: none;
 }
@@ -9875,22 +9880,6 @@ html[data-contrast="true"] .whoop-field { display: none; }
   align-items: center;
   font-size: clamp(.75rem, calc(.72rem + .1vw), .8125rem);
   line-height: 1.4;
-}
-
-.personal-media .overlay-close {
-  position: static;
-  border-radius: 50%;
-  border: 0;
-  background: transparent;
-  box-shadow: none;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-}
-
-.personal-media .overlay-close:is(:hover, :focus-visible) {
-  background: transparent;
-  color: var(--signal);
-  transform: none;
 }
 
 .personal-media__screen {
@@ -9991,6 +9980,16 @@ html[data-contrast="true"] .whoop-field { display: none; }
   }
 }
 
+@media (min-width: 1025px) {
+  .personal-media {
+    overflow: hidden;
+    border-radius: var(--window-radius);
+    corner-shape: var(--corner-card-shape);
+  }
+  .personal-media__screen { border-radius: 0; }
+  .personal-media__controls { padding: var(--space-2) var(--window-pad); }
+}
+
 @media (min-width: 901px) and (max-width: 1024px) {
   .map-inspector:has(.personal-media-slot:not([hidden])) {
     top: 16px;
@@ -10004,8 +10003,7 @@ html[data-contrast="true"] .whoop-field { display: none; }
 
 @media (forced-colors: active) {
   .personal-media__source,
-  .personal-media__play,
-  .personal-media .overlay-close {
+  .personal-media__play {
     border: 1px solid CanvasText;
     background: Canvas;
     color: CanvasText;

@@ -119,7 +119,7 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=f056b8d1cb5b">
+    <link rel="stylesheet" href="styles.css?v=4a05322986d7">
     <style>
       .map-evidence [data-map-evidence-role-label]{font-family:var(--font-author);font-size:.6rem;font-weight:400;letter-spacing:0}
     </style>
@@ -134,11 +134,11 @@
           "./js/analytics.js": "./js/analytics.js?v=8e40098015f7",
           "./js/cipher-field.js": "./js/cipher-field.js?v=646034d9be18",
           "./js/signal-field.js": "./js/signal-field.js?v=e59af2b0e792",
-          "./js/map-data.js": "./js/map-data.js?v=cc3542532ee2",
+          "./js/map-data.js": "./js/map-data.js?v=159c932ba9bf",
           "./js/observation-route.js": "./js/observation-route.js?v=8e66f5c75403",
-          "./js/personal-media.js": "./js/personal-media.js?v=17ff9574625b",
+          "./js/personal-media.js": "./js/personal-media.js?v=7b4d0c100ec8",
           "./js/sphere-surfaces.js": "./js/sphere-surfaces.js?v=4cf52ae3e8a0",
-          "./js/map-engine.js": "./js/map-engine.js?v=4e3fd1d04a25",
+          "./js/map-engine.js": "./js/map-engine.js?v=bd27a4b01618",
           "./js/viewport-ui.js": "./js/viewport-ui.js?v=cf1afc89c3fb",
           "./js/panels.js": "./js/panels.js?v=b7dfe1becd86",
           "./js/case-view.js": "./js/case-view.js?v=1680f47d4c1f",
@@ -155,11 +155,11 @@
     <script type="module" src="js/analytics.js?v=8e40098015f7"></script>
     <script type="module" src="js/cipher-field.js?v=646034d9be18"></script>
     <script type="module" src="js/signal-field.js?v=e59af2b0e792"></script>
-    <script type="module" src="js/map-data.js?v=cc3542532ee2"></script>
+    <script type="module" src="js/map-data.js?v=159c932ba9bf"></script>
     <script type="module" src="js/observation-route.js?v=8e66f5c75403"></script>
-    <script type="module" src="js/personal-media.js?v=17ff9574625b"></script>
+    <script type="module" src="js/personal-media.js?v=7b4d0c100ec8"></script>
     <script type="module" src="js/sphere-surfaces.js?v=4cf52ae3e8a0"></script>
-    <script type="module" src="js/map-engine.js?v=4e3fd1d04a25"></script>
+    <script type="module" src="js/map-engine.js?v=bd27a4b01618"></script>
     <script type="module" src="js/viewport-ui.js?v=cf1afc89c3fb"></script>
     <script type="module" src="js/panels.js?v=b7dfe1becd86"></script>
     <script type="module" src="js/case-view.js?v=1680f47d4c1f"></script>
@@ -631,6 +631,8 @@
           class="personal-media"
           id="personal-media"
           data-personal-media
+          data-material-surface="personal-media"
+          data-material-active="always"
           aria-label="Любимый стрим"
           hidden
         >
@@ -653,12 +655,6 @@
               target="_blank"
               rel="noopener noreferrer"
             >Смотреть на&nbsp;YouTube</a>
-            <button
-              class="ui-close overlay-close personal-media__close"
-              type="button"
-              data-close-personal-media
-              aria-label="Закрыть и остановить стрим"
-            ><svg class="ui-close__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 7 17 17M17 7 7 17"/></svg></button>
           </div>
           <p class="visually-hidden" data-personal-media-status role="status" aria-live="polite"></p>
         </aside>

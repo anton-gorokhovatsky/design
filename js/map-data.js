@@ -644,6 +644,7 @@ const mapItems = [
     id: "beg-vreden",
     kind: "personal",
     relatedPoster: "assets/personal-previews/beg-vreden.jpg",
+    relatedPosterShape: "circle",
     relatedTo: ["running", "youtube"],
     label: "БЕГ ВРЕДЕН",
     title: "БЕГ ВРЕДЕН",

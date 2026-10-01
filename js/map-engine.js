@@ -1154,7 +1154,7 @@ const renderMapRelatedItems=(item=null)=>{
   mapRelatedTrack.innerHTML=items.map(candidate=>{
     const {id,label,timeLabel,timeYear,kindLabel}=candidate;
     const poster=getMapPreviewPoster(candidate);
-    return `<li><a class="map-related__item" href="?point=${id}"><strong>${label}</strong><span>${kindLabel.split(" / ")[0]}${timeLabel||timeYear?` / ${timeLabel||timeYear}`:""}</span>${poster?`<img class="map-related__preview" data-preview-src="${poster}" alt="" decoding="async" width="72" height="48">`:""}</a></li>`;
+    return `<li><a class="map-related__item" href="?point=${id}"><strong>${label}</strong><span>${kindLabel.split(" / ")[0]}${timeLabel||timeYear?` / ${timeLabel||timeYear}`:""}</span>${poster?`<img class="map-related__preview${candidate.relatedPosterShape==="circle"?" map-related__preview--circle":""}" data-preview-src="${poster}" alt="" decoding="async" width="72" height="48">`:""}</a></li>`;
   }).join("");
 };
 const loadRelatedPreview = event => {
