@@ -7301,6 +7301,7 @@ html[data-reduce-motion="true"] .observation-showcase {
   color: var(--content-ink);
   font-size: clamp(0.72rem, calc(0.67rem + 0.14vw), 0.82rem);
   line-height: 1.35;
+  white-space: pre-line;
 }
 
 body:has(.practice-map:is([data-selected-kind=personal],[data-selected-kind=practice])) [data-map-title]{font-family:var(--font-author);}
@@ -10205,7 +10206,6 @@ body[data-case-open] :is(.map-axis-label, .map-labels, .map-node-label, .origin-
 .is-case-view .map-evidence dt { font-size: var(--case-label-size); line-height: 1.45; }
 .is-case-view .map-evidence dd { font-size: var(--case-body-size); line-height: 1.5; overflow-wrap: anywhere; }
 .map-evidence dd .text-link { white-space: normal; }
-.map-evidence [data-map-evidence-feature] { white-space: pre-line; }
 .case-details { display: grid; gap: var(--case-space-section); margin-top: var(--case-space-section); padding-top: var(--case-space-section); border-top: 1px solid var(--line-soft); }
 .case-details[hidden], .case-details__part[hidden] { display: none; }
 .case-details h3, .case-details h4 {
