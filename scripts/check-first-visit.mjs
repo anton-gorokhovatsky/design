@@ -31,7 +31,8 @@ try {
       assert.equal(await page.locator("[data-observation-showcase] img[src]").count(), 0, "Hidden route posters wait for the route to become visible.");
       await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
       // Font and camera reflow are asynchronous; measure the settled input surface.
-      await page.waitForFunction(() => [...document.querySelectorAll(".map-node")].every(node => {
+      await page.waitForFunction(() => !document.querySelector('[data-map-links][data-layout-pending]')
+        && [...document.querySelectorAll(".map-node")].every(node => {
         const rect = node.getBoundingClientRect();
         return document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2)?.closest(".map-node") === node;
       }), null, { timeout: 5000 });
