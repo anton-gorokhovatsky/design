@@ -146,7 +146,19 @@ function draw() {
   paintAura(context, width, height, phase, palette);
 }
 
+function playbackState() {
+  const style = getComputedStyle(field);
+  const visible = !document.hidden
+    && style.visibility !== 'hidden' && style.display !== 'none'
+    && getComputedStyle(root).getPropertyValue('--day-enabled').trim() === '1';
+  const play = visible && !reduced.matches && !contrast.matches && root.dataset.reduceMotion !== 'true';
+  return { visible, play };
+}
+
 function tick() {
+  // A timer can run before the observer's animation frame after a panel opens.
+  // Check the current state before painting, including an already queued tick.
+  if (!playbackState().play) { sync(); return; }
   const now = performance.now();
   phase = (phase + (now - previous) / duration) % 1;
   previous = now;
@@ -156,11 +168,7 @@ function tick() {
 
 function sync() {
   pending = 0;
-  const style = getComputedStyle(field);
-  const visible = !document.hidden
-    && style.visibility !== 'hidden' && style.display !== 'none'
-    && getComputedStyle(root).getPropertyValue('--day-enabled').trim() === '1';
-  const play = visible && !reduced.matches && !contrast.matches && root.dataset.reduceMotion !== 'true';
+  const { visible, play } = playbackState();
   if (!play && running) { clearTimeout(timer); running = false; }
   if (visible) draw();
   if (play && !running) { running = true; previous = performance.now(); timer = setTimeout(tick, 1000 / 24); }
