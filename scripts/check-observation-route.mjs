@@ -18,14 +18,17 @@ const capture = async (page, name) => {
   );
   return page.screenshot({ path: join(directory, `${engine}-${name}.png`), animations: "disabled" });
 };
-const waitForAuthor = async (page, visible) => {
-  await page.waitForFunction(visible => {
-    const card = getComputedStyle(document.querySelector(".site-header"));
+const waitForAuthor = async (page, foreground) => {
+  await page.waitForFunction(foreground => {
+    const author = document.querySelector(".site-header");
+    const card = getComputedStyle(author);
     const glow = getComputedStyle(document.querySelector(".whoop-field"));
-    return [card, glow].every(style => visible
-      ? style.visibility === "visible" && Number(style.opacity) > .99
-      : style.visibility === "hidden");
-  }, visible);
+    return author.inert === !foreground && [card, glow].every(style => (
+      style.visibility === "visible" && (foreground
+        ? Number(style.opacity) > .99
+        : Number(style.opacity) <= .16 && style.filter === "blur(3px)" && style.pointerEvents === "none")
+    ));
+  }, foreground);
 };
 
 try {
@@ -41,10 +44,14 @@ try {
       await page.goto(origin);
       await page.evaluate(scale => { document.documentElement.style.fontSize = `${scale * 16}px`; }, scale);
       await waitForAuthor(page, true);
+      await page.evaluate(() => document.fonts.ready);
+      await page.waitForFunction(() => document.querySelector('[data-whoop-recovery]').textContent.includes('77'));
+      const authorBefore = await page.locator(".site-header").boundingBox();
       await page.locator("[data-start-observation]").click();
       await page.locator("[data-observation-pause]").click();
       await page.evaluate(() => document.fonts.ready);
-      await waitForAuthor(page, true);
+      await waitForAuthor(page, false);
+      assert.deepEqual(await page.locator(".site-header").boundingBox(), authorBefore);
       assert.equal(await progress(page), "01 / 08");
       assert.equal(await page.locator("[data-observation-next]").innerText(), "ДАЛЬШЕ");
       assert.equal(await page.locator("[data-observation-title-card]").count(), 0);
@@ -56,7 +63,7 @@ try {
       for (let step = 2; step <= 7; step++) {
         await page.locator("[data-observation-next]").click();
         assert.equal(await progress(page), `${String(step).padStart(2, "0")} / 08`);
-        await waitForAuthor(page, true);
+        await waitForAuthor(page, false);
         if (step === 4 || step === 7) {
           assert.ok(await page.locator("[data-map-inspector]").isVisible());
           assert.equal(await page.locator("[data-observation-title-card]").count(), 0);
@@ -66,6 +73,7 @@ try {
       assert.equal(requests.filter(url => url.includes("/observation/")).length, 0);
       await page.keyboard.press("Escape");
       await waitForAuthor(page, true);
+      assert.deepEqual(await page.locator(".site-header").boundingBox(), authorBefore);
       assert.equal(await page.locator("[data-signal-field]").getAttribute("data-observation-active"), null);
       if (name === "desktop" || name === "mobile") await capture(page, `returned-${name}-${theme}`);
       await page.close();

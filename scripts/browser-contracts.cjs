@@ -198,8 +198,18 @@ const readMaterialAuditExpression = `(() => {
     })
     .map((element) => {
       const style = getComputedStyle(element);
+      const backgroundDepth = element.matches(
+        "body.has-reading-surface :is(.site-header, .system-dock), "
+        + "body.has-constellation-nav .site-header, "
+        + "body:is([data-case-open], .has-settings-panel) .control-console",
+      ) || (mobile && element.matches(
+        "body.has-content-panel .control-console :is(.constellation-nav, .command-dock)",
+      ));
       return {
         surface: element.dataset.materialSurface,
+        backgroundDepth,
+        opacity: Number(style.opacity),
+        pointerEvents: style.pointerEvents,
         background: style.backgroundColor,
         backdrop: style.backdropFilter || style.webkitBackdropFilter,
         border: style.border,
@@ -215,7 +225,8 @@ const readMaterialAuditExpression = `(() => {
       surface.background !== expectedBackground
       || !surface.backdrop.includes("blur(24px)")
       || surface.shadow !== "none"
-      || surface.filter !== "none"
+      || surface.filter !== (surface.backgroundDepth ? "blur(3px)" : "none")
+      || (surface.backgroundDepth && (surface.opacity > .16 || surface.pointerEvents !== "none"))
       || !surface.border.startsWith("0px")
     )),
   };

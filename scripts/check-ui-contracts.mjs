@@ -340,6 +340,8 @@ const geometryExpression = String.raw`(() => {
       visibility: style.visibility,
       opacity: Number(style.opacity),
       fontSize: Number.parseFloat(style.fontSize),
+      pointerEvents: style.pointerEvents,
+      inert: Boolean(element.closest("[inert]")),
     };
   };
   const visible = (item) => item
@@ -3251,8 +3253,9 @@ const auditBrowser = async (client, origin) => {
   if (!withinViewport(mobilePanel.geometry.panelClose, mobilePanel.viewport, 2)) {
     fail("mobile-panel: close control leaves the viewport.", mobilePanel.geometry.panelClose);
   }
-  if (mobilePanel.visible.search) {
-    fail("mobile-panel: search must yield its space while long-form content is open.");
+  if (!mobilePanel.visible.search || mobilePanel.geometry.search.opacity > .16
+    || mobilePanel.geometry.search.pointerEvents !== "none" || !mobilePanel.geometry.search.inert) {
+    fail("mobile-panel: search stays in place as an inactive background panel.", mobilePanel.geometry.search);
   }
   if (mobilePanel.materialFailures.length > 0) {
     fail("mobile-panel: MATERIAL / 01 mismatch.", mobilePanel.materialFailures);
@@ -3754,7 +3757,7 @@ const auditBrowser = async (client, origin) => {
       dialog,
       command: read('.command-dock'),
       dock: read('.system-dock'),
-      nav: read('[data-constellation-nav-toggle]'),
+      nav: read('.constellation-nav'),
       theme,
       motion,
       themeLabel: document.querySelector('[data-theme-panel-state]')?.textContent.trim(),

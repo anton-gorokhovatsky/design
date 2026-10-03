@@ -76,6 +76,9 @@ try {
       assert.ok(Math.abs(sphere.youtube.area / sphere.running.area - 0.49) < 0.01,
         "YouTube has about half the visual mass of Running.");
       assert.ok(sphere.youtube.fill.includes("gradient"), "YouTube is a shaded sphere.");
+      await page.evaluate(() => document.fonts.ready);
+      await page.waitForFunction(() => document.querySelector('[data-whoop-recovery]').textContent.includes('77'));
+      const authorBefore = await page.locator(".site-header").boundingBox();
       // The relocated point must be directly reachable, not only through search.
       await page.locator('[data-map-id="youtube"]').click();
       // The player opens over this map sector: clear pointer hover for an idle-material audit.
@@ -133,8 +136,11 @@ try {
         assert.ok(Math.abs(geometry.screen.x - geometry.copy.x) < 1
           && Math.abs((geometry.screen.x - geometry.sheet.x) - (geometry.sheet.right - geometry.screen.right)) < 1,
         "Video and caption align with the reading column.");
-        assert.ok(geometry.author.y + geometry.author.height <= geometry.inspector.y,
-          "Author stays visible above every video card.");
+        assert.ok(Object.entries(authorBefore).every(([key, value]) => Math.abs(geometry.author[key] - value) < 1),
+          "Opening a video leaves the author card in its map position.");
+        assert.equal(await page.locator(".site-header").evaluate(element => (
+          element.inert && Number(getComputedStyle(element).opacity) <= .16
+        )), true, "The author card yields focus and visual priority to the reading window.");
       }
       assert.equal(await page.locator("[data-close-personal-media]").count(), 0,
         "The stream has no separate dismiss action in either layout.");
@@ -177,6 +183,10 @@ try {
         assert.equal(await player.locator("iframe").count(), 0, "The favorite episode starts as a local poster.");
         await poster.click();
         assert.match(await player.locator("iframe").getAttribute("src"), /embed\/zNCgPgfxcoM/);
+        await page.waitForFunction(() => {
+          const screen = document.querySelector("[data-personal-media-screen]");
+          return screen.querySelector("iframe") && screen.getBoundingClientRect().height >= 200;
+        });
         assert.ok((await screen.boundingBox()).height >= 200, "Embedded player retains YouTube's minimum height.");
       }
       console.log("PASS " + engine + " " + label + " " + theme);

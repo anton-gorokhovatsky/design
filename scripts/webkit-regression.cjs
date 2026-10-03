@@ -966,7 +966,7 @@ const analyticsConsentAudit = async (page, viewport, label) => {
       bodyHasSettings: document.body.classList.contains("has-settings-panel"),
       command: read(".command-dock"),
       dock: read(".system-dock"),
-      navigation: read("[data-constellation-nav-toggle]"),
+      navigation: read(".constellation-nav"),
       theme,
       motion,
       themeLabel: document.querySelector("[data-theme-panel-state]")
