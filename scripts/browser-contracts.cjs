@@ -158,6 +158,30 @@ const waitForCaseLayout = async (page) => {
   }, undefined, { timeout: 8000, polling: 100 });
 };
 
+// A surface and its background consoles can finish on different frames.
+// Wait for both their own animations and committed geometry/styles to settle;
+// the caller still checks the expected geometry and material afterwards.
+const waitForSurfaceRest = async (page, selectors) => {
+  await page.evaluate(() => document.fonts.ready);
+  await page.evaluate(() => { delete window.__portfolioSurfaceRest; });
+  await page.waitForFunction((selectors) => {
+    const elements = selectors.map(selector => document.querySelector(selector));
+    if (elements.some(element => !element)) return false;
+    const signature = JSON.stringify(elements.map(element => {
+      const style = getComputedStyle(element);
+      return [element.getBoundingClientRect().toJSON(), style.opacity, style.filter,
+        style.transform, style.translate, style.scale];
+    }));
+    const previous = window.__portfolioSurfaceRest;
+    const stableSince = previous?.signature === signature ? previous.stableSince : performance.now();
+    window.__portfolioSurfaceRest = { signature, stableSince };
+    return performance.now() - stableSince >= 200
+      && elements.every(element => element.getAnimations().every(animation => (
+        !animation.pending && animation.playState !== "running"
+      )));
+  }, selectors, { timeout: 8000, polling: 50 });
+};
+
 const mobileSafariSplitViewport = {
   width: 390,
   height: 844,
@@ -948,6 +972,7 @@ const readRenderedFrameCorners = async (page, selector) => {
 module.exports = {
   readRenderedFrameCorners,
   waitForCaseLayout,
+  waitForSurfaceRest,
   chromiumScenarioCatalog,
   clickMobileSearchDismissExpression,
   dispatchMobileSearchKeyExpression,

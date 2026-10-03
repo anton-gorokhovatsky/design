@@ -19,6 +19,7 @@ const {
   readMobileSearchFocusedExpression,
   readMobileSearchRestoredExpression,
   startStaticServer,
+  waitForSurfaceRest,
   validateAnnotationHierarchy,
   validateCompactAuthorship,
   validateMobileContactResume,
@@ -902,7 +903,7 @@ const analyticsConsentAudit = async (page, viewport, label) => {
     `${baseUrl}-analytics-${label}&analytics-consent=show`,
     { waitUntil: "networkidle" },
   );
-  await waitForLayout(page, 180);
+  await waitForSurfaceRest(page, ["[data-settings-panel]"]);
   const result = await page.evaluate(() => {
     const consent = document.querySelector("[data-analytics-consent]");
     const rect = consent?.getBoundingClientRect();
@@ -1042,7 +1043,7 @@ const analyticsConsentAudit = async (page, viewport, label) => {
     document.querySelector("[data-close-settings]")?.click();
     document.querySelector("[data-nav-utility][data-open-settings]")?.click();
   });
-  await waitForLayout(page, 80);
+  await waitForSurfaceRest(page, ["[data-settings-panel]"]);
   const generalSettings = await page.evaluate(() => {
     const panel = document.querySelector("[data-settings-panel]");
     const body = panel?.querySelector(".settings-panel__body");

@@ -8,7 +8,7 @@ import { mapItems } from "../js/map-data.js";
 
 const require = createRequire(import.meta.url);
 const { chromium, webkit } = require("playwright");
-const { startStaticServer, readMaterialAuditExpression } = require("./browser-contracts.cjs");
+const { startStaticServer, readMaterialAuditExpression, waitForSurfaceRest } = require("./browser-contracts.cjs");
 const engine = process.argv[2] || "chromium";
 assert.ok(["chromium", "webkit"].includes(engine));
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -154,7 +154,9 @@ try {
           "Selecting another point returns to its heading and destination.");
       }
       await select(page, "narkomfin");
-      await page.waitForFunction(() => getComputedStyle(document.querySelector("[data-map-inspector]")).opacity === "1");
+      await waitForSurfaceRest(page, [
+        "[data-map-inspector]", ".site-header", ".system-dock", ".control-console",
+      ]);
       const material = await page.evaluate(readMaterialAuditExpression);
       assert.deepEqual(material.failures, [], "The header uses the same material as the rest of the interface.");
       if (directory) await page.screenshot({ path: join(directory, engine + "-links-" + label + "-" + theme + ".jpg"), quality: 78 });
