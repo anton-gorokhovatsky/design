@@ -8027,18 +8027,18 @@ html[data-theme="light"]
     width: auto;
     min-width: 44px;
     height: auto;
-    min-height: var(--control-target);
+    min-height: 48px;
     padding-inline: var(--space-2);
     border-radius: 12px;
     corner-shape: var(--corner-card-shape);
-    grid-template-rows: auto;
-    gap: 0;
+    grid-template-rows: 28px auto;
+    gap: 6px;
   }
   .control-console .constellation-nav__item::after { content: none; }
-  .control-console .constellation-nav__item .constellation-nav__shape { display: none; }
+  .control-console .constellation-nav__item .constellation-nav__shape { display: grid; }
   .control-console .constellation-nav__item .constellation-nav__label {
     position: static;
-    grid-row: 1;
+    grid-row: 2;
     justify-self: center;
     font-size: clamp(.6875rem, calc(.625rem + .1vw), .8125rem);
     font-weight: 400;
@@ -8054,9 +8054,6 @@ html[data-theme="light"]
   }
   .control-console .constellation-nav__item.is-current .constellation-nav__label {
     color: var(--signal);
-    text-decoration: underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: .35em;
   }
 }
 
@@ -8601,9 +8598,9 @@ html[data-focus-modality="pointer"]
   }
 
   .display-control {
-    width: max(264px, 16.5rem);
+    width: max(240px, 15rem);
     min-height: 0;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto;
     gap: 2px;
     padding: 12px;
@@ -8703,15 +8700,20 @@ html[data-focus-modality="pointer"]
 
   .display-control__service [data-map-note] {
     grid-column: 1 / -1;
-    margin: 8px 7px 3px;
+    margin: var(--space-2) 7px 3px;
     padding: 0;
     border: 0;
     color: var(--content-muted);
-    font-size: 0.52rem;
-    font-weight: 500;
-    letter-spacing: 0.025em;
+    font-size: .625rem;
+    font-weight: 400;
+    letter-spacing: 0;
     line-height: 1.4;
+    text-transform: lowercase;
     text-wrap: pretty;
+  }
+
+  .display-control__service [data-map-note]::first-letter {
+    text-transform: uppercase;
   }
 }
 
@@ -10567,9 +10569,16 @@ body:has(.practice-map:is([data-selected-kind=personal],[data-selected-kind=prac
 }
 /* Standalone controls may grow with text; fixed row heights must not overlap. */
 @media (min-width: 901px) {
-  .display-control :is(.map-meta, .theme-toggle, .display-control__service button),
-  .display-control .map-meta p:last-child { height: auto; min-height: var(--control-target); }
-  .display-control__presence { margin-block: var(--space-1) var(--space-2); }
+  .display-control :is(.theme-toggle, .display-control__service button) {
+    height: auto;
+    min-height: var(--control-target);
+  }
+  .display-control .map-meta,
+  .display-control .map-meta p:last-child { height: auto; min-height: 28px; }
+  .display-control__presence {
+    grid-column: 1;
+    margin: 0 7px var(--space-2) 31px;
+  }
 }
 html[data-reduce-motion="true"] :is(.ui-close, .work-row, .map-related__item, .contact-links a) { transition: none; transform: none; }
 @media (prefers-reduced-motion: reduce) {
