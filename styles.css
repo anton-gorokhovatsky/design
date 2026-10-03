@@ -10422,9 +10422,13 @@ html[data-reduce-motion="true"] [style*="scroll-ink-"] { filter: none !important
 /* Reading windows sit above the stationary map consoles. */
 .author-entry { display: inline-flex; align-items: center; min-height: var(--control-target); margin-top: var(--space-2); font-size: var(--type-detail); font-weight: 500; pointer-events: auto; }
 body.has-reading-surface :is(.site-header, .whoop-field, .system-dock),
+body.has-constellation-nav :is(.site-header, .whoop-field),
 body:is([data-case-open], .has-settings-panel) .control-console {
   opacity: .16;
   filter: blur(3px);
+  pointer-events: none;
+}
+body.has-reading-surface .system-dock :is(.map-controls, .display-control) {
   pointer-events: none;
 }
 @media (max-width: 900px) {
