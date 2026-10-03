@@ -119,7 +119,7 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=5b86f1e9cc93">
+    <link rel="stylesheet" href="styles.css?v=0d93d329922b">
     <style>
       .map-evidence [data-map-evidence-role-label]{font-family:var(--font-author);font-size:.6rem;font-weight:400;letter-spacing:0}
     </style>
@@ -136,13 +136,13 @@
           "./js/cipher-field.js": "./js/cipher-field.js?v=646034d9be18",
           "./js/signal-field.js": "./js/signal-field.js?v=e59af2b0e792",
           "./js/map-data.js": "./js/map-data.js?v=6194e1544754",
-          "./js/observation-route.js": "./js/observation-route.js?v=419e33403960",
+          "./js/observation-route.js": "./js/observation-route.js?v=eb1092737ac3",
           "./js/personal-media.js": "./js/personal-media.js?v=dc7d79bfbd18",
           "./js/sphere-surfaces.js": "./js/sphere-surfaces.js?v=4cf52ae3e8a0",
-          "./js/map-engine.js": "./js/map-engine.js?v=943ad5d50882",
-          "./js/viewport-ui.js": "./js/viewport-ui.js?v=60d8dfe1e348",
-          "./js/panels.js": "./js/panels.js?v=793acd86e80e",
-          "./js/case-view.js": "./js/case-view.js?v=c1bb0c7fea5f",
+          "./js/map-engine.js": "./js/map-engine.js?v=6aec08f255bd",
+          "./js/viewport-ui.js": "./js/viewport-ui.js?v=58ae2e63ec07",
+          "./js/panels.js": "./js/panels.js?v=0acdfb6d5891",
+          "./js/case-view.js": "./js/case-view.js?v=97f545ae007e",
           "./js/favicon.js": "./js/favicon.js?v=3aa23538dc2d"
         }
       }
@@ -158,13 +158,13 @@
     <script type="module" src="js/cipher-field.js?v=646034d9be18"></script>
     <script type="module" src="js/signal-field.js?v=e59af2b0e792"></script>
     <script type="module" src="js/map-data.js?v=6194e1544754"></script>
-    <script type="module" src="js/observation-route.js?v=419e33403960"></script>
+    <script type="module" src="js/observation-route.js?v=eb1092737ac3"></script>
     <script type="module" src="js/personal-media.js?v=dc7d79bfbd18"></script>
     <script type="module" src="js/sphere-surfaces.js?v=4cf52ae3e8a0"></script>
-    <script type="module" src="js/map-engine.js?v=943ad5d50882"></script>
-    <script type="module" src="js/viewport-ui.js?v=60d8dfe1e348"></script>
-    <script type="module" src="js/panels.js?v=793acd86e80e"></script>
-    <script type="module" src="js/case-view.js?v=c1bb0c7fea5f"></script>
+    <script type="module" src="js/map-engine.js?v=6aec08f255bd"></script>
+    <script type="module" src="js/viewport-ui.js?v=58ae2e63ec07"></script>
+    <script type="module" src="js/panels.js?v=0acdfb6d5891"></script>
+    <script type="module" src="js/case-view.js?v=97f545ae007e"></script>
     <script type="module" src="js/favicon.js?v=3aa23538dc2d"></script>
     <script type="application/ld+json">
       {
@@ -303,7 +303,7 @@
           проекты справа, личное снизу и принципы слева. Чем ближе точки друг
           к другу, тем ближе их смысловая связь; размер точки показывает личный
           вес опыта, форма — тип объекта. Перемещайтесь между точками стрелками или
-          воспользуйтесь фильтрами и поиском. Кнопка «Обзор работ за 90 секунд» запускает
+          воспользуйтесь фильтрами и поиском. Кнопка «Работы и подход · 2,5 минуты» запускает
           короткий маршрут по проектам; режим «Время»
           перестраивает датированные точки по годовым орбитам.
         </p>
@@ -381,52 +381,34 @@
             data-active-id=""
             aria-hidden="true"
           >
-            <figure
-              class="observation-showcase__plane"
-              data-observation-showcase-id="garage-site"
-            >
-              <img
-                data-src="assets/reel-posters/garage-site.jpg?v=79b071503bf0"
-                alt=""
-                decoding="async"
-                loading="eager"
-              >
+            <figure class="observation-showcase__plane" data-observation-showcase-id="garage-site">
+              <img data-src="assets/reel-posters/garage-site.jpg" alt="" decoding="async">
             </figure>
-            <figure
-              class="observation-showcase__plane"
-              data-observation-showcase-id="narkomfin"
-              data-observation-overview
-            >
-              <img
-                data-src="assets/reel-posters/narkomfin.jpg?v=a612d43dea12"
-                alt=""
-                decoding="async"
-                loading="eager"
-              >
+            <figure class="observation-showcase__plane" data-observation-showcase-id="collection">
+              <img data-src="assets/reel-posters/garage-collection.jpg" alt="" decoding="async">
             </figure>
-            <figure
-              class="observation-showcase__plane"
-              data-observation-showcase-id="eleven"
-              data-observation-overview
-            >
-              <img
-                data-src="assets/reel-posters/11111.jpg?v=f4fcb946c093"
-                alt=""
-                decoding="async"
-                loading="eager"
-              >
+            <figure class="observation-showcase__plane observation-showcase__plane--app" data-observation-showcase-id="garage-app">
+              <img data-src="assets/observation-app/museum-1.jpg" alt="" decoding="async">
+              <img data-src="assets/observation-app/museum-2.jpg" alt="" decoding="async">
+              <img data-src="assets/observation-app/museum-3.jpg" alt="" decoding="async">
             </figure>
-            <figure
-              class="observation-showcase__plane"
-              data-observation-showcase-id="shirokostup"
-              data-observation-overview
-            >
-              <img
-                data-src="assets/reel-posters/shirokostup.jpg?v=74222ef366e9"
-                alt=""
-                decoding="async"
-                loading="eager"
-              >
+            <figure class="observation-showcase__plane" data-observation-showcase-id="narkomfin">
+              <img data-src="assets/reel-posters/narkomfin.jpg" alt="" decoding="async">
+            </figure>
+            <figure class="observation-showcase__plane" data-observation-showcase-id="eleven">
+              <img data-src="assets/reel-posters/11111.jpg" alt="" decoding="async">
+            </figure>
+            <figure class="observation-showcase__plane" data-observation-showcase-id="shirokostup">
+              <img data-src="assets/reel-posters/shirokostup.jpg" alt="" decoding="async">
+            </figure>
+            <figure class="observation-showcase__plane" data-observation-showcase-id="tarski">
+              <img data-src="assets/reel-posters/tarski.jpg" alt="" decoding="async">
+            </figure>
+            <figure class="observation-showcase__plane" data-observation-showcase-id="krainiuk">
+              <img data-src="assets/reel-posters/krainiuk.jpg" alt="" decoding="async">
+            </figure>
+            <figure class="observation-showcase__plane" data-observation-showcase-id="ks-fish">
+              <img data-src="assets/reel-posters/ks-fish.jpg" alt="" decoding="async">
             </figure>
           </div>
           <p
@@ -458,8 +440,8 @@
             data-start-observation
             data-material-surface="origin-label"
             data-material-active="always"
-            aria-label="Обзор работ за 90 секунд"
-          >Обзор работ за 90 секунд</button>
+            aria-label="Работы и подход · 2,5 минуты"
+          >Работы и подход · 2,5 минуты</button>
 
           <aside
             class="map-hover-preview"
@@ -537,7 +519,7 @@
             data-material-surface="inspector-description"
             data-material-active="always"
           >
-            <img class="observation-preview" data-observation-preview alt="" decoding="async" hidden>
+            <div class="observation-preview" data-observation-preview aria-hidden="true" hidden></div>
             <p data-map-description>
               Самый важный профессиональный период: здесь сошлись культура, продукт,
               исследования, дизайн и масштабная веб-разработка.
@@ -596,7 +578,7 @@
             aria-label="Управление сеансом наблюдения"
             hidden
           >
-            <span data-observation-progress>01 / 08</span>
+            <span data-observation-progress>01 / 14</span>
             <div>
               <button type="button" data-observation-previous>НАЗАД</button>
               <button type="button" data-observation-pause>ПАУЗА</button>

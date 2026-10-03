@@ -36,7 +36,7 @@ the central constellation rather than to the label. The running light uses the
 `--running-dusk` token sampled from SATISFY's Dusk Space-O™ Singlet. YouTube uses
 the same sphere geometry at about half the visible area, with its own red accent
 (`--youtube-red`); its approved position is `72 / 82`.
-`Обзор работ за 90 секунд` remains a small coordinate label inside the field, not a separate
+`Работы и подход · 2,5 минуты` remains a small coordinate label inside the field, not a separate
 logo card. It is also the explicit start control for the optional observation
 route.
 
@@ -51,16 +51,18 @@ route.
 - A card's primary external link sits inside its heading fragment, below the
   metadata and before the story. It shares the existing text-link style, with no
   nested material. Labels name the destination; related map points remain last.
-- `Обзор работ за 90 секунд` is an optional eight-stop route through the same
-  map and inspector. Seven automatic transitions take 90 seconds, then the final
+- `Работы и подход · 2,5 минуты` is an optional fourteen-stop route through the same
+  map and inspector. Thirteen individually timed transitions take 150 seconds, then the final
   contact screen stays paused. It never autostarts and supports previous,
   pause/resume, next, arrow keys, and Escape.
   The first stop immediately shows the museum project; subsequent stops show
   their content directly, without decorative title cards or chapter transitions.
   Pause and background tabs preserve the remaining time; reduced motion starts
   paused. Restored step URLs open the selected stop directly.
-  The animated source export is retained in `assets/observation/atlas-loop.mp4`;
-  visitors receive only its compact vector frames, not the source video.
+  One on-demand player reuses the native case reels; principles retain a still
+  from the related work. Mobile puts the same media in the reading window,
+  with route controls outside its inner scroller. Reduced motion keeps stills.
+  The former `assets/observation/atlas-loop.mp4` intro is not requested by the route.
   The static site share cover uses `assets/observation/atlas.svg`; its template
   belongs only to `scripts/capture-share-images.mjs site`, not the live route.
   Sources and export settings are recorded in [the artwork notes](docs/observation-art.md).

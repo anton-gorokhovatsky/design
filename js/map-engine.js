@@ -25,13 +25,6 @@ const mapLinksRoot = document.querySelector("[data-map-links]");
 const observationShowcase = document.querySelector("[data-observation-showcase]");
 const observationPreview = document.querySelector("[data-observation-preview]");
 const inlineObservation = window.matchMedia("(max-width: 900px)");
-const observationShowcaseProgress = {
-  "garage-site": 0,
-  narkomfin: 1,
-  "private-practice": 2,
-  eleven: 2,
-  shirokostup: 3,
-};
 const mapKind = document.querySelector("[data-map-kind]");
 const mapTitle = document.querySelector("[data-map-title]");
 const mapMeta = document.querySelector("[data-map-meta]");
@@ -757,68 +750,96 @@ if (
   mapPreviewMedia.append(mosaic);
 }
 
-const loadObservationShowcaseImages = () => {
-  if (!observationShowcase?.classList.contains("is-visible")
-    || getComputedStyle(observationShowcase).display === "none") return;
-  observationShowcase.querySelectorAll("img[data-src]").forEach(image => {
-    image.src = image.dataset.src;
-    delete image.dataset.src;
-  });
+const observationVideo = document.createElement("video");
+observationVideo.className = "observation-video";
+observationVideo.muted = true;
+observationVideo.playsInline = true;
+observationVideo.preload = "none";
+observationVideo.setAttribute("aria-hidden", "true");
+let observationMediaStep = null;
+let observationMediaPaused = true;
+let observationScene = 0;
+
+const setObservationPlayback = (paused) => {
+  observationMediaPaused = paused;
+  const still = mapItems.find(item => item.id === observationMediaStep?.itemId)?.kind === "practice";
+  if (paused || still || reducedMotion.matches || document.hidden || !observationVideo.getAttribute("src")) {
+    observationVideo.pause();
+  } else {
+    observationVideo.play().catch(() => {});
+  }
 };
-if (observationShowcase) {
-  new ResizeObserver(loadObservationShowcaseImages).observe(observationShowcase);
-}
+observationVideo.addEventListener("loadeddata", () => {
+  const start = observationMediaStep?.scenes?.[0]?.[0] || 0;
+  if (start) observationVideo.currentTime = start;
+  setObservationPlayback(observationMediaPaused);
+});
+observationVideo.addEventListener("timeupdate", () => {
+  const scenes = observationMediaStep?.scenes;
+  if (!scenes || observationVideo.seeking || observationVideo.paused) return;
+  if (observationVideo.currentTime >= scenes[observationScene][1] - 0.06) {
+    observationScene = (observationScene + 1) % scenes.length;
+    observationVideo.currentTime = scenes[observationScene][0];
+  }
+});
 
 const syncObservationPreview = () => {
   const id = observationShowcase?.dataset.activeId;
-  const poster = observationShowcase?.querySelector(`[data-observation-showcase-id="${id === "private-practice" ? "eleven" : id}"] img`);
-  observationPreview.hidden = !inlineObservation.matches || !poster;
+  const plane = observationShowcase?.querySelector(`[data-observation-showcase-id="${id}"]`);
+  observationPreview.hidden = !inlineObservation.matches || !plane;
+  if (!plane) return;
   if (!observationPreview.hidden) {
-    observationPreview.src = poster.dataset.src || poster.src;
-    observationPreview.alt = `Фрагмент сайта: ${mapItems.find(item => item.id === (id === "private-practice" ? "eleven" : id))?.title || ""}`;
+    observationPreview.replaceChildren(...[...plane.querySelectorAll("img")].map(image => image.cloneNode()));
+    observationPreview.classList.toggle("observation-preview--app", id === "garage-app");
   }
+  const parent = inlineObservation.matches ? observationPreview : plane;
+  if (observationVideo.dataset.previewId === id) parent.append(observationVideo);
+  setObservationPlayback(observationMediaPaused);
 };
 inlineObservation.addEventListener("change", syncObservationPreview);
+reducedMotion.addEventListener("change", () => setObservationPlayback(observationMediaPaused));
 
-const renderObservationShowcase = ({ itemId, showcaseId } = {}) => {
-  const activeId = showcaseId || itemId;
-  const progress = observationShowcaseProgress[activeId];
-  const isVisible = Number.isFinite(progress);
-
-  observationShowcase?.classList.toggle("is-visible", isVisible);
-
-  if (observationShowcase) {
-    observationShowcase.dataset.activeId = isVisible ? activeId : "";
-  }
-  syncObservationPreview();
-
-  if (!isVisible) {
-    return;
-  }
-
-  loadObservationShowcaseImages();
-
-  observationShowcase.querySelectorAll("[data-observation-showcase-id]")
-    .forEach((plane, index) => {
+const renderObservationShowcase = (step = {}) => {
+  const activeId = step.showcaseId || step.itemId || "";
+  const planes = [...observationShowcase.querySelectorAll("[data-observation-showcase-id]")];
+  const progress = planes.findIndex(plane => plane.dataset.observationShowcaseId === activeId);
+  const isVisible = progress >= 0;
+  observationMediaStep = step;
+  observationScene = 0;
+  observationVideo.pause();
+  observationShowcase.classList.toggle("is-visible", isVisible);
+  observationShowcase.dataset.activeId = isVisible ? activeId : "";
+  if (isVisible) {
+    planes.forEach((plane, index) => {
       const delta = index - progress;
       const distance = Math.abs(delta);
-      const isActive = plane.dataset.observationShowcaseId === activeId;
-      const isIntroPlane = isActive && activeId === "garage-site";
-      const properties = {
-        x: isIntroPlane ? "-2vw" : `${delta * 14}vw`,
-        y: `${(delta < 0 ? 1 : -1) * Math.min(28, distance * 17)}vh`,
-        scale: isIntroPlane ? 0.85 : Math.max(0.48, 1 - distance * 0.28),
-        opacity: isActive ? 1 : Math.max(0.16, 0.46 - distance * 0.1),
-        blur: `${isActive ? 0 : Math.min(4, distance * 1.8)}px`,
-        saturation: isActive ? 1 : 0.72,
-        rotation: `${delta * -0.8}deg`,
-        z: isActive ? 9 : Math.max(1, 3 - Math.round(distance)),
-      };
-
-      Object.entries(properties).forEach(([name, value]) => {
-        plane.style.setProperty(`--showcase-${name}`, value);
+      plane.querySelectorAll("img[data-src]").forEach(image => {
+        image.src = image.dataset.src;
+        delete image.dataset.src;
       });
+      plane.classList.toggle("is-active", delta === 0);
+      const properties = {
+        x: `${delta * 14}vw`, y: `${(delta < 0 ? 1 : -1) * Math.min(28, distance * 17)}vh`,
+        scale: delta === 0 ? 1 : 0.6, opacity: delta === 0 ? 1 : distance === 1 ? 0.18 : 0,
+        blur: `${delta === 0 ? 0 : 4}px`, saturation: delta === 0 ? 1 : 0.72,
+        rotation: `${delta * -0.8}deg`, z: delta === 0 ? 9 : 1,
+      };
+      Object.entries(properties).forEach(([name, value]) => plane.style.setProperty(`--showcase-${name}`, value));
     });
+  }
+  const item = mapItems.find(item => item.id === activeId);
+  if (!isVisible || !item?.previewVideo || reducedMotion.matches) {
+    observationVideo.remove();
+    observationVideo.removeAttribute("src");
+    delete observationVideo.dataset.previewId;
+    observationVideo.load();
+  } else if (observationVideo.dataset.previewId !== activeId) {
+    observationVideo.dataset.previewId = activeId;
+    observationVideo.poster = getMapPreviewPoster(item);
+    observationVideo.src = item.previewVideo;
+    observationVideo.loop = !step.scenes;
+  }
+  syncObservationPreview();
 };
 
 const pauseReelMosaic = () => {
@@ -1270,8 +1291,8 @@ const selectMapItem = (
   }
 
   if (mapTitle) {
-    mapTitle.textContent = typographUiText(item.displayTitle || item.title);
-    mapTitle.setAttribute("aria-label", typographUiText(item.title));
+    mapTitle.textContent = typographUiText(overview?.title || item.displayTitle || item.title);
+    mapTitle.setAttribute("aria-label", typographUiText(overview?.title || item.title));
   }
 
   if (mapMeta) {
@@ -2129,6 +2150,7 @@ const observationRoute = createObservationRoute({
   hideMapPreview,
   isTimeModeActive: () => timeModeActive,
   renderShowcase: renderObservationShowcase,
+  setShowcasePaused: setObservationPlayback,
   renderSyntheticStep: renderObservationSyntheticStep,
   selectMapItem,
   setMapFilter,

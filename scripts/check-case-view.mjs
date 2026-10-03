@@ -82,6 +82,12 @@ for (const engine of [process.argv[2] || 'chromium']) {
           scrollX:scroll.scrollWidth-scroll.clientWidth,pageX:document.documentElement.scrollWidth-innerWidth};
       });
       result.start = await measure();
+      const corners = await page.locator(".case-sheet, .case-media .map-hover-preview__mosaic-main").evaluateAll(elements => elements.map(element => {
+        const style = getComputedStyle(element);
+        return { radius: style.borderTopLeftRadius, shape: style.cornerShape || "round", expected: style.getPropertyValue("--window-radius").trim() };
+      }));
+      assert.equal(corners.length, 2);
+      assert.ok(corners.every(corner => corner.radius === corner.expected && corner.shape === corners[0].shape), "The media and text frame share the window radius and corner curve.");
       result.type = await page.evaluate(() => {
         const size = selector => parseFloat(getComputedStyle(document.querySelector(selector)).fontSize);
         return {

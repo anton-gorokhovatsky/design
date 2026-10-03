@@ -89,7 +89,8 @@ const lensRow = (g, y) => {
   const flare = g.insetMedia ? 0 : t * t * (3 - 2 * t);
   const r = Math.min(g.radius, g.width / 2, g.height / 2);
   const dy = Math.max(0, r - Math.min(y, g.height - y));
-  const corner = r - Math.sqrt(Math.max(0, r*r - dy*dy));
+  const n = g.cornerPower || 2;
+  const corner = r - Math.pow(Math.max(0, r ** n - dy ** n), 1 / n);
   return { bend, sample: y + 8 * (upper ** 2 - lower ** 2),
     left: g.left * (1 - flare) + corner,
     right: g.left + g.width + (g.portWidth - g.left - g.width) * flare - corner };
@@ -131,7 +132,15 @@ const createLensMedia = video => {
     // bands need row sampling, even when a tall reel scrolls past the window.
     context.save();
     context.beginPath();
-    context.roundRect(g.left*density,0,width,height,Math.min(g.radius*density,width/2,height/2));
+    const r = Math.min(g.radius*density,width/2,height/2), x = g.left*density;
+    const power = 2 / (g.cornerPower || 2);
+    for (const [cx,cy,turn] of [[x+width-r,r,-1],[x+width-r,height-r,0],[x+r,height-r,1],[x+r,r,2]]) {
+      for (let i=0;i<=16;i++) {
+        const a=(turn+i/16)*Math.PI/2, c=Math.cos(a), s=Math.sin(a);
+        context.lineTo(cx+r*Math.sign(c)*Math.abs(c)**power,cy+r*Math.sign(s)*Math.abs(s)**power);
+      }
+    }
+    context.closePath();
     context.clip();
     context.drawImage(source,g.left*density,0);
     context.restore();
@@ -328,11 +337,14 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
       }
       record ||= makeRecord(element);
       if (record.player || record.media) {
+        const frameStyle = getComputedStyle(element.closest(".personal-media__screen, .map-hover-preview__mosaic-main"));
+        const shape = frameStyle.cornerShape || "round";
         const geometry = { width, height, insetMedia: Boolean(element.closest(".personal-media__screen")), left: (rect.left-port.left)/scale,
           y: (rect.top-port.top)/scale, portWidth: region.clientWidth, portHeight: region.clientHeight,
           frameRadius: Math.min(40, parseFloat(getComputedStyle(region).borderTopLeftRadius) || 0),
           top: top ? (port.top-rect.top)/scale : null, bottom: bottom ? (port.bottom-rect.top)/scale : null,
-          radius: parseFloat(getComputedStyle(element.closest(".personal-media__screen, .map-hover-preview__mosaic-main")).borderTopLeftRadius) || 0 };
+          radius: parseFloat(frameStyle.borderTopLeftRadius) || 0,
+          cornerPower: shape.startsWith("superellipse(") ? 2 ** parseFloat(shape.slice(13)) : shape === "squircle" ? 4 : 2 };
         if (record.player) { record.player.draw(geometry); continue; }
         record.media.setGeometry(geometry);
         record.media.draw(true);

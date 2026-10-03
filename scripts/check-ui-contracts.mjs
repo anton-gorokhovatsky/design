@@ -1157,226 +1157,39 @@ const auditBrowser = async (client, origin) => {
   await saveScreenshot(client, "desktop-selected-garage");
   await saveElementScreenshot(client, "crop-desktop-inspector", ".map-inspector");
 
-  const expectedShowcaseIds = [
-    "garage-site",
-    "narkomfin",
-    "eleven",
-    "shirokostup",
-  ];
-  await navigate(
-    client,
-    `${origin}/?qa=ui-contracts-observation-showcase-origin&route=observation&step=1#map`,
-  );
-  await waitForExpression(client, `(() => {
-    const stage = document.querySelector('[data-observation-showcase]');
-    const image = stage?.querySelector(
-      '[data-observation-showcase-id="garage-site"] img',
-    );
-    return stage?.dataset.activeId === 'garage-site'
-      && image?.complete
-      && image.naturalWidth > 0;
-  })()`);
-  const originShowcase = await readObservationShowcaseContract(client);
-  if (
-    originShowcase.activeId !== "garage-site"
-    || originShowcase.activePlaneId !== "garage-site"
-    || originShowcase.routeProgress !== "01 / 08"
-    || originShowcase.originLabelVisible
-    || originShowcase.activeRailGap < 24
-  ) {
-    fail(
-      "observation-showcase: the opening Museum plane does not clear the route chrome.",
-      originShowcase,
-    );
+  const expectedShowcaseIds = ["garage-site", "collection", "garage-app", "narkomfin", "eleven", "shirokostup", "tarski", "krainiuk", "ks-fish"];
+  for (const [step, id] of [[1, "garage-site"], [3, "garage-app"], [4, "garage-app"], [5, "narkomfin"], [6, "eleven"], [8, "shirokostup"], [10, "krainiuk"], [13, "ks-fish"]]) {
+    await navigate(client, `${origin}/?qa=ui-contracts-observation&route=observation&step=${step}#map`);
+    await evaluate(client, "document.querySelector('[data-observation-pause][aria-pressed=false]')?.click(); true");
+    await waitForExpression(client, `(() => {
+      const plane = document.querySelector('[data-observation-showcase] .is-active');
+      return plane && Number(getComputedStyle(plane).opacity) >= .99
+        && [...plane.querySelectorAll('img')].every(image => image.complete && image.naturalWidth > 0);
+    })()`);
+    await delay(820);
+    const state = await readObservationShowcaseContract(client);
+    if (!state.visible || state.activeId !== id || state.activePlaneId !== id
+      || state.routeProgress !== String(step).padStart(2, "0") + " / 14"
+      || JSON.stringify(state.planeIds) !== JSON.stringify(expectedShowcaseIds)
+      || state.imageCount !== 11 || !state.imagesReady || !state.parentIsMap
+      || state.ariaHidden !== "true" || state.focusables !== 0
+      || state.activeOpacity < .9 || !state.activeFilter.includes("blur(0px)")
+      || !state.activeInsideViewport || state.activeInspectorOverlapRatio > .02
+      || state.originLabelVisible
+      || state.layerLevels.stage <= state.layerLevels.routeLabel
+      || state.layerLevels.controls <= state.layerLevels.stage
+      || state.mediaOcclusionSamples.some(sample => !sample.mediaWins)) {
+      fail(`observation-showcase: step ${step} must retain one clear, noninteractive media plane.`, state);
+    }
+    await saveScreenshot(client, `desktop-observation-${step}`);
   }
-
-  await navigate(
-    client,
-    `${origin}/?qa=ui-contracts-observation-showcase&route=observation&step=3#map`,
-  );
-  await waitForExpression(client, `(() => {
-    const stage = document.querySelector('[data-observation-showcase]');
-    const active = stage?.querySelector(
-      '[data-observation-showcase-id="' + stage.dataset.activeId + '"]',
-    );
-    const image = active?.querySelector('img');
-    const activeStyle = active ? getComputedStyle(active) : null;
-    return stage?.classList.contains('is-visible')
-      && stage.dataset.activeId === 'narkomfin'
-      && image?.complete
-      && image.naturalWidth > 0
-      && Number(activeStyle?.opacity) >= 0.9
-      && activeStyle?.filter.includes('blur(0px)');
-  })()`);
-  const narkomfinShowcase = await readObservationShowcaseContract(client);
-  if (
-    !narkomfinShowcase.visible
-    || narkomfinShowcase.display === "none"
-    || narkomfinShowcase.activeId !== "narkomfin"
-    || narkomfinShowcase.activePlaneId !== "narkomfin"
-    || narkomfinShowcase.routeProgress !== "03 / 08"
-    || JSON.stringify(narkomfinShowcase.planeIds)
-      !== JSON.stringify(expectedShowcaseIds)
-    || narkomfinShowcase.imageCount !== expectedShowcaseIds.length
-    || !narkomfinShowcase.imagesReady
-    || !narkomfinShowcase.parentIsMap
-    || narkomfinShowcase.ariaHidden !== "true"
-    || narkomfinShowcase.focusables !== 0
-    || narkomfinShowcase.activeOpacity < 0.9
-    || !narkomfinShowcase.activeFilter.includes("blur(0px)")
-    || !narkomfinShowcase.activeInsideViewport
-    || narkomfinShowcase.activeInspectorOverlapRatio > 0.14
-    || narkomfinShowcase.originLabelVisible
-  ) {
-    fail(
-      "observation-showcase: Narkomfin does not enter one accessible focal plane.",
-      narkomfinShowcase,
-    );
-  }
-
-  await evaluate(
-    client,
-    "document.querySelector('[data-observation-next]')?.click(); true",
-  );
-  await waitForExpression(client, `(() => {
-    const stage = document.querySelector('[data-observation-showcase]');
-    const overviewIds = ['narkomfin', 'eleven', 'shirokostup'];
-    const planes = Array.from(
-      stage?.querySelectorAll('.observation-showcase__plane') || [],
-    );
-    const overviewPlanes = planes.filter((plane) => (
-      overviewIds.includes(plane.dataset.observationShowcaseId)
-    ));
-    const settledOverview = overviewPlanes.every((plane) => {
-      const style = getComputedStyle(plane);
-      return Number(style.opacity) >= 0.8
-        && style.filter.startsWith('blur(')
-        && Number.parseFloat(style.filter.slice(5)) <= 0.05;
-    });
-    const hiddenNonOverview = planes.every((plane) => (
-      overviewIds.includes(plane.dataset.observationShowcaseId)
-      || Number(getComputedStyle(plane).opacity) <= 0.05
-    ));
-
-    return stage?.dataset.activeId === 'private-practice'
-      && settledOverview
-      && hiddenNonOverview;
-  })()`, { timeout: 3000, interval: 80 });
-  const privatePracticeShowcase = await readObservationShowcaseContract(client);
-  const overviewIds = ["narkomfin", "eleven", "shirokostup"];
-  const overviewPlanes = privatePracticeShowcase.planeStates.filter(
-    (plane) => overviewIds.includes(plane.id),
-  );
-  if (
-    privatePracticeShowcase.activeId !== "private-practice"
-    || privatePracticeShowcase.routeProgress !== "04 / 08"
-    || overviewPlanes.length !== overviewIds.length
-    || overviewPlanes.some((plane) => (
-      plane.opacity < 0.8
-      || !plane.filter.startsWith("blur(")
-      || Number.parseFloat(plane.filter.slice(5)) > 0.05
-    ))
-    || privatePracticeShowcase.planeStates.some((plane) => (
-      !overviewIds.includes(plane.id) && plane.opacity > 0.05
-    ))
-    || privatePracticeShowcase.layerLevels.axisLabel
-      <= privatePracticeShowcase.layerLevels.camera
-    || privatePracticeShowcase.layerLevels.mapLabels
-      <= privatePracticeShowcase.layerLevels.camera
-    || privatePracticeShowcase.layerLevels.routeLabel
-      <= privatePracticeShowcase.layerLevels.axisLabel
-    || privatePracticeShowcase.layerLevels.stage
-      <= privatePracticeShowcase.layerLevels.routeLabel
-    || privatePracticeShowcase.layerLevels.controls
-      <= privatePracticeShowcase.layerLevels.stage
-    || privatePracticeShowcase.mediaOcclusionSampleCount < 1
-    || privatePracticeShowcase.mediaOcclusionSamples.some(
-      (sample) => !sample.mediaWins,
-    )
-  ) {
-    fail(
-      "observation-showcase: private-practice must be a crisp foreground stack.",
-      privatePracticeShowcase,
-    );
-  }
-  await evaluate(
-    client,
-    "document.querySelector('[data-observation-next]')?.click(); true",
-  );
-  await delay(820);
-  const elevenShowcase = await readObservationShowcaseContract(client);
-  if (
-    elevenShowcase.activeId !== "eleven"
-    || elevenShowcase.activePlaneId !== "eleven"
-    || elevenShowcase.routeProgress !== "05 / 08"
-    || !elevenShowcase.activeInsideViewport
-    || elevenShowcase.activeInspectorOverlapRatio > 0.14
-    || elevenShowcase.originLabelVisible
-    || elevenShowcase.activeRailGap < 24
-  ) {
-    fail(
-      "observation-showcase: the route does not move focus to 11 111.",
-      elevenShowcase,
-    );
-  }
-  await saveScreenshot(client, "desktop-observation-showcase-eleven");
-  await saveElementScreenshot(
-    client,
-    "crop-desktop-observation-showcase-eleven",
-    '[data-observation-showcase][data-active-id="eleven"] [data-observation-showcase-id="eleven"]',
-  );
-
-  await evaluate(
-    client,
-    "document.querySelector('[data-observation-next]')?.click(); true",
-  );
-  await delay(820);
-  const shirokostupShowcase = await readObservationShowcaseContract(client);
-  if (
-    shirokostupShowcase.activeId !== "shirokostup"
-    || shirokostupShowcase.activePlaneId !== "shirokostup"
-    || shirokostupShowcase.routeProgress !== "06 / 08"
-  ) {
-    fail(
-      "observation-showcase: the route does not move focus to Shirokostup.",
-      shirokostupShowcase,
-    );
-  }
-
-  await setViewport(client, {
-    width: 1440,
-    height: 900,
-    mobile: false,
-    theme: "light",
-    reducedMotion: "reduce",
-  });
-  await navigate(
-    client,
-    `${origin}/?qa=ui-contracts-observation-showcase-reduced&route=observation&step=3#map`,
-  );
+  await setViewport(client, { width: 1440, height: 900, mobile: false, theme: "light", reducedMotion: "reduce" });
+  await navigate(client, `${origin}/?qa=ui-contracts-observation-reduced&route=observation&step=5#map`);
   const reducedShowcase = await readObservationShowcaseContract(client);
-  if (
-    reducedShowcase.display !== "none"
-    || reducedShowcase.ariaHidden !== "true"
-    || reducedShowcase.focusables !== 0
-  ) {
-    fail(
-      "observation-showcase: reduced motion must keep the atmospheric planes absent.",
-      reducedShowcase,
-    );
+  if (reducedShowcase.display === "none" || reducedShowcase.ariaHidden !== "true" || reducedShowcase.focusables !== 0) {
+    fail("observation-showcase: reduced motion retains a static visual example.", reducedShowcase);
   }
-  await setViewport(client, {
-    width: 1440,
-    height: 900,
-    mobile: false,
-    theme: "light",
-  });
-
-  await waitForExpression(client, `(() => {
-    const stage = document.querySelector('[data-observation-showcase]');
-    return getComputedStyle(stage).display !== 'none'
-      && [...stage.querySelectorAll('img')].every(image => image.complete && image.naturalWidth > 0);
-  })()`);
+  await setViewport(client, { width: 1440, height: 900, mobile: false, theme: "light" });
 
   await navigate(client, `${origin}/?qa=ui-contracts-reactive-relations`);
   await client.send("Input.dispatchMouseEvent", {

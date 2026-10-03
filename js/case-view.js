@@ -13,6 +13,7 @@ const kind = mapInspector.querySelector("[data-map-kind]");
 const identity = mapInspector.querySelector(".map-readout__identity");
 const caseEntry = mapInspector.querySelector("[data-case-entry]");
 const caseInquiry = mapInspector.querySelector("[data-case-inquiry]");
+const observationControls = mapInspector.querySelector("[data-observation-controls]");
 const header = document.createElement("div");
 header.className = "case-header";
 const viewport = document.createElement("div");
@@ -95,6 +96,7 @@ function mount(large) {
   layout.append(sheet);
   mapInspector.append(header, layout);
   syncFrameMaterials();
+  if (observationRoute.active) sheet.append(observationControls);
   mapInspector.classList.add("has-reading-frame");
   if (large) {
     mapInspector.classList.add("is-case-view");

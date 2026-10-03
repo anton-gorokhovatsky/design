@@ -442,7 +442,8 @@ if (!/aspect-ratio:\s*3\s*\/\s*2/.test(landscapeMediaRule)) {
 
 if (
   !/overflow:\s*hidden/.test(mediaRule)
-  || !/border-radius:\s*clamp/.test(mediaRule)
+  || !/border-radius:\s*var\(--window-radius\)/.test(mediaRule)
+  || !/corner-shape:\s*var\(--corner-card-shape\)/.test(mediaRule)
   || !/box-shadow:\s*none/.test(mediaRule)
 ) {
   failures.push("receiver: the media wrapper must own the stable clipping silhouette");
@@ -460,10 +461,12 @@ if (
   !/position:\s*absolute/.test(mosaicMainRule)
   || !/overflow:\s*hidden/.test(mosaicMainRule)
   || !/aspect-ratio:\s*3\s*\/\s*2/.test(mosaicMainRule)
-  || !/border-radius:\s*clamp/.test(mosaicMainRule)
+  || !/border-radius:\s*var\(--window-radius\)/.test(mosaicMainRule)
+  || !/corner-shape:\s*var\(--corner-card-shape\)/.test(mosaicMainRule)
   || !/overflow:\s*hidden/.test(mosaicSlotRule)
   || !/aspect-ratio:\s*3\s*\/\s*2/.test(mosaicSlotRule)
-  || !/border-radius:\s*clamp/.test(mosaicSlotRule)
+  || !/border-radius:\s*var\(--window-radius\)/.test(mosaicSlotRule)
+  || !/corner-shape:\s*var\(--corner-card-shape\)/.test(mosaicSlotRule)
   || !/object-fit:\s*contain/.test(mosaicVideoRule)
   || !/object-position:\s*center top/.test(mosaicVideoRule)
   || !/border-radius:\s*0/.test(mosaicVideoRule)

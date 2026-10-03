@@ -256,7 +256,7 @@ for(const engine of [process.argv[2]||'chromium']) {
     await page.waitForFunction(() => document.body.hasAttribute('data-case-open'));
     assert.equal(await sourceDocument.evaluate(node => node === document), true, 'Related points open without reloading the page');
     await sourceDocument.dispose();
-    await page.goto(origin + '/?route=observation&step=8');
+    await page.goto(origin + '/?route=observation&step=14');
     await page.waitForFunction(() => document.querySelector('[data-observation-pause]').hidden);
     assert.equal(await page.locator('[data-observation-pause]').isVisible(), false, 'The final step has no meaningless Continue action');
     await page.locator('[data-observation-previous]').click();

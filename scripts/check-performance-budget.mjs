@@ -58,13 +58,16 @@ const budgets = {
   // This replaces the home page's 67 KiB gzip Atlas frame-data request.
   // +9 KiB for shared author presence, named episodes, canonical project names
   // and fourteen contextual figure captions. All figures remain lazy images.
-  runtime: 305 * 1024,
+  // +6 KiB for the approved 14-stop narrative, per-step timing and one on-demand
+  // media player shared by desktop and mobile; existing reels are reused.
+  // +1 KiB to preserve the shared CSS corner shape in scrolling media rasterization.
+  runtime: 312 * 1024,
   fonts: 160 * 1024,
   // Akt preloads all weights in one 110 KiB variable font. The complete family
   // is smaller than four Golos files; the initial two-weight preload was smaller.
   // +2 KiB for shared vector close icons and on-demand related previews.
   // +12 KiB total: 9 KiB runtime above and 3 KiB for shared reading/preview layouts.
-  initialSource: 650 * 1024,
+  initialSource: 657 * 1024,
 };
 const failures = [];
 
