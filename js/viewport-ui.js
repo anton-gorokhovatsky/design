@@ -694,11 +694,9 @@ const syncFloatingConsoleBounds = () => {
   scheduleDetachedCommandResultsPosition();
 };
 
-let consoleResizeFrame = 0;
-window.addEventListener("resize", () => {
-  window.cancelAnimationFrame(consoleResizeFrame);
-  consoleResizeFrame = window.requestAnimationFrame(syncFloatingConsoleBounds);
-});
+const consoleResize = new ResizeObserver(syncFloatingConsoleBounds);
+floatingConsoleModules.forEach(module => consoleResize.observe(module));
+window.addEventListener("resize", syncFloatingConsoleBounds);
 floatingConsoleMedia.addEventListener?.("change", syncFloatingConsoleBounds);
 
 export {

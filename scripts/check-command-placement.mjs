@@ -21,10 +21,10 @@ const settle = async (page) => {
   await page.evaluate(() => new Promise((done) => {
     requestAnimationFrame(() => requestAnimationFrame(done));
   }));
-  // Counted frames can share a timestamp in a busy headless browser. Await
-  // the actual entrance transition before measuring its scaled rectangle.
-  await page.locator("[data-command-results]").evaluate((element) => (
-    Promise.all(element.getAnimations().map((animation) => animation.finished.catch(() => {})))
+  // Wait for both the panel's reflow transition and the popup entrance.
+  await page.locator('[data-floating-console="navigation"], [data-command-results]').evaluateAll((elements) => (
+    Promise.all(elements.flatMap(element => element.getAnimations({ subtree: true }))
+      .map(animation => animation.finished.catch(() => {})))
   ));
 };
 const readPopup = (page, selector = "[data-command-results]") => page.evaluate((selector) => {
@@ -126,6 +126,7 @@ try {
         await assertPopup(page);
         await capture(page, "top-right-" + theme);
         await page.setViewportSize({ width: 1280, height: 600 });
+        await settle(page);
         await page.waitForFunction(() => {
           const shell = document.querySelector('[data-floating-console="navigation"]').getBoundingClientRect();
           const popup = document.querySelector("[data-command-results]").getBoundingClientRect();

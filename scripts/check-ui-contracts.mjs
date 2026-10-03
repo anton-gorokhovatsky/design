@@ -2002,15 +2002,16 @@ const auditBrowser = async (client, origin) => {
       duplicateAnalytics: buttons.some(button => button.id === "command-result-action-analytics-settings"),
       overflow: results.scrollHeight - results.clientHeight,
       lastInside: buttons.at(-1).getBoundingClientRect().bottom <= bounds.bottom - 6,
-      leftAligned: Math.abs(bounds.left - form.getBoundingClientRect().left) < 0.6,
+      coversSearch: bounds.left <= form.getBoundingClientRect().left + 0.6
+        && bounds.width >= form.getBoundingClientRect().width - 0.6,
       rightAligned: Math.abs(bounds.right - surface.right) < 0.6,
     };
   })()`);
   if (completeSearchContract.count !== 7 || completeSearchContract.settingsCount !== 1
     || completeSearchContract.duplicateAnalytics || completeSearchContract.overflow > 1
-    || !completeSearchContract.lastInside || !completeSearchContract.leftAligned
+    || !completeSearchContract.lastInside || !completeSearchContract.coversSearch
     || !completeSearchContract.rightAligned) {
-    fail("search-default: the complete list must fit and share the visible console edges.", completeSearchContract);
+    fail("search-default: the complete list must fit, cover the search field and share the console's right edge.", completeSearchContract);
   }
   await saveElementScreenshot(client, "crop-desktop-search-complete", ".command-results");
 

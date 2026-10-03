@@ -166,10 +166,16 @@ try {
       assert.equal(await frame.getAttribute("referrerpolicy"), "strict-origin-when-cross-origin");
       assert.equal(await frame.getAttribute("allowfullscreen"), "");
       await page.locator("[data-personal-media-source]").focus();
+      const documentStart = await page.evaluate(() => performance.timeOrigin);
       await page.keyboard.press("Escape");
       assert.equal(await player.isVisible(), false, "Escape closes the video with its card.");
       assert.equal(await frame.count(), 0, "Closing the card stops playback.");
-      await select(page, "youtube");
+      assert.equal(await page.evaluate(() => document.activeElement?.dataset.mapId), "youtube",
+        "Closing returns keyboard focus to the video point.");
+      await page.keyboard.press("Enter");
+      await poster.waitFor({ state: "visible" });
+      assert.equal(await page.evaluate(() => performance.timeOrigin), documentStart,
+        "Closing and reopening the card preserves the current document.");
       assert.equal(await poster.isVisible(), true, "Reopening the card restores its silent poster.");
       await poster.click();
       await frame.waitFor({ state: "visible" });
