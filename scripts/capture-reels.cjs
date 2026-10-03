@@ -102,7 +102,7 @@ const projects = {
   krainiuk: {
     url: "https://anton-gorokhovatsky.github.io/ekaterinakrainiuk/",
     captureBrowser: chromium.executablePath(),
-    outputDuration: 14.2,
+    outputDuration: 38,
     finalHold: 4200,
   },
 };
@@ -537,13 +537,41 @@ const prepareShirokostupCapture = async (page) => {
 };
 
 const runKrainiukCaptureMotion = async (page) => {
+  await page.waitForTimeout(2200);
+  await activateControlWithoutScrolling(
+    page.locator('#run > summary'),
+    "The Krainiuk running story",
+  );
+  await page.waitForTimeout(500);
+  await smoothScrollTo(page, "#run", 2200, 0.12);
   await page.waitForTimeout(1800);
-  await page.locator('.portal[href="#run"]').click();
-  await page.waitForTimeout(2700);
-  await page.locator('.site-header a[href="#tarot"]').click();
-  await page.waitForTimeout(1400);
-  await smoothScrollTo(page, ".tarot-spread", 1000, 0.28);
-  await page.waitForTimeout(900);
+  await smoothScrollTo(page, ".strava-note", 1700, 0.65);
+  await page.waitForTimeout(2000);
+  await smoothScrollTo(page, "#about", 1800, 0.1);
+  await page.waitForTimeout(1800);
+
+  const themePicker = page.locator('.theme-picker > summary');
+  await activateControlWithoutScrolling(themePicker, "The Krainiuk theme picker");
+  await page.waitForTimeout(700);
+  await activateControlWithoutScrolling(
+    page.locator('input[name="desktop-theme"][value="dark"]'),
+    "The Krainiuk dark-theme choice",
+  );
+  await page.waitForTimeout(950);
+  await activateControlWithoutScrolling(themePicker, "The Krainiuk theme picker");
+  await page.waitForTimeout(350);
+  if (await page.locator('html').getAttribute('data-theme') !== 'dark') {
+    throw new Error("The Krainiuk reel must include the real dark theme");
+  }
+
+  await smoothScrollTo(page, "#training", 1800, 0.1);
+  await page.waitForTimeout(2000);
+  await smoothScrollTo(page, "#results", 1800, 0.1);
+  await page.waitForTimeout(2000);
+  await smoothScrollTo(page, "#contact", 2400, 0.1);
+  await page.waitForTimeout(1600);
+  await smoothScrollTo(page, ".tarot-header", 2600, 0.12);
+  await page.waitForTimeout(1200);
 
   const cards = page.locator(".tarot-card-toggle");
   if (await cards.count() !== 3) {
@@ -551,7 +579,7 @@ const runKrainiukCaptureMotion = async (page) => {
   }
   for (let index = 0; index < 3; index += 1) {
     await activateControlWithoutScrolling(cards.nth(index), `Krainiuk card ${index + 1}`);
-    await page.waitForTimeout(index === 2 ? 800 : 950);
+    await page.waitForTimeout(1150);
   }
   await page.locator('[data-tarot-deal]').filter({ hasText: "Ещё расклад" }).waitFor();
 };

@@ -47,7 +47,8 @@ const leave = () => {
   requestController?.abort();
   if (active) {
     try {
-      fetch(endpoint, { method: 'POST', credentials: 'omit', keepalive: true, body: JSON.stringify({ id, action: 'leave' }), headers: { 'content-type': 'text/plain' } }).catch(() => {});
+      // The departing document only notifies the server; it never reads a reply.
+      fetch(endpoint, { method: 'POST', mode: 'no-cors', credentials: 'omit', keepalive: true, body: JSON.stringify({ id, action: 'leave' }), headers: { 'content-type': 'text/plain' } }).catch(() => {});
     } catch {}
   }
   active = false;

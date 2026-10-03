@@ -25,6 +25,11 @@ export async function checkLiveSurface(browser, origin, engine) {
   await page.goto(origin);
   await page.waitForFunction(() => document.querySelector('[data-whoop-recovery]').textContent.includes('77'));
   await page.waitForFunction(n => document.querySelector('[data-presence-count]').textContent === String(n), baseline + 1);
+  // A real document navigation must remove this visit, not wait for the TTL.
+  await page.goto(`${origin}/404.html`);
+  await page.waitForFunction(async expected => (await (await fetch('/__qa/presence')).json()).count === expected, baseline);
+  await page.goto(origin);
+  await page.waitForFunction(n => document.querySelector('[data-presence-count]').textContent === String(n), baseline + 1);
   await page.waitForSelector('.whoop-field canvas', { state: 'attached' });
   const card = await page.locator('.site-header').boundingBox();
   const initial = await state();
