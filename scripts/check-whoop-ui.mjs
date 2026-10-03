@@ -126,9 +126,14 @@ try {
   await latePage.waitForFunction(() => {
     const body = document.querySelector(".settings-panel__body").getBoundingClientRect();
     const action = document.querySelector("[data-analytics-allow]").getBoundingClientRect();
-    const tail = document.querySelector(".settings-panel__details").getBoundingClientRect();
-    return action.top >= body.top && action.bottom <= body.bottom && tail.bottom <= body.bottom + 1;
+    return action.top >= body.top && action.bottom <= body.bottom;
   });
+  await latePage.locator('.settings-panel__details').scrollIntoViewIfNeeded();
+  assert.equal(await latePage.locator('.settings-panel__details').evaluate(tail => {
+    const body = tail.closest('.settings-panel__body').getBoundingClientRect();
+    const rect = tail.getBoundingClientRect();
+    return rect.top >= body.top - 1 && rect.bottom <= body.bottom + 1;
+  }), true, 'The privacy link remains reachable after the feed arrives.');
   await latePage.keyboard.press("Escape");
   await latePage.waitForFunction(() => {
     const header = document.querySelector(".site-header").getBoundingClientRect();

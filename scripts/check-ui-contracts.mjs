@@ -3774,6 +3774,7 @@ const auditBrowser = async (client, origin) => {
         ? Math.abs(dialog.top - document.querySelector('.site-header').getBoundingClientRect().bottom
           - parseFloat(getComputedStyle(document.querySelector('.site-header')).left))
         : Infinity,
+      bottomGap: dialog ? innerHeight - dialog.bottom : -1,
       overflowX: document.documentElement.scrollWidth
         - document.documentElement.clientWidth,
     };
@@ -3794,7 +3795,7 @@ const auditBrowser = async (client, origin) => {
     || !mobileShortSettingsContract.analyticsVisible
     || !mobileShortSettingsContract.dialog
     || mobileShortSettingsContract.dialog.top < 13
-    || mobileShortSettingsContract.dialog.bottom > 637
+    || mobileShortSettingsContract.bottomGap < 11
     || mobileShortSettingsContract.authorGapError > 1
     || !backgroundControlsHidden
     || !mobileShortSettingsContract.theme
