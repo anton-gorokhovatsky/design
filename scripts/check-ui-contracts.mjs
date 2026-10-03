@@ -1502,11 +1502,7 @@ const auditBrowser = async (client, origin) => {
 
     if (
       floatingSafeArea.selected !== pointId
-      || (floatingSafeArea.expanded
-        ? !floatingSafeArea.displayHidden
-        : (floatingSafeArea.inspectorDisplayOverlap !== 0
-          || floatingSafeArea.inspectorDisplayGap < 12
-          || floatingSafeArea.nodeCollisions.length > 0))
+      || !floatingSafeArea.displayHidden
       || (
         pointId === "private-practice"
         && (
@@ -3042,7 +3038,7 @@ const auditBrowser = async (client, origin) => {
     };
   })()`);
   if (
-    !notionProjectMobile.title.includes("САЙТ МУЗЕЯ")
+    !notionProjectMobile.title.includes("Сайт Музея")
     || notionProjectMobile.evidenceHidden
     || notionProjectMobile.horizontalOverflow > 1
     || notionProjectMobile.descriptionOverflow > 1
@@ -3456,8 +3452,9 @@ const auditBrowser = async (client, origin) => {
       horizontalBalance: dialog
         ? Math.abs(dialog.left - (innerWidth - dialog.right))
         : Infinity,
-      verticalBalance: dialog
-        ? Math.abs(dialog.top - (innerHeight - dialog.bottom))
+      authorGapError: dialog
+        ? Math.abs(dialog.top - document.querySelector('.site-header').getBoundingClientRect().bottom
+          - parseFloat(getComputedStyle(document.querySelector('.site-header')).left))
         : Infinity,
       consoleVisibility: getComputedStyle(document.querySelector(".control-console"))
         .visibility,
@@ -3539,7 +3536,7 @@ const auditBrowser = async (client, origin) => {
     || analyticsConsentContract.dialogGap !== analyticsConsentContract.sharedSpacing.gap
     || analyticsConsentContract.dialogPadding !== analyticsConsentContract.sharedSpacing.padding
     || analyticsConsentContract.horizontalBalance > 1
-    || analyticsConsentContract.verticalBalance > 1
+    || analyticsConsentContract.authorGapError > 1
     || analyticsConsentContract.consoleVisibility !== "hidden"
     || analyticsConsentContract.dockVisibility !== "hidden"
     || analyticsConsentContract.displayVisibility !== "hidden"
@@ -3773,8 +3770,9 @@ const auditBrowser = async (client, origin) => {
       axisLabelOpacity: Number(
         getComputedStyle(document.querySelector('.map-axis-label')).opacity,
       ),
-      verticalBalance: dialog
-        ? Math.abs(dialog.top - (innerHeight - dialog.bottom))
+      authorGapError: dialog
+        ? Math.abs(dialog.top - document.querySelector('.site-header').getBoundingClientRect().bottom
+          - parseFloat(getComputedStyle(document.querySelector('.site-header')).left))
         : Infinity,
       overflowX: document.documentElement.scrollWidth
         - document.documentElement.clientWidth,
@@ -3797,7 +3795,7 @@ const auditBrowser = async (client, origin) => {
     || !mobileShortSettingsContract.dialog
     || mobileShortSettingsContract.dialog.top < 13
     || mobileShortSettingsContract.dialog.bottom > 637
-    || mobileShortSettingsContract.verticalBalance > 1
+    || mobileShortSettingsContract.authorGapError > 1
     || !backgroundControlsHidden
     || !mobileShortSettingsContract.theme
     || !mobileShortSettingsContract.motion

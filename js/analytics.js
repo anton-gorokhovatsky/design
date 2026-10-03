@@ -123,6 +123,7 @@ const closeSettingsPanel = ({ restoreFocus = true } = {}) => {
   settingsPanel.inert = true;
   settingsPanel.classList.remove("is-open");
   document.body.classList.remove("has-settings-panel");
+  window.dispatchEvent(new Event("reading-surface-change"));
 
   if (restoreFocus && lastSettingsTrigger?.isConnected) {
     lastSettingsTrigger.focus({ preventScroll: true });

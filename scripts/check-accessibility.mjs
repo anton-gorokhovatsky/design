@@ -13,7 +13,12 @@ const directory = process.env.PORTFOLIO_UI_ARTIFACT_DIR || ".qa-artifacts/access
 mkdirSync(directory, { recursive: true });
 const browser = await ({ chromium, webkit })[engine].launch();
 const report = [], errors = [];
-const settle = page => page.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done))));
+const settle = async page => {
+  await page.waitForFunction(() => document.getAnimations().every(animation =>
+    animation.animationName !== 'window-reveal'
+    || (!animation.pending && animation.playState !== 'running')));
+  await page.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done))));
+};
 const capture = (page, name) => page.screenshot({ path: `${directory}/${engine}-${name}.png` });
 const axe = async (page, name) => {
   await page.addScriptTag({ path: require.resolve("axe-core/axe.min.js") });

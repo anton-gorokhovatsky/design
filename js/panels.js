@@ -614,7 +614,9 @@ const syncMobileMapFrame = () => {
       screenTallProgress,
     );
     const mapYScale = 1 + 0.16 * tallStageProgress;
-    const horizonTop = 85 + 8 * tallStageProgress;
+    const cameraHeight = Math.max(1, mapBounds.height - cameraReserve - cameraTop);
+    const horizonTop = Math.min(85 + 8 * tallStageProgress,
+      (searchBounds.top - mapBounds.top - cameraTop - 16) / cameraHeight * 100);
     const timeScale = 1.18 - 0.04 * shortScreenPressure;
 
     signalField.style.setProperty(

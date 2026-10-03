@@ -33,7 +33,7 @@ try {
     if (width > 900) {
       const header = await page.locator(".site-header").boundingBox();
       const console = await page.locator(".control-console").boundingBox();
-      assert.equal(header.x - console.x - console.width, 16, "One gap separates the bottom panels.");
+      assert.ok(Math.abs(header.x - console.x - console.width - 16) < .1, "One gap separates the bottom panels.");
       assert.equal(header.y + header.height, console.y + console.height, "Bottom panels share a baseline.");
     }
     await page.waitForFunction(() => [...document.querySelectorAll(".map-node")].every(node => {

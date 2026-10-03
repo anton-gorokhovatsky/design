@@ -573,6 +573,7 @@ const syncAuthorPresence = () => {
   window.dispatchEvent(new CustomEvent("author-presence-change"));
 };
 if (authorCard) new ResizeObserver(syncAuthorPresence).observe(authorCard);
+window.addEventListener("reading-surface-change", syncAuthorPresence);
 new MutationObserver(syncAuthorPresence).observe(document.body, { attributes: true, attributeFilter: ["class"] });
 const authorInspector = document.querySelector(".map-inspector");
 if (authorInspector) new MutationObserver(syncAuthorPresence).observe(authorInspector, { attributes: true, attributeFilter: ["class"] });

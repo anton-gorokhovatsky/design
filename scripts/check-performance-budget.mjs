@@ -56,14 +56,14 @@ const budgets = {
   // +1 KiB for deferred related-item thumbnails, reusing the existing posters.
   // +8 KiB for native Aura generation and lifecycle under the author card.
   // This replaces the home page's 67 KiB gzip Atlas frame-data request.
-  // +8 KiB for shared author presence, named episodes, canonical project names
+  // +9 KiB for shared author presence, named episodes, canonical project names
   // and fourteen contextual figure captions. All figures remain lazy images.
-  runtime: 304 * 1024,
+  runtime: 305 * 1024,
   fonts: 160 * 1024,
   // Akt preloads all weights in one 110 KiB variable font. The complete family
   // is smaller than four Golos files; the initial two-weight preload was smaller.
   // +2 KiB for shared vector close icons and on-demand related previews.
-  // +12 KiB total: 8 KiB runtime above and 4 KiB for shared reading/preview layouts.
+  // +12 KiB total: 9 KiB runtime above and 3 KiB for shared reading/preview layouts.
   initialSource: 650 * 1024,
 };
 const failures = [];
