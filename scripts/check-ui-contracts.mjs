@@ -1479,7 +1479,8 @@ const auditBrowser = async (client, origin) => {
       return {
         selected: document.querySelector(".map-inspector")?.dataset.selectedMapId,
         expanded: document.querySelector(".map-inspector")?.classList.contains("is-case-view"),
-        displayHidden: getComputedStyle(document.querySelector(".display-control")).visibility === "hidden",
+        displayBackground: Number(getComputedStyle(document.querySelector(".system-dock")).opacity) <= .16
+          && getComputedStyle(document.querySelector(".display-control")).pointerEvents === "none",
         inspectorDisplayOverlap:
           display && inspector ? intersectionArea(inspector, display) : null,
         inspectorDisplayGap:
@@ -1502,7 +1503,7 @@ const auditBrowser = async (client, origin) => {
 
     if (
       floatingSafeArea.selected !== pointId
-      || !floatingSafeArea.displayHidden
+      || !floatingSafeArea.displayBackground
       || (
         pointId === "private-practice"
         && (
@@ -3452,16 +3453,15 @@ const auditBrowser = async (client, origin) => {
       horizontalBalance: dialog
         ? Math.abs(dialog.left - (innerWidth - dialog.right))
         : Infinity,
-      authorGapError: dialog
-        ? Math.abs(dialog.top - document.querySelector('.site-header').getBoundingClientRect().bottom
-          - parseFloat(getComputedStyle(document.querySelector('.site-header')).left))
+      verticalBalance: dialog
+        ? Math.abs(dialog.top - (innerHeight - dialog.bottom))
         : Infinity,
       consoleVisibility: getComputedStyle(document.querySelector(".control-console"))
-        .visibility,
+        .pointerEvents,
       dockVisibility: getComputedStyle(document.querySelector(".system-dock"))
-        .visibility,
+        .pointerEvents,
       displayVisibility: getComputedStyle(document.querySelector(".display-control"))
-        .visibility,
+        .pointerEvents,
       analyticsLauncherLabel: document.querySelector("[data-analytics-summary]")
         ?.textContent.trim(),
       analyticsLauncherWhiteSpace: getComputedStyle(
@@ -3536,10 +3536,10 @@ const auditBrowser = async (client, origin) => {
     || analyticsConsentContract.dialogGap !== analyticsConsentContract.sharedSpacing.gap
     || analyticsConsentContract.dialogPadding !== analyticsConsentContract.sharedSpacing.padding
     || analyticsConsentContract.horizontalBalance > 1
-    || analyticsConsentContract.authorGapError > 1
-    || analyticsConsentContract.consoleVisibility !== "hidden"
-    || analyticsConsentContract.dockVisibility !== "hidden"
-    || analyticsConsentContract.displayVisibility !== "hidden"
+    || analyticsConsentContract.verticalBalance > 1
+    || analyticsConsentContract.consoleVisibility !== "none"
+    || analyticsConsentContract.dockVisibility !== "none"
+    || analyticsConsentContract.displayVisibility !== "none"
     || analyticsConsentContract.analyticsLauncherLabel !== "АНАЛИТИКА"
     || analyticsConsentContract.analyticsLauncherWhiteSpace !== "nowrap"
     || JSON.stringify(analyticsConsentContract.privacyRows) !== JSON.stringify([
@@ -3770,9 +3770,8 @@ const auditBrowser = async (client, origin) => {
       axisLabelOpacity: Number(
         getComputedStyle(document.querySelector('.map-axis-label')).opacity,
       ),
-      authorGapError: dialog
-        ? Math.abs(dialog.top - document.querySelector('.site-header').getBoundingClientRect().bottom
-          - parseFloat(getComputedStyle(document.querySelector('.site-header')).left))
+      verticalBalance: dialog
+        ? Math.abs(dialog.top - (innerHeight - dialog.bottom))
         : Infinity,
       bottomGap: dialog ? innerHeight - dialog.bottom : -1,
       overflowX: document.documentElement.scrollWidth
@@ -3785,7 +3784,7 @@ const auditBrowser = async (client, origin) => {
     mobileShortSettingsContract.nav,
   ].every((control) => (
     control
-    && (control.visibility === "hidden" || control.opacity === 0)
+    && (control.visibility === "visible" && control.opacity <= .16)
   ));
   if (
     !mobileShortSettingsContract.bodyHasSettings
@@ -3796,7 +3795,7 @@ const auditBrowser = async (client, origin) => {
     || !mobileShortSettingsContract.dialog
     || mobileShortSettingsContract.dialog.top < 13
     || mobileShortSettingsContract.bottomGap < 11
-    || mobileShortSettingsContract.authorGapError > 1
+    || mobileShortSettingsContract.verticalBalance > 1
     || !backgroundControlsHidden
     || !mobileShortSettingsContract.theme
     || !mobileShortSettingsContract.motion

@@ -568,7 +568,6 @@ const syncAuthorPresence = () => {
     || document.body.classList.contains("has-settings-panel")
     || Boolean(document.querySelector(".map-inspector.is-open"));
   document.body.classList.toggle("has-reading-surface", reading);
-  if (reading) document.documentElement.style.setProperty("--author-reading-height", `${authorCard.offsetHeight}px`);
   syncAuthorField();
   window.dispatchEvent(new CustomEvent("author-presence-change"));
 };

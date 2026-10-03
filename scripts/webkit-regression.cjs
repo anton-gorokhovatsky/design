@@ -1098,23 +1098,23 @@ const analyticsConsentAudit = async (page, viewport, label) => {
     result.navigation,
   ].every((control) => (
     control
-    && (control.visibility === "hidden" || control.opacity === 0)
+    && (control.visibility === "visible" && control.opacity <= .16)
   ));
   const withinViewport = rect
     && rect.left >= -0.5
     && rect.top >= -0.5
     && rect.right <= viewport.width + 0.5
     && rect.bottom <= viewport.height + 0.5;
-  const belowAuthor = rect
-    && Math.abs(rect.top - result.authorBottom - result.windowEdge) <= 1;
+  const verticallyCentered = rect
+    && Math.abs(rect.top - (viewport.height - rect.bottom)) <= 1;
   const generalRect = generalSettings.rect;
   const generalWithinViewport = generalRect
     && generalRect.left >= -0.5
     && generalRect.top >= -0.5
     && generalRect.right <= viewport.width + 0.5
     && generalRect.bottom <= viewport.height + 0.5;
-  const generalBelowAuthor = generalRect
-    && Math.abs(generalRect.top - generalSettings.authorBottom - result.windowEdge) <= 1;
+  const generalVerticallyCentered = generalRect
+    && Math.abs(generalRect.top - (viewport.height - generalRect.bottom)) <= 1;
 
   await page.screenshot({
     path: path.join(artifactDir, `${label}-settings-panel.png`),
@@ -1139,11 +1139,11 @@ const analyticsConsentAudit = async (page, viewport, label) => {
     generalSettings,
     settingsEnd,
     generalWithinViewport,
-    generalBelowAuthor,
+    generalVerticallyCentered,
     materialFailures,
     backgroundControlsHidden,
     withinViewport,
-    belowAuthor,
+    verticallyCentered,
     failure: !result.visible
       || result.inert
       || result.mode !== "settings"
@@ -1194,7 +1194,7 @@ const analyticsConsentAudit = async (page, viewport, label) => {
       || !result.actionBeforePrivacy
       || !result.privacyBeforeDetails
       || !withinViewport
-      || !belowAuthor
+      || !verticallyCentered
       || generalSettings.mode !== "settings"
       || generalSettings.focusSection !== "settings"
       || generalSettings.scrollTop !== 0
@@ -1203,7 +1203,7 @@ const analyticsConsentAudit = async (page, viewport, label) => {
       || !generalSettings.screenControlsVisible
       || generalSettings.overflowX !== 0
       || !generalWithinViewport
-      || !generalBelowAuthor
+      || !generalVerticallyCentered
       || !settingsEnd.tailVisible
       || settingsEnd.trailingGap < 12
       || settingsEnd.trailingGap > 40

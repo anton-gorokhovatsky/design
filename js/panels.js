@@ -44,10 +44,8 @@ import {
   scrollRegionFromKey,
   clearCommandViewportPosition,
   compactCommandViewport,
-  getConsoleOffset,
   positionDetachedCommandResults,
   scheduleDetachedCommandResultsPosition,
-  setConsoleOffset,
 } from "./viewport-ui.js";
 
 const constellationNav = document.querySelector("[data-constellation-nav]");
@@ -62,6 +60,7 @@ let isConstellationNavOpen = false;
 
 const syncConstellationNavInteractivity = () => {
   if (constellationNav) {
+    constellationNav.inert = compactConstellationNav.matches && document.body.classList.contains("has-content-panel");
     constellationNav.dataset.materialActive = constellationNav.matches(".is-open, .is-command-close")
       ? "mobile" : "none";
   }
@@ -190,7 +189,6 @@ for (const row of document.querySelectorAll(".work-row[data-map-point]")) {
 const panelOpenButtons = Array.from(document.querySelectorAll("[data-open-panel]"));
 const controlConsole = document.querySelector(".control-console");
 const controlConsoleHome = document.createComment("control-console-home");
-let controlConsolePanelOffset = null;
 
 controlConsole?.before(controlConsoleHome);
 
@@ -218,8 +216,6 @@ const panelViews = {
 
 const setPanelOpen = (isOpen) => {
   if (isOpen && contentPanel && controlConsole && !contentPanel.contains(controlConsole)) {
-    controlConsolePanelOffset = getConsoleOffset(controlConsole);
-    setConsoleOffset(controlConsole, 0, 0);
     contentPanel.append(controlConsole);
     contentPanel.append(commandResults, commandStatus);
   }
@@ -244,19 +240,12 @@ const setPanelOpen = (isOpen) => {
     );
   });
   document.body.classList.toggle("has-content-panel", isOpen);
+  syncConstellationNavInteractivity();
+  if (controlConsole) controlConsole.inert = isOpen && compactConstellationNav.matches;
 
   if (!isOpen && controlConsole && controlConsoleHome.parentNode) {
     controlConsoleHome.parentNode.insertBefore(controlConsole, controlConsoleHome.nextSibling);
     commandResultsHome.after(commandResults, commandStatus);
-
-    if (controlConsolePanelOffset) {
-      setConsoleOffset(
-        controlConsole,
-        controlConsolePanelOffset.x,
-        controlConsolePanelOffset.y,
-      );
-      controlConsolePanelOffset = null;
-    }
   }
 };
 

@@ -50,8 +50,8 @@ const frameMaterials = new Map();
 let backgroundState = [];
 
 function suspendBackground() {
-  backgroundState = [...mapInspector.parentElement.children]
-    .filter(element => element !== mapInspector)
+  backgroundState = [...new Set([...mapInspector.parentElement.children, document.querySelector(".site-header")])]
+    .filter(element => element && element !== mapInspector)
     .map(element => [element, element.inert]);
   for (const [element] of backgroundState) element.inert = true;
 }
