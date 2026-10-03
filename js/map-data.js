@@ -72,8 +72,8 @@ const reelChapterSources = new Map([
       "assets/reel-chapters/doronin-02.mp4?v=cd75b564305b",
   ]],
   ["krainiuk", [
-      "assets/reel-chapters/krainiuk-01.mp4?v=ac5e7aeabc9c",
-      "assets/reel-chapters/krainiuk-02.mp4?v=b2fc11605208",
+      "assets/reel-chapters/krainiuk-01.mp4?v=6707846bad90",
+      "assets/reel-chapters/krainiuk-02.mp4?v=c080a64c42b5",
   ]],
 ]);
 // reel-chapter-manifest:end
@@ -512,11 +512,11 @@ const mapItems = [
     timeYear: 2026,
     href: "https://anton-gorokhovatsky.github.io/ekaterinakrainiuk/",
     kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
-    previewVideo: "assets/reels/krainiuk.mp4?v=b2a8bfb515dd",
+    previewVideo: "assets/reels/krainiuk.mp4?v=289bbfd14839",
     previewPoster: "assets/reel-posters/krainiuk.jpg?v=3dfc87246421",
-    previewDuration: 38,
+    previewDuration: 29.7,
     previewOrientation: "landscape",
-    previewMeta: "ТРЕНИРОВКИ, КАРТЫ И ТЁМНАЯ ТЕМА / 00:38",
+    previewMeta: "ТРЕНИРОВКИ, КАРТЫ И ТЁМНАЯ ТЕМА / 00:30",
     x: 70,
     y: 67,
     size: 18,

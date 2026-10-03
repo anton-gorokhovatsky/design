@@ -144,8 +144,8 @@ export const reelChapterSpecs = [
     itemId: "krainiuk",
     master: "krainiuk.mp4",
     chapters: [
-      { label: "coach-running", start: 4.8, duration: 6.4 },
-      { label: "dark-tarot-reveal", start: 30.6, duration: 7.2 },
+      { label: "coach-running", start: 4.1, duration: 3.8 },
+      { label: "dark-tarot-reveal", start: 22.3, duration: 7.2 },
     ],
   },
 ];

@@ -75,6 +75,7 @@ function syncFrameMaterials() {
     if (!sheet.contains(element)) restoreFrameMaterial(element, attributes);
   }
   for (const element of story.querySelectorAll("[data-material-surface]")) {
+    if (element.dataset.materialSurface === "personal-media-play") continue;
     if (!frameMaterials.has(element)) frameMaterials.set(element,
       ["data-material-surface", "data-material-active"].map(name => [name, element.getAttribute(name)]));
     element.removeAttribute("data-material-surface");

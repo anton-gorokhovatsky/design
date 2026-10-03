@@ -9940,17 +9940,20 @@ html[data-contrast="true"] .whoop-field { display: none; }
   display: grid;
   width: var(--control-target);
   height: var(--control-target);
-  border: 1px solid currentColor;
+  border: 0;
   border-radius: 50%;
-  color: #fff;
+  color: var(--content-ink);
   transform: translate(-50%, -50%);
+  transition: width var(--duration-feedback) var(--motion-shift),
+    height var(--duration-feedback) var(--motion-shift);
   place-items: center;
 }
 
 .personal-media__play::after {
-  width: 12px;
-  height: 14px;
-  margin-left: 2px;
+  width: 14px;
+  height: 16px;
+  /* Compensate for the triangle's visual weight towards its vertical edge. */
+  transform: translateX(2px);
   background: currentColor;
   clip-path: polygon(0 0, 100% 50%, 0 100%);
   content: "";
@@ -9962,7 +9965,13 @@ html[data-contrast="true"] .whoop-field { display: none; }
 }
 
 .personal-media__poster:is(:hover, :focus-visible) .personal-media__play {
-  color: var(--signal);
+  width: calc(var(--control-target) + var(--space-1));
+  height: calc(var(--control-target) + var(--space-1));
+}
+
+html[data-reduce-motion="true"] .personal-media__play { transition: none; }
+@media (prefers-reduced-motion: reduce) {
+  .personal-media__play { transition: none; }
 }
 
 .has-reading-frame .personal-media__screen {

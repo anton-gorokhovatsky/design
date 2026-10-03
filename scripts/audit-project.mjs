@@ -496,6 +496,7 @@ const requiredMaterialSurfaces = [
   "reel-readout",
   "content-window",
   "settings-panel",
+  "personal-media-play",
 ];
 const materialSurfaceTags = [
   ...indexSource.matchAll(/<[^>]*\sdata-material-surface="([^"]+)"[^>]*>/gs),

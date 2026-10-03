@@ -102,7 +102,7 @@ const projects = {
   krainiuk: {
     url: "https://anton-gorokhovatsky.github.io/ekaterinakrainiuk/",
     captureBrowser: chromium.executablePath(),
-    outputDuration: 38,
+    outputDuration: 29.7,
     finalHold: 4200,
   },
 };
@@ -537,18 +537,18 @@ const prepareShirokostupCapture = async (page) => {
 };
 
 const runKrainiukCaptureMotion = async (page) => {
-  await page.waitForTimeout(2200);
+  await page.waitForTimeout(1500);
   await activateControlWithoutScrolling(
     page.locator('#run > summary'),
     "The Krainiuk running story",
   );
   await page.waitForTimeout(500);
   await smoothScrollTo(page, "#run", 2200, 0.12);
-  await page.waitForTimeout(1800);
+  await page.waitForTimeout(600);
   await smoothScrollTo(page, ".strava-note", 1700, 0.65);
-  await page.waitForTimeout(2000);
+  await page.waitForTimeout(600);
   await smoothScrollTo(page, "#about", 1800, 0.1);
-  await page.waitForTimeout(1800);
+  await page.waitForTimeout(600);
 
   const themePicker = page.locator('.theme-picker > summary');
   await activateControlWithoutScrolling(themePicker, "The Krainiuk theme picker");
@@ -565,11 +565,11 @@ const runKrainiukCaptureMotion = async (page) => {
   }
 
   await smoothScrollTo(page, "#training", 1800, 0.1);
-  await page.waitForTimeout(2000);
+  await page.waitForTimeout(600);
   await smoothScrollTo(page, "#results", 1800, 0.1);
-  await page.waitForTimeout(2000);
+  await page.waitForTimeout(600);
   await smoothScrollTo(page, "#contact", 2400, 0.1);
-  await page.waitForTimeout(1600);
+  await page.waitForTimeout(600);
   await smoothScrollTo(page, ".tarot-header", 2600, 0.12);
   await page.waitForTimeout(1200);
 
