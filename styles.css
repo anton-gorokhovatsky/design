@@ -45,6 +45,7 @@
   --space-6: 2rem;
   --space-7: 3rem;
   --type-label: clamp(.75rem, calc(.72rem + .08vw), .8125rem);
+  --word-spacing-label: .12em;
   --type-detail: clamp(.8125rem, calc(.78rem + .1vw), .9375rem);
   --type-body: clamp(1rem, calc(.94rem + .1vw), 1.125rem);
   --type-lead: clamp(1.0625rem, calc(.95rem + .25vw), 1.25rem);
@@ -4646,6 +4647,13 @@ body:has(.command-dock.is-open) .origin-marker__label {
   padding-right: 0;
   animation: none;
   white-space: nowrap;
+}
+
+.map-readout__meta-track,
+.work-row__domain,
+.map-related__item > span,
+[data-map-preview-meta] {
+  word-spacing: var(--word-spacing-label);
 }
 
 .map-inspector .map-readout__identity p.is-marquee .map-readout__meta-track {
