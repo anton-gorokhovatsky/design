@@ -7,7 +7,9 @@ const require=createRequire(import.meta.url);
 const {chromium,webkit}=require('playwright');
 const {startStaticServer,waitForCaseLayout}=require('./browser-contracts.cjs');
 const projectRoot=resolve(fileURLToPath(new URL('../',import.meta.url)));
-const local=process.env.PORTFOLIO_CASE_ORIGIN?null:await startStaticServer({projectRoot});
+// As in check-scroll-lens, isolate hard document navigation from WebKit's
+// retired-document presence keepalive; check-live-surface covers that service.
+const local=process.env.PORTFOLIO_CASE_ORIGIN?null:await startStaticServer({projectRoot,presence:false});
 const origin=process.env.PORTFOLIO_CASE_ORIGIN||local.origin;
 const dir=(process.env.PORTFOLIO_UI_ARTIFACT_DIR||fileURLToPath(new URL('../.qa-artifacts/case-view/',import.meta.url)))+'/';
 mkdirSync(dir,{recursive:true});
@@ -182,6 +184,8 @@ for(const engine of [process.argv[2]||'chromium']) {
     await page.waitForFunction(()=>!document.body.hasAttribute('data-case-open'));
     assert.equal(await page.locator('.map-inspector').evaluate(el=>getComputedStyle(el).opacity),'0','No flash of the old small readout on close');
     await page.screenshot({path:dir+engine+'-restored-map.jpg',type:'jpeg',quality:84});
+    // Restore this fixture's preference after the explicit playback checks.
+    await page.emulateMedia({reducedMotion:'reduce'});
     // Check the route around a case, including the place the reader returns to.
     for (const width of [1440, 390]) {
       await page.setViewportSize({ width, height: 900 });
@@ -225,7 +229,13 @@ for(const engine of [process.argv[2]||'chromium']) {
     }
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto(origin + '/#contact');
+    // Hash navigation can finish before the panel applies its state and focus.
+    await page.waitForFunction(() => document.querySelector('[data-content-panel]').dataset.view === 'contact'
+      && document.activeElement?.matches('[data-close-panel]'));
     assert.equal(await page.locator('.content-panel__more').isVisible(), false, 'No work continuation in other sections');
+    assert.equal(await page.locator('[data-command-input]').evaluate(input => Boolean(input.closest('[inert]'))), false,
+      'Returning from a mobile case must not leave desktop search inert');
+    await page.locator('[data-command-input]').click();
     await page.locator('[data-command-input]').fill('Хотлайн');
     const searchResult = page.getByRole('option', { name: /Hotline Camp/ });
     await searchResult.waitFor({ state: 'visible' });

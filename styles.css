@@ -3769,6 +3769,7 @@ body.has-content-panel .constellation-nav {
 
 body.has-content-panel .control-console {
   z-index: 94;
+  pointer-events: auto;
 }
 
 body.has-content-panel .control-console .command-dock {

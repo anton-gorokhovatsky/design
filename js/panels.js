@@ -1,4 +1,3 @@
-// Runtime module 8/9: content panels, search, navigation, and URL state.
 import {
   openSettingsPanel,
   trackPortfolioEvent,
@@ -56,9 +55,12 @@ const constellationNavItems = Array.from(document.querySelectorAll("[data-nav-vi
 const constellationNavUtilities = Array.from(document.querySelectorAll("[data-nav-utility]"));
 const constellationNavHome = document.querySelector('[data-nav-view="map"]');
 const compactConstellationNav = window.matchMedia("(max-width: 900px)");
+const controlConsole = document.querySelector(".control-console");
 let isConstellationNavOpen = false;
 
-const syncConstellationNavInteractivity = () => {
+export const syncConstellationNavInteractivity = () => {
+  if (controlConsole) controlConsole.inert = document.body.hasAttribute("data-case-open")
+    || (compactConstellationNav.matches && document.body.classList.contains("has-content-panel"));
   if (constellationNav) {
     constellationNav.inert = compactConstellationNav.matches && document.body.classList.contains("has-content-panel");
     constellationNav.dataset.materialActive = constellationNav.matches(".is-open, .is-command-close")
@@ -194,7 +196,6 @@ for (const row of document.querySelectorAll(".work-row[data-map-point]")) {
   row.prepend(image);
 }
 const panelOpenButtons = Array.from(document.querySelectorAll("[data-open-panel]"));
-const controlConsole = document.querySelector(".control-console");
 const controlConsoleHome = document.createComment("control-console-home");
 
 controlConsole?.before(controlConsoleHome);
@@ -248,7 +249,6 @@ const setPanelOpen = (isOpen) => {
   });
   document.body.classList.toggle("has-content-panel", isOpen);
   syncConstellationNavInteractivity();
-  if (controlConsole) controlConsole.inert = isOpen && compactConstellationNav.matches;
 
   if (!isOpen && controlConsole && controlConsoleHome.parentNode) {
     controlConsoleHome.parentNode.insertBefore(controlConsole, controlConsoleHome.nextSibling);
@@ -1164,8 +1164,7 @@ document.addEventListener("keydown", (event) => {
     setCommandOpen(false);
     setCommandStatus("");
     commandInput?.blur();
-    // Escape completes dismissal before the next pointer action. The delayed
-    // blur handler must not move the submit button 68 px during that click.
+    // Finish Escape before the next click; blur is delayed.
     syncCommandFocusViewport();
     clearSearchHighlight();
   } else if (activePreviewItem || mapPreview?.classList.contains("is-visible")) {

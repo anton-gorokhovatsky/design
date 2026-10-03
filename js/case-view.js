@@ -1,9 +1,8 @@
-// Readouts share one stationary frame and inner scroller.
 import { mapItems } from "./map-data.js";
 import { mapInspector, hideMapPreview, observationRoute } from "./map-engine.js";
 import { getTabStops, reducedMotion } from "./preferences.js";
 import { scrollRegionFromKey, observeScrollLens, clearScrollLenses, observeScrollEdges } from "./viewport-ui.js";
-import "./panels.js";
+import { syncConstellationNavInteractivity } from "./panels.js";
 
 const items = new Map(mapItems.map(item => [item.id, item]));
 const body = document.body;
@@ -115,6 +114,7 @@ function unmount() {
   mapInspector.removeAttribute("role");
   mapInspector.removeAttribute("aria-modal");
   body.removeAttribute("data-case-open");
+  syncConstellationNavInteractivity();
   mapInspector.removeAttribute("data-case-media");
 }
 
