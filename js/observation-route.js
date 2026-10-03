@@ -1,4 +1,3 @@
-// Runtime module 5/9: guided overview timing and controls.
 import { trackPortfolioEvent } from "./analytics.js";
 import { mapItems } from "./map-data.js";
 import { reducedMotion } from "./preferences.js";
@@ -91,6 +90,8 @@ const createObservationRoute = ({
   const updateControls = () => {
     setShowcasePaused(paused || document.hidden);
     const isLastStep = stepIndex === observationSteps.length - 1;
+    if ((isLastStep && document.activeElement === observationPause)
+      || (stepIndex === 0 && document.activeElement === observationPrevious)) observationNext?.focus();
     if (observationProgress) {
       observationProgress.textContent = `${String(stepIndex + 1).padStart(2, "0")} / ${String(observationSteps.length).padStart(2, "0")}`;
     }
@@ -100,16 +101,15 @@ const createObservationRoute = ({
     }
 
     if (observationPause) {
-      if (isLastStep && document.activeElement === observationPause) observationNext?.focus();
       observationPause.hidden = isLastStep;
       const label = paused ? "Продолжить обзор" : "Приостановить обзор";
       observationPause.setAttribute("aria-label", label);
       observationPause.title = label;
-      observationPause.setAttribute("aria-pressed", String(paused));
+      observationPause.dataset.paused = String(paused);
     }
 
     if (observationNext) {
-      const label = isLastStep ? "Завершить обзор" : "Следующий шаг";
+      const label = isLastStep ? "К карте" : "Следующий шаг";
       observationNext.setAttribute("aria-label", label);
       observationNext.title = label;
       observationNext.classList.toggle("is-last", isLastStep);
@@ -283,6 +283,7 @@ const createObservationRoute = ({
     if (stepIndex >= observationSteps.length - 1) {
       trackPortfolioEvent("observation_complete", { source: "route" });
       stop();
+      requestAnimationFrame(() => observationStart?.focus({ preventScroll: true }));
       return;
     }
 

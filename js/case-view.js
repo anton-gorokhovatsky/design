@@ -1,4 +1,4 @@
-// Every readout keeps a stationary rounded frame and a single inner scroller.
+// Readouts share one stationary frame and inner scroller.
 import { mapItems } from "./map-data.js";
 import { mapInspector, hideMapPreview, observationRoute } from "./map-engine.js";
 import { getTabStops, reducedMotion } from "./preferences.js";
@@ -21,8 +21,7 @@ viewport.className = "case-scroll";
 viewport.tabIndex = 0;
 viewport.setAttribute("role", "region");
 viewport.setAttribute("aria-label", "Содержимое карточки");
-// Match the existing panel keyboard pattern when the region itself is focused.
-// Do not steal keys from links/buttons or selection; wheel and touch stay native.
+// Scroll keys belong only to the focused region.
 viewport.addEventListener("keydown", (event) => {
   if (event.target !== viewport || event.defaultPrevented || event.isComposing
     || event.altKey || event.shiftKey) return;
@@ -64,8 +63,7 @@ const caseLens = observeScrollLens(viewport, () => viewport.querySelectorAll(
   ".map-readout__identity h2, .map-readout__identity p, .case-inline-media video, [data-personal-media-poster], [data-personal-media-screen] iframe, [data-map-description], .map-evidence dt, .map-evidence dd:not(:has(.case-figure)), .map-evidence__copy, .case-details h3, .case-details h4, .case-details p, .map-related__header, .map-related__item > :is(strong, span)",
 ), { owner: mapInspector });
 
-// The material belongs to a stationary frame; only its transparent child scrolls.
-// Preserve and restore existing fragments when returning to the unmounted readout.
+// Move content while preserving its material registration.
 function restoreFrameMaterial(element, attributes) {
   element.classList.remove("reading-content");
   for (const [name, value] of attributes) element.setAttribute(name, value);
@@ -120,7 +118,7 @@ function unmount() {
   mapInspector.removeAttribute("data-case-media");
 }
 
-// Reuse the playing hover master: no second decoder, fabricated frame or crop.
+// Share the hover player.
 const video = document.querySelector("[data-map-preview-video]");
 const videoFrame = video.closest(".map-hover-preview__mosaic-main") || video;
 const videoHome = videoFrame.parentElement;
@@ -250,7 +248,11 @@ function reflect() {
   caseEntry.hidden = !large;
   caseInquiry.hidden = !large;
   if (nextId === activeId && large === caseMode) return;
-  if (activeId) {
+  const routeControl = observationRoute.active
+    && document.activeElement?.closest("[data-observation-controls] button");
+  const keepOverviewFrame = nextId && activeId && observationRoute.active
+    && !caseMode && !large && observationControls.parentElement === sheet;
+  if (activeId && !keepOverviewFrame) {
     const closing = !mapInspector.classList.contains("is-open");
     if (closing) mapInspector.style.transition = "none";
     pinReel(null);
@@ -261,7 +263,7 @@ function reflect() {
     }
   }
   if (nextId) {
-    mount(large);
+    if (!keepOverviewFrame) mount(large);
     if (large) {
       hideMapPreview({ immediate: true });
       mapInspector.dataset.caseMedia = selected.previewVideo ? "true" : "false";
@@ -269,7 +271,12 @@ function reflect() {
     }
     viewport.scrollTop = 0;
     mapInspector.scrollTop = 0;
-    requestAnimationFrame(() => identity.querySelector("h2").focus({ preventScroll: true }));
+    requestAnimationFrame(() => {
+      const target = routeControl?.isConnected && !routeControl.disabled && !routeControl.hidden
+        ? routeControl
+        : routeControl ? document.querySelector("[data-observation-next]") : identity.querySelector("h2");
+      target?.focus({ preventScroll: true });
+    });
   }
   activeId = nextId;
   caseMode = large;

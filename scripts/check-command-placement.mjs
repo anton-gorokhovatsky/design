@@ -44,7 +44,7 @@ const assertPopup = async (page, selector) => {
   const state = await readPopup(page, selector);
   const { popup, form, surface, viewport } = state;
   assert.ok(popup.top >= 7.5 && popup.bottom <= viewport.height - 7.5, JSON.stringify(state));
-  assert.ok(Math.abs(popup.left - form.left) < 0.6, "The left edge follows the search segment: " + JSON.stringify(state));
+  assert.ok(popup.left <= form.left + 0.6 && popup.width >= form.width - 0.6, "Results can expand left to preserve readable columns: " + JSON.stringify(state));
   assert.ok(Math.abs(popup.right - surface.right) < 0.6, "The right edge follows the visible material: " + JSON.stringify(state));
   const above = surface.top - 16;
   const below = viewport.height - surface.bottom - 16;

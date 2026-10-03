@@ -1596,12 +1596,11 @@ main {
 }
 
 .command-result span:nth-child(2) {
-  overflow: hidden;
   color: var(--content-ink);
   font-family: var(--font-sans);
   font-size: 0.68rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .command-result span:last-child {
@@ -3848,8 +3847,8 @@ body.has-content-panel .control-console .command-dock {
 
 .control-console .constellation-nav__item.is-current .constellation-nav__shape {
   border-color: var(--signal);
-  background: var(--signal);
-  color: var(--bg);
+  background: color-mix(in srgb, var(--signal) 12%, transparent);
+  color: var(--signal);
 }
 
 .control-console .command-dock {
@@ -7177,6 +7176,7 @@ html[data-reduce-motion="true"] :is(.observation-showcase, .observation-showcase
   font-weight: 400;
   cursor: pointer;
   pointer-events: auto;
+  transition: color var(--duration-feedback) var(--motion-shift);
 }
 
 .origin-marker__label:is(:hover, :focus-visible) {
@@ -7289,10 +7289,12 @@ body:has(.practice-map:is([data-selected-kind=personal],[data-selected-kind=prac
 
 .observation-controls {
   position: static;
-  display: grid;
+  display: flex;
+  flex-wrap: wrap;
   grid-row: 4;
   grid-column: 1 / -1;
-  grid-template-columns: minmax(0, 1fr) auto;
+  justify-content: space-between;
+  gap: var(--space-2);
   align-items: center;
 
   margin: 0;
@@ -7326,13 +7328,21 @@ body:has(.practice-map:is([data-selected-kind=personal],[data-selected-kind=prac
   padding: 0;
   border: 0;
   border-radius: 50%;
-  background: transparent;
+  background: color-mix(in srgb, var(--content-ink) 6%, transparent);
   color: var(--content-ink);
   cursor: pointer;
   font: 500 var(--type-label)/1.4 var(--font-sans);
   transition: color var(--duration-feedback) var(--motion-shift);
 }
 .observation-controls button[hidden] { display: none; }
+.observation-controls [data-observation-next].is-last {
+  flex-basis: auto;
+  width: auto;
+  min-width: var(--control-target);
+  padding-inline: var(--space-4);
+  border-radius: calc(var(--control-target) / 2);
+  white-space: nowrap;
+}
 .observation-controls svg {
   width: var(--control-glyph);
   height: var(--control-glyph);
@@ -7343,15 +7353,14 @@ body:has(.practice-map:is([data-selected-kind=personal],[data-selected-kind=prac
   stroke-linejoin: round;
 }
 .observation-controls .observation-controls__play { fill: currentColor; stroke: none; }
-.observation-controls [data-observation-pause] { background: color-mix(in srgb, var(--content-ink) 6%, transparent); }
 .observation-controls__play,
 .observation-controls__finish,
-[data-observation-pause][aria-pressed="true"] .observation-controls__pause,
+[data-observation-pause][data-paused="true"] .observation-controls__pause,
 [data-observation-next].is-last .observation-controls__next { display: none; }
-[data-observation-pause][aria-pressed="true"] .observation-controls__play,
+[data-observation-pause][data-paused="true"] .observation-controls__play,
 [data-observation-next].is-last .observation-controls__finish { display: block; }
 
-.observation-controls button:is(:hover, :focus-visible) {
+.observation-controls button:is(:hover, :active, :focus-visible) {
   color: var(--signal);
 }
 
@@ -7540,6 +7549,8 @@ html[data-theme="dark"] .signal-constellation {
 }
 
 @media (max-width: 900px) {
+  .observation-controls { --control-target: 48px; }
+  .observation-controls > div { gap: var(--space-2); }
   .map-inspector .map-readout__description {
     max-height: min(45vh, 300px);
   }
@@ -8023,7 +8034,7 @@ html[data-theme="light"]
   }
   .control-console .constellation-nav { flex: 0 1 auto; max-width: 100%; }
   .control-console .constellation-nav__orbit { display: flex; flex-wrap: wrap; gap: 8px; }
-  .control-console .command-dock { flex: 1 1 180px; width: auto; }
+  .control-console .command-dock { flex: 1 1 22rem; width: auto; }
   .control-console .constellation-nav__item {
     display: flex;
     align-items: center;
@@ -8058,7 +8069,7 @@ html[data-theme="light"]
   .control-console .constellation-nav__item.is-current .constellation-nav__label {
     color: var(--signal);
   }
-  @container navigation (max-width: 50rem) {
+  @container navigation (max-width: 60rem) {
     .control-console .constellation-nav { flex-basis: 100%; padding-bottom: var(--space-1); }
     .control-console .constellation-nav__orbit {
       display: grid;
@@ -10618,7 +10629,7 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
 .map-related__item > span { font-size: var(--type-label); }
 .contact-copy h2 { font-size: var(--type-author); }
 .contact-lede { font-size: var(--type-body); line-height: var(--leading-body); }
-.observation-controls { padding: 0; gap: var(--space-2); }
+.observation-controls { padding: 0; }
 @media (max-width: 900px) {
   .site-header .brand__name { overflow-wrap: anywhere; }
   .whoop-metrics { grid-template-columns: repeat(auto-fit, minmax(min(100%, 4.5rem), 1fr)); }

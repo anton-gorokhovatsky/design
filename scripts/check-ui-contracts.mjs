@@ -122,7 +122,8 @@ const waitForSearchPlacement = async (client) => {
     return shell.top >= 7.5 && shell.bottom <= innerHeight - 7.5
       && popup.top >= 7.5 && popup.bottom <= innerHeight - 7.5
       && Math.abs(gap - 8) < 0.6
-      && Math.abs(popup.left - form.getBoundingClientRect().left) < 0.6
+      && popup.left <= form.getBoundingClientRect().left + 0.6
+      && popup.width >= form.getBoundingClientRect().width - 0.6
       && Math.abs(popup.right - shell.right) < 0.6
       && parseFloat(style.borderRadius) >= 20
       && (style.maskImage || style.webkitMaskImage || "none") === "none";
@@ -1160,7 +1161,7 @@ const auditBrowser = async (client, origin) => {
   const expectedShowcaseIds = ["garage-site", "collection", "garage-app", "narkomfin", "eleven", "shirokostup", "tarski", "krainiuk", "ks-fish"];
   for (const [step, id] of [[1, "garage-site"], [3, "garage-app"], [4, "garage-app"], [5, "narkomfin"], [6, "eleven"], [8, "shirokostup"], [10, "krainiuk"], [13, "ks-fish"]]) {
     await navigate(client, `${origin}/?qa=ui-contracts-observation&route=observation&step=${step}#map`);
-    await evaluate(client, "document.querySelector('[data-observation-pause][aria-pressed=false]')?.click(); true");
+    await evaluate(client, "document.querySelector('[data-observation-pause][data-paused=false]')?.click(); true");
     await waitForExpression(client, `(() => {
       const plane = document.querySelector('[data-observation-showcase] .is-active');
       return plane && Number(getComputedStyle(plane).opacity) >= .99

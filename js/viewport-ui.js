@@ -1,8 +1,6 @@
 import { reducedMotion } from "./preferences.js";
 
-// Runtime module 7/9: viewport UI for detached command geometry and draggable desktop consoles.
-// Both ordinary panels and expanded cases use the same focused reading keys.
-// This changes keyboard input only; scrolling still belongs to the native region.
+// Shared keyboard scrolling; wheel and touch stay native.
 const scrollRegionFromKey = (event, region, reduceMotion) => {
   if (!["ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End"].includes(event.key)) return;
   const maximum = region.scrollHeight - region.clientHeight;
@@ -468,14 +466,16 @@ const positionDetachedCommandResults = () => {
   const focusedMobile = compact && dock.contains(document.activeElement);
   let anchorTop = surfaceBounds.top;
   let anchorBottom = surfaceBounds.bottom;
-  // Align with the search segment's left edge and the console material's right edge.
+  // Expand results left, keeping the console's right edge.
+  const resultWidth = compact ? surfaceBounds.right - bounds.left
+    : Math.max(surfaceBounds.right - bounds.left, Math.min(surfaceBounds.width, 640));
   let width = Math.min(
-    surfaceBounds.right - bounds.left,
+    resultWidth,
     Math.max(0, viewport.width - edgeGap * 2),
   );
   let left = Math.max(
     viewport.left + edgeGap,
-    Math.min(bounds.left, viewport.left + viewport.width - edgeGap - width),
+    Math.min(surfaceBounds.right - width, viewport.left + viewport.width - edgeGap - width),
   );
 
   if (focusedMobile) {
@@ -501,8 +501,7 @@ const positionDetachedCommandResults = () => {
     setCommandGeometry(element, "results", { left, width });
 
     const contentHeight = element.scrollHeight;
-    // Keep the familiar placement above when it fits; otherwise use the
-    // roomier side. Only the actual visible viewport may constrain the list.
+    // Prefer above unless the other side has more room.
     const opensBelow = !focusedMobile
       && contentHeight > spaceAbove
       && spaceBelow > spaceAbove;
