@@ -53,7 +53,7 @@ try {
       await waitForAuthor(page, false);
       assert.deepEqual(await page.locator(".site-header").boundingBox(), authorBefore);
       assert.equal(await progress(page), "01 / 14");
-      assert.equal(await page.locator("[data-observation-next]").innerText(), "ДАЛЬШЕ");
+      assert.equal(await page.locator("[data-observation-next]").getAttribute("aria-label"), "Следующий шаг");
       assert.equal(await page.locator("[data-observation-title-card]").count(), 0);
       await page.locator(width > 900 ? "[data-observation-showcase]" : "[data-observation-preview]").waitFor({ state: "visible", timeout: 5000 });
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
@@ -105,7 +105,7 @@ try {
   assert.equal(await page.locator("[data-signal-field]").getAttribute("data-observation-active"), null);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.locator("[data-start-observation]").click();
-  assert.equal(await page.locator("[data-observation-pause]").innerText(), "ПРОДОЛЖИТЬ");
+  assert.equal(await page.locator("[data-observation-pause]").getAttribute("aria-label"), "Продолжить обзор");
   await page.clock.fastForward(20000);
   assert.equal(await progress(page), "01 / 14");
   await page.keyboard.press("Escape");

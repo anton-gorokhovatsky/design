@@ -951,7 +951,8 @@ for (const item of mapItems) {
 }
 
 // Unaltered frames from the existing 900×600 masters; time records the source.
-// ks.fish uses public 1200×800 browser captures from 2026-10-03 (null time).
+// ks.fish and the Narkomfin night view use public browser captures from
+// 2026-10-03 (null time), retaining their original aspect ratios.
 const caseFigures = {
   "garage-site": [
     ["task", "assets/case-figures/garage-site-1.jpg", 1.5, "Программа Музея", "Программа, календарь и\u00a0материалы образуют общий вход в\u00a0жизнь Музея."],
@@ -959,7 +960,7 @@ const caseFigures = {
   ],
   "narkomfin": [
     ["task", "assets/case-figures/narkomfin-1.jpg", 3, "Дневная модель Дома Наркомфина", "Модель здания помогает знакомиться с\u00a0местами внутри дома через саму архитектуру."],
-    ["result", "assets/case-figures/narkomfin-2.jpg", 10.5, "Ночная модель Дома Наркомфина", "Дневное и\u00a0ночное освещение меняют восприятие одной и\u00a0той\u00a0же модели."],
+    ["result", "assets/case-figures/narkomfin-2.jpg?v=3a13718cebb1", null, "Ночная модель Дома Наркомфина", "Дневное и\u00a0ночное освещение меняют восприятие одной и\u00a0той\u00a0же модели."],
   ],
   "shirokostup": [
     ["task", "assets/case-figures/shirokostup-1.jpg", 3.5, "Оглавление портфолио Ольги Широкоступ", "Общее оглавление делает разные направления кураторской практики доступными из\u00a0одного места."],

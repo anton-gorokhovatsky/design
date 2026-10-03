@@ -11,14 +11,15 @@ const observationSteps = [
     description: "Каталог помогает знакомиться с коллекцией: переходить от произведений к авторам и готовиться к посещению открытого хранения. Моя роль — продуктовая логика, исследования, интерфейс и координация реализации." },
   { id: "museum-app", itemId: "garage-app", duration: 12000,
     description: "«Я иду в музей» помогает людям с ментальными особенностями и их близким подготовиться к посещению. При перезапуске приложения исследовал и проектировал маршруты к путеводителям, материалам о доступности и играм." },
-  { id: "care", title: "ЦИФРОВАЯ ЗАБОТА", itemId: "principle-experiment", showcaseId: "garage-app", duration: 8000,
+  { id: "care", title: "ЦИФРОВАЯ ЗАБОТА", kind: "ПОДХОД", meta: "", itemId: "principle-experiment", showcaseId: "garage-app", duration: 8000,
     description: "Для меня цифровое гостеприимство — внимание к человеку ещё до первого визита. Понятный маршрут и возможность заранее познакомиться с местом помогают чувствовать себя увереннее." },
   { id: "narkomfin", itemId: "narkomfin", duration: 14000,
     description: "Архитектурный замысел Дома Наркомфина стал основой сайта. Интерактивная модель приглашает исследовать здание: подниматься на крышу, находить кафе и книжный, смотреть на дом при дневном и ночном свете." },
   { id: "eleven", itemId: "eleven", duration: 14000,
     scenes: [[0.2, 3.5], [7.8, 18.5]],
     description: "Велопроект Виктора Доронина — 11 111 км за 31 день. Сайт связывает дневник подготовки и приглашение партнёров, а свет, тени и палитра откликаются на время и погоду в Дубае." },
-  { id: "intuition", itemId: "principle-data-intuition", showcaseId: "eleven", duration: 8000,
+  { id: "intuition", kind: "ПОДХОД", meta: "", itemId: "principle-data-intuition", showcaseId: "eleven", duration: 8000,
+    poster: "assets/case-figures/11111-2.jpg",
     description: "Данные помогают понимать происходящее, а интуиция — придумывать опыт. В «11 111» погодные данные становятся светом и атмосферой, которые можно почувствовать." },
   { id: "shirokostup", itemId: "shirokostup", duration: 12000,
     description: "Кураторская практика, тексты и архив Ольги Широкоступ получают собственный редакционный ритм. Сайт и инфраструктуру подготовили так, чтобы дальше она могла вести его сама." },
@@ -28,11 +29,13 @@ const observationSteps = [
   { id: "krainiuk", itemId: "krainiuk", duration: 16000,
     scenes: [[4.1, 7.9], [10, 14.8], [22.3, 29.7]],
     description: "На сайте тренера Екатерины Крайнюк можно выбрать направление, узнать о тренировках и результатах спортсменов. А «Карты на старт» добавляют игру: открываешь дисциплину, формат старта и знак на финише." },
-  { id: "engineering", itemId: "principle-design-engineering", showcaseId: "krainiuk", duration: 8000,
+  { id: "engineering", kind: "ПОДХОД", meta: "", itemId: "principle-design-engineering", showcaseId: "krainiuk", duration: 8000,
+    poster: "assets/observation-stills/krainiuk-cards.jpg",
     description: "Сам проектирую интерфейс и пишу код: чувствую и композицию, и технические ограничения. Рабочее взаимодействие, как этот расклад карт, позволяет сразу проверить идею в деле." },
   { id: "ks-fish", itemId: "ks-fish", duration: 14000,
     description: "Рыбная лавка капитана Селёдкина знакомит с Олегом Гугунавой ещё до первого визита. Его фотографии и рассказы живут в «Судовом журнале», а каталог помогает найти рыбу, узнать цену и перейти к заказу." },
-  { id: "goal", itemId: "principle-goal", showcaseId: "ks-fish", duration: 8000,
+  { id: "goal", kind: "ПОДХОД", meta: "", itemId: "principle-goal", showcaseId: "ks-fish", duration: 8000,
+    poster: "assets/case-figures/ks-fish-1.jpg",
     description: "Начинаю с того, что нужно людям и самому проекту. В лавке важно сохранить голос владельца и помочь выбрать рыбу. Инструменты и устройство сайта подчиняются этой задаче." },
   {
     id: "contact", kind: "ФИНАЛ / 14", title: "СВЯЗАТЬСЯ",
@@ -99,14 +102,17 @@ const createObservationRoute = ({
     if (observationPause) {
       if (isLastStep && document.activeElement === observationPause) observationNext?.focus();
       observationPause.hidden = isLastStep;
-      observationPause.textContent = paused ? "ПРОДОЛЖИТЬ" : "ПАУЗА";
+      const label = paused ? "Продолжить обзор" : "Приостановить обзор";
+      observationPause.setAttribute("aria-label", label);
+      observationPause.title = label;
       observationPause.setAttribute("aria-pressed", String(paused));
     }
 
     if (observationNext) {
-      observationNext.textContent = stepIndex === observationSteps.length - 1
-        ? "ЗАВЕРШИТЬ"
-        : "ДАЛЬШЕ";
+      const label = isLastStep ? "Завершить обзор" : "Следующий шаг";
+      observationNext.setAttribute("aria-label", label);
+      observationNext.title = label;
+      observationNext.classList.toggle("is-last", isLastStep);
     }
 
     signalField?.style.setProperty(

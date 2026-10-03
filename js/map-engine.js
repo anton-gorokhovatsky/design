@@ -596,6 +596,7 @@ const setMapMetaText = (value) => {
   const text = typographUiText(value);
   const track = document.createElement("span");
 
+  mapMeta.hidden = !text;
   track.className = "map-readout__meta-track";
   track.textContent = text;
   mapMeta.classList.remove("is-marquee");
@@ -817,6 +818,11 @@ const renderObservationShowcase = (step = {}) => {
         image.src = image.dataset.src;
         delete image.dataset.src;
       });
+      const previewItem = mapItems.find(item => item.id === plane.dataset.observationShowcaseId);
+      if (previewItem?.previewVideo) {
+        plane.querySelector("img").src = delta === 0 && step.poster
+          ? step.poster : getMapPreviewPoster(previewItem);
+      }
       plane.classList.toggle("is-active", delta === 0);
       const properties = {
         x: `${delta * 14}vw`, y: `${(delta < 0 ? 1 : -1) * Math.min(28, distance * 17)}vh`,
@@ -828,7 +834,7 @@ const renderObservationShowcase = (step = {}) => {
     });
   }
   const item = mapItems.find(item => item.id === activeId);
-  if (!isVisible || !item?.previewVideo || reducedMotion.matches) {
+  if (!isVisible || !item?.previewVideo || step.poster || reducedMotion.matches) {
     observationVideo.remove();
     observationVideo.removeAttribute("src");
     delete observationVideo.dataset.previewId;
@@ -1287,7 +1293,7 @@ const selectMapItem = (
   setMapRovingId(id);
 
   if (mapKind) {
-    mapKind.textContent = typographUiText(item.kindLabel);
+    mapKind.textContent = typographUiText(overview?.kind || item.kindLabel);
   }
 
   if (mapTitle) {
@@ -1296,7 +1302,7 @@ const selectMapItem = (
   }
 
   if (mapMeta) {
-    setMapMetaText(item.meta);
+    setMapMetaText(overview?.meta ?? item.meta);
   }
 
   if (mapDescription) {

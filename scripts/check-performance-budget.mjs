@@ -67,7 +67,9 @@ const budgets = {
   // is smaller than four Golos files; the initial two-weight preload was smaller.
   // +2 KiB for shared vector close icons and on-demand related previews.
   // +12 KiB total: 9 KiB runtime above and 3 KiB for shared reading/preview layouts.
-  initialSource: 657 * 1024,
+  // +2 KiB for responsive overview controls and explicitly matched principle stills.
+  // Media stays deferred; no additional dependencies or eager requests.
+  initialSource: 659 * 1024,
 };
 const failures = [];
 

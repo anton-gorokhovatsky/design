@@ -7041,18 +7041,6 @@ html[data-theme="dark"] .map-node--sphere .map-node__glyph {
    existing map and MATERIAL / 01 system. They add meaning, not another UI
    family. */
 
-@media (max-width: 900px) {
-  .observation-controls > div {
-  display: flex;
-  flex-wrap: wrap;
-  min-width: 0;
-
-  gap: var(--space-2);
-}
-
-}
-
-
 .observation-showcase {
   display: none;
 }
@@ -7079,10 +7067,12 @@ html[data-theme="dark"] .map-node--sphere .map-node__glyph {
     position: relative;
     display: flex;
     justify-content: center;
-    width: 100%;
-    height: clamp(7rem, calc(50svh - 11rem), 12rem);
-    margin: 0 0 var(--space-3);
+    width: calc(100% + var(--case-pad) * 2);
+    height: auto;
+    aspect-ratio: 3 / 2;
+    margin: 0 calc(-1 * var(--case-pad)) var(--space-5);
   }
+  .observation-preview--app:not([hidden]) { aspect-ratio: 1176 / 696; }
   .observation-preview img {
     width: 100%;
     height: 100%;
@@ -7302,7 +7292,7 @@ body:has(.practice-map:is([data-selected-kind=personal],[data-selected-kind=prac
   display: grid;
   grid-row: 4;
   grid-column: 1 / -1;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
 
   margin: 0;
@@ -7321,28 +7311,45 @@ body:has(.practice-map:is([data-selected-kind=personal],[data-selected-kind=prac
 }
 
 .observation-controls > div {
-  display: grid;
+  display: flex;
   min-width: 0;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
   gap: var(--space-1);
 }
 
-.observation-controls > div:has(button[hidden]) {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
 .observation-controls button {
-  min-width: 0;
-  min-height: var(--control-target);
-  padding: var(--space-2) var(--space-1);
-  border: 1px solid var(--line-soft);
-  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 var(--control-target);
+  width: var(--control-target);
+  height: var(--control-target);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
   background: transparent;
   color: var(--content-ink);
   cursor: pointer;
   font: 500 var(--type-label)/1.4 var(--font-sans);
   transition: color var(--duration-feedback) var(--motion-shift);
 }
+.observation-controls button[hidden] { display: none; }
+.observation-controls svg {
+  width: var(--control-glyph);
+  height: var(--control-glyph);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.observation-controls .observation-controls__play { fill: currentColor; stroke: none; }
+.observation-controls [data-observation-pause] { background: color-mix(in srgb, var(--content-ink) 6%, transparent); }
+.observation-controls__play,
+.observation-controls__finish,
+[data-observation-pause][aria-pressed="true"] .observation-controls__pause,
+[data-observation-next].is-last .observation-controls__next { display: none; }
+[data-observation-pause][aria-pressed="true"] .observation-controls__play,
+[data-observation-next].is-last .observation-controls__finish { display: block; }
 
 .observation-controls button:is(:hover, :focus-visible) {
   color: var(--signal);
@@ -7546,19 +7553,6 @@ html[data-theme="dark"] .signal-constellation {
   .map-evidence > div {
     grid-template-columns: 72px minmax(0, 1fr);
     gap: 8px;
-  }
-
-  .observation-controls {
-    grid-template-columns: 1fr;
-    gap: 7px;
-  }
-
-  .observation-controls > div {
-    justify-content: stretch;
-  }
-
-  .observation-controls button {
-    flex: 1;
   }
 
   .map-inspector:has(.observation-controls:not([hidden])) {
@@ -8023,11 +8017,16 @@ html[data-theme="light"]
     display: flex;
     flex-wrap: wrap;
     height: auto;
+    row-gap: 0;
+    container: navigation / inline-size;
   }
   .control-console .constellation-nav { flex: 0 1 auto; max-width: 100%; }
   .control-console .constellation-nav__orbit { display: flex; flex-wrap: wrap; gap: 8px; }
   .control-console .command-dock { flex: 1 1 180px; width: auto; }
   .control-console .constellation-nav__item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: auto;
     min-width: 44px;
     height: auto;
@@ -8035,11 +8034,10 @@ html[data-theme="light"]
     padding-inline: var(--space-2);
     border-radius: 12px;
     corner-shape: var(--corner-card-shape);
-    grid-template-rows: 28px auto;
-    gap: 6px;
+    gap: var(--space-2);
   }
   .control-console .constellation-nav__item::after { content: none; }
-  .control-console .constellation-nav__item .constellation-nav__shape { display: grid; }
+  .control-console .constellation-nav__item .constellation-nav__shape { display: grid; flex-shrink: 0; }
   .control-console .constellation-nav__item .constellation-nav__label {
     position: static;
     grid-row: 2;
@@ -8058,6 +8056,27 @@ html[data-theme="light"]
   }
   .control-console .constellation-nav__item.is-current .constellation-nav__label {
     color: var(--signal);
+  }
+  @container navigation (max-width: 50rem) {
+    .control-console .constellation-nav { flex-basis: 100%; padding-bottom: var(--space-1); }
+    .control-console .constellation-nav__orbit {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr)) max-content;
+    }
+    .control-console .constellation-nav__item {
+      display: grid;
+      grid-template-rows: 28px auto;
+      justify-content: stretch;
+      gap: 6px;
+      padding-inline: var(--space-1);
+    }
+    .control-console .command-dock { padding-left: 0; }
+    .control-console .command-dock::before {
+      top: 0;
+      width: 100%;
+      height: 1px;
+      transform: none;
+    }
   }
 }
 
@@ -10484,7 +10503,7 @@ body.has-reading-surface .system-dock :is(.map-controls, .display-control) {
 }
 .map-evidence__copy { margin: 0; }
 .case-figure { margin: var(--space-5) 0 0; white-space: normal; }
-.case-figure img { display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; object-fit: contain; border-radius: var(--window-radius); corner-shape: var(--corner-card-shape); }
+.case-figure img { display: block; width: 100%; height: auto; object-fit: contain; border-radius: var(--window-radius); corner-shape: var(--corner-card-shape); }
 .case-figure figcaption { margin-top: var(--space-2); color: var(--content-muted); font-size: var(--type-detail); line-height: var(--leading-body); text-wrap: pretty; }
 /* MATERIAL / 01 CASCADE CONTRACT
    The registry controls the rendered material. Component rules may define
@@ -10584,6 +10603,12 @@ body:has(.practice-map:is([data-selected-kind=personal],[data-selected-kind=prac
   font-weight: 400;
   letter-spacing: -.025em;
 }
+body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) [data-map-title] {
+  font-size: calc(var(--type-title) * .8);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
 .map-inspector .case-header .map-readout__kind { font-size: var(--type-label); line-height: 1.4; padding: 10px 14px; }
 .map-inspector .case-header { gap: var(--window-gap); }
 .map-inspector.has-reading-frame { z-index: 85; gap: var(--window-gap); }
@@ -10593,10 +10618,6 @@ body:has(.practice-map:is([data-selected-kind=personal],[data-selected-kind=prac
 .contact-copy h2 { font-size: var(--type-author); }
 .contact-lede { font-size: var(--type-body); line-height: var(--leading-body); }
 .observation-controls { padding: 0; gap: var(--space-2); }
-@media (max-width: 480px) {
-  .observation-controls { grid-template-columns: minmax(0, 1fr); }
-  .observation-controls > div { justify-content: flex-start; }
-}
 @media (max-width: 900px) {
   .site-header .brand__name { overflow-wrap: anywhere; }
   .whoop-metrics { grid-template-columns: repeat(auto-fit, minmax(min(100%, 4.5rem), 1fr)); }
