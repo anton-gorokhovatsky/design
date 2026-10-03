@@ -72,7 +72,12 @@ try {
         && document.querySelector('[data-map-inspector]').getAnimations().every(a=>a.playState!=='running'));
       if(type==='image') {
         await page.locator(selector).evaluate(i=>i.decode());
-        assert.equal(await page.locator('.personal-media__play').evaluate(e=>getComputedStyle(e,'::after').backgroundColor),'rgb(255, 255, 255)','The play glyph remains legible on the same dark poster in both themes');
+        const glyph = await page.locator('.personal-media__play').evaluate(e => {
+          const ink = document.createElement('i');
+          ink.style.color = getComputedStyle(e).getPropertyValue('--content-ink');
+          return {actual: getComputedStyle(e,'::after').backgroundColor, expected: ink.style.color};
+        });
+        assert.equal(glyph.actual, glyph.expected, 'The play glyph uses the contrasting theme ink over its glass surface');
       }
       if(type==='player') {
         await page.locator('[data-play-personal-media]').click();
