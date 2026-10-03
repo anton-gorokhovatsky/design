@@ -3843,7 +3843,7 @@ const auditBrowser = async (client, origin) => {
 
     document.querySelector("[data-start-observation]")?.click();
     const next = document.querySelector("[data-observation-next]");
-    for (let index = 0; index < 8; index += 1) {
+    for (let index = 0; index < 14; index += 1) {
       next?.click();
     }
 
