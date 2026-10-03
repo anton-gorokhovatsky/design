@@ -7581,6 +7581,7 @@ html[data-theme="dark"] .signal-constellation {
   .map-inspector:has(.observation-controls:not([hidden]))
     .map-readout__description {
     min-height: 0;
+    max-width: none;
     max-height: none;
     align-self: stretch;
   }
