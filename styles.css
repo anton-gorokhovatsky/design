@@ -3685,7 +3685,8 @@ body.has-content-panel .constellation-nav {
 }
 
 .command-results {
-  padding: 7px;
+  --command-results-inset: 7px;
+  padding: var(--command-results-inset);
   border: 0;
   border-radius: var(--window-radius);
   corner-shape:var(--corner-card-shape);
@@ -3694,7 +3695,8 @@ body.has-content-panel .constellation-nav {
 }
 
 .command-result {
-  border-radius: 18px;
+  border-radius: max(0px, calc(var(--window-radius) - var(--command-results-inset)));
+  corner-shape: var(--corner-card-shape);
 }
 
 .command-result:hover,
@@ -3735,9 +3737,7 @@ body.has-content-panel .constellation-nav {
   }
 }
 
-/* Edge controls form one predictable instrument-console family. Context
-   changes the geometry, while material, type, spacing, focus, and motion stay
-   shared with every other transient interface surface. */
+/* Consoles share MATERIAL / 01 with transient windows. */
 
 .control-console,
 .system-dock .map-controls,
@@ -3798,6 +3798,7 @@ body.has-content-panel .control-console .command-dock {
 
   color: var(--content-ink);
   place-items: initial;
+  transition: background-color var(--duration-feedback) var(--motion-enter);
 }
 
 .control-console .constellation-nav__item[data-nav-view] {
@@ -3830,7 +3831,7 @@ body.has-content-panel .control-console .command-dock {
 
 .control-console .constellation-nav__item:hover .constellation-nav__shape,
 .control-console .constellation-nav__item:focus-visible .constellation-nav__shape {
-  transform: scale(1.06);
+  transform: none;
 }
 
 .control-console .constellation-nav__label {
@@ -4847,8 +4848,7 @@ body:has(.command-dock.is-open) .origin-marker__label {
 
 
 
-/* Edge modules can be spatially arranged like instruments. Their
-   controls stay clickable; only free material around them starts a drag. */
+/* Drag the console by free space around its controls. */
 
 .control-console,
 .system-dock .map-controls,
@@ -4858,13 +4858,15 @@ body:has(.command-dock.is-open) .origin-marker__label {
 }
 
 .control-console {
+  --console-inset-x: 10px;
+  --console-inset-y: 8px;
   left: 16px;
   width: min(980px, calc(100vw - 320px));
   height: 64px;
   min-height: 64px;
   grid-template-columns: auto minmax(180px, 1fr);
   gap: 16px;
-  padding: 8px 11px 8px 10px;
+  padding: var(--console-inset-y) 11px var(--console-inset-y) var(--console-inset-x);
   border-radius: var(--window-radius);
   corner-shape:var(--corner-card-shape);
   transform: translate3d(var(--console-drag-x), var(--console-drag-y), 0);
@@ -7037,9 +7039,7 @@ html[data-theme="dark"] .map-node--sphere .map-node__glyph {
   }
 }
 
-/* Observation route, chronology, and the day/night boundary all reuse the
-   existing map and MATERIAL / 01 system. They add meaning, not another UI
-   family. */
+/* Routes reuse the map and MATERIAL / 01. */
 
 .observation-showcase {
   display: none;
@@ -7159,6 +7159,8 @@ html[data-theme="dark"] .map-node--sphere .map-node__glyph {
   }
   .observation-showcase__plane--app { aspect-ratio: 49 / 29; background: none; }
 }
+
+:is(.observation-showcase__plane, .observation-preview):has(.observation-research) { aspect-ratio: 16 / 13; }
 
 @media (prefers-reduced-motion: reduce), (forced-colors: active) {
   .observation-showcase,
@@ -8024,7 +8026,6 @@ html[data-theme="light"]
   .brand { justify-items: start; text-align: left; }
 }
 
-/* Names, not index numbers, explain the five routes before any hover. */
 @media (min-width: 901px) {
   .control-console {
     display: flex;
@@ -8045,7 +8046,8 @@ html[data-theme="light"]
     height: auto;
     min-height: 48px;
     padding-inline: var(--space-2);
-    border-radius: 12px;
+    border-radius: max(0px, calc(var(--window-radius) - var(--console-inset-x))) /
+      max(0px, calc(var(--window-radius) - var(--console-inset-y)));
     corner-shape: var(--corner-card-shape);
     gap: var(--space-2);
   }
@@ -8093,10 +8095,20 @@ html[data-theme="light"]
   }
 }
 
-/* One selected symbol across layouts; keyboard focus includes its label. */
+@media (hover: hover) and (pointer: fine) {
+  .control-console .constellation-nav__item:hover {
+    background: color-mix(in srgb, var(--content-ink) 6%, transparent);
+  }
+}
+
 .control-console .constellation-nav__item:focus-visible {
+  background: color-mix(in srgb, var(--content-ink) 6%, transparent);
   outline: 2px solid var(--signal);
   outline-offset: 2px;
+}
+
+.control-console .constellation-nav__item:active {
+  background: color-mix(in srgb, var(--content-ink) 10%, transparent);
 }
 
 .control-console .constellation-nav__item:focus-visible .constellation-nav__shape {
