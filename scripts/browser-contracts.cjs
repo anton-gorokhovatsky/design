@@ -570,7 +570,8 @@ const readMobileSearchRestoredExpression = `(() => ({
 }))()`;
 
 const readMobileMetricGroupsExpression = `(() => {
-  const element = document.querySelector("[data-map-evidence-result]");
+  const result = document.querySelector("[data-map-evidence-result]");
+  const element = result?.querySelector(".map-evidence__copy") || result;
   const value = element?.textContent || "";
   const measure = (fragment) => {
     const node = element?.firstChild;

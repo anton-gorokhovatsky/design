@@ -105,7 +105,7 @@ try {
         assert.ok(state.inspector.top >= 0 && state.inspector.bottom <= state.viewportHeight + 1,
           context + ": the whole inspector stays inside the viewport");
         assert.equal(state.scrollTop, 0, context + ": each point opens at its heading");
-        assert.equal(state.hidden, Boolean(item.youtube) || !(item.href || item.kind === "practice"), context);
+        assert.equal(state.hidden, Boolean(item.youtube && !item.youtube.href) || !(item.href || item.kind === "practice"), context);
         if (!state.hidden) {
           assert.notEqual(state.text, "ОТКРЫТЬ", context + ": name the destination");
           const copy = { running: "БЕГ В INSTAGRAM", art: "СОБЫТИЯ НА САЙТЕ МУЗЕЯ", wave: "МОРЕ В INSTAGRAM" }[item.id]

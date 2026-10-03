@@ -936,6 +936,8 @@ const analyticsConsentAudit = async (page, viewport, label) => {
     const motion = read("#settings-panel [data-motion-toggle]");
     return {
       visible: Boolean(consent && !consent.hidden && consent.classList.contains("is-open")),
+      authorBottom: document.querySelector(".site-header").getBoundingClientRect().bottom,
+      windowEdge: parseFloat(getComputedStyle(document.querySelector(".site-header")).left),
       inert: consent?.inert ?? true,
       mode: consent?.dataset.settingsMode,
       focusSection: consent?.dataset.focusSection,
@@ -1055,6 +1057,7 @@ const analyticsConsentAudit = async (page, viewport, label) => {
 
     return {
       mode: panel?.dataset.settingsMode || "",
+      authorBottom: document.querySelector(".site-header").getBoundingClientRect().bottom,
       focusSection: panel?.dataset.focusSection,
       scrollTop: body?.scrollTop,
       themeFocused: document.activeElement?.hasAttribute("data-theme-toggle"),
@@ -1102,16 +1105,16 @@ const analyticsConsentAudit = async (page, viewport, label) => {
     && rect.top >= -0.5
     && rect.right <= viewport.width + 0.5
     && rect.bottom <= viewport.height + 0.5;
-  const verticallyBalanced = rect
-    && Math.abs(rect.top - (viewport.height - rect.bottom)) <= 1;
+  const belowAuthor = rect
+    && Math.abs(rect.top - result.authorBottom - result.windowEdge) <= 1;
   const generalRect = generalSettings.rect;
   const generalWithinViewport = generalRect
     && generalRect.left >= -0.5
     && generalRect.top >= -0.5
     && generalRect.right <= viewport.width + 0.5
     && generalRect.bottom <= viewport.height + 0.5;
-  const generalVerticallyBalanced = generalRect
-    && Math.abs(generalRect.top - (viewport.height - generalRect.bottom)) <= 1;
+  const generalBelowAuthor = generalRect
+    && Math.abs(generalRect.top - generalSettings.authorBottom - result.windowEdge) <= 1;
 
   await page.screenshot({
     path: path.join(artifactDir, `${label}-settings-panel.png`),
@@ -1136,11 +1139,11 @@ const analyticsConsentAudit = async (page, viewport, label) => {
     generalSettings,
     settingsEnd,
     generalWithinViewport,
-    generalVerticallyBalanced,
+    generalBelowAuthor,
     materialFailures,
     backgroundControlsHidden,
     withinViewport,
-    verticallyBalanced,
+    belowAuthor,
     failure: !result.visible
       || result.inert
       || result.mode !== "settings"
@@ -1188,13 +1191,10 @@ const analyticsConsentAudit = async (page, viewport, label) => {
       || result.mapNodesOpacity > 0.1
       || result.signalOpacity > 0.1
       || result.axisLabelOpacity !== 0
-      || result.trailingGap === null
-      || result.trailingGap < 12
-      || result.trailingGap > 40
       || !result.actionBeforePrivacy
       || !result.privacyBeforeDetails
       || !withinViewport
-      || !verticallyBalanced
+      || !belowAuthor
       || generalSettings.mode !== "settings"
       || generalSettings.focusSection !== "settings"
       || generalSettings.scrollTop !== 0
@@ -1203,7 +1203,7 @@ const analyticsConsentAudit = async (page, viewport, label) => {
       || !generalSettings.screenControlsVisible
       || generalSettings.overflowX !== 0
       || !generalWithinViewport
-      || !generalVerticallyBalanced
+      || !generalBelowAuthor
       || !settingsEnd.tailVisible
       || settingsEnd.trailingGap < 12
       || settingsEnd.trailingGap > 40

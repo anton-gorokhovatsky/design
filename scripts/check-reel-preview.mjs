@@ -56,7 +56,7 @@ const expectedById = new Map([
     mapId: "narkomfin",
     artifactId: "narkomfin",
     index: "02 / 18",
-    titleFragments: ["ДОМ НАРКОМФИНА"],
+    titleFragments: ["Дом Наркомфина"],
     meta: "МОДЕЛЬ, РАЗДЕЛЫ И ТЕМЫ / 00:13",
     videoPath: "/assets/reels/narkomfin.mp4",
     posterPath: "/assets/reel-posters/narkomfin.jpg",

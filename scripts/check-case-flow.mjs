@@ -203,7 +203,7 @@ for(const engine of [process.argv[2]||'chromium']) {
       assert.equal(new URL(page.url()).hash, '#work', 'Continuation scrolls the existing list');
       await page.locator('.content-panel__body').focus();
       await page.keyboard.press('End');
-      await page.getByRole('button', { name: 'К началу', exact: true }).click();
+      await page.getByRole('button', { name: /^К\sначалу$/ }).click();
       await page.waitForFunction(() => document.querySelector('.content-panel__body').scrollTop === 0);
       const row = page.locator('.work-row[data-map-point="ilmix"]');
       await row.scrollIntoViewIfNeeded();
@@ -227,7 +227,7 @@ for(const engine of [process.argv[2]||'chromium']) {
     await page.goto(origin + '/#contact');
     assert.equal(await page.locator('.content-panel__more').isVisible(), false, 'No work continuation in other sections');
     await page.locator('[data-command-input]').fill('Хотлайн');
-    const searchResult = page.getByRole('option', { name: /HOTLINE CAMP/ });
+    const searchResult = page.getByRole('option', { name: /Hotline Camp/ });
     await searchResult.waitFor({ state: 'visible' });
     await page.locator('[data-command-results]').evaluate(element => Promise.all(
       element.getAnimations().map(animation => animation.finished.catch(() => {})),

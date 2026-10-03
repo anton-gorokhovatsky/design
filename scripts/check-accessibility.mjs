@@ -115,7 +115,8 @@ try {
     }));
     assert.equal(contacts.length, 2);
     assert.ok(contacts.every(r => r.height >= 32), JSON.stringify(contacts));
-    const last = page.locator('.contact-links a').last();
+    const more = page.locator('.content-panel__more');
+    const last = await more.isVisible() ? more : page.locator('.contact-links a').last();
     await last.focus();
     await page.keyboard.press('Tab');
     assert.equal(await page.evaluate(() => document.hasFocus()
