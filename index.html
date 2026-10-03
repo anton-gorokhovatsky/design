@@ -119,7 +119,7 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=9a5113c98f12">
+    <link rel="stylesheet" href="styles.css?v=01011b18bc3d">
     <style>
       .map-evidence [data-map-evidence-role-label]{font-family:var(--font-author);font-size:.6rem;font-weight:400;letter-spacing:0}
     </style>
@@ -135,14 +135,14 @@
           "./js/analytics.js": "./js/analytics.js?v=8e40098015f7",
           "./js/cipher-field.js": "./js/cipher-field.js?v=646034d9be18",
           "./js/signal-field.js": "./js/signal-field.js?v=e59af2b0e792",
-          "./js/map-data.js": "./js/map-data.js?v=71c48c8352f1",
+          "./js/map-data.js": "./js/map-data.js?v=879f80c2f29b",
           "./js/observation-route.js": "./js/observation-route.js?v=419e33403960",
-          "./js/personal-media.js": "./js/personal-media.js?v=4ea0d7adfb77",
+          "./js/personal-media.js": "./js/personal-media.js?v=dc7d79bfbd18",
           "./js/sphere-surfaces.js": "./js/sphere-surfaces.js?v=4cf52ae3e8a0",
-          "./js/map-engine.js": "./js/map-engine.js?v=bd27a4b01618",
-          "./js/viewport-ui.js": "./js/viewport-ui.js?v=cf1afc89c3fb",
-          "./js/panels.js": "./js/panels.js?v=1dc20b75ee74",
-          "./js/case-view.js": "./js/case-view.js?v=9a4583b51c19",
+          "./js/map-engine.js": "./js/map-engine.js?v=943ad5d50882",
+          "./js/viewport-ui.js": "./js/viewport-ui.js?v=13e1b3689eed",
+          "./js/panels.js": "./js/panels.js?v=73419d92435c",
+          "./js/case-view.js": "./js/case-view.js?v=992835458b55",
           "./js/favicon.js": "./js/favicon.js?v=3aa23538dc2d"
         }
       }
@@ -157,14 +157,14 @@
     <script type="module" src="js/analytics.js?v=8e40098015f7"></script>
     <script type="module" src="js/cipher-field.js?v=646034d9be18"></script>
     <script type="module" src="js/signal-field.js?v=e59af2b0e792"></script>
-    <script type="module" src="js/map-data.js?v=71c48c8352f1"></script>
+    <script type="module" src="js/map-data.js?v=879f80c2f29b"></script>
     <script type="module" src="js/observation-route.js?v=419e33403960"></script>
-    <script type="module" src="js/personal-media.js?v=4ea0d7adfb77"></script>
+    <script type="module" src="js/personal-media.js?v=dc7d79bfbd18"></script>
     <script type="module" src="js/sphere-surfaces.js?v=4cf52ae3e8a0"></script>
-    <script type="module" src="js/map-engine.js?v=bd27a4b01618"></script>
-    <script type="module" src="js/viewport-ui.js?v=cf1afc89c3fb"></script>
-    <script type="module" src="js/panels.js?v=1dc20b75ee74"></script>
-    <script type="module" src="js/case-view.js?v=9a4583b51c19"></script>
+    <script type="module" src="js/map-engine.js?v=943ad5d50882"></script>
+    <script type="module" src="js/viewport-ui.js?v=13e1b3689eed"></script>
+    <script type="module" src="js/panels.js?v=73419d92435c"></script>
+    <script type="module" src="js/case-view.js?v=992835458b55"></script>
     <script type="module" src="js/favicon.js?v=3aa23538dc2d"></script>
     <script type="application/ld+json">
       {
@@ -276,6 +276,7 @@
         <span class="brand__name">Антон Гороховатский <small>© 2026</small></span>
         <span class="brand__role">Придумываю, разрабатываю и веду веб‑проекты.</span>
       </p>
+      <a class="text-link author-entry" href="#work" data-open-panel="work">Смотреть работы</a>
       <section class="whoop-readout" aria-label="Мой день: показатели WHOOP" data-whoop-readout hidden>
         <p class="whoop-heading" data-console-text><strong>Сегодня</strong><time data-whoop-date>WHOOP</time></p>
         <dl class="whoop-metrics" data-console-text>
@@ -514,7 +515,6 @@
             data-material-active="always"
           >ИНСТИТУЦИЯ / 2021—2025</p>
           <div class="case-entry" data-case-entry hidden>
-            <p>Антон Гороховатский</p>
             <a class="text-link" href="/#work" data-open-panel="work">Другие работы</a>
           </div>
           <div
@@ -653,13 +653,17 @@
             </button>
           </div>
           <div class="personal-media__controls">
+            <div class="personal-media__caption">
+              <p data-personal-media-caption></p>
+              <h3 data-personal-media-title></h3>
+            </div>
             <a
               class="text-link personal-media__source"
               data-personal-media-source
               href="https://www.youtube.com/watch?v=bkbJsunB5zY"
               target="_blank"
               rel="noopener noreferrer"
-            >Смотреть на&nbsp;YouTube</a>
+            >Открыть на&nbsp;YouTube</a>
           </div>
           <p class="visually-hidden" data-personal-media-status role="status" aria-live="polite"></p>
         </aside>

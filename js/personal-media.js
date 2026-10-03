@@ -8,6 +8,8 @@ export const createPersonalMedia = ({ inspector, returnFocus }) => {
   const poster = root?.querySelector("[data-play-personal-media]");
   const image = root?.querySelector("[data-personal-media-poster]");
   const source = root?.querySelector("[data-personal-media-source]");
+  const title = root?.querySelector("[data-personal-media-title]");
+  const caption = root?.querySelector("[data-personal-media-caption]");
   const status = root?.querySelector("[data-personal-media-status]");
   if (!root || !slot || !launch || !screen || !poster || !image || !source) {
     return { select: () => {} };
@@ -22,7 +24,7 @@ export const createPersonalMedia = ({ inspector, returnFocus }) => {
     slot.hidden = !visible;
     launch.hidden = true;
     launch.setAttribute("aria-expanded", String(visible));
-    if (selectedItem?.youtube && mapLink) mapLink.hidden = true;
+    if (selectedItem?.youtube && mapLink) mapLink.hidden = !selectedItem.youtube.href;
   };
 
   const stop = () => {
@@ -59,9 +61,11 @@ export const createPersonalMedia = ({ inspector, returnFocus }) => {
     if (mediaItem?.youtube.videoId !== item.youtube.videoId) stop();
     mediaItem = item;
     root.setAttribute("aria-label", item.youtube.title);
-    poster.setAttribute("aria-label", "Включить стрим: " + item.youtube.title);
+    poster.setAttribute("aria-label", "Смотреть видео: " + item.youtube.title);
     source.setAttribute("aria-label", "Смотреть на YouTube: " + item.youtube.title);
-    source.href = item.href;
+    source.href = item.youtube.href || item.href;
+    if (title) title.textContent = item.youtube.displayTitle || item.youtube.title;
+    if (caption) caption.textContent = item.youtube.caption || "";
     // The official thumbnail is first-party; opening the point stays private.
     if (image.getAttribute("src") !== item.youtube.poster) {
       image.src = item.youtube.poster;

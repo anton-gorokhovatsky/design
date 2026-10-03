@@ -3,7 +3,7 @@ import {
   openSettingsPanel,
   trackPortfolioEvent,
 } from "./analytics.js";
-import { mapItems } from "./map-data.js";
+import { mapItems, getMapPreviewPoster } from "./map-data.js";
 import {
   activePreviewItem,
   clearMapSelection,
@@ -168,7 +168,25 @@ const placeContentFrame = () => {
 };
 new ResizeObserver(placeContentFrame).observe(contentPanelHeader);
 window.addEventListener("resize", placeContentFrame, { passive: true });
+window.addEventListener("author-presence-change", placeContentFrame);
 const panelSections = Array.from(document.querySelectorAll("[data-panel-section]"));
+// A single static preview belongs to the work link in every input mode.
+for (const row of document.querySelectorAll(".work-row[data-map-point]")) {
+  const item = mapItems.find(item => item.id === row.dataset.mapPoint);
+  if (!item) continue;
+  if (item.kind === "project") row.querySelector(".work-row__title").textContent = typographUiText(item.label);
+  const poster = getMapPreviewPoster(item);
+  if (!poster) continue;
+  const image = document.createElement("img");
+  image.className = "work-row__preview";
+  image.src = poster;
+  image.alt = "";
+  image.width = 900;
+  image.height = 600;
+  image.loading = "lazy";
+  image.decoding = "async";
+  row.prepend(image);
+}
 const panelOpenButtons = Array.from(document.querySelectorAll("[data-open-panel]"));
 const controlConsole = document.querySelector(".control-console");
 const controlConsoleHome = document.createComment("control-console-home");

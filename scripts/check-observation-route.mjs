@@ -44,7 +44,7 @@ try {
       await page.locator("[data-start-observation]").click();
       await page.locator("[data-observation-pause]").click();
       await page.evaluate(() => document.fonts.ready);
-      await waitForAuthor(page, false);
+      await waitForAuthor(page, true);
       assert.equal(await progress(page), "01 / 08");
       assert.equal(await page.locator("[data-observation-next]").innerText(), "ДАЛЬШЕ");
       assert.equal(await page.locator("[data-observation-title-card]").count(), 0);
@@ -56,7 +56,7 @@ try {
       for (let step = 2; step <= 7; step++) {
         await page.locator("[data-observation-next]").click();
         assert.equal(await progress(page), `${String(step).padStart(2, "0")} / 08`);
-        await waitForAuthor(page, false);
+        await waitForAuthor(page, true);
         if (step === 4 || step === 7) {
           assert.ok(await page.locator("[data-map-inspector]").isVisible());
           assert.equal(await page.locator("[data-observation-title-card]").count(), 0);

@@ -86,7 +86,7 @@ const lensRow = (g, y) => {
   const bend = Math.max(upper, lower) ** 2;
   // Meet the frame vertically before its corner begins: no angled join or ear.
   const t = Math.min(1, Math.max(upper, lower) * lensDepth / (lensDepth - g.frameRadius));
-  const flare = t * t * (3 - 2 * t);
+  const flare = g.insetMedia ? 0 : t * t * (3 - 2 * t);
   const r = Math.min(g.radius, g.width / 2, g.height / 2);
   const dy = Math.max(0, r - Math.min(y, g.height - y));
   const corner = r - Math.sqrt(Math.max(0, r*r - dy*dy));
@@ -328,7 +328,7 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
       }
       record ||= makeRecord(element);
       if (record.player || record.media) {
-        const geometry = { width, height, left: (rect.left-port.left)/scale,
+        const geometry = { width, height, insetMedia: Boolean(element.closest(".personal-media__screen")), left: (rect.left-port.left)/scale,
           y: (rect.top-port.top)/scale, portWidth: region.clientWidth, portHeight: region.clientHeight,
           frameRadius: Math.min(40, parseFloat(getComputedStyle(region).borderTopLeftRadius) || 0),
           top: top ? (port.top-rect.top)/scale : null, bottom: bottom ? (port.bottom-rect.top)/scale : null,
@@ -364,11 +364,11 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
 };
 const lensInspector = document.querySelector("[data-map-inspector]");
 observeScrollLens(lensInspector, () => lensInspector.querySelectorAll(
-  ".map-readout__identity h2, .map-readout__identity p, [data-map-description], .map-evidence dt, .map-evidence dd, .case-details h3, .case-details h4, .case-details p, .observation-preview, .map-related__header, .map-related__item > :is(strong, span)",
+  ".map-readout__identity h2, .map-readout__identity p, [data-map-description], .map-evidence dt, .map-evidence dd:not(:has(.case-figure)), .map-evidence__copy, .case-details h3, .case-details h4, .case-details p, .observation-preview, .map-related__header, .map-related__item > :is(strong, span)",
 ), { enabled: () => !lensInspector.classList.contains("has-reading-frame") });
 const lensPanel = document.querySelector(".content-panel__body");
 observeScrollLens(lensPanel, () => lensPanel.querySelectorAll(
-  ".work-intro > *, .approach-intro > *, .work-row > *, .approach-grid li > *, .contact-intro > :not(.contact-resume), .contact-links a > *",
+  ".work-intro > *, .approach-intro > *, .work-row > :not(img), .approach-grid li > *, .contact-intro > :not(.contact-resume), .contact-links a > *",
 ), { owner: document.querySelector("[data-content-panel]") });
 
 // Keep a short continuation cue inside text lists without reshaping cards.
@@ -562,7 +562,21 @@ const syncAuthorField = () => {
   const map = authorField.parentElement.getBoundingClientRect();
   authorField.style.cssText = `left:${card.left-map.left-112}px;top:${card.top-map.top-96}px;width:${card.width+208}px;height:${card.height+192}px`;
 };
-if (authorCard) new ResizeObserver(syncAuthorField).observe(authorCard);
+const syncAuthorPresence = () => {
+  if (!authorCard) return;
+  const reading = document.body.classList.contains("has-content-panel")
+    || document.body.classList.contains("has-settings-panel")
+    || Boolean(document.querySelector(".map-inspector.is-open"));
+  document.body.classList.toggle("has-reading-surface", reading);
+  if (reading) document.documentElement.style.setProperty("--author-reading-height", `${authorCard.offsetHeight}px`);
+  syncAuthorField();
+  window.dispatchEvent(new CustomEvent("author-presence-change"));
+};
+if (authorCard) new ResizeObserver(syncAuthorPresence).observe(authorCard);
+new MutationObserver(syncAuthorPresence).observe(document.body, { attributes: true, attributeFilter: ["class"] });
+const authorInspector = document.querySelector(".map-inspector");
+if (authorInspector) new MutationObserver(syncAuthorPresence).observe(authorInspector, { attributes: true, attributeFilter: ["class"] });
+syncAuthorPresence();
 
 const setConsoleOffset = (module, x, y) => {
   module.dataset.dragX = x.toFixed(2);

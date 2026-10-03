@@ -115,22 +115,26 @@ try {
           player: box("[data-personal-media]"),
           screen: box("[data-personal-media-screen]"),
           sheet: box(".case-sheet"),
+          copy: box("[data-map-description]"),
+          author: box(".site-header"),
           inspector: box("[data-map-inspector]"),
           inline: document.querySelector("[data-personal-media-slot]")
             .contains(document.querySelector("[data-personal-media]")),
           overflow: document.documentElement.scrollWidth - innerWidth,
         };
       });
-      assert.ok(geometry.screen.width >= 200 && geometry.screen.height >= 200);
+      assert.ok(geometry.screen.width >= 200 && Math.abs(geometry.screen.width / geometry.screen.height - 16 / 9) < .02);
       assert.ok(geometry.screen.x >= 0 && geometry.screen.right <= width + 1);
       assert.equal(geometry.overflow, 0);
       assert.ok(geometry.inspector.y >= 0, "Inspector header stays reachable.");
       assert.ok(geometry.inspector.bottom <= height, "Inspector scrolls within the viewport.");
       assert.equal(geometry.inline, true, "Personal video stays inside its reading card at every width.");
       {
-        assert.ok(Math.abs(geometry.screen.x - geometry.sheet.x) < 1
-          && Math.abs(geometry.screen.width - geometry.sheet.width) < 1,
-        "Stream fills its rounded reading window, like inline case reels.");
+        assert.ok(Math.abs(geometry.screen.x - geometry.copy.x) < 1
+          && Math.abs((geometry.screen.x - geometry.sheet.x) - (geometry.sheet.right - geometry.screen.right)) < 1,
+        "Video and caption align with the reading column.");
+        assert.ok(geometry.author.y + geometry.author.height <= geometry.inspector.y,
+          "Author stays visible above every video card.");
       }
       assert.equal(await page.locator("[data-close-personal-media]").count(), 0,
         "The stream has no separate dismiss action in either layout.");
@@ -166,6 +170,15 @@ try {
       await select(page, "coffee");
       assert.equal(await player.isVisible(), false, "Playback belongs to the selected card.");
       assert.equal(await frame.count(), 0, "Changing cards stops playback.");
+      if (label === "mobile" && theme === "light") {
+        await select(page, "across-the-runiverse");
+        assert.equal(await page.locator("[data-personal-media-source]").getAttribute("href"), "https://www.youtube.com/watch?v=zNCgPgfxcoM");
+        assert.equal(await page.locator("[data-personal-media-title]").innerText(), "Полумарафон в Дубне");
+        assert.equal(await player.locator("iframe").count(), 0, "The favorite episode starts as a local poster.");
+        await poster.click();
+        assert.match(await player.locator("iframe").getAttribute("src"), /embed\/zNCgPgfxcoM/);
+        assert.ok((await screen.boundingBox()).height >= 200, "Embedded player retains YouTube's minimum height.");
+      }
       console.log("PASS " + engine + " " + label + " " + theme);
       await page.close();
     }

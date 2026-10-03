@@ -76,8 +76,8 @@ try {
     const trigger = page.locator(width === 320 ? ".whoop-compact-trigger" : ".whoop-foot button");
     await trigger.click();
     await page.waitForFunction(() => document.activeElement === document.querySelector("[data-whoop-toggle]"));
-    assert.equal(await page.locator(".whoop-field").evaluate(node => getComputedStyle(node).visibility), "hidden",
-      "Settings hide the card and its terrain together.");
+    assert.equal(await page.locator(".whoop-field").evaluate(node => getComputedStyle(node).visibility), "visible",
+      "Settings preserve the author card and its terrain together.");
     const toggle = page.locator("[data-whoop-toggle]");
     await toggle.click();
     assert.equal(await toggle.getAttribute("aria-pressed"), "false");

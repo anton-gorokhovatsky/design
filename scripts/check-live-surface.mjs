@@ -44,12 +44,14 @@ export async function checkLiveSurface(browser, origin, engine) {
   assert.equal(hover.thickness, '1px');
   await page.screenshot({ path: `${dir}/${engine}-desktop.png` });
   await link.click();
-  await frozen();
+  assert.equal((await state()).visibility, 'visible', 'Settings preserve author presence.');
   await page.keyboard.press('Escape');
   await page.waitForFunction(() => !document.querySelector('[data-settings-panel]').open);
   await page.locator('[data-start-observation]').first().click();
-  assert.equal((await state()).visibility, 'hidden');
-  await frozen();
+  assert.equal((await state()).visibility, 'visible', 'The observation route preserves author presence.');
+  const author = await page.locator('.site-header').boundingBox();
+  const reader = await page.locator('[data-map-inspector]').boundingBox();
+  assert.ok(author.y + author.height <= reader.y, 'The author and reader do not overlap.');
   await page.keyboard.press('Escape');
   await page.locator('.display-control [data-motion-toggle]').click();
   await frozen();

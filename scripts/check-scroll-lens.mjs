@@ -177,9 +177,10 @@ try {
               let painted=0;for(let n=3;n<pixels.length;n+=4)if(pixels[n]>200)painted++;
               return painted/(pixels.length/4);
             },flareClips[i]);
-            assert.ok(coverage>.7,'Image pixels occupy the former side padding: '+coverage);
+            assert.equal(coverage,0,'Inset video does not spill into the text padding.');
           }
-          assert.ok(flare[i]>(type==='image'?2:10),'The picture fills the former '+(i?'right':'left')+' padding at the '+edge+' edge: '+flare[i]);
+          if(type==='image' || type==='player') assert.ok(flare[i]<4,'Inset media keeps its side margins at both scroll edges: '+flare[i]);
+          else assert.ok(flare[i]>10,'The full-width picture meets the window edge: '+flare[i]);
         }
         const corners=await readRenderedFrameCorners(page,'.case-sheet');
         assert.ok(corners.every(n=>n<12),'All four rendered corners reveal the backdrop: '+corners);

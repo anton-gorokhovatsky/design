@@ -60,7 +60,7 @@ function resumeBackground() {
   backgroundState = [];
 }
 const caseLens = observeScrollLens(viewport, () => viewport.querySelectorAll(
-  ".map-readout__identity h2, .map-readout__identity p, .case-inline-media video, [data-personal-media-poster], [data-personal-media-screen] iframe, [data-map-description], .map-evidence dt, .map-evidence dd, .case-details h3, .case-details h4, .case-details p, .map-related__header, .map-related__item > :is(strong, span)",
+  ".map-readout__identity h2, .map-readout__identity p, .case-inline-media video, [data-personal-media-poster], [data-personal-media-screen] iframe, [data-map-description], .map-evidence dt, .map-evidence dd:not(:has(.case-figure)), .map-evidence__copy, .case-details h3, .case-details h4, .case-details p, .map-related__header, .map-related__item > :is(strong, span)",
 ), { owner: mapInspector });
 
 // The material belongs to a stationary frame; only its transparent child scrolls.

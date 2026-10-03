@@ -617,6 +617,8 @@ const mapItems = [
     youtube: {
       videoId: "bkbJsunB5zY",
       title: "Дмитрий Куплинов — «Тень Чернобыля», стрим №\u00a01",
+      displayTitle: "«Тень Чернобыля»",
+      caption: "Дмитрий Куплинов · Стрим №\u00a01",
       poster: "assets/kuplinov-stalker.jpg",
     },
     kindLabel: "ЛИЧНОЕ / ИНТЕРЕС",
@@ -668,6 +670,14 @@ const mapItems = [
     description: "Бег изнутри: сборы, тренировки, соревнования. С удовольствием смотрю, как Костя Кан показывает жизнь атлетов. Срыв — легенда!",
     href: "https://www.youtube.com/@Acrosstheruniverse",
     linkLabel: "СМОТРЕТЬ КАНАЛ",
+    youtube: {
+      videoId: "zNCgPgfxcoM",
+      href: "https://www.youtube.com/watch?v=zNCgPgfxcoM",
+      title: "Мои атлеты разрывают полумарафон в Дубне. Тестим Saucony Endorphin Pro. ЦЕНЗУРЫ НЕТ",
+      displayTitle: "Полумарафон в\u00a0Дубне",
+      caption: "Across the Runiverse · Один из\u00a0любимых выпусков",
+      poster: "assets/personal-previews/across-dubna.jpg",
+    },
     kindLabel: "ЛИЧНОЕ / БЕГ И YOUTUBE",
     x: 78,
     y: 88,
@@ -913,7 +923,67 @@ const mapItems = [
   },
 ];
 
+// One project name is reused by the map, search, lists and the reading frame.
+const projectNames = {
+  "garage-site": "Сайт Музея «Гараж»",
+  "narkomfin": "Дом Наркомфина",
+  "shirokostup": "Ольга Широкоступ",
+  "tarski": "Tarski",
+  "herman": "Герман Винокуров",
+  "hotline-camp": "Hotline Camp",
+  "dusty": "Dusty Merch",
+  "dd-camp": "DD Camp",
+  "eleven": "11\u00a0111 — Виктор Доронин",
+  "ks-fish": "Рыбная лавка капитана Селёдкина",
+  "doronin": "Доронин в\u00a0деле",
+  "krainiuk": "Екатерина Крайнюк",
+};
+for (const item of mapItems) {
+  if (projectNames[item.id]) item.label = item.title = projectNames[item.id];
+}
+
+// Unaltered frames from the existing 900×600 masters; time records the source.
+// ks.fish uses public 1200×800 browser captures from 2026-10-03 (null time).
+const caseFigures = {
+  "garage-site": [
+    ["task", "assets/case-figures/garage-site-1.jpg", 1.5, "Программа Музея", "Программа, календарь и\u00a0материалы образуют общий вход в\u00a0жизнь Музея."],
+    ["result", "assets/case-figures/garage-site-2.jpg", 5.5, "Материалы на сайте Музея", "Развитие сайта продолжалось после запуска: новые функции и\u00a0публикации встраивались в\u00a0существующий интерфейс."],
+  ],
+  "narkomfin": [
+    ["task", "assets/case-figures/narkomfin-1.jpg", 3, "Дневная модель Дома Наркомфина", "Модель здания помогает знакомиться с\u00a0местами внутри дома через саму архитектуру."],
+    ["result", "assets/case-figures/narkomfin-2.jpg", 10.5, "Ночная модель Дома Наркомфина", "Дневное и\u00a0ночное освещение меняют восприятие одной и\u00a0той\u00a0же модели."],
+  ],
+  "shirokostup": [
+    ["task", "assets/case-figures/shirokostup-1.jpg", 3.5, "Оглавление портфолио Ольги Широкоступ", "Общее оглавление делает разные направления кураторской практики доступными из\u00a0одного места."],
+    ["result", "assets/case-figures/shirokostup-2.jpg", 10, "Раздел проектов Ольги Широкоступ", "Избранные работы и\u00a0долгосрочные проекты получают собственный редакционный ритм."],
+  ],
+  "tarski": [
+    ["task", "assets/case-figures/tarski-1.jpg", 2.5, "Редакционный раздел Tarski", "Текст, программа и\u00a0изображения знакомят с\u00a0направлением работы институции."],
+    ["result", "assets/case-figures/tarski-2.jpg", 10, "Сообщество и досье Tarski", "Сеть участников связывает общую программу с\u00a0конкретными людьми и\u00a0их практиками."],
+  ],
+  "eleven": [
+    ["task", "assets/case-figures/11111-1.jpg", 6, "Навигация и погодные данные проекта 11 111", "Погода и\u00a0освещение связывают страницу с\u00a0местом и\u00a0временем заезда."],
+    ["result", "assets/case-figures/11111-2.jpg", 14, "Свет и тень на сайте 11 111", "Свет и\u00a0тень связывают визуальную среду сайта со\u00a0временем суток."],
+  ],
+  "herman": [
+    ["task", "assets/case-figures/herman-1.jpg", 3, "Профиль Германа Винокурова", "Практика и\u00a0экспертиза соседствуют с\u00a0личными увлечениями, сохраняя цельный портрет человека."],
+    ["result", "assets/case-figures/herman-2.jpg", 13.8, "Музыка и медиа Германа Винокурова", "Музыка получает своё место в\u00a0личном сайте — с\u00a0обложкой и\u00a0трек-листом."],
+  ],
+  "ks-fish": [
+    ["idea", "assets/case-figures/ks-fish-1.jpg", null, "Запись Судового журнала с фотографией, текстом и переходом к заказу", "У\u00a0каждой записи — полный авторский текст, фотография, дата и\u00a0возможность спросить о\u00a0наличии рыбы."],
+    ["result", "assets/case-figures/ks-fish-2.jpg", null, "Поиск по слову «креветки»: пять товаров с ценами и ссылками заказа", "Поиск понимает привычные названия: «креветки» находит позиции «Креветка». Цена и\u00a0переход к\u00a0заказу остаются рядом."],
+  ],
+};
+for (const item of mapItems) {
+  item.figures = (caseFigures[item.id] || []).map(([field, file, time, alt, caption]) => ({
+    field, src: file, time, alt, caption,
+  }));
+}
+const getMapPreviewPoster = item => item.relatedPoster || item.previewPoster || item.youtube?.poster
+  || item.previewVideo?.split("?")[0].replace("assets/reels/", "assets/reel-posters/").replace(/\.mp4$/i, ".jpg") || "";
+
 export {
+  getMapPreviewPoster,
   mapItems,
   principlesSourceHref,
   reelChapterSources,

@@ -2,6 +2,7 @@
 import { trackPortfolioEvent } from "./analytics.js";
 import {
   mapItems,
+  getMapPreviewPoster,
   principlesSourceHref,
   reelChapterSources,
 } from "./map-data.js";
@@ -824,9 +825,6 @@ const pauseReelMosaic = () => {
   reelMosaicVideos.forEach((video) => video.pause());
 };
 
-const getMapPreviewPoster = item => item.relatedPoster || item.previewPoster || item.youtube?.poster
-  || item.previewVideo?.split("?")[0].replace("assets/reels/", "assets/reel-posters/").replace(/\.mp4$/i, ".jpg") || "";
-
 const showReelMosaic = (item, posterPath) => {
   const chapterSources = reelChapterSources.get(item.id) ?? [];
   const mosaicActive = reelMosaicEnabled
@@ -1100,7 +1098,7 @@ reducedMotion.addEventListener?.("change", () => {
   }
 });
 
-const setMapEvidence = (evidence = null) => {
+const setMapEvidence = (evidence = null, item = null) => {
   const entries = [
     [mapEvidenceTask, evidence?.task],
     [mapEvidenceRole, evidence?.role],
@@ -1119,6 +1117,28 @@ const setMapEvidence = (evidence = null) => {
     const row = element.closest("div");
     if (row) row.hidden = !value;
     element.textContent = value ? typographUiText(value) : "";
+    const field = element.getAttributeNames().find(name => name.startsWith("data-map-evidence-"))?.replace("data-map-evidence-", "");
+    for (const figure of (item?.figures || []).filter(figure => figure.field === field)) {
+      const frame = document.createElement("figure");
+      frame.className = "case-figure";
+      const image = document.createElement("img");
+      image.src = figure.src;
+      image.alt = typographUiText(figure.alt);
+      image.width = 900;
+      image.height = 600;
+      image.loading = "lazy";
+      image.decoding = "async";
+      const caption = document.createElement("figcaption");
+      caption.textContent = typographUiText(figure.caption);
+      frame.append(image, caption);
+      if (!element.querySelector(".map-evidence__copy")) {
+        const prose = document.createElement("p");
+        prose.className = "map-evidence__copy";
+        prose.textContent = element.textContent;
+        element.replaceChildren(prose);
+      }
+      element.append(frame);
+    }
   });
 
   mapEvidenceDetails.hidden = !evidence?.details;
@@ -1262,7 +1282,7 @@ const selectMapItem = (
     mapDescription.textContent = typographUiText(overview?.description || item.description);
   }
 
-  setMapEvidence(overview ? null : mapEvidenceById[item.id]);
+  setMapEvidence(overview ? null : mapEvidenceById[item.id], overview ? null : item);
 
   if (mapLink) {
     const itemHref = overview ? `?point=${item.id}` : item.href || (item.kind === "practice" ? principlesSourceHref : "");
