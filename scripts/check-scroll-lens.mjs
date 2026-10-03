@@ -84,6 +84,9 @@ try {
         await page.waitForFunction(()=>document.querySelector('.case-inline-media video')?.readyState>=2);
         await page.locator('[data-case-pause]').click();
       }
+      // The mocked JS clock does not freeze compositor/CSS animations. Keep
+      // the backdrop identical while comparing only the foreground effect.
+      await page.evaluate(() => document.getAnimations().forEach(animation => animation.pause()));
       const sheet=await page.locator('.case-sheet').boundingBox();
       let target;
       for(const edge of ['top','bottom']) {

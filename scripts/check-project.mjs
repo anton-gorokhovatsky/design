@@ -312,7 +312,8 @@ if (failures.length === 0 && !["static", "copy"].includes(checkScope)) {
     printResults([result]);
     if (recordsFailure(result)) {
       failures.push(result);
-      break;
+      // Browser checks are independent. Finish this lane so one report includes
+      // every failure; the combined result still blocks publication below.
     }
   }
 }
