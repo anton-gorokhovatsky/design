@@ -177,17 +177,23 @@ try {
       assert.equal(await player.isVisible(), false, "Playback belongs to the selected card.");
       assert.equal(await frame.count(), 0, "Changing cards stops playback.");
       if (label === "mobile" && theme === "light") {
-        await select(page, "across-the-runiverse");
-        assert.equal(await page.locator("[data-personal-media-source]").getAttribute("href"), "https://www.youtube.com/watch?v=zNCgPgfxcoM");
-        assert.equal(await page.locator("[data-personal-media-title]").innerText(), "Полумарафон в Дубне");
-        assert.equal(await player.locator("iframe").count(), 0, "The favorite episode starts as a local poster.");
-        await poster.click();
-        assert.match(await player.locator("iframe").getAttribute("src"), /embed\/zNCgPgfxcoM/);
-        await page.waitForFunction(() => {
-          const screen = document.querySelector("[data-personal-media-screen]");
-          return screen.querySelector("iframe") && screen.getBoundingClientRect().height >= 200;
-        });
-        assert.ok((await screen.boundingBox()).height >= 200, "Embedded player retains YouTube's minimum height.");
+        for (const [id, videoId, title, channel] of [
+          ["across-the-runiverse", "zNCgPgfxcoM", "Полумарафон в Дубне", "https://www.youtube.com/@Acrosstheruniverse"],
+          ["beg-vreden", "0WI8_H2PTyo", "В чем бегать в 2021 году по красоте", "https://www.youtube.com/@BGVRDN"],
+        ]) {
+          await select(page, id);
+          assert.equal(await page.locator("[data-personal-media-source]").getAttribute("href"), "https://www.youtube.com/watch?v=" + videoId);
+          assert.equal(await page.locator("[data-map-link]").getAttribute("href"), channel, "The channel and selected episode remain separate links.");
+          assert.equal(await page.locator("[data-personal-media-title]").innerText(), title);
+          assert.equal(await player.locator("iframe").count(), 0, "The favorite episode starts as a local poster.");
+          await poster.click();
+          assert.ok((await player.locator("iframe").getAttribute("src")).includes("/embed/" + videoId));
+          await page.waitForFunction(() => {
+            const screen = document.querySelector("[data-personal-media-screen]");
+            return screen.querySelector("iframe") && screen.getBoundingClientRect().height >= 200;
+          });
+          assert.ok((await screen.boundingBox()).height >= 200, "Embedded player retains YouTube's minimum height.");
+        }
       }
       console.log("PASS " + engine + " " + label + " " + theme);
       await page.close();

@@ -175,7 +175,14 @@ for (const row of document.querySelectorAll(".work-row[data-map-point]")) {
   if (!item) continue;
   if (item.kind === "project") row.querySelector(".work-row__title").textContent = typographUiText(item.label);
   const poster = getMapPreviewPoster(item);
-  if (!poster) continue;
+  if (!poster) {
+    const cover = document.createElement("span");
+    cover.className = "work-row__preview work-row__preview--type";
+    cover.setAttribute("aria-hidden", "true");
+    cover.textContent = row.querySelector(".work-row__title").textContent;
+    row.prepend(cover);
+    continue;
+  }
   const image = document.createElement("img");
   image.className = "work-row__preview";
   image.src = poster;
