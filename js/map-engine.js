@@ -461,6 +461,29 @@ const getMapLayout = (item) => {
 };
 const resolveMapLayout = item => mapClearancePositions.get(item.id) || getMapLayout(item);
 
+const placeMapLabel = (item, label) => {
+  if (["garage", "private-practice"].includes(item.id)) return;
+  const field = mapLabelsRoot.getBoundingClientRect();
+  if (!field.width) return;
+  const scale = field.width / mapLabelsRoot.clientWidth;
+  const x = field.left + label.offsetLeft * scale;
+  const y = field.top + label.offsetTop * scale;
+  const width = label.offsetWidth * scale;
+  const height = label.offsetHeight * scale;
+  const offset = Number.parseFloat(label.style.getPropertyValue("--label-offset")) * scale;
+  const top = y - height / 2;
+  const score = left => {
+    const right = left + width;
+    return (Math.max(0, 8 - left) + Math.max(0, right - innerWidth + 8)) * height
+      + mapConsoleBounds.reduce((area, panel) => area
+        + Math.max(0, Math.min(right, panel.right + 8) - Math.max(left, panel.left - 8))
+        * Math.max(0, Math.min(top + height, panel.bottom + 8) - Math.max(top, panel.top - 8)), 0);
+  };
+  const east = score(x + offset);
+  const west = score(x - offset - width);
+  label.classList.toggle("map-node-label--west", west < east || (west === east && item.x >= 72));
+};
+
 const applyMapLayout = () => {
   measureMapClearance();
   mapItems.forEach((item) => {
@@ -473,6 +496,7 @@ const applyMapLayout = () => {
     label?.style.setProperty("--x", `${position.x}%`);
     label?.style.setProperty("--y", `${position.y}%`);
     label?.classList.toggle("is-time-undated", timeModeActive && !Number.isFinite(item.timeYear));
+    if (label?.classList.contains("is-visible")) placeMapLabel(item, label);
 
     if (item.id === atmosphereMapId && signalField) {
       signalField.style.setProperty("--focus-x", `${position.x}%`);
@@ -1476,6 +1500,7 @@ if (mapNodesRoot) {
       });
 
       if (!compactMapViewport.matches) {
+        placeMapLabel(item, label);
         label.classList.add("is-visible");
       }
     };

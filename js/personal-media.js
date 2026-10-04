@@ -60,8 +60,7 @@ export const createPersonalMedia = ({ inspector, returnFocus }) => {
   const show = (item = selectedItem, index = 0) => {
     const media = item?.youtube?.episodes?.[index] || item?.youtube;
     if (!media || !/^[\w-]{11}$/.test(media.videoId)) return;
-    if (mediaItem?.videoId !== media.videoId || mediaItem?.start !== media.start
-      || mediaItem?.end !== media.end) stop();
+    if (mediaItem?.videoId !== media.videoId) stop();
     mediaItem = media;
     root.setAttribute("aria-label", media.title);
     poster.setAttribute("aria-label", "Смотреть видео: " + media.title);
@@ -96,12 +95,6 @@ export const createPersonalMedia = ({ inspector, returnFocus }) => {
       hl: "ru",
       origin: window.location.origin,
     }).toString();
-    for (const boundary of ["start", "end"]) {
-      if (Number.isInteger(mediaItem[boundary]) && mediaItem[boundary] > 0) {
-        url.searchParams.set(boundary, String(mediaItem[boundary]));
-      }
-    }
-
     const frame = document.createElement("iframe");
     frame.title = mediaItem.title;
     frame.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";

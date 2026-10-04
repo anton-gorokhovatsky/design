@@ -206,13 +206,12 @@ try {
         const requestsBefore = thirdParty.length;
         await select(page, "parfyonov");
         const parts = page.locator("[data-personal-media-episodes] button");
-        assert.deepEqual(await parts.allTextContents(), ["Монолог", "Глаз Божий · 1", "Глаз Божий · 2"]);
+        assert.deepEqual(await parts.allTextContents(), ["Глаз Божий · 1", "Глаз Божий · 2"]);
         assert.equal(await parts.nth(0).getAttribute("aria-pressed"), "true");
         assert.equal(await player.locator("iframe").count(), 0);
         assert.equal(thirdParty.length, requestsBefore, "Opening the selection stays local.");
         let previousFrame;
         const videos = [
-          ["QaeRj-ApktY", "Монолог из «Цвета нации»", "parfyonov-tsvet-natsii.jpg", "4912", "4933"],
           ["KIU8dZD4Mbs", "«Глаз Божий». Фильм первый", "parfyonov-glaz-bozhiy-1.jpg", null, null],
           ["qk989s8vfh4", "«Глаз Божий». Фильм второй", "parfyonov-glaz-bozhiy-2.jpg", null, null],
         ];
@@ -232,10 +231,7 @@ try {
           assert.equal(episodeUrl.searchParams.get("t"), start);
           assert.equal(episodeUrl.searchParams.get("list"), "PLWC_P718eyWNPChB0IhNYxepf-FoOi-cV");
           assert.ok((await parts.nth(index).boundingBox()).height >= 48);
-          if (index === 0) {
-            assert.ok((await page.locator("[data-personal-media-caption]").innerText()).includes("1:21:52–1:22:13"));
-            await capture(page, label + "-parfyonov-monologue");
-          }
+          if (index === 0) await capture(page, label + "-parfyonov");
           await poster.click();
           previousFrame = await player.locator("iframe").elementHandle();
           await page.waitForFunction(() => document.querySelector("[data-personal-media-status]").textContent === "Плеер YouTube открыт");
@@ -243,7 +239,7 @@ try {
           assert.equal(embeddedUrl.pathname, "/embed/" + videoId);
           assert.equal(embeddedUrl.searchParams.get("start"), start);
           assert.equal(embeddedUrl.searchParams.get("end"), end,
-            "The monologue ends at 1:22:13; complete films retain their full duration.");
+            "Both films retain their full duration.");
         }
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0);
         await page.locator("[data-personal-media-source]").focus();
@@ -251,7 +247,7 @@ try {
         assert.equal(await player.locator("iframe").count(), 0);
         assert.equal(await page.evaluate(() => document.activeElement?.dataset.mapId), "parfyonov");
         await page.keyboard.press("Enter");
-        assert.equal(await parts.nth(0).getAttribute("aria-pressed"), "true", "Reopening starts with the monologue's silent poster.");
+        assert.equal(await parts.nth(0).getAttribute("aria-pressed"), "true", "Reopening starts with the first film's silent poster.");
         await select(page, "youtube");
         assert.equal(await page.locator("[data-personal-media-episodes]").isVisible(), false,
           "Single videos retain their existing controls.");
