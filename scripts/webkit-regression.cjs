@@ -1232,10 +1232,11 @@ const accessibilityAcceptanceAudit = async (browser) => {
   const failures = [];
   const mainSnapshot = await page.locator("main").ariaSnapshot();
   const mapSnapshot = await page.locator("[data-map-nodes]").ariaSnapshot();
+  const mapSnapshotPresent = /Музей\s+«Гараж»/u.test(mapSnapshot);
 
   if (
     !mainSnapshot.includes("Интерактивная карта опыта")
-    || !mapSnapshot.includes("МУЗЕЙ")
+    || !mapSnapshotPresent
     || !mapSnapshot.includes("Используйте стрелки")
   ) {
     failures.push("the primary map is incomplete in the WebKit accessibility tree");
@@ -1404,7 +1405,7 @@ const accessibilityAcceptanceAudit = async (browser) => {
     environment,
     failures,
     inspectorSnapshotPresent: inspectorSnapshot.includes("Закрыть карточку"),
-    mapSnapshotPresent: mapSnapshot.includes("МУЗЕЙ"),
+    mapSnapshotPresent,
     panelClosed,
     panelOpen,
     skipLink,
