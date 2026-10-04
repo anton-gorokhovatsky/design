@@ -54,6 +54,9 @@ try {
           route: document.querySelector("[data-start-observation]").textContent,
           routeName: document.querySelector("[data-start-observation]").getAttribute("aria-label"),
           nodes: [...document.querySelectorAll(".map-node")].map(box),
+          signs: [...document.querySelectorAll(".map-node__glyph")].map(box),
+          obstacles: [...document.querySelectorAll(".map-controls, .display-control, .control-console, .site-header, .map-axis-label")]
+            .filter(visible).map(box).filter(rect => rect.width && rect.height),
           blockedTargets: [...document.querySelectorAll(".map-node")].flatMap((node) => {
             const rect = node.getBoundingClientRect();
             const hit = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
@@ -74,6 +77,8 @@ try {
       assert.equal(state.routeName, state.route.trim(), "The accessible name matches the visible overview label.");
       assert.ok(!state.nodes.some((node) => state.authorLines.some((line) => overlaps(node, line))), "Authorship must not collide with a map target: " + JSON.stringify({ name, state }));
       if (width > 900) {
+        assert.ok(!state.signs.some(sign => state.obstacles.some(panel => overlaps(sign, panel))),
+          `${name} ${theme}: the complete map sign must clear panels and axis labels.`);
         assert.ok(state.nav.every((item) => item.visible && item.box.width > 0));
         assert.ok(state.search.right <= width + 1, "Search must stay inside the viewport.");
         assert.ok(state.nav.every((item) => !overlaps(item.box, state.search)), "Navigation labels must not overlap search.");

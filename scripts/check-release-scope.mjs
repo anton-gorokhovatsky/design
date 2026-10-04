@@ -35,7 +35,7 @@ change("index.html", html, "регулируется в OKLCH", "меняетс�
 change("index.html", html, /styles\.css\?v=[a-f0-9]{12}/.exec(html)[0], "styles.css?v=aaaaaaaaaaaa", true);
 change("index.html", html, /\.\/js\/panels\.js\?v=[a-f0-9]{12}/.exec(html)[0], "./js/panels.js?v=aaaaaaaaaaaa", true);
 
-change("js/observation-route.js", route, "14000", "10000", false);
+change("js/observation-route.js", route, "20000", "10000", false);
 change("js/panels.js", panels, 'id: "observation"', 'id: "time"', false);
 change("js/panels.js", panels, 'title: "РАБОТЫ И ПОДХОД · 3 МИНУТЫ"', 'title: getTitle()', false);
 change("js/panels.js", panels, 'title: "РАБОТЫ И ПОДХОД · 3 МИНУТЫ"', 'title: __COPY__', false);
@@ -171,7 +171,7 @@ try {
   git("add", "."); git("commit", "-m", "whoop refresh");
   assert.deepEqual(plan({ target: "HEAD" }).components, ["settings", "whoop"], "Component coverage combines unpublished commits");
   assert.deepEqual(plan({ target: "HEAD" }).matrix, browserMatrix("components", ["settings", "whoop"]));
-  writeFileSync(join(directory, "js/observation-route.js"), route.replace("14000", "10000"));
+  writeFileSync(join(directory, "js/observation-route.js"), route.replace("20000", "10000"));
   git("add", "."); git("commit", "-m", "unpublished timing");
   writeFileSync(join(directory, "js/panels.js"), panels);
   git("add", "."); git("commit", "-m", "another copy edit");

@@ -51,16 +51,17 @@ route.
 - A card's primary external link sits inside its heading fragment, below the
   metadata and before the story. It shares the existing text-link style, with no
   nested material. Labels name the destination; related map points remain last.
-- `Работы и подход · 3 минуты` is an optional fourteen-stop route through the same
-  map and inspector. Thirteen individually timed transitions take 150 seconds, then the final
+- `Работы и подход · 3 минуты` is an optional nine-stop route through the same
+  map and inspector. Eight individually timed transitions take 180 seconds, then the final
   contact screen stays paused. It never autostarts and supports previous,
   pause/resume, next, arrow keys, and Escape.
   The first stop immediately shows the museum project; subsequent stops show
   their content directly, without decorative title cards or chapter transitions.
   Pause and background tabs preserve the remaining time; reduced motion starts
   paused. Restored step URLs open the selected stop directly.
-  One on-demand player reuses the native case reels; principles retain a still
-  from the related work. Mobile puts the same media in the reading window,
+  One on-demand player reuses the native case reels. Each project explains its
+  own decisions; separate principle slides do not interrupt the story. The
+  reading frame, media and controls keep their positions throughout the route. Mobile puts the same media in the reading window,
   with route controls outside its inner scroller. Reduced motion keeps stills.
   The former `assets/observation/atlas-loop.mp4` intro is not requested by the route.
   The static site share cover uses `assets/observation/atlas.svg`; its template

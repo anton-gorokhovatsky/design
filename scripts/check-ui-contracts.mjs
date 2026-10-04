@@ -1164,8 +1164,8 @@ const auditBrowser = async (client, origin) => {
   await saveScreenshot(client, "desktop-selected-garage");
   await saveElementScreenshot(client, "crop-desktop-inspector", ".map-inspector");
 
-  const expectedShowcaseIds = ["garage-site", "collection", "garage-app", "garage-care", "narkomfin", "eleven", "shirokostup", "tarski", "krainiuk", "ks-fish"];
-  for (const [step, id] of [[1, "garage-site"], [3, "garage-app"], [4, "garage-care"], [5, "narkomfin"], [6, "eleven"], [8, "shirokostup"], [10, "krainiuk"], [13, "ks-fish"]]) {
+  const expectedShowcaseIds = ["garage-site", "collection", "narkomfin", "eleven", "shirokostup", "tarski", "krainiuk", "ks-fish"];
+  for (const [step, id] of [[1, "garage-site"], [2, "collection"], [3, "narkomfin"], [4, "eleven"], [5, "shirokostup"], [6, "tarski"], [7, "krainiuk"], [8, "ks-fish"]]) {
     await navigate(client, `${origin}/?qa=ui-contracts-observation&route=observation&step=${step}#map`);
     await evaluate(client, "document.querySelector('[data-observation-pause][data-paused=false]')?.click(); true");
     await waitForExpression(client, `(() => {
@@ -1176,9 +1176,9 @@ const auditBrowser = async (client, origin) => {
     await delay(820);
     const state = await readObservationShowcaseContract(client);
     if (!state.visible || state.activeId !== id || state.activePlaneId !== id
-      || state.routeProgress !== String(step).padStart(2, "0") + " / 14"
+      || state.routeProgress !== String(step).padStart(2, "0") + " / 9"
       || JSON.stringify(state.planeIds) !== JSON.stringify(expectedShowcaseIds)
-      || state.imageCount !== 12 || !state.imagesReady || !state.parentIsMap
+      || state.imageCount !== 8 || !state.imagesReady || !state.parentIsMap
       || state.ariaHidden !== "true" || state.focusables !== 0
       || state.activeOpacity < .9 || !state.activeFilter.includes("blur(0px)")
       || !state.activeInsideViewport || state.activeInspectorOverlapRatio > .02

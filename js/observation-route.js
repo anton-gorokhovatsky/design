@@ -4,48 +4,32 @@ import { reducedMotion } from "./preferences.js";
 import { signalField } from "./signal-field.js";
 
 const observationSteps = [
-  { id: "garage", itemId: "garage", showcaseId: "garage-site", duration: 16000,
-    description: "Почти четыре года развивал цифровые проекты Музея «Гараж»: исследования, интерфейсы, координация разработки и релизов. Стратегию и дизайн сайта создала Charmer Studio." },
-  { id: "collection", itemId: "collection", duration: 14000,
-    description: "Из произведения — к автору, из каталога — в открытое хранение. Помогал связать знакомство с коллекцией и визит в музей: продуктовая логика, исследования, интерфейс и координация реализации." },
-  { id: "museum-app", itemId: "garage-app", duration: 14000,
-    description: "Подготовиться к визиту людям с ментальными особенностями и их близким помогает «Я иду в музей». При перезапуске исследовал и проектировал маршруты к путеводителям, материалам о доступности и играм." },
-  { id: "care", title: "ЦИФРОВАЯ ЗАБОТА", kind: "ПОДХОД", meta: "", itemId: "principle-experiment", showcaseId: "garage-care", duration: 18000,
-    description: "Забота начинается до визита. Исследование сенсорной карты «Гаража» описывает свет, звук и места для отдыха. Смысл — помочь человеку заранее выбрать комфортный маршрут." },
-  { id: "narkomfin", itemId: "narkomfin", duration: 14000,
-    description: "Архитектурный замысел Дома Наркомфина стал основой сайта. Интерактивная модель приглашает исследовать здание: подниматься на крышу, находить кафе и книжный, смотреть на дом при дневном и ночном свете." },
-  { id: "eleven", itemId: "eleven", duration: 14000,
-    scenes: [[0.2, 3.5], [7.8, 18.5]],
-    description: "Велопроект Виктора Доронина — 11 111 км за 31 день. Сайт связывает дневник подготовки и приглашение партнёров: можно следить за проектом и найти свой формат участия." },
-  { id: "intuition", kind: "ПОДХОД", meta: "", itemId: "principle-data-intuition", showcaseId: "eleven", duration: 12000,
-    poster: "assets/case-figures/11111-1.jpg",
-    description: "Время и погода в Дубае задают свет и цвет сайта «11 111». Ползунок позволяет прожить день от рассвета до ночи. Данные дают опору, интуиция — форму." },
-  { id: "shirokostup", itemId: "shirokostup", duration: 12000,
-    description: "Кураторская практика, тексты и архив Ольги Широкоступ получают собственный редакционный ритм. Сайт и инфраструктуру подготовили так, чтобы дальше она могла вести его сама." },
-  { id: "tarski", itemId: "tarski", duration: 12000,
-    scenes: [[0.2, 4.2], [6.4, 12.4]],
-    description: "Первая концептуальная версия сайта молодой культурной институции Tarski. Программа, редакционные материалы и сеть участников знакомят с её направлением; сайт будет расти вместе с институцией." },
-  { id: "krainiuk", itemId: "krainiuk", duration: 16000,
-    scenes: [[4.1, 7.9], [10, 14.8], [22.3, 29.7]],
-    description: "Сайт тренера Екатерины Крайнюк помогает выбрать направление: плавание, велосипед, бег или триатлон. Форматы занятий, рассказ о тренере и результаты спортсменов помогают познакомиться с Катей до первого разговора." },
-  { id: "engineering", kind: "ПОДХОД", meta: "", itemId: "principle-design-engineering", showcaseId: "krainiuk", duration: 12000,
-    poster: "assets/observation-stills/krainiuk-cards.jpg",
-    description: "В «Картах на старт» у Крайнюк соединяю дизайн и код: три карты складываются в шуточный прогноз. Рабочий прототип позволяет проверить композицию и взаимодействие сразу в деле." },
-  { id: "ks-fish", itemId: "ks-fish", duration: 14000,
-    description: "Рыбная лавка капитана Селёдкина знакомит с Олегом Гугунавой ещё до первого визита. Каталог помогает выбрать рыбу, узнать цену и перейти к заказу. А за ассортиментом остаётся виден сам человек." },
-  { id: "goal", kind: "ПОДХОД", meta: "", itemId: "principle-goal", showcaseId: "ks-fish", duration: 12000,
-    poster: "assets/case-figures/ks-fish-1.jpg",
-    description: "Начинаю с того, что нужно людям и проекту. В «Судовом журнале» лавки — фотографии и рассказы владельца с переходом к заказу. Сохранить его голос и помочь выбрать рыбу важнее выбора инструментов." },
+  { id: "garage", itemId: "garage", showcaseId: "garage-site", duration: 20000,
+    description: "Почти четыре года развивал цифровые проекты Музея «Гараж»: исследования, интерфейсы, координация разработки и релизов. Цифровое гостеприимство для меня — в том числе подготовка к визиту: приложение «Я иду в музей» и исследование сенсорной карты. Стратегию и дизайн сайта создала Charmer Studio." },
+  { id: "collection", itemId: "collection", duration: 20000,
+    description: "Из произведения — к автору, из каталога — в открытое хранение. Помогал связать знакомство с коллекцией и визит в музей: продуктовая логика, исследования, интерфейс и координация реализации. Отдельные экраны складываются в маршрут, по которому можно продолжить знакомство с искусством." },
+  { id: "narkomfin", itemId: "narkomfin", duration: 22000,
+    description: "Архитектурный замысел Дома Наркомфина стал основой сайта. Интерактивная модель приглашает исследовать здание: подниматься на крышу, находить кафе и книжный, смотреть на дом при дневном и ночном свете. Сам дом становится способом навигации." },
+  { id: "eleven", itemId: "eleven", duration: 24000,
+    description: "Велопроект Виктора Доронина — 11 111 км за 31 день. Сайт связывает дневник подготовки и приглашение партнёров: можно следить за проектом и найти свой формат участия. Свет и цвет меняются вслед за временем и погодой в Дубае — место действия становится частью сайта." },
+  { id: "shirokostup", itemId: "shirokostup", duration: 18000,
+    description: "Кураторская практика, тексты и архив Ольги Широкоступ получают собственный редакционный ритм. Сайт и инфраструктуру подготовили так, чтобы дальше она могла вести его сама. Возможность продолжать работу без разработчика — часть задачи проекта." },
+  { id: "tarski", itemId: "tarski", duration: 18000,
+    description: "Первая концептуальная версия сайта молодой культурной институции Tarski. Программа, редакционные материалы и сеть участников знакомят с её направлением. Структура оставляет место для новых материалов: сайт будет расти вместе с институцией." },
+  { id: "krainiuk", itemId: "krainiuk", duration: 32000,
+    description: "Сайт тренера Екатерины Крайнюк помогает выбрать направление и познакомиться с Катей до первого разговора. Форматы занятий и результаты спортсменов отвечают на практические вопросы, а «Карты на старт» добавляют игру. Интерфейс и взаимодействие проектировал и собирал в коде — от первого экрана до раскрытия карт." },
+  { id: "ks-fish", itemId: "ks-fish", duration: 26000,
+    description: "Рыбная лавка капитана Селёдкина знакомит с Олегом Гугунавой ещё до первого визита. Каталог помогает выбрать рыбу и перейти к заказу, а «Судовой журнал» сохраняет фотографии и рассказы владельца. Его голос остаётся частью сайта — за ассортиментом виден сам человек." },
   {
     id: "contact", kind: "СВЯЗАТЬСЯ", title: "СВЯЗАТЬСЯ",
     meta: "МОСКВА / УДАЛЁННО / ПОЧТА",
     description: "Если вам близок такой подход — напишите мне. Буду рад познакомиться, обсудить идею и вместе найти для неё форму.",
-    href: "mailto:anton@gorokhovatsky.tech", x: 50, y: 54,
+    href: "mailto:anton@gorokhovatsky.tech",
   },
 ];
 
 const createObservationRoute = ({
-  clearMapSelection, getSelectedMapId, getStepPosition, hideMapPreview,
+  clearMapSelection, getSelectedMapId, hideMapPreview,
   isTimeModeActive, renderShowcase, renderSyntheticStep, setShowcasePaused,
   selectMapItem, setMapFilter, setTimeMode, writeUrlState,
 }) => {
@@ -112,9 +96,6 @@ const createObservationRoute = ({
     stepIndex = Math.max(0, Math.min(observationSteps.length - 1, Number(index) || 0));
     const step = observationSteps[stepIndex];
     remaining = step.duration || 0;
-    const position = getStepPosition(step);
-    signalField.style.setProperty("--observation-camera-x", `${Math.max(-5.2, Math.min(5.2, (50 - position.x) * 0.12))}%`);
-    signalField.style.setProperty("--observation-camera-y", `${Math.max(-3.6, Math.min(3.6, (54 - position.y) * 0.09))}%`);
     renderShowcase(step);
     if (step.itemId) selectMapItem(step.itemId, { reveal: true, updateHistory: false, overview: step });
     else renderSyntheticStep(step);
@@ -135,7 +116,6 @@ const createObservationRoute = ({
     indexMenu.hidden = true;
     delete signalField.dataset.observationActive;
     renderShowcase();
-    for (const property of ["--observation-camera-x", "--observation-camera-y"]) signalField.style.removeProperty(property);
     if (closeInspector) clearMapSelection();
     if (updateHistory) writeUrlState({ route: null, step: null, point: closeInspector ? null : getSelectedMapId() }, { replace: true });
   };

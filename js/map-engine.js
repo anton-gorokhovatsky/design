@@ -330,7 +330,7 @@ let mapConsoleBounds = [];
 const mapClearancePositions = new Map();
 const measureMapClearance = () => {
   mapFieldBounds = mapNodesRoot?.getBoundingClientRect();
-  const selectors = [".origin-marker__label", ".site-header"];
+  const selectors = [".origin-marker__label", ".site-header", ".map-axis-label"];
   if (window.innerWidth > 900) selectors.push(".map-controls", ".map-control > span", ".display-control", ".control-console");
   else selectors.push(".command-dock", ".system-dock");
   mapConsoleBounds = [...document.querySelectorAll(selectors.join(","))]
@@ -356,8 +356,9 @@ const clearMapConsoles = (item, position) => {
       if (other.id === item.id) return false;
       const position = mapClearancePositions.get(other.id);
       if (!position) return false;
-      // Keep each point's center reachable even in a dense compact layout.
-      const clearance = Math.max(radius - 8, Math.max(24, other.size) * width / mapNodesRoot.clientWidth / 2) + 2;
+      // Desktop rings need a full gap; compact glyphs keep their reachable centers.
+      const otherRadius = Math.max(24, other.size) * width / mapNodesRoot.clientWidth / 2;
+      const clearance = innerWidth > 900 ? radius + otherRadius - 4 : Math.max(radius - 8, otherRadius) + 2;
       return Math.abs(candidate[0] - left - position.x * width / 100) < clearance
         && Math.abs(candidate[1] - top - position.y * height / 100) < clearance;
     });
@@ -766,8 +767,7 @@ let observationScene = 0;
 
 const setObservationPlayback = (paused) => {
   observationMediaPaused = paused;
-  const still = mapItems.find(item => item.id === observationMediaStep?.itemId)?.kind === "practice";
-  if (paused || still || reducedMotion.matches || document.hidden || !observationVideo.getAttribute("src")) {
+  if (paused || reducedMotion.matches || document.hidden || !observationVideo.getAttribute("src")) {
     observationVideo.pause();
   } else {
     observationVideo.play().catch(() => {});
@@ -794,7 +794,6 @@ const syncObservationPreview = () => {
   if (!plane) return;
   if (!observationPreview.hidden) {
     observationPreview.replaceChildren(...[...plane.querySelectorAll("img")].map(image => image.cloneNode()));
-    observationPreview.classList.toggle("observation-preview--app", id === "garage-app");
   }
   const parent = inlineObservation.matches ? observationPreview : plane;
   if (observationVideo.dataset.previewId === id) parent.append(observationVideo);
@@ -816,7 +815,6 @@ const renderObservationShowcase = (step = {}) => {
   if (isVisible) {
     planes.forEach((plane, index) => {
       const delta = index - progress;
-      const distance = Math.abs(delta);
       plane.querySelectorAll("img[data-src]").forEach(image => {
         image.src = image.dataset.src;
         delete image.dataset.src;
@@ -827,13 +825,6 @@ const renderObservationShowcase = (step = {}) => {
           ? step.poster : getMapPreviewPoster(previewItem);
       }
       plane.classList.toggle("is-active", delta === 0);
-      const properties = {
-        x: `${delta * 14}vw`, y: `${(delta < 0 ? 1 : -1) * Math.min(28, distance * 17)}vh`,
-        scale: delta === 0 ? 1 : 0.6, opacity: delta === 0 ? 1 : distance === 1 ? 0.18 : 0,
-        blur: `${delta === 0 ? 0 : 4}px`, saturation: delta === 0 ? 1 : 0.72,
-        rotation: `${delta * -0.8}deg`, z: delta === 0 ? 9 : 1,
-      };
-      Object.entries(properties).forEach(([name, value]) => plane.style.setProperty(`--showcase-${name}`, value));
     });
   }
   const item = mapItems.find(item => item.id === activeId);
@@ -2154,13 +2145,6 @@ const renderObservationSyntheticStep = (step) => {
 const observationRoute = createObservationRoute({
   clearMapSelection,
   getSelectedMapId: () => selectedMapId,
-  getStepPosition: (step) => {
-    const item = step.itemId
-      ? mapItems.find((candidate) => candidate.id === step.itemId)
-      : null;
-
-    return item ? resolveMapLayout(item) : { x: step.x, y: step.y };
-  },
   hideMapPreview,
   isTimeModeActive: () => timeModeActive,
   renderShowcase: renderObservationShowcase,

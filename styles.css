@@ -44,7 +44,11 @@
   --space-5: 1.5rem;
   --space-6: 2rem;
   --space-7: 3rem;
-  --type-label: clamp(.75rem, calc(.72rem + .08vw), .8125rem);
+  /* The accepted View panel is the reference for utility typography. */
+  --type-panel-heading: .58rem;
+  --type-group-heading: .5rem;
+  --type-caption: .625rem;
+  --type-label: clamp(.62rem, calc(.56rem + .18vw), .72rem);
   --word-spacing-label: .12em;
   --type-detail: clamp(.875rem, calc(.84rem + .1vw), .9375rem);
   --type-body: clamp(1rem, calc(.94rem + .1vw), 1.125rem);
@@ -52,6 +56,7 @@
   --type-item: clamp(1.125rem, calc(1rem + .4vw), 1.375rem);
   --type-title: clamp(1.75rem, calc(1.25rem + 1.3vw), 2.75rem);
   --type-author: calc(var(--type-title) * .8);
+  --leading-control: 1.15;
   --leading-label: 1.4;
   --leading-item: 1.25;
   --leading-body: 1.5;
@@ -6839,32 +6844,40 @@ html[data-theme="dark"] .map-node--sphere .map-node__glyph {
 
 .observation-preview { display: none; }
 .observation-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; object-position: center top; }
-.observation-showcase__plane--app,
-.observation-preview--app { display: flex; gap: var(--space-1); }
-.observation-showcase__plane--app img,
-.observation-preview--app img { min-width: 0; flex: 1; }
-
 @media (max-width: 900px) {
   .observation-preview:not([hidden]) { position: relative; display: flex; justify-content: center; width: calc(100% + var(--case-pad) * 2); height: auto; aspect-ratio: 3 / 2; margin: 0 calc(-1 * var(--case-pad)) var(--space-5); }
-  .observation-preview--app:not([hidden]) { aspect-ratio: 1176 / 696; }
   .observation-preview img { width: 100%; height: 100%; object-fit: contain; }
 }
 
 @media (min-width: 901px) {
-  body:has(.practice-map[data-observation-active]) .map-inspector { right: clamp(var(--window-edge), calc((100vw - 64rem) * .5), 15.5rem); width: min(450px, 44vw); }
-  .observation-showcase { position: absolute; z-index: var(--map-layer-media); inset: 0; display: block; isolation: isolate; opacity: 0; pointer-events: none; transform-origin: 50% 54%; visibility: hidden; transition: opacity 360ms var(--motion-exit), transform 760ms var(--motion-shift), visibility 360ms var(--motion-exit); will-change: opacity, transform; }
-
-  .observation-showcase.is-visible { opacity: 1; visibility: visible; transition: opacity 520ms var(--motion-enter), visibility 520ms var(--motion-enter); }
-
-  .observation-showcase__plane { position: absolute; z-index: var(--showcase-z, 1); top: 52%; left: 28%; width: clamp(260px, 34vw, 560px); aspect-ratio: 3 / 2; margin: 0; overflow: hidden; border: 0; border-radius: var(--window-radius); background: color-mix(in srgb, var(--bg) 88%, var(--ink)); box-shadow: none; corner-shape: var(--corner-card-shape); filter: blur(var(--showcase-blur, 4px)) saturate(var(--showcase-saturation, 0.72)); opacity: var(--showcase-opacity, 0); transform: translate3d( calc(-50% + var(--showcase-x, 0px)), calc(-50% + var(--showcase-y, 0px)), 0 ) rotate(var(--showcase-rotation, 0deg)) scale(var(--showcase-scale, 0.72)); transform-origin: center; transition: opacity 420ms var(--motion-shift), filter 620ms var(--motion-shift), transform 760ms var(--motion-shift); will-change: opacity, filter, transform; }
-
+  body:has(.practice-map[data-observation-active]) {
+    --overview-edge: clamp(20px, 8vw, 160px);
+    --overview-copy: min(450px, 41vw);
+    --overview-gap: clamp(24px, 4vw, 64px);
+    --overview-height: min(36rem, calc(100svh - var(--console-clearance, 100px) - var(--window-gap) - 2 * var(--window-edge)));
+    --overview-top: max(var(--window-edge), calc((100svh - var(--console-clearance, 100px) - var(--window-gap) - var(--overview-height)) / 2));
+  }
+  .observation-showcase { position: fixed; z-index: var(--map-layer-media); inset: 0; display: block; isolation: isolate; pointer-events: none; visibility: hidden; }
+  .observation-showcase.is-visible { visibility: visible; }
+  .observation-showcase__plane {
+    position: absolute;
+    top: calc(var(--overview-top) + 48px + var(--window-gap));
+    left: var(--overview-edge);
+    width: calc(100vw - 2 * var(--overview-edge) - var(--overview-copy) - var(--overview-gap));
+    max-height: calc(var(--overview-height) - 48px - var(--window-gap));
+    aspect-ratio: 3 / 2;
+    margin: 0;
+    overflow: hidden;
+    border: 0;
+    border-radius: var(--window-radius);
+    corner-shape: var(--corner-card-shape);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--duration-feedback) var(--motion-shift);
+  }
   .observation-showcase__plane img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: center top; }
-
-  .observation-showcase__plane.is-active { z-index: 9; filter: blur(0) saturate(1); opacity: 1; }
-  .observation-showcase__plane--app { aspect-ratio: 49 / 29; background: none; }
+  .observation-showcase__plane.is-active { z-index: 9; filter: blur(0); opacity: 1; visibility: visible; }
 }
-
-:is(.observation-showcase__plane, .observation-preview):has(.observation-research) { aspect-ratio: 16 / 13; }
 
 @media (prefers-reduced-motion: reduce), (forced-colors: active) {
   .observation-showcase,
@@ -7009,17 +7022,6 @@ body:has(.practice-map:is([data-selected-kind=personal],[data-selected-kind=prac
 
 .practice-map[data-observation-active] .map-camera {
   z-index: var(--map-layer-active-field);
-}
-
-.practice-map[data-observation-active]
-  :is(.map-camera, .observation-showcase) {
-  transform:
-    translate3d(
-      var(--observation-camera-x, 0%),
-      var(--observation-camera-y, 0%),
-      0
-    )
-    scale(1.055);
 }
 
 .practice-map[data-observation-active] .origin-marker__label {
@@ -7221,16 +7223,7 @@ html[data-theme="dark"] .signal-constellation {
     align-self: stretch;
   }
 
-  .practice-map[data-observation-active]
-    :is(.map-camera, .observation-showcase) {
-    transform:
-      translate3d(
-        var(--observation-camera-x, 0%),
-        var(--observation-camera-y, 0%),
-        0
-      )
-      scale(1.025);
-  }
+
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -9928,6 +9921,32 @@ html[data-reduce-motion="true"] [style*="scroll-ink-"] { filter: none !important
     max-height: calc(100svh - var(--console-clearance, 100px) - var(--window-gap) - var(--window-edge));
   }
 }
+/* Every overview chapter occupies the same frame; only its content changes. */
+body:has(.practice-map[data-observation-active]) .case-layout { align-items: stretch; }
+body:has(.practice-map[data-observation-active]) .map-inspector.has-reading-frame {
+  animation: none;
+  transform: none;
+  translate: none;
+  scale: none;
+}
+@media (min-width: 901px) {
+  body:has(.practice-map[data-observation-active]) .map-inspector.has-reading-frame {
+    top: var(--overview-top);
+    right: var(--overview-edge);
+    bottom: auto;
+    width: var(--overview-copy);
+    height: var(--overview-height);
+    max-height: var(--overview-height);
+  }
+}
+@media (max-width: 900px) {
+  body:has(.practice-map[data-observation-active]) .map-inspector.has-reading-frame {
+    top: var(--window-edge);
+    bottom: var(--window-edge);
+    height: calc(100svh - 2 * var(--window-edge));
+    max-height: none;
+  }
+}
 .has-reading-frame .case-story > * { grid-row: auto; grid-column: auto; }
 .has-reading-frame .observation-preview { border-radius: var(--window-radius); corner-shape:var(--corner-card-shape); overflow: hidden; }
 .case-sheet:has(> .observation-controls) { flex-direction: column; }
@@ -10181,8 +10200,49 @@ html[data-reduce-motion="true"] :is(.ui-close, .work-row, .map-related__item, .c
   :is(.ui-close, .work-row, .map-related__item, .contact-links a) { transition: none; transform: none; }
 }
 /* Reading typography: one role across windows and viewport sizes. */
-.skip-link,
+.system-dock .map-controls::before,
+.display-control::before,
+.control-console .constellation-nav__heading {
+  font-size: var(--type-panel-heading);
+  line-height: normal;
+}
+.map-control-group__label {
+  font-size: var(--type-group-heading);
+  line-height: 1;
+}
+.display-control__service [data-map-note],
+.display-control__presence,
+.whoop-heading time,
+.whoop-metrics dt,
+.whoop-metrics dd small,
+.whoop-level,
+.whoop-foot span,
+.whoop-foot button,
+.site-header .brand__name small,
+.whoop-readout:is([data-stale="true"], [data-unavailable="true"]) .whoop-stamp {
+  font-size: var(--type-caption);
+  line-height: var(--leading-label);
+}
 .theme-toggle,
+.map-control,
+.display-control .theme-toggle,
+.display-control .theme-toggle::before,
+.system-dock .map-control,
+.system-dock .map-control > span:last-child,
+.constellation-nav__label,
+.constellation-nav__item.is-current .constellation-nav__label,
+.control-console .constellation-nav__label,
+.control-console .constellation-nav__item:hover .constellation-nav__label,
+.control-console .constellation-nav__item:focus-visible .constellation-nav__label,
+.control-console .constellation-nav__item.is-current .constellation-nav__label,
+.control-console .constellation-nav__item .constellation-nav__label,
+.display-control .map-meta,
+.display-control__value,
+.display-control__service button {
+  font-size: var(--type-label);
+  line-height: var(--leading-control);
+}
+.skip-link,
 .map-meta,
 .section-head,
 .map-axis-label,
@@ -10195,32 +10255,16 @@ html[data-reduce-motion="true"] :is(.ui-close, .work-row, .map-related__item, .c
 .work-row__domain,
 .approach-grid span,
 .site-footer,
-.map-control,
 .command-result span:last-child,
-.display-control .theme-toggle,
-.display-control .theme-toggle::before,
-.system-dock .map-controls::before,
-.display-control::before,
-.system-dock .map-control,
-.constellation-nav__label,
-.constellation-nav__item.is-current .constellation-nav__label,
 .content-panel__header p,
 .content-panel__header h2,
 .content-panel .work-row__preview--type,
 .content-panel .work-row__number,
 .content-panel .work-row__domain,
 .command-status,
-.system-dock .map-control > span:last-child,
-.display-control .map-meta,
-.display-control__value,
 .map-inspector .map-readout__kind,
 .map-related__header > span,
 .map-related__item > span,
-.control-console .constellation-nav__label,
-.control-console .constellation-nav__item:hover .constellation-nav__label,
-.control-console .constellation-nav__item:focus-visible .constellation-nav__label,
-.control-console .constellation-nav__item.is-current .constellation-nav__label,
-.control-console .constellation-nav__heading,
 .map-hover-preview__readout > span,
 .observation-index,
 .map-note button,
@@ -10228,28 +10272,15 @@ html[data-reduce-motion="true"] :is(.ui-close, .work-row, .map-related__item, .c
 .observation-controls > span,
 .orbital-radar i span,
 .practice-map[data-time-view] .map-node-label[data-time-year]::after,
-.control-console .constellation-nav__item .constellation-nav__label,
 .contact-status,
 .contact-links a,
 .contact-link__index,
-.display-control__service button,
-.display-control__service [data-map-note],
-.map-control-group__label,
 .settings-panel__row h3,
 .settings-presence h3,
 .settings-panel__analytics h3,
 .settings-panel__analytics-state strong,
 .settings-panel__privacy dt,
 .no-script-fallback__inner > p:first-child,
-.site-header .brand__name small,
-.whoop-heading time,
-.whoop-metrics dt,
-.whoop-metrics dd small,
-.whoop-level,
-.whoop-foot span,
-.whoop-foot button,
-.display-control__presence,
-.whoop-readout:is([data-stale="true"], [data-unavailable="true"]) .whoop-stamp,
 .personal-media__caption p,
 .personal-media__source,
 .map-inspector.is-case-view .case-header .map-readout__kind,
