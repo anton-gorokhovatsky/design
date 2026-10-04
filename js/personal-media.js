@@ -11,6 +11,7 @@ export const createPersonalMedia = ({ inspector, returnFocus }) => {
   const title = root?.querySelector("[data-personal-media-title]");
   const caption = root?.querySelector("[data-personal-media-caption]");
   const status = root?.querySelector("[data-personal-media-status]");
+  const episodes = root?.querySelector("[data-personal-media-episodes]");
   if (!root || !slot || !launch || !screen || !poster || !image || !source) {
     return { select: () => {} };
   }
@@ -56,32 +57,36 @@ export const createPersonalMedia = ({ inspector, returnFocus }) => {
     sync();
   };
 
-  const show = (item = selectedItem) => {
-    if (!item?.youtube || !/^[\w-]{11}$/.test(item.youtube.videoId)) return;
-    if (mediaItem?.youtube.videoId !== item.youtube.videoId) stop();
-    mediaItem = item;
-    root.setAttribute("aria-label", item.youtube.title);
-    poster.setAttribute("aria-label", "Смотреть видео: " + item.youtube.title);
-    source.setAttribute("aria-label", "Смотреть на YouTube: " + item.youtube.title);
-    source.href = item.youtube.href || item.href;
-    if (title) title.textContent = item.youtube.displayTitle || item.youtube.title;
-    if (caption) caption.textContent = item.youtube.caption || "";
+  const show = (item = selectedItem, index = 0) => {
+    const media = item?.youtube?.episodes?.[index] || item?.youtube;
+    if (!media || !/^[\w-]{11}$/.test(media.videoId)) return;
+    if (mediaItem?.videoId !== media.videoId) stop();
+    mediaItem = media;
+    root.setAttribute("aria-label", media.title);
+    poster.setAttribute("aria-label", "Смотреть видео: " + media.title);
+    source.setAttribute("aria-label", "Открыть на YouTube: " + media.title);
+    source.href = media.href || item.href;
+    if (title) title.textContent = media.displayTitle || media.title;
+    if (caption) caption.textContent = media.caption || item.youtube.caption || "";
+    episodes?.querySelectorAll("button").forEach((button, position) => {
+      button.setAttribute("aria-pressed", String(position === index));
+    });
     // The official thumbnail is first-party; opening the point stays private.
-    if (image.getAttribute("src") !== item.youtube.poster) {
-      image.src = item.youtube.poster;
+    if (image.getAttribute("src") !== media.poster) {
+      image.src = media.poster;
     }
     root.hidden = false;
     place();
   };
 
   const play = () => {
-    if (!mediaItem?.youtube) return;
+    if (!mediaItem) return;
     if (iframe) {
       iframe.focus({ preventScroll: true });
       return;
     }
     const url = new URL(
-      "https://www.youtube-nocookie.com/embed/" + mediaItem.youtube.videoId,
+      "https://www.youtube-nocookie.com/embed/" + mediaItem.videoId,
     );
     url.search = new URLSearchParams({
       autoplay: "1",
@@ -92,7 +97,7 @@ export const createPersonalMedia = ({ inspector, returnFocus }) => {
     }).toString();
 
     const frame = document.createElement("iframe");
-    frame.title = mediaItem.youtube.title;
+    frame.title = mediaItem.title;
     frame.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
     frame.allowFullscreen = true;
     frame.referrerPolicy = "strict-origin-when-cross-origin";
@@ -116,6 +121,18 @@ export const createPersonalMedia = ({ inspector, returnFocus }) => {
 
   const select = (item) => {
     selectedItem = item || null;
+    if (episodes) {
+      const parts = item?.youtube?.episodes || [];
+      episodes.hidden = parts.length < 2;
+      episodes.replaceChildren(...parts.map((part, index) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "text-link";
+        button.textContent = part.label;
+        button.addEventListener("click", () => show(item, index));
+        return button;
+      }));
+    }
     if (item?.youtube) {
       show(item);
     } else {

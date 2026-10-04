@@ -16,7 +16,7 @@ const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const { server, origin } = await startStaticServer({ projectRoot });
 const directory = process.env.PORTFOLIO_UI_ARTIFACT_DIR;
 if (directory) mkdirSync(directory, { recursive: true });
-const ids = ["garage", "optimal", "ilmix", "running", "youtube"];
+const ids = ["garage", "optimal", "ilmix", "running", "youtube", "parfyonov"];
 const scenarios = chromiumScenarioCatalog.filter((state) => (
   /^(desktop-(light|dark)|tablet-(light|dark)|mobile-(390|320)-(light|dark)|zoom-200-light)$/.test(state.label)
 ));
@@ -112,7 +112,7 @@ const assertMaterials = () => {
     };
     assert.ok(error(1) < error(-1) * 0.1, id + ": surface features move right");
   }
-  assert.equal(signatures.size, ids.length, "Five distinct textures, even at the same phase");
+  assert.equal(signatures.size, ids.length, "Distinct textures, even at the same phase");
   console.log("PASS " + engine + " sphere materials: unique, deterministic, seamless, rightward");
 };
 
@@ -126,7 +126,7 @@ try {
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto(origin, { waitUntil: "load" });
     await page.evaluate(() => document.fonts.ready);
-    await page.waitForFunction(() => document.querySelectorAll(".map-node__surface").length === 5);
+    await page.waitForFunction(count => document.querySelectorAll(".map-node__surface").length === count, ids.length);
     // Mobile framing follows fonts.ready through two scheduled layout passes.
     // Measure axial motion only after that existing entrance has settled.
     await page.evaluate(async () => {

@@ -63,7 +63,9 @@ const budgets = {
   // +1 KiB to preserve the shared CSS corner shape in scrolling media rasterization.
   // +3 KiB for contact-console geometry/focus and revised overview copy
   // (2,472 source bytes / 605 gzip bytes); total source and media budgets stay fixed.
-  runtime: 315 * 1024,
+  // +2 KiB for Parfyonov's two-part film and selection in the existing player.
+  // Official posters stay local and load only when this card is opened.
+  runtime: 317 * 1024,
   fonts: 160 * 1024,
   // Akt preloads all weights in one 110 KiB variable font. The complete family
   // is smaller than four Golos files; the initial two-weight preload was smaller.
@@ -71,7 +73,8 @@ const budgets = {
   // +12 KiB total: 9 KiB runtime above and 3 KiB for shared reading/preview layouts.
   // +2 KiB for responsive overview controls and explicitly matched principle stills.
   // Media stays deferred; no additional dependencies or eager requests.
-  initialSource: 659 * 1024,
+  // +3 KiB total for the film record, episode controls and their shared styles.
+  initialSource: 662 * 1024,
 };
 const failures = [];
 

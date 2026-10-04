@@ -1378,10 +1378,10 @@ inspectorClose?.addEventListener("click", () => {
   selectedButton?.focus();
 });
 
-// Rotate five surfaces, keeping glyph geometry and lighting fixed.
+// Rotate sphere surfaces, keeping glyph geometry and lighting fixed.
 const sphereTurnSeconds = new Map([
   ["garage", 120], ["optimal", 96], ["ilmix", 108],
-  ["running", 112], ["youtube", 88],
+  ["running", 112], ["youtube", 88], ["parfyonov", 104],
 ]);
 
 if (mapNodesRoot) {

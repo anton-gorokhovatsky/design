@@ -119,7 +119,7 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=77d4c171e9fd">
+    <link rel="stylesheet" href="styles.css?v=968a240774ff">
     <style>
       .map-evidence [data-map-evidence-role-label]{font-family:var(--font-author);font-size:.6rem;font-weight:400;letter-spacing:0}
     </style>
@@ -135,11 +135,11 @@
           "./js/analytics.js": "./js/analytics.js?v=68b33d8195e5",
           "./js/cipher-field.js": "./js/cipher-field.js?v=646034d9be18",
           "./js/signal-field.js": "./js/signal-field.js?v=e59af2b0e792",
-          "./js/map-data.js": "./js/map-data.js?v=c57a5e74a4b9",
+          "./js/map-data.js": "./js/map-data.js?v=db022067f26b",
           "./js/observation-route.js": "./js/observation-route.js?v=3ce6f5895049",
-          "./js/personal-media.js": "./js/personal-media.js?v=dc7d79bfbd18",
-          "./js/sphere-surfaces.js": "./js/sphere-surfaces.js?v=4cf52ae3e8a0",
-          "./js/map-engine.js": "./js/map-engine.js?v=f282638c9725",
+          "./js/personal-media.js": "./js/personal-media.js?v=c0c209f9ec92",
+          "./js/sphere-surfaces.js": "./js/sphere-surfaces.js?v=ad8f03a11d06",
+          "./js/map-engine.js": "./js/map-engine.js?v=7e5a10d70955",
           "./js/viewport-ui.js": "./js/viewport-ui.js?v=1bbb0e5afc53",
           "./js/panels.js": "./js/panels.js?v=6c3fdfe1b92b",
           "./js/case-view.js": "./js/case-view.js?v=f71d3016c52b",
@@ -157,11 +157,11 @@
     <script type="module" src="js/analytics.js?v=68b33d8195e5"></script>
     <script type="module" src="js/cipher-field.js?v=646034d9be18"></script>
     <script type="module" src="js/signal-field.js?v=e59af2b0e792"></script>
-    <script type="module" src="js/map-data.js?v=c57a5e74a4b9"></script>
+    <script type="module" src="js/map-data.js?v=db022067f26b"></script>
     <script type="module" src="js/observation-route.js?v=3ce6f5895049"></script>
-    <script type="module" src="js/personal-media.js?v=dc7d79bfbd18"></script>
-    <script type="module" src="js/sphere-surfaces.js?v=4cf52ae3e8a0"></script>
-    <script type="module" src="js/map-engine.js?v=f282638c9725"></script>
+    <script type="module" src="js/personal-media.js?v=c0c209f9ec92"></script>
+    <script type="module" src="js/sphere-surfaces.js?v=ad8f03a11d06"></script>
+    <script type="module" src="js/map-engine.js?v=7e5a10d70955"></script>
     <script type="module" src="js/viewport-ui.js?v=1bbb0e5afc53"></script>
     <script type="module" src="js/panels.js?v=6c3fdfe1b92b"></script>
     <script type="module" src="js/case-view.js?v=f71d3016c52b"></script>
@@ -633,6 +633,7 @@
           aria-label="Любимый стрим"
           hidden
         >
+          <div class="personal-media__episodes" data-personal-media-episodes role="group" aria-label="Выбор фильма" hidden></div>
           <div class="personal-media__screen" data-personal-media-screen>
             <button class="personal-media__poster" type="button" data-play-personal-media>
               <img data-personal-media-poster alt="" width="1280" height="720" decoding="async">

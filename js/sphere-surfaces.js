@@ -13,6 +13,7 @@ const profiles = {
   ilmix: [5827, 2.4, 1.5, 0.75],
   running: [9137, 5.5, 0.35, 0.65],
   youtube: [4211, 8, 1, 0.75],
+  parfyonov: [1549, 6.2, 1, 0.55],
 };
 let projection;
 let frame = 0;

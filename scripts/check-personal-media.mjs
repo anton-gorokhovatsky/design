@@ -202,6 +202,46 @@ try {
           assert.ok((await screen.boundingBox()).height >= 200, "Embedded player retains YouTube's minimum height.");
         }
       }
+      if (theme === "light" && ["desktop", "mobile", "compact"].includes(label)) {
+        const requestsBefore = thirdParty.length;
+        await select(page, "parfyonov");
+        const parts = page.locator("[data-personal-media-episodes] button");
+        assert.deepEqual(await parts.allTextContents(), ["Фильм первый", "Фильм второй"]);
+        assert.equal(await parts.nth(0).getAttribute("aria-pressed"), "true");
+        assert.equal(await player.locator("iframe").count(), 0);
+        assert.equal(thirdParty.length, requestsBefore, "Opening the two-part film stays local.");
+        await poster.click();
+        const firstFrame = await player.locator("iframe").elementHandle();
+        assert.ok((await firstFrame.getAttribute("src")).includes("/embed/KIU8dZD4Mbs"));
+        await parts.nth(1).focus();
+        await page.keyboard.press("Enter");
+        assert.equal(await firstFrame.evaluate(frame => frame.isConnected), false,
+          "Switching episodes removes the previous browsing context and sound.");
+        assert.equal(await player.locator("iframe").count(), 0);
+        assert.equal(thirdParty.length, requestsBefore + 1, "Choosing a part does not autoplay.");
+        assert.equal(await parts.nth(1).getAttribute("aria-pressed"), "true");
+        assert.equal(await parts.nth(0).getAttribute("aria-pressed"), "false");
+        assert.equal(await parts.nth(1).evaluate(button => button === document.activeElement), true);
+        assert.equal(await page.locator("[data-personal-media-title]").innerText(), "«Глаз Божий». Фильм второй");
+        assert.ok((await page.locator("[data-personal-media-poster]").getAttribute("src")).includes("parfyonov-glaz-bozhiy-2.jpg"));
+        const episodeUrl = new URL(await page.locator("[data-personal-media-source]").getAttribute("href"));
+        assert.equal(episodeUrl.searchParams.get("v"), "qk989s8vfh4");
+        assert.equal(episodeUrl.searchParams.get("list"), "PLWC_P718eyWNPChB0IhNYxepf-FoOi-cV");
+        assert.ok((await parts.nth(1).boundingBox()).height >= 48);
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0);
+        await capture(page, label + "-parfyonov-part-two");
+        await poster.click();
+        assert.ok((await player.locator("iframe").getAttribute("src")).includes("/embed/qk989s8vfh4"));
+        await page.locator("[data-personal-media-source]").focus();
+        await page.keyboard.press("Escape");
+        assert.equal(await player.locator("iframe").count(), 0);
+        assert.equal(await page.evaluate(() => document.activeElement?.dataset.mapId), "parfyonov");
+        await page.keyboard.press("Enter");
+        assert.equal(await parts.nth(0).getAttribute("aria-pressed"), "true", "Reopening starts with the first part's silent poster.");
+        await select(page, "youtube");
+        assert.equal(await page.locator("[data-personal-media-episodes]").isVisible(), false,
+          "Single videos retain their existing controls.");
+      }
       console.log("PASS " + engine + " " + label + " " + theme);
       await page.close();
     }
