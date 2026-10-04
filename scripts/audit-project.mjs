@@ -661,11 +661,11 @@ requireContract(
     && /corner-shape:\s*var\(--corner-card-shape\)/.test(
       coordinateLabelGeometryRule,
     )
-    && /\.origin-marker__label,[^{]+\{\s*font-size:\s*var\(--type-body\);\s*line-height:\s*var\(--leading-body\);/.test(styleSource)
+    && /\.origin-marker__label,[^{]+\{\s*font-size:\s*var\(--type-utility\);\s*line-height:\s*var\(--leading-label\);/.test(styleSource)
     && originLabelRules.some((rule) => /min-height:\s*var\(--control-target\)/.test(rule)
       && /padding:\s*10px 12px/.test(rule)),
   "coordinate-label-geometry",
-  "The route entry keeps the coordinate material and gains a readable, distinct input surface.",
+  "The route entry uses the compact utility role, coordinate material and full control target.",
 );
 
 const controlConsoleStart = indexSource.indexOf('class="control-console"');

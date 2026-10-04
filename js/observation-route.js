@@ -24,12 +24,12 @@ const observationSteps = [
     id: "contact", kind: "СВЯЗАТЬСЯ", title: "СВЯЗАТЬСЯ",
     meta: "МОСКВА / УДАЛЁННО / ПОЧТА",
     description: "Если вам близок такой подход — напишите мне. Буду рад познакомиться, обсудить идею и вместе найти для неё форму.",
-    href: "mailto:anton@gorokhovatsky.tech",
+    href: "mailto:anton@gorokhovatsky.tech", x: 50, y: 54,
   },
 ];
 
 const createObservationRoute = ({
-  clearMapSelection, getSelectedMapId, hideMapPreview,
+  clearMapSelection, getSelectedMapId, getStepPosition, hideMapPreview,
   isTimeModeActive, renderShowcase, renderSyntheticStep, setShowcasePaused,
   selectMapItem, setMapFilter, setTimeMode, writeUrlState,
 }) => {
@@ -96,6 +96,9 @@ const createObservationRoute = ({
     stepIndex = Math.max(0, Math.min(observationSteps.length - 1, Number(index) || 0));
     const step = observationSteps[stepIndex];
     remaining = step.duration || 0;
+    const position = getStepPosition(step);
+    signalField.style.setProperty("--observation-camera-x", `${Math.max(-5.2, Math.min(5.2, (50 - position.x) * 0.12))}%`);
+    signalField.style.setProperty("--observation-camera-y", `${Math.max(-3.6, Math.min(3.6, (54 - position.y) * 0.09))}%`);
     renderShowcase(step);
     if (step.itemId) selectMapItem(step.itemId, { reveal: true, updateHistory: false, overview: step });
     else renderSyntheticStep(step);
@@ -116,6 +119,7 @@ const createObservationRoute = ({
     indexMenu.hidden = true;
     delete signalField.dataset.observationActive;
     renderShowcase();
+    for (const property of ["--observation-camera-x", "--observation-camera-y"]) signalField.style.removeProperty(property);
     if (closeInspector) clearMapSelection();
     if (updateHistory) writeUrlState({ route: null, step: null, point: closeInspector ? null : getSelectedMapId() }, { replace: true });
   };

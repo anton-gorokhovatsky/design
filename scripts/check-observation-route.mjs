@@ -60,19 +60,13 @@ try {
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
       await capture(page, `start-${name}-${theme}`);
       if (width === 1440) await page.locator("[data-map-inspector]").screenshot({ path: join(directory, `${engine}-readout-${theme}.png`) });
-      const frame = await page.locator("[data-map-inspector]").boundingBox();
-      const controlsBefore = await page.locator("[data-observation-controls]").boundingBox();
-      // Every project retains its native visual and the same reading frame.
+      // Every project uses the same spatial presentation and reachable controls.
       for (let step = 2; step <= 9; step++) {
         await page.locator("[data-observation-next]").click();
         assert.equal(await progress(page), `${String(step).padStart(2, "0")} / 9`);
         await waitForAuthor(page, false);
-        const currentFrame = await page.locator("[data-map-inspector]").boundingBox();
         const controls = await page.locator("[data-observation-controls]").boundingBox();
-        for (const key of ["x", "y", "width", "height"]) {
-          assert.ok(Math.abs(frame[key] - currentFrame[key]) < 1, `Step ${step}: reading frame must not move (${key}).`);
-          assert.ok(Math.abs(controlsBefore[key] - controls[key]) < 1, `Step ${step}: controls must stay in place (${key}).`);
-        }
+        assert.ok(controls.x >= 0 && controls.x + controls.width <= width + 1, "Route controls fit the viewport.");
         assert.ok(controls.y >= 0 && controls.y + controls.height <= height + 1, "Route controls remain outside the scrolling text.");
         if ([2, 3, 4, 7, 8, 9].includes(step)) {
           assert.ok(await page.locator("[data-map-inspector]").isVisible());

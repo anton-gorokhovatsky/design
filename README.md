@@ -56,12 +56,13 @@ route.
   contact screen stays paused. It never autostarts and supports previous,
   pause/resume, next, arrow keys, and Escape.
   The first stop immediately shows the museum project; subsequent stops show
-  their content directly, without decorative title cards or chapter transitions.
+  their content directly, without decorative title cards or interstitial pauses.
   Pause and background tabs preserve the remaining time; reduced motion starts
   paused. Restored step URLs open the selected stop directly.
   One on-demand player reuses the native case reels. Each project explains its
   own decisions; separate principle slides do not interrupt the story. The
-  reading frame, media and controls keep their positions throughout the route. Mobile puts the same media in the reading window,
+  camera follows the route and media planes retain their spatial transitions;
+  the reading window keeps one right-side, bottom-aligned presentation. Mobile puts the same media in the reading window,
   with route controls outside its inner scroller. Reduced motion keeps stills.
   The former `assets/observation/atlas-loop.mp4` intro is not requested by the route.
   The static site share cover uses `assets/observation/atlas.svg`; its template
