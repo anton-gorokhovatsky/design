@@ -83,7 +83,7 @@ const mapItems = [
     id: "garage",
     kind: "company",
     label: "МУЗЕЙ «ГАРАЖ»",
-    title: "МУЗЕЙ «ГАРАЖ»",
+    title: "Музей «Гараж»",
     meta: "ОКТ 2021—МАР 2025 / СТАРШИЙ МЕНЕДЖЕР ВЕБ-РАЗРАБОТКИ",
     description: "Самый важный профессиональный период: здесь сошлись культура, продукт, исследования, дизайн и масштабная веб-разработка.",
     timeYear: 2023,
@@ -99,7 +99,7 @@ const mapItems = [
     kind: "project",
     accentKind: "practice",
     label: "ЧАСТНАЯ ПРАКТИКА",
-    title: "ЧАСТНАЯ ПРАКТИКА",
+    title: "Частная практика",
     meta: "СЕЙЧАС / НЕБОЛЬШИЕ ЦИФРОВЫЕ ПРОЕКТЫ",
     description: "Самостоятельная работа с небольшими проектами: разобраться в задаче, найти собственную форму и довести продукт до запуска.",
     timeYear: 2023,
@@ -113,9 +113,15 @@ const mapItems = [
     id: "optimal",
     kind: "company",
     label: "ОПТИМАЛГРУПП",
-    title: "ЦИФРОВОЕ АГЕНТСТВО «ОПТИМАЛГРУПП»",
+    title: "Цифровое агентство «ОптималГрупп»",
     meta: "МАР 2025—АПР 2026 / МЕНЕДЖЕР ПРОЕКТОВ",
     description: "В агентстве вёл клиентские сайты и сервисы; главный кейс — год управления развитием Строительной академии ТЕХНОНИКОЛЬ.",
+    caseStudy: {
+      title: "Строительная академия ТЕХНОНИКОЛЬ",
+      kindLabel: "КЕЙС / ОБРАЗОВАТЕЛЬНЫЙ ПОРТАЛ",
+      meta: "ОПТИМАЛГРУПП / МАР 2025—АПР 2026 / МЕНЕДЖЕР ПРОЕКТОВ",
+      description: "В цифровом агентстве «ОптималГрупп» год управлял поддержкой и развитием учебного портала Строительной академии ТЕХНОНИКОЛЬ — от приёма проекта до передачи новому менеджеру.",
+    },
     timeYear: 2025.5,
     timeLabel: "2025—2026",
     href: "https://optimalgroup.ru/projects/academy-tn-ru/",
@@ -129,7 +135,7 @@ const mapItems = [
     id: "early-career",
     kind: "company",
     label: "РАННИЕ РОЛИ",
-    title: "ОТ КОНТЕНТА К ПРОДУКТУ",
+    title: "От контента к продукту",
     meta: "ОКТ 2010—АПР 2016 / КОНТЕНТ → ЭЛЕКТРОННАЯ ТОРГОВЛЯ → ПРОДУКТ",
     description: "Начал с контента и электронной торговли в «ВАЛЛЕКС М», затем развивал сайты и интернет-продвижение «ИльмиксГрупп», а в Freya Project уже отвечал за весь продукт — от идеи и UX до продаж, маркетинга и сообщества.",
     timeYear: 2013,
@@ -145,7 +151,8 @@ const mapItems = [
     id: "ilmix",
     kind: "company",
     label: "ИЛЬМИКСГРУПП",
-    title: "«ИЛЬМИКСГРУПП»",
+    title: "«ИльмиксГрупп»",
+    caseStudy: { title: "Цифровые продукты «ИльмиксГрупп»" },
     meta: "ОКОЛО 5 ЛЕТ В СУММЕ / ЦИФРОВОЕ НАПРАВЛЕНИЕ",
     description: "Перезапустил шесть сайтов, занимался разработкой логотипа и остального брендинга. На основе нового бренда курировал разработку всех упаковок продуктов компании. Развивал онкологическое медиа, корпоративные платформы и сервисы для врачей. Отвечал за продуктовую стратегию, UX, рост аудитории, запуск новых каналов и эксперименты с форматами.",
     timeYear: 2018.5,
@@ -198,7 +205,7 @@ const mapItems = [
     parent: "garage",
     kind: "project",
     label: "КОЛЛЕКЦИЯ",
-    title: "КОЛЛЕКЦИЯ И ОТКРЫТОЕ ХРАНЕНИЕ",
+    title: "Коллекция и открытое хранение",
     meta: "2024 / ПРОДУКТ / ИССЛЕДОВАНИЕ / ЗАПУСК",
     description: "Запуск каталога коллекции и открытого хранения: продуктовая логика, исследования, интерфейс и координация реализации.",
     timeYear: 2024,
@@ -216,7 +223,7 @@ const mapItems = [
     parent: "garage",
     kind: "project",
     label: "АРХИВЫ",
-    title: "АРХИВНЫЕ ПРОЕКТЫ",
+    title: "Архивные проекты",
     meta: "АРХИВ РОССИЙСКОГО ИСКУССТВА / I-M-I / NNS",
     description: "Поддержка и развитие цифровых архивов — от повседневных задач до проектирования новых сценариев доступа к материалам.",
     href: "https://russianartarchive.net/ru",
@@ -234,7 +241,7 @@ const mapItems = [
     parent: "garage",
     kind: "project",
     label: "ОНЛАЙН-КУРСЫ",
-    title: "ОНЛАЙН-КУРСЫ МУЗЕЯ",
+    title: "Онлайн-курсы Музея",
     meta: "ОБУЧЕНИЕ / ПРОДУКТ / ПАРТНЁРСТВА",
     description: "Бесплатные образовательные продукты: запуск курсов, улучшение сценариев и работа с партнёрами.",
     href: "https://garagemca.org/learn/online-courses",
@@ -251,7 +258,7 @@ const mapItems = [
     parent: "garage",
     kind: "project",
     label: "Я ИДУ В МУЗЕЙ",
-    title: "«Я ИДУ В МУЗЕЙ»",
+    title: "«Я иду в музей»",
     meta: "ДОСТУПНОСТЬ / МОБИЛЬНЫЙ ПРОДУКТ / ПЕРЕЗАПУСК",
     description: "Перезапуск приложения для людей с ментальными особенностями и их близких: доступность, навигация и понятный маршрут.",
     timeYear: 2024,
@@ -267,7 +274,7 @@ const mapItems = [
     parent: "garage",
     kind: "project",
     label: "ВЕБ-ЗИН",
-    title: "«НЕЧЕЛОВЕЧЕСКИЕ ЖИВОТНЫЕ И ТЕХНИКА»",
+    title: "«Нечеловеческие животные и техника»",
     meta: "ИССЛЕДОВАНИЕ / ДИЗАЙН-ИНЖИНИРИНГ / КОД",
     description: "Интернет-журнал по текстам ридинг-группы, собранный вручную как самостоятельная цифровая форма.",
     href: "https://non-human-animals.garage.digital/index.html",
@@ -285,7 +292,7 @@ const mapItems = [
     parent: "garage",
     kind: "project",
     label: "ПОМОЩЬ ИНСТИТУЦИЯМ",
-    title: "ПОМОЩЬ КУЛЬТУРНЫМ ИНСТИТУЦИЯМ",
+    title: "Помощь культурным институциям",
     meta: "КОНСУЛЬТАЦИИ / ДИЗАЙН / ТЕХНИЧЕСКАЯ ПОМОЩЬ",
     description: "Знания, консультации и конкретная техническая помощь культурным институциям и НКО — с акцентом на быстрый запуск.",
     href: "https://radiancecca.com/",
@@ -303,7 +310,7 @@ const mapItems = [
     parent: "garage",
     kind: "project",
     label: "ЭНДАУМЕНТ",
-    title: "ЭНДАУМЕНТ-ФОНД МУЗЕЯ",
+    title: "Эндаумент-фонд Музея",
     meta: "ПОДДЕРЖКА / РАЗВИТИЕ / КОНТЕНТ",
     description: "Поддержка и развитие отдельного цифрового продукта эндаумент-фонда Музея.",
     href: "https://endowment.garagemca.org/ru/",
@@ -954,9 +961,10 @@ for (const item of mapItems) {
 // Unaltered frames from the existing 900×600 masters; time records the source.
 // ks.fish and the Narkomfin night view use public browser captures from
 // 2026-10-03 (null time), retaining their original aspect ratios.
+// The Garage calendar is a public browser capture from 2026-10-04.
 const caseFigures = {
   "garage-site": [
-    ["task", "assets/case-figures/garage-site-1.jpg", 1.5, "Программа Музея", "Программа, календарь и\u00a0материалы образуют общий вход в\u00a0жизнь Музея."],
+    ["task", "assets/case-figures/garage-site-1.jpg?v=664b8b1c5a67", null, "Календарь Музея: события, время, место и регистрация", "В\u00a0календаре рядом с\u00a0событием видны время, место и\u00a0условия участия — всё, что нужно для планирования визита.", [1440, 714]],
     ["result", "assets/case-figures/garage-site-2.jpg", 5.5, "Материалы на сайте Музея", "Развитие сайта продолжалось после запуска: новые функции и\u00a0публикации встраивались в\u00a0существующий интерфейс."],
   ],
   "narkomfin": [
@@ -985,8 +993,8 @@ const caseFigures = {
   ],
 };
 for (const item of mapItems) {
-  item.figures = (caseFigures[item.id] || []).map(([field, file, time, alt, caption]) => ({
-    field, src: file, time, alt, caption,
+  item.figures = (caseFigures[item.id] || []).map(([field, file, time, alt, caption, size = [900, 600]]) => ({
+    field, src: file, time, alt, caption, width: size[0], height: size[1],
   }));
 }
 const getMapPreviewPoster = item => item.relatedPoster || item.previewPoster || item.youtube?.poster

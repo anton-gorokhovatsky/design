@@ -208,7 +208,7 @@ let lastPanelTrigger = null;
 const panelViews = {
   work: {
     index: "01 / КЕЙСЫ",
-    title: "КЛЮЧЕВЫЕ КЕЙСЫ",
+    title: "Ключевые кейсы",
   },
   approach: {
     index: "02 / ПОДХОД",
@@ -717,6 +717,7 @@ const getMapItemSearchFields = (item) => {
     item.label,
     item.mapLabel,
     item.title,
+    item.caseStudy?.title,
     item.meta,
     item.kindLabel,
     item.description,

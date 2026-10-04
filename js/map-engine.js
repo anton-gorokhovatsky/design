@@ -1153,8 +1153,8 @@ const setMapEvidence = (evidence = null, item = null) => {
       const image = document.createElement("img");
       image.src = figure.src;
       image.alt = typographUiText(figure.alt);
-      image.width = 900;
-      image.height = 600;
+      image.width = figure.width;
+      image.height = figure.height;
       image.loading = "lazy";
       image.decoding = "async";
       const caption = document.createElement("figcaption");
@@ -1276,6 +1276,7 @@ const selectMapItem = (
     if (!reveal) return;
     stopObservation({ updateHistory: false, closeInspector: false });
   }
+  const caseStudy = overview ? null : item.caseStudy;
   selectedMapId = id;
   signalField.dataset.selectedKind = item.kind;
   signalField.dataset.selectedId = item.id;
@@ -1299,20 +1300,20 @@ const selectMapItem = (
   setMapRovingId(id);
 
   if (mapKind) {
-    mapKind.textContent = typographUiText(overview?.kind || item.kindLabel);
+    mapKind.textContent = typographUiText(overview?.kind || caseStudy?.kindLabel || item.kindLabel);
   }
 
   if (mapTitle) {
-    mapTitle.textContent = typographUiText(overview?.title || item.displayTitle || item.title);
-    mapTitle.setAttribute("aria-label", typographUiText(overview?.title || item.title));
+    mapTitle.textContent = typographUiText(overview?.title || caseStudy?.title || item.displayTitle || item.title);
+    mapTitle.setAttribute("aria-label", typographUiText(overview?.title || caseStudy?.title || item.title));
   }
 
   if (mapMeta) {
-    setMapMetaText(overview?.meta ?? item.meta);
+    setMapMetaText(overview?.meta ?? caseStudy?.meta ?? item.meta);
   }
 
   if (mapDescription) {
-    mapDescription.textContent = typographUiText(overview?.description || item.description);
+    mapDescription.textContent = typographUiText(overview?.description || caseStudy?.description || item.description);
   }
 
   setMapEvidence(overview ? null : mapEvidenceById[item.id], overview ? null : item);

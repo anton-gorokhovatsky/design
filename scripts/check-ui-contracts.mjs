@@ -2161,8 +2161,8 @@ const auditBrowser = async (client, origin) => {
   );
   if (
     casesPanelContract.rowCount !== 8
-    || casesPanelContract.title !== "КЛЮЧЕВЫЕ КЕЙСЫ"
-    || casesPanelContract.heading !== "КЛЮЧЕВЫЕ КЕЙСЫ"
+    || casesPanelContract.title !== "Ключевые кейсы"
+    || casesPanelContract.heading !== "Ключевые кейсы"
     || casesPanelContract.panelHidden !== "true"
     || !casesPanelContract.inspectorOpen
     || casesPanelContract.evidenceHidden

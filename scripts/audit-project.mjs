@@ -949,7 +949,7 @@ requireContract(
 );
 requireContract(
   indexSource.match(/data-map-point="[^"]+"/g)?.length === 8
-    && indexSource.includes("КЛЮЧЕВЫЕ <span>КЕЙСЫ</span>")
+    && indexSource.includes("Ключевые <span>кейсы</span>")
     && scriptSource.includes('source: "cases"')
     && scriptSource.includes("evidence.task")
     && scriptSource.includes("evidence.role")

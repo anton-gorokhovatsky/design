@@ -1372,7 +1372,7 @@ const accessibilityAcceptanceAudit = async (browser) => {
     || panelOpen.inert
     || !panelOpen.activeIsClose
     || !trappedInside
-    || !dialogSnapshot.includes("КЛЮЧЕВЫЕ КЕЙСЫ")
+    || !dialogSnapshot.includes("Ключевые кейсы")
     || !panelClosed.focusReturned
     || panelClosed.hidden !== "true"
     || !panelClosed.inert
@@ -1400,7 +1400,7 @@ const accessibilityAcceptanceAudit = async (browser) => {
   await context.close();
 
   return {
-    dialogSnapshotPresent: dialogSnapshot.includes("КЛЮЧЕВЫЕ КЕЙСЫ"),
+    dialogSnapshotPresent: dialogSnapshot.includes("Ключевые кейсы"),
     environment,
     failures,
     inspectorSnapshotPresent: inspectorSnapshot.includes("Закрыть карточку"),

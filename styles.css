@@ -6027,8 +6027,15 @@ html[data-theme="dark"] .practice-map::before {
   transform: translate3d(0, 0, 0) scale(1);
   transform-origin: 50% 54%;
   transform-style: preserve-3d;
-  transition: transform 760ms var(--motion-shift);
+  opacity: 1;
+  transition: transform 760ms var(--motion-shift), opacity 300ms var(--motion-exit);
   will-change: transform;
+}
+
+/* In reading mode, quiet the scene behind the shared translucent material.
+   The map and the spatial overview retain their full contrast. */
+body:is(.has-content-panel, [data-case-open], .has-settings-panel) .map-camera {
+  opacity: .08;
 }
 
 .practice-map[data-camera-view="work"] .map-camera {
@@ -6739,6 +6746,27 @@ html[data-theme="dark"] .map-node--sphere .map-node__glyph {
     max-width: 100%;
     overflow-wrap: break-word;
   }
+
+  /* Give the title its own measure instead of squeezing it beside the cover. */
+  .content-panel .work-row:has(.work-row__preview) {
+    grid-template-columns: 1.25rem minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+  }
+  .content-panel .work-row__preview--type { display: none; }
+  .content-panel .work-row:has(.work-row__preview) .work-row__number { grid-row: 1; grid-column: 1; }
+  .content-panel .work-row:has(.work-row__preview) .work-row__title { grid-row: 1; grid-column: 2; }
+  .content-panel .work-row:has(.work-row__preview) .work-row__scope { grid-row: 2; grid-column: 2; }
+  .content-panel .work-row:has(.work-row__preview) .work-row__domain { grid-row: 3; grid-column: 2; }
+  .content-panel .work-row:has(img.work-row__preview) { grid-template-rows: auto auto auto auto; }
+  .content-panel img.work-row__preview {
+    grid-row: 1;
+    grid-column: 1 / -1;
+    margin-bottom: var(--space-4);
+  }
+  .content-panel .work-row:has(img.work-row__preview) .work-row__number { grid-row: 2; }
+  .content-panel .work-row:has(img.work-row__preview) .work-row__title { grid-row: 2; }
+  .content-panel .work-row:has(img.work-row__preview) .work-row__scope { grid-row: 3; }
+  .content-panel .work-row:has(img.work-row__preview) .work-row__domain { grid-row: 4; }
 
   .content-panel .work-row__domain {
     min-width: 0;
