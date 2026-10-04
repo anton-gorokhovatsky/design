@@ -275,7 +275,7 @@ const setPanelOpen = (isOpen) => {
   }
 
   panelBackgroundRoots.forEach((element) => {
-    element.inert = isOpen;
+    element.inert = isOpen && !contentPanel.contains(element);
   });
 
   panelScrim?.classList.toggle("is-visible", isOpen);
