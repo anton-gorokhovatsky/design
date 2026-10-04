@@ -36,7 +36,7 @@ the central constellation rather than to the label. The running light uses the
 `--running-dusk` token sampled from SATISFY's Dusk Space-O™ Singlet. YouTube uses
 the same sphere geometry at about half the visible area, with its own red accent
 (`--youtube-red`); its approved position is `72 / 82`.
-`Работы и подход · 2,5 минуты` remains a small coordinate label inside the field, not a separate
+`Работы и подход · 3 минуты` remains a small coordinate label inside the field, not a separate
 logo card. It is also the explicit start control for the optional observation
 route.
 
@@ -51,7 +51,7 @@ route.
 - A card's primary external link sits inside its heading fragment, below the
   metadata and before the story. It shares the existing text-link style, with no
   nested material. Labels name the destination; related map points remain last.
-- `Работы и подход · 2,5 минуты` is an optional fourteen-stop route through the same
+- `Работы и подход · 3 минуты` is an optional fourteen-stop route through the same
   map and inspector. Thirteen individually timed transitions take 150 seconds, then the final
   contact screen stays paused. It never autostarts and supports previous,
   pause/resume, next, arrow keys, and Escape.

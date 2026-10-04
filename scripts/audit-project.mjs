@@ -478,6 +478,7 @@ const requiredMaterialSurfaces = [
   "axis-west",
   "inspector-close",
   "inspector-kind",
+  "observation-index",
   "inspector-identity",
   "inspector-description",
   "inspector-observation",
@@ -660,7 +661,7 @@ requireContract(
     && /corner-shape:\s*var\(--corner-card-shape\)/.test(
       coordinateLabelGeometryRule,
     )
-    && /line-height:\s*1/.test(coordinateLabelGeometryRule)
+    && /\.origin-marker__label,[^{]+\{\s*font-size:\s*var\(--type-body\);\s*line-height:\s*var\(--leading-body\);/.test(styleSource)
     && originLabelRules.some((rule) => /min-height:\s*var\(--control-target\)/.test(rule)
       && /padding:\s*10px 12px/.test(rule)),
   "coordinate-label-geometry",

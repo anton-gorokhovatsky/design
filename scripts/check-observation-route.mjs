@@ -48,7 +48,8 @@ try {
       await page.waitForFunction(() => document.querySelector('[data-whoop-recovery]').textContent.includes('77'));
       const authorBefore = await page.locator(".site-header").boundingBox();
       await page.locator("[data-start-observation]").click();
-      await page.locator("[data-observation-pause]").click();
+      if (width > 900) await page.locator("[data-observation-pause]").click();
+      assert.equal(await page.locator("[data-observation-pause]").getAttribute("data-paused"), "true");
       await page.evaluate(() => document.fonts.ready);
       await waitForAuthor(page, false);
       assert.deepEqual(await page.locator(".site-header").boundingBox(), authorBefore);
@@ -60,13 +61,13 @@ try {
       await capture(page, `start-${name}-${theme}`);
       if (width === 1440) await page.locator("[data-map-inspector]").screenshot({ path: join(directory, `${engine}-readout-${theme}.png`) });
       // Every case and principle retains a real visual on both layouts.
-      for (let step = 2; step <= 13; step++) {
+      for (let step = 2; step <= 14; step++) {
         await page.locator("[data-observation-next]").click();
         assert.equal(await progress(page), `${String(step).padStart(2, "0")} / 14`);
         await waitForAuthor(page, false);
         const controls = await page.locator("[data-observation-controls]").boundingBox();
         assert.ok(controls.y >= 0 && controls.y + controls.height <= height + 1, "Route controls remain outside the scrolling text.");
-        if ([3, 4, 10, 11, 13].includes(step)) {
+        if ([3, 4, 10, 11, 13, 14].includes(step)) {
           assert.ok(await page.locator("[data-map-inspector]").isVisible());
           assert.equal(await page.locator("[data-observation-title-card]").count(), 0);
           if (name === "desktop" || name === "mobile") await capture(page, `step-${step}-${name}-${theme}`);
@@ -82,8 +83,8 @@ try {
     }
   }
 
-  const durations = [14000, 12000, 12000, 8000, 14000, 14000, 8000, 12000, 10000, 16000, 8000, 14000, 8000];
-  assert.equal(durations.reduce((sum, duration) => sum + duration, 0), 150000);
+  const durations = [16000, 14000, 14000, 18000, 14000, 14000, 12000, 12000, 12000, 16000, 12000, 14000, 12000];
+  assert.equal(durations.reduce((sum, duration) => sum + duration, 0), 180000);
   const page = await browser.newPage();
   page.on("pageerror", error => errors.push(error.message));
   await page.clock.install();
@@ -101,6 +102,8 @@ try {
     assert.equal(await progress(page), `${String(step).padStart(2, "0")} / 14`);
   }
   assert.equal(await page.locator("[data-observation-pause]").isVisible(), false);
+  await page.keyboard.press("ArrowRight");
+  assert.equal(await progress(page), "14 / 14", "The final slide closes only with an explicit exit.");
   await page.locator("[data-observation-next]").click();
   assert.equal(await page.locator("[data-signal-field]").getAttribute("data-observation-active"), null);
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -110,8 +113,33 @@ try {
   assert.equal(await progress(page), "01 / 14");
   await page.keyboard.press("Escape");
   await page.close();
+  const reader = await browser.newPage({ viewport: { width: 320, height: 568 } });
+  reader.on("pageerror", error => errors.push(error.message));
+  await reader.goto(origin);
+  await reader.locator("[data-start-observation]").click();
+  assert.equal(await reader.locator("[data-observation-pause]").getAttribute("data-paused"), "true", "Mobile starts at the reader's pace.");
+  await reader.locator("[data-observation-steps]").selectOption("6");
+  assert.equal(await progress(reader), "07 / 14");
+  await reader.locator("[data-observation-pause]").click();
+  await reader.locator("[data-observation-next]").click();
+  assert.equal(await reader.locator("[data-observation-pause]").getAttribute("data-paused"), "true", "Manual next stops autoplay, just like previous.");
+  await reader.locator("[data-observation-pause]").click();
+  await reader.locator(".case-scroll").hover();
+  await reader.mouse.wheel(0, 150);
+  assert.equal(await reader.locator("[data-observation-pause]").getAttribute("data-paused"), "true", "Scrolling to read pauses the route.");
+  await reader.locator("[data-observation-steps]").selectOption("9");
+  const sourceDocument = await reader.evaluateHandle(() => document);
+  await reader.locator("[data-map-link]").click();
+  await reader.waitForFunction(() => document.body.hasAttribute("data-case-open"));
+  assert.equal(await sourceDocument.evaluate(node => node === document), true, "Details open without reloading the route.");
+  await reader.locator("[data-close-inspector]").click();
+  await reader.waitForFunction(() => document.querySelector("[data-observation-progress]").textContent === "10 / 14"
+    && !document.querySelector("[data-observation-controls]").hidden);
+  assert.equal(await reader.locator("[data-observation-pause]").getAttribute("data-paused"), "true");
+  await sourceDocument.dispose();
+  await reader.close();
   assert.deepEqual(errors, []);
-  console.log(`${engine}: immediate route content, author/glow visibility, pause, 150-second timing, Escape and reduced motion PASS`);
+  console.log(`${engine}: route composition, 180-second timing, manual reading, named steps, detail return, Escape and reduced motion PASS`);
 } finally {
   await browser.close();
   server.closeAllConnections();

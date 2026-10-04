@@ -13,6 +13,7 @@ const identity = mapInspector.querySelector(".map-readout__identity");
 const caseEntry = mapInspector.querySelector("[data-case-entry]");
 const caseInquiry = mapInspector.querySelector("[data-case-inquiry]");
 const observationControls = mapInspector.querySelector("[data-observation-controls]");
+const observationIndex = mapInspector.querySelector("[data-observation-index]");
 const header = document.createElement("div");
 header.className = "case-header";
 const viewport = document.createElement("div");
@@ -85,8 +86,8 @@ new MutationObserver(syncFrameMaterials).observe(story, { childList: true, subtr
 observeScrollEdges(viewport, { owner: mapInspector });
 function mount(large) {
   clearScrollLenses(mapInspector);
-  header.append(kind, close);
-  story.append(...originalChildren.filter(element => element !== kind && element !== close));
+  header.append(kind, observationIndex, close);
+  story.append(...originalChildren.filter(element => ![kind, observationIndex, close].includes(element)));
   identity.after(inlineSlot);
   viewport.append(story);
   sheet.append(viewport);

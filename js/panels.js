@@ -382,10 +382,26 @@ const openPointFromContentPanel = (pointId, sourceRow = null) => {
 };
 
 setInspectorReturnHandler(() => {
+  const step = window.history.state?.inspectorOverviewStep;
+  if (Number.isInteger(step)) {
+    startObservation({ step, autoplay: false, updateHistory: false });
+    return true;
+  }
   const origin = window.history.state?.inspectorPanelOrigin;
   if (!origin || !panelViews[origin.view]) return false;
   openContentPanel(origin.view, null, { replaceHistory: true, position: origin });
   return true;
+});
+
+document.querySelector("[data-map-link]").addEventListener("click", event => {
+  if (!observationRoute.active || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  const point = new URL(event.currentTarget.href).searchParams.get("point");
+  if (!mapButtons.has(point)) return;
+  event.preventDefault();
+  const step = observationRoute.step;
+  stopObservation({ updateHistory: false });
+  selectMapItem(point, { reveal: true });
+  history.replaceState({ ...history.state, inspectorOverviewStep: step }, "", location.href);
 });
 
 panelOpenButtons.forEach((button) => {
@@ -753,7 +769,7 @@ const commandViews = [
   {
     type: "action",
     id: "observation",
-    title: "РАБОТЫ И ПОДХОД · 2,5 МИНУТЫ",
+    title: "РАБОТЫ И ПОДХОД · 3 МИНУТЫ",
     meta: `${observationSteps.length} ОСТАНОВОК / РАБОТЫ И ПОДХОД`,
     intents: "сеанс наблюдения обзор экскурсия маршрут",
     keywords: "сеанс наблюдение маршрут обзор экскурсия 60 секунд минута",

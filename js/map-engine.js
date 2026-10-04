@@ -223,7 +223,10 @@ const writeUrlState = (changes, { replace = false } = {}) => {
   const nextUrl = `${url.pathname}${url.search}${url.hash}`;
   const method = replace ? "replaceState" : "pushState";
   const state = { ...window.history.state, ...changes };
-  if (changes.point === null) state.inspectorPanelOrigin = null;
+  if (changes.point === null) {
+    state.inspectorPanelOrigin = null;
+    state.inspectorOverviewStep = null;
+  }
   window.history[method](state, "", nextUrl);
 };
 
@@ -1270,6 +1273,10 @@ const selectMapItem = (
     return;
   }
 
+  if (observationRoute.active && !overview) {
+    if (!reveal) return;
+    stopObservation({ updateHistory: false, closeInspector: false });
+  }
   selectedMapId = id;
   signalField.dataset.selectedKind = item.kind;
   signalField.dataset.selectedId = item.id;
@@ -1317,7 +1324,7 @@ const selectMapItem = (
     if (itemHref) {
       mapLink.hidden = false;
       mapLink.href = itemHref;
-      mapLink.textContent = typographUiText(overview ? (["company", "project"].includes(item.kind) ? "ОТКРЫТЬ КЕЙС" : "ПОДРОБНЕЕ") : item.linkLabel
+      mapLink.textContent = typographUiText(overview ? (["company", "project"].includes(item.kind) ? "ОТКРЫТЬ КЕЙС" : "О ПРИНЦИПЕ") : item.linkLabel
         || (item.kind === "practice" ? "ПРИНЦИПЫ В\u00a0NOTION" : "ОТКРЫТЬ САЙТ"));
       mapLink.classList.remove("is-disabled");
       mapLink.removeAttribute("aria-disabled");
@@ -2096,6 +2103,7 @@ timeToggles.forEach((toggle) => {
 
 const renderObservationSyntheticStep = (step) => {
   selectedMapId = null;
+  delete signalField.dataset.selectedKind;
   setMapAtmosphere(null);
   mapButtons.forEach((button) => {
     button.classList.remove("is-selected");

@@ -21,11 +21,11 @@ const map = read("js/map-data.js");
 const route = read("js/observation-route.js");
 const html = read("index.html");
 // The incident that prompted this lane: changing letter case inside runtime JS.
-change("js/panels.js", panels, "РАБОТЫ И ПОДХОД · 2,5 МИНУТЫ", "Работы и подход · 2,5 минуты", true);
+change("js/panels.js", panels, "РАБОТЫ И ПОДХОД · 3 МИНУТЫ", "Работы и подход · 3 минуты", true);
 change("js/map-data.js", map, "Самый важный профессиональный период:", "Профессиональный опыт:", true);
 change("js/observation-route.js", route, "Почти четыре года развивал", "Развивал", true);
 change("index.html", html, ">МОЯ РОЛЬ<", ">МОЙ ВКЛАД<", true);
-change("index.html", html, 'aria-label="Работы и подход · 2,5 минуты"', 'aria-label="Новая подпись"', true);
+change("index.html", html, 'aria-label="Работы и подход · 3 минуты"', 'aria-label="Новая подпись"', true);
 change("index.html", html, "Развивать цифровые продукты Музея", "Развивать цифровую среду Музея", true);
 change("index.html", html, "Визуальный язык связали", "Визуальное решение связали", true);
 change("index.html", html, "Цветовой цикл учитывает сезон", "Цветовой цикл следует сезону", true);
@@ -37,11 +37,11 @@ change("index.html", html, /\.\/js\/panels\.js\?v=[a-f0-9]{12}/.exec(html)[0], "
 
 change("js/observation-route.js", route, "14000", "10000", false);
 change("js/panels.js", panels, 'id: "observation"', 'id: "time"', false);
-change("js/panels.js", panels, 'title: "РАБОТЫ И ПОДХОД · 2,5 МИНУТЫ"', 'title: getTitle()', false);
-change("js/panels.js", panels, 'title: "РАБОТЫ И ПОДХОД · 2,5 МИНУТЫ"', 'title: __COPY__', false);
-change("js/panels.js", panels, 'title: "РАБОТЫ И ПОДХОД · 2,5 МИНУТЫ"', 'title: \0COPY\0', false);
-change("js/panels.js", panels, 'title: "РАБОТЫ И ПОДХОД · 2,5 МИНУТЫ"', 'title: `Text ${run()}`', false);
-change("js/panels.js", panels, 'title: "РАБОТЫ И ПОДХОД · 2,5 МИНУТЫ"', 'get title() { return "Text"; }', false);
+change("js/panels.js", panels, 'title: "РАБОТЫ И ПОДХОД · 3 МИНУТЫ"', 'title: getTitle()', false);
+change("js/panels.js", panels, 'title: "РАБОТЫ И ПОДХОД · 3 МИНУТЫ"', 'title: __COPY__', false);
+change("js/panels.js", panels, 'title: "РАБОТЫ И ПОДХОД · 3 МИНУТЫ"', 'title: \0COPY\0', false);
+change("js/panels.js", panels, 'title: "РАБОТЫ И ПОДХОД · 3 МИНУТЫ"', 'title: `Text ${run()}`', false);
+change("js/panels.js", panels, 'title: "РАБОТЫ И ПОДХОД · 3 МИНУТЫ"', 'get title() { return "Text"; }', false);
 change("js/panels.js", panels, '"[data-constellation-nav]"', '"[data-other-nav]"', false);
 change("js/panels.js", panels, "сеанс наблюдения обзор экскурсия маршрут", "хронология", false);
 change("js/map-data.js", map, "https://garagemca.org/ru", "https://example.com/ru", false);
@@ -154,7 +154,7 @@ try {
   git("add", "."); git("commit", "-m", "published");
   const published = git("rev-parse", "HEAD");
   const plan = (options = {}) => planRelease({ projectRoot: directory, base: published, ...options });
-  writeFileSync(join(directory, "js/panels.js"), panels.replace("РАБОТЫ И ПОДХОД · 2,5 МИНУТЫ", "Работы и подход · 2,5 минуты"));
+  writeFileSync(join(directory, "js/panels.js"), panels.replace("РАБОТЫ И ПОДХОД · 3 МИНУТЫ", "Работы и подход · 3 минуты"));
   assert.equal(plan().mode, "copy");
   git("add", ".");
   assert.equal(plan().mode, "copy", "Staged copy remains copy");

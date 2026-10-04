@@ -119,7 +119,7 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=1319d1da658a">
+    <link rel="stylesheet" href="styles.css?v=ad7831a42f5c">
     <style>
       .map-evidence [data-map-evidence-role-label]{font-family:var(--font-author);font-size:.6rem;font-weight:400;letter-spacing:0}
     </style>
@@ -135,14 +135,14 @@
           "./js/analytics.js": "./js/analytics.js?v=68b33d8195e5",
           "./js/cipher-field.js": "./js/cipher-field.js?v=646034d9be18",
           "./js/signal-field.js": "./js/signal-field.js?v=e59af2b0e792",
-          "./js/map-data.js": "./js/map-data.js?v=78e839c27e9e",
-          "./js/observation-route.js": "./js/observation-route.js?v=36754a9eb4c8",
+          "./js/map-data.js": "./js/map-data.js?v=b3c7606df47c",
+          "./js/observation-route.js": "./js/observation-route.js?v=7b69c358e9c4",
           "./js/personal-media.js": "./js/personal-media.js?v=dc7d79bfbd18",
           "./js/sphere-surfaces.js": "./js/sphere-surfaces.js?v=4cf52ae3e8a0",
-          "./js/map-engine.js": "./js/map-engine.js?v=ab8c0bb42747",
+          "./js/map-engine.js": "./js/map-engine.js?v=091acc160fb4",
           "./js/viewport-ui.js": "./js/viewport-ui.js?v=6cb54327e1dc",
-          "./js/panels.js": "./js/panels.js?v=e03fb56f8ef6",
-          "./js/case-view.js": "./js/case-view.js?v=0da548e75b37",
+          "./js/panels.js": "./js/panels.js?v=e8d4943bce4f",
+          "./js/case-view.js": "./js/case-view.js?v=f71d3016c52b",
           "./js/favicon.js": "./js/favicon.js?v=3aa23538dc2d"
         }
       }
@@ -157,14 +157,14 @@
     <script type="module" src="js/analytics.js?v=68b33d8195e5"></script>
     <script type="module" src="js/cipher-field.js?v=646034d9be18"></script>
     <script type="module" src="js/signal-field.js?v=e59af2b0e792"></script>
-    <script type="module" src="js/map-data.js?v=78e839c27e9e"></script>
-    <script type="module" src="js/observation-route.js?v=36754a9eb4c8"></script>
+    <script type="module" src="js/map-data.js?v=b3c7606df47c"></script>
+    <script type="module" src="js/observation-route.js?v=7b69c358e9c4"></script>
     <script type="module" src="js/personal-media.js?v=dc7d79bfbd18"></script>
     <script type="module" src="js/sphere-surfaces.js?v=4cf52ae3e8a0"></script>
-    <script type="module" src="js/map-engine.js?v=ab8c0bb42747"></script>
+    <script type="module" src="js/map-engine.js?v=091acc160fb4"></script>
     <script type="module" src="js/viewport-ui.js?v=6cb54327e1dc"></script>
-    <script type="module" src="js/panels.js?v=e03fb56f8ef6"></script>
-    <script type="module" src="js/case-view.js?v=0da548e75b37"></script>
+    <script type="module" src="js/panels.js?v=e8d4943bce4f"></script>
+    <script type="module" src="js/case-view.js?v=f71d3016c52b"></script>
     <script type="module" src="js/favicon.js?v=3aa23538dc2d"></script>
     <script type="application/ld+json">
       {
@@ -303,7 +303,7 @@
           проекты справа, личное снизу и принципы слева. Чем ближе точки друг
           к другу, тем ближе их смысловая связь; размер точки показывает личный
           вес опыта, форма — тип объекта. Перемещайтесь между точками стрелками или
-          воспользуйтесь фильтрами и поиском. Кнопка «Работы и подход · 2,5 минуты» запускает
+          воспользуйтесь фильтрами и поиском. Кнопка «Работы и подход · 3 минуты» запускает
           короткий маршрут по проектам; режим «Время»
           перестраивает датированные точки по годовым орбитам.
         </p>
@@ -443,8 +443,8 @@
             data-start-observation
             data-material-surface="origin-label"
             data-material-active="always"
-            aria-label="Работы и подход · 2,5 минуты"
-          >Работы и подход · 2,5 минуты</button>
+            aria-label="Работы и подход · 3 минуты"
+          >Работы и подход · 3 минуты</button>
 
           <aside
             class="map-hover-preview"
@@ -499,6 +499,11 @@
             data-material-surface="inspector-kind"
             data-material-active="always"
           >ИНСТИТУЦИЯ / 2021—2025</p>
+          <label class="observation-index" data-observation-index data-material-surface="observation-index" data-material-active="always" hidden>
+            Обзор <span data-observation-progress>01 / 14</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+            <select data-observation-steps aria-label="Шаг обзора"></select>
+          </label>
           <div class="case-entry" data-case-entry hidden>
             <a class="text-link" href="/#work" data-open-panel="work">Другие работы</a>
           </div>
@@ -581,7 +586,7 @@
             aria-label="Управление обзором"
             hidden
           >
-            <span data-observation-progress>01 / 14</span>
+            <span data-observation-playback-state>На паузе</span>
             <div>
               <button type="button" data-observation-previous aria-label="Предыдущий шаг" title="Предыдущий шаг">
                 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m14 6-6 6 6 6"/></svg>

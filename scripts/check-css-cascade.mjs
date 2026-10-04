@@ -340,6 +340,16 @@ const unexpectedBackdropValues = rules.flatMap((rule) => {
     .map(({ value }) => `${rule.selector}: ${value}`);
 });
 const failures = [];
+// Reading text is assigned a site-wide role. Breakpoints may reflow it,
+// but cannot quietly introduce a smaller font on one panel or phone.
+const independentType = rules.flatMap(rule => {
+  if (/data-capture|__symbol|__shape|__mark|__submit|constellation-nav__item::after/.test(rule.selector)) return [];
+  return rule.declarations.filter(({ property, value }) =>
+    ["font-size", "font"].includes(property)
+    && !/^(0|inherit)$|var\(--(?:type-|case-)/.test(value))
+    .map(({ property, value }) => `${rule.selector}: ${property}: ${value}`);
+});
+if (independentType.length) failures.push(`Text bypasses shared type roles: ${independentType.join(", ")}.`);
 
 if (emptyRanges.length > 0) {
   failures.push(`${emptyRanges.length} empty CSS rules remain.`);

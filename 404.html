@@ -40,7 +40,7 @@
       })();
     </script>
     <link rel="preload" href="/assets/fonts/Akt-Variable.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="stylesheet" href="/styles.css?v=1319d1da658a">
+    <link rel="stylesheet" href="/styles.css?v=ad7831a42f5c">
     <style>
       html, body { min-height: 100%; }
       body { height: auto; overflow-y: auto; }
@@ -95,7 +95,7 @@
       .not-found__meta {
         margin: 0 0 1.5rem;
         color: var(--content-muted);
-        font-size: var(--content-type-micro);
+        font-size: var(--type-label);
         font-weight: 500;
         letter-spacing: .04em;
         line-height: 1.4;
@@ -105,7 +105,7 @@
         margin: 0;
         font-size: var(--type-title);
         font-weight: 500;
-        line-height: 1.08;
+        line-height: var(--leading-title);
         letter-spacing: -.025em;
         text-wrap: balance;
       }
@@ -125,7 +125,7 @@
         right: max(12px, 2vw);
         min-height: 44px;
         max-width: calc(100% - 24px);
-        font-size: .75rem;
+        font-size: var(--type-label);
         color: var(--content-muted);
       }
       .not-found__motion[hidden] { display: none; }
