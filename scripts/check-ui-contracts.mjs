@@ -734,16 +734,19 @@ const readObservationShowcaseContract = (client) => evaluate(client, `(() => {
     const planeBounds = plane.getBoundingClientRect();
     mapNativeTargets.forEach((target) => {
       const targetBounds = target.getBoundingClientRect();
-      const left = Math.max(planeBounds.left, targetBounds.left);
-      const right = Math.min(planeBounds.right, targetBounds.right);
-      const top = Math.max(planeBounds.top, targetBounds.top);
-      const bottom = Math.min(planeBounds.bottom, targetBounds.bottom);
+      // Departing planes can cross the viewport edge; sample only visible overlap.
+      const left = Math.max(0, planeBounds.left, targetBounds.left);
+      const right = Math.min(innerWidth, planeBounds.right, targetBounds.right);
+      const top = Math.max(0, planeBounds.top, targetBounds.top);
+      const bottom = Math.min(innerHeight, planeBounds.bottom, targetBounds.bottom);
       if (right - left < 3 || bottom - top < 3) return;
       const topElement = document.elementFromPoint(
         (left + right) / 2,
         (top + bottom) / 2,
       );
       mediaOcclusionSamples.push({
+        plane: plane.dataset.observationShowcaseId,
+        point: [(left + right) / 2, (top + bottom) / 2],
         mediaWins: Boolean(
           topElement?.closest('[data-observation-showcase]')
           || topElement?.closest(
