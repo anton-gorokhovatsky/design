@@ -6971,6 +6971,21 @@ html[data-reduce-motion="true"] :is(.observation-showcase, .observation-showcase
   margin: 0;
 }
 
+.map-quotation {
+  margin: var(--space-5) 0 0;
+  padding-left: var(--space-4);
+  border-left: 1px solid var(--line);
+}
+
+.map-quotation blockquote {
+  margin: 0;
+}
+
+.map-quotation figcaption {
+  margin-top: var(--space-3);
+  color: var(--content-muted);
+}
+
 .map-evidence {
   display: grid;
   gap: 9px;
@@ -10352,7 +10367,8 @@ html[data-reduce-motion="true"] :is(.ui-close, .work-row, .map-related__item, .c
 .settings-presence > p,
 .case-entry,
 .author-entry,
-.case-figure figcaption {
+.case-figure figcaption,
+.map-quotation figcaption {
   font-size: var(--type-detail);
   line-height: var(--leading-body);
 }

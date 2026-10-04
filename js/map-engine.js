@@ -29,6 +29,7 @@ const mapKind = document.querySelector("[data-map-kind]");
 const mapTitle = document.querySelector("[data-map-title]");
 const mapMeta = document.querySelector("[data-map-meta]");
 const mapDescription = document.querySelector("[data-map-description]");
+const mapQuotation = document.querySelector("[data-map-quotation]");
 const mapLink = document.querySelector("[data-map-link]");
 const mapInspector = document.querySelector("[data-map-inspector]");
 const mapRelated = document.querySelector("[data-map-related]");
@@ -460,6 +461,13 @@ const getMapLayout = (item) => {
   return { x, y };
 };
 const resolveMapLayout = item => mapClearancePositions.get(item.id) || getMapLayout(item);
+
+const setMapQuotation = quote => {
+  if (!mapQuotation) return;
+  mapQuotation.hidden = !quote;
+  mapQuotation.querySelector("blockquote").textContent = typographUiText(quote?.text || "");
+  mapQuotation.querySelector("figcaption").textContent = typographUiText(quote?.source || "");
+};
 
 const placeMapLabel = (item, label) => {
   if (["garage", "private-practice"].includes(item.id)) return;
@@ -1339,6 +1347,7 @@ const selectMapItem = (
   if (mapDescription) {
     mapDescription.textContent = typographUiText(overview?.description || caseStudy?.description || item.description);
   }
+  setMapQuotation(overview ? null : item.quote);
 
   setMapEvidence(overview ? null : mapEvidenceById[item.id], overview ? null : item);
 
@@ -2155,6 +2164,7 @@ const renderObservationSyntheticStep = (step) => {
   if (mapDescription) {
     mapDescription.textContent = typographUiText(step.description);
   }
+  setMapQuotation(null);
 
   setMapEvidence(null);
   renderMapRelatedItems();

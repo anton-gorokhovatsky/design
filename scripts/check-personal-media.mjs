@@ -205,52 +205,25 @@ try {
       if (theme === "light" && ["desktop", "mobile", "compact"].includes(label)) {
         const requestsBefore = thirdParty.length;
         await select(page, "parfyonov");
-        const parts = page.locator("[data-personal-media-episodes] button");
-        assert.deepEqual(await parts.allTextContents(), ["Глаз Божий · 1", "Глаз Божий · 2"]);
-        assert.equal(await parts.nth(0).getAttribute("aria-pressed"), "true");
+        assert.equal(await player.isVisible(), false, "The film playlist opens externally, without an embedded player.");
         assert.equal(await player.locator("iframe").count(), 0);
-        assert.equal(thirdParty.length, requestsBefore, "Opening the selection stays local.");
-        let previousFrame;
-        const videos = [
-          ["KIU8dZD4Mbs", "«Глаз Божий». Фильм первый", "parfyonov-glaz-bozhiy-1.jpg", null, null],
-          ["qk989s8vfh4", "«Глаз Божий». Фильм второй", "parfyonov-glaz-bozhiy-2.jpg", null, null],
-        ];
-        for (const [index, [videoId, title, posterPath, start, end]] of videos.entries()) {
-          await parts.nth(index).focus();
-          await page.keyboard.press("Enter");
-          if (previousFrame) assert.equal(await previousFrame.evaluate(frame => frame.isConnected), false,
-            "Changing videos removes the previous browsing context and sound.");
-          assert.equal(await player.locator("iframe").count(), 0);
-          assert.equal(thirdParty.length, requestsBefore + index, "Choosing a video does not autoplay.");
-          assert.equal(await parts.nth(index).getAttribute("aria-pressed"), "true");
-          assert.equal(await parts.nth(index).evaluate(button => button === document.activeElement), true);
-          assert.equal(await page.locator("[data-personal-media-title]").innerText(), title);
-          assert.ok((await page.locator("[data-personal-media-poster]").getAttribute("src")).includes(posterPath));
-          const episodeUrl = new URL(await page.locator("[data-personal-media-source]").getAttribute("href"));
-          assert.equal(episodeUrl.searchParams.get("v"), videoId);
-          assert.equal(episodeUrl.searchParams.get("t"), start);
-          assert.equal(episodeUrl.searchParams.get("list"), "PLWC_P718eyWNPChB0IhNYxepf-FoOi-cV");
-          assert.ok((await parts.nth(index).boundingBox()).height >= 48);
-          if (index === 0) await capture(page, label + "-parfyonov");
-          await poster.click();
-          previousFrame = await player.locator("iframe").elementHandle();
-          await page.waitForFunction(() => document.querySelector("[data-personal-media-status]").textContent === "Плеер YouTube открыт");
-          const embeddedUrl = new URL(await previousFrame.getAttribute("src"));
-          assert.equal(embeddedUrl.pathname, "/embed/" + videoId);
-          assert.equal(embeddedUrl.searchParams.get("start"), start);
-          assert.equal(embeddedUrl.searchParams.get("end"), end,
-            "Both films retain their full duration.");
-        }
+        assert.equal(thirdParty.length, requestsBefore, "Reading the quote stays local.");
+        assert.equal(await page.locator("[data-map-quotation]").isVisible(), true);
+        assert.ok((await page.locator("[data-map-quote]").innerText()).includes("Сто лет — невелик вроде срок"));
+        assert.equal(await page.locator("[data-map-link]").getAttribute("href"),
+          "https://www.youtube.com/playlist?list=PLWC_P718eyWNPChB0IhNYxepf-FoOi-cV");
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0);
-        await page.locator("[data-personal-media-source]").focus();
+        await capture(page, label + "-parfyonov");
+        await page.locator("[data-map-link]").focus();
         await page.keyboard.press("Escape");
-        assert.equal(await player.locator("iframe").count(), 0);
         assert.equal(await page.evaluate(() => document.activeElement?.dataset.mapId), "parfyonov");
-        await page.keyboard.press("Enter");
-        assert.equal(await parts.nth(0).getAttribute("aria-pressed"), "true", "Reopening starts with the first film's silent poster.");
         await select(page, "youtube");
-        assert.equal(await page.locator("[data-personal-media-episodes]").isVisible(), false,
-          "Single videos retain their existing controls.");
+        assert.equal(await page.locator("[data-map-quotation]").isVisible(), false,
+          "The quotation must not remain in another point's card.");
+        assert.equal(await page.locator("[data-map-quote]").innerText(), "");
+        assert.equal(await player.isVisible(), true);
+        assert.equal(await page.locator("[data-personal-media-episodes]").isVisible(), false);
+
       }
       console.log("PASS " + engine + " " + label + " " + theme);
       await page.close();
