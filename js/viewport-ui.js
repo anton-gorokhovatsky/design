@@ -11,7 +11,7 @@ const scrollRegionFromKey = (event, region, reduceMotion) => {
   region.scrollTo({ top: Math.max(0, Math.min(maximum, top)), behavior: reduceMotion ? "auto" : "smooth" });
 };
 
-// Refract foreground content inside a fixed material frame.
+// Refract content inside its fixed frame.
 const scrollLensControllers = new Map();
 let scrollLensId = 0;
 const lensNamespace = "http://www.w3.org/2000/svg";
@@ -595,6 +595,10 @@ const setConsoleOffset = (module, x, y) => {
   module.dataset.dragY = y.toFixed(2);
   module.style.setProperty("--console-drag-x", `${x.toFixed(2)}px`);
   module.style.setProperty("--console-drag-y", `${y.toFixed(2)}px`);
+  if (module.classList.contains("control-console")) {
+    const { top, height } = module.getBoundingClientRect();
+    document.documentElement.style.setProperty("--console-clearance", `${height ? innerHeight - top + y : 0}px`);
+  }
   if (module === authorCard) syncAuthorField();
 };
 

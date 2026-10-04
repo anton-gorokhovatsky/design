@@ -1417,7 +1417,8 @@ const accessibilityAcceptanceAudit = async (browser) => {
   let browser;
 
   if (!baseUrl) {
-    localServer = await startStaticServer({ projectRoot });
+    // Retired-document presence keepalive is covered by check-live-surface.
+    localServer = await startStaticServer({ projectRoot, presence: false });
     baseUrl = `${localServer.origin}/?qa=webkit-regression`;
   }
 

@@ -163,8 +163,6 @@ panelMore.addEventListener("click", () => contentPanelBody.scrollTo({
 const placeContentFrame = () => {
   const gap = parseFloat(getComputedStyle(contentPanelHeader).gap) || 12;
   const top = Math.ceil(contentPanelHeader.offsetTop + contentPanelHeader.offsetHeight + gap);
-  const console = document.querySelector(".control-console").getBoundingClientRect();
-  contentPanel.style.setProperty("--section-console-clearance", `${console.height ? innerHeight - console.top + gap : gap}px`);
   contentPanel.style.setProperty("--panel-frame-top", `${top}px`);
 };
 new ResizeObserver(placeContentFrame).observe(contentPanelHeader);

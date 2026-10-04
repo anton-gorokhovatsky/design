@@ -938,6 +938,10 @@ const auditBrowser = async (client, origin) => {
           textBounds[0].left - contentLeft,
           contentRight - textBounds.at(-1).right,
         ];
+        // Share spare width evenly while retaining the short All button's
+        // minimum hit area; larger common type can make that minimum binding.
+        const spareWidths = widths.map((width, index) => width - textBounds[index].width);
+        const sharedSpareWidth = Math.min(...spareWidths);
         return {
           dockHeight: dock?.getBoundingClientRect().height || 0,
           labels: labels.map((label) => label?.textContent.trim() || ""),
@@ -963,6 +967,9 @@ const auditBrowser = async (client, origin) => {
             Math.abs(centerX(symbol) - boundsCenterX(textBounds[index]))
           )),
           controlWidths: widths,
+          labelSpacingDeviations: widths.map((width, index) => Math.abs(
+            width - Math.max(32, textBounds[index].width + sharedSpareWidth),
+          )),
           innerLabelGaps,
           innerLabelGapSpread: Math.max(...innerLabelGaps) - Math.min(...innerLabelGaps),
           outerLabelGaps,
@@ -985,9 +992,8 @@ const auditBrowser = async (client, origin) => {
         || mobileDockContract.dockHeight < 60
         || mobileDockContract.labelCenterOffsets.some((offset) => offset > 0.75)
         || mobileDockContract.symbolToLabelCenterOffsets.some((offset) => offset > 0.75)
-        || mobileDockContract.innerLabelGapSpread > 1
-        || mobileDockContract.outerLabelGapDifference > 1
-        || mobileDockContract.outerToHalfInnerGapDeviation > 1
+        || mobileDockContract.labelSpacingDeviations.some((difference) => difference > 1)
+        || mobileDockContract.innerLabelGaps.some((gap) => gap < 2)
         || mobileDockContract.themeVisible
       ) {
         fail(
