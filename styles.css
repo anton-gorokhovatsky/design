@@ -3781,7 +3781,7 @@ html[data-focus-modality="keyboard"]
   color: var(--content-ink);
   font-family: var(--font-sans);
   line-height: 1;
-  transform: translateY(-1px);
+  transform: none;
 }
 
 .control-console .command-dock::before {
@@ -3809,6 +3809,7 @@ html[data-focus-modality="keyboard"]
   justify-self: center;
   overflow: hidden;
   font-size: 0;
+  transform: translateY(-1px);
 }
 
 .control-console .command-dock__mark::before {
@@ -5925,8 +5926,6 @@ body:has(.command-dock.is-open) .map-links.has-active-relation {
   --layer-mid-y: 0px;
   --layer-near-x: 0px;
   --layer-near-y: 0px;
-  perspective: 1100px;
-  perspective-origin: 50% 54%;
 }
 
 .practice-map[data-focus-kind="company"] {
@@ -6026,7 +6025,10 @@ html[data-theme="dark"] .practice-map::before {
   inset: 0;
   transform: translate3d(0, 0, 0) scale(1);
   transform-origin: 50% 54%;
-  transform-style: preserve-3d;
+  /* Project depth inside the fading scene so opacity cannot flatten and then
+     suddenly restore a perspective inherited from outside the scene. */
+  perspective: 1100px;
+  perspective-origin: 50% 54%;
   opacity: 1;
   transition: transform 760ms var(--motion-shift), opacity 300ms var(--motion-exit);
   will-change: transform;
@@ -7777,16 +7779,16 @@ html[data-theme="light"]
 /* Contact: one content-driven grid, shared type and no nested surfaces. */
 .content-panel .contact-copy {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
-  align-items: start;
-  gap: 24px 32px;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  align-items: stretch;
+  gap: 0;
   margin: 0;
   padding: 0;
   color: var(--content-ink);
   font-family: var(--content-font);
   pointer-events: auto;
 }
-.contact-intro { display: grid; gap: 12px; min-width: 0; }
+.contact-intro { display: grid; align-content: center; gap: var(--space-3); min-width: 0; padding: var(--window-pad); }
 .contact-copy p { margin: 0; }
 .contact-copy h2 {
   margin: 0;
@@ -7814,14 +7816,15 @@ html[data-theme="light"]
   min-height: 36px;
   padding-block: 6px;
 }
-.contact-links { display: grid; min-width: 0; }
+.contact-links { display: grid; grid-template-rows: repeat(2, minmax(0, 1fr)); min-width: 0; border-left: 1px solid var(--line-soft); }
 .contact-links a {
   display: grid;
   grid-template-columns: 18px minmax(0, 1fr) 12px;
   align-items: baseline;
+  align-content: center;
   gap: 6px 12px;
   min-height: 80px;
-  padding: 16px 0;
+  padding: var(--space-5);
   color: inherit;
   transition: color 180ms var(--motion-shift);
 }
@@ -7842,11 +7845,11 @@ html[data-theme="light"]
 }
 .contact-copy a:hover { color: var(--signal); }
 .contact-copy a:focus-visible { outline: 2px solid var(--signal); outline-offset: 4px; }
-@media (max-width: 900px) {
+@media (max-width: 680px) {
   .content-panel[data-view="contact"] { --contact-bottom-clearance: max(12px, env(safe-area-inset-bottom)); }
-  .content-panel .contact-copy { gap: 16px; }
-  .contact-intro { gap: 10px; }
-  .contact-links a { min-height: 72px; padding-block: 12px; }
+  .content-panel .contact-copy { grid-template-columns: minmax(0, 1fr); }
+  .contact-links { border-left: 0; border-top: 1px solid var(--line-soft); }
+  .contact-links a { min-height: 72px; padding: var(--space-4) var(--window-pad); }
 }
 
 .text-link {
@@ -9268,18 +9271,19 @@ html[data-focus-modality="keyboard"]
 
 /* Section variants select a reading measure; shell, type and spacing are shared. */
 .content-panel[data-view="approach"] { --panel-width: 52.5rem; }
-.content-panel[data-view="contact"] { --panel-width: 47.5rem; }
+.content-panel[data-view="contact"] { --panel-width: 45rem; }
 .content-panel[data-view="approach"] .content-panel__frame {
   bottom: auto;
   max-height: calc(100% - var(--panel-frame-top, 96px) - var(--panel-bottom));
 }
 .content-panel .content-panel__frame .approach-section { display: block; }
-.content-panel .approach-grid { display: block; margin: 0; padding: 0; border: 0; }
+.content-panel .approach-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: 0 var(--space-6); margin: 0; padding: 0; border: 0; }
 .content-panel .content-panel__frame .approach-grid li {
   display: grid;
-  grid-template: auto / 1.5rem minmax(0, .8fr) minmax(0, 1.2fr);
+  grid-template: auto auto / 1.5rem minmax(0, 1fr);
   align-items: start;
-  gap: var(--space-5);
+  align-content: start;
+  gap: var(--space-2) var(--space-4);
   min-height: 0;
   padding: var(--space-5) 0;
   border: 0;
@@ -9287,15 +9291,9 @@ html[data-focus-modality="keyboard"]
   border-radius: 0;
   container-type: normal;
 }
-.content-panel .content-panel__frame .approach-grid li:last-child { padding-bottom: 0; }
-.content-panel .approach-grid span { color: var(--content-muted); font: var(--type-label)/var(--leading-body) var(--content-font); }
+.content-panel .approach-grid span { grid-row: 1 / span 2; color: var(--content-muted); font: var(--type-label)/var(--leading-body) var(--content-font); }
 .content-panel .approach-grid h3 { margin: 0; font-weight: 500; letter-spacing: -.025em; }
-.content-panel .approach-grid p { max-width: none; margin: 0; letter-spacing: 0; }
-@media (max-width: 900px) {
-  .content-panel .content-panel__frame .approach-grid li { grid-template-columns: 1.5rem minmax(0, 1fr); gap: var(--space-2) var(--space-4); }
-  .content-panel .approach-grid span { grid-row: 1 / span 2; }
-  .content-panel .approach-grid h3, .content-panel .approach-grid p { grid-column: 2; }
-}
+.content-panel .approach-grid p { grid-column: 2; max-width: none; margin: 0; letter-spacing: 0; }
 
 .content-panel[data-view="work"] .content-panel__frame { flex-direction: column; }
 .content-panel[data-view="work"] .content-panel__body { min-height: 0; }
@@ -9318,10 +9316,8 @@ html[data-focus-modality="keyboard"]
 .content-panel__more:hover { color: var(--signal); }
 .content-panel__more[hidden] { display: none; }
 .content-panel__more:focus-visible { outline: 2px solid var(--signal); outline-offset: -2px; }
-.content-panel__more .map-related__arrow { width: .75rem; height: .75rem; transform: rotate(90deg); }
-.content-panel__more .map-related__arrow::before { display: none; }
-.content-panel__more .map-related__arrow::after { right: .1875rem; width: .375rem; height: .375rem; }
-.content-panel__more[data-direction="up"] .map-related__arrow { transform: rotate(-90deg); }
+.content-panel__more-icon { flex: none; width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; }
+.content-panel__more[data-direction="up"] .content-panel__more-icon { transform: rotate(180deg); }
 
 /* Aura follows its author card beneath the shared material. */
 :root { --day-rgb: 83, 142, 103; --day-enabled: 0; --author-card-width: clamp(20rem, 26vw, 24rem); }
@@ -9798,12 +9794,22 @@ body[data-case-open] :is(.map-axis-label, .map-labels, .map-node-label, .origin-
   -webkit-backdrop-filter: none;
 }
 .is-case-view .map-related {
+  container: related-projects / inline-size;
   padding: var(--case-space-section) 0 0;
   border-radius: 0;
   border-top: 1px solid var(--line-soft);
   background: transparent;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
+}
+
+@container related-projects (min-width: 40rem) {
+  .map-related__track:has(> li:nth-child(5)) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--space-6);
+  }
+  .map-related__track:has(> li:nth-child(5)) > li:nth-child(2) { border-top: 0; }
+  .map-related__track:has(> li:nth-child(5)) .map-related__item { height: 100%; }
 }
 
 .map-inspector.is-case-view .map-readout__identity h2 {
@@ -10040,7 +10046,7 @@ html[data-reduce-motion="true"] [style*="scroll-ink-"] { filter: none !important
   bottom: auto;
   max-height: calc(100% - var(--panel-frame-top, 76px) - var(--panel-bottom));
 }
-.content-panel__frame .contact-section { display: block; }
+.content-panel .content-panel__frame .contact-section { display: block; padding: 0; }
 .content-panel__frame .contact-copy { width: 100%; max-width: none; }
 @media (max-width: 900px) {
   :root { --window-radius: 24px; }
@@ -10054,14 +10060,14 @@ html[data-reduce-motion="true"] [style*="scroll-ink-"] { filter: none !important
 
 /* Reading windows sit above the stationary map consoles. */
 .author-entry { display: inline-flex; align-items: center; min-height: var(--control-target); margin-top: var(--space-2); font-weight: 500; pointer-events: auto; }
-body.has-reading-surface :is(.site-header, .whoop-field, .system-dock),
+body.has-reading-surface:not(.has-contact-consoles) :is(.site-header, .whoop-field, .system-dock),
 body.has-constellation-nav :is(.site-header, .whoop-field),
 body:is([data-case-open], .has-settings-panel) .control-console {
   opacity: .16;
   filter: blur(3px);
   pointer-events: none;
 }
-body.has-reading-surface .system-dock :is(.map-controls, .display-control) {
+body.has-reading-surface:not(.has-contact-consoles) .system-dock :is(.map-controls, .display-control) {
   pointer-events: none;
 }
 @media (max-width: 900px) {

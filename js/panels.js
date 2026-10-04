@@ -164,8 +164,10 @@ const placeContentFrame = () => {
   const gap = parseFloat(getComputedStyle(contentPanelHeader).gap) || 12;
   const top = Math.ceil(contentPanelHeader.offsetTop + contentPanelHeader.offsetHeight + gap);
   contentPanel.style.setProperty("--panel-frame-top", `${top}px`);
+  syncContactConsoles();
 };
 new ResizeObserver(placeContentFrame).observe(contentPanelHeader);
+new ResizeObserver(placeContentFrame).observe(document.querySelector(".content-panel__frame"));
 window.addEventListener("resize", placeContentFrame, { passive: true });
 window.addEventListener("author-presence-change", placeContentFrame);
 const panelSections = Array.from(document.querySelectorAll("[data-panel-section]"));
@@ -203,6 +205,12 @@ const panelBackgroundRoots = [
   document.querySelector(".site-header"),
   ...document.querySelectorAll(".skip-link"),
 ].filter(Boolean);
+const contactConsoleHomes = [".site-header", ".system-dock"].map(selector => {
+  const element = document.querySelector(selector);
+  const home = document.createComment("contact-console-home");
+  element.before(home);
+  return { element, home };
+});
 let activePanelView = null;
 let lastPanelTrigger = null;
 const panelViews = {
@@ -219,6 +227,39 @@ const panelViews = {
     title: "СВЯЗАТЬСЯ",
   },
 };
+
+function syncContactConsoles() {
+  let available = activePanelView === "contact"
+    && document.body.classList.contains("has-content-panel")
+    && !compactConstellationNav.matches
+    && !document.body.classList.contains("has-settings-panel");
+  if (available) {
+    const windows = [contentPanelHeader, document.querySelector(".content-panel__frame")]
+      .map(element => element.getBoundingClientRect());
+    available = [".site-header", ".map-controls", ".display-control"].every(selector => {
+      const box = document.querySelector(selector).getBoundingClientRect();
+      return windows.every(window => box.right + 8 <= window.left || box.left - 8 >= window.right
+        || box.bottom + 8 <= window.top || box.top - 8 >= window.bottom);
+    });
+  }
+  if (available === document.body.classList.contains("has-contact-consoles")) return;
+  if (!available && contactConsoleHomes.some(({ element }) => element.contains(document.activeElement))) {
+    panelClose.focus({ preventScroll: true });
+  }
+  // Keep visible controls inside the dialog's keyboard scope, above its scrim.
+  for (const { element, home } of contactConsoleHomes) {
+    if (available) contentPanel.append(element);
+    else home.after(element);
+  }
+  document.body.classList.toggle("has-contact-consoles", available);
+  window.dispatchEvent(new CustomEvent("reading-surface-change"));
+}
+window.addEventListener("pointerup", syncContactConsoles);
+document.querySelector(".system-dock").addEventListener("click", event => {
+  if (document.body.classList.contains("has-contact-consoles") && event.target.closest(".map-controls button")) {
+    closeContentPanel({ restoreFocus: false });
+  }
+}, true);
 
 const setPanelOpen = (isOpen) => {
   if (isOpen && contentPanel && controlConsole && !contentPanel.contains(controlConsole)) {
@@ -246,6 +287,7 @@ const setPanelOpen = (isOpen) => {
     );
   });
   document.body.classList.toggle("has-content-panel", isOpen);
+  syncContactConsoles();
   syncConstellationNavInteractivity();
 
   if (!isOpen && controlConsole && controlConsoleHome.parentNode) {
@@ -1168,7 +1210,7 @@ commandForm?.addEventListener("submit", (event) => {
 });
 
 document.addEventListener("keydown", (event) => {
-  if (event.key !== "Escape") {
+  if (event.key !== "Escape" || document.querySelector("[data-settings-panel][open]")) {
     return;
   }
 

@@ -579,7 +579,8 @@ const syncAuthorPresence = () => {
     || document.body.classList.contains("has-settings-panel")
     || Boolean(document.querySelector(".map-inspector.is-open"));
   document.body.classList.toggle("has-reading-surface", reading);
-  authorCard.inert = reading || document.body.classList.contains("has-constellation-nav");
+  authorCard.inert = (reading && !document.body.classList.contains("has-contact-consoles"))
+    || document.body.classList.contains("has-constellation-nav");
   syncAuthorField();
   window.dispatchEvent(new CustomEvent("author-presence-change"));
 };

@@ -61,7 +61,9 @@ const budgets = {
   // +6 KiB for the approved 14-stop narrative, per-step timing and one on-demand
   // media player shared by desktop and mobile; existing reels are reused.
   // +1 KiB to preserve the shared CSS corner shape in scrolling media rasterization.
-  runtime: 312 * 1024,
+  // +3 KiB for contact-console geometry/focus and revised overview copy
+  // (2,472 source bytes / 605 gzip bytes); total source and media budgets stay fixed.
+  runtime: 315 * 1024,
   fonts: 160 * 1024,
   // Akt preloads all weights in one 110 KiB variable font. The complete family
   // is smaller than four Golos files; the initial two-weight preload was smaller.
