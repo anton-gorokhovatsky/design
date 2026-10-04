@@ -68,7 +68,7 @@ function startDay() {
       const stamp = value => {
         const instant = new Date(value), label = date.format(instant);
         const key = value => new Date(value).toLocaleDateString("ru-RU", { timeZone: "Europe/Moscow" });
-        return `${day.ended && key(value) === key(day.ended) ? "" : `${label} `}в ${time.format(instant)} мск`;
+        return `${day.ended && key(value) === key(day.ended) ? "" : `${label} `}в ${time.format(instant)} по Москве`;
       };
       const strainDate = day.strainUpdated ? `обновлена ${stamp(day.strainUpdated)}` : "ещё не рассчитана";
       select("provenance").textContent = `${dayLabel}. Получены ${stamp(day.fetched)}; нагрузка в WHOOP ${strainDate}.${day.stale ? " Новых данных пока нет, поэтому карта сохраняет исходную палитру." : ""}`;

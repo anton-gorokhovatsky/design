@@ -119,7 +119,7 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=cb441fd199dd">
+    <link rel="stylesheet" href="styles.css?v=bf35af063bf3">
     <style>
       .map-evidence [data-map-evidence-role-label]{font-family:var(--font-author);font-size:.6rem;font-weight:400;letter-spacing:0}
     </style>
@@ -128,7 +128,7 @@
       {
         "imports": {
           "./js/preferences.js": "./js/preferences.js?v=587c9cbccbbc",
-          "./js/whoop-day.js": "./js/whoop-day.js?v=c1b9dd22391a",
+          "./js/whoop-day.js": "./js/whoop-day.js?v=18eea2f4be2d",
           "./js/whoop-aura.js": "./js/whoop-aura.js?v=dd6e333dd1c2",
           "./js/presence.js": "./js/presence.js?v=b12012556e8b",
           "./js/atlas-motion.js": "./js/atlas-motion.js?v=776a659178f0",
@@ -150,7 +150,7 @@
     <!-- runtime-import-map:end -->
     <!-- Native modules keep their dependencies explicit; see js/README.md. -->
     <script type="module" src="js/preferences.js?v=587c9cbccbbc"></script>
-    <script type="module" src="js/whoop-day.js?v=c1b9dd22391a"></script>
+    <script type="module" src="js/whoop-day.js?v=18eea2f4be2d"></script>
     <script type="module" src="js/whoop-aura.js?v=dd6e333dd1c2"></script>
     <script type="module" src="js/atlas-motion.js?v=776a659178f0"></script>
     <script type="module" src="js/presence.js?v=b12012556e8b"></script>
@@ -1090,7 +1090,7 @@
               <p>4 ПОЛЯ / 2010—СЕЙЧАС</p>
               <p>
                 <span class="status-dot" aria-hidden="true"></span>
-                <span class="display-control__value">МСК <span data-clock>--:--</span></span>
+                <span class="display-control__value">МОСКВА <span data-clock>--:--</span></span>
               </p>
             </div>
             <p class="display-control__presence" data-presence hidden>Сейчас на&nbsp;сайте <span class="presence-total"><span data-presence-count>—</span><span data-presence-unit></span></span></p>
@@ -1118,7 +1118,7 @@
                     class="display-control__glyph display-control__glyph--motion"
                     aria-hidden="true"
                   ></span>
-                  <span>ДВИЖЕНИЕ −</span>
+                  <span class="display-control__label">ДВИЖЕНИЕ <svg class="display-control__modifier" viewBox="0 0 12 12" aria-hidden="true"><path d="M1 6h10"/></svg></span>
                 </button>
                 <button
                   type="button"
@@ -1129,7 +1129,7 @@
                     class="display-control__glyph display-control__glyph--contrast"
                     aria-hidden="true"
                   ></span>
-                  <span>КОНТРАСТ +</span>
+                  <span class="display-control__label">КОНТРАСТ <svg class="display-control__modifier" viewBox="0 0 12 12" aria-hidden="true"><path d="M1 6h10M6 1v10"/></svg></span>
                 </button>
               </div>
               <button
@@ -1361,31 +1361,14 @@
             </p>
             <h2 id="contact-title"><span>Привет!</span></h2>
             <p class="contact-lede">Для предложений о&nbsp;работе, рекомендаций и&nbsp;хороших наводок.</p>
-            <p class="contact-resume">
-              <a class="text-link"
-                href="https://hh.ru/resume/e469b9deff00850af10039ed1f736563726574?print=true"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Резюме на&nbsp;hh.ru
-              </a>
-              <a class="text-link"
-                href="https://gorokhovatsky.notion.site/digital-web-digital-f68fc13247614ccb9738d9a85acf29b4?pvs=74"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Подробное резюме в&nbsp;Notion
-              </a>
-            </p>
           </div>
           <div class="contact-links">
             <a
               href="mailto:anton.gorokhovatsky@gmail.com"
               aria-label="Написать письмо: anton.gorokhovatsky@gmail.com"
             >
-              <span class="contact-link__index" aria-hidden="true">01</span>
-              <span class="contact-link__channel">ЭЛ. ПОЧТА</span>
-              <span class="contact-link__action">Написать письмо</span>
+              <span class="contact-link__channel">Эл. почта</span>
+              <span class="contact-link__action">anton.gorokhovatsky@gmail.com</span>
             </a>
             <a
               href="https://t.me/gorokhovatsky"
@@ -1393,11 +1376,26 @@
               rel="noreferrer"
               aria-label="Написать в Telegram: @gorokhovatsky"
             >
-              <span class="contact-link__index" aria-hidden="true">02</span>
-              <span class="contact-link__channel">TELEGRAM</span>
-              <span class="contact-link__action">Открыть чат</span>
+              <span class="contact-link__channel">Telegram</span>
+              <span class="contact-link__action">@gorokhovatsky</span>
             </a>
           </div>
+          <p class="contact-resume">
+            <a class="text-link"
+              href="https://hh.ru/resume/e469b9deff00850af10039ed1f736563726574?print=true"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Резюме на&nbsp;hh.ru
+            </a>
+            <a class="text-link"
+              href="https://gorokhovatsky.notion.site/digital-web-digital-f68fc13247614ccb9738d9a85acf29b4?pvs=74"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Подробное резюме в&nbsp;Notion
+            </a>
+          </p>
         </div>
       </section>
         </div>
