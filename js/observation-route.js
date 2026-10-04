@@ -56,7 +56,7 @@ const createObservationRoute = ({
     setShowcasePaused(paused || document.hidden);
     if ((last && document.activeElement === playback)
       || (stepIndex === 0 && document.activeElement === previous)) next.focus();
-    progress.textContent = `${String(stepIndex + 1).padStart(2, "0")} / ${observationSteps.length}`;
+    progress.textContent = `${stepIndex + 1} / ${observationSteps.length}`;
     previous.disabled = stepIndex === 0;
     playback.hidden = last;
     const label = paused ? "Продолжить обзор" : "Приостановить обзор";

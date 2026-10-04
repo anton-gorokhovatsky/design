@@ -1179,7 +1179,7 @@ const auditBrowser = async (client, origin) => {
     await delay(820);
     const state = await readObservationShowcaseContract(client);
     if (!state.visible || state.activeId !== id || state.activePlaneId !== id
-      || state.routeProgress !== String(step).padStart(2, "0") + " / 9"
+      || state.routeProgress !== step + " / 9"
       || JSON.stringify(state.planeIds) !== JSON.stringify(expectedShowcaseIds)
       || state.imageCount !== 8 || !state.imagesReady || !state.parentIsMap
       || state.ariaHidden !== "true" || state.focusables !== 0

@@ -53,7 +53,7 @@ try {
       await page.evaluate(() => document.fonts.ready);
       await waitForAuthor(page, false);
       assert.deepEqual(await page.locator(".site-header").boundingBox(), authorBefore);
-      assert.equal(await progress(page), "01 / 9");
+      assert.equal(await progress(page), "1 / 9");
       assert.equal(await page.locator("[data-observation-next]").getAttribute("aria-label"), "Следующий шаг");
       assert.equal(await page.locator("[data-observation-title-card]").count(), 0);
       await page.locator(width > 900 ? "[data-observation-showcase]" : "[data-observation-preview]").waitFor({ state: "visible", timeout: 5000 });
@@ -63,7 +63,7 @@ try {
       // Every project uses the same spatial presentation and reachable controls.
       for (let step = 2; step <= 9; step++) {
         await page.locator("[data-observation-next]").click();
-        assert.equal(await progress(page), `${String(step).padStart(2, "0")} / 9`);
+        assert.equal(await progress(page), `${step} / 9`);
         await waitForAuthor(page, false);
         const controls = await page.locator("[data-observation-controls]").boundingBox();
         assert.ok(controls.x >= 0 && controls.x + controls.width <= width + 1, "Route controls fit the viewport.");
@@ -94,24 +94,24 @@ try {
   await page.clock.fastForward(1000);
   await page.locator("[data-observation-pause]").click();
   await page.clock.fastForward(5000);
-  assert.equal(await progress(page), "01 / 9");
+  assert.equal(await progress(page), "1 / 9");
   await page.locator("[data-observation-pause]").click();
   await page.clock.fastForward(durations[0] - 1000);
-  assert.equal(await progress(page), "02 / 9");
+  assert.equal(await progress(page), "2 / 9");
   for (let step = 3; step <= 9; step++) {
     await page.clock.fastForward(durations[step - 2]);
-    assert.equal(await progress(page), `${String(step).padStart(2, "0")} / 9`);
+    assert.equal(await progress(page), `${step} / 9`);
   }
   assert.equal(await page.locator("[data-observation-pause]").isVisible(), false);
   await page.keyboard.press("ArrowRight");
-  assert.equal(await progress(page), "09 / 9", "The final slide closes only with an explicit exit.");
+  assert.equal(await progress(page), "9 / 9", "The final slide closes only with an explicit exit.");
   await page.locator("[data-observation-next]").click();
   assert.equal(await page.locator("[data-signal-field]").getAttribute("data-observation-active"), null);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.locator("[data-start-observation]").click();
   assert.equal(await page.locator("[data-observation-pause]").getAttribute("aria-label"), "Продолжить обзор");
   await page.clock.fastForward(20000);
-  assert.equal(await progress(page), "01 / 9");
+  assert.equal(await progress(page), "1 / 9");
   await page.keyboard.press("Escape");
   await page.close();
   const reader = await browser.newPage({ viewport: { width: 320, height: 568 } });
@@ -120,7 +120,7 @@ try {
   await reader.locator("[data-start-observation]").click();
   assert.equal(await reader.locator("[data-observation-pause]").getAttribute("data-paused"), "true", "Mobile starts at the reader's pace.");
   await reader.locator("[data-observation-steps]").selectOption("6");
-  assert.equal(await progress(reader), "07 / 9");
+  assert.equal(await progress(reader), "7 / 9");
   await reader.locator("[data-observation-pause]").click();
   await reader.locator("[data-observation-next]").click();
   assert.equal(await reader.locator("[data-observation-pause]").getAttribute("data-paused"), "true", "Manual next stops autoplay, just like previous.");
@@ -134,7 +134,7 @@ try {
   await reader.waitForFunction(() => document.body.hasAttribute("data-case-open"));
   assert.equal(await sourceDocument.evaluate(node => node === document), true, "Details open without reloading the route.");
   await reader.locator("[data-close-inspector]").click();
-  await reader.waitForFunction(() => document.querySelector("[data-observation-progress]").textContent === "07 / 9"
+  await reader.waitForFunction(() => document.querySelector("[data-observation-progress]").textContent === "7 / 9"
     && !document.querySelector("[data-observation-controls]").hidden);
   assert.equal(await reader.locator("[data-observation-pause]").getAttribute("data-paused"), "true");
   await sourceDocument.dispose();
