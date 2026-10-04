@@ -3,6 +3,7 @@ import { mkdirSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join } from "node:path";
 import { chromium, webkit } from "playwright";
+import { mapItems } from "../js/map-data.js";
 
 const require = createRequire(import.meta.url);
 const { startStaticServer } = require("./browser-contracts.cjs");
@@ -71,7 +72,7 @@ try {
       assert.equal(state.overflow, 0, JSON.stringify({ name, theme, state }));
       assert.ok(state.authorVisible && state.author.left >= 0 && state.author.right <= width + 1);
       assert.equal(state.selected, "true");
-      assert.equal(state.nodes.length, 53, "The whole map remains present.");
+      assert.equal(state.nodes.length, mapItems.length, "The whole map remains present.");
       assert.deepEqual(state.blockedTargets, [], `${name} ${theme}: each point must receive input at its own center.`);
       assert.equal(state.route.trim().replace(/\s+/g, " "), "Работы и подход · 3 минуты");
       assert.equal(state.routeName, state.route.trim(), "The accessible name matches the visible overview label.");

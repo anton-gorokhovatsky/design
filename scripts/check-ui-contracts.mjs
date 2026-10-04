@@ -10,9 +10,12 @@ import { createRequire } from "node:module";
 import { dirname, join, resolve } from "node:path";
 import { inflateSync } from "node:zlib";
 import { fileURLToPath } from "node:url";
+import { mapItems } from "../js/map-data.js";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(scriptDirectory, "..");
+const expectedRelationCount = mapItems.reduce((total, item) => total
+  + Number(Boolean(item.parent)) + (item.relatedTo?.length || 0), 0);
 const require = createRequire(import.meta.url);
 const {
   chromiumScenarioCatalog,
@@ -1215,7 +1218,7 @@ const auditBrowser = async (client, origin) => {
     || reactiveGarageContract.changedCount !== 9
     || reactiveGarageContract.changedActiveCount !== 9
     || reactiveGarageContract.changedInactiveCount !== 0
-    || reactiveGarageContract.connectedCount !== 31
+    || reactiveGarageContract.connectedCount !== expectedRelationCount
     || reactiveGarageContract.minimumRelativeDeflection < 0.02
     || reactiveGarageContract.minimumActiveOpacity < 0.2
     || reactiveGarageContract.pendingAnimations !== 0
@@ -1240,7 +1243,7 @@ const auditBrowser = async (client, origin) => {
     || reactiveChildContract.changedCount !== 1
     || reactiveChildContract.changedActiveCount !== 1
     || reactiveChildContract.changedInactiveCount !== 0
-    || reactiveChildContract.connectedCount !== 31
+    || reactiveChildContract.connectedCount !== expectedRelationCount
     || reactiveChildContract.minimumRelativeDeflection < 0.02
     || reactiveChildContract.minimumActiveOpacity < 0.2
     || reactiveChildContract.pendingAnimations !== 0
