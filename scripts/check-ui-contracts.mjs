@@ -2134,13 +2134,13 @@ const auditBrowser = async (client, origin) => {
   const casesPanelContract = await evaluate(client, `(() => {
     const panel = document.querySelector("[data-content-panel]");
     const rows = Array.from(document.querySelectorAll(".work-row[data-map-point]"));
-    const optimal = document.querySelector('.work-row[data-map-point="optimal"]');
+    const selectedCase = document.querySelector('.work-row[data-map-point="ks-fish"]');
     const before = {
       rowCount: rows.length,
       title: document.querySelector("[data-panel-title]")?.textContent.trim(),
       heading: document.querySelector("#work-title")?.textContent.replace(/\\s+/g, " ").trim(),
     };
-    optimal?.click();
+    selectedCase?.click();
     const evidence = document.querySelector("[data-map-evidence]");
     return {
       ...before,
@@ -2166,9 +2166,9 @@ const auditBrowser = async (client, origin) => {
     || casesPanelContract.panelHidden !== "true"
     || !casesPanelContract.inspectorOpen
     || casesPanelContract.evidenceHidden
-    || !casesPanelContract.result.includes("Передал новому менеджеру")
-    || casesPanelContract.selectedId !== "optimal"
-    || casesPanelContract.point !== "optimal"
+    || !casesPanelContract.result.includes("ks.fish")
+    || casesPanelContract.selectedId !== "ks-fish"
+    || casesPanelContract.point !== "ks-fish"
     || casesPanelContract.hash !== "#map"
     || !casesPanelFocus
   ) {
@@ -2177,7 +2177,7 @@ const auditBrowser = async (client, origin) => {
       focusOnInspectorClose: casesPanelFocus,
     });
   }
-  await saveScreenshot(client, "desktop-employer-case-optimal");
+  await saveScreenshot(client, "desktop-employer-case-ks-fish");
   await saveElementScreenshot(client, "crop-desktop-employer-case-optimal", ".map-inspector");
 
   await navigate(client, `${origin}/?qa=ui-contracts-settings-search`);
