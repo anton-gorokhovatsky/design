@@ -7,28 +7,28 @@ const { chromium } = require("playwright");
 // Whole browser viewports, in the author's requested order. Page loads and
 // image warm-up are trimmed out; the source site's layout is never rewritten.
 const scenes = [
-  { id: "home-hero", url: "/", duration: 4 },
-  { id: "museum-menu", url: "/", menu: true, duration: 6 },
+  { id: "home-hero", url: "/", carouselAt: 1000, duration: 4.2 },
+  { id: "museum-menu", url: "/", menu: true, duration: 4.6 },
   { id: "home-stream", url: "/", startHeading: "Поток", offset: 80,
-    scrollBy: 600, hold: 2000, scroll: 2400, duration: 5.8 },
+    scrollBy: 600, hold: 900, scroll: 2600, duration: 4.4 },
   { id: "tours", url: "/visit/tours", scrollStart: 0,
     endHeading: "Открытое хранение", offset: 70,
-    hold: 2300, scroll: 2600, duration: 6.2 },
+    hold: 1200, scroll: 2600, duration: 4.8 },
   { id: "collection", url: "/collection",
     endHeading: "Каталог коллекции", offset: 90,
-    hold: 2300, scroll: 2600, duration: 6.2 },
+    carouselAt: 1200, hold: 3400, scroll: 2600, duration: 6.8 },
   { id: "calendar", url: "/calendar", scrollBy: 600,
-    hold: 2000, scroll: 2400, duration: 5.8 },
+    hold: 900, scroll: 2600, duration: 4.4 },
   { id: "library", url: "/programs/library/catalogue", scrollBy: 550,
-    hold: 2000, scroll: 2400, duration: 5.8 },
+    hold: 900, scroll: 2600, duration: 4.4 },
   { id: "exhibitions", url: "/exhibitions", scrollBy: 650,
-    hold: 2000, scroll: 2400, duration: 5.8 },
+    hold: 900, scroll: 2600, duration: 4.4 },
   { id: "courses", url: "/learn/online-courses", scrollStart: 0,
     endHeading: "Описание", offset: -200,
-    hold: 2300, scroll: 2700, duration: 6.4 },
-  { id: "studios-cover", url: "/programs/garage_studios", scrollStart: 0, duration: 3.2 },
+    hold: 1200, scroll: 2800, duration: 5 },
+  { id: "studios-cover", url: "/programs/garage_studios", scrollStart: 0, duration: 2.2 },
   { id: "studios-gallery", url: "/programs/garage_studios",
-    startHeading: "Галерея", offset: 80, gallery: true, duration: 4.2 },
+    startHeading: "Галерея", offset: 80, carouselAt: 1000, duration: 3.6 },
 ];
 
 const headingPosition = (page, text, offset) => page.evaluate(({ text, offset }) => {
@@ -48,6 +48,25 @@ const waitForVisibleImages = (page) => page.waitForFunction(() => (
 ), null, { timeout: 15000 });
 
 const scrollTo = (page, top) => page.evaluate((y) => window.scrollTo(0, y), top);
+
+// Parking inside the viewport expands the collection image on hover.
+const parkPointer = (page) => page.mouse.move(-30, -30);
+
+async function nextSlide(page) {
+  const controls = page.getByRole("button", {
+    name: "Переключить на следующий слайд", exact: true,
+  });
+  const viewport = page.viewportSize();
+  for (const control of await controls.all()) {
+    const rect = await control.boundingBox();
+    if (!rect || rect.x < 0 || rect.y < 0
+      || rect.x + rect.width > viewport.width || rect.y + rect.height > viewport.height) continue;
+    await control.click();
+    await parkPointer(page);
+    return;
+  }
+  throw new Error("Missing visible Garage carousel control");
+}
 
 const recordScroll = (page, top, duration) => page.evaluate(async ({ top, duration }) => {
   const from = scrollY;
@@ -121,31 +140,30 @@ async function captureGarageTour({ rawDirectory, finalDirectory }) {
         await waitForVisibleImages(page);
       }
       await scrollTo(page, from);
-      await page.mouse.move(1190, 10);
+      await parkPointer(page);
       await page.waitForTimeout(700);
       await waitForVisibleImages(page);
       await page.screenshot({ path: path.join(clipsDirectory, `${scene.id}-start.png`) });
       const usefulStart = (Date.now() - recordingStartedAt) / 1000;
 
-      if (scene.scroll) {
-        await page.waitForTimeout(scene.hold);
-        await recordScroll(page, to, scene.scroll);
-        await page.waitForTimeout(scene.duration * 1000 - scene.hold - scene.scroll);
-      } else if (scene.menu) {
-        await page.waitForTimeout(500);
+      if (scene.menu) {
+        await page.waitForTimeout(400);
         await page.getByRole("button", { name: "Открыть меню", exact: true }).click();
-        await page.mouse.move(1190, 10);
-        await page.waitForTimeout(5500);
-      } else if (scene.gallery) {
-        await page.waitForTimeout(1600);
-        const next = page.getByRole("button", { name: "Переключить на следующий слайд", exact: true });
-        for (const button of await next.all()) {
-          if (await button.isVisible()) { await button.click(); break; }
-        }
-        await page.mouse.move(1190, 10);
-        await page.waitForTimeout(2600);
+        await parkPointer(page);
+        await page.waitForTimeout(scene.duration * 1000 - 400);
       } else {
-        await page.waitForTimeout(scene.duration * 1000);
+        const openingHold = scene.scroll ? scene.hold : scene.duration * 1000;
+        if (scene.carouselAt != null) {
+          await page.waitForTimeout(scene.carouselAt);
+          await nextSlide(page);
+          await page.waitForTimeout(openingHold - scene.carouselAt);
+        } else {
+          await page.waitForTimeout(openingHold);
+        }
+        if (scene.scroll) {
+          await recordScroll(page, to, scene.scroll);
+          await page.waitForTimeout(scene.duration * 1000 - scene.hold - scene.scroll);
+        }
       }
       await page.screenshot({ path: path.join(clipsDirectory, `${scene.id}-end.png`) });
       await page.waitForTimeout(600);

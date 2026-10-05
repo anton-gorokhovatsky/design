@@ -8,8 +8,8 @@ export const reelChapterSpecs = [
     itemId: "garage-site",
     master: "garage-site.mp4",
     chapters: [
-      { label: "museum-menu", start: 4.5, duration: 5.4 },
-      { label: "collection-and-catalogue", start: 22.1, duration: 6 },
+      { label: "museum-menu", start: 4.9, duration: 3.8 },
+      { label: "collection-and-catalogue", start: 18.1, duration: 6.6 },
     ],
   },
   {
