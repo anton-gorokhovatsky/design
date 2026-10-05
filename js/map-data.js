@@ -4,8 +4,8 @@ const principlesSourceHref = "https://app.notion.com/p/digital-web-digital-f68fc
 // reel-chapter-manifest:start
 const reelChapterSources = new Map([
   ["garage-site", [
-      "assets/reel-chapters/garage-site-01.mp4?v=2c74cfcb7562",
-      "assets/reel-chapters/garage-site-02.mp4?v=aa6b76a354f6",
+      "assets/reel-chapters/garage-site-01.mp4?v=206118aff494",
+      "assets/reel-chapters/garage-site-02.mp4?v=eaef8d8527e7",
   ]],
   ["narkomfin", [
       "assets/reel-chapters/narkomfin-01.mp4?v=8a8b8eba97b7",
@@ -179,11 +179,11 @@ const mapItems = [
     timeLabel: "2021—2025",
     href: "https://garagemca.org/",
     kindLabel: "ПРОЕКТ / МУЗЕЙ «ГАРАЖ»",
-    previewVideo: "assets/reels/garage-site.mp4?v=1e206ffd075d",
-    previewPoster: "assets/reel-posters/garage-site.jpg?v=0f474f606e9d",
-    previewDuration: 7.8,
+    previewVideo: "assets/reels/garage-site.mp4?v=99e806446d1a",
+    previewPoster: "assets/reel-posters/garage-site.jpg?v=811821c055d3",
+    previewDuration: 59.4,
     previewOrientation: "landscape",
-    previewMeta: "ГЛАВНАЯ И НАВИГАЦИЯ / 00:08",
+    previewMeta: "ГЛАВНАЯ, МЕНЮ И РАЗДЕЛЫ МУЗЕЯ / 00:59",
     x: 58,
     y: 14,
     size: 23,

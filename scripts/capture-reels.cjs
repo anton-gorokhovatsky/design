@@ -904,14 +904,6 @@ const keepOverlaysDismissed = async (page, selectors = [], duration = 7600) => {
 };
 
 const runCaptureMotion = async (page, id, source) => {
-  if (id === "garage-site") {
-    // Keep the complete first screen before showing the site's full navigation.
-    // Scrolling immediately used to crop the hero in the shared poster frame.
-    await page.waitForTimeout(3200);
-    await page.getByRole("button", { name: "Открыть меню", exact: true }).click();
-    await page.waitForTimeout(3000);
-    return;
-  }
   if (id === "ks-fish") {
     await page.waitForTimeout(1500);
     await page.locator('[data-hero-journal-next]').click();
@@ -1000,6 +992,12 @@ const runCaptureMotion = async (page, id, source) => {
     mkdir(rawDirectory, { recursive: true }),
     mkdir(finalDirectory, { recursive: true }),
   ]);
+
+  if (projectId === "garage-site") {
+    const { captureGarageTour } = require("./capture-garage-tour.cjs");
+    await captureGarageTour({ rawDirectory, finalDirectory });
+    return;
+  }
 
   const browser = await chromium.launch({
     headless: true,
