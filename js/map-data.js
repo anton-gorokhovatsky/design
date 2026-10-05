@@ -4,8 +4,8 @@ const principlesSourceHref = "https://app.notion.com/p/digital-web-digital-f68fc
 // reel-chapter-manifest:start
 const reelChapterSources = new Map([
   ["garage-site", [
-      "assets/reel-chapters/garage-site-01.mp4?v=d231d9f246e7",
-      "assets/reel-chapters/garage-site-02.mp4?v=a185b6d535dc",
+      "assets/reel-chapters/garage-site-01.mp4?v=2c74cfcb7562",
+      "assets/reel-chapters/garage-site-02.mp4?v=aa6b76a354f6",
   ]],
   ["narkomfin", [
       "assets/reel-chapters/narkomfin-01.mp4?v=8a8b8eba97b7",
@@ -81,6 +81,7 @@ const reelChapterSources = new Map([
 const mapItems = [
   {
     id: "garage",
+    descriptionCredit: { label: "Charmer Studio", href: "https://www.charmerstudio.com/ru/work/garage" },
     kind: "company",
     label: "Музей «Гараж»",
     title: "Музей «Гараж»",
@@ -167,19 +168,22 @@ const mapItems = [
   },
   {
     id: "garage-site",
+    descriptionCredit: { label: "Charmer Studio", href: "https://www.charmerstudio.com/ru/work/garage" },
     parent: "garage",
     kind: "project",
     label: "САЙТ МУЗЕЯ",
     title: "САЙТ МУЗЕЯ «ГАРАЖ»",
     meta: "UX / UI / ДИЗАЙН-ИНЖИНИРИНГ / ВЕБ-МЕНЕДЖМЕНТ",
-    description: "Сайт Музея «Гараж»: программа, календарь и материалы. Стратегия и дизайн — Charmer Studio.",
+    description: "Развитие сайта Музея «Гараж»: исследования, продуктовые решения, дизайн новых функций и управление разработкой. Стратегия и дизайн сайта — Charmer Studio.",
     timeYear: 2023,
     timeLabel: "2021—2025",
     href: "https://garagemca.org/",
     kindLabel: "ПРОЕКТ / МУЗЕЙ «ГАРАЖ»",
-    previewVideo: "assets/reels/garage-site.mp4?v=4ebed322d029",
+    previewVideo: "assets/reels/garage-site.mp4?v=1e206ffd075d",
+    previewPoster: "assets/reel-posters/garage-site.jpg?v=0f474f606e9d",
+    previewDuration: 7.8,
     previewOrientation: "landscape",
-    previewMeta: "ГЛАВНАЯ, КАЛЕНДАРЬ И МЕДИА / 00:08",
+    previewMeta: "ГЛАВНАЯ И НАВИГАЦИЯ / 00:08",
     x: 58,
     y: 14,
     size: 23,
@@ -984,12 +988,7 @@ for (const item of mapItems) {
 // Unaltered frames from the existing 900×600 masters; time records the source.
 // ks.fish and the Narkomfin night view use public browser captures from
 // 2026-10-03 (null time), retaining their original aspect ratios.
-// The Garage calendar is a public browser capture from 2026-10-04.
 const caseFigures = {
-  "garage-site": [
-    ["task", "assets/case-figures/garage-site-1.jpg?v=664b8b1c5a67", null, "Календарь Музея: события, время, место и регистрация", "В\u00a0календаре рядом с\u00a0событием видны время, место и\u00a0условия участия — всё, что нужно для планирования визита.", [1440, 714]],
-    ["result", "assets/case-figures/garage-site-2.jpg", 5.5, "Материалы на сайте Музея", "Развитие сайта продолжалось после запуска: новые функции и\u00a0публикации встраивались в\u00a0существующий интерфейс."],
-  ],
   "narkomfin": [
     ["task", "assets/case-figures/narkomfin-1.jpg", 3, "Дневная модель Дома Наркомфина", "Модель здания помогает знакомиться с\u00a0местами внутри дома через саму архитектуру."],
     ["result", "assets/case-figures/narkomfin-2.jpg?v=3a13718cebb1", null, "Ночная модель Дома Наркомфина", "Дневное и\u00a0ночное освещение меняют восприятие одной и\u00a0той\u00a0же модели."],

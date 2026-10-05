@@ -18,6 +18,7 @@ const desktopVideo = { width: 900, height: 600 };
 const projects = {
   "garage-site": {
     url: "https://garagemca.org/",
+    captureBrowser: chromium.executablePath(),
     dismissSelectors: ['button[aria-label="Закрыть"]'],
   },
   "garage-collection": {
@@ -903,6 +904,14 @@ const keepOverlaysDismissed = async (page, selectors = [], duration = 7600) => {
 };
 
 const runCaptureMotion = async (page, id, source) => {
+  if (id === "garage-site") {
+    // Keep the complete first screen before showing the site's full navigation.
+    // Scrolling immediately used to crop the hero in the shared poster frame.
+    await page.waitForTimeout(3200);
+    await page.getByRole("button", { name: "Открыть меню", exact: true }).click();
+    await page.waitForTimeout(3000);
+    return;
+  }
   if (id === "ks-fish") {
     await page.waitForTimeout(1500);
     await page.locator('[data-hero-journal-next]').click();

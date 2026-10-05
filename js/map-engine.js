@@ -462,6 +462,23 @@ const getMapLayout = (item) => {
 };
 const resolveMapLayout = item => mapClearancePositions.get(item.id) || getMapLayout(item);
 
+const setMapDescription = (value, credit) => {
+  if (!mapDescription) return;
+  const text = typographUiText(value);
+  mapDescription.textContent = text;
+  if (!credit) return;
+  const label = typographUiText(credit.label);
+  const index = text.indexOf(label);
+  if (index < 0) return;
+  const link = document.createElement("a");
+  link.className = "text-link";
+  link.href = credit.href;
+  link.textContent = label;
+  link.target = "_blank";
+  link.rel = "noreferrer";
+  mapDescription.replaceChildren(text.slice(0, index), link, text.slice(index + label.length));
+};
+
 const setMapQuotation = quote => {
   if (!mapQuotation) return;
   mapQuotation.hidden = !quote;
@@ -1179,6 +1196,11 @@ const setMapEvidence = (evidence = null, item = null) => {
     if (row) row.hidden = !value;
     element.textContent = value ? typographUiText(value) : "";
     const field = element.getAttributeNames().find(name => name.startsWith("data-map-evidence-"))?.replace("data-map-evidence-", "");
+    const label = row?.querySelector("dt");
+    if (label) {
+      label.dataset.defaultLabel ||= label.textContent;
+      label.textContent = typographUiText(evidence?.labels?.[field] || label.dataset.defaultLabel);
+    }
     for (const figure of (item?.figures || []).filter(figure => figure.field === field)) {
       const frame = document.createElement("figure");
       frame.className = "case-figure";
@@ -1344,9 +1366,7 @@ const selectMapItem = (
     setMapMetaText(overview?.meta ?? caseStudy?.meta ?? item.meta);
   }
 
-  if (mapDescription) {
-    mapDescription.textContent = typographUiText(overview?.description || caseStudy?.description || item.description);
-  }
+  setMapDescription(overview?.description || caseStudy?.description || item.description, item.descriptionCredit);
   setMapQuotation(overview ? null : item.quote);
 
   setMapEvidence(overview ? null : mapEvidenceById[item.id], overview ? null : item);
@@ -2161,9 +2181,7 @@ const renderObservationSyntheticStep = (step) => {
 
   setMapMetaText(step.meta);
 
-  if (mapDescription) {
-    mapDescription.textContent = typographUiText(step.description);
-  }
+  setMapDescription(step.description);
   setMapQuotation(null);
 
   setMapEvidence(null);
