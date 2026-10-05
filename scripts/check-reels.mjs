@@ -6,8 +6,8 @@ import { fileURLToPath } from "node:url";
 import {
   getReelChapterFileName,
   reelChapterFrame,
-  reelChapterSpecs,
-} from "./reel-chapter-specs.mjs";
+  reelSpecs as reelChapterSpecs,
+} from "./reel-specs.mjs";
 import { readRuntimeSource } from "./runtime-files.mjs";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
@@ -19,51 +19,10 @@ const reelNames = readdirSync(reelsDirectory)
   .filter((name) => name.endsWith(".mp4"))
   .sort();
 const failures = [];
-const landscapeReels = [
-  "11111.mp4",
-  "doronin.mp4",
-  "dusty-camp.mp4",
-  "dusty-merch.mp4",
-  "garage-collection.mp4",
-  "garage-courses.mp4",
-  "garage-archives.mp4",
-  "garage-endowment.mp4",
-  "garage-institutions.mp4",
-  "garage-site.mp4",
-  "garage-webzine.mp4",
-  "herman.mp4",
-  "hotline-camp.mp4",
-  "ks-fish.mp4",
-  "krainiuk.mp4",
-  "narkomfin.mp4",
-  "shirokostup.mp4",
-  "tarski.mp4",
-];
-const reelSpecs = new Map(
-  landscapeReels.map((name) => [
-    name,
-    {
-      width: 900,
-      height: 600,
-      displayAspect: "3:2",
-      sourceViewport: "1200x800",
-      duration: { min: 7.5, max: 8.1 },
-    },
-  ]),
-);
-reelSpecs.get("11111.mp4").duration = { min: 18.4, max: 19 };
-reelSpecs.get("garage-site.mp4").duration = { min: 48.6, max: 49.0 };
-reelSpecs.get("garage-archives.mp4").duration = { min: 11.5, max: 12.1 };
-reelSpecs.get("garage-endowment.mp4").duration = { min: 10.5, max: 11.1 };
-reelSpecs.get("garage-institutions.mp4").duration = { min: 11.3, max: 11.9 };
-reelSpecs.get("garage-webzine.mp4").duration = { min: 12.1, max: 12.7 };
-reelSpecs.get("herman.mp4").duration = { min: 14.5, max: 15.1 };
-reelSpecs.get("hotline-camp.mp4").duration = { min: 13.7, max: 14.1 };
-reelSpecs.get("ks-fish.mp4").duration = { min: 14, max: 14.4 };
-reelSpecs.get("krainiuk.mp4").duration = { min: 29.5, max: 29.9 };
-reelSpecs.get("narkomfin.mp4").duration = { min: 12.9, max: 13.5 };
-reelSpecs.get("shirokostup.mp4").duration = { min: 12.5, max: 13.1 };
-reelSpecs.get("tarski.mp4").duration = { min: 12.1, max: 12.7 };
+const reelSpecs = new Map(reelChapterSpecs.map(spec => [spec.master, {
+  width: 900, height: 600, displayAspect: "3:2", sourceViewport: "1200x800",
+  duration: spec.duration,
+}]));
 
 const expectedReelNames = [...reelSpecs.keys()].sort();
 const posterNames = readdirSync(postersDirectory)

@@ -12,101 +12,13 @@ const captureRoot = path.resolve(
 const rawDirectory = path.join(captureRoot, "raw");
 const finalDirectory = path.join(captureRoot, "final");
 
-const desktopViewport = { width: 1200, height: 800 };
-const desktopVideo = { width: 900, height: 600 };
-
-const projects = {
-  "garage-site": {
-    url: "https://garagemca.org/",
-    captureBrowser: chromium.executablePath(),
-    dismissSelectors: ['button[aria-label="Закрыть"]'],
-  },
-  "garage-collection": {
-    url: "https://garagemca.org/collection/catalogue",
-    dismissSelectors: ['button[aria-label="Закрыть"]'],
-  },
-  "garage-courses": {
-    url: "https://garagemca.org/learn/online-courses",
-    dismissSelectors: ['button[aria-label="Закрыть"]'],
-  },
-  "garage-webzine": {
-    url: "https://non-human-animals.garage.digital/index.html",
-    outputDuration: 12.4,
-    finalHold: 1400,
-  },
-  "garage-archives": {
-    url: "https://russianartarchive.net/ru",
-    outputDuration: 11.8,
-    finalHold: 4000,
-  },
-  "garage-institutions": {
-    url: "https://radiancecca.com/",
-    dismissSelectors: [
-      "#rec1613551871 .t886__btn",
-      ".t-popup__close",
-    ],
-    outputDuration: 11.6,
-    finalHold: 1200,
-  },
-  "garage-endowment": {
-    url: "https://endowment.garagemca.org/ru",
-    outputDuration: 10.8,
-    finalHold: 2500,
-  },
-  narkomfin: {
-    url: "https://narkomfin.ru/",
-    dismissSelectors: ['button[aria-label="Закрыть виджет"]'],
-    outputDuration: 13.2,
-    finalHold: 1200,
-  },
-  shirokostup: {
-    url: "https://shirokostup.site/",
-    outputDuration: 12.8,
-    finalHold: 1800,
-  },
-  tarski: {
-    url: "https://tarski.ru/",
-    outputDuration: 12.4,
-    finalHold: 2200,
-  },
-  herman: {
-    url: "https://barberherman.ru/",
-    outputDuration: 14.8,
-    finalHold: 1800,
-  },
-  "hotline-camp": {
-    url: "https://hotlinecamp.ru/",
-    outputDuration: 14,
-    finalHold: 2000,
-  },
-  "dusty-merch": {
-    url: "https://merch.dustydumbbells.com/",
-    dismissSelectors: [".t-popup__close"],
-  },
-  "dusty-camp": {
-    url: "https://camp.dustydumbbells.com/",
-  },
-  "11111": {
-    url: "https://11111.life/",
-    outputDuration: 18.7,
-    finalHold: 2400,
-  },
-  "ks-fish": {
-    url: "https://ks.fish/",
-    captureBrowser: chromium.executablePath(),
-    outputDuration: 14.2,
-    finalHold: 3500,
-  },
-  doronin: {
-    url: "https://doronin.store/",
-  },
-  krainiuk: {
-    url: "https://anton-gorokhovatsky.github.io/ekaterinakrainiuk/",
-    captureBrowser: chromium.executablePath(),
-    outputDuration: 29.7,
-    finalHold: 4200,
-  },
-};
+const specs = require("./reel-specs.json");
+const { reelFrame: desktopVideo, reelSourceViewport: desktopViewport } = require("./reel-specs.mjs");
+const projects = Object.fromEntries(specs.map(spec => [spec.master.slice(0, -4), {
+  ...spec.capture,
+  outputDuration: spec.duration.target,
+  captureBrowser: spec.capture.browser === "chromium" ? chromium.executablePath() : chromePath,
+}]));
 
 const projectId = process.argv[2];
 const project = projects[projectId];
@@ -1094,7 +1006,7 @@ const runCaptureMotion = async (page, id, source) => {
       "-i",
       rawDestination,
       "-t",
-      String(project.outputDuration || 7.8),
+      String(project.outputDuration),
       "-vf",
       `setpts=PTS-STARTPTS,fps=30,scale=${desktopVideo.width}:${desktopVideo.height}:flags=lanczos,setsar=1`,
       "-c:v",
@@ -1125,7 +1037,7 @@ const runCaptureMotion = async (page, id, source) => {
       usefulStart,
       viewport: sourceViewport,
       video: desktopVideo,
-      duration: project.outputDuration || 7.8,
+      duration: project.outputDuration,
     }),
   );
 })().catch((error) => {

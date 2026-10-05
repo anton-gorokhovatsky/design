@@ -1,4 +1,4 @@
-// Runtime module 2/9: explicit analytics consent and delayed counter loading.
+// explicit analytics consent and delayed counter loading.
 import {
   captureMode,
   root,

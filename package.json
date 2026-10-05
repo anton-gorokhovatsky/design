@@ -14,6 +14,8 @@
     "check": "node scripts/check-project.mjs",
     "check:chromium": "node scripts/check-ui-contracts.mjs",
     "check:publication": "node scripts/check-publication-assets.mjs",
+    "media:prepare": "node scripts/prepare-reels.mjs",
+    "media:check": "node scripts/prepare-reels.mjs --check",
     "check:reel": "node scripts/check-reel-preview.mjs",
     "check:personal-media": "node scripts/check-personal-media.mjs",
     "check:webkit": "node scripts/webkit-regression.cjs",

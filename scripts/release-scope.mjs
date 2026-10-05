@@ -8,6 +8,7 @@ import { parse as parseJs } from "acorn";
 import { parse as parseHtml } from "parse5";
 import { cacheVersionFiles } from "./cache-versions.mjs";
 import { affectedComponents } from "./component-scope.mjs";
+import { isMediaOnly, mediaAssetPaths } from "./media-scope.mjs";
 import { browserMatrix } from "./check-catalog.mjs";
 
 // Only display fields in these data arrays are copy. Selectors, destinations,
@@ -107,6 +108,7 @@ export const isCopyOnly = (path, before, after) => {
 
 export const classifyChange = (path, before, after) => {
   if (isCopyOnly(path, before, after)) return { mode: "copy", components: [] };
+  if (isMediaOnly(path, before, after, isCopyOnly)) return { mode: "components", components: ["media"] };
   const components = affectedComponents(path, before, after, maskHtmlCopy);
   return { mode: components ? "components" : "full", components: components || [] };
 };
@@ -123,11 +125,12 @@ export const planRelease = ({ projectRoot, base = "origin/gh-pages", target } = 
     for (let index = 0; index < entries.length; index += 2) {
       const [status, path] = entries.slice(index, index + 2);
       let classification = { mode: "full", components: [] };
-      if (status === "M" && (copyArrays[path] || ["index.html", "404.html", "styles.css", "js/whoop-day.js", "README.md"].includes(path) || /^docs\/.*\.md$/.test(path))) {
+      if (status === "M" && (copyArrays[path] || ["index.html", "404.html", "styles.css", "js/whoop-day.js", "scripts/reel-specs.json", "README.md"].includes(path) || /^docs\/.*\.md$/.test(path))) {
         const before = git("show", `${baseSha}:${path}`);
         const after = targetSha ? git("show", `${targetSha}:${path}`) : readFileSync(resolve(projectRoot, path), "utf8");
         classification = classifyChange(path, before, after);
       }
+      if (status === "M" && mediaAssetPaths.has(path)) classification = { mode: "components", components: ["media"] };
       changes.push({ path, ...classification });
     }
     if (!targetSha) {
@@ -138,14 +141,14 @@ export const planRelease = ({ projectRoot, base = "origin/gh-pages", target } = 
     const components = [...new Set(changes.flatMap(({ components }) => components))].sort();
     const mode = fullPaths.length ? "full" : components.length ? "components" : "copy";
     return {
-      mode, base: baseSha, components, matrix: browserMatrix(mode, components),
+      mode, staticScope: mode === "full" || components.includes("media") ? "static" : "copy", base: baseSha, components, matrix: browserMatrix(mode, components),
       reason: fullPaths.length ? `Shared or unclassified changes: ${fullPaths.join(", ")}`
         : components.length ? `Affected components and their integration checks: ${components.join(", ")}`
           : "Only display text, generated cache keys or documentation changed.",
       files: changes.map(({ path }) => path),
     };
   } catch (error) {
-    return { mode: "full", components: [], matrix: browserMatrix("full"), reason: `Cannot prove a narrower scope: ${error.message}`, files: [] };
+    return { mode: "full", staticScope: "static", components: [], matrix: browserMatrix("full"), reason: `Cannot prove a narrower scope: ${error.message}`, files: [] };
   }
 };
 
@@ -160,5 +163,5 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const plan = planRelease(options);
   console.log(JSON.stringify(plan, null, 2));
   if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT,
-    `mode=${plan.mode}\nmatrix=${JSON.stringify(plan.matrix)}\n`);
+    `mode=${plan.mode}\nstatic-scope=${plan.staticScope}\nmatrix=${JSON.stringify(plan.matrix)}\n`);
 }

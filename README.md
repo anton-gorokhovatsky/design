@@ -159,12 +159,18 @@ route.
   must never turn a desktop site into a portrait tablet. The reel has no title
   bar, footer, border, shadow, or decorative loading fallback. Each reel has a
   selected `900×600` poster from the same native capture, so its composition
-  appears before video decoding. Rebuild the poster set with
-  `node scripts/capture-reel-posters.mjs`. Reproduce a
-  capture with `node scripts/capture-reels.cjs <project-id>` (Node.js,
-  Playwright, Chrome, and FFmpeg are required) and run
-  `node scripts/check-reels.mjs` after assembling or replacing reels. Set
-  `PORTFOLIO_CAPTURE_BROWSER` when Chrome is outside its default macOS path.
+  appears before video decoding. `scripts/reel-specs.json` owns capture settings,
+  poster timestamps, duration bounds and chapter ranges for all 18 masters.
+  Use `pnpm media:prepare <project-id>` to rebuild that project's poster and
+  chapters and synchronize measured durations and SHA-256 media URLs in both
+  map data and HTML. Omit the ID to rebuild all derivatives. Use
+  `pnpm media:prepare <project-id> --capture` to record the source first, or
+  `--master /absolute/path/video.mp4` to adopt an existing native capture.
+  Node.js, Playwright, Chrome and FFmpeg are required for capture; derivative
+  generation requires FFmpeg. Set `PORTFOLIO_CAPTURE_BROWSER` when Chrome is
+  outside its default macOS path. `pnpm media:prepare --sync` refreshes only
+  metadata; `pnpm media:check` verifies it without writing. `node
+  scripts/check-reels.mjs` additionally validates encoded media contracts.
 - Desktop hover and keyboard-focus previews keep the complete master dominant
   and add exactly two independently looping chapters selected for that
   project's own editorial rhythm. Chapters never change `playbackRate`:
@@ -172,10 +178,9 @@ route.
   lengths. They are reproducible 450×300 H.264 derivatives of the 3:2 masters,
   not replacement reels. Use `?reel=mosaic&preview=<project-id>` to hold a
   chosen preview open for review, or `?reel=single` to inspect the master-only
-  fallback. Regenerate every chapter with
-  `node scripts/capture-reel-chapters.mjs`, or one pair with
-  `node scripts/capture-reel-chapters.mjs <project-id>`; the command also
-  refreshes all 36 content hashes in the managed `map-data.js` manifest.
+  fallback. The same `pnpm media:prepare` command produces all 36 chapters.
+  The former `capture-reel-posters.mjs` and `capture-reel-chapters.mjs` entry
+  points remain compatibility aliases to this complete preparation step.
 - Touch devices keep the direct node-to-inspector interaction and do not render
   hover-only media.
 - Long-form content remains inside the same coordinate system. Key cases,
@@ -388,9 +393,18 @@ to compare the entire unpublished change against `origin/gh-pages`:
   Settings run the existing core panel/consent/keyboard contracts, accessibility
   and WHOOP checks in both engines. WHOOP also runs hover and first-visit checks.
   Core currently contains some broader UI safeguards, retained intentionally.
-  Unrelated reel previews, route geometry, lenses and FFmpeg are not run.
+  Unrelated reel previews, route geometry, lenses and FFmpeg are not run for
+  settings/WHOOP-only changes.
+- **Media:** replacements of registered masters, posters and chapters, valid
+  capture/range changes in `scripts/reel-specs.json` with unchanged project/file
+  identities, and generated hashes/durations in the existing map data and HTML.
+  All static contracts, FFmpeg checks and generated-metadata verification remain.
+  Seven existing browser jobs cover reel playback, case view/flow, hover layout
+  and the observation route in Chromium/WebKit. New or removed media identities,
+  executable capture/generation code and changes outside those fields require
+  full checks.
 - **Full:** shared tokens, materials, typography, navigation, other modules,
-  media, dependencies, release tooling, unknown changes, or an unavailable baseline.
+  dependencies, release tooling, unknown changes, or an unavailable baseline.
   The complete Chromium/WebKit inventory runs **once in CI**, split into independent
   jobs instead of a long serial component job. All four WebKit viewport/theme
   profiles remain. Do not duplicate the full CI locally as a release ritual.

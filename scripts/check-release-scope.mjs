@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { classifyChange, isCopyOnly, planRelease } from "./release-scope.mjs";
+import { reelSpecs } from "./reel-specs.mjs";
 import { browserMatrix, browserSteps, componentCoverage } from "./check-catalog.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -112,6 +113,31 @@ scoped("404.html", '<link href="/styles.css?v=aaaaaaaaaaaa">', '<link href="/sty
 scoped("404.html", '<link href="//styles.css?v=aaaaaaaaaaaa">', '<link href="//styles.css?v=bbbbbbbbbbbb">', "full");
 scoped("404.html", '<main>404</main>', '<section>404</section>', "full");
 
+// Media may update only known files, literal URLs and measured timing. A
+// changed expression, map coordinate, unrelated URL or new identity stays full.
+const videoUrl = /assets\/reels\/garage-site\.mp4\?v=[a-f0-9]{12}/.exec(map)[0];
+const posterUrl = /assets\/reel-posters\/garage-site\.jpg\?v=[a-f0-9]{12}/.exec(map)[0];
+const chapterUrl = /assets\/reel-chapters\/garage-site-01\.mp4\?v=[a-f0-9]{12}/.exec(map)[0];
+for (const url of [videoUrl, posterUrl, chapterUrl]) scoped("js/map-data.js", map, map.replace(url, url.replace(/v=.*/, "v=aaaaaaaaaaaa")), "components", ["media"]);
+scoped("js/map-data.js", map, map.replace("previewDuration: 48.8", "previewDuration: 49"), "components", ["media"]);
+scoped("js/map-data.js", map, map.replace("previewDuration: 48.8", "previewDuration: run()"), "full");
+scoped("js/map-data.js", map, map.replace("previewDuration: 48.8", "previewDuration: -1"), "full");
+scoped("js/map-data.js", map, map.replace(videoUrl, "https://example.com/reel.mp4"), "full");
+scoped("js/map-data.js", map, map.replace(chapterUrl, "assets/reel-chapters/unknown.mp4?v=aaaaaaaaaaaa"), "full");
+scoped("js/map-data.js", map, map.replace("previewDuration: 48.8", "previewDuration: 49").replace("x: 46", "x: 90"), "full");
+const arbitrary = `const url = "${videoUrl}";`;
+scoped("js/map-data.js", arbitrary, arbitrary.replace(/v=[a-f0-9]{12}/, "v=aaaaaaaaaaaa"), "full");
+scoped("index.html", html, html.replace(posterUrl, posterUrl.replace(/v=.*/, "v=aaaaaaaaaaaa")), "components", ["media"]);
+const scriptWithMediaUrl = `<script>const source = "${videoUrl}";</script>`;
+scoped("index.html", scriptWithMediaUrl, scriptWithMediaUrl.replace(/v=[a-f0-9]{12}/, "v=aaaaaaaaaaaa"), "full");
+const specSource = JSON.stringify(reelSpecs);
+const changeSpec = callback => { const specs = structuredClone(reelSpecs); callback(specs[0]); return JSON.stringify(specs); };
+scoped("scripts/reel-specs.json", specSource, changeSpec(spec => spec.posterAt = .8), "components", ["media"]);
+scoped("scripts/reel-specs.json", specSource, changeSpec(spec => spec.master = "../other.mp4"), "full");
+scoped("scripts/reel-specs.json", specSource, changeSpec(spec => spec.itemId = "new-item"), "full");
+scoped("scripts/reel-specs.json", specSource, changeSpec(spec => spec.chapters[0].duration = 500), "full");
+scoped("scripts/reel-specs.json", specSource, changeSpec(spec => spec.run = "code"), "full");
+
 // The complete old browser inventory remains mandatory, once per engine;
 // WebKit core retains all four viewport/theme profiles. No shard may disappear.
 const retainedChecks = ["case-flow", "personal-media", "inspector-links", "accessibility", "map-routes", "hover-layout", "whoop-ui", "first-visit", "command-placement", "sphere-motion", "case-view", "scroll-lens", "observation-route"];
@@ -132,6 +158,13 @@ for (const components of [["settings"], ["whoop"], ["settings", "whoop"]]) {
   }
   assert.ok(!matrix.some(({ checks }) => /reels|scroll-lens|map-routes|sphere-motion/.test(checks)));
 }
+const mediaMatrix = browserMatrix("components", ["media"]).include;
+assert.equal(mediaMatrix.length, 7);
+for (const browser of ["chromium", "webkit"]) assert.deepEqual(
+  new Set(mediaMatrix.filter(row => row.browser === browser).flatMap(row => row.checks.split(","))),
+  new Set(componentCoverage.media.filter(id => browser === "chromium" || id !== "reels")),
+);
+assert.equal(browserMatrix("full").include.length, 14);
 assert.deepEqual(browserMatrix("copy"), { include: [] });
 assert.throws(() => browserMatrix("components", []));
 assert.throws(() => browserMatrix("components", ["unknown"]));
@@ -151,9 +184,16 @@ try {
   writeFileSync(join(directory, "index.html"), shell);
   writeFileSync(join(directory, "styles.css"), '.map-node {color: black}');
   writeFileSync(join(directory, "js/whoop-day.js"), 'const interval = 1000;');
+  mkdirSync(join(directory, "assets/reels"), { recursive: true });
+  writeFileSync(join(directory, "assets/reels/garage-site.mp4"), "original master");
   git("add", "."); git("commit", "-m", "published");
   const published = git("rev-parse", "HEAD");
   const plan = (options = {}) => planRelease({ projectRoot: directory, base: published, ...options });
+  writeFileSync(join(directory, "assets/reels/garage-site.mp4"), "updated master");
+  assert.equal(plan().mode, "components");
+  assert.deepEqual(plan().components, ["media"]);
+  assert.equal(plan().staticScope, "static", "Media still requires FFmpeg and all static asset contracts");
+  writeFileSync(join(directory, "assets/reels/garage-site.mp4"), "original master");
   writeFileSync(join(directory, "js/panels.js"), panels.replace("РАБОТЫ И ПОДХОД · 3 МИНУТЫ", "Работы и подход · 3 минуты"));
   assert.equal(plan().mode, "copy");
   git("add", ".");
@@ -177,6 +217,9 @@ try {
   git("add", "."); git("commit", "-m", "another copy edit");
   assert.equal(plan({ base: "HEAD^", target: "HEAD" }).mode, "copy");
   assert.equal(plan({ target: "HEAD" }).mode, "full", "Entire unpublished range determines the gate");
+  writeFileSync(join(directory, "assets/reels/garage-site.mp4"), "updated master");
+  assert.equal(plan().mode, "full", "Media cannot hide an unpublished behavior change");
+  assert.equal(plan().staticScope, "static");
   assert.equal(plan({ base: "missing-ref" }).mode, "full");
   git("rm", "js/panels.js");
   assert.equal(plan().mode, "full", "Deleted data is not copy");
@@ -211,5 +254,5 @@ for (const [scope, staticResult, browserResult, pass] of [
 }
 assert.match(workflow, /matrix: \$\{\{ fromJSON\(needs.static-contracts.outputs.matrix\) \}\}/);
 assert.match(workflow, /--checks=\$\{\{ matrix.checks \}\}/);
-assert.match(workflow, /if: steps.scope.outputs.mode == 'full'/, "FFmpeg stays exclusive to the full lane");
+assert.match(workflow, /if: steps.scope.outputs.static-scope == 'static'/, "Full and media lanes require FFmpeg");
 console.log(`PASS: ${checks} copy/component/global changes; unsafe syntax, combined git history, complete browser coverage and all Quality lanes.`);

@@ -73,7 +73,7 @@ try {
     await page.waitForFunction(() => document.activeElement === document.querySelector("[data-whoop-toggle]"));
     await page.keyboard.press("Escape");
     await page.waitForFunction(selector => document.activeElement === document.querySelector(selector), settingsTrigger);
-    console.log(`PASS ${engine} ${width} ${theme}: 17 hover/focus targets, persistent card, clear consoles, settings.`);
+    console.log(`PASS ${engine} ${width} ${theme}: ${mapItems.filter(item => item.previewVideo).length} hover/focus targets, persistent card, clear consoles, settings.`);
     await page.close();
   }
   for (const [width, height] of [[1440, 900], [1024, 768], [720, 450]]) {

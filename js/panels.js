@@ -1,17 +1,15 @@
+import { isMapPreviewActive, hideMapPreview } from "./map-media.js";
 import {
   openSettingsPanel,
   trackPortfolioEvent,
 } from "./analytics.js";
 import { mapItems, getMapPreviewPoster } from "./map-data.js";
 import {
-  activePreviewItem,
   clearMapSelection,
   getNavigableMapItems,
-  hideMapPreview,
   inspectorClose,
   mapButtons,
   mapInspector,
-  mapPreview,
   normalizeMapFilters,
   observationRoute,
   observationSteps,
@@ -1225,7 +1223,7 @@ document.addEventListener("keydown", (event) => {
     // Finish Escape before the next click; blur is delayed.
     syncCommandFocusViewport();
     clearSearchHighlight();
-  } else if (activePreviewItem || mapPreview?.classList.contains("is-visible")) {
+  } else if (isMapPreviewActive()) {
     hideMapPreview({ immediate: true });
   } else if (observationRoute.active) {
     stopObservation();

@@ -1,5 +1,6 @@
+import { hideMapPreview } from "./map-media.js";
 import { mapItems } from "./map-data.js";
-import { mapInspector, hideMapPreview, observationRoute } from "./map-engine.js";
+import { mapInspector, observationRoute } from "./map-engine.js";
 import { getTabStops, reducedMotion } from "./preferences.js";
 import { scrollRegionFromKey, observeScrollLens, clearScrollLenses, observeScrollEdges } from "./viewport-ui.js";
 import { syncConstellationNavInteractivity } from "./panels.js";
@@ -229,7 +230,7 @@ function pinReel(item) {
   video.setAttribute("aria-label", "Видео сайта: " + item.title);
   reel.dataset.orientation = item.previewOrientation || "landscape";
   reel.querySelector("[data-case-media-label]").textContent =
-    "ФРАГМЕНТ САЙТА / " + Math.round(item.previewDuration || 13) + " СЕК";
+    "ФРАГМЕНТ САЙТА / " + Math.round(item.previewDuration) + " СЕК";
   if (changed) {
     deliberatelyPaused = false;
     wantsPlayback = !reducedMotion.matches;

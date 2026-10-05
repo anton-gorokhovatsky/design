@@ -6,30 +6,8 @@ const { chromium } = require("playwright");
 
 // Whole browser viewports, in the author's requested order. Page loads and
 // image warm-up are trimmed out; the source site's layout is never rewritten.
-const scenes = [
-  { id: "home-hero", url: "/", carouselAt: 1000, duration: 4.2 },
-  { id: "museum-menu", url: "/", menu: true, duration: 4.6 },
-  { id: "home-stream", url: "/", startHeading: "Поток", offset: 80,
-    scrollBy: 600, hold: 900, scroll: 2600, duration: 4.4 },
-  { id: "tours", url: "/visit/tours", scrollStart: 0,
-    endHeading: "Открытое хранение", offset: 70,
-    hold: 1200, scroll: 2600, duration: 4.8 },
-  { id: "collection", url: "/collection",
-    endHeading: "Каталог коллекции", offset: 90,
-    carouselAt: 1200, hold: 3400, scroll: 2600, duration: 6.8 },
-  { id: "calendar", url: "/calendar", scrollBy: 600,
-    hold: 900, scroll: 2600, duration: 4.4 },
-  { id: "library", url: "/programs/library/catalogue", scrollBy: 550,
-    hold: 900, scroll: 2600, duration: 4.4 },
-  { id: "exhibitions", url: "/exhibitions", scrollBy: 650,
-    hold: 900, scroll: 2600, duration: 4.4 },
-  { id: "courses", url: "/learn/online-courses", scrollStart: 0,
-    endHeading: "Описание", offset: -200,
-    hold: 1200, scroll: 2800, duration: 5 },
-  { id: "studios-cover", url: "/programs/garage_studios", scrollStart: 0, duration: 2.2 },
-  { id: "studios-gallery", url: "/programs/garage_studios",
-    startHeading: "Галерея", offset: 80, carouselAt: 1000, duration: 3.6 },
-];
+const { reelSpecs, reelFrame, reelSourceViewport } = require("./reel-specs.mjs");
+const scenes = reelSpecs.find(spec => spec.itemId === "garage-site").capture.scenes;
 
 const headingPosition = (page, text, offset) => page.evaluate(({ text, offset }) => {
   const heading = [...document.querySelectorAll("h1,h2,h3")].find((node) => (
@@ -84,7 +62,7 @@ const recordScroll = (page, top, duration) => page.evaluate(async ({ top, durati
 }, { top, duration });
 
 async function captureGarageTour({ rawDirectory, finalDirectory }) {
-  const viewport = { width: 1200, height: 800 };
+  const viewport = reelSourceViewport;
   const clipsDirectory = process.env.PORTFOLIO_GARAGE_REUSE
     ? path.resolve(process.env.PORTFOLIO_GARAGE_REUSE)
     : path.join(rawDirectory, `garage-tour-${Date.now()}`);
@@ -175,7 +153,7 @@ async function captureGarageTour({ rawDirectory, finalDirectory }) {
       execFileSync("ffmpeg", [
         "-hide_banner", "-loglevel", "error", "-y", "-ss", usefulStart.toFixed(3),
         "-i", raw, "-t", String(scene.duration),
-        "-vf", "setpts=PTS-STARTPTS,fps=30,scale=900:600:flags=lanczos,setsar=1",
+        "-vf", `setpts=PTS-STARTPTS,fps=30,scale=${reelFrame.width}:${reelFrame.height}:flags=lanczos,setsar=1`,
         "-c:v", "libx264", "-preset", "slow", "-crf", "20", "-pix_fmt", "yuv420p",
         "-an", "-movflags", "+faststart", clip,
       ], { stdio: "inherit" });

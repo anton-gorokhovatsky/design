@@ -1,80 +1,26 @@
-// Runtime module 4/9: deterministic portfolio map data.
+// deterministic portfolio map data.
 const principlesSourceHref = "https://app.notion.com/p/digital-web-digital-f68fc13247614ccb9738d9a85acf29b4?source=copy_link#70405c2623e342fb98d027c8634f2207";
 
 // reel-chapter-manifest:start
 const reelChapterSources = new Map([
-  ["garage-site", [
-      "assets/reel-chapters/garage-site-01.mp4?v=1018b4cd4ed9",
-      "assets/reel-chapters/garage-site-02.mp4?v=a4ae6676e253",
-  ]],
-  ["narkomfin", [
-      "assets/reel-chapters/narkomfin-01.mp4?v=8a8b8eba97b7",
-      "assets/reel-chapters/narkomfin-02.mp4?v=b0a3640e9a1e",
-  ]],
-  ["collection", [
-      "assets/reel-chapters/garage-collection-01.mp4?v=c458378b08fa",
-      "assets/reel-chapters/garage-collection-02.mp4?v=13b73239ecf4",
-  ]],
-  ["garage-archives", [
-      "assets/reel-chapters/garage-archives-01.mp4?v=78c2b0318e41",
-      "assets/reel-chapters/garage-archives-02.mp4?v=d86e9d4cf111",
-  ]],
-  ["garage-courses", [
-      "assets/reel-chapters/garage-courses-01.mp4?v=685692edbaeb",
-      "assets/reel-chapters/garage-courses-02.mp4?v=295cc2a59b38",
-  ]],
-  ["garage-webzine", [
-      "assets/reel-chapters/garage-webzine-01.mp4?v=78b46830a8ed",
-      "assets/reel-chapters/garage-webzine-02.mp4?v=93e6e21719a3",
-  ]],
-  ["garage-institutions", [
-      "assets/reel-chapters/garage-institutions-01.mp4?v=e9516d43f06b",
-      "assets/reel-chapters/garage-institutions-02.mp4?v=b138a9b90b19",
-  ]],
-  ["garage-endowment", [
-      "assets/reel-chapters/garage-endowment-01.mp4?v=bd5d5e55e721",
-      "assets/reel-chapters/garage-endowment-02.mp4?v=25a4d5b65e08",
-  ]],
-  ["shirokostup", [
-      "assets/reel-chapters/shirokostup-01.mp4?v=9a2ca8be0932",
-      "assets/reel-chapters/shirokostup-02.mp4?v=f3312ac0f305",
-  ]],
-  ["tarski", [
-      "assets/reel-chapters/tarski-01.mp4?v=9991bad25583",
-      "assets/reel-chapters/tarski-02.mp4?v=ba7327082282",
-  ]],
-  ["herman", [
-      "assets/reel-chapters/herman-01.mp4?v=af3ea87a0934",
-      "assets/reel-chapters/herman-02.mp4?v=7196d29d1d8f",
-  ]],
-  ["hotline-camp", [
-      "assets/reel-chapters/hotline-camp-01.mp4?v=de23ead77824",
-      "assets/reel-chapters/hotline-camp-02.mp4?v=4f83a0d2671b",
-  ]],
-  ["dusty", [
-      "assets/reel-chapters/dusty-merch-01.mp4?v=7219d4df4177",
-      "assets/reel-chapters/dusty-merch-02.mp4?v=fb7fc0b2ed31",
-  ]],
-  ["dd-camp", [
-      "assets/reel-chapters/dusty-camp-01.mp4?v=8a8b672a45a0",
-      "assets/reel-chapters/dusty-camp-02.mp4?v=0fec39e9dd30",
-  ]],
-  ["eleven", [
-      "assets/reel-chapters/11111-01.mp4?v=8f3085992002",
-      "assets/reel-chapters/11111-02.mp4?v=3ddb427a0153",
-  ]],
-  ["ks-fish", [
-      "assets/reel-chapters/ks-fish-01.mp4?v=d4915d6059f4",
-      "assets/reel-chapters/ks-fish-02.mp4?v=08ed32456d91",
-  ]],
-  ["doronin", [
-      "assets/reel-chapters/doronin-01.mp4?v=dbdbce0d7ac3",
-      "assets/reel-chapters/doronin-02.mp4?v=cd75b564305b",
-  ]],
-  ["krainiuk", [
-      "assets/reel-chapters/krainiuk-01.mp4?v=6707846bad90",
-      "assets/reel-chapters/krainiuk-02.mp4?v=c080a64c42b5",
-  ]],
+  ["garage-site", ["assets/reel-chapters/garage-site-01.mp4?v=1018b4cd4ed9", "assets/reel-chapters/garage-site-02.mp4?v=a4ae6676e253"]],
+  ["narkomfin", ["assets/reel-chapters/narkomfin-01.mp4?v=8a8b8eba97b7", "assets/reel-chapters/narkomfin-02.mp4?v=b0a3640e9a1e"]],
+  ["collection", ["assets/reel-chapters/garage-collection-01.mp4?v=c458378b08fa", "assets/reel-chapters/garage-collection-02.mp4?v=13b73239ecf4"]],
+  ["garage-archives", ["assets/reel-chapters/garage-archives-01.mp4?v=78c2b0318e41", "assets/reel-chapters/garage-archives-02.mp4?v=d86e9d4cf111"]],
+  ["garage-courses", ["assets/reel-chapters/garage-courses-01.mp4?v=685692edbaeb", "assets/reel-chapters/garage-courses-02.mp4?v=295cc2a59b38"]],
+  ["garage-webzine", ["assets/reel-chapters/garage-webzine-01.mp4?v=78b46830a8ed", "assets/reel-chapters/garage-webzine-02.mp4?v=93e6e21719a3"]],
+  ["garage-institutions", ["assets/reel-chapters/garage-institutions-01.mp4?v=e9516d43f06b", "assets/reel-chapters/garage-institutions-02.mp4?v=b138a9b90b19"]],
+  ["garage-endowment", ["assets/reel-chapters/garage-endowment-01.mp4?v=bd5d5e55e721", "assets/reel-chapters/garage-endowment-02.mp4?v=25a4d5b65e08"]],
+  ["shirokostup", ["assets/reel-chapters/shirokostup-01.mp4?v=9a2ca8be0932", "assets/reel-chapters/shirokostup-02.mp4?v=f3312ac0f305"]],
+  ["tarski", ["assets/reel-chapters/tarski-01.mp4?v=9991bad25583", "assets/reel-chapters/tarski-02.mp4?v=ba7327082282"]],
+  ["herman", ["assets/reel-chapters/herman-01.mp4?v=af3ea87a0934", "assets/reel-chapters/herman-02.mp4?v=7196d29d1d8f"]],
+  ["hotline-camp", ["assets/reel-chapters/hotline-camp-01.mp4?v=de23ead77824", "assets/reel-chapters/hotline-camp-02.mp4?v=4f83a0d2671b"]],
+  ["dusty", ["assets/reel-chapters/dusty-merch-01.mp4?v=7219d4df4177", "assets/reel-chapters/dusty-merch-02.mp4?v=fb7fc0b2ed31"]],
+  ["dd-camp", ["assets/reel-chapters/dusty-camp-01.mp4?v=8a8b672a45a0", "assets/reel-chapters/dusty-camp-02.mp4?v=0fec39e9dd30"]],
+  ["eleven", ["assets/reel-chapters/11111-01.mp4?v=8f3085992002", "assets/reel-chapters/11111-02.mp4?v=3ddb427a0153"]],
+  ["ks-fish", ["assets/reel-chapters/ks-fish-01.mp4?v=d4915d6059f4", "assets/reel-chapters/ks-fish-02.mp4?v=08ed32456d91"]],
+  ["doronin", ["assets/reel-chapters/doronin-01.mp4?v=dbdbce0d7ac3", "assets/reel-chapters/doronin-02.mp4?v=cd75b564305b"]],
+  ["krainiuk", ["assets/reel-chapters/krainiuk-01.mp4?v=6707846bad90", "assets/reel-chapters/krainiuk-02.mp4?v=c080a64c42b5"]],
 ]);
 // reel-chapter-manifest:end
 
@@ -206,6 +152,7 @@ const mapItems = [
     x: 67,
     y: 21,
     size: 25,
+    previewDuration: 13.2,
   },
   {
     id: "collection",
@@ -224,6 +171,8 @@ const mapItems = [
     x: 75,
     y: 19,
     size: 22,
+    previewPoster: "assets/reel-posters/garage-collection.jpg?v=c8047e2ea15f",
+    previewDuration: 7.767,
   },
   {
     id: "garage-archives",
@@ -242,6 +191,7 @@ const mapItems = [
     x: 59,
     y: 28,
     size: 18,
+    previewDuration: 11.8,
   },
   {
     id: "garage-courses",
@@ -255,10 +205,12 @@ const mapItems = [
     kindLabel: "ПРОЕКТ / МУЗЕЙ «ГАРАЖ»",
     previewVideo: "assets/reels/garage-courses.mp4?v=15acbed30144",
     previewOrientation: "landscape",
-    previewMeta: "КУРСЫ И УЧЕБНЫЕ СЦЕНАРИИ / 00:07",
+    previewMeta: "КУРСЫ И УЧЕБНЫЕ СЦЕНАРИИ / 00:08",
     x: 80,
     y: 30,
     size: 17,
+    previewPoster: "assets/reel-posters/garage-courses.jpg?v=5585fd388333",
+    previewDuration: 7.8,
   },
   {
     id: "garage-app",
@@ -293,6 +245,7 @@ const mapItems = [
     x: 72,
     y: 34,
     size: 15,
+    previewDuration: 12.4,
   },
   {
     id: "garage-institutions",
@@ -311,6 +264,7 @@ const mapItems = [
     x: 55,
     y: 37,
     size: 16,
+    previewDuration: 11.6,
   },
   {
     id: "garage-endowment",
@@ -329,6 +283,7 @@ const mapItems = [
     x: 53,
     y: 26,
     size: 12,
+    previewDuration: 10.8,
   },
   {
     id: "shirokostup",
@@ -349,6 +304,7 @@ const mapItems = [
     x: 78,
     y: 49,
     size: 22,
+    previewDuration: 12.8,
   },
   {
     id: "tarski",
@@ -368,6 +324,8 @@ const mapItems = [
     x: 70,
     y: 44,
     size: 23,
+    previewPoster: "assets/reel-posters/tarski.jpg?v=396ee9047361",
+    previewDuration: 12.4,
   },
   {
     id: "herman",
@@ -388,6 +346,7 @@ const mapItems = [
     x: 83,
     y: 57,
     size: 19,
+    previewDuration: 14.8,
   },
   {
     id: "hotline-camp",
@@ -409,6 +368,7 @@ const mapItems = [
     x: 63,
     y: 52,
     size: 18,
+    previewDuration: 14,
   },
   {
     id: "dusty",
@@ -425,10 +385,12 @@ const mapItems = [
     kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
     previewVideo: "assets/reels/dusty-merch.mp4?v=0a270ae1ed7f",
     previewOrientation: "landscape",
-    previewMeta: "КАТАЛОГ И ОФОРМЛЕНИЕ / 00:07",
+    previewMeta: "КАТАЛОГ И ОФОРМЛЕНИЕ / 00:08",
     x: 69,
     y: 58,
     size: 17,
+    previewPoster: "assets/reel-posters/dusty-merch.jpg?v=525ffb6d4f3c",
+    previewDuration: 7.8,
   },
   {
     id: "dd-camp",
@@ -445,10 +407,12 @@ const mapItems = [
     kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
     previewVideo: "assets/reels/dusty-camp.mp4?v=f37879bb3bb6",
     previewOrientation: "landscape",
-    previewMeta: "ПРОГРАММА И АТМОСФЕРА / 00:07",
+    previewMeta: "ПРОГРАММА И АТМОСФЕРА / 00:08",
     x: 76,
     y: 57,
     size: 15,
+    previewPoster: "assets/reel-posters/dusty-camp.jpg?v=4a6ed01a29c8",
+    previewDuration: 7.8,
   },
   {
     id: "eleven",
@@ -508,10 +472,12 @@ const mapItems = [
     kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
     previewVideo: "assets/reels/doronin.mp4?v=d7fb14430c80",
     previewOrientation: "landscape",
-    previewMeta: "КОЛЛЕКЦИЯ И МЕРЧ / 00:07",
+    previewMeta: "КОЛЛЕКЦИЯ И МЕРЧ / 00:08",
     x: 70,
     y: 70,
     size: 13,
+    previewPoster: "assets/reel-posters/doronin.jpg?v=9040e16ffdcf",
+    previewDuration: 7.8,
   },
   {
     id: "krainiuk",
@@ -1020,7 +986,7 @@ for (const item of mapItems) {
   }));
 }
 const getMapPreviewPoster = item => item.relatedPoster || item.previewPoster || item.youtube?.poster
-  || item.previewVideo?.split("?")[0].replace("assets/reels/", "assets/reel-posters/").replace(/\.mp4$/i, ".jpg") || "";
+  || "";
 
 export {
   getMapPreviewPoster,

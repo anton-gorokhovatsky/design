@@ -1,0 +1,578 @@
+[
+  {
+    "itemId": "garage-site",
+    "master": "garage-site.mp4",
+    "chapters": [
+      {
+        "label": "museum-menu",
+        "start": 4.9,
+        "duration": 3.8
+      },
+      {
+        "label": "collection-and-catalogue",
+        "start": 18.1,
+        "duration": 6.6
+      }
+    ],
+    "posterAt": 0.65,
+    "duration": {
+      "target": 48.8,
+      "min": 48.6,
+      "max": 49
+    },
+    "capture": {
+      "url": "https://garagemca.org/",
+      "dismissSelectors": [
+        "button[aria-label=\"Закрыть\"]"
+      ],
+      "browser": "chromium",
+      "scenes": [
+        {
+          "id": "home-hero",
+          "url": "/",
+          "carouselAt": 1000,
+          "duration": 4.2
+        },
+        {
+          "id": "museum-menu",
+          "url": "/",
+          "menu": true,
+          "duration": 4.6
+        },
+        {
+          "id": "home-stream",
+          "url": "/",
+          "startHeading": "Поток",
+          "offset": 80,
+          "scrollBy": 600,
+          "hold": 900,
+          "scroll": 2600,
+          "duration": 4.4
+        },
+        {
+          "id": "tours",
+          "url": "/visit/tours",
+          "scrollStart": 0,
+          "endHeading": "Открытое хранение",
+          "offset": 70,
+          "hold": 1200,
+          "scroll": 2600,
+          "duration": 4.8
+        },
+        {
+          "id": "collection",
+          "url": "/collection",
+          "endHeading": "Каталог коллекции",
+          "offset": 90,
+          "carouselAt": 1200,
+          "hold": 3400,
+          "scroll": 2600,
+          "duration": 6.8
+        },
+        {
+          "id": "calendar",
+          "url": "/calendar",
+          "scrollBy": 600,
+          "hold": 900,
+          "scroll": 2600,
+          "duration": 4.4
+        },
+        {
+          "id": "library",
+          "url": "/programs/library/catalogue",
+          "scrollBy": 550,
+          "hold": 900,
+          "scroll": 2600,
+          "duration": 4.4
+        },
+        {
+          "id": "exhibitions",
+          "url": "/exhibitions",
+          "scrollBy": 650,
+          "hold": 900,
+          "scroll": 2600,
+          "duration": 4.4
+        },
+        {
+          "id": "courses",
+          "url": "/learn/online-courses",
+          "scrollStart": 0,
+          "endHeading": "Описание",
+          "offset": -200,
+          "hold": 1200,
+          "scroll": 2800,
+          "duration": 5
+        },
+        {
+          "id": "studios-cover",
+          "url": "/programs/garage_studios",
+          "scrollStart": 0,
+          "duration": 2.2
+        },
+        {
+          "id": "studios-gallery",
+          "url": "/programs/garage_studios",
+          "startHeading": "Галерея",
+          "offset": 80,
+          "carouselAt": 1000,
+          "duration": 3.6
+        }
+      ]
+    }
+  },
+  {
+    "itemId": "narkomfin",
+    "master": "narkomfin.mp4",
+    "chapters": [
+      {
+        "label": "day-camera-routes",
+        "start": 0.2,
+        "duration": 7.4
+      },
+      {
+        "label": "night-roof",
+        "start": 8.6,
+        "duration": 4.4
+      }
+    ],
+    "posterAt": 0.75,
+    "duration": {
+      "target": 13.2,
+      "min": 12.9,
+      "max": 13.5
+    },
+    "capture": {
+      "url": "https://narkomfin.ru/",
+      "dismissSelectors": [
+        "button[aria-label=\"Закрыть виджет\"]"
+      ],
+      "finalHold": 1200
+    }
+  },
+  {
+    "itemId": "collection",
+    "master": "garage-collection.mp4",
+    "chapters": [
+      {
+        "label": "catalogue",
+        "start": 0.1,
+        "duration": 3.2
+      },
+      {
+        "label": "works-footer",
+        "start": 3.4,
+        "duration": 4.1
+      }
+    ],
+    "posterAt": 1.55,
+    "duration": {
+      "target": 7.8,
+      "min": 7.5,
+      "max": 8.1
+    },
+    "capture": {
+      "url": "https://garagemca.org/collection/catalogue",
+      "dismissSelectors": [
+        "button[aria-label=\"Закрыть\"]"
+      ]
+    }
+  },
+  {
+    "itemId": "garage-archives",
+    "master": "garage-archives.mp4",
+    "chapters": [
+      {
+        "label": "catalogue-search",
+        "start": 0.1,
+        "duration": 5.7
+      },
+      {
+        "label": "search-results",
+        "start": 6.3,
+        "duration": 5.2
+      }
+    ],
+    "posterAt": 0.8,
+    "duration": {
+      "target": 11.8,
+      "min": 11.5,
+      "max": 12.1
+    },
+    "capture": {
+      "url": "https://russianartarchive.net/ru",
+      "finalHold": 4000
+    }
+  },
+  {
+    "itemId": "garage-courses",
+    "master": "garage-courses.mp4",
+    "chapters": [
+      {
+        "label": "identity",
+        "start": 0.1,
+        "duration": 2.9
+      },
+      {
+        "label": "course-grid",
+        "start": 3.1,
+        "duration": 4.4
+      }
+    ],
+    "posterAt": 1.45,
+    "duration": {
+      "target": 7.8,
+      "min": 7.5,
+      "max": 8.1
+    },
+    "capture": {
+      "url": "https://garagemca.org/learn/online-courses",
+      "dismissSelectors": [
+        "button[aria-label=\"Закрыть\"]"
+      ]
+    }
+  },
+  {
+    "itemId": "garage-webzine",
+    "master": "garage-webzine.mp4",
+    "chapters": [
+      {
+        "label": "light-cover-contents",
+        "start": 0.1,
+        "duration": 4.6
+      },
+      {
+        "label": "dark-article",
+        "start": 6.1,
+        "duration": 6.1
+      }
+    ],
+    "posterAt": 0.6,
+    "duration": {
+      "target": 12.4,
+      "min": 12.1,
+      "max": 12.7
+    },
+    "capture": {
+      "url": "https://non-human-animals.garage.digital/index.html",
+      "finalHold": 1400
+    }
+  },
+  {
+    "itemId": "garage-institutions",
+    "master": "garage-institutions.mp4",
+    "chapters": [
+      {
+        "label": "identity-current-events",
+        "start": 0.1,
+        "duration": 5
+      },
+      {
+        "label": "activities-visit",
+        "start": 5.3,
+        "duration": 6.1
+      }
+    ],
+    "posterAt": 0.7,
+    "duration": {
+      "target": 11.6,
+      "min": 11.3,
+      "max": 11.9
+    },
+    "capture": {
+      "url": "https://radiancecca.com/",
+      "dismissSelectors": [
+        "#rec1613551871 .t886__btn",
+        ".t-popup__close"
+      ],
+      "finalHold": 1200
+    }
+  },
+  {
+    "itemId": "garage-endowment",
+    "master": "garage-endowment.mp4",
+    "chapters": [
+      {
+        "label": "mission-target-capitals",
+        "start": 0.1,
+        "duration": 5.2
+      },
+      {
+        "label": "donation-controls",
+        "start": 5.4,
+        "duration": 5.2
+      }
+    ],
+    "posterAt": 0.8,
+    "duration": {
+      "target": 10.8,
+      "min": 10.5,
+      "max": 11.1
+    },
+    "capture": {
+      "url": "https://endowment.garagemca.org/ru",
+      "finalHold": 2500
+    }
+  },
+  {
+    "itemId": "shirokostup",
+    "master": "shirokostup.mp4",
+    "chapters": [
+      {
+        "label": "light-home-index",
+        "start": 0.1,
+        "duration": 4.1
+      },
+      {
+        "label": "dark-index-work",
+        "start": 4.6,
+        "duration": 7.9
+      }
+    ],
+    "posterAt": 0.6,
+    "duration": {
+      "target": 12.8,
+      "min": 12.5,
+      "max": 13.1
+    },
+    "capture": {
+      "url": "https://shirokostup.site/",
+      "finalHold": 1800
+    }
+  },
+  {
+    "itemId": "tarski",
+    "master": "tarski.mp4",
+    "chapters": [
+      {
+        "label": "light-editorial",
+        "start": 0.2,
+        "duration": 4.7
+      },
+      {
+        "label": "dark-network-dossier",
+        "start": 5.4,
+        "duration": 6.6
+      }
+    ],
+    "posterAt": 1.45,
+    "duration": {
+      "target": 12.4,
+      "min": 12.1,
+      "max": 12.7
+    },
+    "capture": {
+      "url": "https://tarski.ru/",
+      "finalHold": 2200
+    }
+  },
+  {
+    "itemId": "herman",
+    "master": "herman.mp4",
+    "chapters": [
+      {
+        "label": "light-profile-expertise",
+        "start": 0.2,
+        "duration": 5
+      },
+      {
+        "label": "partnerships-dark-media-music",
+        "start": 5.3,
+        "duration": 9.2
+      }
+    ],
+    "posterAt": 2.2,
+    "duration": {
+      "target": 14.8,
+      "min": 14.5,
+      "max": 15.1
+    },
+    "capture": {
+      "url": "https://barberherman.ru/",
+      "finalHold": 1800
+    }
+  },
+  {
+    "itemId": "hotline-camp",
+    "master": "hotline-camp.mp4",
+    "chapters": [
+      {
+        "label": "solar-hero-menu-programme",
+        "start": 0.1,
+        "duration": 5.6
+      },
+      {
+        "label": "dark-trainers-finish",
+        "start": 6.4,
+        "duration": 7.5
+      }
+    ],
+    "posterAt": 0.7,
+    "duration": {
+      "target": 14,
+      "min": 13.7,
+      "max": 14.1
+    },
+    "capture": {
+      "url": "https://hotlinecamp.ru/",
+      "finalHold": 2000
+    }
+  },
+  {
+    "itemId": "dusty",
+    "master": "dusty-merch.mp4",
+    "chapters": [
+      {
+        "label": "collection",
+        "start": 0.1,
+        "duration": 2.4
+      },
+      {
+        "label": "product-delivery",
+        "start": 2.7,
+        "duration": 4.8
+      }
+    ],
+    "posterAt": 1.35,
+    "duration": {
+      "target": 7.8,
+      "min": 7.5,
+      "max": 8.1
+    },
+    "capture": {
+      "url": "https://merch.dustydumbbells.com/",
+      "dismissSelectors": [
+        ".t-popup__close"
+      ]
+    }
+  },
+  {
+    "itemId": "dd-camp",
+    "master": "dusty-camp.mp4",
+    "chapters": [
+      {
+        "label": "hero",
+        "start": 0.1,
+        "duration": 2.9
+      },
+      {
+        "label": "programme-place",
+        "start": 3.1,
+        "duration": 4.4
+      }
+    ],
+    "posterAt": 1.45,
+    "duration": {
+      "target": 7.8,
+      "min": 7.5,
+      "max": 8.1
+    },
+    "capture": {
+      "url": "https://camp.dustydumbbells.com/"
+    }
+  },
+  {
+    "itemId": "eleven",
+    "master": "11111.mp4",
+    "chapters": [
+      {
+        "label": "hero-weather-menu",
+        "start": 0.2,
+        "duration": 3.3
+      },
+      {
+        "label": "wordmark-sunset-night",
+        "start": 7.8,
+        "duration": 10.7
+      }
+    ],
+    "posterAt": 0.75,
+    "duration": {
+      "target": 18.7,
+      "min": 18.4,
+      "max": 19
+    },
+    "capture": {
+      "url": "https://11111.life/",
+      "finalHold": 2400
+    }
+  },
+  {
+    "itemId": "ks-fish",
+    "master": "ks-fish.mp4",
+    "chapters": [
+      {
+        "label": "sea-journal-assortment",
+        "start": 0.1,
+        "duration": 4.6
+      },
+      {
+        "label": "catalog-seafood",
+        "start": 7.4,
+        "duration": 6.3
+      }
+    ],
+    "posterAt": 0.7,
+    "duration": {
+      "target": 14.2,
+      "min": 14,
+      "max": 14.4
+    },
+    "capture": {
+      "url": "https://ks.fish/",
+      "finalHold": 3500,
+      "browser": "chromium"
+    }
+  },
+  {
+    "itemId": "doronin",
+    "master": "doronin.mp4",
+    "chapters": [
+      {
+        "label": "campaign",
+        "start": 0.1,
+        "duration": 2.3
+      },
+      {
+        "label": "assortment",
+        "start": 2.6,
+        "duration": 4.9
+      }
+    ],
+    "posterAt": 1.35,
+    "duration": {
+      "target": 7.8,
+      "min": 7.5,
+      "max": 8.1
+    },
+    "capture": {
+      "url": "https://doronin.store/"
+    }
+  },
+  {
+    "itemId": "krainiuk",
+    "master": "krainiuk.mp4",
+    "chapters": [
+      {
+        "label": "coach-running",
+        "start": 4.1,
+        "duration": 3.8
+      },
+      {
+        "label": "dark-tarot-reveal",
+        "start": 22.3,
+        "duration": 7.2
+      }
+    ],
+    "posterAt": 0.7,
+    "duration": {
+      "target": 29.7,
+      "min": 29.5,
+      "max": 29.9
+    },
+    "capture": {
+      "url": "https://anton-gorokhovatsky.github.io/ekaterinakrainiuk/",
+      "finalHold": 4200,
+      "browser": "chromium"
+    }
+  }
+]

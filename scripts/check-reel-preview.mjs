@@ -5,182 +5,35 @@ import { createRequire } from "node:module";
 import os from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { reelSpecs, reelFrame, reelChapterFrame, getReelChapterFileName } from "./reel-specs.mjs";
+import { mapItems } from "../js/map-data.js";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(scriptDirectory, "..");
 const reelId = process.argv[2] || "eleven";
 const expectedById = new Map([
-  ["krainiuk", {
-    mapId: "krainiuk",
-    artifactId: "krainiuk",
-    index: "18 / 18",
-    titleFragments: ["Сайт тренера Екатерины Крайнюк"],
-    meta: "ТРЕНИРОВКИ, КАРТЫ И ТЁМНАЯ ТЕМА / 00:30",
-    videoPath: "/assets/reels/krainiuk.mp4",
-    posterPath: "/assets/reel-posters/krainiuk.jpg",
-    chapterPaths: ["/assets/reel-chapters/krainiuk-01.mp4", "/assets/reel-chapters/krainiuk-02.mp4"],
-    width: 900,
-    height: 600,
-    duration: { min: 29.5, max: 29.9 },
-  }],
-  ["ks-fish", {
-    mapId: "ks-fish",
-    artifactId: "ks-fish",
-    index: "16 / 18",
-    titleFragments: ["Сайт «Рыбной лавки капитана Селёдкина»"],
-    meta: "ГЛАВНАЯ, ЖУРНАЛ И КАТАЛОГ / 00:14",
-    videoPath: "/assets/reels/ks-fish.mp4",
-    posterPath: "/assets/reel-posters/ks-fish.jpg",
-    chapterPaths: ["/assets/reel-chapters/ks-fish-01.mp4", "/assets/reel-chapters/ks-fish-02.mp4"],
-    width: 900,
-    height: 600,
-    duration: { min: 14, max: 14.4 },
-  }],
-  ["eleven", {
-    mapId: "eleven",
-    artifactId: "11111",
-    index: "15 / 18",
-    titleFragments: ["11 111", "Виктора Доронина"],
-    meta: "ПАЛИТРА, ПОГОДА И ВРЕМЯ / 00:19",
-    videoPath: "/assets/reels/11111.mp4",
-    posterPath: "/assets/reel-posters/11111.jpg",
-    chapterPaths: [
-      "/assets/reel-chapters/11111-01.mp4",
-      "/assets/reel-chapters/11111-02.mp4",
-    ],
-    width: 900,
-    height: 600,
-    duration: { min: 18.4, max: 19 },
-  }],
-  ["narkomfin", {
-    mapId: "narkomfin",
-    artifactId: "narkomfin",
-    index: "02 / 18",
-    titleFragments: ["Дом Наркомфина"],
-    meta: "МОДЕЛЬ, РАЗДЕЛЫ И ТЕМЫ / 00:13",
-    videoPath: "/assets/reels/narkomfin.mp4",
-    posterPath: "/assets/reel-posters/narkomfin.jpg",
-    chapterPaths: [
-      "/assets/reel-chapters/narkomfin-01.mp4",
-      "/assets/reel-chapters/narkomfin-02.mp4",
-    ],
-    width: 900,
-    height: 600,
-    duration: { min: 12.9, max: 13.5 },
-  }],
-  ["garage-archives", {
-    mapId: "garage-archives",
-    artifactId: "garage-archives",
-    index: "04 / 18",
-    titleFragments: ["Архивные проекты"],
-    meta: "КАТАЛОГ, ПОИСК И АРХИВНЫЕ МАТЕРИАЛЫ / 00:12",
-    videoPath: "/assets/reels/garage-archives.mp4",
-    posterPath: "/assets/reel-posters/garage-archives.jpg",
-    chapterPaths: [
-      "/assets/reel-chapters/garage-archives-01.mp4",
-      "/assets/reel-chapters/garage-archives-02.mp4",
-    ],
-    width: 900,
-    height: 600,
-    duration: { min: 11.5, max: 12.1 },
-  }],
-  ["garage-webzine", {
-    mapId: "garage-webzine",
-    artifactId: "garage-webzine",
-    index: "06 / 18",
-    titleFragments: ["Нечеловеческие животные", "техника"],
-    meta: "ГЛАВНАЯ, ТЕКСТ И ТЁМНАЯ ТЕМА / 00:12",
-    videoPath: "/assets/reels/garage-webzine.mp4",
-    posterPath: "/assets/reel-posters/garage-webzine.jpg",
-    chapterPaths: [
-      "/assets/reel-chapters/garage-webzine-01.mp4",
-      "/assets/reel-chapters/garage-webzine-02.mp4",
-    ],
-    width: 900,
-    height: 600,
-    duration: { min: 12.1, max: 12.7 },
-  }],
-  ["garage-institutions", {
-    mapId: "garage-institutions",
-    artifactId: "garage-institutions",
-    index: "07 / 18",
-    titleFragments: ["Помощь культурным институциям"],
-    meta: "СОБЫТИЯ, НАПРАВЛЕНИЯ И ПОСЕЩЕНИЕ / 00:12",
-    videoPath: "/assets/reels/garage-institutions.mp4",
-    posterPath: "/assets/reel-posters/garage-institutions.jpg",
-    chapterPaths: [
-      "/assets/reel-chapters/garage-institutions-01.mp4",
-      "/assets/reel-chapters/garage-institutions-02.mp4",
-    ],
-    width: 900,
-    height: 600,
-    duration: { min: 11.3, max: 11.9 },
-  }],
-  ["garage-endowment", {
-    mapId: "garage-endowment",
-    artifactId: "garage-endowment",
-    index: "08 / 18",
-    titleFragments: ["Эндаумент-фонд Музея"],
-    meta: "МИССИЯ, ЦЕЛЕВЫЕ КАПИТАЛЫ И ПОЖЕРТВОВАНИЕ / 00:11",
-    videoPath: "/assets/reels/garage-endowment.mp4",
-    posterPath: "/assets/reel-posters/garage-endowment.jpg",
-    chapterPaths: [
-      "/assets/reel-chapters/garage-endowment-01.mp4",
-      "/assets/reel-chapters/garage-endowment-02.mp4",
-    ],
-    width: 900,
-    height: 600,
-    duration: { min: 10.5, max: 11.1 },
-  }],
-  ["shirokostup", {
-    mapId: "shirokostup",
-    artifactId: "shirokostup",
-    index: "09 / 18",
-    titleFragments: ["Сайт независимого куратора", "Ольги Широкоступ"],
-    meta: "ГЛАВНАЯ, МЕНЮ И ТЁМНАЯ ТЕМА / 00:13",
-    videoPath: "/assets/reels/shirokostup.mp4",
-    posterPath: "/assets/reel-posters/shirokostup.jpg",
-    chapterPaths: [
-      "/assets/reel-chapters/shirokostup-01.mp4",
-      "/assets/reel-chapters/shirokostup-02.mp4",
-    ],
-    width: 900,
-    height: 600,
-    duration: { min: 12.5, max: 13.1 },
-  }],
-  ["herman", {
-    mapId: "herman",
-    artifactId: "herman",
-    index: "11 / 18",
-    titleFragments: ["Сайт стилиста", "Германа Винокурова"],
-    meta: "ПРОФИЛЬ, МЕДИА И ПЛЕЙЛИСТЫ / 00:15",
-    videoPath: "/assets/reels/herman.mp4",
-    posterPath: "/assets/reel-posters/herman.jpg",
-    chapterPaths: [
-      "/assets/reel-chapters/herman-01.mp4",
-      "/assets/reel-chapters/herman-02.mp4",
-    ],
-    width: 900,
-    height: 600,
-    duration: { min: 14.5, max: 15.1 },
-  }],
-  ["hotline-camp", {
-    mapId: "hotline-camp",
-    artifactId: "hotline-camp",
-    index: "12 / 18",
-    titleFragments: ["Сайт предстартового кэмпа", "Hotline Camp"],
-    meta: "СОЧИНСКАЯ ПАЛИТРА, МЕНЮ И ТРЕНЕРЫ / 00:14",
-    videoPath: "/assets/reels/hotline-camp.mp4",
-    posterPath: "/assets/reel-posters/hotline-camp.jpg",
-    chapterPaths: [
-      "/assets/reel-chapters/hotline-camp-01.mp4",
-      "/assets/reel-chapters/hotline-camp-02.mp4",
-    ],
-    width: 900,
-    height: 600,
-    duration: { min: 13.7, max: 14.1 },
-  }],
-]);
+  ["krainiuk", {"index":"18 / 18","titleFragments":["Сайт тренера Екатерины Крайнюк"],"meta":"ТРЕНИРОВКИ, КАРТЫ И ТЁМНАЯ ТЕМА / "}],
+  ["ks-fish", {"index":"16 / 18","titleFragments":["Сайт «Рыбной лавки капитана Селёдкина»"],"meta":"ГЛАВНАЯ, ЖУРНАЛ И КАТАЛОГ / "}],
+  ["eleven", {"index":"15 / 18","titleFragments":["11 111","Виктора Доронина"],"meta":"ПАЛИТРА, ПОГОДА И ВРЕМЯ / "}],
+  ["narkomfin", {"index":"02 / 18","titleFragments":["Дом Наркомфина"],"meta":"МОДЕЛЬ, РАЗДЕЛЫ И ТЕМЫ / "}],
+  ["garage-archives", {"index":"04 / 18","titleFragments":["Архивные проекты"],"meta":"КАТАЛОГ, ПОИСК И АРХИВНЫЕ МАТЕРИАЛЫ / "}],
+  ["garage-webzine", {"index":"06 / 18","titleFragments":["Нечеловеческие животные","техника"],"meta":"ГЛАВНАЯ, ТЕКСТ И ТЁМНАЯ ТЕМА / "}],
+  ["garage-institutions", {"index":"07 / 18","titleFragments":["Помощь культурным институциям"],"meta":"СОБЫТИЯ, НАПРАВЛЕНИЯ И ПОСЕЩЕНИЕ / "}],
+  ["garage-endowment", {"index":"08 / 18","titleFragments":["Эндаумент-фонд Музея"],"meta":"МИССИЯ, ЦЕЛЕВЫЕ КАПИТАЛЫ И ПОЖЕРТВОВАНИЕ / "}],
+  ["shirokostup", {"index":"09 / 18","titleFragments":["Сайт независимого куратора","Ольги Широкоступ"],"meta":"ГЛАВНАЯ, МЕНЮ И ТЁМНАЯ ТЕМА / "}],
+  ["herman", {"index":"11 / 18","titleFragments":["Сайт стилиста","Германа Винокурова"],"meta":"ПРОФИЛЬ, МЕДИА И ПЛЕЙЛИСТЫ / "}],
+  ["hotline-camp", {"index":"12 / 18","titleFragments":["Сайт предстартового кэмпа","Hotline Camp"],"meta":"СОЧИНСКАЯ ПАЛИТРА, МЕНЮ И ТРЕНЕРЫ / "}],
+].map(([mapId, identity]) => {
+  const spec = reelSpecs.find(item => item.itemId === mapId);
+  const seconds = Math.round(mapItems.find(item => item.id === mapId).previewDuration);
+  const time = String(Math.floor(seconds / 60)).padStart(2, "0") + ":" + String(seconds % 60).padStart(2, "0");
+  return [mapId, { ...identity, mapId, artifactId: spec.master.slice(0, -4),
+    meta: identity.meta + time, videoPath: "/assets/reels/" + spec.master,
+    posterPath: "/assets/reel-posters/" + spec.master.slice(0, -4) + ".jpg",
+    chapterPaths: spec.chapters.map((_, i) => "/assets/reel-chapters/" + getReelChapterFileName(spec, i)),
+    ...reelFrame, duration: spec.duration,
+  }];
+}));
 const expected = expectedById.get(reelId);
 
 if (!expected) {
@@ -358,8 +211,8 @@ try {
     new URL(currentSrc).pathname
   ));
   const chapterGeometryFits = report.chapters.every((chapter) => (
-    chapter.videoWidth === 450
-    && chapter.videoHeight === 300
+    chapter.videoWidth === reelChapterFrame.width
+    && chapter.videoHeight === reelChapterFrame.height
     && chapter.objectFit === "contain"
     && chapter.objectPosition === "50% 0%"
   ));

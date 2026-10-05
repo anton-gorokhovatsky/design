@@ -66,6 +66,10 @@ const contractScripts = [
   "scripts/check-release-quality.mjs",
   "scripts/release-scope.mjs",
   "scripts/component-scope.mjs",
+  "scripts/media-scope.mjs",
+  "scripts/reel-specs.mjs",
+  "scripts/reel-metadata.mjs",
+  "scripts/prepare-reels.mjs",
   "scripts/check-catalog.mjs",
   "scripts/check-release-scope.mjs",
   "scripts/check-ui-contracts.mjs",
@@ -142,7 +146,14 @@ const staticContractSteps = [
     args: ["scripts/check-publication-assets.mjs"],
   },
   {
+    label: "Generated reel metadata",
+    requiresFfmpeg: true,
+    command: process.execPath,
+    args: ["scripts/prepare-reels.mjs", "--check"],
+  },
+  {
     label: "Reel contracts",
+    requiresFfmpeg: true,
     command: process.execPath,
     args: ["scripts/check-reels.mjs"],
   },
@@ -277,7 +288,7 @@ if (["all", "static", "copy"].includes(checkScope)) {
   if (failures.length === 0) {
     const scopedStaticSteps = checkScope === "all"
       ? [...staticContractSteps, ...chromiumReelSteps, gitWhitespaceStep]
-      : [...staticContractSteps.filter((step) => checkScope !== "copy" || step.label !== "Reel contracts"), gitWhitespaceStep];
+      : [...staticContractSteps.filter((step) => checkScope !== "copy" || !step.requiresFfmpeg), gitWhitespaceStep];
     const staticContractResults = await runPhase(
       "Static release gate",
       scopedStaticSteps,

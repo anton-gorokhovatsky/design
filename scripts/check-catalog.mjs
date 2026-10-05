@@ -19,6 +19,7 @@ export const componentChecks = {
 // Settings assertions already live in the core browser contracts. Keep them,
 // including consent and keyboard behavior, instead of duplicating a weaker test.
 export const componentCoverage = {
+  media: ["reels", "case-view", "case-flow", "hover-layout", "observation-route"],
   settings: ["core", "accessibility", "whoop-ui"],
   whoop: ["core", "accessibility", "whoop-ui", "hover-layout", "first-visit"],
 };
