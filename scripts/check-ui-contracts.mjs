@@ -2341,7 +2341,7 @@ const auditBrowser = async (client, origin) => {
         && style?.display !== "none"
         && style?.visibility !== "hidden"
         && Number(style?.opacity) > 0
-        && video?.getAttribute("poster")?.endsWith(
+        && video?.getAttribute("poster")?.split("?")[0].endsWith(
           "assets/reel-posters/tarski.jpg",
         )
         && bounds?.width > 0
@@ -2435,7 +2435,7 @@ const auditBrowser = async (client, origin) => {
       || Math.abs(reelContract.ratio - 1.5) > 0.02
       || reelContract.objectFit !== "contain"
       || reelContract.objectPosition !== "50% 0%"
-      || !reelContract.poster?.endsWith("assets/reel-posters/tarski.jpg")
+      || !reelContract.poster?.split("?")[0].endsWith("assets/reel-posters/tarski.jpg")
       || reelContract.previewZ <= reelContract.originZ
     ) {
       fail("reel: Tarski receiver lost its native 3:2 content geometry.", reelContract);
