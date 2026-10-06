@@ -119,7 +119,7 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=be7ea35bb73c">
+    <link rel="stylesheet" href="styles.css?v=d901cd680ac5">
     <style>
       .map-evidence [data-map-evidence-role-label]{font-family:var(--font-author);font-size:.6rem;font-weight:400;letter-spacing:0}
     </style>
@@ -141,8 +141,8 @@
           "./js/sphere-surfaces.js": "./js/sphere-surfaces.js?v=ad8f03a11d06",
           "./js/map-media.js": "./js/map-media.js?v=2a08dd031f9a",
           "./js/map-engine.js": "./js/map-engine.js?v=e782363907b9",
-          "./js/viewport-ui.js": "./js/viewport-ui.js?v=8a4ca23a8f8a",
-          "./js/panels.js": "./js/panels.js?v=ea2f7f8db4a0",
+          "./js/viewport-ui.js": "./js/viewport-ui.js?v=79d37ab194e6",
+          "./js/panels.js": "./js/panels.js?v=3367f25e9625",
           "./js/case-view.js": "./js/case-view.js?v=f9175047c8c1",
           "./js/favicon.js": "./js/favicon.js?v=ef61cd158b18"
         }
@@ -164,8 +164,8 @@
     <script type="module" src="js/sphere-surfaces.js?v=ad8f03a11d06"></script>
     <script type="module" src="js/map-media.js?v=2a08dd031f9a"></script>
     <script type="module" src="js/map-engine.js?v=e782363907b9"></script>
-    <script type="module" src="js/viewport-ui.js?v=8a4ca23a8f8a"></script>
-    <script type="module" src="js/panels.js?v=ea2f7f8db4a0"></script>
+    <script type="module" src="js/viewport-ui.js?v=79d37ab194e6"></script>
+    <script type="module" src="js/panels.js?v=3367f25e9625"></script>
     <script type="module" src="js/case-view.js?v=f9175047c8c1"></script>
     <script type="module" src="js/favicon.js?v=ef61cd158b18"></script>
     <script type="application/ld+json">
@@ -279,12 +279,16 @@
         <span class="brand__role">Придумываю, разрабатываю и веду веб‑проекты.</span>
       </p>
       <section class="whoop-readout" aria-label="Мой день: показатели WHOOP" data-whoop-readout hidden>
+        <div class="whoop-foot">
+          <span class="whoop-heading" data-console-text><strong>Сегодня</strong><time data-whoop-date>WHOOP</time></span>
+          <button class="text-link whoop-compact-trigger" type="button" data-open-settings data-settings-focus="whoop">О&nbsp;данных и&nbsp;цвете</button>
+        </div>
         <dl class="whoop-metrics" data-console-text>
           <div><dt>Восстановление</dt><dd data-whoop-recovery>—</dd></div>
           <div><dt>Сон</dt><dd data-whoop-sleep>—</dd></div>
           <div><dt>Нагрузка</dt><dd data-whoop-strain>—</dd></div>
         </dl>
-        <div class="whoop-foot"><span class="whoop-heading" data-console-text><strong>Сегодня</strong><time data-whoop-date>WHOOP</time></span><span data-whoop-status data-console-text>Получаем данные</span><button class="text-link whoop-compact-trigger" type="button" data-open-settings data-settings-focus="whoop">О&nbsp;данных и&nbsp;цвете</button></div>
+        <span class="whoop-status" data-whoop-status data-console-text>Получаем данные</span>
         <span class="whoop-stamp" data-whoop-stamp></span>
       </section>
     </header>

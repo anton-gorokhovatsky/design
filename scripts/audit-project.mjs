@@ -682,7 +682,8 @@ requireContract(
 );
 requireContract(
   scriptSource.includes("positionDetachedCommandResults")
-    && scriptSource.includes('commandResults?.classList.toggle("is-open", isOpen)'),
+    && scriptSource.includes('commandResults?.classList.toggle("is-open", hasResults)')
+    && scriptSource.includes("const hasResults = isOpen && currentCommandResults.length > 0"),
   "material-search-positioning",
   "Detached search results need explicit positioning and open-state synchronization.",
 );

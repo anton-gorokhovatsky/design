@@ -60,7 +60,7 @@ export const syncConstellationNavInteractivity = () => {
     || (compactConstellationNav.matches && document.body.classList.contains("has-content-panel"));
   if (constellationNav) {
     constellationNav.inert = compactConstellationNav.matches && document.body.classList.contains("has-content-panel");
-    constellationNav.dataset.materialActive = constellationNav.matches(".is-open, .is-command-close")
+    constellationNav.dataset.materialActive = constellationNav.matches(".is-open")
       ? "mobile" : "none";
   }
   const quickLinks = document.querySelector(".mobile-index-links");
@@ -97,18 +97,6 @@ const setConstellationNavCurrent = (view) => {
 };
 
 constellationNavToggle?.addEventListener("click", () => {
-  if (
-    compactConstellationNav.matches
-    && document.querySelector("[data-command-form]")?.classList.contains("is-open")
-  ) {
-    setCommandOpen(false);
-    setCommandStatus("");
-    commandInput?.blur();
-    syncCommandFocusViewport();
-    clearSearchHighlight();
-    return;
-  }
-
   setConstellationNavOpen(!isConstellationNavOpen);
 });
 
@@ -540,48 +528,9 @@ const commandStatus = document.querySelector("[data-command-status]");
 const commandResultsHome = document.createComment("command-results-home");
 commandResults?.before(commandResultsHome);
 const commandSubmit = commandForm?.querySelector(".command-dock__submit");
-const syncCompactCommandDismiss = (isOpen) => {
-  const usesNavigationToggle = Boolean(
-    isOpen && compactCommandViewport.matches,
-  );
-
-  if (usesNavigationToggle && isConstellationNavOpen) {
-    setConstellationNavOpen(false);
-  }
-
-  constellationNav?.classList.toggle(
-    "is-command-close",
-    usesNavigationToggle,
-  );
-  syncConstellationNavInteractivity();
-
-  if (constellationNavToggle) {
-    constellationNavToggle.setAttribute(
-      "aria-controls",
-      usesNavigationToggle ? "command-results" : "constellation-nav-orbit",
-    );
-
-    if (usesNavigationToggle) {
-      constellationNavToggle.removeAttribute("aria-expanded");
-    } else {
-      constellationNavToggle.setAttribute(
-        "aria-expanded",
-        String(isConstellationNavOpen),
-      );
-    }
-  }
-
-  if (constellationNavToggleLabel) {
-    constellationNavToggleLabel.textContent = usesNavigationToggle
-      ? "Закрыть поиск"
-      : isConstellationNavOpen
-        ? "Закрыть меню"
-        : "Открыть меню";
-  }
-};
 const syncCommandFocusViewport = () => {
   const usesFocusedMobileLayout = compactCommandViewport.matches
-    && document.activeElement === commandInput;
+    && commandForm?.classList.contains("is-open");
 
   document.body.classList.toggle(
     "has-command-focus",
@@ -599,7 +548,7 @@ let mobileMapFrame = 0;
 const syncMobileMapFrame = () => {
   window.cancelAnimationFrame(mobileMapFrame);
   mobileMapFrame = window.requestAnimationFrame(() => {
-    if (!signalField || !commandForm) {
+    if (!signalField || !commandForm || commandForm.classList.contains("is-open")) {
       return;
     }
 
@@ -705,9 +654,6 @@ compactConstellationNav.addEventListener("change", syncCommandPlaceholder);
 syncCommandPlaceholder();
 compactCommandViewport.addEventListener?.("change", () => {
   syncCommandFocusViewport();
-  syncCompactCommandDismiss(
-    commandForm?.classList.contains("is-open"),
-  );
 });
 compactMapFrame.addEventListener?.("change", syncMobileMapFrame);
 window.addEventListener("resize", syncMobileMapFrame, { passive: true });
@@ -855,21 +801,24 @@ const commandViews = [
 const setCommandOpen = (isOpen) => {
   if (isOpen) {
     setCommandStatus("");
-    positionDetachedCommandResults();
+    if (compactCommandViewport.matches && isConstellationNavOpen) setConstellationNavOpen(false);
   }
 
+  const hasResults = isOpen && currentCommandResults.length > 0;
   commandForm?.classList.toggle("is-open", isOpen);
-  commandResults?.classList.toggle("is-open", isOpen);
-  commandInput?.setAttribute("aria-expanded", String(isOpen));
-  commandResults?.setAttribute("aria-hidden", String(!isOpen));
+  commandResults?.classList.toggle("is-open", hasResults);
+  commandInput?.setAttribute("aria-expanded", String(hasResults));
+  commandResults?.setAttribute("aria-hidden", String(!hasResults));
   commandSubmit?.setAttribute(
     "aria-label",
     isOpen ? "Закрыть поиск" : "Открыть результат",
   );
-  syncCompactCommandDismiss(isOpen);
+  syncCommandFocusViewport();
+  if (isOpen) positionDetachedCommandResults();
+  else syncMobileMapFrame();
 
   if (commandResults) {
-    commandResults.inert = !isOpen;
+    commandResults.inert = !hasResults;
   }
 
   if (!isOpen) {
@@ -1004,7 +953,7 @@ const renderCommandResults = (query = "") => {
 
   if (!currentCommandResults.length) {
     setSearchRelationshipPreview(null);
-    setCommandOpen(false);
+    setCommandOpen(true);
     setCommandStatus("Ничего не\u00a0нашлось — попробуйте другое слово");
     return;
   }
@@ -1101,7 +1050,6 @@ const runCommandResult = (result) => {
 
 commandInput?.addEventListener("focus", () => {
   if (observationRoute.active) stopObservation();
-  syncCommandFocusViewport();
   hideMapPreview({ immediate: true });
   setInspectorOpen(false);
   renderCommandResults(commandInput.value);
@@ -1161,6 +1109,7 @@ commandSubmit?.addEventListener("click", (event) => {
   event.preventDefault();
   setCommandOpen(false);
   setCommandStatus("");
+  commandInput?.blur();
   clearSearchHighlight();
 });
 
@@ -1213,6 +1162,7 @@ document.addEventListener("keydown", (event) => {
     document.activeElement === commandInput
     || commandForm?.classList.contains("is-open")
   ) {
+    event.preventDefault();
     setCommandOpen(false);
     setCommandStatus("");
     commandInput?.blur();

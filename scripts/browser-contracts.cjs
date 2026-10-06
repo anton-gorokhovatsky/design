@@ -224,7 +224,7 @@ const readMaterialAuditExpression = `(() => {
       const style = getComputedStyle(element);
       const backgroundDepth = element.matches(
         "body.has-reading-surface :is(.site-header, .system-dock), "
-        + "body.has-constellation-nav .site-header, "
+        + "body:is(.has-constellation-nav, .has-command-focus) .site-header, "
         + "body:is([data-case-open], .has-settings-panel) .control-console",
       ) || (mobile && element.matches(
         "body.has-content-panel .control-console :is(.constellation-nav, .command-dock)",
@@ -405,12 +405,12 @@ const openMobileSearchExpression = `(() => {
 })()`;
 
 const exposeMobileSearchDismissFallbackExpression = `(() => {
-  document.body.classList.remove("has-command-focus");
+  document.querySelector(".command-dock__submit")?.focus({ preventScroll: true });
   return true;
 })()`;
 
 const clickMobileSearchDismissExpression = `(() => {
-  const toggle = document.querySelector("[data-constellation-nav-toggle]");
+  const toggle = document.querySelector(".command-dock__submit");
   toggle?.click();
   return Boolean(toggle);
 })()`;
@@ -484,7 +484,7 @@ const readMobileSearchFocusedExpression = `(() => {
     results: resultsBounds,
     geometryFits: withinViewport(dockBounds)
       && withinViewport(resultsBounds)
-      && resultsBounds.bottom <= dockBounds.top - 6,
+      && resultsBounds.top >= dockBounds.bottom + 6,
     resultsClientHeight: results?.clientHeight || 0,
     resultsScrollHeight: results?.scrollHeight || 0,
     pageScrollY: window.scrollY,
@@ -514,51 +514,18 @@ const readMobileSearchFocusedExpression = `(() => {
 })()`;
 
 const readMobileSearchDismissFallbackExpression = `(() => {
-  const navigation = document.querySelector("[data-constellation-nav]");
-  const toggle = document.querySelector("[data-constellation-nav-toggle]");
-  const cluster = toggle?.querySelector(".constellation-nav__cluster");
-  const results = document.querySelector("[data-command-results]");
-  const bounds = toggle?.getBoundingClientRect();
+  const toggle = document.querySelector(".command-dock__submit");
+  const bounds = toggle.getBoundingClientRect();
   return {
     bodyHasFocus: document.body.classList.contains("has-command-focus"),
-    button: bounds ? {
-      top: bounds.top,
-      right: bounds.right,
-      bottom: bounds.bottom,
-      left: bounds.left,
-      width: bounds.width,
-      height: bounds.height,
-    } : null,
-    buttonFits: Boolean(
-      bounds
-      && bounds.top >= -1
-      && bounds.left >= -1
-      && bounds.right <= innerWidth + 1
-      && bounds.bottom <= innerHeight + 1
-    ),
-    dotsOpacity: Array.from(cluster?.querySelectorAll("i") || []).map(
-      (dot) => getComputedStyle(dot).opacity,
-    ),
-    inputExpanded: document.querySelector("[data-command-input]")
-      ?.getAttribute("aria-expanded"),
-    navigationCommandClose: navigation?.classList.contains("is-command-close"),
-    navigationOpacity: getComputedStyle(navigation).opacity,
-    navigationPointerEvents: getComputedStyle(navigation).pointerEvents,
-    navigationVisibility: getComputedStyle(navigation).visibility,
-    navigationZIndex: Number.parseInt(getComputedStyle(navigation).zIndex, 10),
-    resultsOpen: results?.classList.contains("is-open"),
-    resultsZIndex: Number.parseInt(getComputedStyle(results).zIndex, 10),
-    toggleAfterOpacity: cluster
-      ? getComputedStyle(cluster, "::after").opacity
-      : null,
-    toggleBeforeOpacity: cluster
-      ? getComputedStyle(cluster, "::before").opacity
-      : null,
-    toggleControls: toggle?.getAttribute("aria-controls"),
-    toggleExpanded: toggle?.getAttribute("aria-expanded"),
-    toggleLabel: document.querySelector(
-      "[data-constellation-nav-toggle-label]",
-    )?.textContent.trim(),
+    button: { width: bounds.width, height: bounds.height },
+    buttonFits: bounds.top >= 0 && bounds.left >= 0
+      && bounds.right <= innerWidth && bounds.bottom <= innerHeight,
+    labelledClose: toggle.getAttribute("aria-label") === "Закрыть поиск",
+    receivesInput: document.elementFromPoint(bounds.x + bounds.width / 2,
+      bounds.y + bounds.height / 2)?.closest("button") === toggle,
+    inputExpanded: document.querySelector("[data-command-input]").getAttribute("aria-expanded"),
+    resultsOpen: document.querySelector("[data-command-results]").classList.contains("is-open"),
   };
 })()`;
 
@@ -684,10 +651,10 @@ const validateMobileSearchContract = ({
     || focused.overflowX !== 0
     || focused.systemDockVisibility !== "hidden"
     || focused.navigationVisibility !== "hidden"
-    || !focused.navigationCommandClose
-    || focused.navigationToggleLabel !== "Закрыть поиск"
-    || focused.navigationToggleControls !== "command-results"
-    || focused.navigationToggleExpanded !== null
+    || focused.navigationCommandClose
+    || focused.navigationToggleLabel !== "Открыть меню"
+    || focused.navigationToggleControls !== "constellation-nav-orbit"
+    || focused.navigationToggleExpanded !== "false"
     || focused.focusModality !== "pointer"
     || focused.activeSelected !== "true"
     || focused.activeBackground !== focused.inactiveBackground
@@ -700,26 +667,14 @@ const validateMobileSearchContract = ({
   }
 
   if (
-    fallback.bodyHasFocus
-    || !fallback.navigationCommandClose
-    || fallback.navigationVisibility !== "visible"
-    || fallback.navigationOpacity !== "1"
-    || fallback.navigationPointerEvents === "none"
-    || fallback.toggleLabel !== "Закрыть поиск"
-    || fallback.toggleControls !== "command-results"
-    || fallback.toggleExpanded !== null
+    !fallback.bodyHasFocus
+    || !fallback.labelledClose
+    || !fallback.receivesInput
     || fallback.inputExpanded !== "true"
     || !fallback.resultsOpen
     || !fallback.buttonFits
     || fallback.button?.width < 40
     || fallback.button?.height < 40
-    || fallback.toggleBeforeOpacity !== "1"
-    || fallback.toggleAfterOpacity !== "1"
-    || fallback.dotsOpacity.length !== 4
-    || fallback.dotsOpacity.some((opacity) => opacity !== "0")
-    || !Number.isFinite(fallback.navigationZIndex)
-    || !Number.isFinite(fallback.resultsZIndex)
-    || fallback.navigationZIndex <= fallback.resultsZIndex
   ) {
     failures.push({
       id: "visible-dismiss",
@@ -786,10 +741,10 @@ const validateMobileSafariSplitSearchContract = ({ emulation, focused }) => {
     && focused.overflowX === 0
     && focused.systemDockVisibility === "hidden"
     && focused.navigationVisibility === "hidden"
-    && focused.navigationCommandClose
-    && focused.navigationToggleLabel === "Закрыть поиск"
-    && focused.navigationToggleControls === "command-results"
-    && focused.navigationToggleExpanded === null
+    && !focused.navigationCommandClose
+    && focused.navigationToggleLabel === "Открыть меню"
+    && focused.navigationToggleControls === "constellation-nav-orbit"
+    && focused.navigationToggleExpanded === "false"
     && focused.focusModality === "pointer"
     && focused.activeSelected === "true"
     && focused.activeBackground === focused.inactiveBackground
@@ -799,7 +754,7 @@ const validateMobileSafariSplitSearchContract = ({ emulation, focused }) => {
 
   return [{
     id: "safari-split-viewport",
-    message: "search results do not stay above the dock in Safari's split viewport",
+    message: "search field and results do not fit Safari's split viewport",
     details: { emulation, focused },
   }];
 };

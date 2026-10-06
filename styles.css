@@ -2321,7 +2321,7 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 }
 
 .command-dock__submit {
-  width: 36px;
+  width: var(--control-target);
   height: 100%;
   min-height: 44px;
   border: 0;
@@ -2577,7 +2577,7 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
   }
 
   .command-dock__submit {
-    width: 36px;
+    width: var(--control-target);
     min-height: 44px;
   }
 
@@ -4041,7 +4041,7 @@ body:has(.command-dock.is-open) .origin-marker__label {
     left: 8px;
     width: auto;
     min-height: 48px;
-    grid-template-columns: 34px minmax(0, 1fr) 40px;
+    grid-template-columns: 34px minmax(0, 1fr) var(--control-target);
     padding: 5px 6px;
     border: 0;
     border-radius: 22px;
@@ -4491,7 +4491,7 @@ body:has(.command-dock.is-open) .origin-marker__label {
 .control-console .command-dock {
   height: 48px;
   min-height: 48px;
-  grid-template-columns: 34px minmax(0, 1fr) 38px;
+  grid-template-columns: 34px minmax(0, 1fr) var(--control-target);
   padding-left: 10px;
 }
 
@@ -4640,27 +4640,27 @@ body:has(.command-dock.is-open) .origin-marker__label {
   }
 
   .control-console
-    .constellation-nav:is(.is-open, .is-command-close)
+    .constellation-nav.is-open
     .constellation-nav__cluster {
     transform: none;
   }
 
   .control-console
-    .constellation-nav:is(.is-open, .is-command-close)
+    .constellation-nav.is-open
     .constellation-nav__cluster
     i {
     opacity: 0;
   }
 
   .control-console
-    .constellation-nav:is(.is-open, .is-command-close)
+    .constellation-nav.is-open
     .constellation-nav__cluster::before {
     opacity: 1;
     transform: translate(-50%, -50%) rotate(45deg);
   }
 
   .control-console
-    .constellation-nav:is(.is-open, .is-command-close)
+    .constellation-nav.is-open
     .constellation-nav__cluster::after {
     opacity: 1;
     transform: translate(-50%, -50%) rotate(-45deg);
@@ -5400,9 +5400,6 @@ body:has(.command-dock.is-open) .map-links.has-active-relation {
 
   }
 
-  .control-console .constellation-nav.is-command-close {
-    z-index: 66;
-  }
 
 
 
@@ -7524,7 +7521,7 @@ html[data-focus-modality="pointer"]
   }
 
   body.has-command-focus .control-console .command-dock {
-    top: var(--command-focus-top, auto);
+    top: calc(var(--command-focus-top, 8px) + env(safe-area-inset-top));
     right: auto;
     bottom: auto;
     left: var(--command-focus-left, 8px);
@@ -9620,7 +9617,7 @@ html[data-reduce-motion="true"] [style*="scroll-ink-"] { filter: none !important
 /* Reading windows sit above the stationary map consoles. */
 .author-entry { display: inline-flex; align-items: center; min-height: var(--control-target); margin-top: var(--space-2); font-weight: 500; pointer-events: auto; }
 body.has-reading-surface:not(.has-contact-consoles) :is(.site-header, .whoop-field, .system-dock),
-body.has-constellation-nav :is(.site-header, .whoop-field),
+body:is(.has-constellation-nav, .has-command-focus) :is(.site-header, .whoop-field),
 body:is([data-case-open], .has-settings-panel) .control-console {
   opacity: .16;
   filter: blur(3px);
@@ -9969,19 +9966,21 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
 .constellation-nav__destination { color: var(--content-muted); font-size: var(--type-caption); line-height: var(--leading-label); }
 .control-console .constellation-nav__item .constellation-nav__label { display: flex; align-items: baseline; gap: .3em; }
 .site-header .brand { gap: var(--space-2); }
-.site-header .brand__role { text-wrap: pretty; }
+.site-header .brand__role { text-wrap: balance; }
 .site-header .whoop-readout { margin-top: var(--space-4); padding: 0; }
 .site-header .whoop-heading { display: inline-flex; align-items: baseline; gap: var(--space-2); justify-content: flex-start; margin: 0; }
 .site-header .whoop-heading strong { font-size: var(--type-detail); line-height: var(--leading-label); }
-.site-header .whoop-metrics { display: flex; flex-wrap: wrap; column-gap: var(--space-4); row-gap: var(--space-1); }
-.site-header .whoop-metrics > div { display: flex; flex: 0 1 auto; gap: .35em; align-items: baseline; }
+.site-header .whoop-metrics { display: grid; grid-template-columns: 1.35fr 1fr 1fr; gap: var(--space-3); }
+.site-header .whoop-metrics > div { display: grid; gap: var(--space-1); align-content: start; }
 .site-header .whoop-metrics :is(dt, dd, dd small) { margin: 0; font-size: var(--type-utility); line-height: var(--leading-label); letter-spacing: 0; }
 .site-header .whoop-metrics dd { white-space: nowrap; }
 .site-header .whoop-level { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.site-header .whoop-foot { display: flex; margin-top: var(--space-1); column-gap: var(--space-3); row-gap: 0; }
+.site-header .whoop-foot { display: flex; justify-content: space-between; margin: 0 0 var(--space-1); column-gap: var(--space-3); row-gap: 0; }
 .site-header .whoop-compact-trigger { position: static; display: inline; width: auto; height: auto; min-height: 28px; padding: 4px 0; border: 0; background: none; }
 .site-header .whoop-compact-trigger::after { content: none; }
 .site-header .whoop-readout .whoop-stamp { display: none; }
+.whoop-status { display: block; font-size: var(--type-caption); line-height: var(--leading-label); margin-top: var(--space-1); }
+.whoop-readout[data-stale="false"][data-unavailable="false"] .whoop-status { display: none; }
 
 @media (min-width: 901px) {
   .control-console[data-material-surface] {
@@ -10014,7 +10013,7 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
     padding: var(--space-4) 0 0; border: 0; border-top: 1px solid var(--line); border-radius: 0;
     background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: none;
   }
-  .site-header .brand__role { max-width: 22rem; }
+  .site-header .brand__role { max-width: 29ch; }
   .map-axis-label--south { top: auto; bottom: calc(var(--console-clearance, 140px) + var(--space-4)); }
 }
 
@@ -10025,7 +10024,7 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
   .site-header .whoop-readout { margin-top: var(--space-2); }
   .site-header .whoop-heading { margin: 0; }
   .site-header .whoop-foot { margin-top: 0; }
-  .site-header .whoop-metrics { column-gap: var(--space-3); }
+
   .mobile-index-links {
     position: fixed; left: 12px; right: 12px; bottom: calc(76px + env(safe-area-inset-bottom));
     display: grid; grid-template-columns: .8fr 1.25fr .85fr .8fr; gap: var(--space-2); min-height: 48px; pointer-events: none;
@@ -10036,12 +10035,12 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
   .mobile-index-links button:focus-visible { outline: var(--focus-width) solid var(--signal); outline-offset: 0; }
   .control-console .command-dock { bottom: calc(132px + env(safe-area-inset-bottom)); }
   .control-console .constellation-nav { top: auto; right: 12px; bottom: calc(76px + env(safe-area-inset-bottom)); width: calc((100vw - 48px) * .8 / 3.7); height: 48px; border-radius: 0; overflow: visible; transition: none; }
-  .control-console .constellation-nav:not(.is-open):not(.is-command-close) { border-top: 1px solid var(--line); }
+  .control-console .constellation-nav:not(.is-open) { border-top: 1px solid var(--line); }
   .control-console .constellation-nav__toggle { width: 100%; height: 48px; display: flex; justify-content: flex-end; align-items: center; gap: var(--space-2); font: 500 var(--type-body)/var(--leading-control) var(--font-sans); color: var(--content-ink); }
   .control-console .constellation-nav__toggle:focus-visible { outline: var(--focus-width) solid var(--signal); outline-offset: 0; }
   .constellation-nav__toggle-caption { display: inline; }
-  .control-console .constellation-nav:not(.is-open):not(.is-command-close) .constellation-nav__cluster { display: none; }
-  .control-console .constellation-nav:is(.is-open, .is-command-close) .constellation-nav__toggle-caption { display: none; }
+  .control-console .constellation-nav:not(.is-open) .constellation-nav__cluster { display: none; }
+  .control-console .constellation-nav.is-open .constellation-nav__toggle-caption { display: none; }
   .control-console .constellation-nav:not(.is-open) .constellation-nav__orbit { visibility: hidden; }
   .control-console .constellation-nav.is-open {
     width: calc(100vw - 24px); height: auto; max-height: calc(100svh - 200px - env(safe-area-inset-bottom));
@@ -10060,8 +10059,6 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
   .control-console .constellation-nav .constellation-nav__destination { position: static; grid-column: 3; }
   .control-console .constellation-nav__utilities { grid-column: 1 / -1; }
   body:is(.has-constellation-nav, .has-command-focus, .has-content-panel, .has-settings-panel, [data-case-open]) .mobile-index-links { visibility: hidden; pointer-events: none; }
-  .control-console .constellation-nav.is-command-close { top: max(12px, env(safe-area-inset-top)); bottom: auto; width: 44px; height: 44px; border-radius: 50%; }
-  .control-console .constellation-nav.is-command-close .constellation-nav__toggle { width: 44px; height: 44px; }
 }
 
 @media (max-width: 900px) {

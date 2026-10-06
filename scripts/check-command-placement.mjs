@@ -102,7 +102,8 @@ try {
       const input = page.locator("[data-command-input]");
       const submit = page.locator(".command-dock__submit");
       assert.equal(await submit.getAttribute("aria-label"), "Открыть результат");
-      await input.focus();
+      if (width <= 900) await input.tap();
+      else await input.focus();
       assert.equal(await submit.getAttribute("aria-label"), "Закрыть поиск");
       await settle(page);
       const initialPopup = await assertPopup(page);
@@ -177,6 +178,7 @@ try {
       await input.press("Escape");
       assert.equal(await page.evaluate(() => window.commandDismissedLayout), true,
         "Escape must finish mobile layout dismissal before the next pointer action.");
+      assert.equal(await input.inputValue(), "наркомфин", "Dismissing search preserves the query.");
       assert.equal(await input.getAttribute("aria-expanded"), "false");
       assert.equal(await submit.getAttribute("aria-label"), "Открыть результат");
       if (width <= 900) {

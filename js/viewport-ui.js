@@ -460,7 +460,7 @@ const positionDetachedCommandResults = () => {
   const surfaceBounds = surface.getBoundingClientRect();
   const viewport = getCommandVisualViewport();
   const gap = 8;
-  const focusedMobile = compact && dock.contains(document.activeElement);
+  const focusedMobile = compact && dock.classList.contains("is-open");
   let anchorTop = surfaceBounds.top;
   let anchorBottom = surfaceBounds.bottom;
   // Results share the console's right edge.
@@ -471,11 +471,13 @@ const positionDetachedCommandResults = () => {
     Math.min(surfaceBounds.right - width, viewport.left + viewport.width - gap - width));
 
   if (focusedMobile) {
-    anchorTop = Math.max(viewport.top + gap, viewport.top + viewport.height - bounds.height - gap);
+    anchorTop = viewport.top + gap;
     anchorBottom = anchorTop + bounds.height;
     left = viewport.left + gap;
     width = Math.max(0, viewport.width - gap * 2);
     setCommandGeometry(document.documentElement, "focus", { left, top: anchorTop, width });
+    anchorTop = dock.getBoundingClientRect().top;
+    anchorBottom = anchorTop + bounds.height;
   } else {
     clearCommandViewportPosition();
   }
@@ -487,9 +489,7 @@ const positionDetachedCommandResults = () => {
     setCommandGeometry(element, "results", { left, width });
 
     const contentHeight = element.scrollHeight;
-    const opensBelow = !focusedMobile
-      && contentHeight > spaceAbove
-      && spaceBelow > spaceAbove;
+    const opensBelow = focusedMobile || (contentHeight > spaceAbove && spaceBelow > spaceAbove);
     let maxHeight = opensBelow ? spaceBelow : spaceAbove;
     // A partial row signals that the list continues.
     const peek = [...element.children].map(row => row.offsetTop + row.offsetHeight / 2)
@@ -569,7 +569,7 @@ const syncAuthorPresence = () => {
     || Boolean(document.querySelector(".map-inspector.is-open"));
   document.body.classList.toggle("has-reading-surface", reading);
   authorCard.inert = (reading && !document.body.classList.contains("has-contact-consoles"))
-    || document.body.classList.contains("has-constellation-nav");
+    || document.body.matches(".has-constellation-nav, .has-command-focus");
   syncAuthorField();
   window.dispatchEvent(new CustomEvent("author-presence-change"));
 };
