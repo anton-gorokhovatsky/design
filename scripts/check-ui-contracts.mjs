@@ -387,8 +387,6 @@ const geometryExpression = String.raw`(() => {
   return {
     viewport,
     mobile,
-    compactSearch: mobile && !document.body.matches(".has-command-focus, .has-constellation-nav")
-      && !document.querySelector("[data-command-form]").classList.contains("is-open"),
     geometry,
     visible: Object.fromEntries(
       Object.entries(geometry).map(([name, item]) => [name, visible(item)]),
@@ -647,9 +645,7 @@ const auditGeometry = (label, state) => {
     if (geometry.searchInput?.fontSize < 16) {
       fail(`${label}: search input can trigger Safari auto-zoom.`, geometry.searchInput.fontSize);
     }
-    const searchParts = state.compactSearch
-      ? ["search", "searchInput"]
-      : ["searchMark", "searchInput", "searchSubmit"];
+    const searchParts = ["searchMark", "searchInput", "searchSubmit"];
     const searchCenters = searchParts.map(name => geometry[name]?.centerY).filter(Number.isFinite);
     if (
       searchCenters.length !== searchParts.length

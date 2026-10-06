@@ -119,7 +119,7 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=22afce343106">
+    <link rel="stylesheet" href="styles.css?v=49c17ccf56e4">
     <style>
       .map-evidence [data-map-evidence-role-label]{font-family:var(--font-author);font-size:.6rem;font-weight:400;letter-spacing:0}
     </style>
@@ -141,8 +141,8 @@
           "./js/sphere-surfaces.js": "./js/sphere-surfaces.js?v=ad8f03a11d06",
           "./js/map-media.js": "./js/map-media.js?v=2a08dd031f9a",
           "./js/map-engine.js": "./js/map-engine.js?v=e782363907b9",
-          "./js/viewport-ui.js": "./js/viewport-ui.js?v=e5c00a917479",
-          "./js/panels.js": "./js/panels.js?v=69e2bfada655",
+          "./js/viewport-ui.js": "./js/viewport-ui.js?v=79d37ab194e6",
+          "./js/panels.js": "./js/panels.js?v=d159e263b3e1",
           "./js/case-view.js": "./js/case-view.js?v=f9175047c8c1",
           "./js/favicon.js": "./js/favicon.js?v=ef61cd158b18"
         }
@@ -164,8 +164,8 @@
     <script type="module" src="js/sphere-surfaces.js?v=ad8f03a11d06"></script>
     <script type="module" src="js/map-media.js?v=2a08dd031f9a"></script>
     <script type="module" src="js/map-engine.js?v=e782363907b9"></script>
-    <script type="module" src="js/viewport-ui.js?v=e5c00a917479"></script>
-    <script type="module" src="js/panels.js?v=69e2bfada655"></script>
+    <script type="module" src="js/viewport-ui.js?v=79d37ab194e6"></script>
+    <script type="module" src="js/panels.js?v=d159e263b3e1"></script>
     <script type="module" src="js/case-view.js?v=f9175047c8c1"></script>
     <script type="module" src="js/favicon.js?v=ef61cd158b18"></script>
     <script type="application/ld+json">
@@ -279,15 +279,15 @@
         <span class="brand__role">Придумываю, разрабатываю и веду веб‑проекты.</span>
       </p>
       <section class="whoop-readout" aria-label="Мой день: показатели WHOOP" data-whoop-readout hidden>
-        <div class="whoop-foot">
-          <span class="whoop-heading" data-console-text><strong>Сегодня</strong><time data-whoop-date>WHOOP</time></span>
-          <button class="text-link whoop-compact-trigger" type="button" data-open-settings data-settings-focus="whoop">О&nbsp;данных и&nbsp;цвете</button>
-        </div>
         <dl class="whoop-metrics" data-console-text>
           <div><dt>Восстановление</dt><dd data-whoop-recovery>—</dd></div>
           <div><dt>Сон</dt><dd data-whoop-sleep>—</dd></div>
           <div><dt>Нагрузка</dt><dd data-whoop-strain>—</dd></div>
         </dl>
+        <div class="whoop-foot">
+          <time data-whoop-date data-console-text>WHOOP</time>
+          <button class="text-link whoop-compact-trigger" type="button" data-open-settings data-settings-focus="whoop">О&nbsp;данных и&nbsp;цвете</button>
+        </div>
         <span class="whoop-status" data-whoop-status data-console-text>Получаем данные</span>
         <span class="whoop-stamp" data-whoop-stamp></span>
       </section>
@@ -804,10 +804,6 @@
           role="group"
           aria-label="Навигация и&nbsp;поиск"
         >
-          <div class="mobile-index-links" role="group" aria-label="Быстрые переходы">
-            <button type="button" data-open-panel="work" data-index-route="work">Кейсы</button>
-            <button type="button" data-open-panel="contact" data-index-route="contact">Связаться</button>
-          </div>
           <nav
             class="constellation-nav"
             data-constellation-nav
@@ -826,8 +822,7 @@
               <span class="constellation-nav__cluster" aria-hidden="true">
                 <i></i><i></i><i></i><i></i>
               </span>
-              <span class="visually-hidden" data-constellation-nav-toggle-label>Открыть меню</span>
-              <span class="constellation-nav__toggle-caption" aria-hidden="true">Меню</span>
+              <span class="visually-hidden" data-constellation-nav-toggle-label>Открыть навигацию</span>
             </button>
             <span class="constellation-nav__heading" aria-hidden="true">РАЗДЕЛЫ</span>
 
@@ -843,6 +838,7 @@
                 href="#map"
                 aria-current="page"
               >
+                <span class="constellation-nav__shape" aria-hidden="true"></span>
                 <span class="constellation-nav__label">КАРТА</span>
               </a>
               <button
@@ -852,6 +848,7 @@
                 data-nav-index="02"
                 data-open-panel="work"
               >
+                <span class="constellation-nav__shape" aria-hidden="true"></span>
                 <span class="constellation-nav__label">КЕЙСЫ</span>
               </button>
               <button
@@ -861,6 +858,7 @@
                 data-nav-index="03"
                 data-open-panel="approach"
               >
+                <span class="constellation-nav__shape" aria-hidden="true"></span>
                 <span class="constellation-nav__label">ПОДХОД</span>
               </button>
               <button
@@ -870,6 +868,25 @@
                 data-nav-index="04"
                 data-open-panel="contact"
               >
+                <span class="constellation-nav__shape" aria-hidden="true">
+                  <svg
+                    class="constellation-nav__carabiner"
+                    viewBox="0 0 20 20"
+                    focusable="false"
+                  >
+                    <path
+                      class="constellation-nav__carabiner-body"
+                      d="M14.6 3.8C12.1 2.2 8.4 2.3 5.6 4.3C3.1 6.1 2.3 9.5 3.5 12.4C4.8 15.5 8.2 17.2 11.3 16.4C12.3 16.2 13.1 15.7 13.8 15"
+                    ></path>
+                    <g class="constellation-nav__carabiner-gate">
+                      <path d="M13.8 15L14.6 3.8"></path>
+                      <path
+                        class="constellation-nav__carabiner-sleeves"
+                        d="M12.8 13.7L14.8 13.85M13.5 5.1L15.5 5.25"
+                      ></path>
+                    </g>
+                  </svg>
+                </span>
                 <span class="constellation-nav__label">СВЯЗАТЬСЯ</span>
               </button>
               <a
@@ -881,8 +898,11 @@
                 rel="noreferrer"
                 aria-label="Открыть резюме Антона Гороховатского на hh.ru"
               >
-                <span class="constellation-nav__label">РЕЗЮМЕ<svg class="nav-external" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5M5 5h14v14"/></svg></span>
-                <span class="constellation-nav__destination" aria-hidden="true">hh.ru</span>
+                <span
+                  class="constellation-nav__shape constellation-nav__shape--external"
+                  aria-hidden="true"
+                ></span>
+                <span class="constellation-nav__label">РЕЗЮМЕ<span class="nav-external" aria-hidden="true"></span><span class="constellation-nav__destination" aria-hidden="true">hh.ru</span></span>
               </a>
               <div
                 class="constellation-nav__utilities"

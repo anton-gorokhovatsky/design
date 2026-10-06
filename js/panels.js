@@ -56,18 +56,13 @@ const controlConsole = document.querySelector(".control-console");
 let isConstellationNavOpen = false;
 
 export const syncConstellationNavInteractivity = () => {
-  if (controlConsole) {
-    controlConsole.inert = document.body.hasAttribute("data-case-open")
-      || (compactConstellationNav.matches && document.body.classList.contains("has-content-panel"));
-    controlConsole.dataset.materialActive = isConstellationNavOpen ? "mobile" : "none";
-    controlConsole.querySelector("[data-command-form]").dataset.materialActive = isConstellationNavOpen ? "none" : "mobile";
-  }
+  if (controlConsole) controlConsole.inert = document.body.hasAttribute("data-case-open")
+    || (compactConstellationNav.matches && document.body.classList.contains("has-content-panel"));
   if (constellationNav) {
     constellationNav.inert = compactConstellationNav.matches && document.body.classList.contains("has-content-panel");
-    constellationNav.dataset.materialActive = "none";
+    constellationNav.dataset.materialActive = constellationNav.matches(".is-open")
+      ? "mobile" : "none";
   }
-  const quickLinks = document.querySelector(".mobile-index-links");
-  if (quickLinks) quickLinks.inert = isConstellationNavOpen || controlConsole.inert;
   if (constellationNavOrbit) {
     constellationNavOrbit.inert = compactConstellationNav.matches && !isConstellationNavOpen;
   }
@@ -80,15 +75,15 @@ const setConstellationNavOpen = (isOpen) => {
   document.body.classList.toggle("has-constellation-nav", isOpen);
 
   if (constellationNavToggleLabel) {
-    constellationNavToggleLabel.textContent = isOpen ? "Закрыть меню" : "Открыть меню";
+    constellationNavToggleLabel.textContent = isOpen ? "Закрыть навигацию" : "Открыть навигацию";
   }
 
   syncConstellationNavInteractivity();
 };
 
 const setConstellationNavCurrent = (view) => {
-  document.querySelectorAll("[data-nav-view], [data-index-route]").forEach((item) => {
-    const isCurrent = (item.dataset.navView || item.dataset.indexRoute) === view;
+  constellationNavItems.forEach((item) => {
+    const isCurrent = item.dataset.navView === view;
     item.classList.toggle("is-current", isCurrent);
 
     if (isCurrent) {
