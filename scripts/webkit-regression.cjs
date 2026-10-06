@@ -806,6 +806,7 @@ const mobileSearchViewportAudit = async (browser) => {
     waitUntil: "networkidle",
   });
   await page.evaluate(() => document.fonts?.ready);
+  await waitForLayout(page, 180);
   const authorship = await page.evaluate(readCompactAuthorshipExpression);
   await page.screenshot({
     path: path.join(artifactDir, "390x430-dark-mobile-authorship.png"),

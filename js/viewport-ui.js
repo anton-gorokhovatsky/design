@@ -587,7 +587,8 @@ const setConsoleOffset = (module, x, y) => {
   module.style.setProperty("--console-drag-y", `${y.toFixed(2)}px`);
   if (module.classList.contains("control-console")) {
     const { top, height } = module.getBoundingClientRect();
-    document.documentElement.style.setProperty("--console-clearance", `${height ? innerHeight - top + y : 0}px`);
+    const clearance = floatingConsoleMedia.matches && height ? innerHeight - top + y : 0;
+    document.documentElement.style.setProperty("--console-clearance", `${clearance}px`);
   }
   if (module === authorCard) syncAuthorField();
 };
