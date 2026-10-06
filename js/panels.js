@@ -75,7 +75,7 @@ const setConstellationNavOpen = (isOpen) => {
   document.body.classList.toggle("has-constellation-nav", isOpen);
 
   if (constellationNavToggleLabel) {
-    constellationNavToggleLabel.textContent = isOpen ? "Закрыть навигацию" : "Открыть навигацию";
+    constellationNavToggleLabel.textContent = isOpen ? "Закрыть меню" : "Открыть меню";
   }
 
   syncConstellationNavInteractivity();
