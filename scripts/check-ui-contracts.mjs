@@ -79,7 +79,7 @@ const waitForHoverTransition = (client, selector) => waitForExpression(
 
     const probe = document.createElement("i");
     probe.style.color = getComputedStyle(document.documentElement)
-      .getPropertyValue("--ink");
+      .getPropertyValue("--signal");
     document.body.append(probe);
     const expectedColor = getComputedStyle(probe).color;
     probe.remove();
