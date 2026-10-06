@@ -179,7 +179,12 @@ try {
         "Escape must finish mobile layout dismissal before the next pointer action.");
       assert.equal(await input.getAttribute("aria-expanded"), "false");
       assert.equal(await submit.getAttribute("aria-label"), "Открыть результат");
-      await submit.click();
+      if (width <= 900) {
+        // The Index keeps only the input visible until search is expanded.
+        await input.click();
+        await input.fill("наркомфин");
+        await input.press("Enter");
+      } else await submit.click();
       await page.waitForFunction(() => document.querySelector("[data-map-inspector]")
         ?.dataset.selectedMapId === "narkomfin");
       console.log("PASS " + engine + " command placement " + label + " " + theme);

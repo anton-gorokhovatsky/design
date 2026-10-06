@@ -452,9 +452,7 @@ const positionDetachedCommandResults = () => {
   const results = document.querySelector("[data-command-results]");
   const status = document.querySelector("[data-command-status]");
 
-  if (!dock || !results) {
-    return;
-  }
+  if (!dock || !results) return;
 
   const compact = compactCommandViewport.matches;
   const bounds = dock.getBoundingClientRect();
@@ -462,57 +460,48 @@ const positionDetachedCommandResults = () => {
   const surfaceBounds = surface.getBoundingClientRect();
   const viewport = getCommandVisualViewport();
   const gap = 8;
-  const edgeGap = 8;
   const focusedMobile = compact && dock.contains(document.activeElement);
   let anchorTop = surfaceBounds.top;
   let anchorBottom = surfaceBounds.bottom;
-  // Expand results left, keeping the console's right edge.
+  // Results share the console's right edge.
   const resultWidth = compact ? surfaceBounds.right - bounds.left
     : Math.max(surfaceBounds.right - bounds.left, Math.min(surfaceBounds.width, 640));
-  let width = Math.min(
-    resultWidth,
-    Math.max(0, viewport.width - edgeGap * 2),
-  );
-  let left = Math.max(
-    viewport.left + edgeGap,
-    Math.min(surfaceBounds.right - width, viewport.left + viewport.width - edgeGap - width),
-  );
+  let width = Math.min(resultWidth, Math.max(0, viewport.width - gap * 2));
+  let left = Math.max(viewport.left + gap,
+    Math.min(surfaceBounds.right - width, viewport.left + viewport.width - gap - width));
 
   if (focusedMobile) {
-    anchorTop = Math.max(
-      viewport.top + edgeGap,
-      viewport.top + viewport.height - bounds.height - edgeGap,
-    );
+    anchorTop = Math.max(viewport.top + gap, viewport.top + viewport.height - bounds.height - gap);
     anchorBottom = anchorTop + bounds.height;
-    left = viewport.left + edgeGap;
-    width = Math.max(0, viewport.width - edgeGap * 2);
+    left = viewport.left + gap;
+    width = Math.max(0, viewport.width - gap * 2);
     setCommandGeometry(document.documentElement, "focus", { left, top: anchorTop, width });
   } else {
     clearCommandViewportPosition();
   }
 
-  const spaceAbove = Math.max(0, anchorTop - viewport.top - gap - edgeGap);
-  const spaceBelow = Math.max(
-    0,
-    viewport.top + viewport.height - anchorBottom - gap - edgeGap,
-  );
+  const spaceAbove = Math.max(0, anchorTop - viewport.top - gap * 2);
+  const spaceBelow = Math.max(0, viewport.top + viewport.height - anchorBottom - gap * 2);
 
   [results, status].filter(Boolean).forEach((element) => {
     setCommandGeometry(element, "results", { left, width });
 
     const contentHeight = element.scrollHeight;
-    // Prefer above unless the other side has more room.
     const opensBelow = !focusedMobile
       && contentHeight > spaceAbove
       && spaceBelow > spaceAbove;
-    const maximumHeight = opensBelow ? spaceBelow : spaceAbove;
+    let maxHeight = opensBelow ? spaceBelow : spaceAbove;
+    // A partial row signals that the list continues.
+    const peek = [...element.children].map(row => row.offsetTop + row.offsetHeight / 2)
+      .filter(height => height <= maxHeight).at(-1);
+    if (contentHeight > maxHeight && peek) maxHeight = peek;
     element.dataset.placement = opensBelow ? "below" : "above";
     setCommandGeometry(element, "results", {
-      "max-height": maximumHeight,
+      "max-height": maxHeight,
       top: opensBelow
         ? anchorBottom + gap
         : focusedMobile
-          ? anchorTop - gap - Math.min(maximumHeight, contentHeight)
+          ? anchorTop - gap - Math.min(maxHeight, contentHeight)
           : "auto",
       bottom: opensBelow || focusedMobile
         ? "auto"
