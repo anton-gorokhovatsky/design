@@ -5487,7 +5487,7 @@ body:has(.command-dock.is-open) .map-links.has-active-relation {
   z-index: 40;
   top: auto;
   right: 16px;
-  bottom: 16px;
+  bottom: calc(var(--space-6) + var(--space-1));
   left: auto;
   display: block;
   width: max-content;
