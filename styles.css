@@ -3482,7 +3482,6 @@ body.has-content-panel .constellation-nav {
 
 /* Consoles share MATERIAL / 01 with transient windows. */
 
-.control-console,
 .system-dock .map-controls,
 .display-control {
   border: 0;
@@ -5641,7 +5640,8 @@ body:has(.command-dock.is-open) .map-links.has-active-relation {
   }
 
   .control-console .constellation-nav.is-open {
-    width: min(196px, calc(100vw - 16px));
+    right: clamp(8px, calc((100vw - 14rem) / 2), 20px);
+    width: min(14rem, calc(100vw - 16px));
     border-radius: var(--window-radius);
   }
   .control-console .constellation-nav__toggle {
@@ -10075,17 +10075,14 @@ html[data-reduce-motion="true"] :is(.ui-close, .work-row, .map-related__item, .c
 .display-control .theme-toggle::before,
 .system-dock .map-control,
 .system-dock .map-control > span:last-child,
-.constellation-nav__label,
-.constellation-nav__item.is-current .constellation-nav__label,
-.control-console .constellation-nav__label,
-.control-console .constellation-nav__item:hover .constellation-nav__label,
-.control-console .constellation-nav__item:focus-visible .constellation-nav__label,
-.control-console .constellation-nav__item.is-current .constellation-nav__label,
-.control-console .constellation-nav__item .constellation-nav__label,
 .display-control .map-meta,
 .display-control__value,
 .display-control__service button {
   font-size: var(--type-label);
+  line-height: var(--leading-control);
+}
+.control-console .constellation-nav__item .constellation-nav__label {
+  font-size: var(--type-detail);
   line-height: var(--leading-control);
 }
 .origin-marker__label,

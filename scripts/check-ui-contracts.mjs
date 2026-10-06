@@ -2542,11 +2542,16 @@ const auditBrowser = async (client, origin) => {
     const toggle = document.querySelector("[data-constellation-nav-toggle]");
     const items = [...document.querySelectorAll("[data-nav-view]")];
     const heights = items.map((item) => item.getBoundingClientRect().height);
+    const consoleStyle = getComputedStyle(document.querySelector(".control-console"));
     return {
       expanded: toggle?.getAttribute("aria-expanded"),
       count: items.length,
       minimumHeight: Math.min(...heights),
       maximumHeight: Math.max(...heights),
+      parentBackdrop: consoleStyle.backdropFilter || consoleStyle.webkitBackdropFilter,
+      minimumLabelSize: Math.min(...items.map((item) => parseFloat(
+        getComputedStyle(item.querySelector(".constellation-nav__label")).fontSize,
+      ))),
       allVisible: items.every((item) => {
         const style = getComputedStyle(item);
         const bounds = item.getBoundingClientRect();
@@ -2561,8 +2566,10 @@ const auditBrowser = async (client, origin) => {
     || !mobileNavigationContract.allVisible
     || mobileNavigationContract.minimumHeight < 40
     || mobileNavigationContract.maximumHeight - mobileNavigationContract.minimumHeight > 1
+    || mobileNavigationContract.parentBackdrop !== "none"
+    || mobileNavigationContract.minimumLabelSize < 14
   ) {
-    fail("mobile-navigation: five equal touch routes are not disclosed together.", mobileNavigationContract);
+    fail("mobile-navigation: route layout, typography or material contract failed.", mobileNavigationContract);
   }
   if (!withinViewport(
     mobileNavigationState.geometry.mobileNavigation,
