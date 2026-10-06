@@ -172,6 +172,7 @@ try {
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0);
     await capture(page, scenario.label);
     if (scenario.label.startsWith("desktop")) {
+      await page.locator('[popovertarget="screen-controls"]:not([popovertargetaction])').click();
       const toggle = page.locator(".display-control [data-motion-toggle]");
       await toggle.click();
       await assertStopped(page);

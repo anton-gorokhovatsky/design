@@ -521,6 +521,16 @@ const invalidMaterialModes = materialSurfaceTags.filter(
 );
 const dynamicMaterialSurfaces = [
   {
+    name: "screen-controls",
+    assignment: "createDisclosure('screen-controls', 'ЭКРАН', display)",
+    mode: "panel.dataset.materialActive = 'desktop';",
+  },
+  {
+    name: "map-about",
+    assignment: "createDisclosure('map-about', 'О КАРТЕ', view)",
+    mode: "panel.dataset.materialActive = 'desktop';",
+  },
+  {
     name: "case-story",
     assignment: 'sheet.dataset.materialSurface = "case-story";',
     mode: 'sheet.dataset.materialActive = "always";',

@@ -1547,6 +1547,7 @@ const auditBrowser = async (client, origin) => {
       color: getComputedStyle(project).color,
       backgroundPixel: colorPixel(getComputedStyle(project).backgroundColor),
       colorPixel: colorPixel(getComputedStyle(project).color),
+      referenceIdleColorPixel: colorPixel(getComputedStyle(motion).color),
       referenceIdleBackgroundColor: getComputedStyle(motion).backgroundColor,
       referenceIdleBackgroundPixel: colorPixel(getComputedStyle(motion).backgroundColor),
     };
@@ -1572,6 +1573,8 @@ const auditBrowser = async (client, origin) => {
     "crop-desktop-map-filters-project-hover-off",
     ".map-control-group--filters",
   );
+  await evaluate(client, `document.querySelector('[popovertarget="screen-controls"]').click(); true`);
+  await waitForExpression(client, `document.querySelector('#screen-controls').matches(':popover-open')`);
   const motionTogglePoint = await evaluate(client, `(() => {
     const bounds = document.querySelector('.display-control__service [data-motion-toggle]')
       ?.getBoundingClientRect();
@@ -1616,8 +1619,8 @@ const auditBrowser = async (client, origin) => {
   })()`);
   if (
     !sidePanelHoverContract.hovered
-    || sidePanelHoverContract.backgroundPixel
-      === hoveredInactiveFilterContract.referenceIdleBackgroundPixel
+    || sidePanelHoverContract.colorPixel
+      === hoveredInactiveFilterContract.referenceIdleColorPixel
     || sidePanelHoverContract.backgroundPixel
       !== hoveredInactiveFilterContract.backgroundPixel
     || sidePanelHoverContract.colorPixel !== hoveredInactiveFilterContract.colorPixel
@@ -1627,6 +1630,7 @@ const auditBrowser = async (client, origin) => {
       right: sidePanelHoverContract,
     });
   }
+  await evaluate(client, `document.querySelector('#screen-controls').hidePopover(); true`);
   await evaluate(
     client,
     "document.querySelector('[data-map-filter=\"all\"]')?.click(); true",
@@ -3428,7 +3432,7 @@ const auditBrowser = async (client, origin) => {
     fail("privacy: neutral close changes consent or keeps toggle semantics.", neutralCloseContract);
   }
 
-  await evaluate(client, "document.querySelector('[data-analytics-settings]')?.click(); true");
+  await evaluate(client, "document.querySelector('[popovertarget=\"screen-controls\"]')?.click(); document.querySelector('[data-analytics-settings]')?.click(); true");
   await delay(40);
   await client.send("Input.dispatchKeyEvent", {
     type: "rawKeyDown",
@@ -3447,7 +3451,7 @@ const auditBrowser = async (client, origin) => {
   await delay(120);
   const escapeCloseContract = await evaluate(client, `(() => ({
     hidden: document.querySelector("[data-settings-panel]")?.hidden,
-    focusReturned: document.activeElement?.hasAttribute("data-analytics-settings"),
+    focusReturned: document.activeElement?.getAttribute("popovertarget") === "screen-controls",
     preference: localStorage.getItem("anton-signal-analytics"),
   }))()`);
   if (
@@ -3458,7 +3462,7 @@ const auditBrowser = async (client, origin) => {
     fail("privacy: Escape does not cancel and return focus.", escapeCloseContract);
   }
 
-  await evaluate(client, "document.querySelector('[data-analytics-settings]')?.click(); true");
+  await evaluate(client, "document.querySelector('[popovertarget=\"screen-controls\"]')?.click(); document.querySelector('[data-analytics-settings]')?.click(); true");
   await delay(40);
 
   await evaluate(client, "document.querySelector('[data-analytics-deny]')?.click(); true");
@@ -3481,7 +3485,7 @@ const auditBrowser = async (client, origin) => {
     fail("privacy: declining analytics does not persist a tracker-free state.", deniedContract);
   }
 
-  await evaluate(client, "document.querySelector('[data-analytics-settings]')?.click(); true");
+  await evaluate(client, "document.querySelector('[popovertarget=\"screen-controls\"]')?.click(); document.querySelector('[data-analytics-settings]')?.click(); true");
   await waitForExpression(client, `(() => (
     document.activeElement?.hasAttribute('data-analytics-allow')
     || document.activeElement?.hasAttribute('data-analytics-deny')
@@ -3773,7 +3777,7 @@ const auditBrowser = async (client, origin) => {
     });
   }
 
-  await evaluate(client, "document.querySelector('[data-analytics-settings]')?.click(); true");
+  await evaluate(client, "document.querySelector('[popovertarget=\"screen-controls\"]')?.click(); document.querySelector('[data-analytics-settings]')?.click(); true");
   await waitForExpression(client, `(() => (
     document.activeElement?.hasAttribute('data-analytics-deny')
   ))()`);
@@ -3783,7 +3787,7 @@ const auditBrowser = async (client, origin) => {
     const launcher = document.querySelector(".display-control__analytics");
     const launcherMarker = launcher?.firstElementChild;
     const signal = marker ? getComputedStyle(marker).backgroundColor : "";
-    const muted = getComputedStyle(document.querySelector(".display-control [data-map-note]")).color;
+    const muted = getComputedStyle(document.querySelector(".display-control__presence")).color;
     return signal && signal !== "rgba(0, 0, 0, 0)"
       && getComputedStyle(status).color === signal
       && getComputedStyle(launcher).color === muted
@@ -3809,7 +3813,7 @@ const auditBrowser = async (client, origin) => {
       ).color,
       launcherColor: launcher ? getComputedStyle(launcher).color : "",
       launcherWeight: launcher ? getComputedStyle(launcher).fontWeight : "",
-      mutedColor: getComputedStyle(document.querySelector(".display-control [data-map-note]")).color,
+      mutedColor: getComputedStyle(document.querySelector(".display-control__presence")).color,
       launcherMarkerColor: launcherMarker
         ? getComputedStyle(launcherMarker).color
         : "",

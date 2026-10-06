@@ -145,6 +145,13 @@ const openSettingsPanel = ({
     : activeElement instanceof HTMLElement && !settingsPanel.contains(activeElement)
       ? activeElement
       : lastSettingsTrigger;
+  const sourcePopover = lastSettingsTrigger?.closest("[popover]");
+  if (sourcePopover) {
+    // The disclosure closes when the dialog opens; return to its visible trigger.
+    lastSettingsTrigger = document.querySelector(
+      `[popovertarget="${sourcePopover.id}"]:not([popovertargetaction])`,
+    ) || lastSettingsTrigger;
+  }
   settingsPanel.dataset.settingsMode = "settings";
   if (!settingsPanel.open) {
     document.body.classList.add("has-settings-panel");

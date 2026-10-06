@@ -3678,13 +3678,13 @@ html[data-focus-modality="keyboard"]
 
 .control-console .command-dock__mark::after {
   position: absolute;
-  top: 12px;
+  top: 11px;
   left: 11px;
   width: 7px;
   height: 1.5px;
   background: currentColor;
   content: "";
-  transform: rotate(45deg);
+  transform: translateY(-50%) rotate(45deg);
   transform-origin: left center;
 }
 
@@ -10255,7 +10255,7 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
 
 @media (min-width: 901px) {
   .control-console .constellation-nav__item .constellation-nav__shape { display: none; }
-  .nav-external { display: inline-block; margin-inline-start: .3em; vertical-align: calc((1cap - 12px) / 2); }
+  .nav-external { display: inline-block; box-sizing: content-box; margin-inline-start: .32em; vertical-align: calc(1cap - 12px - 1.5px); }
   .control-console[data-material-surface] {
     display: grid; grid-template-columns: minmax(0, 1fr); container-type: normal;
     height: auto; min-height: 0; gap: var(--space-3); padding: 0;
@@ -10272,7 +10272,7 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
   .control-console .constellation-nav__item::before { content: attr(data-nav-index); font-size: var(--type-caption); line-height: var(--leading-label); color: var(--content-muted); }
   .control-console .constellation-nav .constellation-nav__item .constellation-nav__label { font-size: var(--type-index); line-height: var(--leading-item); font-weight: 500; letter-spacing: -.04em; white-space: nowrap; }
   .control-console .constellation-nav__item.is-current::after { content: ""; position: absolute; inset: auto auto 0 2px; width: 28px; height: 2px; background: var(--signal); transform: none; }
-  .constellation-nav__destination { position: absolute; top: var(--space-1); left: 2.2em; }
+  .constellation-nav__destination { position: absolute; top: var(--space-1); left: 2.2em; letter-spacing: normal; }
   .control-console .command-dock {
     position: relative; order: 1; flex: none; inset: auto; width: 100%; min-width: 0; height: 48px; min-height: 48px;
     padding: 0; grid-template-columns: 28px minmax(0, 1fr) var(--control-target); border-bottom: 1px solid var(--line);
@@ -10298,4 +10298,103 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
   .site-header .whoop-foot { margin-top: 0; }
   .constellation-nav__destination { color: inherit; font: inherit; text-transform: uppercase; }
   .constellation-nav__destination::before { content: " / "; }
+}
+
+/* Desktop map controls: open typography and native disclosures. */
+.map-about-trigger { display: none; }
+
+@media (min-width: 901px) {
+  html[data-map-controls-ready] .system-dock .map-controls,
+  html[data-map-controls-ready] .display-control {
+    border: 0;
+    border-top: 1px solid var(--line);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  html[data-map-controls-ready] .system-dock .map-controls {
+    width: max(148px, 9.25rem);
+    padding: var(--space-3) 0 0;
+    gap: var(--space-2);
+  }
+  html[data-map-controls-ready] .system-dock .map-controls::before {
+    padding: 0 var(--space-2) var(--space-2);
+  }
+  html[data-map-controls-ready] .map-control-group__label { display: none; }
+  html[data-map-controls-ready] .map-control-group--coordinates {
+    padding-top: var(--space-2);
+    margin-top: var(--space-2);
+    border-top: 1px solid var(--line-soft);
+  }
+  html[data-map-controls-ready] .system-dock .map-control { border-radius: 0; }
+  html[data-map-controls-ready] .system-dock .map-control:is(:hover, :focus-visible),
+  html[data-map-controls-ready] .display-control :is(.theme-toggle, .display-control__service button):is(:hover, :focus-visible) {
+    background: transparent;
+    color: var(--signal);
+  }
+  html[data-map-controls-ready] .display-control {
+    display: grid;
+    grid-template-columns: 5px minmax(0, 1fr) auto;
+    align-items: center;
+    width: max(240px, 15rem);
+    padding: var(--space-2) 0 0;
+    gap: 0 var(--space-2);
+    overflow: visible;
+  }
+  html[data-map-controls-ready] .display-control::before { content: none; }
+  .map-screen-top,
+  html[data-map-controls-ready] .display-control .map-meta,
+  html[data-map-controls-ready] .display-control .map-meta p:last-child { display: contents; }
+  html[data-map-controls-ready] .display-control .status-dot { position: static; grid-column: 1; grid-row: 1; margin: 0; }
+  html[data-map-controls-ready] .display-control__value { grid-column: 2; grid-row: 1; }
+  .map-screen-top > .map-disclosure { grid-column: 3; grid-row: 1; }
+  html[data-map-controls-ready] .display-control__presence { grid-column: 2 / -1; grid-row: 2; margin: 0; padding: 0; text-align: left; }
+  .map-disclosure {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    min-height: var(--control-target-compact);
+    padding: 0 var(--space-2);
+    border: 0;
+    border-radius: 0;
+    color: var(--content-ink);
+    background: transparent;
+    font: 500 var(--type-label)/var(--leading-control) var(--font-sans);
+    letter-spacing: .035em;
+    cursor: pointer;
+    transition: color var(--duration-feedback) var(--motion-shift);
+  }
+  .map-disclosure:is(:hover, :focus-visible, [aria-expanded="true"]) { color: var(--signal); }
+  .map-disclosure:focus-visible { outline: var(--focus-width) solid var(--signal); outline-offset: var(--focus-offset); }
+  .map-disclosure__chevron { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; }
+  .map-disclosure[aria-expanded="true"] .map-disclosure__chevron { transform: rotate(180deg); }
+  .map-about-trigger { justify-content: flex-start; padding-left: 31px; font-size: var(--type-caption); color: var(--content-muted); }
+  .map-popover {
+    position: fixed;
+    inset: auto;
+    width: max(240px, 15rem);
+    max-width: calc(100vw - 32px);
+    margin: 0;
+    padding: var(--space-3);
+    overflow: auto;
+    border-radius: var(--window-radius);
+    corner-shape: var(--corner-card-shape);
+    color: var(--content-ink);
+  }
+  .map-popover::backdrop { background: transparent; }
+  .map-popover__header { display: flex; align-items: center; justify-content: space-between; min-height: 36px; margin-bottom: var(--space-1); padding-left: 7px; }
+  .map-popover__header h2 { margin: 0; font: 500 var(--type-panel-heading)/var(--leading-label) var(--font-sans); letter-spacing: .06em; }
+  .map-popover .map-popover__close { background: transparent; }
+  #screen-controls > .theme-toggle { margin-bottom: calc(var(--space-1) / 2); }
+  #map-about { width: min(320px, calc(100vw - 32px)); }
+  #map-about [data-map-note] { margin: 0; padding: var(--space-2) 7px; font: 400 var(--type-detail)/var(--leading-body) var(--font-sans); text-transform: lowercase; }
+  #map-about [data-map-note]::first-letter { text-transform: uppercase; }
+  html[data-map-controls-ready] body:not(.has-reading-surface):not(.has-command-focus) .practice-map:not([data-time-view]):not(:has(.map-inspector.is-open, .map-hover-preview.is-visible)) .map-anchor-label:not(.map-anchor-hidden) { opacity: 1; }
+  html[data-map-controls-ready] .map-anchor-label[data-map-label-id="garage"] { transform: translate(calc(-100% - var(--garage-label-offset)), -50%); }
+  html[data-map-controls-ready] .map-anchor-label[data-map-label-id="private-practice"] { transform: translate(-50%, -100%); }
+  html[data-map-controls-ready] .map-anchor-label[data-map-label-id="running"] { transform: translate(calc(-100% - var(--label-offset)), -50%); }
+  html[data-map-controls-ready] .map-anchor-label.map-anchor-hidden { opacity: 0; }
 }

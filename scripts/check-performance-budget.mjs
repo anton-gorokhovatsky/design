@@ -30,7 +30,8 @@ const budgets = {
   // +1 KiB for immediate accessibility suppression of content-only optical effects.
   // +1 KiB for the fixed work-list continuation control.
   // +6 KiB for the responsive author/WHOOP readout; settings and material are reused.
-  css: 240 * 1024,
+  // Approved desktop controls add 6.1 KiB; most fits the previous headroom.
+  css: 242 * 1024,
   // +4 KiB for measured control clearance and deferred route posters (5 September).
   // +2 KiB for Clayton Young copy and personal map connections (6 September).
   // +2 KiB for two running channel records; no new runtime logic or media.
@@ -67,7 +68,8 @@ const budgets = {
   // Official posters stay local and load only when this card is opened.
   // +1 KiB for the favorite monologue, revised copy and bounded video playback.
   // +1 KiB for the author-provided quotation and its shared reading component.
-  runtime: 319 * 1024,
+  // +6 KiB for native desktop disclosures, map anchors and dialog focus return.
+  runtime: 325 * 1024,
   fonts: 160 * 1024,
   // Akt preloads all weights in one 110 KiB variable font. The complete family
   // is smaller than four Golos files; the initial two-weight preload was smaller.
@@ -76,7 +78,8 @@ const budgets = {
   // +2 KiB for responsive overview controls and explicitly matched principle stills.
   // Media stays deferred; no additional dependencies or eager requests.
   // +3 KiB total for the film record, episode controls and their shared styles.
-  initialSource: 664 * 1024,
+  // +12 KiB for the approved desktop-control CSS and dependency-free module.
+  initialSource: 676 * 1024,
 };
 const failures = [];
 

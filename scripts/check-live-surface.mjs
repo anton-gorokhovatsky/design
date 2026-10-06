@@ -58,6 +58,28 @@ export async function checkLiveSurface(browser, origin, engine) {
   assert.deepEqual(await page.locator('.site-header').boundingBox(), card, 'Reading leaves the author card in place.');
   assert.ok(await page.locator('.site-header').evaluate(e => Number(getComputedStyle(e).opacity) <= .16), 'Reading subordinates the background card.');
   await page.keyboard.press('Escape');
+  for (const id of ['screen-controls', 'map-about']) {
+    const trigger = page.locator(`[popovertarget="${id}"]:not([popovertargetaction])`);
+    const panel = page.locator(`#${id}`);
+    assert.equal(await panel.isVisible(), false, `${id}: closed at rest`);
+    await trigger.click();
+    assert.equal(await panel.isVisible(), true, `${id}: opens from its trigger`);
+    await page.waitForFunction(id => document.querySelector(
+      `[popovertarget="${id}"]:not([popovertargetaction])`,
+    ).getAttribute('aria-expanded') === 'true', id);
+    assert.equal(await trigger.getAttribute('aria-expanded'), 'true');
+    const surface = await panel.evaluate(el => {
+      const css = getComputedStyle(el);
+      return { blur: css.backdropFilter || css.webkitBackdropFilter, shadow: css.boxShadow, border: css.borderTopWidth };
+    });
+    assert.ok(surface.blur.includes('blur(24px)'), `${id}: shared material`);
+    assert.equal(surface.shadow, 'none');
+    assert.equal(surface.border, '0px');
+    await page.keyboard.press('Escape');
+    assert.equal(await panel.isVisible(), false);
+    assert.equal(await trigger.evaluate(el => document.activeElement === el), true, `${id}: Escape returns focus`);
+  }
+  await page.locator('[popovertarget="screen-controls"]:not([popovertargetaction])').click();
   await page.locator('.display-control [data-motion-toggle]').click();
   await frozen();
   await page.locator('.display-control [data-motion-toggle]').click();
