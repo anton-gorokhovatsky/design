@@ -63,6 +63,7 @@
   --leading-body: 1.5;
   --leading-title: 1.12;
   --control-target: max(44px, 2.75rem);
+  --control-target-compact: max(38px, 2.375rem);
   --control-glyph: 1.5rem;
   --focus-width: 2px;
   --focus-offset: 4px;
@@ -3856,7 +3857,7 @@ body:has(.command-dock.is-open) .origin-marker__label {
 }
 
 .system-dock .map-control {
-  min-height: var(--control-target);
+  min-height: var(--control-target-compact);
   grid-template-columns: 16px minmax(0, 1fr);
   gap: 8px;
   padding: 0 7px;
@@ -10064,7 +10065,7 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
 @media (min-width: 901px) {
   .display-control :is(.theme-toggle, .display-control__service button) {
     height: auto;
-    min-height: var(--control-target);
+    min-height: var(--control-target-compact);
   }
   .display-control .map-meta,
   .display-control .map-meta p:last-child { height: auto; min-height: 28px; }
