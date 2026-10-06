@@ -803,6 +803,8 @@ const mobileSearchViewportAudit = async (browser) => {
     waitUntil: "networkidle",
   });
   await page.evaluate(() => document.fonts?.ready);
+  // The mobile camera follows the resized author panel on the next frame.
+  await waitForLayout(page, 160);
   const authorship = await page.evaluate(readCompactAuthorshipExpression);
   await page.screenshot({
     path: path.join(artifactDir, "390x430-dark-mobile-authorship.png"),
