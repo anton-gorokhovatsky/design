@@ -554,24 +554,24 @@
     "chapters": [
       {
         "label": "coach-running",
-        "start": 4.1,
-        "duration": 3.8
+        "start": 2.4,
+        "duration": 3.9
       },
       {
         "label": "dark-tarot-reveal",
-        "start": 22.3,
-        "duration": 7.2
+        "start": 27.8,
+        "duration": 7.7
       }
     ],
     "posterAt": 0.7,
     "duration": {
-      "target": 29.7,
-      "min": 29.5,
-      "max": 29.9
+      "target": 35.7,
+      "min": 35.5,
+      "max": 35.9
     },
     "capture": {
       "url": "https://anton-gorokhovatsky.github.io/ekaterinakrainiuk/",
-      "finalHold": 4200,
+      "finalHold": 3250,
       "browser": "chromium"
     }
   }

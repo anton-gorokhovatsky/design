@@ -450,40 +450,40 @@ const prepareShirokostupCapture = async (page) => {
 };
 
 const runKrainiukCaptureMotion = async (page) => {
-  await page.waitForTimeout(1500);
+  await page.waitForTimeout(2000);
   await activateControlWithoutScrolling(
     page.locator('#run > summary'),
     "The Krainiuk running story",
   );
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(400);
   await smoothScrollTo(page, "#run", 2200, 0.12);
-  await page.waitForTimeout(600);
-  await smoothScrollTo(page, ".strava-note", 1700, 0.65);
-  await page.waitForTimeout(600);
-  await smoothScrollTo(page, "#about", 1800, 0.1);
-  await page.waitForTimeout(600);
+  await page.waitForTimeout(1700);
+  await smoothScrollTo(page, "#training", 2200, 0.12);
+  await page.waitForTimeout(1800);
+  await smoothScrollTo(page, "#about", 2200, 0.12);
+  await page.waitForTimeout(1600);
 
   const themePicker = page.locator('.theme-picker > summary');
   await activateControlWithoutScrolling(themePicker, "The Krainiuk theme picker");
-  await page.waitForTimeout(700);
+  await page.waitForTimeout(500);
   await activateControlWithoutScrolling(
     page.locator('input[name="desktop-theme"][value="dark"]'),
     "The Krainiuk dark-theme choice",
   );
-  await page.waitForTimeout(950);
+  await page.waitForTimeout(800);
   await activateControlWithoutScrolling(themePicker, "The Krainiuk theme picker");
-  await page.waitForTimeout(350);
+  await page.waitForTimeout(300);
   if (await page.locator('html').getAttribute('data-theme') !== 'dark') {
     throw new Error("The Krainiuk reel must include the real dark theme");
   }
 
-  await smoothScrollTo(page, "#training", 1800, 0.1);
-  await page.waitForTimeout(600);
-  await smoothScrollTo(page, "#results", 1800, 0.1);
-  await page.waitForTimeout(600);
-  await smoothScrollTo(page, "#contact", 2400, 0.1);
-  await page.waitForTimeout(600);
-  await smoothScrollTo(page, ".tarot-header", 2600, 0.12);
+  await smoothScrollTo(page, "#results", 2200, 0.12);
+  await page.waitForTimeout(1500);
+  await smoothScrollTo(page, "#contact", 2800, 0.12);
+  await page.waitForTimeout(1200);
+  await smoothScrollTo(page, "#channel", 1200, 0.12);
+  await page.waitForTimeout(1200);
+  await smoothScrollTo(page, ".tarot-header", 2000, 0.12);
   await page.waitForTimeout(1200);
 
   const cards = page.locator(".tarot-card-toggle");
@@ -966,6 +966,14 @@ const runCaptureMotion = async (page, id, source) => {
 
   if (projectId === "herman") {
     await prepareHermanCapture(page);
+  }
+
+  if (projectId === "krainiuk") {
+    await page.evaluate(async () => {
+      const images = [...document.images].filter(image => image.getAttribute("src"));
+      images.forEach(image => { image.loading = "eager"; });
+      await Promise.all(images.map(image => image.decode()));
+    });
   }
 
   await applyCaptureStyles(page);

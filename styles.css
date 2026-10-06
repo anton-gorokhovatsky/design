@@ -10265,8 +10265,8 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
     background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none;
     border: 0; border-radius: 0; box-shadow: none;
   }
-  .control-console .constellation-nav { position: relative; order: 2; display: block; width: 100%; max-width: none; padding: 0; }
-  .control-console .constellation-nav__orbit { display: grid; grid-template-columns: .8fr .8fr 1fr 1.3fr 1.1fr; width: 100%; gap: var(--space-2); }
+  .control-console .constellation-nav { position: relative; order: 2; display: block; width: calc(100% - 36px); max-width: none; padding: 0; }
+  .control-console .constellation-nav__orbit { display: grid; grid-template-columns: repeat(5, max-content); justify-content: space-between; width: 100%; gap: var(--space-2); }
   .control-console .constellation-nav__item {
     position: relative; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start;
     gap: var(--space-2); width: 100%; min-width: 0; height: auto; min-height: var(--control-target);

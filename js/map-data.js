@@ -20,7 +20,7 @@ const reelChapterSources = new Map([
   ["eleven", ["assets/reel-chapters/11111-01.mp4?v=8f3085992002", "assets/reel-chapters/11111-02.mp4?v=3ddb427a0153"]],
   ["ks-fish", ["assets/reel-chapters/ks-fish-01.mp4?v=d4915d6059f4", "assets/reel-chapters/ks-fish-02.mp4?v=08ed32456d91"]],
   ["doronin", ["assets/reel-chapters/doronin-01.mp4?v=dbdbce0d7ac3", "assets/reel-chapters/doronin-02.mp4?v=cd75b564305b"]],
-  ["krainiuk", ["assets/reel-chapters/krainiuk-01.mp4?v=6707846bad90", "assets/reel-chapters/krainiuk-02.mp4?v=c080a64c42b5"]],
+  ["krainiuk", ["assets/reel-chapters/krainiuk-01.mp4?v=20aec7f5ae37", "assets/reel-chapters/krainiuk-02.mp4?v=f439074d8206"]],
 ]);
 // reel-chapter-manifest:end
 
@@ -492,11 +492,11 @@ const mapItems = [
     timeYear: 2026,
     href: "https://anton-gorokhovatsky.github.io/ekaterinakrainiuk/",
     kindLabel: "ПРОЕКТ / ЧАСТНАЯ ПРАКТИКА",
-    previewVideo: "assets/reels/krainiuk.mp4?v=289bbfd14839",
-    previewPoster: "assets/reel-posters/krainiuk.jpg?v=3dfc87246421",
-    previewDuration: 29.7,
+    previewVideo: "assets/reels/krainiuk.mp4?v=10e85ab4220a",
+    previewPoster: "assets/reel-posters/krainiuk.jpg?v=0d5b50e4998d",
+    previewDuration: 35.7,
     previewOrientation: "landscape",
-    previewMeta: "ТРЕНИРОВКИ, КАРТЫ И ТЁМНАЯ ТЕМА / 00:30",
+    previewMeta: "ТРЕНИРОВКИ, КАРТЫ И ТЁМНАЯ ТЕМА / 00:36",
     x: 58,
     y: 67,
     size: 18,
