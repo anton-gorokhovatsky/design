@@ -3856,7 +3856,7 @@ body:has(.command-dock.is-open) .origin-marker__label {
 }
 
 .system-dock .map-control {
-  min-height: 38px;
+  min-height: var(--control-target);
   grid-template-columns: 16px minmax(0, 1fr);
   gap: 8px;
   padding: 0 7px;
