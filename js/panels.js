@@ -50,7 +50,6 @@ const constellationNavToggle = document.querySelector("[data-constellation-nav-t
 const constellationNavToggleLabel = document.querySelector("[data-constellation-nav-toggle-label]");
 const constellationNavOrbit = document.querySelector("[data-constellation-nav-orbit]");
 const constellationNavItems = Array.from(document.querySelectorAll("[data-nav-view]"));
-const constellationNavUtilities = Array.from(document.querySelectorAll("[data-nav-utility]"));
 const constellationNavHome = document.querySelector('[data-nav-view="map"]');
 const compactConstellationNav = window.matchMedia("(max-width: 900px)");
 const controlConsole = document.querySelector(".control-console");
@@ -64,6 +63,8 @@ export const syncConstellationNavInteractivity = () => {
     constellationNav.dataset.materialActive = constellationNav.matches(".is-open, .is-command-close")
       ? "mobile" : "none";
   }
+  const quickLinks = document.querySelector(".mobile-index-links");
+  if (quickLinks) quickLinks.inert = isConstellationNavOpen || controlConsole.inert;
   if (constellationNavOrbit) {
     constellationNavOrbit.inert = compactConstellationNav.matches && !isConstellationNavOpen;
   }
@@ -76,15 +77,15 @@ const setConstellationNavOpen = (isOpen) => {
   document.body.classList.toggle("has-constellation-nav", isOpen);
 
   if (constellationNavToggleLabel) {
-    constellationNavToggleLabel.textContent = isOpen ? "Закрыть навигацию" : "Открыть навигацию";
+    constellationNavToggleLabel.textContent = isOpen ? "Закрыть меню" : "Открыть меню";
   }
 
   syncConstellationNavInteractivity();
 };
 
 const setConstellationNavCurrent = (view) => {
-  constellationNavItems.forEach((item) => {
-    const isCurrent = item.dataset.navView === view;
+  document.querySelectorAll("[data-nav-view], [data-index-route]").forEach((item) => {
+    const isCurrent = (item.dataset.navView || item.dataset.indexRoute) === view;
     item.classList.toggle("is-current", isCurrent);
 
     if (isCurrent) {
@@ -111,12 +112,7 @@ constellationNavToggle?.addEventListener("click", () => {
   setConstellationNavOpen(!isConstellationNavOpen);
 });
 
-constellationNavItems.forEach((item) => {
-  item.addEventListener("click", () => {
-    setConstellationNavOpen(false);
-  });
-});
-constellationNavUtilities.forEach((item) => {
+document.querySelectorAll("[data-nav-view], [data-nav-utility]").forEach((item) => {
   item.addEventListener("click", () => {
     setConstellationNavOpen(false);
   });
@@ -579,8 +575,8 @@ const syncCompactCommandDismiss = (isOpen) => {
     constellationNavToggleLabel.textContent = usesNavigationToggle
       ? "Закрыть поиск"
       : isConstellationNavOpen
-        ? "Закрыть навигацию"
-        : "Открыть навигацию";
+        ? "Закрыть меню"
+        : "Открыть меню";
   }
 };
 const syncCommandFocusViewport = () => {

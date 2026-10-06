@@ -310,7 +310,7 @@ const measureMapClearance = () => {
   mapFieldBounds = mapNodesRoot?.getBoundingClientRect();
   const selectors = [".origin-marker__label", ".site-header", ".map-axis-label"];
   if (window.innerWidth > 900) selectors.push(".map-controls", ".map-control > span", ".display-control", ".control-console");
-  else selectors.push(".command-dock", ".system-dock");
+  else selectors.push(".command-dock", ".system-dock", ".mobile-index-links");
   mapConsoleBounds = [...document.querySelectorAll(selectors.join(","))]
     .map(element => element.getBoundingClientRect())
     .filter(rect => rect.width && rect.height);
@@ -1392,7 +1392,7 @@ if (mapLinksRoot) {
   document.fonts?.ready.then(scheduleMapLinksRender);
   const clearanceResize = new ResizeObserver(scheduleMapLinksRender);
   clearanceResize.observe(mapNodesRoot);
-  document.querySelectorAll(".origin-marker__label, .map-controls, .display-control, .control-console, .site-header")
+  document.querySelectorAll(".origin-marker__label, .map-controls, .display-control, .control-console, .site-header, .mobile-index-links")
     .forEach(element => clearanceResize.observe(element));
 }
 

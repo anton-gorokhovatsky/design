@@ -748,7 +748,7 @@ const validateMobileSearchContract = ({
     || state.systemDockVisibility !== "visible"
     || state.navigationVisibility !== "visible"
     || state.navigationCommandClose
-    || state.navigationToggleLabel !== "Открыть навигацию"
+    || state.navigationToggleLabel !== "Открыть меню"
     || state.navigationToggleControls !== "constellation-nav-orbit"
     || state.navigationToggleExpanded !== "false"
   );

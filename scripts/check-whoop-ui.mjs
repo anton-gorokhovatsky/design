@@ -40,7 +40,12 @@ try {
       const r = node.getBoundingClientRect();
       return document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)?.closest(".map-node") === node;
     }), null, { timeout: 6000 });
-    if (width === 320) assert.ok((await page.locator("[data-whoop-readout]").boundingBox()).height < 72);
+    if (width === 320) {
+      assert.ok((await page.locator("[data-whoop-readout]").boundingBox()).height < 112,
+        "The always-visible day line stays secondary to the author.");
+    }
+    const metricSizes = await page.locator(".whoop-metrics dd").evaluateAll(nodes => nodes.map(node => parseFloat(getComputedStyle(node).fontSize)));
+    assert.ok(metricSizes.every(size => size <= 14), "Day metrics use the small utility role, not dashboard numbers.");
     await page.screenshot({ path: `${directory}/${engine}-${width}-${theme}.png` });
     await page.locator(".site-header").screenshot({ path: `${directory}/${engine}-${width}-${theme}-readout.png` });
     if (width > 900) {

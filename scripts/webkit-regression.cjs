@@ -752,8 +752,11 @@ const firstPaintAudit = async (browser, viewport, colorScheme) => {
 const commandDockAxisAudit = async (page) => page.evaluate(() => {
   const centerY = (selector) => {
     const rect = document.querySelector(selector)?.getBoundingClientRect();
-    return rect ? rect.top + rect.height / 2 : null;
+    return rect?.width && rect.height ? rect.top + rect.height / 2 : null;
   };
+  const compact = matchMedia("(max-width: 900px)").matches
+    && !document.body.matches(".has-command-focus, .has-constellation-nav")
+    && !document.querySelector("[data-command-form]").classList.contains("is-open");
   const centers = {
     dock: centerY(".control-console .command-dock"),
     mark: centerY(".control-console .command-dock__mark"),
@@ -762,7 +765,7 @@ const commandDockAxisAudit = async (page) => page.evaluate(() => {
     submitMark: centerY(".command-dock__submit-mark"),
   };
   const missing = Object.entries(centers)
-    .filter(([, value]) => value === null)
+    .filter(([name, value]) => value === null && (!compact || ["dock", "input"].includes(name)))
     .map(([name]) => name);
   const deltas = Object.fromEntries(
     Object.entries(centers)

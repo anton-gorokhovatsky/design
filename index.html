@@ -119,7 +119,7 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=eb0e00001705">
+    <link rel="stylesheet" href="styles.css?v=c5cea793c5d1">
     <style>
       .map-evidence [data-map-evidence-role-label]{font-family:var(--font-author);font-size:.6rem;font-weight:400;letter-spacing:0}
     </style>
@@ -128,7 +128,7 @@
       {
         "imports": {
           "./js/preferences.js": "./js/preferences.js?v=c5baca6d14b1",
-          "./js/whoop-day.js": "./js/whoop-day.js?v=18eea2f4be2d",
+          "./js/whoop-day.js": "./js/whoop-day.js?v=8d5f6a893aa8",
           "./js/whoop-aura.js": "./js/whoop-aura.js?v=dd6e333dd1c2",
           "./js/presence.js": "./js/presence.js?v=b12012556e8b",
           "./js/atlas-motion.js": "./js/atlas-motion.js?v=776a659178f0",
@@ -140,9 +140,9 @@
           "./js/personal-media.js": "./js/personal-media.js?v=ee51495df325",
           "./js/sphere-surfaces.js": "./js/sphere-surfaces.js?v=ad8f03a11d06",
           "./js/map-media.js": "./js/map-media.js?v=2a08dd031f9a",
-          "./js/map-engine.js": "./js/map-engine.js?v=0d51bb53e5cd",
+          "./js/map-engine.js": "./js/map-engine.js?v=e782363907b9",
           "./js/viewport-ui.js": "./js/viewport-ui.js?v=1bbb0e5afc53",
-          "./js/panels.js": "./js/panels.js?v=b282fc416640",
+          "./js/panels.js": "./js/panels.js?v=ea2f7f8db4a0",
           "./js/case-view.js": "./js/case-view.js?v=f9175047c8c1",
           "./js/favicon.js": "./js/favicon.js?v=ef61cd158b18"
         }
@@ -151,7 +151,7 @@
     <!-- runtime-import-map:end -->
     <!-- Native modules keep their dependencies explicit; see js/README.md. -->
     <script type="module" src="js/preferences.js?v=c5baca6d14b1"></script>
-    <script type="module" src="js/whoop-day.js?v=18eea2f4be2d"></script>
+    <script type="module" src="js/whoop-day.js?v=8d5f6a893aa8"></script>
     <script type="module" src="js/whoop-aura.js?v=dd6e333dd1c2"></script>
     <script type="module" src="js/atlas-motion.js?v=776a659178f0"></script>
     <script type="module" src="js/presence.js?v=b12012556e8b"></script>
@@ -163,9 +163,9 @@
     <script type="module" src="js/personal-media.js?v=ee51495df325"></script>
     <script type="module" src="js/sphere-surfaces.js?v=ad8f03a11d06"></script>
     <script type="module" src="js/map-media.js?v=2a08dd031f9a"></script>
-    <script type="module" src="js/map-engine.js?v=0d51bb53e5cd"></script>
+    <script type="module" src="js/map-engine.js?v=e782363907b9"></script>
     <script type="module" src="js/viewport-ui.js?v=1bbb0e5afc53"></script>
-    <script type="module" src="js/panels.js?v=b282fc416640"></script>
+    <script type="module" src="js/panels.js?v=ea2f7f8db4a0"></script>
     <script type="module" src="js/case-view.js?v=f9175047c8c1"></script>
     <script type="module" src="js/favicon.js?v=ef61cd158b18"></script>
     <script type="application/ld+json">
@@ -273,22 +273,19 @@
       Открыть ключевые кейсы
     </button>
 
-    <header class="site-header" data-floating-console="author" data-material-surface="whoop-readout" data-material-active="always">
+    <header class="site-header" data-floating-console="author" data-material-surface="whoop-readout" data-material-active="mobile">
       <p class="brand" data-console-text>
         <span class="brand__name">Антон Гороховатский <small>© 2026</small></span>
         <span class="brand__role">Придумываю, разрабатываю и веду веб‑проекты.</span>
       </p>
-      <a class="text-link author-entry" href="#work" data-open-panel="work">Смотреть работы</a>
       <section class="whoop-readout" aria-label="Мой день: показатели WHOOP" data-whoop-readout hidden>
-        <p class="whoop-heading" data-console-text><strong>Сегодня</strong><time data-whoop-date>WHOOP</time></p>
         <dl class="whoop-metrics" data-console-text>
           <div><dt>Восстановление</dt><dd data-whoop-recovery>—</dd></div>
           <div><dt>Сон</dt><dd data-whoop-sleep>—</dd></div>
           <div><dt>Нагрузка</dt><dd data-whoop-strain>—</dd></div>
         </dl>
-        <div class="whoop-foot"><span data-whoop-status data-console-text>Получаем данные</span><button class="text-link" type="button" data-open-settings data-settings-focus="whoop">О&nbsp;данных и&nbsp;цвете</button></div>
+        <div class="whoop-foot"><span class="whoop-heading" data-console-text><strong>Сегодня</strong><time data-whoop-date>WHOOP</time></span><span data-whoop-status data-console-text>Получаем данные</span><button class="text-link whoop-compact-trigger" type="button" data-open-settings data-settings-focus="whoop">О&nbsp;данных и&nbsp;цвете</button></div>
         <span class="whoop-stamp" data-whoop-stamp></span>
-        <button class="whoop-compact-trigger" type="button" aria-label="Показатели WHOOP и цвет дня" data-open-settings data-settings-focus="whoop"></button>
       </section>
     </header>
 
@@ -799,10 +796,14 @@
           class="control-console"
           data-floating-console="navigation"
           data-material-surface="desktop-console"
-          data-material-active="desktop"
+          data-material-active="none"
           role="group"
           aria-label="Навигация и&nbsp;поиск"
         >
+          <div class="mobile-index-links" role="group" aria-label="Быстрые переходы">
+            <button type="button" data-open-panel="work" data-index-route="work">Кейсы</button>
+            <button type="button" data-open-panel="contact" data-index-route="contact">Связаться</button>
+          </div>
           <nav
             class="constellation-nav"
             data-constellation-nav
@@ -821,7 +822,8 @@
               <span class="constellation-nav__cluster" aria-hidden="true">
                 <i></i><i></i><i></i><i></i>
               </span>
-              <span class="visually-hidden" data-constellation-nav-toggle-label>Открыть навигацию</span>
+              <span class="visually-hidden" data-constellation-nav-toggle-label>Открыть меню</span>
+              <span class="constellation-nav__toggle-caption" aria-hidden="true">Меню</span>
             </button>
             <span class="constellation-nav__heading" aria-hidden="true">РАЗДЕЛЫ</span>
 
@@ -837,7 +839,6 @@
                 href="#map"
                 aria-current="page"
               >
-                <span class="constellation-nav__shape" aria-hidden="true"></span>
                 <span class="constellation-nav__label">КАРТА</span>
               </a>
               <button
@@ -847,7 +848,6 @@
                 data-nav-index="02"
                 data-open-panel="work"
               >
-                <span class="constellation-nav__shape" aria-hidden="true"></span>
                 <span class="constellation-nav__label">КЕЙСЫ</span>
               </button>
               <button
@@ -857,7 +857,6 @@
                 data-nav-index="03"
                 data-open-panel="approach"
               >
-                <span class="constellation-nav__shape" aria-hidden="true"></span>
                 <span class="constellation-nav__label">ПОДХОД</span>
               </button>
               <button
@@ -867,25 +866,6 @@
                 data-nav-index="04"
                 data-open-panel="contact"
               >
-                <span class="constellation-nav__shape" aria-hidden="true">
-                  <svg
-                    class="constellation-nav__carabiner"
-                    viewBox="0 0 20 20"
-                    focusable="false"
-                  >
-                    <path
-                      class="constellation-nav__carabiner-body"
-                      d="M14.6 3.8C12.1 2.2 8.4 2.3 5.6 4.3C3.1 6.1 2.3 9.5 3.5 12.4C4.8 15.5 8.2 17.2 11.3 16.4C12.3 16.2 13.1 15.7 13.8 15"
-                    ></path>
-                    <g class="constellation-nav__carabiner-gate">
-                      <path d="M13.8 15L14.6 3.8"></path>
-                      <path
-                        class="constellation-nav__carabiner-sleeves"
-                        d="M12.8 13.7L14.8 13.85M13.5 5.1L15.5 5.25"
-                      ></path>
-                    </g>
-                  </svg>
-                </span>
                 <span class="constellation-nav__label">СВЯЗАТЬСЯ</span>
               </button>
               <a
@@ -897,11 +877,8 @@
                 rel="noreferrer"
                 aria-label="Открыть резюме Антона Гороховатского на hh.ru"
               >
-                <span
-                  class="constellation-nav__shape constellation-nav__shape--external"
-                  aria-hidden="true"
-                ></span>
-                <span class="constellation-nav__label">РЕЗЮМЕ / HH.RU</span>
+                <span class="constellation-nav__label">РЕЗЮМЕ<svg class="nav-external" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5M5 5h14v14"/></svg></span>
+                <span class="constellation-nav__destination" aria-hidden="true">hh.ru</span>
               </a>
               <div
                 class="constellation-nav__utilities"
