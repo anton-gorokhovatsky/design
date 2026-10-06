@@ -1109,7 +1109,7 @@ commandSubmit?.addEventListener("click", (event) => {
   event.preventDefault();
   setCommandOpen(false);
   setCommandStatus("");
-  commandInput?.blur();
+  if (compactCommandViewport.matches) commandInput?.blur();
   clearSearchHighlight();
 });
 
