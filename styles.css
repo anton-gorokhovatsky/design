@@ -10397,4 +10397,7 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
   html[data-map-controls-ready] .map-anchor-label[data-map-label-id="private-practice"] { transform: translate(-50%, -100%); }
   html[data-map-controls-ready] .map-anchor-label[data-map-label-id="running"] { transform: translate(calc(-100% - var(--label-offset)), -50%); }
   html[data-map-controls-ready] .map-anchor-label.map-anchor-hidden { opacity: 0; }
+  html[data-map-controls-ready] body:not(.has-reading-surface):not(.has-command-focus) .practice-map:not([data-time-view]):not(:has(.map-inspector.is-open, .map-hover-preview.is-visible, .map-node-label.is-visible)) .map-space-label:not(.map-label-unavailable) { opacity: 1; }
+  .map-space-label { transform: translate(var(--label-offset), -50%); }
+  .map-space-label.map-node-label--west { transform: translate(calc(-100% - var(--label-offset)), -50%); }
 }

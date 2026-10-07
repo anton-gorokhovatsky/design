@@ -69,7 +69,8 @@ const budgets = {
   // +1 KiB for the favorite monologue, revised copy and bounded video playback.
   // +1 KiB for the author-provided quotation and its shared reading component.
   // +6 KiB for native desktop disclosures, map anchors and dialog focus return.
-  runtime: 325 * 1024,
+  // +3 KiB headroom for bounded map spacing and collision-aware case labels.
+  runtime: 328 * 1024,
   fonts: 160 * 1024,
   // Akt preloads all weights in one 110 KiB variable font. The complete family
   // is smaller than four Golos files; the initial two-weight preload was smaller.
@@ -79,7 +80,8 @@ const budgets = {
   // Media stays deferred; no additional dependencies or eager requests.
   // +3 KiB total for the film record, episode controls and their shared styles.
   // +12 KiB for the approved desktop-control CSS and dependency-free module.
-  initialSource: 676 * 1024,
+  // +4 KiB headroom for adaptive map spacing and its existing label surfaces.
+  initialSource: 680 * 1024,
 };
 const failures = [];
 

@@ -32,7 +32,7 @@ const routeProblems = () => [...document.querySelectorAll('[data-map-links] path
 });
 
 try {
-  for (const width of [320, 390, 680, 1440]) {
+  for (const width of [320, 390, 680, 1024, 1440]) {
     const page = await browser.newPage({ viewport: { width, height: width === 320 ? 568 : 900 },
       isMobile: width <= 680, hasTouch: width <= 680, reducedMotion: "no-preference" });
     page.on("pageerror", error => errors.push(error.message));
@@ -43,6 +43,33 @@ try {
         && !document.querySelector('[data-map-links][data-layout-pending]'));
       const check = async label => assert.deepEqual(await page.evaluate(routeProblems), [], `${engine} ${width} ${view} ${label}`);
       await check("resting routes");
+      if (width > 900 && view === "map") {
+        const positions = () => page.locator('[data-map-nodes] button').evaluateAll(nodes =>
+          nodes.map(node => [node.dataset.mapId, node.style.getPropertyValue('--x'), node.style.getPropertyValue('--y')]));
+        const before = await positions();
+        const labels = page.locator('.map-space-label');
+        assert.ok(await labels.count() > 0 && await labels.count() <= 4, 'Bounded additional labels use the free field.');
+        assert.ok(parseFloat(before.find(([id]) => id === 'garage')[2]) < 14, 'The upper group uses available headroom.');
+        const intersections = await labels.evaluateAll(elements => elements.flatMap(label => {
+          const rect = label.getBoundingClientRect();
+          const outside = rect.left < 0 || rect.top < 0 || rect.right > innerWidth || rect.bottom > innerHeight;
+          const overlaps = [...document.querySelectorAll('.map-controls,.display-control,.site-header,.control-console,.map-axis-label,.origin-marker__label,.map-space-label,.map-anchor-label,[data-map-nodes] button')]
+            .filter(node => node !== label && node.dataset.mapId !== label.dataset.mapLabelId)
+            .some(node => { const other = node.getBoundingClientRect(); return rect.left < other.right && rect.right > other.left && rect.top < other.bottom && rect.bottom > other.top; });
+          return outside || overlaps ? [label.dataset.mapLabelId] : [];
+        }));
+        assert.deepEqual(intersections, [], 'Resting labels clear points, controls and each other.');
+        await page.locator('[popovertarget="screen-controls"]:not([popovertargetaction])').click();
+        await page.keyboard.press('Escape');
+        await page.locator('.map-controls [data-map-filter="company"]').click();
+        await page.waitForFunction(() => [...document.querySelectorAll('.map-space-label--project,.map-space-label.map-node-label--project')]
+          .every(label => Number(getComputedStyle(label).opacity) < .05));
+        assert.deepEqual(await positions(), before, 'Settings and filters retain map coordinates.');
+        await page.locator('.map-controls [data-map-filter="all"]').click();
+        assert.deepEqual(await positions(), before, 'Returning to all objects retains map coordinates.');
+      } else {
+        assert.equal(await page.locator('.map-space-label').count(), 0, 'Compact and chronological maps keep their own presentation.');
+      }
       for (const id of view === "time" ? ["garage", "private-practice"] : ["garage", "private-practice", "running", "youtube"]) {
         await page.locator(`[data-map-id="${id}"]`).focus();
         await page.waitForFunction(() => !document.querySelector('[data-relation-morphing]'));

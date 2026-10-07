@@ -306,6 +306,26 @@ const getTimeLayout = (item) => {
 let mapFieldBounds;
 let mapConsoleBounds = [];
 const mapClearancePositions = new Map();
+let mapSpaceGrowth = { x: 0, y: 0 };
+const measureMapSpace = () => {
+  mapSpaceGrowth = { x: 0, y: 0 };
+  if (innerWidth <= 900 || timeModeActive || !mapFieldBounds?.width) return;
+  const { left, top, width, height } = mapFieldBounds;
+  const scale = width / mapNodesRoot.clientWidth;
+  const professional = mapItems.filter(item => ["company", "project"].includes(item.kind));
+  const north = Math.min(...professional.map(item =>
+    top + item.y * height / 100 - Math.max(24, item.size) * scale / 2));
+  const east = Math.max(...professional.map(item =>
+    left + item.x * width / 100 + Math.max(24, item.size) * scale / 2));
+  // Use three quarters of the available outer field, with a bounded stretch.
+  // The existing clearance pass then fits this target around actual controls.
+  const northSpan = (54 - Math.min(...professional.map(item => item.y))) * height / 100;
+  const eastSpan = (Math.max(...professional.map(item => item.x)) - 50) * width / 100;
+  mapSpaceGrowth = {
+    x: Math.max(0, Math.min(.2, (innerWidth - 24 - east) * .75 / eastSpan)),
+    y: Math.max(0, Math.min(.2, (north - 24) * .75 / northSpan)),
+  };
+};
 const measureMapClearance = () => {
   mapFieldBounds = mapNodesRoot?.getBoundingClientRect();
   const selectors = [".origin-marker__label", ".site-header", ".map-axis-label"];
@@ -314,6 +334,7 @@ const measureMapClearance = () => {
   mapConsoleBounds = [...document.querySelectorAll(selectors.join(","))]
     .map(element => element.getBoundingClientRect())
     .filter(rect => rect.width && rect.height);
+  measureMapSpace();
   mapClearancePositions.clear();
   [...mapItems].sort((a, b) => b.size - a.size).forEach(item =>
     mapClearancePositions.set(item.id, clearMapConsoles(item, getMapLayout(item))));
@@ -433,6 +454,10 @@ const getMapLayout = (item) => {
       safeTopY,
       Math.min(94, 50 + (y - 50) * safeMobileYScale),
     );
+  } else if (["company", "project"].includes(item.kind)) {
+    // The center, personal sector and principles retain their authored anchors.
+    x += Math.max(0, x - 50) * mapSpaceGrowth.x;
+    y -= Math.max(0, 54 - y) * mapSpaceGrowth.y;
   }
 
   return { x, y };
@@ -464,7 +489,7 @@ const setMapQuotation = quote => {
 };
 
 const placeMapLabel = (item, label) => {
-  if (["garage", "private-practice"].includes(item.id)) return;
+  if (["garage", "private-practice"].includes(item.id) || label.classList.contains("map-space-label")) return;
   const field = mapLabelsRoot.getBoundingClientRect();
   if (!field.width) return;
   const scale = field.width / mapLabelsRoot.clientWidth;
@@ -486,6 +511,57 @@ const placeMapLabel = (item, label) => {
   label.classList.toggle("map-node-label--west", west < east || (west === east && item.x >= 72));
 };
 
+const placeMapRestLabels = () => {
+  mapLabels.forEach(label => label.classList.remove("map-space-label"));
+  if (innerWidth <= 900 || timeModeActive || !document.documentElement.dataset.mapControlsReady) return;
+  const field = mapLabelsRoot.getBoundingClientRect();
+  const scale = field.width / mapLabelsRoot.clientWidth;
+  const overlaps = (a, b, gap = 12) => a.left < b.right + gap && a.right > b.left - gap
+    && a.top < b.bottom + gap && a.bottom > b.top - gap;
+  const occupied = [...mapConsoleBounds];
+  mapItems.forEach(item => {
+    const { x, y } = resolveMapLayout(item);
+    const radius = Math.max(24, item.size) * scale / 2;
+    const cx = field.left + x * field.width / 100, cy = field.top + y * field.height / 100;
+    occupied.push({ left: cx - radius, right: cx + radius, top: cy - radius, bottom: cy + radius, id: item.id });
+  });
+  const labelRect = (item, west) => {
+    const label = mapLabels.get(item.id), position = resolveMapLayout(item);
+    const width = label.offsetWidth * scale, height = label.offsetHeight * scale;
+    const offset = parseFloat(label.style.getPropertyValue(item.id === "garage" ? "--garage-label-offset" : "--label-offset")) * scale;
+    const x = field.left + position.x * field.width / 100, y = field.top + position.y * field.height / 100;
+    const left = item.id === "private-practice" ? x - width / 2 : west ? x - offset - width : x + offset;
+    const top = item.id === "private-practice" ? y - offset - height : y - height / 2;
+    return { left, right: left + width, top, bottom: top + height };
+  };
+  ["garage", "private-practice", "running"].forEach(id => occupied.push(labelRect(mapItems.find(item => item.id === id), true)));
+  const companies = mapItems.filter(item => item.kind === "company" && item.id !== "garage")
+    .sort((a, b) => b.size - a.size).slice(0, 2);
+  const cases = [...document.querySelectorAll(".work-row[data-map-point]")]
+    .map(row => mapItems.find(item => item.id === row.dataset.mapPoint)).filter(Boolean);
+  const parents = new Set();
+  const representatives = cases.filter(item => {
+    if (parents.has(item.parent)) return false;
+    parents.add(item.parent);
+    return true;
+  });
+  let count = 0;
+  for (const item of [...new Set([...companies, ...representatives, ...cases])]) {
+    if (count === 4) break;
+    const label = mapLabels.get(item.id);
+    for (const west of item.x >= 72 ? [true, false] : [false, true]) {
+      const rect = labelRect(item, west);
+      if (rect.left < 24 || rect.right > innerWidth - 24 || rect.top < 24 || rect.bottom > innerHeight - 24
+        || occupied.some(obstacle => obstacle.id !== item.id && overlaps(rect, obstacle))) continue;
+      label.classList.toggle("map-node-label--west", west);
+      label.classList.add("map-space-label");
+      occupied.push(rect);
+      count++;
+      break;
+    }
+  }
+};
+
 const applyMapLayout = () => {
   measureMapClearance();
   mapItems.forEach((item) => {
@@ -505,6 +581,7 @@ const applyMapLayout = () => {
       signalField.style.setProperty("--focus-y", `${position.y}%`);
     }
   });
+  placeMapRestLabels();
 };
 
 const syncMapRelationships = () => {
@@ -662,6 +739,7 @@ const syncMapNodeAvailability = () => {
 
     button.inert = !isAvailable;
     button.setAttribute("aria-hidden", String(!isAvailable));
+    mapLabels.get(item.id)?.classList.toggle("map-label-unavailable", !isAvailable);
     button.classList.toggle("is-filter-miss", !activeMapFilters.has(item.kind));
     button.classList.toggle(
       "is-filter-match",
