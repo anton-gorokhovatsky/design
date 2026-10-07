@@ -66,7 +66,7 @@ try {
   const context = await browser.newContext({
     viewport: { width: 1200, height: 630 },
     colorScheme: "dark",
-    deviceScaleFactor: 1,
+    deviceScaleFactor: selectedCaptures.some(capture => capture.id === "site") ? 2 : 1,
     reducedMotion: "reduce",
   });
   const page = await context.newPage();
@@ -82,18 +82,21 @@ try {
       await page.addStyleTag({ content: `
         html[data-capture="og"] .share-heading,
         html[data-capture="og"] .share-domain { visibility: hidden; }
+        html[data-capture="og"] .map-links path.is-garage-link { opacity: .6; }
       ` });
       await page.waitForFunction(() => !document.querySelector('[data-map-links][data-layout-pending]'));
+      const garage = await page.locator('[data-map-id="garage"]').boundingBox();
+      const crop = { scale: 2.1, x: 885 - (garage.x + garage.width / 2) * 2.1,
+        y: 205 - (garage.y + garage.height / 2) * 2.1 };
       const mapImage = 'data:image/png;base64,' + (await page.screenshot({ animations: 'disabled' })).toString('base64');
       // A build-only cover: it adds no title card, styles or video to the live route.
       await page.evaluate(async mapImage => {
         const card = document.createElement("figure");
         card.className = "share-cover";
-        card.innerHTML = `<img alt="">
+        card.innerHTML = `<div class="share-cover__map"><img alt=""></div>
           <figcaption>
             <strong>Антон<br>Гороховатский</strong>
             <span class="share-cover__caption">Придумываю, разрабатываю<br>и веду веб-проекты.</span>
-            <span class="share-cover__domain">gorokhovatsky.tech</span>
           </figcaption>`;
         document.body.append(card);
         card.querySelector("img").src = mapImage;
@@ -104,25 +107,24 @@ try {
         html[data-capture="og"] .share-domain { visibility: hidden; }
         .share-cover {
           position: fixed; inset: 0; z-index: 30; width: 1200px; height: 630px;
-          margin: 0; overflow: hidden; background: #f0f0e9; color: #292e27;
-          container-type: inline-size;
+          margin: 0; overflow: hidden; background: var(--bg); color: var(--ink);
+        }
+        .share-cover__map {
+          position: absolute; inset: 0;
+          mask-image: linear-gradient(90deg, transparent 46%, #000 61%);
         }
         .share-cover img {
-          position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-          transform: translateX(160px);
-          mask-image: linear-gradient(90deg, transparent 20%, #000 55%);
+          position: absolute; left: ${crop.x}px; top: ${crop.y}px;
+          width: ${1200 * crop.scale}px; height: ${630 * crop.scale}px; max-width: none;
         }
         .share-cover figcaption {
           position: relative; display: flex; flex-direction: column; align-items: flex-start;
-          justify-content: space-between; gap: clamp(.75rem, 4cqi, 3rem);
-          padding: 14% 6% 4.2%; min-height: 100%; aspect-ratio: 1200 / 630;
+          justify-content: center; gap: 44px; padding: 64px; height: 100%;
         }
         .share-cover strong {
-          font-size: clamp(1.375rem, calc(.75rem + 5.5cqi), 4.75rem);
-          line-height: 1.03; letter-spacing: -.04em; font-weight: 500;
+          font-size: 88px; line-height: 1.03; letter-spacing: -.04em; font-weight: 500;
         }
-        .share-cover__caption { max-width: 430px; font-size: 1.5rem; line-height: 1.35; }
-        .share-cover__domain { font-size: 1.125rem; }
+        .share-cover__caption { font-size: 32px; line-height: 1.35; }
       ` });
     }
     await page.locator(
@@ -140,6 +142,7 @@ try {
       path: capture.outputPath,
       type: "jpeg",
       quality: 90,
+      scale: "css",
       animations: "disabled",
     });
     console.log(
@@ -148,7 +151,7 @@ try {
     if (capture.id === "site") {
       const version = createHash("sha256").update(readFileSync(capture.outputPath)).digest("hex").slice(0, 12);
       const indexPath = join(projectRoot, "index.html");
-      const alt = "Антон Гороховатский. Придумываю, разрабатываю и веду веб-проекты. На фоне — актуальная карта проектов, институций, принципов и личных интересов.";
+      const alt = "Антон Гороховатский. Придумываю, разрабатываю и веду веб-проекты. Справа — увеличенный фрагмент карты со сферой Музея «Гараж» и связями между проектами.";
       const html = readFileSync(indexPath, "utf8")
         .replaceAll(/og-signal\.jpg\?v=[a-f0-9]{12}/g, `og-signal.jpg?v=${version}`)
         .replace(/(<meta\s+(?:property="og:image:alt"|name="twitter:image:alt")\s+content=")[^"]*(")/g, `$1${alt}$2`)
