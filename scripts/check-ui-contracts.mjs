@@ -1210,6 +1210,7 @@ const auditBrowser = async (client, origin) => {
   });
   await delay(420);
   const reactiveGarageContract = await readReactiveRelationsContract(client, "garage");
+  // check-map-routes owns the arc shape; short routes have no minimum bow.
   if (
     reactiveGarageContract.relationshipId !== "garage"
     || reactiveGarageContract.activeCount !== 9
@@ -1217,7 +1218,6 @@ const auditBrowser = async (client, origin) => {
     || reactiveGarageContract.changedActiveCount !== 9
     || reactiveGarageContract.changedInactiveCount !== 0
     || reactiveGarageContract.connectedCount !== expectedRelationCount
-    || reactiveGarageContract.minimumRelativeDeflection < 0.02
     || reactiveGarageContract.minimumActiveOpacity < 0.2
     || reactiveGarageContract.pendingAnimations !== 0
   ) {
@@ -1242,7 +1242,6 @@ const auditBrowser = async (client, origin) => {
     || reactiveChildContract.changedActiveCount !== 1
     || reactiveChildContract.changedInactiveCount !== 0
     || reactiveChildContract.connectedCount !== expectedRelationCount
-    || reactiveChildContract.minimumRelativeDeflection < 0.02
     || reactiveChildContract.minimumActiveOpacity < 0.2
     || reactiveChildContract.pendingAnimations !== 0
   ) {

@@ -278,6 +278,8 @@ const routeAudit = async (page, mapId, expectedCount) => {
     )).length;
     const requiresExactRelationshipFamily = phase === "hover";
 
+    // Short arcs may be almost straight. Painted shape bounds and inflections
+    // belong to check-map-routes; here the real family must morph continuously.
     return {
       phase,
       stateId,
@@ -299,7 +301,6 @@ const routeAudit = async (page, mapId, expectedCount) => {
         || changedActiveCount !== count
         || (requiresExactRelationshipFamily && changed.length !== count)
         || (requiresExactRelationshipFamily && changedInactiveCount !== 0)
-        || minimumRelativeDeflection < 0.02
         || paths.some((path) => (
           path.querySelector("animate") || path.dataset.relationMorphing === "true"
         ))
@@ -452,7 +453,6 @@ const childRelationsAudit = async (browser) => {
         && nextState.changedCount === 1
         && nextState.changedActiveCount === 1
         && nextState.changedInactiveCount === 0
-        && nextState.minimumRelativeDeflection >= 0.02
         && nextState.pendingAnimations === 0;
       if (ready || performance.now() - startedAt >= 5000) {
         resolve(nextState);
@@ -471,7 +471,6 @@ const childRelationsAudit = async (browser) => {
       || state.changedCount !== 1
       || state.changedActiveCount !== 1
       || state.changedInactiveCount !== 0
-      || state.minimumRelativeDeflection < 0.02
       || state.pendingAnimations !== 0,
   };
 };
