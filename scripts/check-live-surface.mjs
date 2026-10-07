@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import { setTimeout as delay } from 'node:timers/promises';
 import { pathToFileURL } from 'node:url';
 import { chromium, webkit } from 'playwright';
 
@@ -27,7 +28,15 @@ export async function checkLiveSurface(browser, origin, engine) {
   await page.waitForFunction(n => document.querySelector('[data-presence-count]').textContent === String(n), baseline + 1);
   // A real document navigation must remove this visit, not wait for the TTL.
   await page.goto(`${origin}/404.html`);
-  await page.waitForFunction(async expected => (await (await fetch('/__qa/presence')).json()).count === expected, baseline);
+  // Poll from the runner so the next navigation cannot cancel a fixture probe.
+  // An async browser predicate returns a truthy Promise before its count matches.
+  const departureDeadline = Date.now() + 5000;
+  let departedCount = await count();
+  while (departedCount !== baseline && Date.now() < departureDeadline) {
+    await delay(100);
+    departedCount = await count();
+  }
+  assert.equal(departedCount, baseline, 'Navigation removes the visit before the 90s TTL.');
   await page.goto(origin);
   await page.waitForFunction(n => document.querySelector('[data-presence-count]').textContent === String(n), baseline + 1);
   await page.waitForSelector('.whoop-field canvas', { state: 'attached' });

@@ -106,7 +106,8 @@ try {
   });
 
   await page.goto(`${origin}/?reel=mosaic&preview=${expected.mapId}`, {
-    waitUntil: "networkidle",
+    // Streaming media need not become network-idle. Readiness is asserted below.
+    waitUntil: "domcontentloaded",
   });
   await page.evaluate(() => document.fonts?.ready);
   await page.locator(`[data-map-id="${expected.mapId}"]`).hover({ force: true });
