@@ -5203,8 +5203,7 @@ html[data-theme="dark"] .map-node--sphere.is-selected .map-node__glyph {
   opacity: 0;
 }
 
-/* A centre reveals its family; a child reveals its route.
-   Pointer, keyboard, click and search share one path state. */
+/* Shared relation state: a centre reveals its family, a child its route. */
 
 .map-links path {
   fill: none;
@@ -5229,6 +5228,7 @@ body:has(.command-dock.is-open) .map-links.has-active-relation {
 }
 
 .map-links.has-active-relation path.is-active-relation {
+  stroke-dasharray: none;
   stroke: color-mix(in srgb, var(--signal) 74%, var(--ink));
   stroke-width: 1.1;
   opacity: 0.74;

@@ -410,7 +410,6 @@ const getMapLayout = (item) => {
     const compactOverrides = {
       "garage-archives": { x: 62, y: 29 },
       eleven: { x: 78, y: 71 },
-      art: { x: 49, y: 83 },
       "principle-autonomy": { x: 23.5, y: 38 },
       "principle-system": { x: 15 },
       "principle-goal": { y: 46 },
@@ -1291,106 +1290,110 @@ if (mapLinksRoot) {
       };
     };
 
+    const nodeGeometry = new Map(mapItems.map(item => [item.id, getNodeGeometry(item)]));
+    const obstacles = [...nodeGeometry].filter(([id]) => (
+      !timeModeActive || mapButtons.get(id)?.hasAttribute("data-time-year")
+    ));
+
     childrenByParent.forEach((children, parentId) => {
-      const parent = itemById.get(parentId);
-      const parentGeometry = getNodeGeometry(parent);
-      const measuredChildren = children
-        .map((item) => {
-          const geometry = getNodeGeometry(item);
-          const deltaX = geometry.centerX - parentGeometry.centerX;
-          const deltaY = geometry.centerY - parentGeometry.centerY;
-          let angle = Math.atan2(deltaY, deltaX);
+      const parent = nodeGeometry.get(parentId);
+      const measured = children.map(item => {
+        const geometry = nodeGeometry.get(item.id);
+        return { item, geometry, angle: Math.atan2(
+          geometry.centerY - parent.centerY, geometry.centerX - parent.centerX,
+        ) };
+      }).sort((a, b) => a.angle - b.angle);
+      // Open the circular order at its largest empty sector, never through a fan.
+      const gaps = measured.map((child, i) => (
+        (measured[(i + 1) % measured.length].angle - child.angle + Math.PI * 2) % (Math.PI * 2)
+      ));
+      const split = gaps.indexOf(Math.max(...gaps)) + 1;
+      const ordered = [...measured.slice(split), ...measured.slice(0, split)];
+      ordered.forEach((child, i) => {
+        if (i && child.angle < ordered[i - 1].angle) child.angle += Math.PI * 2;
+      });
+      const ports = ordered.map(child => child.angle);
+      const spacing = Math.min(0.18, 7 / (parent.radius + 3));
+      for (let pass = 0; pass < ports.length; pass += 1) {
+        for (let i = 1; i < ports.length; i += 1) {
+          const spread = Math.max(0, spacing - ports[i] + ports[i - 1]) / 2;
+          ports[i - 1] -= spread;
+          ports[i] += spread;
+        }
+      }
+      let previousPort = -Infinity;
 
-          if (timeModeActive && parentId === "private-practice" && angle < 0) {
-            angle += Math.PI * 2;
+      ordered.forEach(({ item, geometry, angle }, index) => {
+        const dx = geometry.centerX - parent.centerX;
+        const dy = geometry.centerY - parent.centerY;
+        const distance = Math.hypot(dx, dy) || 1;
+        const nx = -dy / distance, ny = dx / distance;
+        const gap = Math.max(1, distance - parent.radius - geometry.radius - 5);
+        const preferred = distance * Math.tan(ports[index] - angle + 0.04) / 2;
+        const neighbours = obstacles.flatMap(([id, node]) => {
+          if (id === parentId || id === item.id) return [];
+          const x = node.centerX - parent.centerX, y = node.centerY - parent.centerY;
+          const t = (x * dx + y * dy) / (distance * distance);
+          return t > 0 && t < 1
+            ? [{ factor: 2 * t * (1 - t), offset: x * nx + y * ny, radius: node.radius + 5 }]
+            : [];
+        });
+        let bend = gap * 0.08, bestScore = Infinity, leastObstruction = Infinity;
+        for (let step = -12; step <= 12; step += 1) {
+          if (Math.abs(step) < 3) continue;
+          const candidate = gap * step * 0.02;
+          const port = angle + Math.atan2(2 * candidate, distance);
+          const score = (candidate - preferred) ** 2
+            + (Math.max(0, spacing - port + previousPort) * distance) ** 2;
+          let obstruction = 0;
+          neighbours.forEach(({ factor, offset, radius }) => {
+            const base = offset - factor * candidate * 0.84;
+            const active = offset - factor * candidate;
+            const clearance = base * active < 0 ? 0 : Math.min(Math.abs(base), Math.abs(active));
+            obstruction += Math.max(0, radius - clearance) ** 2;
+          });
+          // Clear other nodes first; spacing chooses between equally clear arcs.
+          if (obstruction < leastObstruction || (obstruction === leastObstruction && score < bestScore)) {
+            leastObstruction = obstruction;
+            bestScore = score;
+            bend = candidate;
           }
-
-          return {
-            item,
-            geometry,
-            angle,
+        }
+        previousPort = angle + Math.atan2(2 * bend, distance);
+        const curve = (bow) => {
+          const point = t => [
+            parent.centerX + dx * t + nx * 2 * t * (1 - t) * bow,
+            parent.centerY + dy * t + ny * 2 * t * (1 - t) * bow,
+          ];
+          const trim = (node, end) => {
+            let low = 0, high = 0.5;
+            for (let i = 0; i < 12; i += 1) {
+              const t = (low + high) / 2;
+              const p = point(end ? 1 - t : t);
+              if (Math.hypot(p[0] - node.centerX, p[1] - node.centerY) < node.radius + 3) low = t;
+              else high = t;
+            }
+            return end ? 1 - high : high;
           };
-        })
-        .sort((left, right) => (
-          left.angle - right.angle
-          || left.geometry.centerY - right.geometry.centerY
-          || left.geometry.centerX - right.geometry.centerX
-        ));
-      const firstAngle = measuredChildren[0]?.angle || 0;
-      const lastAngle = measuredChildren.at(-1)?.angle || firstAngle;
-      const portPadding = (parentId === "garage" ? 3 : 4) * (Math.PI / 180);
-      const portStart = firstAngle - portPadding;
-      const portEnd = lastAngle + portPadding;
-
-      measuredChildren.forEach(({ item, geometry, angle }, index) => {
-        const portProgress = measuredChildren.length > 1
-          ? index / (measuredChildren.length - 1)
-          : 0.5;
-        const parentRadius = parentGeometry.radius + 3;
-        const childRadius = geometry.radius + 2;
-        const fanAngle = portStart + (portEnd - portStart) * portProgress;
-        // Keep each port facing its child, especially when the gap is tiny.
-        const gap = Math.max(0, Math.hypot(
-          geometry.centerX - parentGeometry.centerX,
-          geometry.centerY - parentGeometry.centerY,
-        ) - parentRadius - childRadius);
-        const portLimit = Math.min(Math.PI / 12, gap / (parentRadius * 3));
-        const portShift = Math.atan2(Math.sin(fanAngle - angle), Math.cos(fanAngle - angle));
-        const portAngle = angle + Math.max(-portLimit, Math.min(portLimit, portShift));
+          const from = trim(parent, false), to = trim(geometry, true);
+          const start = point(from), end = point(to);
+          const control = [
+            start[0] + (to - from) * (dx / 2 + nx * (1 - 2 * from) * bow),
+            start[1] + (to - from) * (dy / 2 + ny * (1 - 2 * from) * bow),
+          ];
+          // One quadratic arc, expressed as a cubic for the existing in-place morph.
+          return formatMapLinkCurve([
+            ...start,
+            ...start.map((value, i) => value + (control[i] - value) * 2 / 3),
+            ...end.map((value, i) => value + (control[i] - value) * 2 / 3),
+            ...end,
+          ].map((value, i) => value * 100 / (i % 2 ? bounds.height : bounds.width)));
+        };
+        const baseD = curve(bend * 0.84);
+        const reactiveD = curve(bend);
         const relationKey = `${parentId}:${item.id}`;
-        const path = mapLinksRoot.querySelector(
-          `path[data-relation-key="${relationKey}"]`,
-        ) || document.createElementNS(svgNamespace, "path");
-        const parentCenterX = parentGeometry.centerX;
-        const parentCenterY = parentGeometry.centerY;
-        const childCenterX = geometry.centerX;
-        const childCenterY = geometry.centerY;
-        const sourcePixelX = parentCenterX + Math.cos(portAngle) * parentRadius;
-        const sourcePixelY = parentCenterY + Math.sin(portAngle) * parentRadius;
-        const childToSourceX = sourcePixelX - childCenterX;
-        const childToSourceY = sourcePixelY - childCenterY;
-        const childToSourceLength = Math.hypot(childToSourceX, childToSourceY) || 1;
-        const targetPixelX = childCenterX
-          + (childToSourceX / childToSourceLength) * childRadius;
-        const targetPixelY = childCenterY
-          + (childToSourceY / childToSourceLength) * childRadius;
-        const deltaX = targetPixelX - sourcePixelX;
-        const deltaY = targetPixelY - sourcePixelY;
-        const distance = Math.hypot(deltaX, deltaY) || 1;
-        const targetDirectionX = deltaX / distance;
-        const targetDirectionY = deltaY / distance;
-        const sourceLead = Math.min(48, distance * 0.24);
-        const targetLead = Math.min(38, distance * 0.2);
-        const control1PixelX = sourcePixelX + Math.cos(portAngle) * sourceLead;
-        const control1PixelY = sourcePixelY + Math.sin(portAngle) * sourceLead;
-        const control2PixelX = targetPixelX - targetDirectionX * targetLead;
-        const control2PixelY = targetPixelY - targetDirectionY * targetLead;
-        const toViewBoxX = (value) => (value / bounds.width) * 100;
-        const toViewBoxY = (value) => (value / bounds.height) * 100;
-        const curve = (x1, y1, x2, y2) => formatMapLinkCurve([
-          toViewBoxX(sourcePixelX), toViewBoxY(sourcePixelY),
-          toViewBoxX(x1), toViewBoxY(y1), toViewBoxX(x2), toViewBoxY(y2),
-          toViewBoxX(targetPixelX), toViewBoxY(targetPixelY),
-        ]);
-        const normalPixelX = -deltaY / distance;
-        const normalPixelY = deltaX / distance;
-        const relationSpread = measuredChildren.length > 1
-          ? (index / (measuredChildren.length - 1)) * 2 - 1
-          : 0;
-        const relationDirection = Math.abs(relationSpread) > 0.08
-          ? Math.sign(relationSpread)
-          : 1;
-        const relationTension = Math.min(
-          30,
-          distance * (0.09 + Math.abs(relationSpread) * 0.025),
-        );
-        const baseD = curve(control1PixelX, control1PixelY, control2PixelX, control2PixelY);
-        const reactiveD = curve(
-          control1PixelX + normalPixelX * relationTension * relationDirection,
-          control1PixelY + normalPixelY * relationTension * relationDirection,
-          control2PixelX - normalPixelX * relationTension * relationDirection,
-          control2PixelY - normalPixelY * relationTension * relationDirection,
-        );
+        const path = mapLinksRoot.querySelector(`path[data-relation-key="${relationKey}"]`)
+          || document.createElementNS(svgNamespace, "path");
 
         path.dataset.baseD = baseD;
         const existingGeometry = mapLinkGeometries.get(path);

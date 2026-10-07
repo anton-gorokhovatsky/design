@@ -75,7 +75,7 @@ try {
       await page.evaluate(() => document.fonts.ready);
       const exhaustive = label === "desktop" || label === "mobile" || label === "reflow";
       const items = exhaustive ? mapItems : mapItems.filter((item) => [
-        "narkomfin", "garage-app", "early-career", "coffee", "youtube", "private-practice", "running", "art", "wave", "principle-wings",
+        "narkomfin", "garage-app", "early-career", "coffee", "youtube", "private-practice", "running", "wave", "principle-wings",
       ].includes(item.id));
       for (const item of items) {
         await select(page, item.id);
@@ -108,7 +108,7 @@ try {
         assert.equal(state.hidden, Boolean(item.youtube && !item.youtube.href) || !(item.href || item.kind === "practice"), context);
         if (!state.hidden) {
           assert.notEqual(state.text, "ОТКРЫТЬ", context + ": name the destination");
-          const copy = { running: "БЕГ В INSTAGRAM", art: "СОБЫТИЯ НА САЙТЕ МУЗЕЯ", wave: "МОРЕ В INSTAGRAM" }[item.id]
+          const copy = { running: "БЕГ В INSTAGRAM", wave: "МОРЕ В INSTAGRAM" }[item.id]
             || (item.kind === "practice" ? "ПРИНЦИПЫ В NOTION" : "");
           if (copy) assert.equal(state.text.replace(/\s+/gu, " ").trim(), copy, context + ": explicit CTA copy");
           assert.equal(state.target, "_blank", context);
@@ -126,7 +126,7 @@ try {
           assert.equal(state.blur, "none", context);
           assert.ok(state.underline.includes("underline"), context);
         }
-        if (directory && ["running", "art", "wave", "principle-wings"].includes(item.id)) {
+        if (directory && ["running", "wave", "principle-wings"].includes(item.id)) {
           await page.waitForFunction(() => getComputedStyle(document.querySelector("[data-map-inspector]")).opacity === "1");
           await page.locator(".map-readout__identity").screenshot({
             path: join(directory, engine + "-cta-" + item.id + "-" + label + "-" + theme + ".jpg"), quality: 90,

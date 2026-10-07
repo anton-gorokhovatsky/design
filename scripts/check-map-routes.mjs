@@ -19,15 +19,17 @@ const routeProblems = () => [...document.querySelectorAll('[data-map-links] path
   const start = points[0], end = points.at(-1);
   const dx = end.x - start.x, dy = end.y - start.y, chord = Math.hypot(dx, dy);
   if (chord < .1) return [];
-  let previous = 0, travelled = 0, backwards = 0, deflection = 0;
+  let previous = 0, travelled = 0, backwards = 0, deflection = 0, low = 0, high = 0;
   points.forEach((point, index) => {
     const progress = ((point.x - start.x) * dx + (point.y - start.y) * dy) / chord;
+    const offset = (dx * (point.y - start.y) - dy * (point.x - start.x)) / chord;
     backwards = Math.max(backwards, previous - progress);
-    deflection = Math.max(deflection, Math.abs(dx * (point.y - start.y) - dy * (point.x - start.x)) / chord);
+    deflection = Math.max(deflection, Math.abs(offset));
+    low = Math.min(low, offset); high = Math.max(high, offset);
     if (index) travelled += Math.hypot(point.x - points[index - 1].x, point.y - points[index - 1].y);
     previous = progress;
   });
-  return backwards > .25 || deflection > Math.max(1, chord * .15) || travelled > chord * 1.12 + .5
+  return (low < -.25 && high > .25) || backwards > .25 || deflection > Math.max(1, chord * .15) || travelled > chord * 1.12 + .5
     ? [{ key: path.dataset.relationKey, chord, travelled, backwards, deflection }] : [];
 });
 
@@ -74,6 +76,9 @@ try {
         await page.locator(`[data-map-id="${id}"]`).focus();
         await page.waitForFunction(() => !document.querySelector('[data-relation-morphing]'));
         assert.ok(await page.locator('[data-map-links] .is-active-relation').count() > 0);
+        assert.ok(await page.locator('[data-map-links] .is-active-relation').evaluateAll(paths =>
+          paths.every(path => getComputedStyle(path).strokeDasharray === 'none')),
+        'Active routes use a continuous line.');
         await check(id);
         await page.screenshot({ path: `${directory}/${engine}-${width}-${view}-${id}.png` });
       }
