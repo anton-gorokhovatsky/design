@@ -6803,8 +6803,8 @@ body:has(.practice-map:is([data-selected-kind=personal],[data-selected-kind=prac
 .observation-controls > div { display: flex; min-width: 0; align-items: center; gap: var(--space-1); }
 
 .origin-marker__control,
-.observation-controls button { display: grid; place-items: center; width: var(--control-target); height: var(--control-target); border-radius: 50%; background: color-mix(in srgb, var(--content-ink) 6%, transparent); }
-.observation-controls button { flex: 0 0 var(--control-target); padding: 0; color: var(--content-ink); cursor: pointer; font: 500 var(--type-label)/var(--leading-label) var(--font-sans); transition: color var(--duration-feedback) var(--motion-shift); }
+.observation-controls button { display: grid; place-items: center; width: var(--control-target); height: var(--control-target); border-radius: 50%; }
+.observation-controls button { flex: 0 0 var(--control-target); padding: 0; background: color-mix(in srgb, var(--content-ink) 6%, transparent); color: var(--content-ink); cursor: pointer; font: 500 var(--type-label)/var(--leading-label) var(--font-sans); transition: color var(--duration-feedback) var(--motion-shift); }
 .observation-controls button[hidden] { display: none; }
 .observation-controls [data-observation-next].is-last { flex-basis: auto; width: auto; min-width: var(--control-target); padding-inline: var(--space-4); border-radius: calc(var(--control-target) / 2); white-space: nowrap; }
 .observation-controls svg,

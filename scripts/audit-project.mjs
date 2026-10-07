@@ -475,6 +475,7 @@ const requiredMaterialSurfaces = [
   "inspector-close",
   "inspector-kind",
   "observation-index",
+  "overview-play",
   "inspector-identity",
   "inspector-description",
   "inspector-observation",
