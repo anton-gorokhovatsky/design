@@ -33,7 +33,7 @@ try {
     if (width > 900) {
       const header = await page.locator(".site-header").boundingBox();
       const console = await page.locator(".control-console").boundingBox();
-      assert.ok(Math.abs(header.x - console.x - console.width - 16) < .1, "One gap separates the bottom panels.");
+      assert.ok(Math.abs(header.x - console.x - console.width - 40) < .1, "The author panel has a 40px gap from desktop navigation.");
       assert.equal(console.y + console.height - header.y - header.height, 20, "The author panel starts 20px above the navigation baseline.");
     }
     await page.waitForFunction(() => [...document.querySelectorAll(".map-node")].every(node => {
