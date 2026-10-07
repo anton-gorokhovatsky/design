@@ -304,6 +304,11 @@ const getTimeLayout = (item) => {
 
 // Keep map points clear of controls.
 let mapFieldBounds;
+let mapTargetSize = 24;
+let mapTargetScale = 1;
+const mapTargetDiameters = new Map();
+const mapTargetDiameter = item => mapTargetDiameters.get(item.id)
+  || Math.max(mapTargetSize, item.size * mapTargetScale);
 let mapConsoleBounds = [];
 const mapClearancePositions = new Map();
 let mapSpaceGrowth = { x: 0, y: 0 };
@@ -328,6 +333,10 @@ const measureMapSpace = () => {
 };
 const measureMapClearance = () => {
   mapFieldBounds = mapNodesRoot?.getBoundingClientRect();
+  mapTargetSize = parseFloat(getComputedStyle(mapNodesRoot).getPropertyValue("--map-target-size")) || 24;
+  mapTargetScale = parseFloat(getComputedStyle(mapNodesRoot).getPropertyValue("--map-target-scale")) || 1;
+  mapTargetDiameters.clear();
+  mapButtons.forEach((button, id) => mapTargetDiameters.set(id, parseFloat(getComputedStyle(button).width)));
   const selectors = [".origin-marker__label", ".site-header", ".map-axis-label"];
   if (window.innerWidth > 900) selectors.push(".map-controls", ".map-control > span", ".display-control", ".control-console");
   else selectors.push(".command-dock", ".system-dock", ".mobile-index-links");
@@ -342,7 +351,8 @@ const measureMapClearance = () => {
 const clearMapConsoles = (item, position) => {
   if (!mapFieldBounds?.width || !mapConsoleBounds.length) return position;
   const { left, top, width, height } = mapFieldBounds;
-  const radius = Math.max(24, item.size) * width / mapNodesRoot.clientWidth / 2 + 8;
+  const padding = innerWidth > 900 ? 8 : 4;
+  const radius = mapTargetDiameter(item) * width / mapNodesRoot.clientWidth / 2 + padding;
   const point = [left + position.x * width / 100, top + position.y * height / 100];
   const covers = ([x, y], rect) => x > rect.left - radius && x < rect.right + radius
     && y > rect.top - radius && y < rect.bottom + radius;
@@ -355,9 +365,9 @@ const clearMapConsoles = (item, position) => {
       if (other.id === item.id) return false;
       const position = mapClearancePositions.get(other.id);
       if (!position) return false;
-      // Desktop rings need a full gap; compact glyphs keep their reachable centers.
-      const otherRadius = Math.max(24, other.size) * width / mapNodesRoot.clientWidth / 2;
-      const clearance = innerWidth > 900 ? radius + otherRadius - 4 : Math.max(radius - 8, otherRadius) + 2;
+      // Reserve the whole pointer target, including on compact maps.
+      const otherRadius = mapTargetDiameter(other) * width / mapNodesRoot.clientWidth / 2;
+      const clearance = radius - padding + otherRadius + (innerWidth > 900 ? 4 : 0);
       return Math.abs(candidate[0] - left - position.x * width / 100) < clearance
         && Math.abs(candidate[1] - top - position.y * height / 100) < clearance;
     });
@@ -367,9 +377,11 @@ const clearMapConsoles = (item, position) => {
     [x, obstacle.top - radius], [x, obstacle.bottom + radius],
   ] : []).filter(isFree);
   // Find the nearest free ring when the edges are occupied.
-  for (let distance = 12; !candidates.length && distance < Math.max(innerWidth, innerHeight); distance += 12) {
-    for (let step = 0; step < 24; step++) {
-      const angle = step * Math.PI / 12;
+  const increment = innerWidth > 900 ? 12 : 6;
+  for (let distance = increment; !candidates.length && distance < Math.max(innerWidth, innerHeight); distance += increment) {
+    const steps = innerWidth > 900 ? 24 : Math.max(24, Math.ceil(2 * Math.PI * distance / 6));
+    for (let step = 0; step < steps; step++) {
+      const angle = step * 2 * Math.PI / steps;
       const candidate = [x + Math.cos(angle) * distance, y + Math.sin(angle) * distance];
       if (isFree(candidate)) candidates.push(candidate);
     }
@@ -1745,7 +1757,7 @@ const setTimeMode = (
     toggle.classList.toggle("is-active", nextEnabled);
     toggle.setAttribute(
       "aria-label",
-      nextEnabled ? "Вернуть смысловую карту" : "Показывать хронологию",
+      `ХРОНОЛОГИЯ. ${nextEnabled ? "Вернуть смысловую карту" : "Показывать хронологию"}`,
     );
   });
 

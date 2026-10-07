@@ -9,10 +9,11 @@ import { reelSpecs, reelFrame, getReelChapterFileName } from "./reel-specs.mjs";
 export const contentHash = path => createHash("sha256").update(readFileSync(path)).digest("hex").slice(0, 12);
 export function probeMaster(path, spec) {
   const probe = JSON.parse(execFileSync(process.env.PORTFOLIO_FFPROBE || "ffprobe", [
-    "-v", "error", "-select_streams", "v:0", "-show_entries",
-    "stream=width,height,sample_aspect_ratio,display_aspect_ratio,duration:format_tags=comment", "-of", "json", path,
+    "-v", "error", "-show_entries",
+    "stream=codec_type,width,height,sample_aspect_ratio,display_aspect_ratio,duration:format_tags=comment", "-of", "json", path,
   ], { encoding: "utf8" }));
-  const video = probe.streams?.[0], duration = Number(video?.duration);
+  const video = probe.streams?.find(stream => stream.codec_type === "video"), duration = Number(video?.duration);
+  assert.ok(!probe.streams?.some(stream => stream.codec_type === "audio"), `${spec.master}: silent illustrative reels must not carry an audio stream`);
   assert.ok(video?.width === reelFrame.width && video.height === reelFrame.height
     && video.sample_aspect_ratio === "1:1" && video.display_aspect_ratio === "3:2", `${spec.master}: native 900×600, SAR 1:1 required`);
   assert.ok(duration >= spec.duration.min && duration <= spec.duration.max, `${spec.master}: unexpected duration ${duration}`);

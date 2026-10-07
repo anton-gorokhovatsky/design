@@ -27,6 +27,7 @@ const {
   mobileSafariSplitViewport,
   mobileSearchViewport,
   openMobileSearchExpression,
+  installMapGeometryAudit,
   readAnnotationHierarchyExpression,
   readCompactAuthorshipExpression,
   readMaterialAuditExpression,
@@ -467,6 +468,7 @@ const readReactiveRelationsContract = async (client, mapId) => {
   return evaluate(
   client,
   `((mapId) => new Promise((resolve) => {
+    (${installMapGeometryAudit.toString()})();
     const paths = [...document.querySelectorAll("[data-map-links] path")];
     const initial = paths.map((path) => path.getAttribute("d"));
     document.querySelector(\`[data-map-id="\${mapId}"]\`)?.dispatchEvent(
@@ -485,24 +487,7 @@ const readReactiveRelationsContract = async (client, mapId) => {
       opacityFrame = window.requestAnimationFrame(sampleActiveOpacity);
     };
     opacityFrame = window.requestAnimationFrame(sampleActiveOpacity);
-    const getRelativeCurveDeflection = (path) => {
-      const bounds = path.ownerSVGElement.getBoundingClientRect();
-      const numbers = (path.getAttribute("d") || "")
-        .match(/-?\\d+(?:\\.\\d+)?/g)?.map((value, index) => Number(value) * (index % 2 ? bounds.height : bounds.width) / 100) || [];
-      if (numbers.length !== 8) return 0;
-      const [startX, startY, control1X, control1Y, control2X, control2Y, endX, endY]
-        = numbers;
-      const deltaX = endX - startX;
-      const deltaY = endY - startY;
-      const length = Math.hypot(deltaX, deltaY) || 1;
-      const distanceFromChord = (x, y) => Math.abs(
-        deltaY * x - deltaX * y + endX * startY - endY * startX
-      ) / length;
-      return Math.max(
-        distanceFromChord(control1X, control1Y),
-        distanceFromChord(control2X, control2Y),
-      ) / length;
-    };
+    const getRelativeCurveDeflection = window.__portfolioCurveDeflection;
     window.setTimeout(() => {
       window.cancelAnimationFrame(opacityFrame);
       const active = paths.filter((path) => path.classList.contains("is-active-relation"));
@@ -1398,8 +1383,8 @@ const auditBrowser = async (client, origin) => {
     || displayGlyphContract.contrast.beforeBackground === "rgba(0, 0, 0, 0)"
     || displayGlyphContract.analytics.beforeBoxShadow === "none"
     || Number.parseFloat(displayGlyphContract.analytics.afterHeight) < 1
-    || displayGlyphContract.labels.motion !== "Меньше движения"
-    || displayGlyphContract.labels.contrast !== "Высокий контраст"
+    || displayGlyphContract.labels.motion !== "ДВИЖЕНИЕ. Меньше движения"
+    || displayGlyphContract.labels.contrast !== "КОНТРАСТ. Высокий контраст"
     || displayGlyphContract.labels.analytics
       !== "Аналитика и приватность: сейчас не выбрана"
   ) {

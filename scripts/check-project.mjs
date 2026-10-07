@@ -57,6 +57,7 @@ const contractScripts = [
   "scripts/check-command-placement.mjs",
   "scripts/check-first-visit.mjs",
   "scripts/check-accessibility.mjs",
+  "scripts/accessibility-audit.mjs",
   "scripts/check-whoop-ui.mjs",
   "scripts/check-hover-layout.mjs",
   "scripts/check-map-routes.mjs",

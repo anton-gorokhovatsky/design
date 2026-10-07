@@ -130,7 +130,7 @@ button {
 
 ::selection {
   background: var(--signal);
-  color: #fff;
+  color: var(--bg);
 }
 
 .skip-link {
@@ -580,8 +580,8 @@ html[data-capture="og"] .map-grid {
   top: var(--y);
   left: var(--x);
   display: grid;
-
-
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
   padding: 0;
   place-items: center;
   background: transparent;
@@ -6475,6 +6475,7 @@ html[data-theme="dark"] .map-node--sphere .map-node__glyph {
   .practice-map .map-node--garage:is(:hover, :focus-visible, .is-selected),
   .practice-map:has(.map-inspector.is-open) .map-node--garage.is-selected {
     --node-scale: 0.6;
+    --map-target-scale: 0.6;
   }
 }
 
@@ -7293,8 +7294,17 @@ html[data-theme="light"]
 }
 
 .map-node {
-  width: max(var(--size), 24px);
-  height: max(var(--size), 24px);
+  width: max(calc(var(--size) * var(--map-target-scale)), var(--map-target-size));
+  height: max(calc(var(--size) * var(--map-target-scale)), var(--map-target-size));
+}
+
+.map-nodes { --map-target-size: 24px; --map-target-scale: 1; }
+
+@media (max-width: 900px) {
+  /* Leave room for pixel rounding of the projected 24px target. */
+  .map-nodes { --map-target-size: 26px; --map-target-scale: .72; }
+  /* Only the transparent hit area is square; glyph and halo stay round. */
+  .map-node { border-radius: 0; }
 }
 
 .map-node[data-map-id="private-practice"] .map-node__glyph {
@@ -8883,7 +8893,7 @@ html[data-analytics="denied"] [data-analytics-action="denied"] {
 .settings-panel__analytics-actions [data-analytics-allow] {
   border-color: var(--signal);
   background: var(--signal);
-  color: #fff;
+  color: var(--bg);
 }
 
 .settings-panel__analytics-actions [data-analytics-deny] {

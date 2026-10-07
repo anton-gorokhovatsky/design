@@ -67,8 +67,9 @@ the first stop without opening it; the axes remain visible below the entry.
   the reading window keeps one right-side, bottom-aligned presentation. Mobile puts the same media in the reading window,
   with route controls outside its inner scroller. Reduced motion keeps stills.
   The former `assets/observation/atlas-loop.mp4` intro is not requested by the route.
-  The static site share cover uses `assets/observation/atlas.svg`; its template
+  The static site share cover captures the current map; its typographic template
   belongs only to `scripts/capture-share-images.mjs site`, not the live route.
+  `assets/observation/atlas.svg` remains the source for the derived 404 terrain.
   Sources and export settings are recorded in [the artwork notes](docs/observation-art.md).
 - The author's WHOOP card uses the native Aura Mesh / Flow field in
   `js/whoop-aura.js`: an 18-second cycle, amplitude 0.6 and the recovery palette.
@@ -333,14 +334,30 @@ instead of adding Storybook:
   the supported reel ids: it hovers the mapped project, verifies the current
   900×600 video/poster, two 450×300 chapters and readout, and writes a full
   frame plus a 1:1 receiver crop.
-- The WebKit gate also completes one assistive-technology route at `390×844`:
+- The WebKit gate also completes one keyboard and accessibility-tree route at `390×844`:
   it reads the live accessibility tree, enters through the visible skip link,
   moves between map points with arrows, opens and closes a point with
   `Enter`/`Escape`, verifies dialog focus trap/return, reduced motion, and
   reflow without horizontal overflow.
+  This is browser automation, not a VoiceOver or physical-device acceptance.
+- `node scripts/check-accessibility.mjs chromium` (or `webkit`) checks WCAG
+  A/AA axe tags through 2.2 and explicitly enables visible-label/name matching.
+  It retains each `incomplete` node, its checks and its evidence-based resolution;
+  unknown cases fail the gate. It measures visible text against composited
+  screenshot backgrounds, including the three day palettes, and samples the
+  full scroll range of settings and a representative case. Dimmed modal
+  backgrounds are inactive; clipped text gets no contrast verdict in that sample.
+  Mobile map checks exercise a real unobscured 24×24 square for every point,
+  including points managed by roving focus. Registered illustrative reels are
+  verified to contain no audio stream. These checks do not certify whole-site
+  WCAG conformance or replace a screen-reader session.
 - `node scripts/check-performance-budget.mjs` keeps CSS, runtime, preloaded
   fonts, and their combined first-party source under explicit budgets and
-  forbids eager video. Architecture/font changes need measured evidence beyond
+  forbids eager video. The 7 October baseline reserves about 6–8% for bounded
+  source maintenance: 256 KiB CSS, 352 KiB runtime and 720 KiB initial source.
+  Independently compressed assets also have limits: 48 KiB CSS, 108 KiB runtime,
+  272 KiB including preloaded fonts. Deterministic per-file gzip is a guardrail,
+  not a measurement of CDN transfer or real-user speed. Architecture/font changes need measured evidence beyond
   this guardrail; line count alone is not a reason to rewrite working layers.
 - `node scripts/check-css-cascade.mjs --report-overridden` inventories earlier
   declarations that the same selector/media unconditionally replaces later.

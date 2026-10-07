@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { chromium, webkit } from "playwright";
+import { mapItems } from "../js/map-data.js";
+import { measureTextContrast as contrast, assertTextContrast, reviewIncomplete, readMapTargets } from "./accessibility-audit.mjs";
 
 const require = createRequire(import.meta.url);
 const { startStaticServer } = require("./browser-contracts.cjs");
@@ -14,6 +16,7 @@ mkdirSync(directory, { recursive: true });
 const browser = await ({ chromium, webkit })[engine].launch();
 const report = [], errors = [];
 const settle = async page => {
+  await page.waitForFunction(() => !document.querySelector('[data-map-links][data-layout-pending]'));
   await page.waitForFunction(() => document.getAnimations().every(animation =>
     animation.animationName !== 'window-reveal'
     || (!animation.pending && animation.playState !== 'running')));
@@ -24,61 +27,29 @@ const axe = async (page, name) => {
   await page.addScriptTag({ path: require.resolve("axe-core/axe.min.js") });
   const result = await page.evaluate(async () => {
     const { violations, incomplete } = await axe.run(document, {
-      runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"] },
+      runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22a", "wcag22aa"] },
+      rules: { "label-content-name-mismatch": { enabled: true } },
     });
-    return { violations, incomplete: incomplete.map(({ id, nodes }) => ({ id, count: nodes.length })) };
+    return { violations, incomplete };
   });
-  report.push({ name, axe: result });
+  const measured = await contrast(page);
+  const review = await reviewIncomplete(page, result.incomplete, measured);
+  report.push({ name, axe: result, contrast: measured, review });
+  assertTextContrast(measured, name);
+  assert.deepEqual(review.filter(item => !item.resolution), [], `Unresolved accessibility review: ${name}`);
   assert.deepEqual(result.violations.map(({ id, nodes }) => ({ id, nodes: nodes.map(n => n.target) })), [], name);
 };
-
-// Axe cannot resolve translucent surfaces. Sample the rendered background after
-// hiding only the labels, then composite their actual foreground and opacity.
-const contrast = async page => {
-  const targets = await page.evaluate(() => [...document.querySelectorAll(
-    '.constellation-nav__label, .whoop-metrics dt, .whoop-level, .brand__role, .map-control > span:last-child',
-  )].filter(e => e.checkVisibility({ visibilityProperty: true, opacityProperty: true })
-    && !e.closest(':disabled')).map((e, id) => {
-    const r = e.getBoundingClientRect(), style = getComputedStyle(e);
-    let opacity = 1;
-    for (let node = e; node; node = node.parentElement) opacity *= Number(getComputedStyle(node).opacity);
-    const target = { id, text: e.textContent, color: style.color, opacity,
-      x: r.x, y: r.y, width: r.width, height: r.height, visibility: e.style.visibility };
-    e.dataset.contrastSample = id;
-    e.closest('.map-control')?.setAttribute('data-contrast-control', '');
-    return target;
-  }).filter(r => r.width && r.height && r.x >= 0 && r.y >= 0
-    && r.x + r.width <= innerWidth + 1 && r.y + r.height <= innerHeight + 1));
-  // Hide the affected navigation/WHOOP labels without changing their geometry.
-  const conceal = await page.addStyleTag({ content: '[data-contrast-sample] { visibility: hidden !important; } [data-contrast-control] { opacity: 0 !important; }' });
-  const pixels = (await page.screenshot()).toString("base64");
-  await conceal.evaluate(e => e.remove());
-  return page.evaluate(async ({ targets, pixels }) => {
-    const image = new Image(); image.src = 'data:image/png;base64,' + pixels; await image.decode();
-    const canvas = document.createElement('canvas'); canvas.width = image.width; canvas.height = image.height;
-    const context = canvas.getContext('2d'); context.drawImage(image, 0, 0);
-    const luminance = rgb => rgb.map(value => {
-      value /= 255; return value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4;
-    }).reduce((sum, value, i) => sum + value * [.2126, .7152, .0722][i], 0);
-    const result = targets.map(target => {
-      const rgba = target.color.match(/[\d.]+/g).map(Number);
-      const alpha = target.opacity * (rgba[3] ?? 1), ratios = [];
-      for (const x of [.2, .5, .8]) for (const y of [.25, .5, .75]) {
-        const background = [...context.getImageData(Math.round(target.x + target.width * x),
-          Math.round(target.y + target.height * y), 1, 1).data].slice(0, 3);
-        const foreground = rgba.slice(0, 3).map((value, i) => value * alpha + background[i] * (1 - alpha));
-        const a = luminance(foreground), b = luminance(background);
-        ratios.push((Math.max(a, b) + .05) / (Math.min(a, b) + .05));
-      }
-      return { text: target.text, minimum: Math.min(...ratios) };
-    });
-    document.querySelectorAll('[data-contrast-sample]').forEach(e => {
-      e.style.visibility = targets.find(t => t.id === Number(e.dataset.contrastSample))?.visibility || '';
-      delete e.dataset.contrastSample;
-    });
-    document.querySelectorAll('[data-contrast-control]').forEach(e => e.removeAttribute('data-contrast-control'));
-    return result;
-  }, { targets, pixels });
+const auditScroll = async (page, selector, name) => {
+  const scroller = page.locator(selector);
+  const { maximum, step } = await scroller.evaluate(e => ({
+    maximum: e.scrollHeight - e.clientHeight, step: Math.max(1, Math.floor(e.clientHeight * .8)),
+  }));
+  for (let position = 0; ; position = Math.min(maximum, position + step)) {
+    await scroller.evaluate((e, top) => { e.scrollTop = top; }, position);
+    await settle(page);
+    await axe(page, `${name}-scroll-${position}`);
+    if (position === maximum) break;
+  }
 };
 
 try {
@@ -98,11 +69,17 @@ try {
         const measured = await contrast(page);
         report.push({ name, palette, contrast: measured });
         assert.ok(measured.length >= 8, 'Measure visible text, not an empty selection.');
-        assert.deepEqual(measured.filter(item => item.minimum < 4.5), [], `Contrast ${name} ${palette}`);
+        assertTextContrast(measured, `${name} ${palette}`);
         await capture(page, `palette-${palette}-${name}`);
       }
       await page.evaluate(() => document.documentElement.style.setProperty('--day-rgb', '83,142,103'));
       await axe(page, `home-${name}`);
+    }
+    if (width <= 390) {
+      const targets = await readMapTargets(page);
+      report.push({ name, targets });
+      assert.equal(targets.length, mapItems.length, 'Every map point has a reachable target.');
+      assert.deepEqual(targets.filter(target => target.misses.length || target.width < 24 || target.height < 24), [], `Mobile targets ${name}`);
     }
     await capture(page, `home-${name}`);
     await page.locator('.site-header').screenshot({ path: `${directory}/${engine}-author-${name}.png` });
@@ -110,6 +87,25 @@ try {
     else {
       await page.locator('[data-constellation-nav-toggle]').click();
       await capture(page, `menu-${name}`);
+      await page.keyboard.press('Escape');
+    }
+
+    if (width === 1440 || width === 320) {
+      await page.locator('[data-open-settings]:visible').first().click();
+      await auditScroll(page, '.settings-panel__body', `settings-${name}`);
+      await page.emulateMedia({ reducedMotion: 'no-preference' });
+      for (const [selector, cycles] of [['[data-theme-toggle]', 3], ['[data-motion-toggle]', 2], ['[data-contrast-toggle]', 2], ['[data-whoop-toggle]', 2]]) {
+        const button = page.locator('[data-settings-panel] ' + selector);
+        for (let i = 0; i < cycles; i++) {
+          await button.click();
+          const violations = await page.evaluate(async () => (await axe.run(document, {
+            runOnly: { type: 'rule', values: ['label-content-name-mismatch'] },
+            rules: { 'label-content-name-mismatch': { enabled: true } },
+          })).violations);
+          assert.deepEqual(violations.map(v => v.nodes.map(n => n.target)), [], `Settings names ${name} ${selector} ${i}`);
+        }
+      }
+      await page.emulateMedia({ reducedMotion: 'reduce' });
       await page.keyboard.press('Escape');
     }
 
@@ -147,8 +143,13 @@ try {
       await axe(page, `work-${name}`);
       await page.goto(`${origin}/?point=ks-fish`, { waitUntil: 'load' });
       await page.waitForFunction(() => document.querySelector('[data-map-inspector]').getAttribute('role') === 'dialog');
-      await axe(page, `case-${name}`);
       await capture(page, `case-${name}`);
+      await auditScroll(page, '.case-scroll', `case-${name}`);
+      const playback = page.locator('[data-case-pause]');
+      for (let i = 0; i < 2; i++) {
+        await playback.click();
+        assert.ok((await playback.getAttribute('aria-label')).startsWith(await playback.textContent()), 'Playback name includes its visible action.');
+      }
     }
     console.log(`PASS ${engine} ${name}: contrast, contact targets, modal focus and semantics.`);
     } catch (error) {

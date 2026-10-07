@@ -78,12 +78,18 @@ try {
     });
     await page.evaluate(() => document.fonts?.ready);
     if (capture.id === "site") {
+      await page.evaluate(() => { document.documentElement.dataset.theme = "light"; });
+      await page.addStyleTag({ content: `
+        html[data-capture="og"] .share-heading,
+        html[data-capture="og"] .share-domain { visibility: hidden; }
+      ` });
+      await page.waitForFunction(() => !document.querySelector('[data-map-links][data-layout-pending]'));
+      const mapImage = 'data:image/png;base64,' + (await page.screenshot({ animations: 'disabled' })).toString('base64');
       // A build-only cover: it adds no title card, styles or video to the live route.
-      await page.evaluate(async () => {
-        document.documentElement.dataset.theme = "light";
+      await page.evaluate(async mapImage => {
         const card = document.createElement("figure");
         card.className = "share-cover";
-        card.innerHTML = `<img src="assets/observation/atlas.svg" alt="">
+        card.innerHTML = `<img alt="">
           <figcaption>
             <span class="share-cover__eyebrow">Работы и интересы</span>
             <strong>Антон<br>Гороховатский</strong>
@@ -91,8 +97,9 @@ try {
             <span class="share-cover__domain">gorokhovatsky.tech</span>
           </figcaption>`;
         document.body.append(card);
+        card.querySelector("img").src = mapImage;
         await card.querySelector("img").decode();
-      });
+      }, mapImage);
       await page.addStyleTag({ content: `
         html[data-capture="og"] .share-heading,
         html[data-capture="og"] .share-domain { visibility: hidden; }
@@ -103,7 +110,8 @@ try {
         }
         .share-cover img {
           position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-          opacity: .72; mask-image: linear-gradient(90deg, transparent 30%, #000 78%);
+          transform: translateX(160px);
+          mask-image: linear-gradient(90deg, transparent 20%, #000 55%);
         }
         .share-cover figcaption {
           position: relative; display: flex; flex-direction: column; align-items: flex-start;
@@ -145,7 +153,7 @@ try {
     if (capture.id === "site") {
       const version = createHash("sha256").update(readFileSync(capture.outputPath)).digest("hex").slice(0, 12);
       const indexPath = join(projectRoot, "index.html");
-      const alt = "Антон Гороховатский. Придумываю, разрабатываю и веду веб-проекты. Работы и интересы: имя на фоне рельефа из точек и крестов.";
+      const alt = "Антон Гороховатский. Придумываю, разрабатываю и веду веб-проекты. На фоне — актуальная карта проектов, институций, принципов и личных интересов.";
       const html = readFileSync(indexPath, "utf8")
         .replaceAll(/og-signal\.jpg\?v=[a-f0-9]{12}/g, `og-signal.jpg?v=${version}`)
         .replace(/(<meta\s+(?:property="og:image:alt"|name="twitter:image:alt")\s+content=")[^"]*(")/g, `$1${alt}$2`)

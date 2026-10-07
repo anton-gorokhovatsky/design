@@ -8,6 +8,7 @@ const {
   mobileMetricViewport,
   mobileSearchViewport,
   openMobileSearchExpression,
+  installMapGeometryAudit,
   readAnnotationHierarchyExpression,
   readCompactAuthorshipExpression,
   readMaterialAuditExpression,
@@ -229,6 +230,7 @@ const routeAudit = async (page, mapId, expectedCount) => {
     };
   }, mapId);
 
+  await page.evaluate(installMapGeometryAudit);
   const readRouteState = (mode) => page.evaluate(({
     id,
     count,
@@ -251,24 +253,7 @@ const routeAudit = async (page, mapId, expectedCount) => {
     const stateId = phase === "hover"
       ? field?.dataset.focusId || ""
       : field?.dataset.selectedId || "";
-    const getRelativeCurveDeflection = (path) => {
-      const bounds = path.ownerSVGElement.getBoundingClientRect();
-      const numbers = (path.getAttribute("d") || "")
-        .match(/-?\d+(?:\.\d+)?/g)?.map((value, index) => Number(value) * (index % 2 ? bounds.height : bounds.width) / 100) || [];
-      if (numbers.length !== 8) return 0;
-      const [startX, startY, control1X, control1Y, control2X, control2Y, endX, endY]
-        = numbers;
-      const deltaX = endX - startX;
-      const deltaY = endY - startY;
-      const length = Math.hypot(deltaX, deltaY) || 1;
-      const distanceFromChord = (x, y) => Math.abs(
-        deltaY * x - deltaX * y + endX * startY - endY * startX
-      ) / length;
-      return Math.max(
-        distanceFromChord(control1X, control1Y),
-        distanceFromChord(control2X, control2Y),
-      ) / length;
-    };
+    const getRelativeCurveDeflection = window.__portfolioCurveDeflection;
     const minimumRelativeDeflection = active.length
       ? Math.min(...active.map(getRelativeCurveDeflection))
       : 0;
@@ -402,27 +387,11 @@ const childRelationsAudit = async (browser) => {
     '[data-map-links][data-layout-pending]',
   ), null, { polling: 50, timeout: 5000 });
 
+  await page.evaluate(installMapGeometryAudit);
   const state = await page.evaluate(() => new Promise((resolve) => {
     const paths = Array.from(document.querySelectorAll("[data-map-links] path"));
     const baseline = paths.map((path) => path.getAttribute("d"));
-    const getRelativeCurveDeflection = (path) => {
-      const bounds = path.ownerSVGElement.getBoundingClientRect();
-      const numbers = (path.getAttribute("d") || "")
-        .match(/-?\d+(?:\.\d+)?/g)?.map((value, index) => Number(value) * (index % 2 ? bounds.height : bounds.width) / 100) || [];
-      if (numbers.length !== 8) return 0;
-      const [startX, startY, control1X, control1Y, control2X, control2Y, endX, endY]
-        = numbers;
-      const deltaX = endX - startX;
-      const deltaY = endY - startY;
-      const length = Math.hypot(deltaX, deltaY) || 1;
-      const distanceFromChord = (x, y) => Math.abs(
-        deltaY * x - deltaX * y + endX * startY - endY * startX
-      ) / length;
-      return Math.max(
-        distanceFromChord(control1X, control1Y),
-        distanceFromChord(control2X, control2Y),
-      ) / length;
-    };
+    const getRelativeCurveDeflection = window.__portfolioCurveDeflection;
     document.querySelector('[data-map-id="narkomfin"]')?.click();
     const readState = () => {
       const active = paths.filter((path) => path.classList.contains("is-active-relation"));

@@ -51,6 +51,7 @@ function startDay() {
     root.style.setProperty("--day-enabled", enabled && day?.colour ? "1" : "0");
     select("toggle").setAttribute("aria-pressed", String(enabled));
     select("toggle-label").textContent = enabled ? "ВКЛЮЧЁН" : "ВЫКЛЮЧЕН";
+    select("toggle").setAttribute("aria-label", `${select("toggle-label").textContent}. Цвет дня по данным WHOOP`);
     readout.dataset.stale = String(Boolean(day?.stale));
     select("recovery").innerHTML = day?.recovery != null ? `${Math.round(day.recovery)}<small> %</small><span class="whoop-level">${palette.label}</span>` : "—";
     select("sleep").innerHTML = day?.sleep != null ? `${Math.floor(day.sleep / 60)}<small> ч </small>${String(day.sleep % 60).padStart(2, "0")}<small> м</small>` : "—";

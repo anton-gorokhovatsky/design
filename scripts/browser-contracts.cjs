@@ -940,7 +940,30 @@ const readRenderedFrameCorners = async (page, selector) => {
   }, [visible.toString('base64'), background.toString('base64')]);
 };
 
+// Browser-side geometry diagnostic shared by Chromium and WebKit.
+const installMapGeometryAudit = () => {
+  window.__portfolioCurveDeflection = (path) => {
+    const bounds = path.ownerSVGElement.getBoundingClientRect();
+    const numbers = (path.getAttribute("d") || "")
+      .match(/-?\d+(?:\.\d+)?/g)?.map((value, index) => Number(value) * (index % 2 ? bounds.height : bounds.width) / 100) || [];
+    if (numbers.length !== 8) return 0;
+    const [startX, startY, control1X, control1Y, control2X, control2Y, endX, endY]
+      = numbers;
+    const deltaX = endX - startX;
+    const deltaY = endY - startY;
+    const length = Math.hypot(deltaX, deltaY) || 1;
+    const distanceFromChord = (x, y) => Math.abs(
+      deltaY * x - deltaX * y + endX * startY - endY * startX
+    ) / length;
+    return Math.max(
+      distanceFromChord(control1X, control1Y),
+      distanceFromChord(control2X, control2Y),
+    ) / length;
+  };
+};
+
 module.exports = {
+  installMapGeometryAudit,
   readRenderedFrameCorners,
   waitForCaseLayout,
   waitForSurfaceRest,

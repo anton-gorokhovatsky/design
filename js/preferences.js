@@ -89,18 +89,18 @@ const createEffectivePreference = ({
       delete root.dataset[rootAttribute];
     }
 
+    stateElements.forEach((element) => {
+      element.textContent = mediaQuery.matches
+        ? systemState
+        : forced ? activeState : inactiveState;
+    });
     toggles.forEach((toggle) => {
       toggle.setAttribute("aria-pressed", String(preference.matches));
       toggle.toggleAttribute("disabled", mediaQuery.matches);
       toggle.setAttribute(
         "aria-label",
-        mediaQuery.matches ? systemLabel : label,
+        `${toggle.textContent.trim()}. ${mediaQuery.matches ? systemLabel : label}`,
       );
-    });
-    stateElements.forEach((element) => {
-      element.textContent = mediaQuery.matches
-        ? systemState
-        : forced ? activeState : inactiveState;
     });
 
     if (notify) {
@@ -197,7 +197,7 @@ const setThemeMode = (mode, persist = false) => {
   themeToggles.forEach((toggle) => {
     toggle.setAttribute(
       "aria-label",
-      `Режим темы: ${currentModeLabel}. Переключить на ${nextModeLabel}`,
+      `${modeLabel}. Режим темы: ${currentModeLabel}. Переключить на ${nextModeLabel}`,
     );
   });
 

@@ -150,12 +150,12 @@ function syncPlayback() {
   const request = ++playbackRequest;
   const playing = wantsPlayback && !document.hidden;
   pause.textContent = playing ? "Пауза" : "Смотреть фрагмент";
-  pause.setAttribute("aria-label", playing ? "Приостановить видео проекта" : "Воспроизвести видео проекта");
+  pause.setAttribute("aria-label", `${pause.textContent}. Видео проекта`);
   if (playing) video.play().catch(() => {
     if (request !== playbackRequest) return;
     wantsPlayback = false;
     pause.textContent = "Смотреть фрагмент";
-    pause.setAttribute("aria-label", "Воспроизвести видео проекта");
+    pause.setAttribute("aria-label", `${pause.textContent}. Видео проекта`);
   });
   else video.pause();
 }
