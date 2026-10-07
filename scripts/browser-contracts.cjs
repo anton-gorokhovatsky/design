@@ -18,6 +18,13 @@ const staticAssetMimeTypes = {
   ".xml": "application/xml; charset=utf-8",
 };
 
+const whoopDayFixture = (now = Date.now()) => ({
+  schema: 1, source: "WHOOP", fetched_at: new Date(now).toISOString(),
+  recovery: { value: 77, updated_at: new Date(now - 9 * 3600000).toISOString() },
+  sleep: { minutes: 362, ended_at: new Date(now - 9 * 3600000).toISOString() },
+  strain: { value: 12.9, updated_at: new Date(now - 3600000).toISOString() },
+});
+
 const startStaticServer = async ({
   projectRoot,
   onNotFound = () => {},
@@ -49,13 +56,8 @@ const startStaticServer = async ({
     }
     // Browser contracts use a deterministic fixture, never the author's live API.
     if (pathname === "/__qa/whoop-day.json") {
-      const now = Date.now();
       response.writeHead(200, { "content-type": "application/json", "cache-control": "no-store" });
-      response.end(JSON.stringify({ schema: 1, source: "WHOOP", fetched_at: new Date(now).toISOString(),
-        recovery: { value: 77, updated_at: new Date(now - 9 * 3600000).toISOString() },
-        sleep: { minutes: 362, ended_at: new Date(now - 9 * 3600000).toISOString() },
-        strain: { value: 12.9, updated_at: new Date(now - 3600000).toISOString() },
-      }));
+      response.end(JSON.stringify(whoopDayFixture()));
       return;
     }
     const relativePath = pathname === "/" ? "index.html" : pathname.slice(1);
@@ -986,6 +988,7 @@ module.exports = {
   readMobileSearchFocusedExpression,
   readMobileSearchRestoredExpression,
   startStaticServer,
+  whoopDayFixture,
   staticAssetMimeTypes,
   validateAnnotationHierarchy,
   validateCompactAuthorship,

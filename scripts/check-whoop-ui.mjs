@@ -4,7 +4,7 @@ import { createRequire } from "node:module";
 import { chromium, webkit } from "playwright";
 import { checkLiveSurface } from "./check-live-surface.mjs";
 
-const { startStaticServer } = createRequire(import.meta.url)("./browser-contracts.cjs");
+const { startStaticServer, whoopDayFixture } = createRequire(import.meta.url)("./browser-contracts.cjs");
 const engine = process.argv[2] || "chromium";
 assert.ok(["chromium", "webkit"].includes(engine));
 const { server, origin } = await startStaticServer({ projectRoot: process.cwd() });
@@ -100,7 +100,8 @@ try {
     await page.keyboard.press("Escape");
 
     await page.route("**/__qa/whoop-day.json", async route => {
-      const data = await (await route.fetch()).json();
+      // Serve the shared fixture directly; a reload must not interrupt a proxy request.
+      const data = whoopDayFixture();
       data.fetched_at = new Date(Date.now() - 3 * 3600000).toISOString();
       await route.fulfill({ json: data });
     });
@@ -122,7 +123,7 @@ try {
   const pendingFeed = new Promise(done => { deliver = done; });
   await latePage.route("**/__qa/whoop-day.json", async route => {
     await pendingFeed;
-    await route.fulfill({ response: await route.fetch() });
+    await route.fulfill({ json: whoopDayFixture() });
   });
   await latePage.goto(`${origin}/?analytics-consent=show`, { waitUntil: "domcontentloaded" });
   await latePage.waitForFunction(() => document.activeElement?.matches("[data-analytics-allow]"));
