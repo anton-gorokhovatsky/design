@@ -287,6 +287,8 @@ const readAnnotationHierarchyExpression = `(() => {
     const bounds = element?.getBoundingClientRect();
     const style = element ? getComputedStyle(element) : null;
     const properties = style ? {
+      backgroundColor: style.backgroundColor,
+      backdropFilter: style.backdropFilter || style.webkitBackdropFilter || "none",
       borderBottomWidth: style.borderBottomWidth,
       borderLeftWidth: style.borderLeftWidth,
       borderRadius: style.borderRadius,
@@ -808,9 +810,15 @@ const validateAnnotationHierarchy = (hierarchy) => {
   const axesMatch = axes.length === 4 && axes.every(axis => axis.exists
     && approximatelyEqual(axis.height, referenceAxis.height)
     && sharedProperties.every(property => axis.properties?.[property] === referenceAxis.properties?.[property]));
-  const routeKeepsMaterialGeometry = route.exists && axesMatch
+  const axesAreCoordinates = axesMatch && axes.every(axis =>
+    axis.properties.backgroundColor === "rgba(0, 0, 0, 0)"
+    && axis.properties.backdropFilter === "none"
+    && ["borderRadius", "paddingBottom", "paddingLeft", "paddingRight", "paddingTop"]
+      .every(property => Number.parseFloat(axis.properties[property]) === 0));
+  const routeKeepsMaterialGeometry = route.exists && garage.exists
+    && Number.parseFloat(route.properties?.borderRadius || "0") > 0
     && sharedProperties.filter(property => !/^(font|lineHeight|padding)/.test(property))
-      .every(property => route.properties?.[property] === referenceAxis.properties?.[property]);
+      .every(property => route.properties?.[property] === garage.properties?.[property]);
   const routeIsProminent = route.height >= 36
     && Number.parseFloat(route.properties?.fontSize || "0") > Number.parseFloat(referenceAxis?.properties?.fontSize || "0")
     && Number.parseFloat(route.properties?.paddingRight || "0") > Number.parseFloat(referenceAxis?.properties?.paddingRight || "0");
@@ -819,13 +827,13 @@ const validateAnnotationHierarchy = (hierarchy) => {
     && Number.parseFloat(garage.properties?.paddingTop || "0") > Number.parseFloat(referenceAxis.properties?.paddingTop || "0")
     && Number.parseFloat(garage.properties?.paddingRight || "0") > Number.parseFloat(referenceAxis.properties?.paddingRight || "0");
 
-  if (routeKeepsMaterialGeometry && routeIsProminent && garageIsLarger && hierarchy.overflowX === 0) {
+  if (axesAreCoordinates && routeKeepsMaterialGeometry && routeIsProminent && garageIsLarger && hierarchy.overflowX === 0) {
     return [];
   }
 
   return [{
     id: "annotation-hierarchy",
-    message: "the route entry loses prominence or shared geometry, axes differ, or Garage loses its object-label hierarchy",
+    message: "axes must be consistent unboxed coordinates; the route and Garage must retain their material geometry and hierarchy",
     details: hierarchy,
   }];
 };
