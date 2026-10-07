@@ -10283,6 +10283,7 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
   html[data-focus-modality="keyboard"] .control-console .command-dock:focus-within { border-radius: 0; }
   .site-header[data-material-surface="whoop-readout"] {
     --content-ink: var(--ink); --content-muted: var(--ink);
+    width: calc(var(--author-card-width) - var(--space-5));
     padding: var(--space-4) 0 0; border: 0; border-top: 1px solid var(--line); border-radius: 0;
     background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: none;
   }
