@@ -91,7 +91,6 @@ try {
         card.className = "share-cover";
         card.innerHTML = `<img alt="">
           <figcaption>
-            <span class="share-cover__eyebrow">Работы и интересы</span>
             <strong>Антон<br>Гороховатский</strong>
             <span class="share-cover__caption">Придумываю, разрабатываю<br>и веду веб-проекты.</span>
             <span class="share-cover__domain">gorokhovatsky.tech</span>
@@ -116,11 +115,7 @@ try {
         .share-cover figcaption {
           position: relative; display: flex; flex-direction: column; align-items: flex-start;
           justify-content: space-between; gap: clamp(.75rem, 4cqi, 3rem);
-          padding: 4.2% 6%; min-height: 100%; aspect-ratio: 1200 / 630;
-        }
-        .share-cover__eyebrow {
-          display: block; font-size: clamp(.75rem, calc(.5rem + 1cqi), 1.125rem);
-          letter-spacing: .04em; text-transform: uppercase;
+          padding: 14% 6% 4.2%; min-height: 100%; aspect-ratio: 1200 / 630;
         }
         .share-cover strong {
           font-size: clamp(1.375rem, calc(.75rem + 5.5cqi), 4.75rem);
