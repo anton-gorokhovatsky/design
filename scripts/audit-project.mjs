@@ -472,10 +472,6 @@ const materialAccessibilityDefinitions = materialDefinitions.filter((value) => v
 const materialUsages = (styleSource.match(/var\(--material-01\)/g) || []).length;
 const requiredMaterialSurfaces = [
   "whoop-readout",
-  "axis-north",
-  "axis-east",
-  "axis-south",
-  "axis-west",
   "inspector-close",
   "inspector-kind",
   "observation-index",
@@ -651,7 +647,7 @@ const originLabelMaterialRule = originLabelRules.find((rule) => (
 )) ?? "";
 const coordinateLabelGeometryRule = (
   styleSource.match(
-    /(?:^|\n)\.map-axis-label,\s*\n\.origin-marker__label\s*\{([^}]*)\}/,
+    /(?:^|\n)\.origin-marker__label\s*\{([^}]*)\}/,
   )?.[1] ?? ""
 );
 requireContract(
@@ -664,8 +660,7 @@ requireContract(
   "The origin label must use only MATERIAL / 01; historical local backdrops are forbidden.",
 );
 requireContract(
-  /padding:\s*4px 6px/.test(coordinateLabelGeometryRule)
-    && /margin:\s*0/.test(coordinateLabelGeometryRule)
+  /margin:\s*0/.test(coordinateLabelGeometryRule)
     && /border:\s*0/.test(coordinateLabelGeometryRule)
     && /border-radius:\s*12px/.test(coordinateLabelGeometryRule)
     && /corner-shape:\s*var\(--corner-card-shape\)/.test(

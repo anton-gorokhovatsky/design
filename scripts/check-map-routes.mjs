@@ -48,7 +48,7 @@ try {
           nodes.map(node => [node.dataset.mapId, node.style.getPropertyValue('--x'), node.style.getPropertyValue('--y')]));
         const before = await positions();
         const labels = page.locator('.map-space-label');
-        assert.ok(await labels.count() > 0 && await labels.count() <= 4, 'Bounded additional labels use the free field.');
+        assert.ok(await labels.count() > 0 && await labels.count() <= 7, 'Bounded additional labels use the free field.');
         assert.ok(parseFloat(before.find(([id]) => id === 'garage')[2]) < 14, 'The upper group uses available headroom.');
         const intersections = await labels.evaluateAll(elements => elements.flatMap(label => {
           const rect = label.getBoundingClientRect();

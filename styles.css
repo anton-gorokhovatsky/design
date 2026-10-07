@@ -436,11 +436,9 @@ html[data-capture="og"] .map-grid {
   width: 1px;
 }
 
-.map-axis-label,
 .origin-marker__label {
   box-sizing: border-box;
   margin: 0;
-  padding: 4px 6px;
   border: 0;
   border-radius: 12px;
   corner-shape: var(--corner-card-shape);
@@ -450,14 +448,9 @@ html[data-capture="og"] .map-grid {
 .map-axis-label {
   position: absolute;
   z-index: var(--map-layer-labels);
-
-  box-shadow: none;
-
-
-
+  margin: 0;
+  white-space: nowrap;
   pointer-events: none;
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
 }
 
 
@@ -2250,8 +2243,7 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
 }
 
 .map-axis-label {
-  background: var(--bg);
-  color: var(--content-ink);
+  color: var(--content-muted);
   font-family: var(--font-sans);
 
   letter-spacing: 0.045em;
@@ -4040,7 +4032,6 @@ body:has(.command-dock.is-open) .origin-marker__label {
 
   .map-axis-label {
     max-width: none;
-    padding: 3px 5px;
 
     white-space: nowrap;
   }
@@ -10056,6 +10047,7 @@ html[data-reduce-motion="true"] :is(.ui-close, .work-row, .map-related__item, .c
   font-size: var(--type-group-heading);
   line-height: 1;
 }
+.map-axis-label,
 .display-control__service [data-map-note],
 .display-control__presence,
 .whoop-heading time,
@@ -10093,7 +10085,6 @@ html[data-reduce-motion="true"] :is(.ui-close, .work-row, .map-related__item, .c
 .skip-link,
 .map-meta,
 .section-head,
-.map-axis-label,
 .map-node-label,
 .map-legend,
 .map-readout__kind,
@@ -10401,4 +10392,6 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
   html[data-map-controls-ready] body:not(.has-reading-surface):not(.has-command-focus) .practice-map:not([data-time-view]):not(:has(.map-inspector.is-open, .map-hover-preview.is-visible, .map-node-label.is-visible)) .map-space-label:not(.map-label-unavailable) { opacity: 1; }
   .map-space-label { transform: translate(var(--label-offset), -50%); }
   .map-space-label.map-node-label--west { transform: translate(calc(-100% - var(--label-offset)), -50%); }
+  .map-space-label--north { transform: translate(-50%, calc(-100% - var(--label-offset))); }
+  .map-space-label--south { transform: translate(-50%, var(--label-offset)); }
 }

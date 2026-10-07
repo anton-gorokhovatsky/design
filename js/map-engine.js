@@ -512,7 +512,7 @@ const placeMapLabel = (item, label) => {
 };
 
 const placeMapRestLabels = () => {
-  mapLabels.forEach(label => label.classList.remove("map-space-label"));
+  mapLabels.forEach(label => label.classList.remove("map-space-label", "map-space-label--north", "map-space-label--south"));
   if (innerWidth <= 900 || timeModeActive || !document.documentElement.dataset.mapControlsReady) return;
   const field = mapLabelsRoot.getBoundingClientRect();
   const scale = field.width / mapLabelsRoot.clientWidth;
@@ -525,38 +525,34 @@ const placeMapRestLabels = () => {
     const cx = field.left + x * field.width / 100, cy = field.top + y * field.height / 100;
     occupied.push({ left: cx - radius, right: cx + radius, top: cy - radius, bottom: cy + radius, id: item.id });
   });
-  const labelRect = (item, west) => {
+  const labelRect = (item, side) => {
     const label = mapLabels.get(item.id), position = resolveMapLayout(item);
     const width = label.offsetWidth * scale, height = label.offsetHeight * scale;
     const offset = parseFloat(label.style.getPropertyValue(item.id === "garage" ? "--garage-label-offset" : "--label-offset")) * scale;
     const x = field.left + position.x * field.width / 100, y = field.top + position.y * field.height / 100;
-    const left = item.id === "private-practice" ? x - width / 2 : west ? x - offset - width : x + offset;
-    const top = item.id === "private-practice" ? y - offset - height : y - height / 2;
+    const centered = item.id === "private-practice" || side === "north" || side === "south";
+    const left = centered ? x - width / 2 : side === "west" ? x - offset - width : x + offset;
+    const top = item.id === "private-practice" || side === "north" ? y - offset - height
+      : side === "south" ? y + offset : y - height / 2;
     return { left, right: left + width, top, bottom: top + height };
   };
-  ["garage", "private-practice", "running"].forEach(id => occupied.push(labelRect(mapItems.find(item => item.id === id), true)));
-  const companies = mapItems.filter(item => item.kind === "company" && item.id !== "garage")
-    .sort((a, b) => b.size - a.size).slice(0, 2);
-  const cases = [...document.querySelectorAll(".work-row[data-map-point]")]
-    .map(row => mapItems.find(item => item.id === row.dataset.mapPoint)).filter(Boolean);
-  const parents = new Set();
-  const representatives = cases.filter(item => {
-    if (parents.has(item.parent)) return false;
-    parents.add(item.parent);
-    return true;
-  });
-  let count = 0;
-  for (const item of [...new Set([...companies, ...representatives, ...cases])]) {
-    if (count === 4) break;
+  ["garage", "private-practice", "running"].forEach(id => occupied.push(labelRect(mapItems.find(item => item.id === id), "west")));
+  // Authored emphasis, independent of case order and node size.
+  // Herman is considered last, after the main labels have claimed their space.
+  const featured = ["early-career", "ilmix", "narkomfin", "eleven", "ks-fish", "principle-data-intuition", "herman"];
+  for (const id of featured) {
+    const item = mapItems.find(candidate => candidate.id === id);
     const label = mapLabels.get(item.id);
-    for (const west of item.x >= 72 ? [true, false] : [false, true]) {
-      const rect = labelRect(item, west);
+    const sides = item.x >= 72 ? ["west", "east", "north", "south"] : ["east", "west", "north", "south"];
+    for (const side of sides) {
+      const rect = labelRect(item, side);
       if (rect.left < 24 || rect.right > innerWidth - 24 || rect.top < 24 || rect.bottom > innerHeight - 24
         || occupied.some(obstacle => obstacle.id !== item.id && overlaps(rect, obstacle))) continue;
-      label.classList.toggle("map-node-label--west", west);
+      label.classList.toggle("map-node-label--west", side === "west");
+      label.classList.toggle("map-space-label--north", side === "north");
+      label.classList.toggle("map-space-label--south", side === "south");
       label.classList.add("map-space-label");
       occupied.push(rect);
-      count++;
       break;
     }
   }
