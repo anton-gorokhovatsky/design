@@ -484,7 +484,6 @@ const requiredMaterialSurfaces = [
   "mobile-search",
   "search-results",
   "search-status",
-  "origin-label",
   "mobile-system-dock",
   "desktop-view-console",
   "desktop-display-console",
@@ -642,35 +641,22 @@ requireContract(
 const originLabelRules = [
   ...styleSource.matchAll(/(?:^|\n)\.origin-marker__label\s*\{([^}]*)\}/g),
 ].map((match) => match[1]);
-const originLabelMaterialRule = originLabelRules.find((rule) => (
-  rule.includes("background: var(--material-01)")
-)) ?? "";
-const coordinateLabelGeometryRule = (
-  styleSource.match(
-    /(?:^|\n)\.origin-marker__label\s*\{([^}]*)\}/,
-  )?.[1] ?? ""
+const originLabelRule = originLabelRules[0] ?? "";
+requireContract(
+  originLabelRules.length === 1
+    && /background:\s*transparent/.test(originLabelRule)
+    && !/backdrop-filter/.test(originLabelRule)
+    && !materialSurfaceNames.includes("origin-label"),
+  "overview-open-entry",
+  "The overview entry is open typography with no enclosing material surface.",
 );
 requireContract(
-  originLabelRules.length >= 1
-    && /background:\s*var\(--material-01\)/.test(originLabelMaterialRule)
-    && /backdrop-filter:\s*blur\(24px\)/.test(originLabelMaterialRule)
-    && /-webkit-backdrop-filter:\s*blur\(24px\)/.test(originLabelMaterialRule)
-    && !originLabelRules.some((rule) => /background:\s*color-mix/.test(rule)),
-  "material-origin-label",
-  "The origin label must use only MATERIAL / 01; historical local backdrops are forbidden.",
-);
-requireContract(
-  /margin:\s*0/.test(coordinateLabelGeometryRule)
-    && /border:\s*0/.test(coordinateLabelGeometryRule)
-    && /border-radius:\s*12px/.test(coordinateLabelGeometryRule)
-    && /corner-shape:\s*var\(--corner-card-shape\)/.test(
-      coordinateLabelGeometryRule,
-    )
-    && /\.origin-marker__label,[^{]+\{\s*font-size:\s*var\(--type-utility\);\s*line-height:\s*var\(--leading-label\);/.test(styleSource)
-    && originLabelRules.some((rule) => /min-height:\s*var\(--control-target\)/.test(rule)
-      && /padding:\s*10px 12px/.test(rule)),
-  "coordinate-label-geometry",
-  "The route entry uses the compact utility role, coordinate material and full control target.",
+  /grid-template-columns:\s*var\(--control-target\)/.test(originLabelRule)
+    && /\.origin-marker__title,[^{]+\{\s*font-size:\s*var\(--type-item\);/.test(styleSource)
+    && /\.origin-marker__control,\s*\.observation-controls button/.test(styleSource)
+    && indexSource.includes('aria-labelledby="observation-start-title observation-start-caption"'),
+  "overview-entry-geometry",
+  "The route entry shares playback geometry, uses the item title role and keeps its title and duration in the accessible name.",
 );
 
 const controlConsoleStart = indexSource.indexOf('class="control-console"');

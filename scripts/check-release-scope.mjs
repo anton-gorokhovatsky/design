@@ -26,7 +26,7 @@ change("js/panels.js", panels, "РАБОТЫ И ПОДХОД · 3 МИНУТЫ",
 change("js/map-data.js", map, "Самый важный профессиональный период:", "Профессиональный опыт:", true);
 change("js/observation-route.js", route, "Почти четыре года развивал", "Развивал", true);
 change("index.html", html, ">МОЯ РОЛЬ<", ">МОЙ ВКЛАД<", true);
-change("index.html", html, 'aria-label="Работы и подход · 3 минуты"', 'aria-label="Новая подпись"', true);
+change("index.html", html, 'aria-label="Управление обзором"', 'aria-label="Новая подпись"', true);
 change("index.html", html, "Развивать цифровые продукты Музея", "Развивать цифровую среду Музея", true);
 change("index.html", html, "Визуальный язык связали", "Визуальное решение связали", true);
 change("index.html", html, "Цветовой цикл учитывает сезон", "Цветовой цикл следует сезону", true);

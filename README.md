@@ -37,9 +37,10 @@ the central constellation rather than to the label. The running light uses the
 the same sphere geometry at about half the visible area, with its own red accent
 (`--youtube-red`). Personal interests form the southern arc: Running is at
 `50 / 73`, YouTube at `36 / 82`, and Parfyonov at `29 / 73`.
-`Работы и подход · 3 минуты` remains a small coordinate label inside the field, not a separate
-logo card. It is also the explicit start control for the optional observation
-route.
+`Обзор` starts the optional observation route. Its open title and the caption
+`Работы и подход · 3 минуты` sit beside the shared circular playback control,
+just above the coordinate origin. Pointer hover and keyboard focus highlight
+the first stop without opening it; the axes remain visible below the entry.
 
 ## Interaction model
 

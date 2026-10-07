@@ -119,7 +119,7 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=f96e8026e103">
+    <link rel="stylesheet" href="styles.css?v=7fa184743a94">
     <style>
       .map-evidence [data-map-evidence-role-label]{font-family:var(--font-author);font-size:.6rem;font-weight:400;letter-spacing:0}
     </style>
@@ -308,7 +308,7 @@
           проекты справа, личное снизу и принципы слева. Чем ближе точки друг
           к другу, тем ближе их смысловая связь; размер точки показывает личный
           вес опыта, форма — тип объекта. Перемещайтесь между точками стрелками или
-          воспользуйтесь фильтрами и поиском. Кнопка «Работы и подход · 3 минуты» запускает
+          воспользуйтесь фильтрами и поиском. Кнопка «Обзор» запускает
           короткий маршрут по проектам; режим «Время»
           перестраивает датированные точки по годовым орбитам.
         </p>
@@ -422,10 +422,16 @@
             type="button"
             class="origin-marker__label"
             data-start-observation
-            data-material-surface="origin-label"
-            data-material-active="always"
-            aria-label="Работы и подход · 3 минуты"
-          >Работы и подход · 3 минуты</button>
+            aria-labelledby="observation-start-title observation-start-caption"
+          >
+            <span class="origin-marker__control" aria-hidden="true">
+              <svg class="observation-play-glyph" viewBox="0 0 24 24" focusable="false"><path d="m9 6 9 6-9 6Z"/></svg>
+            </span>
+            <span class="origin-marker__text">
+              <span class="origin-marker__title" id="observation-start-title">Обзор</span>
+              <span class="origin-marker__caption" id="observation-start-caption">Работы и&nbsp;подход · 3&nbsp;минуты</span>
+            </span>
+          </button>
 
           <aside
             class="map-hover-preview"
@@ -578,7 +584,7 @@
               </button>
               <button type="button" data-observation-pause aria-label="Приостановить обзор" title="Приостановить обзор">
                 <svg class="observation-controls__pause" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 6v12M16 6v12"/></svg>
-                <svg class="observation-controls__play" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m9 6 9 6-9 6Z"/></svg>
+                <svg class="observation-controls__play observation-play-glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m9 6 9 6-9 6Z"/></svg>
               </button>
               <button type="button" data-observation-next aria-label="Следующий шаг" title="Следующий шаг">
                 <svg class="observation-controls__next" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m10 6 6 6-6 6"/></svg>

@@ -53,7 +53,8 @@ try {
           overflow: document.documentElement.scrollWidth - innerWidth,
           selected: document.querySelector("[data-map-inspector]").getAttribute("aria-hidden"),
           route: document.querySelector("[data-start-observation]").textContent,
-          routeName: document.querySelector("[data-start-observation]").getAttribute("aria-label"),
+          routeName: document.querySelector("[data-start-observation]").getAttribute("aria-labelledby")
+            .split(" ").map(id => document.getElementById(id).textContent).join(" "),
           nodes: [...document.querySelectorAll(".map-node")].map(box),
           signs: [...document.querySelectorAll(".map-node__glyph")].map(box),
           obstacles: [...document.querySelectorAll(".map-controls, .display-control, .control-console, .site-header, .map-axis-label")]
@@ -74,8 +75,8 @@ try {
       assert.equal(state.selected, "true");
       assert.equal(state.nodes.length, mapItems.length, "The whole map remains present.");
       assert.deepEqual(state.blockedTargets, [], `${name} ${theme}: each point must receive input at its own center.`);
-      assert.equal(state.route.trim().replace(/\s+/g, " "), "Работы и подход · 3 минуты");
-      assert.equal(state.routeName, state.route.trim(), "The accessible name matches the visible overview label.");
+      assert.equal(state.route.trim().replace(/\s+/g, " "), "Обзор Работы и подход · 3 минуты");
+      assert.equal(state.routeName.replace(/\s+/g, " "), state.route.trim().replace(/\s+/g, " "), "The accessible name matches the visible overview label.");
       assert.ok(!state.nodes.some((node) => state.authorLines.some((line) => overlaps(node, line))), "Authorship must not collide with a map target: " + JSON.stringify({ name, state }));
       if (width > 900) {
         assert.ok(!state.signs.some(sign => state.obstacles.some(panel => overlaps(sign, panel))),
