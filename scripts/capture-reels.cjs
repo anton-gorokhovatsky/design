@@ -60,47 +60,6 @@ const smoothScroll = async (page, duration = 6500) => {
   }, duration);
 };
 
-const runElevenCaptureMotion = async (page) => {
-  // Drive the public range control and its normal input handler. The last
-  // sweep keeps the wordmark in view; no light/weather values are mocked.
-  const scrubTime = async (from, to, duration) => {
-    await page.locator("#dubai-time").evaluate(async (input, range) => {
-      if (input.disabled) throw new Error("Start-day preview must be active");
-      const startedAt = performance.now();
-      await new Promise((resolve) => {
-        const frame = (now) => {
-          const progress = Math.min(1, (now - startedAt) / range.duration);
-          input.value = String(Math.round(range.from + (range.to - range.from) * progress));
-          input.dispatchEvent(new Event("input", { bubbles: true }));
-          if (progress < 1) requestAnimationFrame(frame);
-          else {
-            input.dispatchEvent(new Event("change", { bubbles: true }));
-            resolve();
-          }
-        };
-        requestAnimationFrame(frame);
-      });
-    }, { from, to, duration });
-  };
-
-  await page.waitForTimeout(1400);
-  await page.locator("details.nav-shell > summary").click();
-  await page.waitForTimeout(1500);
-  await page.locator('details.nav-shell a[href="#dubai-forecast"]').click();
-  await page.waitForTimeout(800);
-  await smoothScrollTo(page, "#dubai-light", 500, 0.14);
-  await page.locator('[data-dubai-mode="preview"]').click();
-  await scrubTime(420, 420, 1);
-  await page.waitForTimeout(800);
-  await scrubTime(420, 720, 1800);
-  await page.waitForTimeout(700);
-  await smoothScrollTo(page, ".site-footer__wordmark", 1000, 0.14);
-  await scrubTime(720, 1035, 3500);
-  await page.waitForTimeout(1100);
-  await scrubTime(1035, 1260, 2300);
-  await page.waitForTimeout(700);
-};
-
 const smoothScrollTo = async (
   page,
   selector,
@@ -863,11 +822,6 @@ const runCaptureMotion = async (page, id, source) => {
     return;
   }
 
-  if (id === "11111") {
-    await runElevenCaptureMotion(page);
-    return;
-  }
-
   if (id === "herman") {
     await runHermanCaptureMotion(page);
     return;
@@ -908,6 +862,12 @@ const runCaptureMotion = async (page, id, source) => {
   if (projectId === "garage-site") {
     const { captureGarageTour } = require("./capture-garage-tour.cjs");
     await captureGarageTour({ rawDirectory, finalDirectory });
+    return;
+  }
+
+  if (projectId === "11111") {
+    const { captureElevenTour } = require("./capture-eleven-tour.cjs");
+    await captureElevenTour({ rawDirectory, finalDirectory });
     return;
   }
 

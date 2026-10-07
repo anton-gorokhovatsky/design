@@ -475,25 +475,41 @@
     "master": "11111.mp4",
     "chapters": [
       {
-        "label": "hero-weather-menu",
-        "start": 0.2,
-        "duration": 3.3
+        "label": "hero-menu-calendar",
+        "start": 0.1,
+        "duration": 10.4
       },
       {
-        "label": "wordmark-sunset-night",
-        "start": 7.8,
-        "duration": 10.7
+        "label": "ride-2024-day-night",
+        "start": 12,
+        "duration": 18.5
       }
     ],
-    "posterAt": 0.75,
+    "posterAt": 0.8,
     "duration": {
-      "target": 18.7,
-      "min": 18.4,
-      "max": 19
+      "target": 42,
+      "min": 41.9,
+      "max": 42.1
     },
     "capture": {
       "url": "https://11111.life/",
-      "finalHold": 2400
+      "scenes": [
+        {
+          "id": "overview",
+          "url": "/",
+          "duration": 10.8
+        },
+        {
+          "id": "ride-2024",
+          "url": "/",
+          "duration": 21
+        },
+        {
+          "id": "daylight",
+          "url": "/",
+          "duration": 10.2
+        }
+      ]
     }
   },
   {
