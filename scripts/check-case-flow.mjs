@@ -190,6 +190,17 @@ for(const engine of [process.argv[2]||'chromium']) {
     for (const width of [1440, 390]) {
       await page.setViewportSize({ width, height: 900 });
       await page.goto(origin + '/#work');
+      // Same-document navigation resolves before the panel's next-frame scroll
+      // restoration and focus. Wait for that lifecycle before sending input.
+      await page.waitForFunction(() => {
+        const panel = document.querySelector('[data-content-panel]');
+        const position = history.state?.panelPosition;
+        const target = position?.view === 'work' && position.pointId
+          ? panel.querySelector(`.work-row[data-map-point="${CSS.escape(position.pointId)}"]`)
+          : panel.querySelector('[data-close-panel]');
+        return panel.dataset.view === 'work' && panel.classList.contains('is-open')
+          && target && document.activeElement === target;
+      }, undefined, { polling: 50 });
       await page.waitForFunction(() => document.getAnimations().every(animation =>
         animation.animationName !== 'window-reveal'
         || (!animation.pending && animation.playState !== 'running')),
@@ -202,6 +213,8 @@ for(const engine of [process.argv[2]||'chromium']) {
           .map(animation => animation.finished.catch(() => {})),
       ));
       await continuation.focus();
+      assert.equal(await continuation.evaluate(button => document.activeElement === button), true,
+        'The continuation owns keyboard focus before activation');
       await page.keyboard.press('Enter');
       await page.waitForFunction(() => document.querySelector('.content-panel__body').scrollTop > 20);
       assert.equal(new URL(page.url()).hash, '#work', 'Continuation scrolls the existing list');
