@@ -13,7 +13,7 @@ const projectRoot = resolve(scriptDirectory, "..");
 const reelId = process.argv[2] || "eleven";
 const expectedById = new Map([
   ["krainiuk", {"index":"18 / 18","titleFragments":["Сайт тренера Екатерины Крайнюк"],"meta":"ТРЕНИРОВКИ, КАРТЫ И ТЁМНАЯ ТЕМА / "}],
-  ["ks-fish", {"index":"16 / 18","titleFragments":["Сайт «Рыбной лавки капитана Селёдкина»"],"meta":"ГЛАВНАЯ, ЖУРНАЛ И КАТАЛОГ / "}],
+  ["ks-fish", {"index":"16 / 18","titleFragments":["Сайт «Рыбной лавки капитана Селёдкина»"],"meta":"ЖУРНАЛ, РЕЦЕПТЫ И КАТАЛОГ / "}],
   ["eleven", {"index":"15 / 18","titleFragments":["11 111","Виктора Доронина"],"meta":"ПРОЕКТ, ЗАЕЗД И СВЕТ / "}],
   ["narkomfin", {"index":"02 / 18","titleFragments":["Дом Наркомфина"],"meta":"МОДЕЛЬ, РАЗДЕЛЫ И ТЕМЫ / "}],
   ["garage-archives", {"index":"04 / 18","titleFragments":["Архивные проекты"],"meta":"КАТАЛОГ, ПОИСК И АРХИВНЫЕ МАТЕРИАЛЫ / "}],

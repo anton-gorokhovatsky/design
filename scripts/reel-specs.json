@@ -517,26 +517,32 @@
     "master": "ks-fish.mp4",
     "chapters": [
       {
-        "label": "sea-journal-assortment",
-        "start": 0.1,
-        "duration": 4.6
+        "label": "journal-photoatlas",
+        "start": 4.9,
+        "duration": 8.5
       },
       {
-        "label": "catalog-seafood",
-        "start": 7.4,
-        "duration": 6.3
+        "label": "recipes-editorial",
+        "start": 16.9,
+        "duration": 13.4
       }
     ],
-    "posterAt": 0.7,
+    "posterAt": 7.2,
     "duration": {
-      "target": 14.2,
-      "min": 14,
-      "max": 14.4
+      "target": 34,
+      "min": 33.8,
+      "max": 34.2
     },
     "capture": {
       "url": "https://ks.fish/",
-      "finalHold": 3500,
-      "browser": "chromium"
+      "browser": "chromium",
+      "scenes": [
+        { "id": "sea", "url": "/", "duration": 3.4 },
+        { "id": "journal", "url": "/journal/", "duration": 10.4 },
+        { "id": "recipe-cod", "url": "/recipes/", "duration": 9.6 },
+        { "id": "recipe-stories", "url": "/recipes/", "duration": 7.2 },
+        { "id": "catalog", "url": "/catalog/", "duration": 3.4 }
+      ]
     }
   },
   {

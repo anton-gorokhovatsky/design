@@ -775,25 +775,6 @@ const keepOverlaysDismissed = async (page, selectors = [], duration = 7600) => {
 };
 
 const runCaptureMotion = async (page, id, source) => {
-  if (id === "ks-fish") {
-    await page.waitForTimeout(1500);
-    await page.locator('[data-hero-journal-next]').click();
-    await page.waitForTimeout(1100);
-    await smoothScrollTo(page, "#assortment", 1200, .04);
-    await page.waitForTimeout(1000);
-    await smoothScrollTo(page, "#prices", 850, .12);
-    await page.waitForTimeout(900);
-    await page.locator('#prices a[href="catalog/"]').click();
-    await page.waitForLoadState("domcontentloaded");
-    await page.evaluate(() => document.fonts.ready);
-    await applyCaptureStyles(page);
-    await page.waitForTimeout(1000);
-    await page.locator('button[data-category="seafood"]').click();
-    await page.waitForTimeout(700);
-    await smoothScrollTo(page, "#category-seafood", 900, .12);
-    await page.waitForTimeout(1400);
-    return;
-  }
   if (id === "garage-archives") {
     await runArchivesCaptureMotion(page);
     return;
@@ -868,6 +849,12 @@ const runCaptureMotion = async (page, id, source) => {
   if (projectId === "11111") {
     const { captureElevenTour } = require("./capture-eleven-tour.cjs");
     await captureElevenTour({ rawDirectory, finalDirectory });
+    return;
+  }
+
+  if (projectId === "ks-fish") {
+    const { captureKsFishTour } = require("./capture-ks-fish-tour.cjs");
+    await captureKsFishTour({ rawDirectory, finalDirectory });
     return;
   }
 
