@@ -2155,7 +2155,7 @@ const auditBrowser = async (client, origin) => {
     || casesPanelContract.panelHidden !== "true"
     || !casesPanelContract.inspectorOpen
     || casesPanelContract.evidenceHidden
-    || !casesPanelContract.result.includes("ks.fish")
+    || !casesPanelContract.result.includes("Покупатель может собрать список заказа")
     || casesPanelContract.selectedId !== "ks-fish"
     || casesPanelContract.point !== "ks-fish"
     || casesPanelContract.hash !== "#map"
