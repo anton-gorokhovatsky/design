@@ -1018,7 +1018,7 @@ const selectMapItem = (
     if (itemHref) {
       mapLink.hidden = false;
       mapLink.href = itemHref;
-      mapLink.textContent = typographUiText(overview ? (["company", "project"].includes(item.kind) ? "ОТКРЫТЬ КЕЙС" : "О ПРИНЦИПЕ") : item.linkLabel
+      mapLink.textContent = typographUiText(overview ? (overview.linkLabel || (["company", "project"].includes(item.kind) ? "ОТКРЫТЬ КЕЙС" : "О ПРИНЦИПЕ")) : item.linkLabel
         || (item.kind === "practice" ? "ПРИНЦИПЫ В\u00a0NOTION" : "ОТКРЫТЬ САЙТ"));
       mapLink.classList.remove("is-disabled");
       mapLink.removeAttribute("aria-disabled");

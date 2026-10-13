@@ -54,6 +54,8 @@ const constellationNavHome = document.querySelector('[data-nav-view="map"]');
 const compactConstellationNav = window.matchMedia("(max-width: 900px)");
 const controlConsole = document.querySelector(".control-console");
 let isConstellationNavOpen = false;
+const isModifiedLinkClick = event => event.currentTarget.matches("a")
+  && (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey);
 
 export const syncConstellationNavInteractivity = () => {
   if (controlConsole) controlConsole.inert = document.body.hasAttribute("data-case-open")
@@ -99,7 +101,8 @@ constellationNavToggle?.addEventListener("click", () => {
 });
 
 document.querySelectorAll("[data-nav-view], [data-nav-utility]").forEach((item) => {
-  item.addEventListener("click", () => {
+  item.addEventListener("click", (event) => {
+    if (isModifiedLinkClick(event)) return;
     setConstellationNavOpen(false);
   });
 });
@@ -196,15 +199,12 @@ let activePanelView = null;
 let lastPanelTrigger = null;
 const panelViews = {
   work: {
-    index: "01 / КЕЙСЫ",
     title: "Ключевые кейсы",
   },
   approach: {
-    index: "02 / ПОДХОД",
     title: "ПОДХОД",
   },
   contact: {
-    index: "03 / СВЯЗАТЬСЯ",
     title: "СВЯЗАТЬСЯ",
   },
 };
@@ -313,7 +313,8 @@ const openContentPanel = (
   }
 
   if (panelIndex) {
-    panelIndex.textContent = config.index;
+    const navItem = constellationNavItems.find(item => item.dataset.navView === view);
+    panelIndex.textContent = `${navItem.dataset.navIndex} / ${navItem.querySelector(".constellation-nav__label").textContent}`;
   }
 
   hideMapPreview({ immediate: true });
@@ -430,7 +431,7 @@ panelOpenButtons.forEach((button) => {
   button.setAttribute("aria-expanded", "false");
   button.setAttribute("aria-haspopup", "dialog");
   button.addEventListener("click", (event) => {
-    if (button.matches("a") && (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)) return;
+    if (isModifiedLinkClick(event)) return;
     event.preventDefault();
     openContentPanel(button.dataset.openPanel, button);
   });
@@ -510,7 +511,8 @@ mapInspector?.querySelector("[data-map-related]")?.addEventListener("click", (ev
   window.requestAnimationFrame(() => mapInspector.querySelector("[data-map-title]")?.focus({ preventScroll: true }));
 });
 
-constellationNavHome?.addEventListener("click", () => {
+constellationNavHome?.addEventListener("click", (event) => {
+  if (isModifiedLinkClick(event)) return;
   if (activePanelView) {
     closeContentPanel({ restoreFocus: false });
   }
