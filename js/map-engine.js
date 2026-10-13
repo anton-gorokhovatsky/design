@@ -30,6 +30,7 @@ const mapQuotation = document.querySelector("[data-map-quotation]");
 const mapLink = document.querySelector("[data-map-link]");
 const mapInspector = document.querySelector("[data-map-inspector]");
 const mapRelated = document.querySelector("[data-map-related]");
+const mapRelatedTitle = document.getElementById("map-related-title");
 const mapRelatedTrack = document.querySelector("[data-map-related-track]");
 const inspectorClose = document.querySelector("[data-close-inspector]");
 const mapEvidence = document.querySelector("[data-map-evidence]");
@@ -894,7 +895,7 @@ const renderMapRelatedItems=(item=null)=>{
   const items=signalField?.hasAttribute("data-observation-active")?[]:ids.map(id=>mapItems.find(candidate=>candidate.id===id)).filter(Boolean);
   mapRelated.hidden=!items.length;
   mapRelated.dataset.relatedKind=personalLinks?"personal":"project";
-  mapRelated.setAttribute("aria-label", personalLinks ? "Связанные точки" : "Следующие кейсы");
+  mapRelatedTitle.textContent=items.every(candidate=>candidate.kind==="project")?"СВЯЗАННЫЕ ПРОЕКТЫ":"СВЯЗАННЫЕ ТОЧКИ";
   mapRelatedTrack.innerHTML=items.map(candidate=>{
     const {id,label,timeLabel,timeYear,kindLabel}=candidate;
     const poster=getMapPreviewPoster(candidate);

@@ -140,7 +140,7 @@
           "./js/personal-media.js": "./js/personal-media.js?v=ee51495df325",
           "./js/sphere-surfaces.js": "./js/sphere-surfaces.js?v=ad8f03a11d06",
           "./js/map-media.js": "./js/map-media.js?v=2a08dd031f9a",
-          "./js/map-engine.js": "./js/map-engine.js?v=cbfbb4f02dd8",
+          "./js/map-engine.js": "./js/map-engine.js?v=534d473be4d2",
           "./js/map-controls.js": "./js/map-controls.js?v=0132166b4155",
           "./js/viewport-ui.js": "./js/viewport-ui.js?v=79d37ab194e6",
           "./js/panels.js": "./js/panels.js?v=b9496574ab66",
@@ -164,7 +164,7 @@
     <script type="module" src="js/personal-media.js?v=ee51495df325"></script>
     <script type="module" src="js/sphere-surfaces.js?v=ad8f03a11d06"></script>
     <script type="module" src="js/map-media.js?v=2a08dd031f9a"></script>
-    <script type="module" src="js/map-engine.js?v=cbfbb4f02dd8"></script>
+    <script type="module" src="js/map-engine.js?v=534d473be4d2"></script>
     <script type="module" src="js/map-controls.js?v=0132166b4155"></script>
     <script type="module" src="js/viewport-ui.js?v=79d37ab194e6"></script>
     <script type="module" src="js/panels.js?v=b9496574ab66"></script>
@@ -611,11 +611,11 @@
             data-map-related
             data-material-surface="inspector-related"
             data-material-active="always"
-            aria-label="Следующие кейсы"
+            aria-labelledby="map-related-title"
             hidden
           >
             <div class="map-related__header">
-              <span>ДАЛЬШЕ ПО КАРТЕ</span>
+              <span id="map-related-title">СВЯЗАННЫЕ ТОЧКИ</span>
             </div>
             <ul
               class="map-related__track"
