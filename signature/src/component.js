@@ -1,5 +1,5 @@
 // Bundled with the accepted SVG and CSS by ../build.mjs. No runtime imports.
-export const VERSION = "1.0.1";
+export const VERSION = "1.0.2";
 const STYLE = __SIGNATURE_CSS__;
 const MARK = __SIGNATURE_SVG__;
 const template = document.createElement('template');
@@ -16,9 +16,10 @@ template.innerHTML = `<style>${STYLE}</style>
   </div>`;
 
 export class AGSignature extends HTMLElement {
-  static observedAttributes = ['role-label', 'paused', 'controls'];
+  static observedAttributes = ['role-label', 'paused', 'controls', 'lang'];
   #mark;
   #role;
+  #name;
   #button;
   #abort;
   #intersection;
@@ -33,6 +34,7 @@ export class AGSignature extends HTMLElement {
     shadow.append(template.content.cloneNode(true));
     this.#mark = shadow.querySelector('.mark');
     this.#role = shadow.querySelector('.role');
+    this.#name = shadow.querySelector('.name');
     this.#button = shadow.querySelector('.motion');
   }
 
@@ -67,7 +69,7 @@ export class AGSignature extends HTMLElement {
     // Optional bridge to the existing site-wide motion preference.
     this.#rootObserver = new view.MutationObserver(this.#sync);
     this.#rootObserver.observe(doc.documentElement, {
-      attributes: true, attributeFilter: ['data-reduce-motion'],
+      attributes: true, attributeFilter: ['data-reduce-motion', 'lang'],
     });
     this.#sync();
   }
@@ -83,10 +85,25 @@ export class AGSignature extends HTMLElement {
     const enabled = this.isConnected && !doc.hidden && this.#visible
       && !this.paused && !systemPaused && !sitePaused;
     this.#mark.dataset.arcRunning = String(enabled);
-    this.#role.textContent = this.getAttribute('role-label') ?? 'Дизайн и\u00a0разработка';
+    const english = (this.closest('[lang]')?.getAttribute('lang') || doc.documentElement.lang).toLowerCase().startsWith('en');
+    const name = english ? 'Anton Gorokhovatsky' : 'Антон Гороховатский';
+    if (this.#name.textContent.trim() !== name) {
+      const split = name.lastIndexOf(' ');
+      const surname = name.slice(split + 1);
+      const family = doc.createElement('span');
+      family.className = 'surname';
+      const ending = doc.createElement('span');
+      ending.className = 'name-end';
+      ending.append(surname.slice(-2), this.#name.querySelector('.arrow').cloneNode(true));
+      family.append(surname.slice(0, -2), ending);
+      this.#name.replaceChildren(name.slice(0, split + 1), family);
+    }
+    this.#role.textContent = this.getAttribute('role-label') ?? (english ? 'Design and development' : 'Дизайн и\u00a0разработка');
     this.#role.hidden = this.#role.textContent === '';
     this.#button.hidden = this.getAttribute('controls') === 'external' || systemPaused || sitePaused;
-    this.#button.textContent = this.paused ? 'Включить движение' : 'Остановить движение';
+    this.#button.textContent = english
+      ? (this.paused ? 'Resume motion' : 'Pause motion')
+      : (this.paused ? 'Включить движение' : 'Остановить движение');
   };
 
   #disconnect() {
