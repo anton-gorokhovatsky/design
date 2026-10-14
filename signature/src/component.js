@@ -1,18 +1,18 @@
 // Bundled with the accepted SVG and CSS by ../build.mjs. No runtime imports.
-export const VERSION = "1.0.2";
+export const VERSION = "1.0.3";
 const STYLE = __SIGNATURE_CSS__;
 const MARK = __SIGNATURE_SVG__;
 const template = document.createElement('template');
 template.innerHTML = `<style>${STYLE}</style>
   <div class="signature">
-    <a class="credit" href="https://gorokhovatsky.tech/" rel="author">
+    <a class="credit" part="credit" href="https://gorokhovatsky.tech/" rel="author">
       ${MARK}
-      <span class="text">
-        <span class="name">Антон <span class="surname">Гороховатск<span class="name-end">ий<span class="arrow" aria-hidden="true"></span></span></span></span>
-        <span class="role"></span>
+      <span class="text" part="text">
+        <span class="name" part="name">Антон <span class="surname">Гороховатск<span class="name-end">ий<span class="arrow" part="arrow" aria-hidden="true"></span></span></span></span>
+        <span class="role" part="role"></span>
       </span>
     </a>
-    <button class="motion" type="button" hidden>Остановить движение</button>
+    <button class="motion" part="motion" type="button" hidden>Остановить движение</button>
   </div>`;
 
 export class AGSignature extends HTMLElement {
@@ -33,6 +33,7 @@ export class AGSignature extends HTMLElement {
     const shadow = this.attachShadow({ mode: 'open' });
     shadow.append(template.content.cloneNode(true));
     this.#mark = shadow.querySelector('.mark');
+    this.#mark.setAttribute('part', 'mark');
     this.#role = shadow.querySelector('.role');
     this.#name = shadow.querySelector('.name');
     this.#button = shadow.querySelector('.motion');
