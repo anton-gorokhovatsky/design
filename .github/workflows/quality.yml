@@ -42,14 +42,16 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends ffmpeg
       - run: node scripts/check-project.mjs --scope=${{ steps.scope.outputs.static-scope }}
+        env:
+          SIGNATURE_BASE: ${{ github.event.pull_request.base.sha || 'origin/gh-pages' }}
 
   browser-contracts:
     name: browser-contracts (${{ matrix.artifact }})
     needs: static-contracts
     if: needs.static-contracts.outputs.mode != 'copy'
-    # Exercise WebKit with macOS compositing and media support. Software
-    # WebKitGTK stalls in frame/scroll waits and can terminate during playback.
-    runs-on: ${{ matrix.browser == 'webkit' && 'macos-15' || 'ubuntu-latest' }}
+    # Portfolio WebKit keeps native macOS media/compositing. The standalone
+    # signature has no portfolio/media dependencies and uses Linux WebKit.
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 20
     strategy:
       fail-fast: false

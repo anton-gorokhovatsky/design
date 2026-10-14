@@ -3,6 +3,7 @@
 import { spawn } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { checkProfiles } from "./check-profiles.mjs";
 import { runtimeFiles } from "./runtime-files.mjs";
 import { browserSteps, checkIds } from "./check-catalog.mjs";
 
@@ -13,7 +14,8 @@ const scopeArgument = argumentsToCheck.find((argument) => (
   argument.startsWith("--scope=")
 ));
 const checkScope = scopeArgument?.slice("--scope=".length) || "all";
-const supportedScopes = new Set(["all", "copy", "static", "chromium", "webkit"]);
+const supportedScopes = new Set(["all", "copy", "static", "chromium", "webkit", ...Object.keys(checkProfiles)]);
+const listOnly = argumentsToCheck.includes("--list");
 const suiteArgument = argumentsToCheck.find((argument) => (
   argument.startsWith("--browser-suite=")
 ));
@@ -23,7 +25,7 @@ const checksArgument = argumentsToCheck.find((argument) => argument.startsWith("
 const selectedChecks = checksArgument?.slice("--checks=".length).split(",");
 
 if (
-  argumentsToCheck.length !== Number(Boolean(scopeArgument)) + Number(Boolean(suiteArgument)) + Number(Boolean(checksArgument))
+  argumentsToCheck.length !== Number(Boolean(scopeArgument)) + Number(Boolean(suiteArgument)) + Number(Boolean(checksArgument)) + Number(listOnly)
   || (selectedChecks && (suiteArgument || !["chromium", "webkit"].includes(checkScope)
     || selectedChecks.some((id) => !checkIds.includes(id))
     || new Set(selectedChecks).size !== selectedChecks.length
@@ -34,12 +36,17 @@ if (
 ) {
   console.error(
     "Usage: node scripts/check-project.mjs "
-    + "[--scope=all|copy|static|chromium|webkit] [--browser-suite=all|core|components | --checks=id,...]",
+    + "[--scope=all|copy|static|signature|checks|chromium|webkit] [--list] [--browser-suite=all|core|components | --checks=id,...]",
   );
   process.exit(2);
 }
 
 const contractScripts = [
+  "scripts/check-profiles.mjs",
+  "scripts/check-runner.mjs",
+  "scripts/check-signature.mjs",
+  "scripts/check-signature-static.mjs",
+  "scripts/publication-assets.mjs",
   "scripts/audit-project.mjs",
   "scripts/browser-contracts.cjs",
   "scripts/cache-versions.mjs",
@@ -96,6 +103,7 @@ const syntaxSteps = [
 ];
 
 const staticContractSteps = [
+  ...checkProfiles.signature.static,
   {
     label: "WHOOP service authorization and publication",
     command: process.execPath,
@@ -282,51 +290,37 @@ const scopeLabel = checkScope === "all"
   ? "Project check"
   : `Project ${checkScope} check`;
 
-if (["all", "static", "copy"].includes(checkScope)) {
-  const syntaxResults = await runPhase("Syntax gate", syntaxSteps);
-  failures.push(...syntaxResults.filter(recordsFailure));
-
-  if (failures.length === 0) {
-    const scopedStaticSteps = checkScope === "all"
-      ? [...staticContractSteps, ...chromiumReelSteps, gitWhitespaceStep]
-      : [...staticContractSteps.filter((step) => checkScope !== "copy" || !step.requiresFfmpeg), gitWhitespaceStep];
-    const staticContractResults = await runPhase(
-      "Static release gate",
-      scopedStaticSteps,
-    );
-    failures.push(...staticContractResults.filter(recordsFailure));
-  }
-}
-
-if (failures.length === 0 && checkScope === "chromium"
-  && (selectedChecks ? selectedChecks.includes("reels") : browserSuite !== "components")) {
-  const reelResults = await runPhase(
-    "Chromium reel preview gate",
-    chromiumReelSteps,
-  );
-  failures.push(...reelResults.filter(recordsFailure));
-}
-
-if (failures.length === 0 && !["static", "copy"].includes(checkScope)) {
-  const scopedBrowserSteps = browserContractSteps.filter((step) => (
+// --list exposes the exact execution plan; tests exercise the same selected
+// steps that run below, rather than a parallel description of the gate.
+const isolated = checkProfiles[checkScope];
+const hasStatic = isolated || ["all", "static", "copy"].includes(checkScope);
+const plan = {
+  syntax: !hasStatic ? [] : isolated ? isolated.syntax.map(path => ({
+    label: `Syntax: ${path}`, command: process.execPath, args: ["--check", path],
+  })) : syntaxSteps,
+  static: !hasStatic ? [] : isolated ? [...isolated.static, gitWhitespaceStep]
+    : checkScope === "all" ? [...staticContractSteps, ...chromiumReelSteps, gitWhitespaceStep]
+      : [...staticContractSteps.filter(step => checkScope !== "copy" || !step.requiresFfmpeg), gitWhitespaceStep],
+  reels: checkScope === "chromium" && (selectedChecks ? selectedChecks.includes("reels") : browserSuite !== "components") ? chromiumReelSteps : [],
+  browser: isolated || ["static", "copy"].includes(checkScope) ? [] : browserContractSteps.filter(step => (
     (checkScope === "all" || step.scope === checkScope)
     && (selectedChecks ? selectedChecks.includes(step.id)
       : browserSuite === "all" || (step.id === "core" ? "core" : "components") === browserSuite)
-  ));
-  console.log(
-    `\nBrowser release gate: ${scopedBrowserSteps.length} serial task`
-    + `${scopedBrowserSteps.length === 1 ? "" : "s"}`,
-  );
-
-  for (const step of scopedBrowserSteps) {
+  )),
+};
+if (listOnly) { console.log(JSON.stringify(plan)); process.exit(0); }
+for (const [label, steps] of [["Syntax gate", plan.syntax], ["Static release gate", plan.static], ["Chromium reel preview gate", plan.reels]]) {
+  if (failures.length || !steps.length) continue;
+  const results = await runPhase(label, steps);
+  failures.push(...results.filter(recordsFailure));
+}
+if (failures.length === 0 && plan.browser.length) {
+  console.log(`\nBrowser release gate: ${plan.browser.length} serial tasks`);
+  for (const step of plan.browser) {
     console.log(`\n→ ${step.label}`);
     const result = await runStep({ ...step, streamOutput: true });
     printResults([result]);
-    if (recordsFailure(result)) {
-      failures.push(result);
-      // Browser checks are independent. Finish this lane so one report includes
-      // every failure; the combined result still blocks publication below.
-    }
+    if (recordsFailure(result)) failures.push(result);
   }
 }
 

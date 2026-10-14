@@ -2,10 +2,12 @@
 
 import { createHash } from "node:crypto";
 import { spawn } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { waitForQuality } from "./release-quality.mjs";
+import { onlyIndependentChecks, localScopeFor } from "./check-profiles.mjs";
+import { getPublicationAssets } from "./publication-assets.mjs";
 import { planRelease } from "./release-scope.mjs";
 import {
   syncRuntimeAssetVersions,
@@ -121,28 +123,7 @@ const normalizeStatusPath = (line) => {
 
 const sha256 = (value) => createHash("sha256").update(value).digest("hex");
 
-const getLocalRuntimeAssets = () => {
-  const html = readFileSync(resolve(projectRoot, "index.html"), "utf8");
-  const assetReferences = [...html.matchAll(
-    /(?:src|href)=["']((?:styles\.css|(?:js|assets)\/[^"'?#]+)(?:\?[^"']*)?)["']/g,
-  )].map((match) => match[1]);
-
-  return {
-    html,
-    htmlHash: sha256(html),
-    assets: [...new Set(assetReferences)]
-      .map((reference) => ({
-        reference,
-        path: reference.split(/[?#]/, 1)[0],
-      }))
-      .filter(({ path }) => existsSync(resolve(projectRoot, path)))
-      .map(({ path, reference }) => ({
-        path,
-        reference,
-        hash: sha256(readFileSync(resolve(projectRoot, path))),
-      })),
-  };
-};
+const getLocalRuntimeAssets = plan => getPublicationAssets(projectRoot, plan);
 
 const fetchWithTimeout = async (url, timeout = 12000) => {
   const controller = new AbortController();
@@ -170,18 +151,18 @@ const verifyPublicRelease = async (publicUrl, commit, localRuntime) => {
 
   while (Date.now() < deadline) {
     try {
-      const response = await fetchWithTimeout(releaseUrl);
-      if (!response.ok) {
+      const response = localRuntime.htmlHash === null ? null : await fetchWithTimeout(releaseUrl);
+      if (response && !response.ok) {
         lastDifference = `HTTP ${response.status}`;
       } else {
-        const publicHtml = await response.text();
+        const publicHtml = response ? await response.text() : "";
         const publicHtmlHash = sha256(publicHtml);
-        const localRuntimeReferences = localRuntime.assets.map(({ reference }) => reference);
+        const localRuntimeReferences = localRuntime.htmlHash === null ? [] : localRuntime.assets.filter(asset => asset.linked).map(({ reference }) => reference);
         const missingReferences = localRuntimeReferences.filter((reference) => (
           !publicHtml.includes(reference)
         ));
 
-        if (publicHtmlHash !== localRuntime.htmlHash) {
+        if (localRuntime.htmlHash !== null && publicHtmlHash !== localRuntime.htmlHash) {
           lastDifference = "production HTML is still stale";
         } else if (missingReferences.length > 0) {
           lastDifference = `missing runtime references: ${missingReferences.join(", ")}`;
@@ -193,7 +174,11 @@ const verifyPublicRelease = async (publicUrl, commit, localRuntime) => {
             const assetResponse = await fetchWithTimeout(assetUrl);
             const bytes = Buffer.from(await assetResponse.arrayBuffer());
 
-            if (!assetResponse.ok || sha256(bytes) !== asset.hash) {
+            const moduleHeadersValid = !asset.module || (
+              /javascript/.test(assetResponse.headers.get("content-type") || "")
+              && assetResponse.headers.get("access-control-allow-origin") === "*"
+            );
+            if (!assetResponse.ok || sha256(bytes) !== asset.hash || !moduleHeadersValid) {
               mismatchedAssets.push(asset.path);
             }
           }
@@ -275,8 +260,9 @@ if (options.resume) {
     fail("--resume requires the exact current commit, a clean checkout, and no --file/--message.");
   }
   try {
-    verifyRuntimeAssetVersions(projectRoot);
-    await publishVerifiedCommit(head, options.publicUrl, getLocalRuntimeAssets());
+    const plan = planRelease({ projectRoot, target: head });
+    if (!onlyIndependentChecks(plan)) verifyRuntimeAssetVersions(projectRoot);
+    await publishVerifiedCommit(head, options.publicUrl, getLocalRuntimeAssets(plan));
     console.log(`\nRelease complete: ${head}`);
     process.exit(0);
   } catch (error) {
@@ -333,7 +319,7 @@ try {
 }
 
 try {
-  cacheUpdate = syncRuntimeAssetVersions(projectRoot);
+  cacheUpdate = onlyIndependentChecks(planRelease({ projectRoot })) ? { changedPaths: [] } : syncRuntimeAssetVersions(projectRoot);
 } catch (error) {
   fail(
     "could not update CSS/JS content hashes: "
@@ -386,11 +372,11 @@ try {
   console.log(`\nRelease checks: ${plan.mode}. ${plan.reason}`);
   // Full browser coverage runs once in Quality. Local work includes a focused
   // render of the actual change; repeating the entire CI matrix adds no evidence.
-  await run(process.execPath, ["scripts/check-project.mjs", "--scope=copy"], {
-    label: "Run the short local preflight; Quality selects copy, component or full coverage",
+  await run(process.execPath, ["scripts/check-project.mjs", `--scope=${localScopeFor(plan)}`], {
+    label: `Run the selected local preflight: ${localScopeFor(plan)}`,
   });
-  verifyRuntimeAssetVersions(projectRoot);
-  console.log("\n✓ CSS/JS references match their current content hashes.");
+  if (!onlyIndependentChecks(plan)) verifyRuntimeAssetVersions(projectRoot);
+  console.log("\n✓ The selected publication assets are ready.");
   await run("git", ["add", "--", ...options.files], {
     label: "Stage the approved release scope",
   });
@@ -405,7 +391,7 @@ try {
     label: "Create the release commit",
   });
   const [commit] = await readGitLines(["rev-parse", "HEAD"]);
-  const localRuntime = getLocalRuntimeAssets();
+  const localRuntime = getLocalRuntimeAssets(plan);
 
   await run("git", ["push", "origin", `${commit}:refs/heads/main`], {
     label: "Send the candidate to Quality without changing production",

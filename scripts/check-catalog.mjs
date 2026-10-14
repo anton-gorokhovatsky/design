@@ -1,6 +1,7 @@
 // One catalogue drives local execution and the CI matrix. Scope selection may
 // select a subset, but the full lane must retain every check in this catalogue.
 export const componentChecks = {
+  signature: "Shared author signature",
   "case-flow": "Case reading lifecycle",
   "personal-media": "Personal video lifecycle",
   "inspector-links": "Inspector destination links",
@@ -19,6 +20,8 @@ export const componentChecks = {
 // Settings assertions already live in the core browser contracts. Keep them,
 // including consent and keyboard behavior, instead of duplicating a weaker test.
 export const componentCoverage = {
+  signature: ["signature"],
+  checks: ["signature"],
   media: ["reels", "case-view", "case-flow", "hover-layout", "observation-route"],
   settings: ["core", "accessibility", "whoop-ui"],
   whoop: ["core", "accessibility", "whoop-ui", "hover-layout", "first-visit"],
@@ -51,10 +54,11 @@ export const browserMatrix = (mode, components = []) => {
   }
   const selected = new Set(mode === "full" ? checkIds : components.flatMap((id) => componentCoverage[id]));
   const include = [];
-  const add = (browser, name, checks, scenario = "") => {
-    if (checks.length) include.push({ browser, artifact: `${browser}-${name}`, checks: checks.join(","), scenario });
+  const add = (browser, name, checks, scenario = "", runner = browser === "webkit" ? "macos-15" : "ubuntu-latest") => {
+    if (checks.length) include.push({ browser, artifact: `${browser}-${name}`, checks: checks.join(","), scenario, runner });
   };
   for (const browser of ["chromium", "webkit"]) {
+    if (selected.has("signature")) add(browser, "signature", ["signature"], "", "ubuntu-latest");
     if (selected.has("core")) {
       if (browser === "webkit") for (const scenario of webkitScenarios) add(browser, scenario, ["core"], scenario);
       else add(browser, "core", ["core"]);

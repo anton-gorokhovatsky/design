@@ -64,7 +64,7 @@ assert.equal(isCopyOnly("js/panels.js", panels, panels.replace('title: "', 'titl
 assert.equal(isCopyOnly("styles.css", "a{font-size:12px}", "a{font-size:14px}"), false);
 assert.equal(isCopyOnly("unknown.js", 'const title="one";', 'const title="two";'), false);
 assert.equal(isCopyOnly("README.md", "old", "new"), true);
-assert.equal(isCopyOnly("AGENTS.md", "old", "new"), false);
+assert.equal(isCopyOnly("AGENTS.md", "old", "new"), true, "Instruction-only edits do not change the rendered interface");
 
 const scoped = (path, before, after, mode, components = []) => {
   assert.deepEqual(classifyChange(path, before, after), { mode, components }, `${path}: ${after.slice(-180)}`);
@@ -140,7 +140,7 @@ scoped("scripts/reel-specs.json", specSource, changeSpec(spec => spec.run = "cod
 
 // The complete old browser inventory remains mandatory, once per engine;
 // WebKit core retains all four viewport/theme profiles. No shard may disappear.
-const retainedChecks = ["case-flow", "personal-media", "inspector-links", "accessibility", "map-routes", "hover-layout", "whoop-ui", "first-visit", "command-placement", "sphere-motion", "case-view", "scroll-lens", "observation-route"];
+const retainedChecks = ["signature", "case-flow", "personal-media", "inspector-links", "accessibility", "map-routes", "hover-layout", "whoop-ui", "first-visit", "command-placement", "sphere-motion", "case-view", "scroll-lens", "observation-route"];
 const fullMatrix = browserMatrix("full").include;
 assert.equal(new Set(fullMatrix.map(({ artifact }) => artifact)).size, fullMatrix.length);
 for (const browser of ["chromium", "webkit"]) {
@@ -164,7 +164,7 @@ for (const browser of ["chromium", "webkit"]) assert.deepEqual(
   new Set(mediaMatrix.filter(row => row.browser === browser).flatMap(row => row.checks.split(","))),
   new Set(componentCoverage.media.filter(id => browser === "chromium" || id !== "reels")),
 );
-assert.equal(browserMatrix("full").include.length, 14);
+assert.equal(browserMatrix("full").include.length, 16);
 assert.deepEqual(browserMatrix("copy"), { include: [] });
 assert.throws(() => browserMatrix("components", []));
 assert.throws(() => browserMatrix("components", ["unknown"]));
@@ -255,4 +255,43 @@ for (const [scope, staticResult, browserResult, pass] of [
 assert.match(workflow, /matrix: \$\{\{ fromJSON\(needs.static-contracts.outputs.matrix\) \}\}/);
 assert.match(workflow, /--checks=\$\{\{ matrix.checks \}\}/);
 assert.match(workflow, /if: steps.scope.outputs.static-scope == 'static'/, "Full and media lanes require FFmpeg");
+// Independently published signatures keep one component job per engine. Known
+// check tooling uses its own contracts; neither boundary masks runtime edits.
+for (const path of ['signature/src/component.js', 'signature/src/motion.css', 'signature/src/mark.svg', 'signature/build.mjs', 'signature/demo.html', 'signature/v1/signature.js', 'signature/1.0.3/signature.js']) {
+  assert.deepEqual(classifyChange(path, 'before', 'after'), { mode: 'components', components: ['signature'] });
+}
+for (const path of ['signature/../styles.css', 'signature-other/src/component.js', 'signature/unknown.txt']) {
+  assert.equal(classifyChange(path, 'before', 'after').mode, 'full');
+}
+for (const owner of ['signature', 'checks']) {
+  const matrix = browserMatrix('components', [owner]).include;
+  assert.equal(matrix.length, 2);
+  assert(matrix.every(row => row.checks === 'signature' && row.runner === 'ubuntu-latest'));
+}
+assert(fullMatrix.filter(row => row.browser === 'webkit' && row.checks !== 'signature').every(row => row.runner === 'macos-15'), 'Portfolio WebKit retains native media coverage');
+const isolatedDirectory = mkdtempSync(join(tmpdir(), 'signature-release-scope-'));
+try {
+  const git = (...args) => execFileSync('git', ['-c', 'user.name=Scope test', '-c', 'user.email=scope@example.invalid', '-c', 'core.hooksPath=/dev/null', ...args], { cwd: isolatedDirectory, encoding: 'utf8', stdio: 'pipe' }).trim();
+  const put = (path, text) => { mkdirSync(dirname(join(isolatedDirectory, path)), { recursive: true }); writeFileSync(join(isolatedDirectory, path), text); };
+  git('init', '-b', 'main');
+  put('signature/src/component.js', 'export const VERSION = "1.0.2";');
+  put('styles.css', '.map-node {color: black}');
+  put('README.md', 'Published');
+  git('add', '.'); git('commit', '-m', 'published');
+  const base = git('rev-parse', 'HEAD');
+  const plan = () => planRelease({ projectRoot: isolatedDirectory, base });
+  put('signature/src/component.js', 'export const VERSION = "1.0.3";');
+  put('signature/1.0.3/signature.js', 'new bundle');
+  assert.equal(plan().staticScope, 'signature');
+  assert.deepEqual(plan().components, ['signature'], 'New untracked fixed releases belong to the signature');
+  git('add', '.'); git('commit', '-m', 'signature');
+  put('README.md', 'A later copy-only commit'); git('add', '.'); git('commit', '-m', 'copy');
+  assert.equal(plan().staticScope, 'signature', 'Selection uses the complete unpublished signature range');
+  put('scripts/check-project.mjs', 'check runner');
+  assert.equal(plan().staticScope, 'checks', 'Tooling changes run chooser and execution contracts');
+  put('styles.css', '.map-node {color: red}');
+  assert.equal(plan().mode, 'full', 'A signature cannot hide a shared portfolio style change');
+  assert.equal(plan().staticScope, 'static');
+  assert.deepEqual(plan().matrix, browserMatrix('full'));
+} finally { rmSync(isolatedDirectory, { recursive: true, force: true }); }
 console.log(`PASS: ${checks} copy/component/global changes; unsafe syntax, combined git history, complete browser coverage and all Quality lanes.`);

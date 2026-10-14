@@ -9,6 +9,7 @@ import { parse as parseHtml } from "parse5";
 import { cacheVersionFiles } from "./cache-versions.mjs";
 import { affectedComponents } from "./component-scope.mjs";
 import { isMediaOnly, mediaAssetPaths } from "./media-scope.mjs";
+import { ownedCheckComponent, staticScopeFor } from "./check-profiles.mjs";
 import { browserMatrix } from "./check-catalog.mjs";
 
 // Only display fields in these data arrays are copy. Selectors, destinations,
@@ -94,7 +95,7 @@ const maskHtmlCopy = (source) => {
 
 export const isCopyOnly = (path, before, after) => {
   if (before === after) return true;
-  if (path === "README.md" || /^docs\/[^\n]+\.md$/.test(path)) return true;
+  if (["README.md", "AGENTS.md"].includes(path) || /^docs\/[^\n]+\.md$/.test(path)) return true;
   // Mask tokens cannot collide with a source expression or literal URL.
   if (before.includes("\0") || after.includes("\0")) return false;
   try {
@@ -107,6 +108,8 @@ export const isCopyOnly = (path, before, after) => {
 };
 
 export const classifyChange = (path, before, after) => {
+  const owner = ownedCheckComponent(path);
+  if (owner) return { mode: "components", components: [owner] };
   if (isCopyOnly(path, before, after)) return { mode: "copy", components: [] };
   if (isMediaOnly(path, before, after, isCopyOnly)) return { mode: "components", components: ["media"] };
   const components = affectedComponents(path, before, after, maskHtmlCopy);
@@ -124,8 +127,9 @@ export const planRelease = ({ projectRoot, base = "origin/gh-pages", target } = 
     const changes = [];
     for (let index = 0; index < entries.length; index += 2) {
       const [status, path] = entries.slice(index, index + 2);
-      let classification = { mode: "full", components: [] };
-      if (status === "M" && (copyArrays[path] || ["index.html", "404.html", "styles.css", "js/whoop-day.js", "scripts/reel-specs.json", "README.md"].includes(path) || /^docs\/.*\.md$/.test(path))) {
+      const owner = ownedCheckComponent(path);
+      let classification = owner ? { mode: "components", components: [owner] } : { mode: "full", components: [] };
+      if (status === "M" && (copyArrays[path] || ["index.html", "404.html", "styles.css", "js/whoop-day.js", "scripts/reel-specs.json", "README.md", "AGENTS.md"].includes(path) || /^docs\/.*\.md$/.test(path))) {
         const before = git("show", `${baseSha}:${path}`);
         const after = targetSha ? git("show", `${targetSha}:${path}`) : readFileSync(resolve(projectRoot, path), "utf8");
         classification = classifyChange(path, before, after);
@@ -135,13 +139,13 @@ export const planRelease = ({ projectRoot, base = "origin/gh-pages", target } = 
     }
     if (!targetSha) {
       changes.push(...git("ls-files", "--others", "--exclude-standard", "-z").split("\0").filter(Boolean)
-        .map((path) => ({ path, mode: "full", components: [] })));
+        .map((path) => { const owner = ownedCheckComponent(path); return { path, mode: owner ? "components" : "full", components: owner ? [owner] : [] }; }));
     }
     const fullPaths = changes.filter(({ mode }) => mode === "full").map(({ path }) => path);
     const components = [...new Set(changes.flatMap(({ components }) => components))].sort();
     const mode = fullPaths.length ? "full" : components.length ? "components" : "copy";
     return {
-      mode, staticScope: mode === "full" || components.includes("media") ? "static" : "copy", base: baseSha, components, matrix: browserMatrix(mode, components),
+      mode, staticScope: staticScopeFor(mode, components), base: baseSha, components, matrix: browserMatrix(mode, components),
       reason: fullPaths.length ? `Shared or unclassified changes: ${fullPaths.join(", ")}`
         : components.length ? `Affected components and their integration checks: ${components.join(", ")}`
           : "Only display text, generated cache keys or documentation changed.",
