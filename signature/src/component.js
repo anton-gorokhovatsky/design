@@ -1,5 +1,5 @@
 // Bundled with the accepted SVG and CSS by ../build.mjs. No runtime imports.
-export const VERSION = "1.0.0";
+export const VERSION = "1.0.1";
 const STYLE = __SIGNATURE_CSS__;
 const MARK = __SIGNATURE_SVG__;
 const template = document.createElement('template');
@@ -8,7 +8,7 @@ template.innerHTML = `<style>${STYLE}</style>
     <a class="credit" href="https://gorokhovatsky.tech/" rel="author">
       ${MARK}
       <span class="text">
-        <span class="name">Антон <span class="surname">Гороховатский&#8288;<span class="arrow" aria-hidden="true"></span></span></span>
+        <span class="name">Антон <span class="surname">Гороховатск<span class="name-end">ий<span class="arrow" aria-hidden="true"></span></span></span></span>
         <span class="role"></span>
       </span>
     </a>

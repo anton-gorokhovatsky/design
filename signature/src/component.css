@@ -41,7 +41,7 @@
 }
 .text {
   display: grid;
-  flex: 1 1 10rem;
+  flex: 1 1 auto;
   min-inline-size: min(100%, 10rem);
   gap: .25rem;
   overflow-wrap: anywhere;
@@ -64,6 +64,7 @@
   text-decoration: inherit;
   text-underline-offset: inherit;
 }
+.name-end { white-space: nowrap; }
 .role {
   color: var(--ag-signature-muted, inherit);
   font-size: var(--ag-signature-role-size, .875rem);
@@ -95,7 +96,7 @@
   inline-size: fit-content;
   max-inline-size: 100%;
   min-block-size: 2.75rem;
-  margin: .25rem 0 0 calc(var(--ag-signature-size, 8rem) + var(--ag-signature-gap, 1rem));
+  margin: .25rem 0 0;
   padding: 0;
   border: 0;
   border-radius: 0;
