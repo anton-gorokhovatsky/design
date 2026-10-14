@@ -1,0 +1,136 @@
+:host {
+  display: block;
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  --_accent: #2448ed;
+  --_node-ink: #4d4d48;
+}
+@media (prefers-color-scheme: dark) {
+  :host { --_accent: #8094ff; --_node-ink: #d0d0c9; }
+}
+:host([theme="light"]) { --_accent: #2448ed; --_node-ink: #4d4d48; }
+:host([theme="dark"]) { --_accent: #8094ff; --_node-ink: #d0d0c9; }
+:host([hidden]), [hidden] { display: none !important; }
+* { box-sizing: border-box; }
+.signature { max-inline-size: 100%; }
+.credit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .75rem var(--ag-signature-gap, 1rem);
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  min-block-size: 2.75rem;
+  color: var(--ag-signature-ink, inherit);
+  font: inherit;
+  text-decoration: none;
+}
+.mark {
+  display: block;
+  flex: 0 0 var(--ag-signature-size, 8rem);
+  inline-size: var(--ag-signature-size, 8rem);
+  max-inline-size: 100%;
+  block-size: auto;
+  aspect-ratio: 64 / 46;
+  overflow: visible;
+  color: var(--ag-signature-accent, var(--_accent));
+  /* Private aliases preserve the accepted SVG's material literally. */
+  --content-ink: var(--ag-signature-node-ink, var(--ag-signature-ink, var(--_node-ink)));
+  --tone-practice: var(--ag-signature-practice, #6e9484);
+  --running-dusk: var(--ag-signature-personal, #a098b0);
+}
+.text {
+  display: grid;
+  flex: 1 1 10rem;
+  min-inline-size: min(100%, 10rem);
+  gap: .25rem;
+  overflow-wrap: anywhere;
+}
+.name {
+  font-size: var(--ag-signature-name-size, 1.25rem);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -.02em;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 30%, transparent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: .2em;
+  text-decoration-skip-ink: auto;
+}
+.surname {
+  display: inline-block;
+  max-inline-size: 100%;
+  vertical-align: top;
+  text-decoration: inherit;
+  text-underline-offset: inherit;
+}
+.role {
+  color: var(--ag-signature-muted, inherit);
+  font-size: var(--ag-signature-role-size, .875rem);
+  font-weight: 400;
+  line-height: 1.4;
+  text-wrap: pretty;
+}
+.arrow {
+  display: inline-block;
+  box-sizing: content-box;
+  inline-size: .75rem;
+  block-size: .75rem;
+  margin-inline-start: .5em;
+  vertical-align: calc(1cap - .75rem - .09375rem);
+  border-top: .09375rem solid currentColor;
+  border-right: .09375rem solid currentColor;
+  background: linear-gradient(135deg, transparent 43%, currentColor 44% 52%, transparent 53%);
+}
+.credit:is(:hover, :focus-visible) .name {
+  color: var(--ag-signature-accent, var(--_accent));
+  text-decoration-color: currentColor;
+}
+.credit:focus-visible, .motion:focus-visible {
+  outline: 2px solid var(--ag-signature-accent, var(--_accent));
+  outline-offset: 4px;
+}
+.motion {
+  display: block;
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  min-block-size: 2.75rem;
+  margin: .25rem 0 0 calc(var(--ag-signature-size, 8rem) + var(--ag-signature-gap, 1rem));
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--ag-signature-muted, inherit);
+  font: inherit;
+  font-size: .75rem;
+  line-height: 1.4;
+  text-align: start;
+  text-decoration: underline;
+  text-underline-offset: .2em;
+  cursor: pointer;
+}
+.arc-particle {
+  animation-duration: 12s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-delay: var(--arc-phase);
+  animation-play-state: paused;
+  transform-box: view-box;
+  transform-origin: 0 0;
+}
+.arc-particle--near { animation-name: author-arc-near; }
+.arc-particle--far { animation-name: author-arc-far; animation-duration: 18s; }
+[data-arc-running="true"] .arc-particle { animation-play-state: running; }
+@media (max-width: 680px) {
+  .credit { flex-direction: column; align-items: flex-start; gap: .5rem; }
+  .mark, .text { flex: none; }
+  .motion { margin-inline-start: 0; }
+}
+@media (prefers-reduced-motion: reduce), (forced-colors: active) {
+  .arc-particle { animation: none; opacity: var(--arc-alpha); }
+}
+@media (forced-colors: active) {
+  .credit, .mark, .role, .motion { color: LinkText; }
+  .mark { --content-ink: LinkText; --tone-practice: LinkText; --running-dusk: LinkText; }
+  .arrow { forced-color-adjust: none; }
+}

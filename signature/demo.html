@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ru">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Авторская подпись · компонент</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: clamp(20px, 5vw, 64px); background: #eeede7; color: #343530; font: 16px/1.5 Arial, sans-serif; }
+  main { max-width: 1200px; margin: auto; }
+  h1 { margin: 0; font-size: clamp(26px, 3vw, 40px); line-height: 1.15; letter-spacing: -.025em; }
+  .intro { max-width: 660px; margin: 14px 0 28px; }
+  .examples { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+  .example { min-width: 0; padding: clamp(20px, 3vw, 40px); min-height: 330px; border: 1px solid #c9c9c2; display: flex; flex-direction: column; gap: 24px; }
+  .example h2 { margin: 0; font: 400 12px/1.5 Arial, sans-serif; letter-spacing: .04em; text-transform: uppercase; }
+  .light { background: #f6f5ef; color: #4d4d48; }
+  .dark { background: #11120f; color: #d0d0c9; border-color: #11120f; font-family: Georgia, serif; }
+  ag-signature { margin-block: auto; }
+  .tools { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; margin: 28px 0; }
+  button { font: inherit; color: inherit; background: transparent; border: 1px solid currentColor; padding: 8px 14px; min-height: 44px; cursor: pointer; }
+  a { color: inherit; text-underline-offset: .2em; }
+  :focus-visible { outline: 2px solid #2448ed; outline-offset: 4px; }
+  .detail { font-size: 14px; max-width: 760px; }
+  .text-large ag-signature { --ag-signature-name-size: 2.5rem; --ag-signature-role-size: 1.75rem; }
+  @media (max-width: 760px) { .examples { grid-template-columns: 1fr; } }
+</style>
+<main>
+  <h1>Одна подпись — разные сайты</h1>
+  <p class="intro">Принятый знак 07 как самостоятельный компонент. Эти примеры используют только стили этой страницы — CSS портфолио сюда не подключён.</p>
+  <div class="examples">
+    <section class="example light" aria-labelledby="light-title">
+      <h2 id="light-title">Светлая поверхность · Arial</h2>
+      <ag-signature theme="light" role-label="Дизайн и разработка">
+        <a href="https://gorokhovatsky.tech/" rel="author">Антон Гороховатский — Дизайн и разработка</a>
+      </ag-signature>
+    </section>
+    <section class="example dark" aria-labelledby="dark-title">
+      <h2 id="dark-title">Тёмная поверхность · Georgia</h2>
+      <ag-signature theme="dark" role-label="Дизайн и разработка">
+        <a href="https://gorokhovatsky.tech/" rel="author">Антон Гороховатский — Дизайн и разработка</a>
+      </ag-signature>
+    </section>
+  </div>
+  <div class="tools">
+    <button type="button" id="text-size" aria-pressed="false">Текст 200%</button>
+    <button type="button" id="component-load" aria-pressed="false">Показать без компонента</button>
+    <a href="https://github.com/anton-gorokhovatsky/design/blob/main/signature/README.md">Как подключить</a>
+    <a href="./1.0.0/signature.js">Версия 1.0.0</a>
+  </div>
+  <p class="detail">Версия 1.0.0. Общий модуль можно подключать на других сайтах. Кнопка «Показать без компонента» открывает эту страницу без загрузки модуля: остаются обычные ссылки.</p>
+</main>
+<script type="module">
+  const fallback = new URLSearchParams(location.search).has('fallback');
+  const loadButton = document.querySelector('#component-load');
+  loadButton.textContent = fallback ? 'Показать компонент' : 'Показать без компонента';
+  loadButton.setAttribute('aria-pressed', String(fallback));
+  loadButton.addEventListener('click', () => {
+    const url = new URL(location.href);
+    if (fallback) url.searchParams.delete('fallback'); else url.searchParams.set('fallback', '1');
+    location.href = url.href;
+  });
+  document.querySelector('#text-size').addEventListener('click', event => {
+    const enlarged = document.body.classList.toggle('text-large');
+    event.currentTarget.setAttribute('aria-pressed', String(enlarged));
+  });
+  if (!fallback) await import('./v1/signature.js');
+</script>
+</html>
