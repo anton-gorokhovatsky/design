@@ -1,5 +1,5 @@
 // Bundled with the accepted SVG and CSS by ../build.mjs. No runtime imports.
-export const VERSION = "1.0.3";
+export const VERSION = "1.0.4";
 const STYLE = __SIGNATURE_CSS__;
 const MARK = __SIGNATURE_SVG__;
 const template = document.createElement('template');
@@ -16,7 +16,8 @@ template.innerHTML = `<style>${STYLE}</style>
   </div>`;
 
 export class AGSignature extends HTMLElement {
-  static observedAttributes = ['role-label', 'paused', 'controls', 'lang'];
+  static observedAttributes = ['href', 'role-label', 'paused', 'controls', 'lang'];
+  #credit;
   #mark;
   #role;
   #name;
@@ -32,6 +33,7 @@ export class AGSignature extends HTMLElement {
     super();
     const shadow = this.attachShadow({ mode: 'open' });
     shadow.append(template.content.cloneNode(true));
+    this.#credit = shadow.querySelector('.credit');
     this.#mark = shadow.querySelector('.mark');
     this.#mark.setAttribute('part', 'mark');
     this.#role = shadow.querySelector('.role');
@@ -81,6 +83,7 @@ export class AGSignature extends HTMLElement {
   #stop = () => { this.#mark.dataset.arcRunning = 'false'; };
   #sync = () => {
     const doc = this.ownerDocument;
+    this.#credit.setAttribute('href', this.getAttribute('href')?.trim() || 'https://gorokhovatsky.tech/');
     const systemPaused = Boolean(this.#reduced?.matches || this.#contrast?.matches);
     const sitePaused = doc.documentElement.dataset.reduceMotion === 'true';
     const enabled = this.isConnected && !doc.hidden && this.#visible

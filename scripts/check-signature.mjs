@@ -32,6 +32,14 @@ try {
   await page.waitForFunction(version => [...document.querySelectorAll('ag-signature')].every(host => host.dataset.signatureVersion === version), version);
   assert.equal(await page.getByRole('link', { name: 'Антон Гороховатский Дизайн и разработка', exact: true }).count(), 1);
   assert.equal(await page.getByRole('link', { name: 'Anton Gorokhovatsky Design and development', exact: true }).count(), 1);
+  const authorLinks = page.locator('ag-signature .credit');
+  assert.deepEqual(await authorLinks.evaluateAll(links => links.map(link => link.href)),
+    ['https://gorokhovatsky.tech/', 'https://gorokhovatsky.tech/?point=shirokostup'], 'Default and project destinations remain native links');
+  const english = page.locator('ag-signature[lang="en"]');
+  await english.evaluate(host => host.removeAttribute('href'));
+  assert.equal(await english.locator('.credit').getAttribute('href'), 'https://gorokhovatsky.tech/', 'Removing href restores the default destination');
+  await english.evaluate(host => host.setAttribute('href', 'https://gorokhovatsky.tech/?point=shirokostup'));
+  assert.equal(await english.locator('.credit').getAttribute('href'), 'https://gorokhovatsky.tech/?point=shirokostup', 'Changing href updates the native link');
   await checkBounds('desktop: RU/light and EN/dark');
   const paints = await page.locator('ag-signature .mark').evaluateAll(marks => marks.map(m => getComputedStyle(m).color));
   assert.deepEqual(paints, ['rgb(36, 72, 237)', 'rgb(128, 148, 255)'], 'Explicit host themes do not inherit the wrong system palette');
@@ -61,9 +69,9 @@ try {
   await fallback.goto(`${server.origin}/signature/demo.html`, { waitUntil: 'load' });
   const links = fallback.locator('ag-signature a[rel="author"]');
   assert.equal(await links.count(), 2);
-  for (const link of await links.all()) {
+  for (const [index, link] of (await links.all()).entries()) {
     assert(await link.isVisible(), 'The author link survives without JavaScript');
-    assert.equal(await link.getAttribute('href'), 'https://gorokhovatsky.tech/');
+    assert.equal(await link.getAttribute('href'), ['https://gorokhovatsky.tech/', 'https://gorokhovatsky.tech/?point=shirokostup'][index]);
   }
   assert.equal(await fallback.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false, 'Fallback does not overflow');
   await fallback.close();
