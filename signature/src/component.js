@@ -1,5 +1,5 @@
 // Bundled with the accepted SVG and CSS by ../build.mjs. No runtime imports.
-export const VERSION = "1.0.4";
+export const VERSION = "1.0.5";
 const STYLE = __SIGNATURE_CSS__;
 const MARK = __SIGNATURE_SVG__;
 const template = document.createElement('template');
@@ -16,7 +16,7 @@ template.innerHTML = `<style>${STYLE}</style>
   </div>`;
 
 export class AGSignature extends HTMLElement {
-  static observedAttributes = ['href', 'role-label', 'paused', 'controls', 'lang'];
+  static observedAttributes = ['href', 'role-label', 'paused', 'controls', 'lang', 'layout'];
   #credit;
   #mark;
   #role;
@@ -82,6 +82,9 @@ export class AGSignature extends HTMLElement {
 
   #stop = () => { this.#mark.dataset.arcRunning = 'false'; };
   #sync = () => {
+    const compact = this.getAttribute('layout') === 'compact';
+    const parent = this.shadowRoot.querySelector(compact ? '.signature' : '.credit');
+    if (this.#mark.parentNode !== parent) parent.prepend(this.#mark);
     const doc = this.ownerDocument;
     this.#credit.setAttribute('href', this.getAttribute('href')?.trim() || 'https://gorokhovatsky.tech/');
     const systemPaused = Boolean(this.#reduced?.matches || this.#contrast?.matches);

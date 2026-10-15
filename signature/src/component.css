@@ -75,12 +75,12 @@
 .arrow {
   display: inline-block;
   box-sizing: content-box;
-  inline-size: .75rem;
-  block-size: .75rem;
-  margin-inline-start: .5em;
-  vertical-align: calc(1cap - .75rem - .09375rem);
-  border-top: .09375rem solid currentColor;
-  border-right: .09375rem solid currentColor;
+  inline-size: var(--ag-signature-arrow-size, .75rem);
+  block-size: var(--ag-signature-arrow-size, .75rem);
+  margin-inline-start: var(--ag-signature-arrow-gap, .5em);
+  vertical-align: calc(1cap - var(--ag-signature-arrow-size, .75rem) - var(--ag-signature-arrow-stroke, .09375rem));
+  border-top: var(--ag-signature-arrow-stroke, .09375rem) solid currentColor;
+  border-right: var(--ag-signature-arrow-stroke, .09375rem) solid currentColor;
   background: linear-gradient(135deg, transparent 43%, currentColor 44% 52%, transparent 53%);
 }
 .credit:is(:hover, :focus-visible) .name {
@@ -134,4 +134,23 @@
   .credit, .mark, .role, .motion { color: LinkText; }
   .mark { --content-ink: LinkText; --tone-practice: LinkText; --running-dusk: LinkText; }
   .arrow { forced-color-adjust: none; }
+}
+
+/* Opt-in footer layout: the decorative mark spans the credit and its control.
+   The default layout and accepted SVG remain unchanged. */
+:host([layout="compact"]) .signature {
+  display: grid;
+  grid-template-columns: minmax(0, var(--ag-signature-size, 8rem)) minmax(0, 1fr);
+  column-gap: var(--ag-signature-gap, 1rem);
+  align-items: start;
+}
+:host([layout="compact"]) .mark { grid-column: 1; grid-row: 1 / span 2; }
+:host([layout="compact"]) .credit { grid-column: 2; grid-row: 1; display: block; min-inline-size: 0; }
+:host([layout="compact"]) .text { min-inline-size: 0; }
+:host([layout="compact"]) .motion { grid-column: 2; grid-row: 2; display: flex; align-items: flex-start; margin: 0; padding-block-start: .25rem; }
+@media (max-width: 680px) {
+  :host([layout="compact"]) .signature { grid-template-columns: minmax(0, 1fr); row-gap: .5rem; }
+  :host([layout="compact"]) .mark { grid-column: 1; grid-row: 1; }
+  :host([layout="compact"]) .credit { grid-column: 1; grid-row: 2; }
+  :host([layout="compact"]) .motion { grid-column: 1; grid-row: 3; }
 }
