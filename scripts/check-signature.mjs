@@ -59,6 +59,7 @@ try {
   await page.setViewportSize({ width: 320, height: 568 });
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.reload({ waitUntil: 'load' });
+  await page.waitForFunction(version => [...document.querySelectorAll('ag-signature')].every(host => host.dataset.signatureVersion === version), version);
   await checkBounds('mobile: 320px and reduced motion');
   assert.equal(await page.getByRole('button', { name: 'Остановить движение', exact: true }).count(), 0, 'System reduction needs no decorative-motion switch');
   await page.getByRole('button', { name: 'Текст 200%', exact: true }).click();
