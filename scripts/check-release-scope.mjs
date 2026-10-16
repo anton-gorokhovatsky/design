@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { classifyChange, isCopyOnly, planRelease } from "./release-scope.mjs";
 import { reelSpecs } from "./reel-specs.mjs";
 import { browserMatrix, browserSteps, componentCoverage } from "./check-catalog.mjs";
+import { pointAddressPaths, pointAddressRename } from "./point-address-scope.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (path) => readFileSync(join(root, path), "utf8");
@@ -21,6 +22,71 @@ const panels = read("js/panels.js");
 const map = read("js/map-data.js");
 const route = read("js/observation-route.js");
 const html = read("index.html");
+// Reproduce the one-address release that previously selected the whole site.
+const addressFixture = {
+  'js/map-data.js': 'const mapItems = [{id: "parfyonov", x: 29, y: 73}];',
+  'js/map-engine.js': 'const turns = new Map([["parfyonov", 104]]);',
+  'js/sphere-surfaces.js': 'const profiles = {parfyonov: [1549, 6.2, 1, 0.55]};',
+  'styles.css': ':root {--parfyonov-burgundy: #7a3346;} .map-node--parfyonov {color: var(--parfyonov-burgundy)}',
+  'scripts/check-personal-media.mjs': 'select("parfyonov");',
+  'scripts/check-sphere-motion.mjs': 'const ids = ["parfyonov"];',
+  'js/panels.js': 'const applyUrlState = () => {\n  try {\n    const url = new URL(window.location.href);\n    const pointId = url.searchParams.get("point");\n  } finally {}\n};',
+};
+const aliasFixture = `    // Preserve published point and mobile-preview links after the slug rename.
+    let hasLegacyPoint = false;
+    for (const key of ["point", "preview"]) {
+      if (url.searchParams.get(key) === "parfyonov") {
+        url.searchParams.set(key, "parfenov");
+        hasLegacyPoint = true;
+      }
+    }
+    if (hasLegacyPoint) window.history.replaceState(window.history.state, "", url);
+`;
+const addressSources = Object.fromEntries(pointAddressPaths.map(path => {
+  const before = addressFixture[path];
+  let after = before.replaceAll('parfyonov', 'parfenov');
+  if (path === 'js/panels.js') after = after.replace('    const pointId', aliasFixture + '    const pointId');
+  return [path, { before, after }];
+}));
+assert.deepEqual(pointAddressRename(addressSources), {
+  from: 'parfyonov', to: 'parfenov', paths: pointAddressPaths,
+});
+for (const [path, mutate] of [
+  ['styles.css', value => value.replace('#7a3346', '#713c46')],
+  ['js/map-engine.js', value => value.replace('["parfenov", 104]', '["parfenov", 105]')],
+  ['js/map-data.js', value => value.replace('x: 29,', 'x: 30,')],
+  ['js/panels.js', value => value.replace('window.history.replaceState', 'window.history.pushState')],
+  ['js/panels.js', value => value.replace('=== "parfyonov"', '=== "wrong-old-address"')],
+  ['js/panels.js', value => value.replace('hasLegacyPoint = true;', 'hasLegacyPoint = true; run();')],
+]) {
+  const changed = structuredClone(addressSources);
+  changed[path].after = mutate(changed[path].after);
+  assert.notEqual(changed[path].after, addressSources[path].after, 'Negative fixture must change the source');
+  assert.equal(pointAddressRename(changed), null, `Not an address-only change: ${path}`);
+}
+const missingOwner = structuredClone(addressSources);
+missingOwner['styles.css'].after = missingOwner['styles.css'].before;
+assert.equal(pointAddressRename(missingOwner), null, 'A forgotten sphere selector cannot use the short lane');
+const addressDirectory = mkdtempSync(join(tmpdir(), 'point-address-scope-'));
+try {
+  const git = (...args) => execFileSync('git', ['-c', 'user.name=Scope test', '-c', 'user.email=scope@example.invalid', '-c', 'core.hooksPath=/dev/null', ...args], { cwd: addressDirectory, encoding: 'utf8', stdio: 'pipe' }).trim();
+  const put = (path, source) => { mkdirSync(dirname(join(addressDirectory, path)), { recursive: true }); writeFileSync(join(addressDirectory, path), source); };
+  git('init', '-b', 'main');
+  for (const [path, source] of Object.entries(addressSources)) put(path, source.before);
+  git('add', '.'); git('commit', '-m', 'published');
+  const base = git('rev-parse', 'HEAD');
+  for (const [path, source] of Object.entries(addressSources)) put(path, source.after);
+  const plan = () => planRelease({ projectRoot: addressDirectory, base });
+  assert.equal(plan().mode, 'components');
+  assert.equal(plan().staticScope, 'copy');
+  assert.deepEqual(plan().components, ['point-address']);
+  assert.deepEqual(plan().pointAddresses, [{ from: 'parfyonov', to: 'parfenov' }]);
+  assert.equal(plan().matrix.include.length, 2);
+  git('add', '.'); git('commit', '-m', 'address');
+  put('js/unrelated.js', 'export const changed = true;');
+  git('add', '.'); git('commit', '-m', 'unrelated behavior');
+  assert.equal(plan().mode, 'full', 'A rename cannot hide other unpublished behavior');
+} finally { rmSync(addressDirectory, { recursive: true, force: true }); }
 // The incident that prompted this lane: changing letter case inside runtime JS.
 change("js/panels.js", panels, "КОРОТКИЙ ОБЗОР", "Короткий обзор", true);
 change("js/map-data.js", map, "Самый важный профессиональный период:", "Профессиональный опыт:", true);
@@ -140,7 +206,7 @@ scoped("scripts/reel-specs.json", specSource, changeSpec(spec => spec.run = "cod
 
 // The complete old browser inventory remains mandatory, once per engine;
 // WebKit core retains all four viewport/theme profiles. No shard may disappear.
-const retainedChecks = ["signature", "case-flow", "personal-media", "inspector-links", "accessibility", "map-routes", "hover-layout", "whoop-ui", "first-visit", "command-placement", "sphere-motion", "case-view", "scroll-lens", "observation-route"];
+const retainedChecks = ["signature", "case-flow", "personal-media", "inspector-links", "point-address", "accessibility", "map-routes", "hover-layout", "whoop-ui", "first-visit", "command-placement", "sphere-motion", "case-view", "scroll-lens", "observation-route"];
 const fullMatrix = browserMatrix("full").include;
 assert.equal(new Set(fullMatrix.map(({ artifact }) => artifact)).size, fullMatrix.length);
 for (const browser of ["chromium", "webkit"]) {
@@ -166,6 +232,9 @@ for (const browser of ["chromium", "webkit"]) assert.deepEqual(
 );
 assert.equal(browserMatrix("full").include.length, 16);
 assert.deepEqual(browserMatrix("copy"), { include: [] });
+const addressMatrix = browserMatrix('components', ['point-address']).include;
+assert.equal(addressMatrix.length, 2);
+assert(addressMatrix.every(row => row.checks === 'point-address'));
 assert.throws(() => browserMatrix("components", []));
 assert.throws(() => browserMatrix("components", ["unknown"]));
 assert.throws(() => browserMatrix("skip"));
@@ -265,8 +334,8 @@ for (const path of ['signature/../styles.css', 'signature-other/src/component.js
 }
 for (const owner of ['signature', 'checks']) {
   const matrix = browserMatrix('components', [owner]).include;
-  assert.equal(matrix.length, 2);
-  assert(matrix.every(row => row.checks === 'signature' && row.runner === 'ubuntu-latest'));
+  assert.equal(matrix.length, owner === 'signature' ? 2 : 4);
+  assert(matrix.filter(row => row.checks === 'signature').every(row => row.runner === 'ubuntu-latest'));
 }
 assert(fullMatrix.filter(row => row.browser === 'webkit' && row.checks !== 'signature').every(row => row.runner === 'macos-15'), 'Portfolio WebKit retains native media coverage');
 const isolatedDirectory = mkdtempSync(join(tmpdir(), 'signature-release-scope-'));

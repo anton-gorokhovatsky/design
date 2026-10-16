@@ -18,6 +18,10 @@ for (const engine of ['chromium', 'webkit']) {
   assert.deepEqual(selected.reels, []);
   assert.deepEqual(selected.static, []);
   assert.deepEqual(selected.syntax, []);
+  const address = plan(`--scope=${engine}`, '--checks=point-address');
+  assert.deepEqual(address.browser.map(s => s.args), [['scripts/check-point-address.mjs', engine]]);
+  assert.deepEqual(address.reels, []);
+  assert.deepEqual(address.static, []);
 }
 const checks = plan('--scope=checks');
 assert.deepEqual(checks.static.map(s => s.args[0]), ['scripts/check-release-scope.mjs', 'scripts/check-release-quality.mjs', 'scripts/check-runner.mjs', 'scripts/check-signature-static.mjs', 'diff']);

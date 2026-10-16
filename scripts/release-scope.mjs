@@ -11,6 +11,7 @@ import { affectedComponents } from "./component-scope.mjs";
 import { isMediaOnly, mediaAssetPaths } from "./media-scope.mjs";
 import { ownedCheckComponent, staticScopeFor } from "./check-profiles.mjs";
 import { browserMatrix } from "./check-catalog.mjs";
+import { pointAddressPaths, pointAddressRename } from "./point-address-scope.mjs";
 
 // Only display fields in these data arrays are copy. Selectors, destinations,
 // identifiers, search rules, expressions and every other byte remain protected.
@@ -124,6 +125,15 @@ export const planRelease = ({ projectRoot, base = "origin/gh-pages", target } = 
     // Compare everything not yet published, not merely HEAD^ or the last push.
     const entries = git("diff", "--name-status", "--no-renames", "-z", baseSha, ...(targetSha ? [targetSha] : []), "--")
       .split("\0").filter(Boolean);
+    let pointRename = null;
+    if (entries.includes("js/map-data.js")) {
+      try {
+        pointRename = pointAddressRename(Object.fromEntries(pointAddressPaths.map(path => [path, {
+          before: git("show", `${baseSha}:${path}`),
+          after: targetSha ? git("show", `${targetSha}:${path}`) : readFileSync(resolve(projectRoot, path), "utf8"),
+        }])));
+      } catch { /* Missing owners cannot prove an address-only rename. */ }
+    }
     const changes = [];
     for (let index = 0; index < entries.length; index += 2) {
       const [status, path] = entries.slice(index, index + 2);
@@ -135,6 +145,7 @@ export const planRelease = ({ projectRoot, base = "origin/gh-pages", target } = 
         classification = classifyChange(path, before, after);
       }
       if (status === "M" && mediaAssetPaths.has(path)) classification = { mode: "components", components: ["media"] };
+      if (status === "M" && pointRename?.paths.includes(path)) classification = { mode: "components", components: ["point-address"] };
       changes.push({ path, ...classification });
     }
     if (!targetSha) {
@@ -146,6 +157,7 @@ export const planRelease = ({ projectRoot, base = "origin/gh-pages", target } = 
     const mode = fullPaths.length ? "full" : components.length ? "components" : "copy";
     return {
       mode, staticScope: staticScopeFor(mode, components), base: baseSha, components, matrix: browserMatrix(mode, components),
+      pointAddresses: pointRename ? [{ from: pointRename.from, to: pointRename.to }] : [],
       reason: fullPaths.length ? `Shared or unclassified changes: ${fullPaths.join(", ")}`
         : components.length ? `Affected components and their integration checks: ${components.join(", ")}`
           : "Only display text, generated cache keys or documentation changed.",
@@ -167,5 +179,5 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const plan = planRelease(options);
   console.log(JSON.stringify(plan, null, 2));
   if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT,
-    `mode=${plan.mode}\nstatic-scope=${plan.staticScope}\nmatrix=${JSON.stringify(plan.matrix)}\n`);
+    `mode=${plan.mode}\nstatic-scope=${plan.staticScope}\nmatrix=${JSON.stringify(plan.matrix)}\npoint-addresses=${JSON.stringify(plan.pointAddresses || [])}\n`);
 }

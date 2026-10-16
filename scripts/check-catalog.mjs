@@ -5,6 +5,7 @@ export const componentChecks = {
   "case-flow": "Case reading lifecycle",
   "personal-media": "Personal video lifecycle",
   "inspector-links": "Inspector destination links",
+  "point-address": "Canonical and legacy point addresses",
   accessibility: "Accessibility, painted contrast and text reflow",
   "map-routes": "Map route geometry",
   "hover-layout": "Hover preview and persistent consoles",
@@ -21,7 +22,8 @@ export const componentChecks = {
 // including consent and keyboard behavior, instead of duplicating a weaker test.
 export const componentCoverage = {
   signature: ["signature"],
-  checks: ["signature"],
+  checks: ["signature", "point-address"],
+  "point-address": ["point-address"],
   media: ["reels", "case-view", "case-flow", "hover-layout", "observation-route"],
   settings: ["core", "accessibility", "whoop-ui"],
   whoop: ["core", "accessibility", "whoop-ui", "hover-layout", "first-visit"],
@@ -33,7 +35,7 @@ export const checkIds = ["core", "reels", ...Object.keys(componentChecks)];
 const shards = {
   reading: ["case-flow", "personal-media", "case-view"],
   interface: ["accessibility", "whoop-ui", "first-visit", "command-placement"],
-  map: ["map-routes", "hover-layout", "sphere-motion", "inspector-links"],
+  map: ["map-routes", "hover-layout", "sphere-motion", "inspector-links", "point-address"],
   motion: ["scroll-lens", "observation-route"],
 };
 const webkitScenarios = ["390x844-light", "390x844-dark", "320x568-light", "320x568-dark"];

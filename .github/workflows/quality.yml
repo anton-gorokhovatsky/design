@@ -16,6 +16,7 @@ jobs:
     outputs:
       mode: ${{ steps.scope.outputs.mode }}
       matrix: ${{ steps.scope.outputs.matrix }}
+      point-addresses: ${{ steps.scope.outputs.point-addresses }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -60,6 +61,7 @@ jobs:
       PORTFOLIO_UI_ARTIFACT_DIR: artifacts/${{ matrix.artifact }}
       PORTFOLIO_AUDIT_DIR: artifacts/${{ matrix.artifact }}
       PORTFOLIO_WEBKIT_SCENARIO: ${{ matrix.scenario }}
+      PORTFOLIO_POINT_ADDRESSES: ${{ needs.static-contracts.outputs.point-addresses }}
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
