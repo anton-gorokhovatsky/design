@@ -4116,7 +4116,7 @@ body:has(.command-dock.is-open) .origin-marker__label {
 
 
     border: 0;
-    border-radius: var(--window-radius);
+
     background: var(--material-01);
     box-shadow: none;
     corner-shape: var(--corner-card-shape);
@@ -4127,7 +4127,7 @@ body:has(.command-dock.is-open) .origin-marker__label {
 
   .system-dock .map-controls {
 
-    padding: 0;
+
     border: 0;
     border-radius: 0;
     background: transparent;
@@ -4796,9 +4796,7 @@ body:has(.command-dock.is-open) .origin-marker__label {
     display: none;
   }
 
-  .system-dock {
-    padding: 4px 0;
-  }
+
 
   .system-dock .map-controls {
 
@@ -4806,8 +4804,8 @@ body:has(.command-dock.is-open) .origin-marker__label {
     flex: 1 1 auto;
     flex-direction: row;
     display: grid;
-    width: 100%;
-    height: 40px;
+
+
     grid-template-columns: repeat(5, minmax(0, 1fr));
     align-items: center;
     gap: 0;
@@ -8379,10 +8377,7 @@ html[data-focus-modality="keyboard"]
 }
 
 @media (max-width: 900px) {
-  .system-dock {
-    display: flex;
-    height: 60px;
-  }
+
 
   .system-dock .map-controls,
   .system-dock .map-control-group--filters {
@@ -8399,18 +8394,18 @@ html[data-focus-modality="keyboard"]
   }
 
   .system-dock .map-control {
-    width: auto;
+
     min-width: 32px;
     height: 52px;
-    min-height: 52px;
+
     flex: 1 1 auto;
     grid-template-areas:
       "symbol"
       "label";
     grid-template-rows: 16px auto;
     align-content: center;
-    gap: 5px;
-    padding: 4px 1px 3px;
+
+
   }
 
   .system-dock .map-control > .map-control__symbol {
@@ -9909,44 +9904,6 @@ body.has-reading-surface:not(.has-contact-consoles) .system-dock :is(.map-contro
 .case-figure { margin: var(--space-5) 0 0; white-space: normal; }
 .case-figure img { display: block; width: 100%; height: auto; object-fit: contain; border-radius: var(--window-radius); corner-shape: var(--corner-card-shape); }
 .case-figure figcaption { margin-top: var(--space-2); color: var(--content-muted); text-wrap: pretty; }
-/* MATERIAL / 01 CASCADE CONTRACT
-   The registry controls the rendered material. Component rules may define
-   geometry and type, but cannot substitute a local fill, border, shadow, or
-   blur for an active registered interface surface. */
-
-[data-material-surface][data-material-active="always"]:not(
-    .is-content-stack-hidden
-  ),
-.map-node-label[data-material-surface][data-material-active="always"] {
-  border: 0;
-  background: var(--material-01);
-  box-shadow: none;
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-}
-
-@media (min-width: 901px) {
-  [data-material-surface][data-material-active="desktop"] {
-    border: 0;
-    background: var(--material-01);
-    box-shadow: none;
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-  }
-}
-
-@media (max-width: 900px) {
-  [data-material-surface][data-material-active="mobile"] {
-    border: 0;
-    background: var(--material-01);
-    box-shadow: none;
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-  }
-}
-
-
-
 /* Interactive primitives: shared roles, no per-window hover geometry. */
 .ui-close {
   display: grid;
@@ -10392,4 +10349,586 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
   .map-space-label.map-node-label--west { transform: translate(calc(-100% - var(--label-offset)), -50%); }
   .map-space-label--north { transform: translate(-50%, calc(-100% - var(--label-offset))); }
   .map-space-label--south { transform: translate(-50%, var(--label-offset)); }
+}
+
+/* Mobile directions, previews and persistent navigation. */
+.mobile-first-dock { display: contents; }
+.mobile-first-cases, .mobile-first-composition, .mobile-composition-heading { display: none; }
+
+@media (max-width: 900px) {
+  .map-labels { display: block; top: var(--mobile-map-top); bottom: var(--mobile-map-reserve); }
+  .mobile-first-dock {
+    --dock-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    --dock-column-gap: 16px;
+    --dock-tool-size: 20px;
+    --dock-tool-stroke: 1.8;
+    --dock-first-line-offset: max(0px, calc((28px - var(--type-item) * 1.2) / 2));
+    --dock-groove-shadow: rgb(0 0 0 / .18);
+    --dock-groove-light: rgb(255 255 255 / .85);
+    position: fixed;
+    inset: auto 8px var(--mobile-console-bottom);
+    z-index: 38;
+    display: grid;
+    padding: 12px 16px 8px;
+    border-radius: var(--window-radius);
+    corner-shape: var(--corner-card-shape);
+    color: var(--content-ink);
+    pointer-events: auto;
+  }
+  .mobile-first-paths {
+    position: relative;
+
+    grid-template-columns: var(--dock-columns);
+    column-gap: var(--dock-column-gap);
+    align-items: start;
+
+    padding-bottom: 16px;
+  }
+  .mobile-first-paths::after {
+     position: absolute; inset: auto 0 0; height: 6px; pointer-events: none;
+    background: linear-gradient(to bottom, transparent 0%, var(--dock-groove-shadow) 30%, transparent 58%, var(--dock-groove-light) 78%, transparent 100%);
+    filter: blur(.35px);
+    mask-image: linear-gradient(to right, transparent, #000 16px, #000 calc(100% - 16px), transparent);
+  }
+  html[data-theme="dark"] .mobile-first-dock {
+    --dock-groove-shadow: rgb(0 0 0 / .45);
+    --dock-groove-light: rgb(255 255 255 / .16);
+  }
+  .mobile-first-dock .origin-marker__label {
+    position: static;
+    display: grid;
+
+    align-items: start;
+    width: auto;
+    max-width: none;
+    min-height: 48px;
+    padding: 0;
+
+    transform: none;
+    font-size: var(--type-item);
+  }
+  .mobile-first-dock .origin-marker__control {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+    aspect-ratio: 1;
+    align-self: start;
+    margin-top: max(0px, calc((var(--type-item) * 1.2 - 28px) / 2));
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .mobile-first-dock .origin-marker__text {  padding-top: var(--dock-first-line-offset); text-align: left; }
+  .mobile-first-dock .origin-marker__title { font-size: var(--type-item); line-height: 1.2; }
+  .mobile-first-dock .origin-marker__caption { font-size: var(--type-detail);  white-space: normal; }
+  .mobile-first-cases {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 8px;
+    min-height: 48px;
+
+    color: inherit;
+    font-size: var(--type-item);
+    line-height: 1.2;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .mobile-first-cases svg { flex: none; width: 24px; height: 24px;  fill: none; stroke: currentColor; stroke-width: 1.5; }
+  .mobile-first-tools {  grid-template-columns: var(--dock-columns);   padding-top: 4px; }
+  .control-console .mobile-first-dock .command-dock {
+    position: static;
+    inset: auto;
+    display: grid;
+    grid-template-columns: 28px minmax(0,1fr);
+    width: auto;
+    min-width: 0;
+    min-height: 48px;
+    height: auto;
+    padding: 0;
+    gap: 12px;
+    border-radius: 0;
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .mobile-first-dock .command-dock input { padding: 0; font-size: var(--type-body); width: 100%; }
+  .mobile-first-dock .command-dock__mark { width: var(--dock-tool-size); height: var(--dock-tool-size); justify-self: center; }
+  .mobile-first-dock .command-dock__mark::before,
+  .mobile-first-dock .command-dock__mark::after { content: none; }
+  .mobile-first-dock :is(.command-dock__mark, .focused-map-open, .mobile-first-composition) svg {
+    display: block;
+    flex: none;
+    width: var(--dock-tool-size);
+    height: var(--dock-tool-size);
+    fill: none;
+    stroke: currentColor;
+    stroke-width: var(--dock-tool-stroke);
+  }
+  .mobile-first-dock .command-dock__submit { position: absolute; visibility: hidden; width: 0; overflow: hidden; }
+  .mobile-first-composition {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    min-height: 48px;
+    padding: 0;
+    color: inherit;
+    font-size: var(--type-detail);
+    text-align: left;
+    background: transparent;
+    cursor: pointer;
+  }
+  .mobile-first-composition[aria-expanded="true"] svg { transform: rotate(180deg); }
+  .mobile-first-dock :is(a,button):focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+  .mobile-first-dock :is(a,button):hover { color: var(--signal); }
+
+  .system-dock {
+    display: none;
+    inset: auto 8px calc(var(--mobile-first-dock-height, 124px) + var(--mobile-console-bottom) + 8px);
+    width: auto;
+    height: auto;
+    min-height: 0;
+    max-height: calc(100dvh - var(--mobile-first-dock-height, 124px) - var(--mobile-console-bottom) - 24px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 8px 16px 12px;
+    border-radius: var(--window-radius);
+    z-index: 39;
+  }
+  body.has-mobile-composition .system-dock { display: block; }
+  .mobile-composition-heading { display: flex; align-items: center; justify-content: space-between; min-height: 44px; font-size: var(--type-body); font-weight: 600; }
+  .mobile-composition-heading button { display: grid; place-items: center; width: 44px; height: 44px; background: transparent; color: inherit; }
+  .mobile-composition-heading svg { width: 20px; height: 20px; stroke: currentColor; stroke-width: 1.5; }
+  .system-dock .map-controls { width: 100%; height: auto; min-height: 0; padding: 0; }
+  .system-dock .map-control-group--filters { display: grid; grid-template-columns: 1fr; gap: 4px; width: 100%; }
+  .system-dock .map-control-group__label { display: none; }
+  .system-dock .map-control { display: flex; flex-direction: row; justify-content: flex-start; gap: 16px; width: 100%; min-height: 44px; padding: 0 8px; }
+  .system-dock .map-control > span:last-child { font-size: var(--type-detail); text-transform: none; }
+
+  body:is(.has-content-panel,[data-case-open],.has-settings-panel):not(.has-command-focus) .mobile-first-dock,
+  body:has(.map-inspector.is-open) .mobile-first-dock,
+  body.has-constellation-nav .mobile-first-dock { visibility: hidden; pointer-events: none; }
+  body.has-command-focus .mobile-first-dock { background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; }
+  body.has-command-focus :is(.mobile-first-paths,.mobile-first-composition) { visibility: hidden; }
+  body.has-command-focus .control-console .mobile-first-dock .command-dock {
+    position: fixed;
+    top: calc(var(--command-focus-top, calc(100dvh - 56px)) - env(safe-area-inset-bottom));
+    right: auto;
+    bottom: auto;
+    left: var(--command-focus-left, 8px);
+    width: var(--command-focus-width, calc(100vw - 16px));
+    grid-template-columns: 24px minmax(0,1fr) 48px;
+    padding-inline: 12px 0;
+    min-height: 48px;
+    border-radius: var(--window-radius);
+    background: var(--material-01);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+  body.has-command-focus .mobile-first-dock .command-dock__submit { position: static; visibility: visible; width: 48px; }
+
+  .map-node-label.mobile-landmark {
+    display: inline-flex;
+    max-width: 140px;
+    padding: 5px 8px;
+    border-radius: 10px;
+    font-size: var(--type-utility);
+    line-height: 1.2;
+    white-space: normal;
+    text-wrap: balance;
+    opacity: 1;
+    pointer-events: auto;
+    cursor: pointer;
+
+  }
+  .mobile-landmark[data-map-label-id="garage"] { font-size: var(--type-detail); font-weight: 600; }
+  .mobile-landmark[data-map-label-id="narkomfin"] { transform: translate(-40%, var(--label-offset)); }
+  .mobile-landmark[data-map-label-id="private-practice"] { top: calc(var(--y) + var(--layer-mid-y)); transform: translate(-50%, calc(-100% - var(--label-offset))); }
+  .mobile-landmark[data-map-label-id="ks-fish"] { transform: translate(calc(-100% - var(--label-offset)), -50%); max-width: 100px; }
+  .mobile-landmark[data-map-label-id="eleven"] { transform: translate(var(--label-offset), -50%); }
+  .mobile-landmark[data-map-label-id="running"] { transform: translate(var(--label-offset), -50%); }
+  .mobile-landmark[data-map-label-id="principle-data-intuition"] { transform: translate(-30%, var(--label-offset)); max-width: 110px; }
+  .map-node-label.mobile-landmark { transform: translate(var(--mobile-label-dx, -50%), var(--mobile-label-dy, -100%)); }
+  body:is(.has-reading-surface,.has-command-focus,.has-constellation-nav,.has-mobile-composition) .mobile-landmark,
+  .practice-map[data-time-view] .mobile-landmark,
+  .practice-map[data-observation-active] .mobile-landmark,
+  .mobile-landmark[data-mobile-hidden],
+  .mobile-landmark[data-mobile-no-space] { opacity: 0; pointer-events: none; }
+}
+
+/* Local variant 04: the same map-first journey, with lighter framing and readable relationships. */
+.focused-home, .focused-map-open, .focused-return, .point-preview { display: none; }
+.direction-landmark__kind { display: none; }
+@media (max-width: 900px) {
+  /* Switching map scope must not move a target while the visitor taps it. */
+  body[data-mobile-preview-ui] .practice-map:not([data-observation-active],[data-time-view]) .map-node { transition-property: opacity, transform, filter; }
+  body[data-mobile-preview-ui] .practice-map:not([data-observation-active],[data-time-view]) .map-node-label { transition-property: opacity; }
+  body.has-focused-home .focused-home {
+    position: absolute; z-index: 18; inset: 0 0 calc(var(--mobile-first-dock-height, 124px) + var(--mobile-console-bottom) + 8px);
+    display: block; padding: 20px 20px 8px; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; color: var(--ink);
+  }
+  /* The author is an open signature on the map; disclosed surfaces keep MATERIAL / 01. */
+  .focused-home .site-header[data-material-surface] {
+    position: relative; inset: auto; width: 100%; min-width: 0; max-width: none; max-height: none;
+    margin: 0 0 12px; padding: 0; overflow: visible; background: none; border: 0; box-shadow: none;
+    backdrop-filter: none; -webkit-backdrop-filter: none;
+  }
+  .focused-home .brand { max-height: none; }
+  .focused-home .whoop-readout { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: var(--space-3); }
+  .focused-home .whoop-readout[hidden] { display: none; }
+  .focused-home .whoop-metrics { flex-basis: 100%; }
+  .focused-home .whoop-status { order: 1; margin-top: 0; }
+  .focused-home .whoop-foot { order: 2; }
+  .focused-home .whoop-readout[data-unavailable="true"] .whoop-foot time { display: none; }
+  .focused-home__map { position: relative; overflow: clip;   }
+  .focused-home .map-camera, .focused-home .map-labels { inset: 0; transform: none; }
+  .focused-home .map-camera { perspective: none; transition: none; }
+  .focused-home :is(.map-nodes, .map-links) { transform: none; }
+  .focused-home :is(.origin-marker, .map-axis-label, .map-depth-grid, .map-specks) { display: none; }
+  .focused-home .map-node:not([data-map-id="garage"], [data-map-id="narkomfin"], [data-map-id="private-practice"], [data-map-id="eleven"], [data-map-id="ks-fish"], [data-map-id="principle-data-intuition"], [data-map-id="running"], [data-map-id="youtube"]) { display: none; }
+  .focused-home .map-node { --node-scale: 1; --map-target-scale: 1; --map-target-size: 48px; transform: translate(-50%, -50%); }
+  .focused-home .map-node--garage { --map-target-size: 76px; }
+  .focused-home .map-node--garage .map-node__glyph { width: 76px; height: 76px; transform: none; }
+  .focused-home .map-node--running .map-node__glyph { width: 48px; height: 48px; transform: none; }
+  .focused-home .map-node--youtube .map-node__glyph { width: 30px; height: 30px; transform: none; }
+  .focused-home .map-node[data-map-id="private-practice"] .map-node__glyph { width: 32px; height: 32px; transform: none; }
+  .focused-home .map-node[data-map-id="narkomfin"] .map-node__glyph { width: 26px; height: 26px; transform: none; }
+  .focused-home .map-links path { display: none !important; }
+  .focused-home .map-links path:where([data-parent-id="garage"][data-child-id="narkomfin"], [data-parent-id="private-practice"][data-child-id="eleven"], [data-parent-id="private-practice"][data-child-id="ks-fish"]) {
+    display: block !important; stroke-dasharray: none; opacity: 1;
+    stroke-width: 1; vector-effect: non-scaling-stroke;
+  }
+  .focused-home .map-links path:not(.is-active-relation) { stroke: color-mix(in srgb, var(--content-ink) 36%, transparent); }
+  .focused-home .map-links.has-active-relation path:not(.is-active-relation) { opacity: .4; }
+  .focused-home .map-links path.is-active-relation { opacity: .85; }
+  .focused-home .map-labels .map-node-label { display: none; }
+  .focused-home .map-labels .direction-landmark {
+    display: grid; gap: 4px; padding: 5px 7px; max-width: 150px; font-size: var(--type-detail); line-height: 1.25; text-align: center;
+    white-space: normal; text-wrap: balance; opacity: 1; pointer-events: auto; cursor: pointer; transform: translate(-50%, 20px);
+  }
+  .direction-landmark__kind { display: none; }
+  .focused-home .direction-landmark__kind { display: block; font-size: var(--type-caption); font-weight: 400; letter-spacing: .045em; }
+  .focused-home .map-labels .direction-landmark:has(small) { padding: 0; background: none; backdrop-filter: none; font-weight: 600; font-size: var(--type-detail); }
+  .focused-home .map-labels [data-map-label-id="garage"] { transform: translate(-50%, calc(-100% - 44px)); white-space: nowrap; max-width: none; }
+  .focused-home .map-labels [data-map-label-id="private-practice"] { transform: translate(-50%, calc(-100% - 24px)); max-width: 168px; }
+  .focused-home .map-labels [data-map-label-id="principle-data-intuition"] { transform: translate(-50%, 22px); max-width: 120px; }
+  .focused-home .map-labels [data-map-label-id="running"] { transform: translate(34px, -50%); text-align: left; }
+  .focused-home .map-labels [data-map-label-id="youtube"] { transform: translate(-50%, 22px); background: none; backdrop-filter: none; padding: 0; font-size: var(--type-utility); }
+
+  body[data-mobile-large-text] .focused-home .map-labels .direction-landmark { max-width: calc(100% - 24px); }
+  body[data-mobile-large-text] .focused-home .map-labels [data-map-label-id="garage"] {
+    left: 0; transform: translate(0, calc(-100% - 44px)); white-space: normal; text-align: left;
+  }
+  body[data-mobile-large-text] .focused-home .map-labels :is([data-map-label-id="narkomfin"], [data-map-label-id="private-practice"]) { left: auto; right: 0; text-align: right; }
+  body[data-mobile-large-text] .focused-home .map-labels [data-map-label-id="narkomfin"] { transform: translate(0, 24px); }
+  body[data-mobile-large-text] .focused-home .map-labels [data-map-label-id="private-practice"] { transform: translate(0, calc(-100% - 24px)); }
+  body[data-mobile-large-text] .focused-home .map-labels [data-map-label-id="principle-data-intuition"] { left: 0; transform: translate(0, 26px); text-align: left; }
+  body.has-focused-home [data-mobile-composition] { display: none; }
+  body.has-focused-home .focused-map-open { display: inline-flex; }
+  .focused-map-open { align-items: center; justify-content: flex-start; gap: 8px; min-height: 48px; padding: 0; color: inherit; background: none; font-size: var(--type-detail); text-align: left; cursor: pointer; }
+  body.has-full-mobile-map .focused-return { position: absolute; z-index: 20; display: flex; align-items: center; gap: 8px; top: calc(var(--focused-author-bottom, 172px) + 4px); left: 20px; min-height: 48px; padding: 0; background: none; color: var(--ink); font-size: var(--type-detail); }
+  .focused-return:focus-visible { outline: 2px solid var(--signal); outline-offset: 4px; }
+  .point-preview:not([hidden]) {
+    position: fixed; z-index: 37; display: block; inset: auto 12px calc(var(--mobile-first-dock-height, 124px) + var(--mobile-console-bottom) + 12px);
+    padding: 16px; max-height: min(52dvh, 460px); overflow: auto; overscroll-behavior: contain; border-radius: var(--window-radius); corner-shape: var(--corner-card-shape); color: var(--content-ink);
+  }
+  .point-preview[data-placement="above"] {
+    top: var(--preview-top);
+    bottom: auto;
+    max-height: min(52dvh, 460px, calc(100dvh - var(--preview-top) - var(--mobile-first-dock-height, 124px) - var(--mobile-console-bottom) - 12px));
+  }
+  .point-preview__close { position: absolute; inset: 4px 4px auto auto; width: 48px; height: 48px; display: grid; place-items: center; background: none; color: inherit; }
+  .point-preview__close svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.5; }
+  .point-preview__head { display: flex; flex-wrap: wrap; gap: 12px; padding-right: 32px; align-items: start; }
+  .point-preview__head > div { flex: 1 1 10rem; min-width: 0; }
+  .point-preview__image { flex: none; width: 96px; height: 64px; object-fit: contain; border-radius: 6px; }
+  .point-preview__image[hidden] { display: none; }
+  .point-preview__kind { margin: 0 0 4px; font-size: var(--type-caption); line-height: 1.35; }
+  .point-preview h2 { margin: 0; font-size: var(--type-item); line-height: 1.15; font-weight: 600; letter-spacing: -.02em; }
+  .point-preview h2:focus-visible { outline: 2px solid var(--signal); outline-offset: 4px; }
+  .point-preview__description { margin: 12px 0 4px; font-size: var(--type-detail); line-height: 1.4; }
+  .point-preview__link { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; color: inherit; font-size: var(--type-detail); font-weight: 600; text-decoration: none; }
+  .point-preview__link span { text-decoration: underline; text-underline-offset: 3px; }
+  .point-preview__link svg { width: 24px; height: 24px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.5; }
+  .point-preview :is(a,button):focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+  body:is(.has-content-panel,[data-case-open],.has-settings-panel,.has-command-focus,.has-constellation-nav) :is(.focused-home,.focused-return,.point-preview),
+  body:has(.map-inspector.is-open) :is(.focused-home,.focused-return,.point-preview) { visibility: hidden; pointer-events: none; }
+  body.has-command-focus .focused-map-open { visibility: hidden; }
+}
+
+/* Contribution labels shared by the work list, case and point preview. */
+.work-tags {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  color: var(--content-muted);
+  font-family: var(--content-font);
+  font-size: var(--type-detail);
+  font-weight: 400;
+  line-height: var(--leading-label);
+  letter-spacing: 0;
+  text-transform: none;
+}
+.work-tags__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font: inherit;
+}
+.work-tags__list > li { max-width: 100%; overflow-wrap: anywhere; }
+.content-panel .work-row > .work-tags {
+  grid-column: 3;
+  grid-row: 3;
+  margin-top: var(--space-3);
+}
+.content-panel .work-row:has(.work-tags) .work-row__domain { grid-row: 4; }
+.map-readout__identity > .work-tags { margin-block: var(--space-3); }
+.point-preview > .work-tags { margin-block: var(--space-3) var(--space-2); }
+
+/* Open typographic boundaries, without a button surface. */
+.work-tags__list > li {
+  display: inline-flex;
+  align-items: baseline;
+  gap: .2em;
+}
+.work-tags__list > li > span { min-width: 0; }
+.work-tags__list > li::before { content: '['; margin: 0; }
+.work-tags__list > li::after { content: ']'; }
+
+@media (max-width: 900px) {
+  .content-panel .work-row > .work-tags { grid-column: 2; grid-row: 3; }
+  .content-panel .work-row:has(img.work-row__preview) > .work-tags { grid-row: 4; }
+  .content-panel .work-row:has(img.work-row__preview):has(.work-tags) .work-row__domain { grid-row: 5; }
+}
+
+/* Direct manipulation of the mobile map volume. */
+.spatial-intro, .spatial-search, .spatial-field { display: none; }
+@media (max-width: 900px) {
+  body.has-focused-home .spatial-intro {
+    display: block; margin: 0 0 12px; color: var(--content-ink);
+    font-size: var(--type-detail); line-height: var(--leading-body);
+  }
+  .spatial-intro span { display: block; }
+  .spatial-intro span + span {
+    margin-top: var(--space-1); color: var(--content-muted);
+    font-size: var(--type-utility);
+  }
+  .focused-home .site-header[data-material-surface] { margin-bottom: var(--space-5); }
+  .focused-home .whoop-readout[data-unavailable="true"] .whoop-metrics { display: none; }
+  .focused-home__map {
+    height: calc(100dvh - var(--focused-author-height, 160px) - var(--mobile-first-dock-height, 112px) - var(--spatial-guide-height, 54px) - 56px);
+    min-height: 410px; touch-action: pan-y; isolation: isolate;
+  }
+  .focused-home__map[data-dragging] { cursor: grabbing; }
+  .focused-home :is(.orbital-radar, .orbital-horizon, .orbital-terminator, .map-grid, .map-axis, .map-links) { display: none; }
+  .focused-home .spatial-field {
+    display: block; position: absolute; inset: 0; width: 100%; height: 100%;
+    overflow: visible; pointer-events: none; z-index: 1;
+  }
+  /* The field's axes and guides are behind the solid objects, within one stack. */
+  .focused-home .map-camera { z-index: 2; }
+  .spatial-field path { fill: none; vector-effect: non-scaling-stroke; }
+  .spatial-orbit { stroke: var(--content-ink); stroke-width: .65; opacity: .12; }
+  .spatial-orbit--back { opacity: .07; }
+  .spatial-axis { stroke: var(--content-ink); stroke-width: .65; opacity: .2; }
+  .spatial-relation { stroke: var(--content-ink); stroke-width: 1; opacity: .38; }
+  .spatial-relation[data-selected] { stroke: var(--map-focus-accent, var(--signal)); opacity: .8; }
+  .focused-home .map-node, .focused-home .map-labels .direction-landmark {
+    translate: var(--spatial-dx, 0px) var(--spatial-dy, 0px);
+  }
+  .focused-home .map-node { transition: opacity 180ms var(--motion-enter); }
+  .focused-home .map-node__glyph { scale: var(--spatial-scale, 1); }
+  .focused-home .map-node[data-spatial-muted],
+  .focused-home .map-labels .direction-landmark[data-spatial-muted] { opacity: .42; }
+  .focused-home .map-node--sphere[data-spatial-muted] { opacity: 1; filter: saturate(.35); }
+  .focused-home .map-node-label { user-select: none; -webkit-user-select: none; }
+  .focused-home .map-labels .direction-landmark { transition: opacity 180ms var(--motion-enter); }
+  .focused-home .map-node__glyph { transition: none; }
+  .focused-home .map-node.is-selected { z-index: 8; }
+  .focused-home .map-labels .direction-landmark[data-spatial-selected] { z-index: 8; }
+  .focused-home .signal-constellation { opacity: .65; }
+
+  /* Four independently operable targets, grouped by alignment and proximity. */
+  .mobile-first-dock[data-material-surface] {
+    inset-inline: 20px;
+    background: none; border: 0; border-radius: 0; box-shadow: none;
+    backdrop-filter: none; -webkit-backdrop-filter: none;
+    --dock-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  }
+
+  .mobile-first-paths::after { content: none; }
+
+  .mobile-first-dock .origin-marker__label { grid-template-columns: 24px minmax(0,1fr); gap: 8px; }
+  .mobile-first-dock .origin-marker__control[data-material-surface] {
+    width: 24px; height: 24px; min-width: 24px; min-height: 24px;
+    margin: 0; border: 0; box-shadow: none; background: none; border-radius: 0;
+    backdrop-filter: none; -webkit-backdrop-filter: none;
+  }
+  .mobile-first-dock .origin-marker__control svg { width: 24px; height: 24px; }
+  .mobile-first-dock .origin-marker__text { padding: 0; gap: 4px; }
+  .mobile-first-cases { padding: 0; }
+  .mobile-first-cases__text { display: grid; gap: var(--space-1); }
+  .mobile-first-cases__title { display: flex; align-items: center; gap: var(--space-2); }
+  .mobile-first-dock .mobile-first-cases__caption {
+    font-size: var(--type-detail); line-height: var(--leading-label); font-weight: 400;
+  }
+  .mobile-first-cases svg { margin-top: 0; }
+  .mobile-first-dock :is(.origin-marker__title, .mobile-first-cases) { line-height: 24px; }
+  .mobile-first-dock .origin-marker__caption { line-height: var(--leading-label); }
+  .spatial-search {
+    display: inline-flex; gap: 12px; align-items: center; justify-content: flex-start;
+    min-width: 0; min-height: 48px; padding: 0; background: none; color: inherit;
+    font-size: var(--type-detail); line-height: var(--leading-label); cursor: pointer;
+  }
+  .spatial-search svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; flex: none; }
+  .mobile-first-dock :is(.focused-map-open, .mobile-first-composition) { flex-direction: row-reverse; justify-content: flex-end; gap: 8px; }
+  body:not(.has-command-focus) .control-console .mobile-first-dock .command-dock {
+    position: absolute; width: 1px; min-width: 0; height: 1px; min-height: 0;
+    inset: 0 auto auto 0; padding: 0; overflow: hidden; clip-path: inset(50%); pointer-events: none;
+  }
+  body.has-command-focus .spatial-search { visibility: hidden; }
+  body.has-command-focus .mobile-first-dock .command-dock { clip-path: none; }
+  html[data-focus-modality="keyboard"] .focused-home :is(.map-node, .direction-landmark) { transition: none; }
+  html[data-reduce-motion="true"] .focused-home :is(.map-node, .direction-landmark) { transition: none; }
+  html[data-reduce-motion="true"] .spatial-intro span:last-child { display: none; }
+  body[data-mobile-large-text] .focused-home__map { min-height: 38rem; }
+  body[data-mobile-large-text] .mobile-first-dock :is(.origin-marker__title, .mobile-first-cases) { line-height: 1.25; }
+  body[data-mobile-large-text] .mobile-first-dock .origin-marker__control { margin-top: .2em; }
+  body[data-mobile-large-text] .mobile-first-cases svg { margin-top: .2em; }
+  @media (hover: hover) and (pointer: fine) {
+    .focused-home__map { cursor: grab; }
+    .focused-home__map :is(button, .direction-landmark) { cursor: pointer; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .focused-home :is(.map-node, .direction-landmark) { transition: none; }
+    .spatial-intro span:last-child { display: none; }
+  }
+}
+
+/* The work index includes the overview; mobile keeps one primary work link. */
+.content-panel .work-overview {
+  appearance: none;
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--control-target);
+  max-width: 100%;
+  margin: 0 0 var(--space-6);
+  padding: 0;
+  border: 0;
+  border-radius: var(--space-1);
+  background: transparent;
+  color: var(--content-ink);
+  font-family: var(--content-font);
+  text-align: left;
+  cursor: pointer;
+}
+.work-overview > svg { flex: 0 0 24px; width: 24px; height: 24px; fill: currentColor; translate: 1px 0; }
+.work-overview__text { display: grid; gap: var(--space-1); min-width: 0; }
+.work-overview__text > :first-child { font-size: var(--type-item); font-weight: 600; line-height: var(--leading-item); }
+.work-overview__text > :last-child { font-size: var(--type-detail); font-weight: 400; line-height: var(--leading-label); color: var(--content-muted); }
+.content-panel .work-overview:is(:hover, :active) { color: var(--signal); }
+.content-panel .work-overview:focus-visible { outline: var(--focus-width) solid var(--signal); outline-offset: var(--focus-offset); }
+@media (max-width: 900px) {
+  .mobile-first-dock[data-material-surface] {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-1) var(--space-5);
+    padding: 0;
+  }
+  .mobile-first-paths {
+    display: block;
+    flex: 0 0 auto;
+    min-height: 48px;
+    margin-inline-start: auto;
+    padding: 0;
+  }
+  .mobile-first-dock .mobile-entry {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+    backdrop-filter: none;
+    text-decoration: none;
+    color: inherit;
+  }
+  .mobile-entry__heading {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--type-body);
+    line-height: 24px;
+    font-weight: 600;
+  }
+  .mobile-first-tools {
+    display: flex;
+    flex: 0 1 auto;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: flex-start;
+    gap: var(--space-1) var(--space-4);
+    width: max-content;
+    max-width: 100%;
+    min-height: 48px;
+    min-width: 0;
+    margin-left: 0;
+    padding: 0;
+  }
+  .mobile-first-tools :is(.spatial-search,.focused-map-open,.mobile-first-composition) {
+    min-height: 48px;
+    min-width: 48px;
+    padding-inline: 0;
+    line-height: 24px;
+  }
+  .mobile-first-dock .mobile-entry:active { color: var(--signal); }
+}
+
+/* MATERIAL / 01 CASCADE CONTRACT
+   The registry controls the rendered material. Component rules may define
+   geometry and type, but cannot substitute a local fill, border, shadow, or
+   blur for an active registered interface surface. */
+
+[data-material-surface][data-material-active="always"]:not(
+    .is-content-stack-hidden
+  ),
+.map-node-label[data-material-surface][data-material-active="always"] {
+  border: 0;
+  background: var(--material-01);
+  box-shadow: none;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+@media (min-width: 901px) {
+  [data-material-surface][data-material-active="desktop"] {
+    border: 0;
+    background: var(--material-01);
+    box-shadow: none;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+}
+
+@media (max-width: 900px) {
+  [data-material-surface][data-material-active="mobile"] {
+    border: 0;
+    background: var(--material-01);
+    box-shadow: none;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
 }

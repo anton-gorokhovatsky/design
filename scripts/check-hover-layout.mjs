@@ -32,7 +32,7 @@ try {
   for (const [width, height] of [[1440, 900], [1024, 768], [720, 450]]) for (const theme of ["light", "dark"]) {
     const page = await browser.newPage({ viewport: { width, height }, colorScheme: theme, reducedMotion: "reduce" });
     page.on("pageerror", error => errors.push(error.message));
-    await page.goto(origin);
+    await page.goto(origin + '/?scene=map');
     await page.evaluate(() => document.fonts.ready);
     await page.waitForFunction(() => document.querySelector(".whoop-level"));
     await page.waitForFunction(() => !document.querySelector("[data-map-links][data-layout-pending]"));
@@ -79,7 +79,7 @@ try {
   for (const [width, height] of [[1440, 900], [1024, 768], [720, 450]]) {
     const page = await browser.newPage({ viewport: { width, height }, reducedMotion: "no-preference" });
     page.on("pageerror", error => errors.push(error.message));
-    await page.goto(origin);
+    await page.goto(origin + '/?scene=map');
     await page.evaluate(() => document.fonts.ready);
     await page.waitForFunction(() => !document.querySelector("[data-map-links][data-layout-pending]"));
     await page.locator('[data-map-id="doronin"]').hover();

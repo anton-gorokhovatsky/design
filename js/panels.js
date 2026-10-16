@@ -4,8 +4,10 @@ import {
   trackPortfolioEvent,
 } from "./analytics.js";
 import { mapItems, getMapPreviewPoster } from "./map-data.js";
+import { createWorkTags } from "./work-tags.js";
 import {
   clearMapSelection,
+  exitObservation,
   getNavigableMapItems,
   inspectorClose,
   mapButtons,
@@ -127,7 +129,7 @@ const syncPanelMore = () => {
   }
   const end = contentPanelBody.scrollTop + contentPanelBody.clientHeight >= contentPanelBody.scrollHeight - 2;
   panelMore.dataset.direction = end ? "up" : "down";
-  panelMore.firstElementChild.textContent = typographUiText(end ? "К началу" : contentPanel.dataset.view === "work" ? "Ещё кейсы" : "Дальше");
+  panelMore.firstElementChild.textContent = typographUiText(end ? "К началу" : contentPanel.dataset.view === "work" ? "Ещё работы" : "Дальше");
 };
 let moreFrame = 0;
 const schedulePanelMore = () => {
@@ -154,10 +156,43 @@ new ResizeObserver(placeContentFrame).observe(document.querySelector(".content-p
 window.addEventListener("resize", placeContentFrame, { passive: true });
 window.addEventListener("author-presence-change", placeContentFrame);
 const panelSections = Array.from(document.querySelectorAll("[data-panel-section]"));
+// Keep the accepted opening order; include every remaining project from the map.
+// Institutional hubs and early career describe experience rather than a separate work.
+const workList = document.querySelector(".work-list");
+const listedWorks = new Set(Array.from(workList.querySelectorAll("[data-map-point]"), row => row.dataset.mapPoint));
+for (const item of mapItems.filter(item => (item.kind === "project" && item.parent) || item.caseStudy)) {
+  if (listedWorks.has(item.id)) continue;
+  const row = document.createElement("a");
+  row.className = "work-row";
+  row.href = `?point=${encodeURIComponent(item.id)}#map`;
+  row.dataset.mapPoint = item.id;
+  const context = item.parent === "garage" ? "МУЗЕЙ «ГАРАЖ»"
+    : item.parent === "private-practice" ? "ЧАСТНАЯ ПРАКТИКА" : item.label.toLocaleUpperCase("ru");
+  const year = item.timeLabel || (Number.isInteger(item.timeYear) ? String(item.timeYear) : "");
+  const description = (item.caseStudy?.description || item.description).split(/(?<=[.!?])\s+/)[0];
+  const fields = {
+    number: String(listedWorks.size + 1).padStart(2, "0"),
+    title: item.caseStudy?.title || item.title,
+    scope: description,
+    domain: [context, year].filter(Boolean).join(" / "),
+  };
+  for (const [name, value] of Object.entries(fields)) {
+    const span = document.createElement("span");
+    span.className = `work-row__${name}`;
+    span.textContent = typographUiText(value);
+    row.append(span);
+  }
+  workList.append(row);
+  listedWorks.add(item.id);
+}
+document.querySelector("[data-work-count]").textContent = `${listedWorks.size} работа`;
+
 // A single static preview belongs to the work link in every input mode.
 for (const row of document.querySelectorAll(".work-row[data-map-point]")) {
   const item = mapItems.find(item => item.id === row.dataset.mapPoint);
   if (!item) continue;
+  const tags = createWorkTags(item.id);
+  if (tags) row.querySelector('.work-row__domain').before(tags);
   if (item.kind === "project") row.querySelector(".work-row__title").textContent = typographUiText(item.label);
   const poster = getMapPreviewPoster(item);
   if (!poster) {
@@ -199,7 +234,7 @@ let activePanelView = null;
 let lastPanelTrigger = null;
 const panelViews = {
   work: {
-    title: "Ключевые кейсы",
+    title: "Работы",
   },
   approach: {
     title: "ПОДХОД",
@@ -299,6 +334,7 @@ const openContentPanel = (
   lastPanelTrigger = trigger instanceof HTMLElement && mapInspector.contains(trigger)
     ? constellationNavItems.find(item => item.dataset.navView === view)
     : trigger instanceof HTMLElement ? trigger
+    : position && lastPanelTrigger instanceof HTMLElement && lastPanelTrigger.dataset.openPanel === view ? lastPanelTrigger
     : position ? panelOpenButtons.find(button => button.dataset.openPanel === view)
       : document.activeElement;
   contentPanel?.setAttribute("data-view", view);
@@ -384,6 +420,21 @@ const closeContentPanel = (
     lastPanelTrigger.focus({ preventScroll: true });
   }
 };
+
+const workOverview = document.querySelector("[data-start-observation]");
+observationRoute.setExitHandler(() => {
+  const position = history.state?.overviewWorkOrigin || { view: "work", scrollTop: 0 };
+  openContentPanel("work", null, { replaceHistory: true, position });
+  requestAnimationFrame(() => workOverview.focus({ preventScroll: true }));
+});
+workOverview.addEventListener("click", () => {
+  const origin = { view: "work", scrollTop: contentPanelBody.scrollTop };
+  history.replaceState({ ...history.state, panelPosition: origin }, "", location.href);
+  closeContentPanel({ restoreFocus: false, updateHistory: false });
+  startObservation({ source: "work" });
+  history.replaceState({ ...history.state, overviewWorkOrigin: origin }, "", location.href);
+  requestAnimationFrame(() => inspectorClose.focus());
+});
 
 const openPointFromContentPanel = (pointId, sourceRow = null) => {
   const origin = activePanelView ? {
@@ -565,7 +616,7 @@ const syncMobileMapFrame = () => {
     }
 
     const mapBounds = signalField.getBoundingClientRect();
-    const searchBounds = commandForm.getBoundingClientRect();
+    const searchBounds = (document.querySelector(".mobile-first-dock") || commandForm).getBoundingClientRect();
 
     if (!mapBounds.height || !searchBounds.height) {
       return;
@@ -582,7 +633,7 @@ const syncMobileMapFrame = () => {
     const stageGap = 14;
     const lowerOverscan = 26 * shortScreenPressure;
     const authorBottom = document.querySelector(".site-header")?.getBoundingClientRect().bottom || 48;
-    const cameraTop = Math.max(48, authorBottom - mapBounds.top + 14);
+    const cameraTop = Math.max(48, authorBottom - mapBounds.top + (document.body.classList.contains("has-full-mobile-map") ? 58 : 14));
     const cameraReserve = Math.max(
       52,
       controlClearance + stageGap - lowerOverscan,
@@ -751,8 +802,8 @@ const commandViews = [
   {
     type: "action",
     id: "observation",
-    title: "РАБОТЫ И ПОДХОД · 3 МИНУТЫ",
-    meta: `${observationSteps.length} ОСТАНОВОК / РАБОТЫ И ПОДХОД`,
+    title: "КОРОТКИЙ ОБЗОР",
+    meta: "САЙТЫ В ДЕЙСТВИИ / 3 МИНУТЫ",
     intents: "сеанс наблюдения обзор экскурсия маршрут",
     keywords: "сеанс наблюдение маршрут обзор экскурсия 60 секунд минута",
   },
@@ -775,8 +826,8 @@ const commandViews = [
   {
     type: "panel",
     id: "work",
-    title: "КЛЮЧЕВЫЕ КЕЙСЫ",
-    meta: "8 КЕЙСОВ / 2017—2026",
+    title: "РАБОТЫ",
+    meta: "ВСЕ РАБОТЫ / 2012—2026",
     intents: "кейсы проекты работы портфолио",
     keywords: "кейсы проекты работы портфолио работодатель результаты вклад задача роль сайты",
   },
@@ -1172,7 +1223,7 @@ document.addEventListener("keydown", (event) => {
   } else if (isMapPreviewActive()) {
     hideMapPreview({ immediate: true });
   } else if (observationRoute.active) {
-    stopObservation();
+    exitObservation();
   } else if (isConstellationNavOpen) {
     setConstellationNavOpen(false);
     constellationNavToggle?.focus();

@@ -124,7 +124,7 @@ try {
       colorScheme: scenario.theme, reducedMotion: "no-preference", hasTouch: scenario.mobile,
       isMobile: scenario.mobile, deviceScaleFactor: scenario.deviceScaleFactor || 1 });
     page.on("pageerror", (error) => errors.push(error.message));
-    await page.goto(origin, { waitUntil: "load" });
+    await page.goto(origin + "/?scene=map", { waitUntil: "load" });
     await page.evaluate(() => document.fonts.ready);
     await page.waitForFunction(count => document.querySelectorAll(".map-node__surface").length === count, ids.length);
     // Mobile framing follows fonts.ready through two scheduled layout passes.

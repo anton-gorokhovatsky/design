@@ -24,7 +24,7 @@ const observationSteps = [
   {
     id: "contact", kind: "СВЯЗАТЬСЯ", title: "СВЯЗАТЬСЯ",
     meta: "МОСКВА / УДАЛЁННО / ПОЧТА",
-    description: "Если вы ищете человека в команду или хотите обсудить проект, напишите мне. Буду рад познакомиться.",
+    get description() { return document.querySelector("[data-contact-message]").textContent.trim(); },
     href: "mailto:anton@gorokhovatsky.tech", x: 50, y: 54,
   },
 ];
@@ -35,7 +35,8 @@ const createObservationRoute = ({
   selectMapItem, setMapFilter, setTimeMode, writeUrlState,
 }) => {
   const find = name => document.querySelector(`[data-observation-${name}]`);
-  const startButton = document.querySelector("[data-start-observation]");
+  let exitHandler = null;
+  const setExitHandler = handler => { exitHandler = handler; };
   const inspector = document.querySelector("[data-map-inspector]");
   const controls = find("controls"), progress = find("progress"), status = find("status");
   const previous = find("previous"), playback = find("pause"), next = find("next");
@@ -65,7 +66,7 @@ const createObservationRoute = ({
     playback.title = label;
     playback.dataset.paused = String(paused);
     playbackState.textContent = last ? "Обзор завершён" : paused ? "На паузе" : "Автопоказ";
-    next.setAttribute("aria-label", last ? "К карте" : "Следующий шаг");
+    next.setAttribute("aria-label", last ? "К работам" : "Следующий шаг");
     next.title = next.getAttribute("aria-label");
     next.classList.toggle("is-last", last);
     indexList.value = stepIndex;
@@ -139,12 +140,14 @@ const createObservationRoute = ({
     }
     renderStep(step);
   };
+  const exit = () => {
+    stop();
+    exitHandler?.();
+  };
   const finish = () => {
     trackPortfolioEvent("observation_complete", { source: "route" });
-    stop();
-    startButton.focus({ preventScroll: true });
+    exit();
   };
-  startButton.addEventListener("click", () => start());
   previous.addEventListener("click", () => chooseStep(stepIndex - 1));
   next.addEventListener("click", () => stepIndex === observationSteps.length - 1 ? finish() : chooseStep(stepIndex + 1));
   playback.addEventListener("click", () => {
@@ -172,7 +175,7 @@ const createObservationRoute = ({
       chooseStep(stepIndex + 1);
     }
   }, true);
-  return { get active() { return active; }, get step() { return stepIndex; }, start, steps: observationSteps, stop };
+  return { get active() { return active; }, get step() { return stepIndex; }, start, steps: observationSteps, stop, exit, setExitHandler };
 };
 
 export { createObservationRoute, observationSteps };

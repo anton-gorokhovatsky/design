@@ -71,7 +71,7 @@ const annotationHierarchyAudit = async (browser) => {
   const page = await context.newPage();
   await isolateThirdPartyTelemetry(page);
   attachRuntimeLog(page, "1440x900-light-annotation-hierarchy");
-  await page.goto(`${baseUrl}-annotation-hierarchy`, {
+  await page.goto(`${baseUrl}&scene=map&qa-scenario=annotation-hierarchy`, {
     waitUntil: "networkidle",
   });
   await page.evaluate(() => document.fonts?.ready);
@@ -165,6 +165,7 @@ const routeAudit = async (page, mapId, expectedCount) => {
   await page.mouse.move(1, 1);
   const routeUrl = new URL(baseUrl);
   routeUrl.searchParams.set("qa-relation", mapId);
+  routeUrl.searchParams.set("scene", "map");
   await page.goto(routeUrl.href, { waitUntil: "networkidle" });
   await page.evaluate(() => document.fonts.ready);
   // The camera and individual nodes can finish in different frames.
@@ -329,7 +330,7 @@ const reducedMotionRelationsAudit = async (browser) => {
   const page = await context.newPage();
   await isolateThirdPartyTelemetry(page);
   attachRuntimeLog(page, "reduced-motion-relations");
-  await page.goto(`${baseUrl}-reduced-motion-relations`, {
+  await page.goto(`${baseUrl}&scene=map&qa-scenario=reduced-motion-relations`, {
     waitUntil: "networkidle",
   });
   await page.evaluate(() => document.fonts?.ready);
@@ -378,7 +379,7 @@ const childRelationsAudit = async (browser) => {
   const page = await context.newPage();
   await isolateThirdPartyTelemetry(page);
   attachRuntimeLog(page, "child-relations");
-  await page.goto(`${baseUrl}-child-relations`, {
+  await page.goto(`${baseUrl}&scene=map&qa-scenario=child-relations`, {
     waitUntil: "networkidle",
   });
   await page.evaluate(() => document.fonts?.ready);
@@ -501,6 +502,7 @@ const relationshipCascadeAudit = async (page) => {
     document.querySelector('[data-map-filter="all"]')?.click();
   });
   const input = page.locator("[data-command-input]");
+  if (await page.locator("[data-spatial-search]").isVisible()) await page.locator("[data-spatial-search]").click();
   await input.fill("Сайт музея");
   await waitForLayout(page, 420);
 
@@ -680,7 +682,7 @@ const firstPaintAudit = async (browser, viewport, colorScheme) => {
     };
     requestAnimationFrame(sample);
   });
-  await page.goto(`${baseUrl}-first-paint-${viewport.width}-${colorScheme}`, {
+  await page.goto(`${baseUrl}&scene=map&qa-scenario=first-paint-${viewport.width}-${colorScheme}`, {
     waitUntil: "networkidle",
   });
   await page.waitForTimeout(1600);
@@ -767,7 +769,7 @@ const mobileSearchViewportAudit = async (browser) => {
   const page = await context.newPage();
   await isolateThirdPartyTelemetry(page);
   attachRuntimeLog(page, "390x430-dark-mobile-search");
-  await page.goto(`${baseUrl}-mobile-search#map`, {
+  await page.goto(`${baseUrl}&scene=map&qa-scenario=mobile-search#map`, {
     waitUntil: "networkidle",
   });
   await page.evaluate(() => document.fonts?.ready);
@@ -812,7 +814,7 @@ const mobileSearchViewportAudit = async (browser) => {
 
   await page.setViewportSize(mobileMetricViewport);
   await page.goto(
-    `${baseUrl}-narkomfin-number&point=narkomfin#map`,
+    `${baseUrl}&scene=map&qa-scenario=narkomfin-number&point=narkomfin#map`,
     { waitUntil: "networkidle" },
   );
   await page.evaluate(() => document.fonts?.ready);
@@ -870,7 +872,7 @@ const projectGlyphAudit = async (page) => page.evaluate(() => {
 
 const analyticsConsentAudit = async (page, viewport, label) => {
   await page.goto(
-    `${baseUrl}-analytics-${label}&analytics-consent=show`,
+    `${baseUrl}&scene=map&qa-scenario=analytics-${label}&analytics-consent=show`,
     { waitUntil: "networkidle" },
   );
   await waitForSurfaceRest(page, ["[data-settings-panel]"]);
@@ -1193,7 +1195,7 @@ const accessibilityAcceptanceAudit = async (browser) => {
   const page = await context.newPage();
   await isolateThirdPartyTelemetry(page);
   attachRuntimeLog(page, "accessibility-acceptance");
-  await page.goto(`${baseUrl}-accessibility-acceptance`, {
+  await page.goto(`${baseUrl}&scene=map&qa-scenario=accessibility-acceptance`, {
     waitUntil: "networkidle",
   });
   await page.evaluate(() => document.fonts?.ready);
@@ -1260,6 +1262,7 @@ const accessibilityAcceptanceAudit = async (browser) => {
   }
 
   await page.keyboard.press("Enter");
+  await page.locator(".point-preview__link").click();
   await waitForLayout(page, 220);
   const inspectorOpen = await page.evaluate((mapId) => {
     const active = document.activeElement;
@@ -1343,7 +1346,7 @@ const accessibilityAcceptanceAudit = async (browser) => {
     || panelOpen.inert
     || !panelOpen.activeIsClose
     || !trappedInside
-    || !dialogSnapshot.includes("Ключевые кейсы")
+    || !dialogSnapshot.includes("Работы")
     || !panelClosed.focusReturned
     || panelClosed.hidden !== "true"
     || !panelClosed.inert
@@ -1371,7 +1374,7 @@ const accessibilityAcceptanceAudit = async (browser) => {
   await context.close();
 
   return {
-    dialogSnapshotPresent: dialogSnapshot.includes("Ключевые кейсы"),
+    dialogSnapshotPresent: dialogSnapshot.includes("Работы"),
     environment,
     failures,
     inspectorSnapshotPresent: inspectorSnapshot.includes("Закрыть карточку"),
@@ -1433,13 +1436,15 @@ const accessibilityAcceptanceAudit = async (browser) => {
       const page = await context.newPage();
       await isolateThirdPartyTelemetry(page);
       attachRuntimeLog(page, label);
-      await page.goto(`${baseUrl}-${label}`, { waitUntil: "networkidle" });
+      await page.goto(`${baseUrl}&scene=map&qa-scenario=${label}`, { waitUntil: "networkidle" });
       await page.evaluate(() => document.fonts?.ready);
       await waitForLayout(page, 500);
 
       const initialSelectedId = await page.locator("[data-signal-field]")
         .getAttribute("data-selected-id");
+      await page.locator("[data-spatial-search]").click();
       const commandDockAxis = await commandDockAxisAudit(page);
+      await page.keyboard.press("Escape");
       const projectGlyphs = await projectGlyphAudit(page);
       const workStack = await stackAudit(page, "work", label, {
         nativeWheel: false,
@@ -1488,7 +1493,7 @@ const accessibilityAcceptanceAudit = async (browser) => {
         await isolateThirdPartyTelemetry(nativePage);
         const nativeLabel = `${label}-native-scroll`;
         attachRuntimeLog(nativePage, nativeLabel);
-        await nativePage.goto(`${baseUrl}-${nativeLabel}`, {
+        await nativePage.goto(`${baseUrl}&scene=map&qa-scenario=${nativeLabel}`, {
           waitUntil: "networkidle",
         });
         await nativePage.evaluate(() => document.fonts?.ready);
@@ -1547,7 +1552,7 @@ const accessibilityAcceptanceAudit = async (browser) => {
       });
       const noScriptPage = await noScriptContext.newPage();
       await isolateThirdPartyTelemetry(noScriptPage);
-      await noScriptPage.goto(`${baseUrl}-no-script`, {
+      await noScriptPage.goto(`${baseUrl}&scene=map&qa-scenario=no-script`, {
         waitUntil: "networkidle",
       });
       const noScriptFallback = noScriptPage.locator(".no-script-fallback");

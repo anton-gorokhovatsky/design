@@ -205,7 +205,7 @@ for(const engine of [process.argv[2]||'chromium']) {
         animation.animationName !== 'window-reveal'
         || (!animation.pending && animation.playState !== 'running')),
       undefined, {polling:50});
-      const continuation = page.getByRole('button', { name: 'Ещё кейсы', exact: true });
+      const continuation = page.getByRole('button', { name: 'Ещё работы', exact: true });
       await continuation.waitFor({ state: 'visible' });
       await page.locator('.content-panel').evaluate(element => Promise.all(
         element.getAnimations({ subtree: true })

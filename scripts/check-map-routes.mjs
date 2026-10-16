@@ -39,7 +39,7 @@ try {
       isMobile: width <= 680, hasTouch: width <= 680, reducedMotion: "no-preference" });
     page.on("pageerror", error => errors.push(error.message));
     for (const view of ["map", "time"]) {
-      await page.goto(`${origin}/?view=${view}`);
+      await page.goto(`${origin}/?scene=map&view=${view}`);
       await page.evaluate(() => document.fonts.ready);
       await page.waitForFunction(() => document.querySelector('[data-whoop-recovery]').textContent.includes('77')
         && !document.querySelector('[data-map-links][data-layout-pending]'));
@@ -73,13 +73,15 @@ try {
         assert.equal(await page.locator('.map-space-label').count(), 0, 'Compact and chronological maps keep their own presentation.');
       }
       for (const id of view === "time" ? ["garage", "private-practice"] : ["garage", "private-practice", "running", "youtube"]) {
-        await page.locator(`[data-map-id="${id}"]`).focus();
+        if (width <= 900) await page.locator(`[data-map-id="${id}"]`).click();
+        else await page.locator(`[data-map-id="${id}"]`).focus();
         await page.waitForFunction(() => !document.querySelector('[data-relation-morphing]'));
         assert.ok(await page.locator('[data-map-links] .is-active-relation').count() > 0);
         assert.ok(await page.locator('[data-map-links] .is-active-relation').evaluateAll(paths =>
           paths.every(path => getComputedStyle(path).strokeDasharray === 'none')),
         'Active routes use a continuous line.');
         await check(id);
+        if (width <= 900) await page.keyboard.press("Escape");
         await page.screenshot({ path: `${directory}/${engine}-${width}-${view}-${id}.png` });
       }
     }

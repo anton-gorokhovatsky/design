@@ -1,5 +1,6 @@
 // Spatial map geometry, relations, filters and selection.
 import { trackPortfolioEvent } from "./analytics.js";
+import { updateWorkTags } from "./work-tags.js";
 import {
   mapItems,
   getMapPreviewPoster,
@@ -45,7 +46,6 @@ const mapEvidenceById = JSON.parse(
 );
 const mapNote = document.querySelector("[data-map-note]");
 const timeToggles = Array.from(document.querySelectorAll("[data-time-toggle]"));
-const observationStart = document.querySelector("[data-start-observation]");
 const hoverCapable = window.matchMedia("(hover: hover) and (pointer: fine)");
 const compactMapViewport = window.matchMedia("(max-width: 900px)");
 const mapButtons = new Map();
@@ -332,7 +332,34 @@ const measureMapSpace = () => {
     y: Math.max(0, Math.min(.2, (north - 24) * .75 / northSpan)),
   };
 };
+const focusHomePoints = new Map([
+  ["garage", { x: 27, y: 18 }],
+  ["narkomfin", { x: 76, y: 22 }],
+  ["private-practice", { x: 73, y: 47 }],
+  ["eleven", { x: 87, y: 65 }],
+  ["ks-fish", { x: 58, y: 63 }],
+  ["principle-data-intuition", { x: 19, y: 48 }],
+  ["running", { x: 43, y: 86 }],
+  ["youtube", { x: 19, y: 87 }],
+]);
+const focusHomeNarrowPoints = new Map([...focusHomePoints,
+  ["garage", {x:27,y:22}], ["narkomfin", {x:76,y:20}],
+  ["private-practice", {x:73,y:50}], ["running", {x:43,y:79}], ["youtube", {x:19,y:81}],
+]);
+const focusHomeActive = () => innerWidth <= 900 && document.body.classList.contains("has-focused-home");
+const focusHomeLargeTextPoints = new Map([
+  ["garage", { x: 20, y: 12 }],
+  ["narkomfin", { x: 76, y: 26 }],
+  ["private-practice", { x: 73, y: 41 }],
+  ["ks-fish", { x: 45, y: 52 }],
+  ["eleven", { x: 82, y: 62 }],
+  ["principle-data-intuition", { x: 19, y: 70 }],
+  ["running", { x: 43, y: 84 }],
+  ["youtube", { x: 19, y: 94 }],
+]);
 const measureMapClearance = () => {
+  const largeTextHome = focusHomeActive() && parseFloat(getComputedStyle(document.documentElement).fontSize) > 20;
+  document.body.toggleAttribute("data-mobile-large-text", largeTextHome);
   mapFieldBounds = mapNodesRoot?.getBoundingClientRect();
   mapTargetSize = parseFloat(getComputedStyle(mapNodesRoot).getPropertyValue("--map-target-size")) || 24;
   mapTargetScale = parseFloat(getComputedStyle(mapNodesRoot).getPropertyValue("--map-target-scale")) || 1;
@@ -340,14 +367,65 @@ const measureMapClearance = () => {
   mapButtons.forEach((button, id) => mapTargetDiameters.set(id, parseFloat(getComputedStyle(button).width)));
   const selectors = [".origin-marker__label", ".site-header", ".map-axis-label"];
   if (window.innerWidth > 900) selectors.push(".map-controls", ".map-control > span", ".display-control", ".control-console");
-  else selectors.push(".command-dock", ".system-dock", ".mobile-index-links");
+  else selectors.push(".command-dock", ".mobile-index-links");
   mapConsoleBounds = [...document.querySelectorAll(selectors.join(","))]
     .map(element => element.getBoundingClientRect())
     .filter(rect => rect.width && rect.height);
   measureMapSpace();
   mapClearancePositions.clear();
-  [...mapItems].sort((a, b) => b.size - a.size).forEach(item =>
-    mapClearancePositions.set(item.id, clearMapConsoles(item, getMapLayout(item))));
+  if (focusHomeActive()) {
+    (largeTextHome ? focusHomeLargeTextPoints : innerWidth < 360 ? focusHomeNarrowPoints : focusHomePoints).forEach((position, id) => mapClearancePositions.set(id, position));
+    return;
+  }
+  // Mobile titles reserve space alongside the consoles.
+  // First place the author's named landmarks, then fit other nodes around them.
+  const mobileTitles = innerWidth <= 900 && !timeModeActive;
+  const priorities = ["garage", "private-practice", "running", "narkomfin", "eleven", "ks-fish", "principle-data-intuition"];
+  const sorted = [...mapItems].sort((a, b) => {
+    const rank = item => mobileTitles && priorities.includes(item.id) ? priorities.indexOf(item.id) : 100;
+    return rank(a) - rank(b) || b.size - a.size;
+  });
+  sorted.forEach(item => {
+    const position = clearMapConsoles(item, getMapLayout(item));
+    mapClearancePositions.set(item.id, position);
+    const label = mapLabels.get(item.id);
+    if (!mobileTitles || !label?.classList.contains("mobile-landmark") || label.hasAttribute("data-mobile-hidden")) return;
+    const {left, top, width, height} = mapFieldBounds;
+    const x = left + position.x * width / 100;
+    const y = top + position.y * height / 100;
+    const labelWidth = label.offsetWidth, labelHeight = label.offsetHeight;
+    const gap = Math.max(12, (mapButtons.get(item.id)?.querySelector(".map-node__glyph")?.getBoundingClientRect().width || 12) / 2 + 6);
+    const sides = {
+      north: [-labelWidth / 2, -gap - labelHeight],
+      south: [-labelWidth / 2, gap],
+      west: [-gap - labelWidth, -labelHeight / 2],
+      east: [gap, -labelHeight / 2],
+    };
+    const preferred = item.id === "garage" || item.id === "private-practice" ? "north"
+      : item.id === "ks-fish" ? "west" : item.id === "principle-data-intuition" ? "south" : "east";
+    const occupied = [...mapConsoleBounds];
+    mapClearancePositions.forEach((other, id) => {
+      if (id === item.id) return;
+      const radius = (mapTargetDiameters.get(id) || 24) / 2;
+      const cx = left + other.x * width / 100, cy = top + other.y * height / 100;
+      occupied.push({left: cx-radius, right:cx+radius, top:cy-radius, bottom:cy+radius});
+    });
+    const collides = a => occupied.some(b => a.left < b.right+6 && a.right > b.left-6 && a.top < b.bottom+6 && a.bottom > b.top-6);
+    let chosen = null;
+    for (const side of [preferred, ...Object.keys(sides).filter(side => side !== preferred)]) {
+      const [dx,dy] = sides[side];
+      const box = {left:x+dx, right:x+dx+labelWidth, top:y+dy, bottom:y+dy+labelHeight};
+      if (box.left < 12 || box.right > innerWidth-12 || box.top < top || box.bottom > top+height || collides(box)) continue;
+      chosen = {box,dx,dy};
+      break;
+    }
+    label.toggleAttribute("data-mobile-no-space", !chosen);
+    if (chosen) {
+      label.style.setProperty("--mobile-label-dx", `${chosen.dx}px`);
+      label.style.setProperty("--mobile-label-dy", `${chosen.dy}px`);
+      mapConsoleBounds.push(chosen.box);
+    }
+  });
 };
 const clearMapConsoles = (item, position) => {
   if (!mapFieldBounds?.width || !mapConsoleBounds.length) return position;
@@ -589,7 +667,8 @@ const applyMapLayout = () => {
       signalField.style.setProperty("--focus-y", `${position.y}%`);
     }
   });
-  placeMapRestLabels();
+  if (!focusHomeActive()) placeMapRestLabels();
+  window.dispatchEvent(new Event("map-layout"));
 };
 
 const syncMapRelationships = () => {
@@ -725,9 +804,10 @@ const getNavigableMapItems = () => (
     const button = mapButtons.get(item.id);
 
     return button
+      && (!focusHomeActive() || focusHomePoints.has(item.id))
       && (!timeModeActive || Number.isFinite(item.timeYear))
       && !button.classList.contains("is-search-miss")
-      && activeMapFilters.has(item.kind);
+      && (focusHomeActive() || activeMapFilters.has(item.kind));
   })
 );
 
@@ -741,17 +821,18 @@ const syncMapNodeAvailability = () => {
       return;
     }
 
-    const isAvailable = (!timeModeActive || Number.isFinite(item.timeYear))
+    const isAvailable = (!focusHomeActive() || focusHomePoints.has(item.id))
+      && (!timeModeActive || Number.isFinite(item.timeYear))
       && !button.classList.contains("is-search-miss")
-      && activeMapFilters.has(item.kind);
+      && (focusHomeActive() || activeMapFilters.has(item.kind));
 
     button.inert = !isAvailable;
     button.setAttribute("aria-hidden", String(!isAvailable));
     mapLabels.get(item.id)?.classList.toggle("map-label-unavailable", !isAvailable);
-    button.classList.toggle("is-filter-miss", !activeMapFilters.has(item.kind));
+    button.classList.toggle("is-filter-miss", !focusHomeActive() && !activeMapFilters.has(item.kind));
     button.classList.toggle(
       "is-filter-match",
-      hasCustomFilters && activeMapFilters.has(item.kind),
+      hasCustomFilters && (focusHomeActive() || activeMapFilters.has(item.kind)),
     );
   });
 };
@@ -1004,8 +1085,10 @@ const selectMapItem = (
     mapTitle.setAttribute("aria-label", typographUiText(overview?.title || caseStudy?.title || item.title));
   }
 
+  const hasWorkTags = updateWorkTags(mapTitle.parentElement, overview ? null : item.id);
+  if (hasWorkTags) mapLink.before(mapTitle.parentElement.querySelector('.work-tags'));
   if (mapMeta) {
-    setMapMetaText(overview?.meta ?? caseStudy?.meta ?? item.meta);
+    setMapMetaText(overview?.meta ?? (hasWorkTags && item.kind === 'project' ? '' : caseStudy?.meta ?? item.meta));
   }
 
   setMapDescription(overview?.description || caseStudy?.description || item.description, item.descriptionCredit);
@@ -1062,8 +1145,7 @@ const setInspectorReturnHandler = (handler) => { inspectorReturnHandler = handle
 
 inspectorClose?.addEventListener("click", () => {
   if (observationRoute.active) {
-    stopObservation();
-    observationStart?.focus({ preventScroll: true });
+    exitObservation();
     return;
   }
 
@@ -1198,6 +1280,10 @@ if (mapNodesRoot) {
       restoreSelectedMapAtmosphere();
     });
     button.addEventListener("click", () => {
+      if (compactMapViewport.matches && document.body.hasAttribute("data-mobile-preview-ui")) {
+        window.dispatchEvent(new CustomEvent("mobile-point-request", { detail: { id: item.id } }));
+        return;
+      }
       hideLabel();
       hideMapPreview({ immediate: true });
       trackPortfolioEvent("point_open", {
@@ -1228,6 +1314,7 @@ if (mapNodesRoot) {
     });
     button.addEventListener("focus", () => {
       showLabel();
+      if (compactMapViewport.matches && document.body.hasAttribute("data-mobile-preview-ui")) return;
       selectMapItem(item.id);
     });
     button.addEventListener("blur", hideLabel);
@@ -1303,19 +1390,23 @@ if (mapLinksRoot) {
       };
     };
 
-    const nodeGeometry = new Map(mapItems.map(item => [item.id, getNodeGeometry(item)]));
+    // Hidden points cannot bend the few relationships shown on the introductory map.
+    const visibleItems = focusHomeActive() ? mapItems.filter(item => focusHomePoints.has(item.id)) : mapItems;
+    const nodeGeometry = new Map(visibleItems.map(item => [item.id, getNodeGeometry(item)]));
     const obstacles = [...nodeGeometry].filter(([id]) => (
       !timeModeActive || mapButtons.get(id)?.hasAttribute("data-time-year")
     ));
 
     childrenByParent.forEach((children, parentId) => {
       const parent = nodeGeometry.get(parentId);
-      const measured = children.map(item => {
+      if (!parent) return;
+      const measured = children.filter(item => nodeGeometry.has(item.id)).map(item => {
         const geometry = nodeGeometry.get(item.id);
         return { item, geometry, angle: Math.atan2(
           geometry.centerY - parent.centerY, geometry.centerX - parent.centerX,
         ) };
       }).sort((a, b) => a.angle - b.angle);
+      if (!measured.length) return;
       // Open the circular order at its largest empty sector, never through a fan.
       const gaps = measured.map((child, i) => (
         (measured[(i + 1) % measured.length].angle - child.angle + Math.PI * 2) % (Math.PI * 2)
@@ -1814,6 +1905,7 @@ const renderObservationSyntheticStep = (step) => {
   }
 
   setMapMetaText(step.meta);
+  updateWorkTags(mapTitle.parentElement, null);
 
   setMapDescription(step.description);
   setMapQuotation(null);
@@ -1858,6 +1950,7 @@ const observationRoute = createObservationRoute({
 const observationSteps = observationRoute.steps;
 const startObservation = (options) => observationRoute.start(options);
 const stopObservation = (options) => observationRoute.stop(options);
+const exitObservation = () => observationRoute.exit();
 
 const requestMapLinksRender = () => {
   scheduleMapLinksRender();
@@ -1889,6 +1982,7 @@ export {
   setTimeMode,
   startObservation,
   stopObservation,
+  exitObservation,
   syncMapNodeAvailability,
   timeModeActive,
   writeUrlState,

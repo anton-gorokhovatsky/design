@@ -22,7 +22,7 @@ const map = read("js/map-data.js");
 const route = read("js/observation-route.js");
 const html = read("index.html");
 // The incident that prompted this lane: changing letter case inside runtime JS.
-change("js/panels.js", panels, "РАБОТЫ И ПОДХОД · 3 МИНУТЫ", "Работы и подход · 3 минуты", true);
+change("js/panels.js", panels, "КОРОТКИЙ ОБЗОР", "Короткий обзор", true);
 change("js/map-data.js", map, "Самый важный профессиональный период:", "Профессиональный опыт:", true);
 change("js/observation-route.js", route, "Почти четыре года развивал", "Развивал", true);
 change("index.html", html, ">МОЯ РОЛЬ<", ">МОЙ ВКЛАД<", true);
@@ -38,11 +38,11 @@ change("index.html", html, /\.\/js\/panels\.js\?v=[a-f0-9]{12}/.exec(html)[0], "
 
 change("js/observation-route.js", route, "20000", "10000", false);
 change("js/panels.js", panels, 'id: "observation"', 'id: "time"', false);
-change("js/panels.js", panels, 'title: "РАБОТЫ И ПОДХОД · 3 МИНУТЫ"', 'title: getTitle()', false);
-change("js/panels.js", panels, 'title: "РАБОТЫ И ПОДХОД · 3 МИНУТЫ"', 'title: __COPY__', false);
-change("js/panels.js", panels, 'title: "РАБОТЫ И ПОДХОД · 3 МИНУТЫ"', 'title: \0COPY\0', false);
-change("js/panels.js", panels, 'title: "РАБОТЫ И ПОДХОД · 3 МИНУТЫ"', 'title: `Text ${run()}`', false);
-change("js/panels.js", panels, 'title: "РАБОТЫ И ПОДХОД · 3 МИНУТЫ"', 'get title() { return "Text"; }', false);
+change("js/panels.js", panels, 'title: "КОРОТКИЙ ОБЗОР"', 'title: getTitle()', false);
+change("js/panels.js", panels, 'title: "КОРОТКИЙ ОБЗОР"', 'title: __COPY__', false);
+change("js/panels.js", panels, 'title: "КОРОТКИЙ ОБЗОР"', 'title: \0COPY\0', false);
+change("js/panels.js", panels, 'title: "КОРОТКИЙ ОБЗОР"', 'title: `Text ${run()}`', false);
+change("js/panels.js", panels, 'title: "КОРОТКИЙ ОБЗОР"', 'get title() { return "Text"; }', false);
 change("js/panels.js", panels, '"[data-constellation-nav]"', '"[data-other-nav]"', false);
 change("js/panels.js", panels, "сеанс наблюдения обзор экскурсия маршрут", "хронология", false);
 change("js/map-data.js", map, "https://garagemca.org/ru", "https://example.com/ru", false);
@@ -194,7 +194,7 @@ try {
   assert.deepEqual(plan().components, ["media"]);
   assert.equal(plan().staticScope, "static", "Media still requires FFmpeg and all static asset contracts");
   writeFileSync(join(directory, "assets/reels/garage-site.mp4"), "original master");
-  writeFileSync(join(directory, "js/panels.js"), panels.replace("РАБОТЫ И ПОДХОД · 3 МИНУТЫ", "Работы и подход · 3 минуты"));
+  writeFileSync(join(directory, "js/panels.js"), panels.replace("КОРОТКИЙ ОБЗОР", "Короткий обзор"));
   assert.equal(plan().mode, "copy");
   git("add", ".");
   assert.equal(plan().mode, "copy", "Staged copy remains copy");

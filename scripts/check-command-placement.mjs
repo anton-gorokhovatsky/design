@@ -102,7 +102,7 @@ try {
       const input = page.locator("[data-command-input]");
       const submit = page.locator(".command-dock__submit");
       assert.equal(await submit.getAttribute("aria-label"), "Открыть результат");
-      if (width <= 900) await input.tap();
+      if (width <= 900) await page.locator("[data-spatial-search]").tap();
       else await input.focus();
       assert.equal(await submit.getAttribute("aria-label"), "Закрыть поиск");
       await settle(page);
@@ -182,8 +182,8 @@ try {
       assert.equal(await input.getAttribute("aria-expanded"), "false");
       assert.equal(await submit.getAttribute("aria-label"), "Открыть результат");
       if (width <= 900) {
-        // The Index keeps only the input visible until search is expanded.
-        await input.click();
+        // Search expands from its persistent bottom command.
+        await page.locator("[data-spatial-search]").click();
         await input.fill("наркомфин");
         await input.press("Enter");
       } else await submit.click();

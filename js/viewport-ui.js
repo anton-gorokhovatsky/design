@@ -471,7 +471,7 @@ const positionDetachedCommandResults = () => {
     Math.min(surfaceBounds.right - width, viewport.left + viewport.width - gap - width));
 
   if (focusedMobile) {
-    anchorTop = viewport.top + gap;
+    anchorTop = Math.max(viewport.top + gap, viewport.top + viewport.height - bounds.height - gap);
     anchorBottom = anchorTop + bounds.height;
     left = viewport.left + gap;
     width = Math.max(0, viewport.width - gap * 2);
@@ -489,7 +489,7 @@ const positionDetachedCommandResults = () => {
     setCommandGeometry(element, "results", { left, width });
 
     const contentHeight = element.scrollHeight;
-    const opensBelow = focusedMobile || (contentHeight > spaceAbove && spaceBelow > spaceAbove);
+    const opensBelow = !focusedMobile && (contentHeight > spaceAbove && spaceBelow > spaceAbove);
     let maxHeight = opensBelow ? spaceBelow : spaceAbove;
     // A partial row signals that the list continues.
     const peek = [...element.children].map(row => row.offsetTop + row.offsetHeight / 2)

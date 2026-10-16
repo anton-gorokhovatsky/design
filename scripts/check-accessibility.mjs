@@ -78,10 +78,18 @@ try {
     if (width <= 390) {
       const targets = await readMapTargets(page);
       report.push({ name, targets });
-      assert.equal(targets.length, mapItems.length, 'Every map point has a reachable target.');
+      assert.equal(targets.length, 8, 'Each introductory direction has a reachable target.');
       assert.deepEqual(targets.filter(target => target.misses.length || target.width < 24 || target.height < 24), [], `Mobile targets ${name}`);
     }
     await capture(page, `home-${name}`);
+    if (width <= 390) {
+      await page.locator('[data-focused-map-open]').click();
+      await settle(page);
+      const fullTargets = await readMapTargets(page);
+      assert.equal(fullTargets.length, mapItems.length, 'The full map retains every point.');
+      assert.deepEqual(fullTargets.filter(t => t.misses.length || t.width < 24 || t.height < 24), []);
+      await page.locator('[data-focused-return]').click();
+    }
     await page.locator('.site-header').screenshot({ path: `${directory}/${engine}-author-${name}.png` });
     if (width > 900) await page.locator('.control-console').screenshot({ path: `${directory}/${engine}-navigation-${name}.png` });
     else {

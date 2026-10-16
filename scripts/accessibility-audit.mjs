@@ -165,6 +165,24 @@ export async function reviewIncomplete(page, incomplete, contrast) {
 
 // Check a real, unobscured 24px square, not only CSS width or a clickable centre.
 export async function readMapTargets(page) {
+  const focused = await page.locator('body').evaluate(body => body.classList.contains('has-focused-home'));
+  if (focused) {
+    const points = page.locator('[data-map-nodes] button:not([inert])');
+    const results = [];
+    for (const point of await points.all()) {
+      await point.scrollIntoViewIfNeeded();
+      results.push(await point.evaluate(e => {
+        const r = e.getBoundingClientRect(), x = r.x + r.width / 2, y = r.y + r.height / 2;
+        const misses = [];
+        for (const dx of [-11.9, -6, 0, 6, 11.9]) for (const dy of [-11.9, -6, 0, 6, 11.9]) {
+          if (!e.contains(document.elementFromPoint(x+dx,y+dy))) misses.push([dx,dy]);
+        }
+        return { id:e.dataset.mapId, width:r.width, height:r.height, misses };
+      }));
+    }
+    await page.locator('.focused-home').evaluate(e => { e.scrollTop = 0; });
+    return results;
+  }
   return page.locator('[data-map-nodes] button').evaluateAll(elements => elements
     .filter(e => e.checkVisibility({ visibilityProperty:true, opacityProperty:true }) && !e.closest('[inert]'))
     .map(e => {

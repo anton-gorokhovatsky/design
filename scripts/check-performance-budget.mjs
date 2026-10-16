@@ -24,14 +24,16 @@ const initialSourceBytes = cssBytes + runtimeBytes + fontBytes;
 const eagerMedia = [
   ...indexSource.matchAll(/<(?:video|source)[^>]+(?:src|srcset)="([^"]+\.(?:mp4|webm))"/g),
 ].map((match) => match[1]);
-// Reviewed 7 October 2026: source reserve for bounded maintenance, plus a
+// Reviewed 16 October 2026: includes the approved mobile directions, previews,
+// depth and work index. Readable source capacity grows with these features;
+// the compressed transfer budgets remain unchanged. Source reserve plus a
 // separately enforced compressed budget. Gzip is deterministic per asset, not
 // a claim about the CDN's measured transfer size or real-user performance.
 const budgets = {
-  css: 256 * 1024,
-  runtime: 352 * 1024,
+  css: 280 * 1024,
+  runtime: 376 * 1024,
   fonts: 160 * 1024,
-  initialSource: 720 * 1024,
+  initialSource: 800 * 1024,
   cssGzip: 48 * 1024,
   runtimeGzip: 108 * 1024,
   initialCompressed: 272 * 1024,

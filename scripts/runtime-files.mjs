@@ -21,6 +21,10 @@ export const runtimeFiles = [
   "js/panels.js",
   "js/case-view.js",
   "js/favicon.js",
+  "js/work-tags.js",
+  "js/mobile-first.js",
+  "js/focused-home.js",
+  "js/spatial-home.js",
 ];
 
 export const readRuntimeSource = (projectRoot) => runtimeFiles

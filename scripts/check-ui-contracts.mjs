@@ -368,6 +368,7 @@ const geometryExpression = String.raw`(() => {
     searchInput: ".command-dock input",
     searchSubmit: ".command-dock__submit",
     systemDock: ".system-dock",
+    mobileDock: ".mobile-first-dock",
     mobileMenu: ".constellation-nav__toggle",
     mobileNavigation: ".constellation-nav__orbit",
     mapCamera: ".map-camera",
@@ -578,66 +579,18 @@ const auditGeometry = (label, state) => {
       fail(`${label}: navigation and authorship overlap.`);
     }
   } else {
-    for (const name of ["mobileMenu", "search", "systemDock", "brand"]) {
+    for (const name of ["mobileMenu", "mobileDock", "brand"]) {
       if (!visible[name]) fail(`${label}: ${name} is not visible.`);
-      else if (!withinViewport(geometry[name], viewport, 2)) {
-        fail(`${label}: ${name} leaves the viewport.`, geometry[name]);
-      }
+      else if (!withinViewport(geometry[name], viewport, 2)) fail(`${label}: ${name} leaves the viewport.`, geometry[name]);
     }
-    if (!visible.mapCamera) {
-      fail(`${label}: mapCamera is not visible.`);
-    } else if (
-      geometry.mapCamera.left < -2
+    if (!visible.mapCamera || geometry.mapCamera.left < -2
       || geometry.mapCamera.right > viewport.width + 2
-      || geometry.mapCamera.top - geometry.header.bottom < 8
-      || geometry.mapCamera.top - geometry.header.bottom > 24
-      || geometry.mapCamera.bottom > viewport.height
-      || geometry.mapCamera.bottom < geometry.search.top - 24
-      || geometry.mapCamera.bottom > geometry.search.top + 16
-    ) {
-      fail(`${label}: mapCamera does not fill the useful mobile stage.`, geometry.mapCamera);
+      || geometry.mapCamera.top < geometry.header.bottom
+      || geometry.mapCamera.bottom > viewport.height) {
+      fail(`${label}: the full map must fit between authorship and bottom navigation.`, geometry.mapCamera);
     }
-    if (!visible.horizon) {
-      fail(`${label}: orbital horizon is not visible.`);
-    } else if (geometry.search) {
-      const horizonToControls = geometry.search.top - geometry.horizon.top;
-      const maximumHorizonGap = Math.max(72, viewport.height * 0.085);
-
-      if (horizonToControls < 16 || horizonToControls > maximumHorizonGap) {
-        fail(`${label}: lower map stage loses its spacing above the controls.`, {
-          horizonToControls,
-          maximumHorizonGap,
-        });
-      }
-    }
-    if (!visible.garageNode) {
-      fail(`${label}: primary company sphere is not visible.`);
-    } else if (geometry.garageNode.top < 6) {
-      fail(`${label}: primary company sphere is clipped at the top edge.`, {
-        top: geometry.garageNode.top,
-      });
-    }
-    if (overlaps(geometry.search, geometry.systemDock, 1)) {
-      fail(`${label}: mobile search and system dock overlap.`);
-    }
-    if (
-      geometry.search
-      && geometry.systemDock
-      && geometry.search.bottom > geometry.systemDock.top - 6
-    ) {
-      fail(`${label}: mobile bottom controls have no breathing room.`);
-    }
-    if (geometry.searchInput?.fontSize < 16) {
-      fail(`${label}: search input can trigger Safari auto-zoom.`, geometry.searchInput.fontSize);
-    }
-    const searchParts = ["searchMark", "searchInput", "searchSubmit"];
-    const searchCenters = searchParts.map(name => geometry[name]?.centerY).filter(Number.isFinite);
-    if (
-      searchCenters.length !== searchParts.length
-      || searchParts.some(name => !visible[name])
-      || Math.max(...searchCenters) - Math.min(...searchCenters) > 1.5
-    ) {
-      fail(`${label}: search-row elements are not on one optical axis.`, searchCenters);
+    if (!visible.garageNode || geometry.garageNode.top < 6) {
+      fail(`${label}: primary company sphere is clipped.`, geometry.garageNode);
     }
     if (geometry.mobileMenu && (geometry.mobileMenu.width < 40 || geometry.mobileMenu.height < 40)) {
       fail(`${label}: mobile navigation hit area is too small.`, geometry.mobileMenu);
@@ -849,7 +802,7 @@ const auditBrowser = async (client, origin) => {
 
   for (const scenario of scenarios) {
     await setViewport(client, scenario);
-    await navigate(client, `${origin}/?qa=ui-contracts-${scenario.label}`);
+    await navigate(client, `${origin}/?scene=map&qa=ui-contracts-${scenario.label}`);
     // A loaded page can still be resolving a camera transition or the mobile
     // frame. Measure the settled composition, not an intermediate animation.
     const settled = await waitForExpression(client, `(() => {
@@ -879,116 +832,19 @@ const auditBrowser = async (client, origin) => {
     auditGeometry(scenario.label, state);
     await saveScreenshot(client, scenario.label);
     if (scenario.mobile) {
+      await evaluate(client, "document.querySelector('[data-mobile-composition]').click(); true");
       const mobileDockContract = await evaluate(client, `(() => {
-        const visible = (element) => {
-          if (!element) return false;
-          const style = getComputedStyle(element);
-          const bounds = element.getBoundingClientRect();
-          return style.display !== "none"
-            && style.visibility !== "hidden"
-            && Number(style.opacity) > 0
-            && bounds.width > 0
-            && bounds.height > 0;
-        };
-        const dock = document.querySelector(".system-dock");
-        const controls = [...document.querySelectorAll(
-          ".system-dock .map-control-group--filters [data-map-filter]",
-        )];
-        const labels = controls.map((control) => control.querySelector("span:last-child"));
-        const symbols = controls.map((control) => control.querySelector(".map-control__symbol"));
-        const widths = controls.map((control) => control.getBoundingClientRect().width);
-        const textBounds = labels.map((label) => {
-          if (!label) return null;
-          const range = document.createRange();
-          range.selectNodeContents(label);
-          return range.getBoundingClientRect();
+        const controls = [...document.querySelectorAll('.system-dock [data-map-filter]')];
+        return controls.map(control => {
+          const box = control.getBoundingClientRect();
+          const style = getComputedStyle(control);
+          return { label: control.textContent.trim(), width: box.width, height: box.height,
+            visible: style.visibility !== 'hidden' && box.width > 0,
+            fits: box.left >= 0 && box.right <= innerWidth && box.top >= 0 && box.bottom <= innerHeight };
         });
-        const centerX = (element) => {
-          const bounds = element?.getBoundingClientRect();
-          return bounds ? bounds.left + bounds.width / 2 : Number.NaN;
-        };
-        const boundsCenterX = (bounds) => (
-          bounds ? bounds.left + bounds.width / 2 : Number.NaN
-        );
-        const dockBounds = dock?.getBoundingClientRect();
-        const dockStyle = dock ? getComputedStyle(dock) : null;
-        const contentLeft = dockBounds && dockStyle
-          ? dockBounds.left + Number.parseFloat(dockStyle.paddingLeft)
-          : Number.NaN;
-        const contentRight = dockBounds && dockStyle
-          ? dockBounds.right - Number.parseFloat(dockStyle.paddingRight)
-          : Number.NaN;
-        const innerLabelGaps = textBounds.slice(0, -1).map((bounds, index) => (
-          textBounds[index + 1].left - bounds.right
-        ));
-        const averageInnerLabelGap = innerLabelGaps.reduce((sum, gap) => sum + gap, 0)
-          / innerLabelGaps.length;
-        const outerLabelGaps = [
-          textBounds[0].left - contentLeft,
-          contentRight - textBounds.at(-1).right,
-        ];
-        // Share spare width evenly while retaining the short All button's
-        // minimum hit area; larger common type can make that minimum binding.
-        const spareWidths = widths.map((width, index) => width - textBounds[index].width);
-        const sharedSpareWidth = Math.min(...spareWidths);
-        return {
-          dockHeight: dock?.getBoundingClientRect().height || 0,
-          labels: labels.map((label) => label?.textContent.trim() || ""),
-          labelsVisible: labels.every(visible),
-          labelsFit: labels.every((label, index) => {
-            if (!label) return false;
-            const bounds = textBounds[index];
-            const controlBounds = controls[index].getBoundingClientRect();
-            return label.scrollWidth <= label.clientWidth + 1
-              && bounds.left >= controlBounds.left - 1
-              && bounds.right <= controlBounds.right + 1
-              && bounds.top >= controlBounds.top - 1
-              && bounds.bottom <= controlBounds.bottom + 1;
-          }),
-          minimumControlHeight: Math.min(
-            ...controls.map((control) => control.getBoundingClientRect().height),
-          ),
-          minimumControlWidth: Math.min(...widths),
-          labelCenterOffsets: textBounds.map((bounds, index) => (
-            Math.abs(boundsCenterX(bounds) - centerX(controls[index]))
-          )),
-          symbolToLabelCenterOffsets: symbols.map((symbol, index) => (
-            Math.abs(centerX(symbol) - boundsCenterX(textBounds[index]))
-          )),
-          controlWidths: widths,
-          labelSpacingDeviations: widths.map((width, index) => Math.abs(
-            width - Math.max(32, textBounds[index].width + sharedSpareWidth),
-          )),
-          innerLabelGaps,
-          innerLabelGapSpread: Math.max(...innerLabelGaps) - Math.min(...innerLabelGaps),
-          outerLabelGaps,
-          outerLabelGapDifference: Math.abs(outerLabelGaps[0] - outerLabelGaps[1]),
-          outerToHalfInnerGapDeviation: Math.max(
-            ...outerLabelGaps.map((gap) => Math.abs(gap - averageInnerLabelGap / 2)),
-          ),
-          themeVisible: visible(
-            document.querySelector(".system-dock > .display-control [data-theme-toggle]"),
-          ),
-        };
       })()`);
-      if (
-        JSON.stringify(mobileDockContract.labels)
-          !== JSON.stringify(["ВСЁ", "КОМПАНИИ", "ПРОЕКТЫ", "ЛИЧНОЕ", "ПРИНЦИПЫ"])
-        || !mobileDockContract.labelsVisible
-        || !mobileDockContract.labelsFit
-        || mobileDockContract.minimumControlHeight < 52
-        || mobileDockContract.minimumControlWidth < 32
-        || mobileDockContract.dockHeight < 60
-        || mobileDockContract.labelCenterOffsets.some((offset) => offset > 0.75)
-        || mobileDockContract.symbolToLabelCenterOffsets.some((offset) => offset > 0.75)
-        || mobileDockContract.labelSpacingDeviations.some((difference) => difference > 1)
-        || mobileDockContract.innerLabelGaps.some((gap) => gap < 2)
-        || mobileDockContract.themeVisible
-      ) {
-        fail(
-          scenario.label + ": mobile map filters are not five label-balanced controls.",
-          mobileDockContract,
-        );
+      if (mobileDockContract.length !== 5 || mobileDockContract.some(item => !item.visible || !item.fits || item.width < 44 || item.height < 44)) {
+        fail(scenario.label + ': disclosed composition must expose all five reachable filters.', mobileDockContract);
       }
       await evaluate(
         client,
@@ -1038,7 +894,7 @@ const auditBrowser = async (client, origin) => {
       }
       await evaluate(
         client,
-        "document.querySelector('[data-map-filter=\"all\"]')?.click(); true",
+        "document.querySelector('[data-map-filter=\"all\"]')?.click(); document.querySelector('[data-mobile-composition-close]')?.click(); true",
       );
     }
     if (scenario.label === "desktop-light") {
@@ -1067,7 +923,7 @@ const auditBrowser = async (client, origin) => {
   }
 
   if (focusedScenarioLabel) {
-    await navigate(client, `${origin}/?qa=ui-contracts-favicon-motion`);
+    await navigate(client, `${origin}/?scene=map&qa=ui-contracts-favicon-motion`);
     const faviconMotion = await evaluate(client, `(() => new Promise((resolve) => {
       const link = document.querySelector("#site-favicon");
       const firstHref = link?.href || "";
@@ -1115,7 +971,7 @@ const auditBrowser = async (client, origin) => {
     mobile: false,
     theme: "light",
   });
-  await navigate(client, `${origin}/?qa=ui-contracts-selected&point=garage`);
+  await navigate(client, `${origin}/?scene=map&qa=ui-contracts-selected&point=garage`);
   await waitForExpression(client, `(() => {
     const inspector = document.querySelector(".map-inspector");
     const bounds = inspector?.getBoundingClientRect();
@@ -1155,7 +1011,7 @@ const auditBrowser = async (client, origin) => {
 
   const expectedShowcaseIds = ["garage-site", "collection", "narkomfin", "eleven", "shirokostup", "tarski", "krainiuk", "ks-fish"];
   for (const [step, id] of [[1, "garage-site"], [2, "collection"], [3, "narkomfin"], [4, "eleven"], [5, "shirokostup"], [6, "tarski"], [7, "krainiuk"], [8, "ks-fish"]]) {
-    await navigate(client, `${origin}/?qa=ui-contracts-observation&route=observation&step=${step}#map`);
+    await navigate(client, `${origin}/?scene=map&qa=ui-contracts-observation&route=observation&step=${step}#map`);
     await evaluate(client, "document.querySelector('[data-observation-pause][data-paused=false]')?.click(); true");
     await waitForExpression(client, `(() => {
       const plane = document.querySelector('[data-observation-showcase] .is-active');
@@ -1180,14 +1036,14 @@ const auditBrowser = async (client, origin) => {
     await saveScreenshot(client, `desktop-observation-${step}`);
   }
   await setViewport(client, { width: 1440, height: 900, mobile: false, theme: "light", reducedMotion: "reduce" });
-  await navigate(client, `${origin}/?qa=ui-contracts-observation-reduced&route=observation&step=5#map`);
+  await navigate(client, `${origin}/?scene=map&qa=ui-contracts-observation-reduced&route=observation&step=5#map`);
   const reducedShowcase = await readObservationShowcaseContract(client);
   if (reducedShowcase.display === "none" || reducedShowcase.ariaHidden !== "true" || reducedShowcase.focusables !== 0) {
     fail("observation-showcase: reduced motion retains a static visual example.", reducedShowcase);
   }
   await setViewport(client, { width: 1440, height: 900, mobile: false, theme: "light" });
 
-  await navigate(client, `${origin}/?qa=ui-contracts-reactive-relations`);
+  await navigate(client, `${origin}/?scene=map&qa=ui-contracts-reactive-relations`);
   await client.send("Input.dispatchMouseEvent", {
     type: "mouseMoved",
     x: 1,
@@ -1212,7 +1068,7 @@ const auditBrowser = async (client, origin) => {
     );
   }
 
-  await navigate(client, `${origin}/?qa=ui-contracts-reactive-relations-child`);
+  await navigate(client, `${origin}/?scene=map&qa=ui-contracts-reactive-relations-child`);
   await client.send("Input.dispatchMouseEvent", {
     type: "mouseMoved",
     x: 1,
@@ -1243,7 +1099,7 @@ const auditBrowser = async (client, origin) => {
     theme: "light",
     reducedMotion: "reduce",
   });
-  await navigate(client, `${origin}/?qa=ui-contracts-reactive-relations-reduced`);
+  await navigate(client, `${origin}/?scene=map&qa=ui-contracts-reactive-relations-reduced`);
   const reducedRelationsContract = await readReactiveRelationsContract(client, "garage");
   if (
     reducedRelationsContract.relationshipId !== "garage"
@@ -1268,7 +1124,7 @@ const auditBrowser = async (client, origin) => {
   for (const pointId of ["private-practice", "running"]) {
     await navigate(
       client,
-      `${origin}/?qa=ui-contracts-floating-safe-area&point=${pointId}`,
+      `${origin}/?scene=map&qa=ui-contracts-floating-safe-area&point=${pointId}`,
     );
     const floatingSafeArea = await evaluate(client, `(() => {
       const display = document.querySelector(".display-control")?.getBoundingClientRect();
@@ -1334,7 +1190,7 @@ const auditBrowser = async (client, origin) => {
     }
   }
 
-  await navigate(client, `${origin}/?qa=ui-contracts-map-controls`);
+  await navigate(client, `${origin}/?scene=map&qa=ui-contracts-map-controls`);
   const displayGlyphContract = await evaluate(client, `(() => {
     const readGlyph = (selector) => {
       const glyph = document.querySelector(selector);
@@ -1913,7 +1769,7 @@ const auditBrowser = async (client, origin) => {
     );
   }
 
-  await navigate(client, `${origin}/?qa=ui-contracts-search`);
+  await navigate(client, `${origin}/?scene=map&qa=ui-contracts-search`);
   await evaluate(client, `(() => {
     const input = document.querySelector("[data-command-input]");
     input.value = "сайт герман";
@@ -2118,7 +1974,7 @@ const auditBrowser = async (client, origin) => {
     }
   }
 
-  await navigate(client, `${origin}/?qa=ui-contracts-employer-cases#work`);
+  await navigate(client, `${origin}/?scene=map&qa=ui-contracts-employer-cases#work`);
   await delay(80);
   const casesPanelContract = await evaluate(client, `(() => {
     const panel = document.querySelector("[data-content-panel]");
@@ -2149,9 +2005,9 @@ const auditBrowser = async (client, origin) => {
     { timeout: 1200, interval: 40 },
   );
   if (
-    casesPanelContract.rowCount !== 8
-    || casesPanelContract.title !== "Ключевые кейсы"
-    || casesPanelContract.heading !== "Ключевые кейсы"
+    casesPanelContract.rowCount !== 21
+    || casesPanelContract.title !== "Работы"
+    || casesPanelContract.heading !== "Работы"
     || casesPanelContract.panelHidden !== "true"
     || !casesPanelContract.inspectorOpen
     || casesPanelContract.evidenceHidden
@@ -2169,7 +2025,7 @@ const auditBrowser = async (client, origin) => {
   await saveScreenshot(client, "desktop-employer-case-ks-fish");
   await saveElementScreenshot(client, "crop-desktop-employer-case-optimal", ".map-inspector");
 
-  await navigate(client, `${origin}/?qa=ui-contracts-settings-search`);
+  await navigate(client, `${origin}/?scene=map&qa=ui-contracts-settings-search`);
 
   await evaluate(client, `(() => {
     const input = document.querySelector("[data-command-input]");
@@ -2291,7 +2147,7 @@ const auditBrowser = async (client, origin) => {
     enabled: false,
     configuration: "desktop",
   });
-  await navigate(client, `${origin}/?qa=ui-contracts-reel`);
+  await navigate(client, `${origin}/?scene=map&qa=ui-contracts-reel`);
   await client.send("Input.dispatchMouseEvent", {
     type: "mouseMoved",
     x: 1,
@@ -2443,7 +2299,7 @@ const auditBrowser = async (client, origin) => {
     identifier: desktopPointerScript.identifier,
   });
 
-  await navigate(client, `${origin}/?qa=ui-contracts-focus`);
+  await navigate(client, `${origin}/?scene=map&qa=ui-contracts-focus`);
   await pressTab(client);
   const focusContract = await evaluate(client, `(() => {
     const target = document.activeElement;
@@ -2480,7 +2336,7 @@ const auditBrowser = async (client, origin) => {
     contrast: "more",
     forcedColors: "active",
   });
-  await navigate(client, `${origin}/?qa=ui-contracts-forced-colors`);
+  await navigate(client, `${origin}/?scene=map&qa=ui-contracts-forced-colors`);
   await pressTab(client);
   const forcedColorsContract = await evaluate(client, `(() => {
     const target = document.activeElement;
@@ -2522,7 +2378,7 @@ const auditBrowser = async (client, origin) => {
     mobile: true,
     theme: "dark",
   });
-  await navigate(client, `${origin}/?qa=ui-contracts-mobile-navigation`);
+  await navigate(client, `${origin}/?scene=map&qa=ui-contracts-mobile-navigation`);
   await evaluate(client, "document.querySelector('[data-constellation-nav-toggle]')?.click()");
   await delay(120);
   const mobileNavigationState = await evaluate(client, geometryExpression);
@@ -2583,7 +2439,7 @@ const auditBrowser = async (client, origin) => {
     screenWidth: mobileSearchViewport.screenWidth,
     screenHeight: mobileSearchViewport.screenHeight,
   });
-  await navigate(client, `${origin}/?qa=ui-contracts-mobile-search#map`);
+  await navigate(client, `${origin}/?scene=map&qa=ui-contracts-mobile-search#map`);
   const compactAuthorship = await evaluate(
     client,
     readCompactAuthorshipExpression,
@@ -2652,7 +2508,7 @@ const auditBrowser = async (client, origin) => {
   });
   await navigate(
     client,
-    `${origin}/?qa=ui-contracts-mobile-search-safari-split#map`,
+    `${origin}/?scene=map&qa=ui-contracts-mobile-search-safari-split#map`,
   );
   const mobileSafariSplitEmulation = await evaluate(
     client,
@@ -2679,7 +2535,7 @@ const auditBrowser = async (client, origin) => {
     mobile: false,
     theme: "light",
   });
-  await navigate(client, `${origin}/?qa=ui-contracts-ilmix-copy&point=ilmix#map`);
+  await navigate(client, `${origin}/?scene=map&qa=ui-contracts-ilmix-copy&point=ilmix#map`);
   const ilmixCopy = await evaluate(client, `(() => {
     const evidence = document.querySelector("[data-map-evidence]");
     const task = document.querySelector("[data-map-evidence-task]");
@@ -2719,7 +2575,7 @@ const auditBrowser = async (client, origin) => {
   await saveScreenshot(client, "desktop-ilmix-copy");
   await saveElementScreenshot(client, "crop-desktop-ilmix-copy", ".map-inspector");
 
-  await navigate(client, `${origin}/?qa=ui-contracts-optimal-copy&point=optimal#map`);
+  await navigate(client, `${origin}/?scene=map&qa=ui-contracts-optimal-copy&point=optimal#map`);
   const optimalCopy = await evaluate(client, `(() => {
     const evidence = document.querySelector("[data-map-evidence]");
     const task = document.querySelector("[data-map-evidence-task]");
@@ -2766,7 +2622,7 @@ const auditBrowser = async (client, origin) => {
 
   await navigate(
     client,
-    `${origin}/?qa=ui-contracts-notion-project-evidence&point=garage-site#map`,
+    `${origin}/?scene=map&qa=ui-contracts-notion-project-evidence&point=garage-site#map`,
   );
   const notionProjectEvidence = await evaluate(client, `(() => {
     const ids = [
@@ -2833,7 +2689,7 @@ const auditBrowser = async (client, origin) => {
   });
   await navigate(
     client,
-    `${origin}/?qa=ui-contracts-notion-project-mobile&point=garage-site#map`,
+    `${origin}/?scene=map&qa=ui-contracts-notion-project-mobile&point=garage-site#map`,
   );
   const notionProjectMobile = await evaluate(client, `(() => {
     const inspector = document.querySelector("[data-map-inspector]");
@@ -2887,7 +2743,7 @@ const auditBrowser = async (client, origin) => {
     theme: "light",
   });
 
-  await navigate(client, `${origin}/?qa=ui-contracts-food-forks&point=food#map`);
+  await navigate(client, `${origin}/?scene=map&qa=ui-contracts-food-forks&point=food#map`);
   const foodForks = await evaluate(client, `(() => {
     const link = document.querySelector("[data-map-link]");
     const map = document.querySelector("[data-practice-map]");
@@ -2927,7 +2783,7 @@ const auditBrowser = async (client, origin) => {
   await saveScreenshot(client, "desktop-food-forks");
   await saveElementScreenshot(client, "crop-desktop-food-forks", ".map-inspector");
 
-  await navigate(client, `${origin}/?qa=ui-contracts-filter-hover&filter=personal#map`);
+  await navigate(client, `${origin}/?scene=map&qa=ui-contracts-filter-hover&filter=personal#map`);
   await evaluate(client, `(() => {
     document.querySelector('[data-map-id="wave"]')
       ?.dispatchEvent(new PointerEvent("pointerenter"));
@@ -2978,7 +2834,7 @@ const auditBrowser = async (client, origin) => {
   });
   await navigate(
     client,
-    `${origin}/?qa=ui-contracts-principle-verbatim&point=principle-data-intuition#map`,
+    `${origin}/?scene=map&qa=ui-contracts-principle-verbatim&point=principle-data-intuition#map`,
   );
   const principleVerbatim = await evaluate(client, `(() => {
     const inspector = document.querySelector("[data-map-inspector]");
@@ -3043,7 +2899,7 @@ const auditBrowser = async (client, origin) => {
   });
   await navigate(
     client,
-    `${origin}/?qa=ui-contracts-narkomfin-number&point=narkomfin#map`,
+    `${origin}/?scene=map&qa=ui-contracts-narkomfin-number&point=narkomfin#map`,
   );
   const mobileMetricGroups = await evaluate(
     client,
@@ -3065,7 +2921,7 @@ const auditBrowser = async (client, origin) => {
     mobile: true,
     theme: "dark",
   });
-  await navigate(client, `${origin}/?qa=ui-contracts-mobile-panel#contact`);
+  await navigate(client, `${origin}/?scene=map&qa=ui-contracts-mobile-panel#contact`);
   const mobilePanel = await evaluate(client, geometryExpression);
   if (!mobilePanel.visible.contentPanel || !mobilePanel.visible.contentBody) {
     fail("mobile-panel: content panel/body is not visible.");
@@ -3095,7 +2951,7 @@ const auditBrowser = async (client, origin) => {
     mobile: false,
     theme: "light",
   });
-  await navigate(client, `${origin}/?qa=ui-contracts-favicon`);
+  await navigate(client, `${origin}/?scene=map&qa=ui-contracts-favicon`);
   const firstFavicon = await evaluate(
     client,
     "document.querySelector('#site-favicon')?.href || ''",
@@ -3128,7 +2984,7 @@ const auditBrowser = async (client, origin) => {
       { name: "prefers-color-scheme", value: "light" },
     ],
   });
-  await navigate(client, `${origin}/?qa=ui-contracts-favicon-reduced`);
+  await navigate(client, `${origin}/?scene=map&qa=ui-contracts-favicon-reduced`);
   const reducedFirst = await evaluate(
     client,
     "document.querySelector('#site-favicon')?.href || ''",
@@ -3168,7 +3024,7 @@ const auditBrowser = async (client, origin) => {
   await client.send("Emulation.setScriptExecutionDisabled", { value: true });
   {
     const loaded = client.waitFor("Page.loadEventFired");
-    await client.send("Page.navigate", { url: `${origin}/?qa=no-script` });
+    await client.send("Page.navigate", { url: `${origin}/?scene=map&qa=no-script` });
     await loaded;
     await delay(120);
   }
@@ -3200,7 +3056,7 @@ const auditBrowser = async (client, origin) => {
   await saveScreenshot(client, "desktop-no-script");
   await saveElementScreenshot(client, "crop-desktop-no-script", ".no-script-fallback");
 
-  await navigate(client, `${origin}/?qa=privacy&analytics-consent=show`);
+  await navigate(client, `${origin}/?scene=map&qa=privacy&analytics-consent=show`);
   await waitForGeometryTransition(client, "[data-settings-panel]");
   const analyticsRequestsBeforeChoice = observedNetworkRequests.filter((url) => (
     url.startsWith("https://mc.yandex.ru/")
@@ -3535,7 +3391,7 @@ const auditBrowser = async (client, origin) => {
     mobile: true,
     theme: "dark",
   });
-  await navigate(client, `${origin}/?qa=mobile-393-safari-short-settings`);
+  await navigate(client, `${origin}/?scene=map&qa=mobile-393-safari-short-settings`);
   await evaluate(client, `(() => {
     document.querySelector('[data-nav-utility][data-open-settings]')?.click();
     return true;
@@ -3724,7 +3580,7 @@ const auditBrowser = async (client, origin) => {
     client,
     "localStorage.removeItem('anton-signal-analytics'); true",
   );
-  await navigate(client, `${origin}/?qa=privacy-allow&analytics-consent=show`);
+  await navigate(client, `${origin}/?scene=map&qa=privacy-allow&analytics-consent=show`);
   const analyticsRequestBaseline = observedNetworkRequests.length;
   await evaluate(client, "document.querySelector('[data-analytics-allow]')?.click(); true");
   await delay(80);

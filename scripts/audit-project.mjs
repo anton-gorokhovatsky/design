@@ -475,7 +475,8 @@ const requiredMaterialSurfaces = [
   "inspector-close",
   "inspector-kind",
   "observation-index",
-  "overview-play",
+  "map-preview",
+  "mobile-first-dock",
   "inspector-identity",
   "inspector-description",
   "inspector-observation",
@@ -932,7 +933,7 @@ requireContract(
 );
 requireContract(
   indexSource.includes('class="no-script-fallback"')
-    && indexSource.includes('aria-label="Ключевые кейсы"')
+    && indexSource.includes('aria-label="Работы"')
     && indexSource.includes("https://hh.ru/resume/e469b9deff00850af10039ed1f736563726574?print=true")
     && indexSource.includes("Подробное резюме в Notion")
     && indexSource.includes("mailto:anton.gorokhovatsky@gmail.com")
@@ -942,13 +943,14 @@ requireContract(
 );
 requireContract(
   indexSource.match(/data-map-point="[^"]+"/g)?.length === 8
-    && indexSource.includes("Ключевые <span>кейсы</span>")
+    && indexSource.includes('id="work-title">Работы</h2>')
+    && scriptSource.includes("listedWorks.has(item.id)")
     && scriptSource.includes('source: "cases"')
     && scriptSource.includes("evidence.task")
     && scriptSource.includes("evidence.role")
     && scriptSource.includes("evidence.result"),
   "employer-case-route",
-  "The employer route must expose eight evidence-backed cases and index task, role, and result text.",
+  "The work index keeps its eight editorial opening rows, includes the remaining works and preserves task, role and result evidence.",
 );
 requireContract(
   scriptSource.includes("if (document.hidden)")

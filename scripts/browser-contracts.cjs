@@ -272,6 +272,7 @@ const readCompactAuthorshipExpression = `(() => {
     top: bounds?.top || 0,
     bottom: bounds?.bottom || 0,
     viewportWidth: innerWidth,
+    focusedHome: document.body.classList.contains("has-focused-home"),
     cameraTop: document.querySelector(".map-camera")?.getBoundingClientRect().top || 0,
     hidden: !header
       || style?.display === "none"
@@ -322,6 +323,7 @@ const readAnnotationHierarchyExpression = `(() => {
     garage: readBox(document.querySelector(".map-node-label--garage")),
     overflowX: document.documentElement.scrollWidth
       - document.documentElement.clientWidth,
+    overviewInWork: Boolean(document.querySelector("#work [data-start-observation]")),
     route: readBox(document.querySelector(".origin-marker__label")),
     routeTitle: readBox(document.querySelector(".origin-marker__title")),
     routeCaption: readBox(document.querySelector(".origin-marker__caption")),
@@ -491,7 +493,7 @@ const readMobileSearchFocusedExpression = `(() => {
     results: resultsBounds,
     geometryFits: withinViewport(dockBounds)
       && withinViewport(resultsBounds)
-      && resultsBounds.top >= dockBounds.bottom + 6,
+      && resultsBounds.bottom <= dockBounds.top - 6,
     resultsClientHeight: results?.clientHeight || 0,
     resultsScrollHeight: results?.scrollHeight || 0,
     pageScrollY: window.scrollY,
@@ -555,6 +557,7 @@ const readMobileSearchArrowExpression = `(() => ({
 
 const readMobileSearchRestoredExpression = `(() => ({
   focused: document.activeElement?.matches?.("[data-command-input]") || false,
+  searchTriggerVisible: document.querySelector("[data-spatial-search]").checkVisibility({visibilityProperty:true}),
   bodyHasFocus: document.body.classList.contains("has-command-focus"),
   expanded: document.querySelector("[data-command-input]")
     ?.getAttribute("aria-expanded"),
@@ -707,7 +710,7 @@ const validateMobileSearchContract = ({
     || state.bodyHasFocus
     || state.expanded !== "false"
     || state.pageScrollY !== 0
-    || state.systemDockVisibility !== "visible"
+    || !state.searchTriggerVisible
     || state.navigationVisibility !== "visible"
     || state.navigationCommandClose
     || state.navigationToggleLabel !== "Открыть меню"
@@ -774,7 +777,7 @@ const validateCompactAuthorship = (authorship) => {
     && authorship.right <= authorship.viewportWidth
     && authorship.top >= 0
     && authorship.cameraTop - authorship.bottom >= 8
-    && authorship.cameraTop - authorship.bottom <= 24
+    && authorship.cameraTop - authorship.bottom <= (authorship.focusedHome ? 128 : 80)
   ) {
     return [];
   }
@@ -837,13 +840,13 @@ const validateAnnotationHierarchy = (hierarchy) => {
     && Number.parseFloat(garage.properties?.paddingTop || "0") > Number.parseFloat(referenceAxis.properties?.paddingTop || "0")
     && Number.parseFloat(garage.properties?.paddingRight || "0") > Number.parseFloat(referenceAxis.properties?.paddingRight || "0");
 
-  if (axesAreCoordinates && routeIsOpen && routeIsProminent && garageIsLarger && hierarchy.overflowX === 0) {
+  if (axesAreCoordinates && hierarchy.overviewInWork && garageIsLarger && hierarchy.overflowX === 0) {
     return [];
   }
 
   return [{
     id: "annotation-hierarchy",
-    message: "axes stay unboxed, the overview is an open title and caption with a circular playback control, and Garage retains its object label",
+    message: "axes stay unboxed, the overview belongs inside the work section, and Garage retains its object label",
     details: hierarchy,
   }];
 };

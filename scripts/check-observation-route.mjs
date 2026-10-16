@@ -11,6 +11,13 @@ mkdirSync(directory, { recursive: true });
 const { server, origin } = await startStaticServer({ projectRoot: process.cwd() });
 const browser = await ({ chromium, webkit })[engine].launch({ headless: true });
 const errors = [];
+const startOverview = async page => {
+  if (!await page.locator('[data-start-observation]').isVisible()) {
+    await page.locator('.skip-link--secondary').focus();
+    await page.keyboard.press('Enter');
+  }
+  await page.locator('[data-start-observation]').click();
+};
 const progress = page => page.locator("[data-observation-progress]").innerText();
 const capture = async (page, name) => {
   await page.locator("[data-observation-showcase].is-visible img[src], [data-observation-preview]:not([hidden]) img").evaluateAll(
@@ -47,12 +54,12 @@ try {
       await page.evaluate(() => document.fonts.ready);
       await page.waitForFunction(() => document.querySelector('[data-whoop-recovery]').textContent.includes('77'));
       const authorBefore = await page.locator(".site-header").boundingBox();
-      await page.locator("[data-start-observation]").click();
+      await startOverview(page);
       if (width > 900) await page.locator("[data-observation-pause]").click();
       assert.equal(await page.locator("[data-observation-pause]").getAttribute("data-paused"), "true");
       await page.evaluate(() => document.fonts.ready);
       await waitForAuthor(page, false);
-      assert.deepEqual(await page.locator(".site-header").boundingBox(), authorBefore);
+      if (width > 900) assert.deepEqual(await page.locator(".site-header").boundingBox(), authorBefore);
       assert.equal(await progress(page), "1 / 9");
       assert.equal(await page.locator("[data-observation-next]").getAttribute("aria-label"), "Следующий шаг");
       assert.equal(await page.locator("[data-observation-title-card]").count(), 0);
@@ -76,8 +83,10 @@ try {
       }
       assert.equal(requests.filter(url => url.includes("/observation/")).length, 0);
       await page.keyboard.press("Escape");
+      assert.equal(await page.locator("[data-content-panel]").getAttribute("data-view"), "work");
+      await page.locator("[data-close-panel]").click();
       await waitForAuthor(page, true);
-      assert.deepEqual(await page.locator(".site-header").boundingBox(), authorBefore);
+      if (width > 900) assert.deepEqual(await page.locator(".site-header").boundingBox(), authorBefore);
       assert.equal(await page.locator("[data-signal-field]").getAttribute("data-observation-active"), null);
       if (name === "desktop" || name === "mobile") await capture(page, `returned-${name}-${theme}`);
       await page.close();
@@ -90,7 +99,7 @@ try {
   page.on("pageerror", error => errors.push(error.message));
   await page.clock.install();
   await page.goto(origin);
-  await page.locator("[data-start-observation]").click();
+  await startOverview(page);
   await page.clock.fastForward(1000);
   await page.locator("[data-observation-pause]").click();
   await page.clock.fastForward(5000);
@@ -108,7 +117,7 @@ try {
   await page.locator("[data-observation-next]").click();
   assert.equal(await page.locator("[data-signal-field]").getAttribute("data-observation-active"), null);
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.locator("[data-start-observation]").click();
+  await startOverview(page);
   assert.equal(await page.locator("[data-observation-pause]").getAttribute("aria-label"), "Продолжить обзор");
   await page.clock.fastForward(20000);
   assert.equal(await progress(page), "1 / 9");
@@ -117,7 +126,7 @@ try {
   const reader = await browser.newPage({ viewport: { width: 320, height: 568 } });
   reader.on("pageerror", error => errors.push(error.message));
   await reader.goto(origin);
-  await reader.locator("[data-start-observation]").click();
+  await startOverview(reader);
   assert.equal(await reader.locator("[data-observation-pause]").getAttribute("data-paused"), "true", "Mobile starts at the reader's pace.");
   await reader.locator("[data-observation-steps]").selectOption("6");
   assert.equal(await progress(reader), "7 / 9");

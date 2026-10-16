@@ -62,11 +62,13 @@ export async function checkLiveSurface(browser, origin, engine) {
   assert.deepEqual(await page.locator('.site-header').boundingBox(), card, 'Settings leave the author card in place.');
   await page.keyboard.press('Escape');
   await page.waitForFunction(() => !document.querySelector('[data-settings-panel]').open);
+  await page.locator('.constellation-nav__item[data-open-panel="work"]').click();
   await page.locator('[data-start-observation]').first().click();
   assert.equal((await state()).visibility, 'visible', 'The observation route preserves author presence.');
   assert.deepEqual(await page.locator('.site-header').boundingBox(), card, 'Reading leaves the author card in place.');
   assert.ok(await page.locator('.site-header').evaluate(e => Number(getComputedStyle(e).opacity) <= .16), 'Reading subordinates the background card.');
   await page.keyboard.press('Escape');
+  await page.locator('[data-close-panel]').click();
   for (const id of ['screen-controls', 'map-about']) {
     const trigger = page.locator(`[popovertarget="${id}"]:not([popovertargetaction])`);
     const panel = page.locator(`#${id}`);

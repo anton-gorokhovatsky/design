@@ -33,9 +33,9 @@ try {
       await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
       // Font and camera reflow are asynchronous; measure the settled input surface.
       await page.waitForFunction(() => !document.querySelector('[data-map-links][data-layout-pending]')
-        && [...document.querySelectorAll(".map-node")].every(node => {
+        && [...document.querySelectorAll(".map-node:not([inert])")].every(node => {
         const rect = node.getBoundingClientRect();
-        return document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2)?.closest(".map-node") === node;
+        return rect.top >= innerHeight || rect.bottom <= 0 || document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2)?.closest(".map-node") === node;
       }), null, { timeout: 5000 });
       const state = await page.evaluate(() => {
         const box = (e) => e.getBoundingClientRect().toJSON();
@@ -55,12 +55,14 @@ try {
           route: document.querySelector("[data-start-observation]").textContent,
           routeName: document.querySelector("[data-start-observation]").getAttribute("aria-labelledby")
             .split(" ").map(id => document.getElementById(id).textContent).join(" "),
-          nodes: [...document.querySelectorAll(".map-node")].map(box),
+          totalNodes: document.querySelectorAll(".map-node").length,
+          nodes: [...document.querySelectorAll(".map-node:not([inert])")].map(box),
           signs: [...document.querySelectorAll(".map-node__glyph")].map(box),
           obstacles: [...document.querySelectorAll(".map-controls, .display-control, .control-console, .site-header, .map-axis-label")]
             .filter(visible).map(box).filter(rect => rect.width && rect.height),
-          blockedTargets: [...document.querySelectorAll(".map-node")].flatMap((node) => {
+          blockedTargets: [...document.querySelectorAll(".map-node:not([inert])")].flatMap((node) => {
             const rect = node.getBoundingClientRect();
+            if (rect.top >= innerHeight || rect.bottom <= 0) return [];
             const hit = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
             return hit?.closest(".map-node") === node ? [] : [{ id: node.dataset.mapId, hit: hit?.closest(".map-node")?.dataset.mapId || hit?.className }];
           }),
@@ -73,9 +75,10 @@ try {
       assert.equal(state.overflow, 0, JSON.stringify({ name, theme, state }));
       assert.ok(state.authorVisible && state.author.left >= 0 && state.author.right <= width + 1);
       assert.equal(state.selected, "true");
-      assert.equal(state.nodes.length, mapItems.length, "The whole map remains present.");
+      assert.equal(state.totalNodes, mapItems.length, "All points remain available through the full map.");
+      if (width <= 900) assert.equal(state.nodes.length, 8, "The introductory map exposes eight directions and examples.");
       assert.deepEqual(state.blockedTargets, [], `${name} ${theme}: each point must receive input at its own center.`);
-      assert.equal(state.route.trim().replace(/\s+/g, " "), "Обзор Работы и подход · 3 минуты");
+      assert.equal(state.route.trim().replace(/\s+/g, " "), "Короткий обзор Сайты в действии · 3 минуты");
       assert.equal(state.routeName.replace(/\s+/g, " "), state.route.trim().replace(/\s+/g, " "), "The accessible name matches the visible overview label.");
       assert.ok(!state.nodes.some((node) => state.authorLines.some((line) => overlaps(node, line))), "Authorship must not collide with a map target: " + JSON.stringify({ name, state }));
       if (width > 900) {
@@ -97,7 +100,7 @@ try {
         if (width <= 900) await page.locator("[data-constellation-nav-toggle]").click();
         await page.locator('.constellation-nav__item[data-open-panel="work"]').click();
         await capture(page, `work-${name}-${theme}`);
-        assert.equal(await page.locator(".work-row").count(), 8);
+        assert.equal(await page.locator(".work-row").count(), 21);
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0);
         const scopes = await page.locator(".work-row__scope").evaluateAll((elements) => elements.map((element) => ({
           size: parseFloat(getComputedStyle(element).fontSize),
@@ -116,7 +119,7 @@ try {
           assert.equal(await page.locator('[data-content-panel]').getAttribute('aria-hidden'), 'false');
           // WebKit follows the host default: Option+Tab includes links.
           const nextLinkKey = engine === "webkit" ? "Alt+Tab" : "Tab";
-          for (let index = 1; index < 8; index++) await page.keyboard.press(nextLinkKey);
+          for (let index = 1; index < 21; index++) await page.keyboard.press(nextLinkKey);
           assert.equal(await page.locator(".work-row").last().evaluate((element) => element === document.activeElement), true, "Keyboard navigation reaches the final case.");
           await capture(page, `work-end-${name}-${theme}`);
           const last = await page.locator(".work-row").last().boundingBox();
