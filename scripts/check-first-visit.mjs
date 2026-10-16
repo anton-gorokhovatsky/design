@@ -89,7 +89,7 @@ try {
       assert.equal(state.totalNodes, mapItems.length, "All points remain available through the full map.");
       if (width <= 900) assert.equal(state.nodes.length, 8, "The introductory map exposes eight directions and examples.");
       assert.deepEqual(state.blockedTargets, [], `${name} ${theme}: each point must receive input at its own center.`);
-      assert.equal(state.route.trim().replace(/\s+/g, " "), "Короткий обзор Сайты в действии · 3 минуты");
+      assert.equal(state.route.trim().replace(/\s+/g, " "), "Короткий обзор Рассказ о проектах");
       assert.equal(state.routeName.replace(/\s+/g, " "), state.route.trim().replace(/\s+/g, " "), "The accessible name matches the visible overview label.");
       assert.ok(!state.nodes.some((node) => state.authorLines.some((line) => overlaps(node, line))), "Authorship must not collide with a map target: " + JSON.stringify({ name, state }));
       if (width > 900) {
