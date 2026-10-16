@@ -12,10 +12,11 @@ const { server, origin } = await startStaticServer({ projectRoot: process.cwd() 
 const browser = await ({ chromium, webkit })[engine].launch({ headless: true });
 const errors = [];
 const startOverview = async page => {
-  if (!await page.locator('[data-start-observation]').isVisible()) {
+  if (!await page.locator('[data-content-panel]').evaluate(panel => panel.classList.contains('is-open') && panel.dataset.view === 'work')) {
     await page.locator('.skip-link--secondary').focus();
     await page.keyboard.press('Enter');
   }
+  await page.waitForFunction(() => document.querySelector('[data-content-panel].is-open[data-view="work"]'));
   await page.locator('[data-start-observation]').click();
 };
 const progress = page => page.locator("[data-observation-progress]").innerText();

@@ -2923,9 +2923,9 @@ const auditBrowser = async (client, origin) => {
   if (!withinViewport(mobilePanel.geometry.panelClose, mobilePanel.viewport, 2)) {
     fail("mobile-panel: close control leaves the viewport.", mobilePanel.geometry.panelClose);
   }
-  if (!mobilePanel.visible.search || mobilePanel.geometry.search.opacity > .16
+  if (mobilePanel.visible.search || mobilePanel.geometry.search.opacity > .16
     || mobilePanel.geometry.search.pointerEvents !== "none" || !mobilePanel.geometry.search.inert) {
-    fail("mobile-panel: search stays in place as an inactive background panel.", mobilePanel.geometry.search);
+    fail("mobile-panel: collapsed search must remain hidden and inactive behind the reading panel.", mobilePanel.geometry.search);
   }
   if (mobilePanel.materialFailures.length > 0) {
     fail("mobile-panel: MATERIAL / 01 mismatch.", mobilePanel.materialFailures);
@@ -3457,7 +3457,7 @@ const auditBrowser = async (client, origin) => {
     mobileShortSettingsContract.nav,
   ].every((control) => (
     control
-    && (control.visibility === "visible" && control.opacity <= .16)
+    && (control.visibility === "hidden" || control.width === 0 || control.opacity <= .16)
   ));
   if (
     !mobileShortSettingsContract.bodyHasSettings

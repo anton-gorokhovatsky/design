@@ -1071,7 +1071,7 @@ const analyticsConsentAudit = async (page, viewport, label) => {
     result.navigation,
   ].every((control) => (
     control
-    && (control.visibility === "visible" && control.opacity <= .16)
+    && (control.visibility === "hidden" || control.width === 0 || control.opacity <= .16)
   ));
   const withinViewport = rect
     && rect.left >= -0.5

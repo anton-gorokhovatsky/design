@@ -159,10 +159,12 @@ for (const engine of [process.argv[2] || 'chromium']) {
       await page.waitForTimeout(200);
       await close.click();
       await page.waitForFunction(() => !document.body.hasAttribute('data-case-open'));
+      await page.waitForFunction(() => document.activeElement?.dataset.mapId === 'garage-site');
       if (width>900) await page.waitForFunction(()=>getComputedStyle(document.querySelector('.map-axis-label--north')).visibility==='visible');
       assert.equal(await page.evaluate(() => document.activeElement?.dataset.mapId),'garage-site','Close returns focus to the selected point');
       assert.equal(await page.locator('.ad-map-home,.ad-landmarks,.ad-utilities,.ad-intro').count(),0,'Rejected home/navigation experiment is absent');
       await page.locator('[data-map-id="garage-site"]').click();
+      if (width <= 900) await page.locator('.point-preview__link').click();
       await page.waitForFunction(() => document.body.hasAttribute('data-case-open'));
       assert.equal((await measure()).top,0,'Reopening starts at the beginning');
       if (name==='mobile-light') {

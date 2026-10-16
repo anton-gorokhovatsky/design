@@ -183,6 +183,12 @@ function restoreScene() {
   if (restoring) return;
   restoring = true;
   const url = new URL(location.href);
+  // A direct case link needs the complete map as its return destination.
+  // Preview links retain the introductory scene and its selected point.
+  if (compact.matches && url.searchParams.has('point') && !url.searchParams.has('preview')) {
+    url.searchParams.set('scene', 'map');
+    history.replaceState(history.state, '', url);
+  }
   setScene(url.searchParams.get('scene') !== 'map');
   const id = url.searchParams.get('preview');
   if (id && (!url.searchParams.has('point') || url.searchParams.get('point') === id)) {
@@ -226,5 +232,9 @@ compact.addEventListener('change', restoreScene);
 window.addEventListener('resize', syncMeasurements);
 window.addEventListener('reading-surface-change', syncReading);
 new MutationObserver(syncReading).observe(document.body, { attributes: true, attributeFilter: ['class', 'data-case-open'] });
-new ResizeObserver(syncMeasurements).observe(header);
+let measurementFrame = 0;
+new ResizeObserver(() => {
+  if (measurementFrame) return;
+  measurementFrame = requestAnimationFrame(() => { measurementFrame = 0; syncMeasurements(); });
+}).observe(header);
 restoreScene();

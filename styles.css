@@ -1217,7 +1217,7 @@ html[data-capture="og"] .map-grid {
     scroll-behavior: auto !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    transition-duration: 0s !important;
   }
 }
 
@@ -8169,7 +8169,7 @@ html[data-reduce-motion="true"] *::after {
   animation-duration: 0.01ms !important;
   animation-iteration-count: 1 !important;
   scroll-behavior: auto !important;
-  transition-duration: 0.01ms !important;
+  transition-duration: 0s !important;
 }
 
 html[data-reduce-motion="true"]
@@ -10470,6 +10470,8 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
     backdrop-filter: none; -webkit-backdrop-filter: none;
   }
   .focused-home .brand { max-height: none; }
+  /* The open author signature has no material between its text and the day field. */
+  .focused-home .brand__role { color: var(--ink); }
   .focused-home .whoop-readout { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: var(--space-3); }
   .focused-home .whoop-readout[hidden] { display: none; }
   .focused-home .whoop-metrics { flex-basis: 100%; }

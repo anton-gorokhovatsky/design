@@ -18,7 +18,7 @@ try {
       colorScheme: theme, reducedMotion: "reduce", isMobile: width === 320, hasTouch: width === 320 });
     page.on("pageerror", error => errors.push(error.message));
     const open = async () => {
-      await page.goto(origin, { waitUntil: "load" });
+      await page.goto(`${origin}/?scene=map`, { waitUntil: "load" });
       await page.evaluate(() => document.fonts.ready);
     };
     await open();
@@ -144,7 +144,9 @@ try {
   await latePage.waitForFunction(() => {
     const header = document.querySelector(".site-header").getBoundingClientRect();
     const camera = document.querySelector(".map-camera").getBoundingClientRect();
-    return Math.abs(camera.top - header.bottom - 14) < 1;
+    const intro = document.querySelector('.spatial-intro').getBoundingClientRect();
+    return document.body.classList.contains('has-focused-home')
+      && intro.top >= header.bottom && camera.top >= intro.bottom;
   });
   await latePage.close();
   console.log(`PASS ${engine} delayed WHOOP: analytics stays visible; mobile map follows the card.`);

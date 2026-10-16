@@ -25,10 +25,15 @@ compact.addEventListener('change', () => setComposition(false));
 setComposition(false);
 
 let height = 0;
+let measurementFrame = 0;
 new ResizeObserver(() => {
-  const next = Math.ceil(dock.getBoundingClientRect().height);
-  if (next === height) return;
-  height = next;
-  document.documentElement.style.setProperty('--mobile-first-dock-height', `${height}px`);
-  window.dispatchEvent(new Event('resize'));
+  if (measurementFrame) return;
+  measurementFrame = requestAnimationFrame(() => {
+    measurementFrame = 0;
+    const next = Math.ceil(dock.getBoundingClientRect().height);
+    if (next === height) return;
+    height = next;
+    document.documentElement.style.setProperty('--mobile-first-dock-height', `${height}px`);
+    window.dispatchEvent(new Event('resize'));
+  });
 }).observe(dock);

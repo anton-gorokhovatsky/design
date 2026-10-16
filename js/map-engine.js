@@ -367,7 +367,7 @@ const measureMapClearance = () => {
   mapButtons.forEach((button, id) => mapTargetDiameters.set(id, parseFloat(getComputedStyle(button).width)));
   const selectors = [".site-header", ".map-axis-label"];
   if (window.innerWidth > 900) selectors.push(".map-controls", ".map-control > span", ".display-control", ".control-console");
-  else selectors.push(".command-dock", ".mobile-index-links");
+  else selectors.push(".command-dock", ".focused-return", ".mobile-first-dock");
   mapConsoleBounds = [...document.querySelectorAll(selectors.join(","))]
     .map(element => element.getBoundingClientRect())
     .filter(rect => rect.width && rect.height);
@@ -391,22 +391,27 @@ const measureMapClearance = () => {
     const label = mapLabels.get(item.id);
     if (!mobileTitles || !label?.classList.contains("mobile-landmark") || label.hasAttribute("data-mobile-hidden")) return;
     const {left, top, width, height} = mapFieldBounds;
-    const x = left + position.x * width / 100;
-    const y = top + position.y * height / 100;
+    const labelBounds = mapLabelsRoot.getBoundingClientRect();
+    const x = labelBounds.left + position.x * labelBounds.width / 100;
+    const y = labelBounds.top + position.y * labelBounds.height / 100;
+    const targetX = left + position.x * width / 100;
+    const targetY = top + position.y * height / 100;
     const labelWidth = label.offsetWidth, labelHeight = label.offsetHeight;
-    const gap = Math.max(12, (mapButtons.get(item.id)?.querySelector(".map-node__glyph")?.getBoundingClientRect().width || 12) / 2 + 6);
+    const radius = mapTargetDiameter(item) * width / mapNodesRoot.clientWidth / 2;
+    const gapX = radius + Math.abs(targetX - x) + 6;
+    const gapY = radius + Math.abs(targetY - y) + 6;
     const sides = {
-      north: [-labelWidth / 2, -gap - labelHeight],
-      south: [-labelWidth / 2, gap],
-      west: [-gap - labelWidth, -labelHeight / 2],
-      east: [gap, -labelHeight / 2],
+      north: [-labelWidth / 2, -gapY - labelHeight],
+      south: [-labelWidth / 2, gapY],
+      west: [-gapX - labelWidth, -labelHeight / 2],
+      east: [gapX, -labelHeight / 2],
     };
     const preferred = item.id === "garage" || item.id === "private-practice" ? "north"
       : item.id === "ks-fish" ? "west" : item.id === "principle-data-intuition" ? "south" : "east";
     const occupied = [...mapConsoleBounds];
     mapClearancePositions.forEach((other, id) => {
       if (id === item.id) return;
-      const radius = (mapTargetDiameters.get(id) || 24) / 2;
+      const radius = (mapTargetDiameters.get(id) || 24) * width / mapNodesRoot.clientWidth / 2;
       const cx = left + other.x * width / 100, cy = top + other.y * height / 100;
       occupied.push({left: cx-radius, right:cx+radius, top:cy-radius, bottom:cy+radius});
     });
@@ -446,7 +451,7 @@ const clearMapConsoles = (item, position) => {
       if (!position) return false;
       // Reserve the whole pointer target, including on compact maps.
       const otherRadius = mapTargetDiameter(other) * width / mapNodesRoot.clientWidth / 2;
-      const clearance = radius - padding + otherRadius + (innerWidth > 900 ? 4 : 0);
+      const clearance = radius - padding + otherRadius + (innerWidth > 900 ? 4 : 2);
       return Math.abs(candidate[0] - left - position.x * width / 100) < clearance
         && Math.abs(candidate[1] - top - position.y * height / 100) < clearance;
     });
@@ -746,7 +751,8 @@ const setMapAtmosphere = (item = null) => {
   signalField.style.setProperty("--focus-x", `${position.x}%`);
   signalField.style.setProperty("--focus-y", `${position.y}%`);
 
-  if (position.y >= 74) {
+  // The plane belongs to the map sector, even when controls displace its target.
+  if (getMapLayout(item).y >= 74) {
     const horizonX = ((position.x + 12) / 124) * 100;
     signalField.dataset.focusPlane = "ground";
     signalField.style.setProperty("--focus-horizon-x", `${horizonX}%`);
@@ -1007,6 +1013,7 @@ const setInspectorOpen = (isOpen) => {
   personalMedia.select(isOpen
     ? mapItems.find((item) => item.id === selectedMapId)
     : null);
+  window.dispatchEvent(new Event("reading-surface-change"));
 };
 
 const clearMapSelection = ({ updateHistory = false } = {}) => {
@@ -1153,6 +1160,10 @@ inspectorClose?.addEventListener("click", () => {
   const selectedButton = mapButtons.get(selectedMapId);
   clearMapSelection({ updateHistory: true });
   selectedButton?.focus();
+  if (document.activeElement !== selectedButton) requestAnimationFrame(() => {
+    // A mobile preview or parent panel may already have restored its own focus.
+    if (document.activeElement === document.body || mapInspector.contains(document.activeElement)) selectedButton?.focus();
+  });
 });
 
 // Rotate sphere surfaces, keeping glyph geometry and lighting fixed.

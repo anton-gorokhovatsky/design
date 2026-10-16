@@ -152,7 +152,11 @@ field.addEventListener('pointermove', event => {
 const stopDrag = () => { drag = null; field.removeAttribute('data-dragging'); };
 field.addEventListener('pointerup', stopDrag); field.addEventListener('pointercancel', stopDrag);
 window.addEventListener('map-layout', () => { if (active()) measure(); });
-new ResizeObserver(() => { if (active()) measure(); }).observe(field);
+let measureFrame = 0;
+new ResizeObserver(() => {
+  if (!active() || measureFrame) return;
+  measureFrame = requestAnimationFrame(() => { measureFrame = 0; if (active()) measure(); });
+}).observe(field);
 new MutationObserver(sync).observe(document.body, {attributes:true, attributeFilter:['class']});
 reducedMotion.addEventListener('change', sync);
 new MutationObserver(sync).observe(root, {attributes:true, attributeFilter:['data-reduce-motion']});
@@ -170,10 +174,12 @@ form.querySelector('.command-dock__submit').addEventListener('click', restoreSea
 input.addEventListener('keydown', event => { if (event.key === 'Escape') restoreSearchFocus(); });
 function syncSearch() {
   const open = document.body.classList.contains('has-command-focus');
+  form.dataset.materialActive = compact.matches && open ? 'mobile' : 'none';
   search.setAttribute('aria-expanded', String(open));
   input.tabIndex = compact.matches && !open ? -1 : 0;
   if (compact.matches && !open) form.setAttribute('aria-hidden', 'true');
   else form.removeAttribute('aria-hidden');
 }
 new MutationObserver(syncSearch).observe(document.body, {attributes:true, attributeFilter:['class']});
+compact.addEventListener('change', syncSearch);
 syncSearch(); sync();

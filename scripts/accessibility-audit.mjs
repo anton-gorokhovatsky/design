@@ -189,7 +189,8 @@ export async function readMapTargets(page) {
       const r = e.getBoundingClientRect(), x = r.x + r.width / 2, y = r.y + r.height / 2;
       const misses = [];
       for (const dx of [-11.9, -6, 0, 6, 11.9]) for (const dy of [-11.9, -6, 0, 6, 11.9]) {
-        if (!e.contains(document.elementFromPoint(x+dx,y+dy))) misses.push([dx,dy]);
+        const hit = document.elementFromPoint(x+dx,y+dy);
+        if (!e.contains(hit)) misses.push({ dx, dy, hit: hit?.closest('[data-map-id],[data-map-label-id]')?.outerHTML.slice(0, 240) || hit?.className });
       }
       return { id:e.dataset.mapId, width:r.width, height:r.height, misses };
     }));

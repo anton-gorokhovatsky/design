@@ -57,7 +57,7 @@ try {
         contentType: "text/html",
         body: '<!doctype html><html lang="ru"><title>Player lifecycle fixture</title><body><button>Fixture play</button></body></html>',
       }));
-      await page.goto(origin, { waitUntil: "load" });
+      await page.goto(`${origin}/?scene=map`, { waitUntil: "load" });
       await page.locator('[data-map-id="youtube"]').waitFor({ state: "attached" });
       const player = page.locator("[data-personal-media]");
       assert.equal(await player.isVisible(), false, "No player on the untouched map.");
@@ -81,6 +81,7 @@ try {
       const authorBefore = await page.locator(".site-header").boundingBox();
       // The relocated point must be directly reachable, not only through search.
       await page.locator('[data-map-id="youtube"]').click();
+      if (width <= 900) await page.locator('.point-preview__link').click();
       // The player opens over this map sector: clear pointer hover for an idle-material audit.
       await page.mouse.move(0, 0);
       await player.waitFor({ state: "visible" });
@@ -170,8 +171,13 @@ try {
       await page.keyboard.press("Escape");
       assert.equal(await player.isVisible(), false, "Escape closes the video with its card.");
       assert.equal(await frame.count(), 0, "Closing the card stops playback.");
-      assert.equal(await page.evaluate(() => document.activeElement?.dataset.mapId), "youtube",
-        "Closing returns keyboard focus to the video point.");
+      await page.waitForFunction(mobile => mobile
+        ? document.activeElement?.matches('.point-preview__link')
+        : document.activeElement?.dataset.mapId === 'youtube', width <= 900);
+      assert.equal(await page.evaluate(mobile => mobile
+        ? document.activeElement?.matches('.point-preview__link')
+        : document.activeElement?.dataset.mapId === 'youtube', width <= 900), true,
+        "Closing returns focus to the originating preview or map point.");
       await page.keyboard.press("Enter");
       await poster.waitFor({ state: "visible" });
       assert.equal(await originalDocument.evaluate(saved => saved === document), true,
@@ -216,7 +222,9 @@ try {
         await capture(page, label + "-parfyonov");
         await page.locator("[data-map-link]").focus();
         await page.keyboard.press("Escape");
-        assert.equal(await page.evaluate(() => document.activeElement?.dataset.mapId), "parfyonov");
+        await page.waitForFunction(mobile => mobile
+          ? document.activeElement?.matches('.point-preview__link')
+          : document.activeElement?.dataset.mapId === 'parfyonov', width <= 900);
         await select(page, "youtube");
         assert.equal(await page.locator("[data-map-quotation]").isVisible(), false,
           "The quotation must not remain in another point's card.");

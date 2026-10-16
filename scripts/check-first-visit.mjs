@@ -4,6 +4,7 @@ import { createRequire } from "node:module";
 import { join } from "node:path";
 import { chromium, webkit } from "playwright";
 import { mapItems } from "../js/map-data.js";
+import { readMapTargets } from "./accessibility-audit.mjs";
 
 const require = createRequire(import.meta.url);
 const { startStaticServer } = require("./browser-contracts.cjs");
@@ -35,8 +36,17 @@ try {
       await page.waitForFunction(() => !document.querySelector('[data-map-links][data-layout-pending]')
         && [...document.querySelectorAll(".map-node:not([inert])")].every(node => {
         const rect = node.getBoundingClientRect();
-        return rect.top >= innerHeight || rect.bottom <= 0 || document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2)?.closest(".map-node") === node;
+        const clip = node.closest('.focused-home')?.getBoundingClientRect();
+        return rect.bottom > (clip?.bottom ?? innerHeight) || rect.top < (clip?.top ?? 0)
+          || document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2)?.closest(".map-node") === node;
       }), null, { timeout: 5000 });
+      if (width <= 900) {
+        // Short screens and enlarged text scroll the introductory map. Audit
+        // every point after bringing it into view, not through the fixed nav.
+        const targets = await readMapTargets(page);
+        assert.equal(targets.length, 8);
+        assert.deepEqual(targets.filter(target => target.misses.length), [], `${name}: scrolled map targets`);
+      }
       const state = await page.evaluate(() => {
         const box = (e) => e.getBoundingClientRect().toJSON();
         const visible = (e) => { const s = getComputedStyle(e); return s.display !== "none" && s.visibility !== "hidden" && Number(s.opacity) > 0; };
@@ -62,7 +72,8 @@ try {
             .filter(visible).map(box).filter(rect => rect.width && rect.height),
           blockedTargets: [...document.querySelectorAll(".map-node:not([inert])")].flatMap((node) => {
             const rect = node.getBoundingClientRect();
-            if (rect.top >= innerHeight || rect.bottom <= 0) return [];
+            const clip = node.closest('.focused-home')?.getBoundingClientRect();
+            if (rect.bottom > (clip?.bottom ?? innerHeight) || rect.top < (clip?.top ?? 0)) return [];
             const hit = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
             return hit?.closest(".map-node") === node ? [] : [{ id: node.dataset.mapId, hit: hit?.closest(".map-node")?.dataset.mapId || hit?.className }];
           }),
