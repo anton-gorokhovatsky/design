@@ -640,25 +640,21 @@ requireContract(
   "Map labels need a dedicated sibling layer so MATERIAL / 01 can blur the map instead of inheriting each transformed node.",
 );
 
-const originLabelRules = [
-  ...styleSource.matchAll(/(?:^|\n)\.origin-marker__label\s*\{([^}]*)\}/g),
-].map((match) => match[1]);
-const originLabelRule = originLabelRules[0] ?? "";
+const overviewEntryRule = styleSource.match(/\.content-panel \.work-overview\s*\{([^}]*)\}/)?.[1] ?? "";
 requireContract(
-  originLabelRules.length === 1
-    && /background:\s*transparent/.test(originLabelRule)
-    && !/backdrop-filter/.test(originLabelRule)
+  /background:\s*transparent/.test(overviewEntryRule)
+    && !/backdrop-filter/.test(overviewEntryRule)
     && !materialSurfaceNames.includes("origin-label"),
   "overview-open-entry",
   "The overview entry is open typography with no enclosing material surface.",
 );
 requireContract(
-  /grid-template-columns:\s*var\(--control-target\)/.test(originLabelRule)
-    && /\.origin-marker__title,[^{]+\{\s*font-size:\s*var\(--type-item\);/.test(styleSource)
-    && /\.origin-marker__control,\s*\.observation-controls button/.test(styleSource)
+  /min-height:\s*var\(--control-target\)/.test(overviewEntryRule)
+    && /\.work-overview__text > :first-child\s*\{\s*font-size:\s*var\(--type-item\);/.test(styleSource)
+    && indexSource.includes('class="work-overview" data-start-observation')
     && indexSource.includes('aria-labelledby="observation-start-title observation-start-caption"'),
   "overview-entry-geometry",
-  "The route entry shares playback geometry, uses the item title role and keeps its title and duration in the accessible name.",
+  "The work-section overview entry keeps a full control target, the item title role and its title and duration in the accessible name.",
 );
 
 const controlConsoleStart = indexSource.indexOf('class="control-console"');

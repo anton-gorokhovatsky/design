@@ -55,7 +55,7 @@ try {
         const intersections = await labels.evaluateAll(elements => elements.flatMap(label => {
           const rect = label.getBoundingClientRect();
           const outside = rect.left < 0 || rect.top < 0 || rect.right > innerWidth || rect.bottom > innerHeight;
-          const overlaps = [...document.querySelectorAll('.map-controls,.display-control,.site-header,.control-console,.map-axis-label,.origin-marker__label,.map-space-label,.map-anchor-label,[data-map-nodes] button')]
+          const overlaps = [...document.querySelectorAll('.map-controls,.display-control,.site-header,.control-console,.map-axis-label,.map-space-label,.map-anchor-label,[data-map-nodes] button')]
             .filter(node => node !== label && node.dataset.mapId !== label.dataset.mapLabelId)
             .some(node => { const other = node.getBoundingClientRect(); return rect.left < other.right && rect.right > other.left && rect.top < other.bottom && rect.bottom > other.top; });
           return outside || overlaps ? [label.dataset.mapLabelId] : [];

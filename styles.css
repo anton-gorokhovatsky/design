@@ -334,7 +334,6 @@ html[data-capture="og"] :is(
   .map-note,
   .map-legend,
   .map-axis-label,
-  .origin-marker__label,
   .map-node-label
 ) {
   display: none;
@@ -1957,33 +1956,6 @@ html[data-theme="dark"] .map-node--garage.is-selected .map-node__glyph {
   transform: translate(-50%, -50%);
 }
 
-.origin-marker__label {
-  appearance: none; position: absolute;
-  z-index: var(--map-layer-route);
-  top: calc(50% + var(--core-y));
-  left: calc(50% + var(--core-x));
-  display: grid;
-  grid-template-columns: var(--control-target) minmax(0, 1fr);
-  align-items: center; gap: var(--space-3);
-  max-width: calc(100% - var(--space-7));
-  padding: 0; border-radius: 0;
-  background: transparent;
-  color: var(--content-ink);
-  text-align: left; cursor: pointer; pointer-events: auto;
-  transform: translate(-50%, calc(-100% - var(--space-4)));
-  transition: color var(--duration-feedback) var(--motion-shift);
-}
-
-.origin-marker__text { display: grid; gap: var(--space-1); }
-.origin-marker__title { font-weight: 600; }
-.origin-marker__caption { color: var(--content-muted); }
-.origin-marker__label:is(:hover, :focus-visible) { color: var(--signal); }
-
-.origin-marker__label:focus-visible {
-  outline: var(--focus-width) solid var(--signal);
-  outline-offset: var(--focus-offset);
-}
-
 .origin-marker .signal-pulse {
   position: absolute;
   right: 24px;
@@ -3218,7 +3190,7 @@ body.has-content-panel .practice-map {
 }
 
 body.has-content-panel
-  :is(.map-axis-label, .origin-marker__label, .map-node-label) {
+  :is(.map-axis-label, .map-node-label) {
   opacity: 0;
 }
 
@@ -3768,19 +3740,16 @@ body:has(.command-dock.is-open) .map-links {
   opacity: 0.18;
 }
 
-body:has(.command-dock.is-open) .map-axis-label,
-body:has(.command-dock.is-open) .origin-marker__label {
+body:has(.command-dock.is-open) .map-axis-label {
   opacity: 0.16;
 }
 
 .practice-map:has(.map-inspector.is-open) .map-axis,
-.practice-map:has(.map-inspector.is-open) .map-axis-label,
-.practice-map:has(.map-inspector.is-open) .origin-marker__label {
+.practice-map:has(.map-inspector.is-open) .map-axis-label {
   opacity: 0.14;
 }
 
-.practice-map:has(.map-hover-preview.is-visible) .map-axis-label,
-.practice-map:has(.map-hover-preview.is-visible) .origin-marker__label {
+.practice-map:has(.map-hover-preview.is-visible) .map-axis-label {
   opacity: 0.14;
 }
 
@@ -5991,7 +5960,6 @@ html[data-theme="light"] .orbital-radar i {
   transform: scale(0.78);
 }
 
-.practice-map:not([data-observation-active],[data-time-view]):has(.origin-marker__label:is(:hover,:focus-visible)) .map-node--garage:not(.is-filter-miss)::after,
 .map-node:is(:hover, :focus-visible)::after {
   opacity: 0.7;
   transform: scale(0.94);
@@ -6448,10 +6416,6 @@ html[data-theme="dark"] .map-node--sphere .map-node__glyph {
     transform-origin: 50% 50%;
   }
 
-  .origin-marker__label {
-    top: calc(50% - 26px + var(--core-y) + var(--layer-near-y));
-  }
-
   .map-axis-label--south {
     right: calc(50% + 8px);
     bottom: 24px;
@@ -6801,7 +6765,6 @@ body:has(.practice-map:is([data-selected-kind=personal],[data-selected-kind=prac
 
 .observation-controls > div { display: flex; min-width: 0; align-items: center; gap: var(--space-1); }
 
-.origin-marker__control,
 .observation-controls button { display: grid; place-items: center; width: var(--control-target); height: var(--control-target); border-radius: 50%; }
 .observation-controls button { flex: 0 0 var(--control-target); padding: 0; background: color-mix(in srgb, var(--content-ink) 6%, transparent); color: var(--content-ink); cursor: pointer; font: 500 var(--type-label)/var(--leading-label) var(--font-sans); transition: color var(--duration-feedback) var(--motion-shift); }
 .observation-controls button[hidden] { display: none; }
@@ -6834,11 +6797,6 @@ body:has(.practice-map:is([data-selected-kind=personal],[data-selected-kind=prac
       0
     )
     scale(1.055);
-}
-
-.practice-map[data-observation-active] .origin-marker__label {
-  visibility: hidden;
-  pointer-events: none;
 }
 
 
@@ -6987,8 +6945,7 @@ html[data-theme="dark"] .signal-constellation {
 }
 
 @media (max-width: 900px) {
-  .observation-controls,
-  .origin-marker__label { --control-target: 48px; }
+  .observation-controls { --control-target: 48px; }
   .observation-controls > div { gap: var(--space-2); }
   .map-inspector .map-readout__description {
     max-height: min(45vh, 300px);
@@ -7768,12 +7725,6 @@ html[data-focus-modality="pointer"]
   .map-camera {
     top: var(--mobile-map-top);
     bottom: var(--mobile-map-reserve);
-  }
-
-  .origin-marker__label {
-    top: calc(
-      var(--mobile-map-center-y) + var(--core-y) + var(--layer-near-y)
-    );
   }
 
   .control-console .command-dock {
@@ -8638,7 +8589,7 @@ body.has-settings-panel
 }
 
 body.has-settings-panel
-  :is(.map-axis-label, .map-node-label, .origin-marker__label) {
+  :is(.map-axis-label, .map-node-label) {
   opacity: 0;
 }
 
@@ -9479,7 +9430,7 @@ html[data-reduce-motion="true"] :is(
 /* Only the open professional case changes; the map retains its release layout. */
 /* The map is a non-interactive backdrop while reading a case. Its labels
    must not peek out from card corners or compete with the case's own text. */
-body[data-case-open] :is(.map-axis-label, .map-labels, .map-node-label, .origin-marker__label) {
+body[data-case-open] :is(.map-axis-label, .map-labels, .map-node-label) {
   visibility: hidden;
   pointer-events: none;
 }
@@ -10036,7 +9987,6 @@ html[data-reduce-motion="true"] :is(.ui-close, .work-row, .map-related__item, .c
   line-height: var(--leading-label);
 }
 .skip-link,
-.origin-marker__caption,
 .map-meta,
 .section-head,
 .map-node-label,
@@ -10145,7 +10095,6 @@ html[data-reduce-motion="true"] :is(.ui-close, .work-row, .map-related__item, .c
   font-size: var(--type-lead);
   line-height: var(--leading-body);
 }
-.origin-marker__title,
 .work-row__title,
 .approach-grid h3,
 .brand,
@@ -10358,13 +10307,8 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
 @media (max-width: 900px) {
   .map-labels { display: block; top: var(--mobile-map-top); bottom: var(--mobile-map-reserve); }
   .mobile-first-dock {
-    --dock-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-    --dock-column-gap: 16px;
     --dock-tool-size: 20px;
     --dock-tool-stroke: 1.8;
-    --dock-first-line-offset: max(0px, calc((28px - var(--type-item) * 1.2) / 2));
-    --dock-groove-shadow: rgb(0 0 0 / .18);
-    --dock-groove-light: rgb(255 255 255 / .85);
     position: fixed;
     inset: auto 8px var(--mobile-console-bottom);
     z-index: 38;
@@ -10375,54 +10319,6 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
     color: var(--content-ink);
     pointer-events: auto;
   }
-  .mobile-first-paths {
-    position: relative;
-
-    grid-template-columns: var(--dock-columns);
-    column-gap: var(--dock-column-gap);
-    align-items: start;
-
-    padding-bottom: 16px;
-  }
-  .mobile-first-paths::after {
-     position: absolute; inset: auto 0 0; height: 6px; pointer-events: none;
-    background: linear-gradient(to bottom, transparent 0%, var(--dock-groove-shadow) 30%, transparent 58%, var(--dock-groove-light) 78%, transparent 100%);
-    filter: blur(.35px);
-    mask-image: linear-gradient(to right, transparent, #000 16px, #000 calc(100% - 16px), transparent);
-  }
-  html[data-theme="dark"] .mobile-first-dock {
-    --dock-groove-shadow: rgb(0 0 0 / .45);
-    --dock-groove-light: rgb(255 255 255 / .16);
-  }
-  .mobile-first-dock .origin-marker__label {
-    position: static;
-    display: grid;
-
-    align-items: start;
-    width: auto;
-    max-width: none;
-    min-height: 48px;
-    padding: 0;
-
-    transform: none;
-    font-size: var(--type-item);
-  }
-  .mobile-first-dock .origin-marker__control {
-    width: 28px;
-    height: 28px;
-    min-width: 28px;
-    min-height: 28px;
-    aspect-ratio: 1;
-    align-self: start;
-    margin-top: max(0px, calc((var(--type-item) * 1.2 - 28px) / 2));
-    background: transparent;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-  }
-
-  .mobile-first-dock .origin-marker__text {  padding-top: var(--dock-first-line-offset); text-align: left; }
-  .mobile-first-dock .origin-marker__title { font-size: var(--type-item); line-height: 1.2; }
-  .mobile-first-dock .origin-marker__caption { font-size: var(--type-detail);  white-space: normal; }
   .mobile-first-cases {
     display: flex;
     align-items: flex-start;
@@ -10436,8 +10332,6 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
     font-weight: 600;
     text-decoration: none;
   }
-  .mobile-first-cases svg { flex: none; width: 24px; height: 24px;  fill: none; stroke: currentColor; stroke-width: 1.5; }
-  .mobile-first-tools {  grid-template-columns: var(--dock-columns);   padding-top: 4px; }
   .control-console .mobile-first-dock .command-dock {
     position: static;
     inset: auto;
@@ -10481,7 +10375,6 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
     background: transparent;
     cursor: pointer;
   }
-  .mobile-first-composition[aria-expanded="true"] svg { transform: rotate(180deg); }
   .mobile-first-dock :is(a,button):focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
   .mobile-first-dock :is(a,button):hover { color: var(--signal); }
 
@@ -10755,39 +10648,19 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
   .focused-home .map-labels .direction-landmark[data-spatial-selected] { z-index: 8; }
   .focused-home .signal-constellation { opacity: .65; }
 
-  /* Four independently operable targets, grouped by alignment and proximity. */
+  /* Text navigation uses alignment and proximity without a shared panel surface. */
   .mobile-first-dock[data-material-surface] {
     inset-inline: 20px;
     background: none; border: 0; border-radius: 0; box-shadow: none;
     backdrop-filter: none; -webkit-backdrop-filter: none;
-    --dock-columns: minmax(0, 1.2fr) minmax(0, 1fr);
   }
-
-  .mobile-first-paths::after { content: none; }
-
-  .mobile-first-dock .origin-marker__label { grid-template-columns: 24px minmax(0,1fr); gap: 8px; }
-  .mobile-first-dock .origin-marker__control[data-material-surface] {
-    width: 24px; height: 24px; min-width: 24px; min-height: 24px;
-    margin: 0; border: 0; box-shadow: none; background: none; border-radius: 0;
-    backdrop-filter: none; -webkit-backdrop-filter: none;
-  }
-  .mobile-first-dock .origin-marker__control svg { width: 24px; height: 24px; }
-  .mobile-first-dock .origin-marker__text { padding: 0; gap: 4px; }
   .mobile-first-cases { padding: 0; }
-  .mobile-first-cases__text { display: grid; gap: var(--space-1); }
-  .mobile-first-cases__title { display: flex; align-items: center; gap: var(--space-2); }
-  .mobile-first-dock .mobile-first-cases__caption {
-    font-size: var(--type-detail); line-height: var(--leading-label); font-weight: 400;
-  }
-  .mobile-first-cases svg { margin-top: 0; }
-  .mobile-first-dock :is(.origin-marker__title, .mobile-first-cases) { line-height: 24px; }
-  .mobile-first-dock .origin-marker__caption { line-height: var(--leading-label); }
+  .mobile-first-dock .mobile-first-cases { line-height: 24px; }
   .spatial-search {
     display: inline-flex; gap: 12px; align-items: center; justify-content: flex-start;
     min-width: 0; min-height: 48px; padding: 0; background: none; color: inherit;
     font-size: var(--type-detail); line-height: var(--leading-label); cursor: pointer;
   }
-  .spatial-search svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; flex: none; }
   .mobile-first-dock :is(.focused-map-open, .mobile-first-composition) { flex-direction: row-reverse; justify-content: flex-end; gap: 8px; }
   body:not(.has-command-focus) .control-console .mobile-first-dock .command-dock {
     position: absolute; width: 1px; min-width: 0; height: 1px; min-height: 0;
@@ -10799,9 +10672,7 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
   html[data-reduce-motion="true"] .focused-home :is(.map-node, .direction-landmark) { transition: none; }
   html[data-reduce-motion="true"] .spatial-intro span:last-child { display: none; }
   body[data-mobile-large-text] .focused-home__map { min-height: 38rem; }
-  body[data-mobile-large-text] .mobile-first-dock :is(.origin-marker__title, .mobile-first-cases) { line-height: 1.25; }
-  body[data-mobile-large-text] .mobile-first-dock .origin-marker__control { margin-top: .2em; }
-  body[data-mobile-large-text] .mobile-first-cases svg { margin-top: .2em; }
+  body[data-mobile-large-text] .mobile-first-dock .mobile-first-cases { line-height: 1.25; }
   @media (hover: hover) and (pointer: fine) {
     .focused-home__map { cursor: grab; }
     .focused-home__map :is(button, .direction-landmark) { cursor: pointer; }

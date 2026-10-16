@@ -365,7 +365,7 @@ const measureMapClearance = () => {
   mapTargetScale = parseFloat(getComputedStyle(mapNodesRoot).getPropertyValue("--map-target-scale")) || 1;
   mapTargetDiameters.clear();
   mapButtons.forEach((button, id) => mapTargetDiameters.set(id, parseFloat(getComputedStyle(button).width)));
-  const selectors = [".origin-marker__label", ".site-header", ".map-axis-label"];
+  const selectors = [".site-header", ".map-axis-label"];
   if (window.innerWidth > 900) selectors.push(".map-controls", ".map-control > span", ".display-control", ".control-console");
   else selectors.push(".command-dock", ".mobile-index-links");
   mapConsoleBounds = [...document.querySelectorAll(selectors.join(","))]
@@ -1573,7 +1573,7 @@ if (mapLinksRoot) {
   document.fonts?.ready.then(scheduleMapLinksRender);
   const clearanceResize = new ResizeObserver(scheduleMapLinksRender);
   clearanceResize.observe(mapNodesRoot);
-  document.querySelectorAll(".origin-marker__label, .map-controls, .display-control, .control-console, .site-header, .mobile-index-links")
+  document.querySelectorAll(".map-controls, .display-control, .control-console, .site-header, .mobile-index-links")
     .forEach(element => clearanceResize.observe(element));
 }
 

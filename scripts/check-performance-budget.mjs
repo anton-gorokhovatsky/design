@@ -25,17 +25,17 @@ const eagerMedia = [
   ...indexSource.matchAll(/<(?:video|source)[^>]+(?:src|srcset)="([^"]+\.(?:mp4|webm))"/g),
 ].map((match) => match[1]);
 // Reviewed 16 October 2026: includes the approved mobile directions, previews,
-// depth and work index. Readable source capacity grows with these features;
-// the compressed transfer budgets remain unchanged. Source reserve plus a
-// separately enforced compressed budget. Gzip is deterministic per asset, not
-// a claim about the CDN's measured transfer size or real-user performance.
+// depth and work index. The author approved 112 KiB for compressed runtime
+// after CI measured 110927 bytes against the previous 108 KiB allowance.
+// The total compressed-load budget remains unchanged. Gzip is measured with
+// this Node/zlib version, not the CDN or a real user's connection.
 const budgets = {
   css: 280 * 1024,
   runtime: 376 * 1024,
   fonts: 160 * 1024,
   initialSource: 800 * 1024,
   cssGzip: 48 * 1024,
-  runtimeGzip: 108 * 1024,
+  runtimeGzip: 112 * 1024,
   initialCompressed: 272 * 1024,
 };
 const cssGzip = gzipSync(readProjectFile("styles.css"), { level: 9 }).length;

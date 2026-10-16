@@ -155,7 +155,7 @@ const waitForCaseLayout = async (page) => {
     return document.fonts.status === 'loaded' && stableFor >= 300
       && style.opacity === '1' && style.transform === 'none'
       && inspector.getAnimations().every(animation => animation.playState === 'finished')
-      && [...document.querySelectorAll('.map-axis-label,.map-node-label,.origin-marker__label')]
+      && [...document.querySelectorAll('.map-axis-label,.map-node-label')]
         .every(element => getComputedStyle(element).visibility === 'hidden');
   }, undefined, { timeout: 8000, polling: 100 });
 };
@@ -324,10 +324,6 @@ const readAnnotationHierarchyExpression = `(() => {
     overflowX: document.documentElement.scrollWidth
       - document.documentElement.clientWidth,
     overviewInWork: Boolean(document.querySelector("#work [data-start-observation]")),
-    route: readBox(document.querySelector(".origin-marker__label")),
-    routeTitle: readBox(document.querySelector(".origin-marker__title")),
-    routeCaption: readBox(document.querySelector(".origin-marker__caption")),
-    routeControl: readBox(document.querySelector(".origin-marker__control")),
   };
 })()`;
 
@@ -790,7 +786,6 @@ const validateCompactAuthorship = (authorship) => {
 };
 
 const validateAnnotationHierarchy = (hierarchy) => {
-  const route = hierarchy.route;
   const garage = hierarchy.garage;
   const axes = hierarchy.axes || [];
   const sharedProperties = [
@@ -823,18 +818,6 @@ const validateAnnotationHierarchy = (hierarchy) => {
     && axis.properties.backdropFilter === "none"
     && ["borderRadius", "paddingBottom", "paddingLeft", "paddingRight", "paddingTop"]
       .every(property => Number.parseFloat(axis.properties[property]) === 0));
-  const routeIsOpen = route.exists
-    && route.properties?.backgroundColor === "rgba(0, 0, 0, 0)"
-    && route.properties?.backdropFilter === "none"
-    && ["borderRadius", "paddingTop", "paddingRight", "paddingBottom", "paddingLeft"]
-      .every(property => Number.parseFloat(route.properties?.[property]) === 0);
-  const { routeTitle, routeCaption, routeControl } = hierarchy;
-  const routeIsProminent = route.height >= 44
-    && routeTitle?.exists && routeCaption?.exists && routeControl?.exists
-    && Number.parseFloat(routeTitle.properties.fontSize) > Number.parseFloat(garage.properties?.fontSize || "0")
-    && Number.parseFloat(routeTitle.properties.fontSize) > Number.parseFloat(routeCaption.properties.fontSize)
-    && routeControl.width >= 44 && approximatelyEqual(routeControl.width, routeControl.height)
-    && routeControl.properties.borderRadius === "50%";
   const garageIsLarger = garage.exists && axesMatch
     && garage.height >= referenceAxis.height + 6
     && Number.parseFloat(garage.properties?.paddingTop || "0") > Number.parseFloat(referenceAxis.properties?.paddingTop || "0")

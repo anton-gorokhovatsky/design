@@ -106,7 +106,7 @@ for (const engine of [process.argv[2] || 'chromium']) {
       assert.match(result.type.roleFamily,/Akt/,'Long role copy uses Akt');
       assert.match(result.type.roleLabelFamily,/Rene/,'The role label retains the author face');
       assert.equal(result.type.mediaCount,1,'The case uses the original single video');
-      assert.equal(await page.locator('.map-axis-label,.map-node-label,.origin-marker__label').evaluateAll(elements=>elements.every(el=>getComputedStyle(el).visibility==='hidden')),true,'Backdrop labels cannot collide with case edges');
+      assert.equal(await page.locator('.map-axis-label,.map-node-label').evaluateAll(elements=>elements.every(el=>getComputedStyle(el).visibility==='hidden')),true,'Backdrop labels cannot collide with case edges');
       await page.screenshot({path:dir+engine+'-'+name+'-top.jpg',type:'jpeg',quality:86});
       if (name.startsWith('desktop-')) await page.screenshot({path:dir+engine+'-'+name+'-case-edge.jpg',type:'jpeg',quality:90,
         clip:{x:Math.max(0,result.start.sheet.x-110),y:Math.max(0,result.start.sheet.y-60),width:480,height:250}});

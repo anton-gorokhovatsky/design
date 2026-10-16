@@ -647,13 +647,10 @@ const readObservationShowcaseContract = (client) => evaluate(client, `(() => {
   const activeBounds = active?.getBoundingClientRect();
   const inspectorBounds = document.querySelector('.map-inspector')
     ?.getBoundingClientRect();
-  const originLabel = document.querySelector('.origin-marker__label');
-  const originLabelVisible = Boolean(originLabel
-    && getComputedStyle(originLabel).visibility !== 'hidden');
   const railBounds = document.querySelector('.map-controls')
     ?.getBoundingClientRect();
   const mapNativeTargets = Array.from(document.querySelectorAll(
-    '.map-camera .map-node, .map-speck, .principle-glyph, .map-axis-label, .map-node-label.is-visible, .origin-marker__label',
+    '.map-camera .map-node, .map-speck, .principle-glyph, .map-axis-label, .map-node-label.is-visible',
   )).filter((target) => {
     const style = getComputedStyle(target);
     const bounds = target.getBoundingClientRect();
@@ -732,7 +729,6 @@ const readObservationShowcaseContract = (client) => evaluate(client, `(() => {
     activeInspectorOverlapRatio: activeArea > 0
       ? intersectionArea / activeArea
       : 1,
-    originLabelVisible,
     activeRailGap: activeBounds && railBounds
       ? activeBounds.left - railBounds.right
       : -1,
@@ -758,7 +754,6 @@ const readObservationShowcaseContract = (client) => evaluate(client, `(() => {
       camera: readZIndex(camera),
       controls: readZIndex(document.querySelector('.map-controls')),
       mapLabels: readZIndex(document.querySelector('.map-labels')),
-      routeLabel: readZIndex(document.querySelector('.origin-marker__label')),
       stage: readZIndex(stage),
     },
     mediaOcclusionSampleCount: mediaOcclusionSamples.length,
@@ -1027,8 +1022,7 @@ const auditBrowser = async (client, origin) => {
       || state.ariaHidden !== "true" || state.focusables !== 0
       || state.activeOpacity < .9 || !state.activeFilter.includes("blur(0px)")
       || !state.activeInsideViewport || state.activeInspectorOverlapRatio > .02
-      || state.originLabelVisible
-      || state.layerLevels.stage <= state.layerLevels.routeLabel
+      || state.layerLevels.stage <= state.layerLevels.mapLabels
       || state.layerLevels.controls <= state.layerLevels.stage
       || state.mediaOcclusionSamples.some(sample => !sample.mediaWins)) {
       fail(`observation-showcase: step ${step} must retain one clear, noninteractive media plane.`, state);
@@ -2254,8 +2248,8 @@ const auditBrowser = async (client, origin) => {
       const bounds = media?.getBoundingClientRect();
       const style = video ? getComputedStyle(video) : null;
       const previewStyle = preview ? getComputedStyle(preview) : null;
-      const originStyle = getComputedStyle(
-        document.querySelector(".origin-marker__label"),
+      const labelsStyle = getComputedStyle(
+        document.querySelector(".map-labels"),
       );
       return {
         visible: preview?.classList.contains("is-visible"),
@@ -2265,7 +2259,7 @@ const auditBrowser = async (client, origin) => {
         objectPosition: style?.objectPosition,
         poster: video?.getAttribute("poster"),
         previewZ: Number.parseInt(previewStyle?.zIndex || "0", 10),
-        originZ: Number.parseInt(originStyle.zIndex || "0", 10),
+        labelsZ: Number.parseInt(labelsStyle.zIndex || "0", 10),
       };
     })()`);
     if (
@@ -2278,7 +2272,7 @@ const auditBrowser = async (client, origin) => {
       || reelContract.objectFit !== "contain"
       || reelContract.objectPosition !== "50% 0%"
       || !reelContract.poster?.split("?")[0].endsWith("assets/reel-posters/tarski.jpg")
-      || reelContract.previewZ <= reelContract.originZ
+      || reelContract.previewZ <= reelContract.labelsZ
     ) {
       fail("reel: Tarski receiver lost its native 3:2 content geometry.", reelContract);
     }
