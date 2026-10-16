@@ -1256,6 +1256,15 @@ const applyUrlState = () => {
 
   try {
     const url = new URL(window.location.href);
+    // Preserve published point and mobile-preview links after the slug rename.
+    let hasLegacyPoint = false;
+    for (const key of ["point", "preview"]) {
+      if (url.searchParams.get(key) === "parfyonov") {
+        url.searchParams.set(key, "parfenov");
+        hasLegacyPoint = true;
+      }
+    }
+    if (hasLegacyPoint) window.history.replaceState(window.history.state, "", url);
     const panelView = url.hash.slice(1);
     const route = url.searchParams.get("route");
     const pointId = url.searchParams.get("point");

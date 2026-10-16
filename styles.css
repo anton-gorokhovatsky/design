@@ -19,7 +19,7 @@
   --pulse: #d8ff47;
   --running-dusk: #a098b0;
   --youtube-red: #ff0033;
-  --parfyonov-burgundy: #7a3346;
+  --parfenov-burgundy: #7a3346;
   --tone-company: #887958;
   --tone-project: #2448ed;
   --tone-personal: #90869f;
@@ -5101,12 +5101,12 @@ html[data-reduce-motion="true"] .map-node__surface {
   --sphere-shadow: color-mix(in srgb, var(--youtube-red) 20%, #121015);
 }
 
-.map-node--personal.map-node--parfyonov {
-  --node-accent: var(--parfyonov-burgundy);
-  --sphere-highlight: color-mix(in srgb, var(--parfyonov-burgundy) 60%, #f4a0a5);
-  --sphere-tone: var(--parfyonov-burgundy);
-  --sphere-shade: color-mix(in srgb, var(--parfyonov-burgundy) 42%, #121015);
-  --sphere-shadow: color-mix(in srgb, var(--parfyonov-burgundy) 20%, #121015);
+.map-node--personal.map-node--parfenov {
+  --node-accent: var(--parfenov-burgundy);
+  --sphere-highlight: color-mix(in srgb, var(--parfenov-burgundy) 60%, #f4a0a5);
+  --sphere-tone: var(--parfenov-burgundy);
+  --sphere-shade: color-mix(in srgb, var(--parfenov-burgundy) 42%, #121015);
+  --sphere-shadow: color-mix(in srgb, var(--parfenov-burgundy) 20%, #121015);
 }
 
 .map-node--sphere .map-node__glyph::after {

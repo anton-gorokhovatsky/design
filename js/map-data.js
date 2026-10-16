@@ -593,7 +593,7 @@ const mapItems = [
     size: 42,
   },
   {
-    id: "parfyonov",
+    id: "parfenov",
     kind: "personal",
     shape: "sphere",
     relatedTo: ["youtube"],

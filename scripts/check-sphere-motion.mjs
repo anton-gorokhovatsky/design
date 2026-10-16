@@ -16,7 +16,7 @@ const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const { server, origin } = await startStaticServer({ projectRoot });
 const directory = process.env.PORTFOLIO_UI_ARTIFACT_DIR;
 if (directory) mkdirSync(directory, { recursive: true });
-const ids = ["garage", "optimal", "ilmix", "running", "youtube", "parfyonov"];
+const ids = ["garage", "optimal", "ilmix", "running", "youtube", "parfenov"];
 const scenarios = chromiumScenarioCatalog.filter((state) => (
   /^(desktop-(light|dark)|tablet-(light|dark)|mobile-(390|320)-(light|dark)|zoom-200-light)$/.test(state.label)
 ));

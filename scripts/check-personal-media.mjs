@@ -210,7 +210,7 @@ try {
       }
       if (theme === "light" && ["desktop", "mobile", "compact"].includes(label)) {
         const requestsBefore = thirdParty.length;
-        await select(page, "parfyonov");
+        await select(page, "parfenov");
         assert.equal(await player.isVisible(), false, "The film playlist opens externally, without an embedded player.");
         assert.equal(await player.locator("iframe").count(), 0);
         assert.equal(thirdParty.length, requestsBefore, "Reading the quote stays local.");
@@ -219,12 +219,12 @@ try {
         assert.equal(await page.locator("[data-map-link]").getAttribute("href"),
           "https://www.youtube.com/playlist?list=PLWC_P718eyWNPChB0IhNYxepf-FoOi-cV");
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0);
-        await capture(page, label + "-parfyonov");
+        await capture(page, label + "-parfenov");
         await page.locator("[data-map-link]").focus();
         await page.keyboard.press("Escape");
         await page.waitForFunction(mobile => mobile
           ? document.activeElement?.matches('.point-preview__link')
-          : document.activeElement?.dataset.mapId === 'parfyonov', width <= 900);
+          : document.activeElement?.dataset.mapId === 'parfenov', width <= 900);
         await select(page, "youtube");
         assert.equal(await page.locator("[data-map-quotation]").isVisible(), false,
           "The quotation must not remain in another point's card.");
