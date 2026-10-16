@@ -339,12 +339,13 @@ const focusHomePoints = new Map([
   ["eleven", { x: 87, y: 65 }],
   ["ks-fish", { x: 58, y: 63 }],
   ["principle-data-intuition", { x: 19, y: 48 }],
-  ["running", { x: 43, y: 86 }],
+  ["running", { x: 55, y: 86 }],
   ["youtube", { x: 19, y: 87 }],
 ]);
 const focusHomeNarrowPoints = new Map([...focusHomePoints,
   ["garage", {x:27,y:22}], ["narkomfin", {x:76,y:20}],
-  ["private-practice", {x:73,y:50}], ["running", {x:43,y:79}], ["youtube", {x:19,y:81}],
+  ["private-practice", {x:73,y:50}],
+  ["principle-data-intuition", {x:22,y:48}],
 ]);
 const focusHomeActive = () => innerWidth <= 900 && document.body.classList.contains("has-focused-home");
 const focusHomeLargeTextPoints = new Map([
@@ -374,7 +375,17 @@ const measureMapClearance = () => {
   measureMapSpace();
   mapClearancePositions.clear();
   if (focusHomeActive()) {
-    (largeTextHome ? focusHomeLargeTextPoints : innerWidth < 360 ? focusHomeNarrowPoints : focusHomePoints).forEach((position, id) => mapClearancePositions.set(id, position));
+    const points = largeTextHome ? focusHomeLargeTextPoints : innerWidth < 360 ? focusHomeNarrowPoints : focusHomePoints;
+    const shortField = !largeTextHome && mapFieldBounds.height <= 420;
+    // Labels stay inside the available field, including the permitted tilt.
+    const museumTop = (mapLabels.get('garage').offsetHeight + 44 + (shortField ? 8 : 20)) / mapFieldBounds.height * 100;
+    points.forEach((position, id) => {
+      let y = position.y;
+      if (id === 'garage') y = Math.max(y, museumTop);
+      if (shortField && id === 'running') y = 90;
+      if (shortField && id === 'youtube') y = 84;
+      mapClearancePositions.set(id, { ...position, y });
+    });
     return;
   }
   // Mobile titles reserve space alongside the consoles.

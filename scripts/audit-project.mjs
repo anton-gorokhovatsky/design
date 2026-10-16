@@ -650,11 +650,11 @@ requireContract(
 );
 requireContract(
   /min-height:\s*var\(--control-target\)/.test(overviewEntryRule)
-    && /\.work-overview__text > :first-child\s*\{\s*font-size:\s*var\(--type-item\);/.test(styleSource)
+    && /\.work-overview__text > :first-child\s*\{\s*font-size:\s*var\(--type-body\);/.test(styleSource)
     && indexSource.includes('class="work-overview" data-start-observation')
     && indexSource.includes('aria-labelledby="observation-start-title observation-start-caption"'),
   "overview-entry-geometry",
-  "The work-section overview entry keeps a full control target, the item title role and its title and duration in the accessible name.",
+  "The work-section overview entry keeps a full control target, a subordinate body-size title and its title and duration in the accessible name.",
 );
 
 const controlConsoleStart = indexSource.indexOf('class="control-console"');

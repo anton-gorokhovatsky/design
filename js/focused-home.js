@@ -20,6 +20,8 @@ const previewTitle = preview.querySelector('h2');
 const previewLink = preview.querySelector('a');
 const previewClose = preview.querySelector('button');
 const map = document.querySelector('[data-practice-map]');
+// Keep the overlay in the main landmark, outside the map's isolated stack.
+map.after(preview);
 let previewId = null;
 let returnToPreview = false;
 let wasReading = false;
@@ -63,7 +65,7 @@ const summaries = {
   'principle-data-intuition': 'О данных, интуиции и том, как рождается идея продукта.',
   youtube: 'Игровые видео и любимый стрим Дмитрия Куплинова.',
 };
-const actionLabel = item => item.id === 'garage' ? 'О работе в музее'
+const actionLabel = item => item.id === 'garage' ? 'О работе в Музее'
   : item.id === 'private-practice' ? 'Проекты частной практики'
   : item.kind === 'practice' ? 'Читать принцип'
   : item.id === 'running' ? 'О беге'
@@ -176,7 +178,6 @@ function syncReading() {
 }
 function syncMeasurements() {
   document.documentElement.style.setProperty('--focused-author-bottom', `${Math.ceil(header.getBoundingClientRect().bottom)}px`);
-  document.documentElement.style.setProperty('--focused-author-height', `${Math.ceil(header.getBoundingClientRect().height)}px`);
   positionPreview();
 }
 function restoreScene() {

@@ -2,7 +2,6 @@ import { mapButtons, selectedMapId } from './map-engine.js';
 import { reducedMotion } from './preferences.js';
 
 const field = document.querySelector('.focused-home__map');
-const intro = document.querySelector('.spatial-intro');
 const root = document.documentElement;
 const compact = matchMedia('(max-width: 900px)');
 const ns = 'http://www.w3.org/2000/svg';
@@ -56,7 +55,6 @@ const pathFrom = points => points.map((p, i) => `${i ? 'L' : 'M'}${p.x.toFixed(2
 function measure() {
   width = field.clientWidth; height = field.clientHeight;
   svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
-  root.style.setProperty('--spatial-guide-height', `${intro.offsetHeight + 12}px`);
   for (const node of nodes) {
     node.baseX = parseFloat(node.button.style.getPropertyValue('--x')) * width / 100;
     node.baseY = parseFloat(node.button.style.getPropertyValue('--y')) * height / 100;
@@ -78,9 +76,11 @@ function draw() {
   const geometry = new Map();
   for (const node of nodes) {
     const chosen = node.id === selected;
-    const point = project(node.x, node.y, node.z + (node.lift || 0));
+    const point = project(node.x, node.y, node.z);
     const dx = point.x - node.baseX, dy = point.y - node.baseY;
-    const scale = point.scale / node.restScale;
+    // Approach along the viewing ray: selection keeps its projected position.
+    const distance = 760 / point.scale;
+    const scale = point.scale / node.restScale * distance / (distance - (node.lift || 0));
     for (const element of [node.button, node.label]) {
       element.style.setProperty('--spatial-dx', `${dx.toFixed(2)}px`);
       element.style.setProperty('--spatial-dy', `${dy.toFixed(2)}px`);
