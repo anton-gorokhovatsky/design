@@ -573,7 +573,11 @@ const syncAuthorPresence = () => {
   syncAuthorField();
   window.dispatchEvent(new CustomEvent("author-presence-change"));
 };
-if (authorCard) new ResizeObserver(syncAuthorPresence).observe(authorCard);
+let authorPresenceFrame = 0;
+if (authorCard) new ResizeObserver(() => {
+  if (authorPresenceFrame) return;
+  authorPresenceFrame = requestAnimationFrame(() => { authorPresenceFrame = 0; syncAuthorPresence(); });
+}).observe(authorCard);
 window.addEventListener("reading-surface-change", syncAuthorPresence);
 new MutationObserver(syncAuthorPresence).observe(document.body, { attributes: true, attributeFilter: ["class"] });
 const authorInspector = document.querySelector(".map-inspector");

@@ -151,8 +151,13 @@ const placeContentFrame = () => {
   contentPanel.style.setProperty("--panel-frame-top", `${top}px`);
   syncContactConsoles();
 };
-new ResizeObserver(placeContentFrame).observe(contentPanelHeader);
-new ResizeObserver(placeContentFrame).observe(document.querySelector(".content-panel__frame"));
+let contentFrameRequest = 0;
+const contentFrameResize = new ResizeObserver(() => {
+  if (contentFrameRequest) return;
+  contentFrameRequest = requestAnimationFrame(() => { contentFrameRequest = 0; placeContentFrame(); });
+});
+contentFrameResize.observe(contentPanelHeader);
+contentFrameResize.observe(document.querySelector(".content-panel__frame"));
 window.addEventListener("resize", placeContentFrame, { passive: true });
 window.addEventListener("author-presence-change", placeContentFrame);
 const panelSections = Array.from(document.querySelectorAll("[data-panel-section]"));
@@ -377,7 +382,8 @@ const openContentPanel = (
     window.history.replaceState({ ...history.state, panelPosition: position }, "", location.href);
   }
 
-  window.requestAnimationFrame(() => {
+  const restorePanelEntry = () => window.requestAnimationFrame(() => {
+    if (activePanelView !== view) return;
     placeContentFrame();
     syncPanelMore();
     contentPanelBody?.scrollTo({ top: position?.scrollTop || 0, behavior: "auto" });
@@ -387,6 +393,10 @@ const openContentPanel = (
     );
     (sourceRow || panelClose)?.focus({ preventScroll: true });
   });
+  // Chromium resets fragment-navigation focus after DOMContentLoaded. Initial
+  // route focus belongs after that native step; later navigation stays immediate.
+  if (document.readyState === "complete") restorePanelEntry();
+  else window.addEventListener("load", restorePanelEntry, { once: true });
 };
 
 const closeContentPanel = (

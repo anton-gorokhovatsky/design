@@ -307,7 +307,12 @@ document.addEventListener("keydown", event => {
     }
   }
 }, true);
+let headerMeasureFrame = 0;
 new ResizeObserver(() => {
-  header.style.paddingRight = (viewport.offsetWidth - viewport.clientWidth) + "px";
+  if (headerMeasureFrame) return;
+  headerMeasureFrame = requestAnimationFrame(() => {
+    headerMeasureFrame = 0;
+    header.style.paddingRight = (viewport.offsetWidth - viewport.clientWidth) + "px";
+  });
 }).observe(viewport);
 reflect();

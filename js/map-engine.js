@@ -1678,7 +1678,11 @@ if (mapSpecksRoot) {
 setMapRovingId("garage");
 
 if (mapMeta && "ResizeObserver" in window) {
-  new ResizeObserver(syncMapMetaOverflow).observe(mapMeta);
+  let metaMeasureFrame = 0;
+  new ResizeObserver(() => {
+    if (metaMeasureFrame) return;
+    metaMeasureFrame = requestAnimationFrame(() => { metaMeasureFrame = 0; syncMapMetaOverflow(); });
+  }).observe(mapMeta);
 }
 
 const practiceMap = document.querySelector("[data-practice-map]");
