@@ -337,7 +337,9 @@ const openContentPanel = (
 
   activePanelView = view;
   lastPanelTrigger = trigger instanceof HTMLElement && mapInspector.contains(trigger)
-    ? constellationNavItems.find(item => item.dataset.navView === view)
+    ? view === "work" && compactConstellationNav.matches
+      ? document.querySelector(".mobile-first-cases")
+      : constellationNavItems.find(item => item.dataset.navView === view)
     : trigger instanceof HTMLElement ? trigger
     : position && lastPanelTrigger instanceof HTMLElement && lastPanelTrigger.dataset.openPanel === view ? lastPanelTrigger
     : position ? panelOpenButtons.find(button => button.dataset.openPanel === view)
