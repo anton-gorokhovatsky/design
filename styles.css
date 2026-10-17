@@ -10484,7 +10484,7 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
   .focused-home :is(.map-nodes, .map-links) { transform: none; }
   .focused-home :is(.origin-marker, .map-axis-label, .map-depth-grid, .map-specks) { display: none; }
   .focused-home .map-node:not([data-map-id="garage"], [data-map-id="narkomfin"], [data-map-id="private-practice"], [data-map-id="eleven"], [data-map-id="ks-fish"], [data-map-id="principle-data-intuition"], [data-map-id="running"], [data-map-id="youtube"]) { display: none; }
-  .focused-home .map-node { --node-scale: 1; --map-target-scale: 1; --map-target-size: 48px; transform: translate(-50%, -50%); }
+  .focused-home .map-node { --node-scale: 1; --map-target-scale: 1; --map-target-size: 26px; transform: translate(-50%, -50%); }
   .focused-home .map-node--garage { --map-target-size: 76px; }
   .focused-home .map-node--garage .map-node__glyph { width: 76px; height: 76px; transform: none; }
   .focused-home .map-node--running .map-node__glyph { width: 48px; height: 48px; transform: none; }
@@ -10682,6 +10682,9 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
   html[data-focus-modality="keyboard"] .focused-home :is(.map-node, .direction-landmark) { transition: none; }
   html[data-reduce-motion="true"] .focused-home :is(.map-node, .direction-landmark) { transition: none; }
   html[data-reduce-motion="true"] .spatial-intro span:last-child { display: none; }
+  @media (max-width: 360px) {
+    .focused-home .map-labels .direction-landmark.map-node-label--project:not(:has(small)) { min-height: 0; padding: 3px var(--space-1); }
+  }
   body[data-mobile-large-text] .focused-home { grid-template-rows: max-content max-content minmax(38rem, 1fr); }
   body[data-mobile-large-text] .mobile-first-dock .mobile-first-cases { line-height: 1.25; }
   @media (hover: hover) and (pointer: fine) {

@@ -116,7 +116,6 @@ function measure() {
     node.baseX = parseFloat(node.button.style.getPropertyValue('--x')) * width / 100;
     node.baseY = parseFloat(node.button.style.getPropertyValue('--y')) * height / 100;
     node.radius = node.glyph.offsetWidth / 2;
-    node.heading = Boolean(node.label.querySelector('small'));
     reflow ||= node.labelBox?.width !== node.label.offsetWidth || node.labelBox?.height !== node.label.offsetHeight;
     const transform = new DOMMatrixReadOnly(getComputedStyle(node.label).transform);
     node.labelBox = { width: node.label.offsetWidth, height: node.label.offsetHeight,
@@ -145,77 +144,89 @@ function measure() {
   draw();
 }
 function seedLabels(geometry) {
-  const overlaps = (a, b, gap = 6) => a.left < b.right + gap && a.right > b.left - gap
+  const gap = 4, points = [...geometry.values()];
+  const overlaps = (a, b) => a.left < b.right + gap && a.right > b.left - gap
     && a.top < b.bottom + gap && a.bottom > b.top - gap;
-  const points = [...geometry.values()];
-  // Area headings keep their authored positions first. A bounded joint search
-  // can nudge an earlier caption when that gives every neighbour a legal slot.
-  const ordered = [...nodes].sort((a, b) => Number(b.heading) - Number(a.heading));
-  const choices = ordered.map(node => {
-    const point = geometry.get(node.id), size = node.labelBox;
-    const home = [point.x + size.x, point.y + size.y], gap = point.radius + 8;
-    const anchors = { home,
-      north: [point.x - size.width / 2, point.y - gap - size.height],
-      south: [point.x - size.width / 2, point.y + gap],
-      west: [point.x - gap - size.width, point.y - size.height / 2],
-      east: [point.x + gap, point.y - size.height / 2],
-      northeast: [point.x + gap, point.y - gap - size.height],
-      northwest: [point.x - gap - size.width, point.y - gap - size.height],
-      southeast: [point.x + gap, point.y + gap],
-      southwest: [point.x - gap - size.width, point.y + gap] };
+  const choices = nodes.map(node => {
+    const point = geometry.get(node.id), size = node.labelBox, old = node.labelPosition;
+    const home = { x: node.baseX + (point.x - node.baseX) * .45 + size.x,
+      y: node.baseY + (point.y - node.baseY) * .45 + size.y };
+    const target = old ? { x: old.x + (point.x - old.px) * .45 - size.width / 2,
+      y: old.y + (point.y - old.py) * .45 - size.height / 2 } : home;
+    if (old) { target.x = (target.x + home.x) / 2; target.y = (target.y + home.y) / 2; }
+    const xs = [target.x, home.x, 0, width - size.width];
+    const ys = [target.y, home.y, 0, height - size.height];
+    for (const p of points) {
+      const r = Math.max(p.radius, 13) + gap;
+      xs.push(p.x - r - size.width, p.x + r);
+      ys.push(p.y - r - size.height, p.y + r);
+    }
+    for (const other of nodes) if (other.labelPosition) {
+      const p = other.labelPosition, s = other.labelBox;
+      xs.push(p.x - s.width / 2 - gap - size.width, p.x + s.width / 2 + gap);
+      ys.push(p.y - s.height / 2 - gap - size.height, p.y + s.height / 2 + gap);
+    }
+    for (let x = 0; x < width - size.width; x += 16) xs.push(x);
+    for (let y = 0; y < height - size.height; y += 16) ys.push(y);
     const candidates = [], seen = new Set();
-    for (const [side, [x, y]] of Object.entries(anchors)) {
-      for (const shift of side.length > 5 ? [0] : [0, -12, 12, -24, 24]) for (const rise of side === 'home' || side.length > 5 ? [0, -6, 6] : [0]) {
-        const vertical = side === 'west' || side === 'east';
-        const left = Math.max(0, Math.min(width - size.width, x + (vertical ? 0 : shift)));
-        const top = Math.max(0, Math.min(height - size.height, y + (vertical ? shift : rise)));
-        const box = { left, right: left + size.width, top, bottom: top + size.height };
-        const position = `${left.toFixed(2)},${top.toFixed(2)}`;
-        if (seen.has(position) || box.right > width || box.bottom > height) continue;
-        seen.add(position);
-        if (points.some(other => {
-          const dx = other.x - Math.max(box.left, Math.min(box.right, other.x));
-          const dy = other.y - Math.max(box.top, Math.min(box.bottom, other.y));
-          return dx * dx + dy * dy < (other.radius + 4) ** 2;
-        })) continue;
-        candidates.push({ ...box, node });
-      }
+    for (const x of xs) for (const y of ys) {
+      const left = Math.max(0, Math.min(width - size.width, x));
+      const top = Math.max(0, Math.min(height - size.height, y));
+      const box = { left, right: left + size.width, top, bottom: top + size.height, node };
+      const key = `${left.toFixed(2)},${top.toFixed(2)}`;
+      if (seen.has(key) || box.right > width || box.bottom > height) continue;
+      seen.add(key);
+      if (points.some(p => {
+        const dx = p.x - Math.max(box.left, Math.min(box.right, p.x));
+        const dy = p.y - Math.max(box.top, Math.min(box.bottom, p.y));
+        return dx * dx + dy * dy < (p.radius + 2) ** 2
+          || (node.id !== p.id && box.left < p.x + 15 && box.right > p.x - 15 && box.top < p.y + 15 && box.bottom > p.y - 15);
+      })) continue;
+      box.cost = (left - target.x) ** 2 + (top - target.y) ** 2;
+      candidates.push(box);
     }
-    return candidates;
+    return candidates.sort((a, b) => a.cost - b.cost);
   });
-  let remaining = 2000, best = [];
-  for (const candidates of choices) {
-    const candidate = candidates.find(box => !best.some(other => overlaps(box, other)));
-    if (candidate) best.push(candidate);
-  }
-  const score = placed => placed.length + nodes.length * placed.filter(box => box.node.heading).length;
-  function fit(pending, placed) {
-    if (score(placed) > score(best)) best = [...placed];
-    if (!pending.length) return placed.length === ordered.length;
-    if (--remaining < 0) return false;
-    const next = pending.map(index => ({ index, candidates: choices[index]
-      .filter(box => !placed.some(other => overlaps(box, other))) }))
-      .sort((a, b) => a.candidates.length - b.candidates.length)[0];
-    const rest = pending.filter(index => index !== next.index);
-    for (const candidate of next.candidates) {
-      if (fit(rest, [...placed, candidate])) return true;
+  // Search nearby slots first; only widen the displacement when neighbours
+  // cannot all fit. This keeps labels near their points instead of picking
+  // the first available slot on the opposite side of the field.
+  let solution;
+  for (const limit of [64, 256, 1024, 4096, Infinity]) {
+    let remaining = 2000;
+    const allowed = choices.map(candidates => candidates.filter(box => box.cost <= limit));
+    function fit(pending, placed) {
+      if (!pending.length) { solution = placed; return true; }
+      if (--remaining < 0) return false;
+      const next = pending.map(index => ({ index, candidates: allowed[index]
+        .filter(box => !placed.some(other => overlaps(box, other))) }))
+        .sort((a, b) => a.candidates.length - b.candidates.length)[0];
+      const rest = pending.filter(index => index !== next.index), tried = [];
+      for (const box of next.candidates) {
+        if (tried.some(other => Math.abs(other.left - box.left) < 8 && Math.abs(other.top - box.top) < 8)) continue;
+        tried.push(box);
+        if (fit(rest, [...placed, box])) return true;
+      }
+      return false;
     }
-    return false;
+    if (fit(nodes.map((_, index) => index), [])) break;
   }
-  if (best.length < ordered.length) fit(ordered.map((_, index) => index), []);
-  for (const box of best) {
+  if (!solution) return false;
+  for (const box of solution) {
     const point = geometry.get(box.node.id);
     box.node.labelPosition = { x: (box.left + box.right) / 2, y: (box.top + box.bottom) / 2,
       px: point.x, py: point.y };
   }
+  return true;
 }
 function placeLabels(geometry) {
   if (nodes.every(node => !node.labelPosition)) seedLabels(geometry);
   const items = nodes.map(node => {
     const point = geometry.get(node.id), size = node.labelBox, old = node.labelPosition;
+    const homeX = node.baseX + (point.x - node.baseX) * .45 + size.x + size.width / 2;
+    const homeY = node.baseY + (point.y - node.baseY) * .45 + size.y + size.height / 2;
     return { node, w: size.width / 2, h: size.height / 2, px: point.x, py: point.y,
-      x: old ? old.x + point.x - old.px : point.x + size.x + size.width / 2,
-      y: old ? old.y + point.y - old.py : point.y + size.y + size.height / 2 };
+      x: old ? (old.x + (point.x - old.px) * .45) * .88 + homeX * .12 : homeX,
+      y: old ? (old.y + (point.y - old.py) * .45) * .88 + homeY * .12 : homeY };
   });
   const contain = box => {
     box.x = Math.max(box.w, Math.min(width - box.w, box.x));
@@ -233,6 +244,13 @@ function placeLabels(geometry) {
       contain(a); contain(b);
     }
     for (const box of items) for (const point of geometry.values()) {
+      // Keep foreign 26px targets clear. The label itself activates its own point.
+      const tx = box.w + 15 - Math.abs(box.x - point.x), ty = box.h + 15 - Math.abs(box.y - point.y);
+      if (box.node.id !== point.id && tx > 0 && ty > 0) {
+        if (tx < ty) box.x += tx * Math.sign(box.x - point.x || 1);
+        else box.y += ty * Math.sign(box.y - point.y || 1);
+        contain(box);
+      }
       const dx = box.x + Math.max(-box.w, Math.min(box.w, point.x - box.x)) - point.x;
       const dy = box.y + Math.max(-box.h, Math.min(box.h, point.y - box.y)) - point.y;
       const distance = Math.hypot(dx, dy), radius = point.radius + 2;
@@ -245,6 +263,16 @@ function placeLabels(geometry) {
       }
       contain(box);
     }
+  }
+  // Local separation can get trapped between a sphere and a neighbouring
+  // caption. Reassign nearby free slots instead of stopping the camera.
+  const crowded = items.some((a, i) => items.slice(i + 1).some(b =>
+    Math.abs(a.x - b.x) < a.w + b.w + 1 && Math.abs(a.y - b.y) < a.h + b.h + 1))
+    || items.some(b => [...geometry.values()].some(p => Math.hypot(
+      Math.max(0, Math.abs(b.x - p.x) - b.w), Math.max(0, Math.abs(b.y - p.y) - b.h))
+      < p.radius + 1 || (b.node.id !== p.id && Math.abs(b.x - p.x) < b.w + 14 && Math.abs(b.y - p.y) < b.h + 14)));
+  if (crowded && seedLabels(geometry)) for (const box of items) {
+    box.x = box.node.labelPosition.x; box.y = box.node.labelPosition.y;
   }
   for (const box of items) {
     box.node.labelPosition = { x: box.x, y: box.y, px: box.px, py: box.py };
@@ -394,6 +422,7 @@ reducedMotion.addEventListener('change', sync);
 new MutationObserver(sync).observe(root, {attributes:true, attributeFilter:['data-reduce-motion']});
 document.addEventListener('visibilitychange', () => { if (document.hidden) { stopMotion(); cancelAnimationFrame(request); request = 0; } else sync(); });
 compact.addEventListener('change', sync);
+document.fonts.ready.then(() => { if (active()) measure(); });
 
 const search = document.querySelector('[data-spatial-search]');
 const input = document.querySelector('[data-command-input]');

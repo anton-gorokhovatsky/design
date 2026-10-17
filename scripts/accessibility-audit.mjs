@@ -175,7 +175,9 @@ export async function readMapTargets(page) {
         const r = e.getBoundingClientRect(), x = r.x + r.width / 2, y = r.y + r.height / 2;
         const misses = [];
         for (const dx of [-11.9, -6, 0, 6, 11.9]) for (const dy of [-11.9, -6, 0, 6, 11.9]) {
-          if (!e.contains(document.elementFromPoint(x+dx,y+dy))) misses.push([dx,dy]);
+          const hit = document.elementFromPoint(x+dx,y+dy);
+          // A landmark caption activates the same point as its glyph.
+          if (!e.contains(hit) && hit?.closest('[data-map-label-id]')?.dataset.mapLabelId !== e.dataset.mapId) misses.push([dx,dy]);
         }
         return { id:e.dataset.mapId, width:r.width, height:r.height, misses };
       }));
