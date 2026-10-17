@@ -10456,21 +10456,11 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
     position: absolute; z-index: 18; inset: 0 0 calc(var(--mobile-first-dock-height, 124px) + var(--mobile-console-bottom) + 8px);
     display: grid; grid-template-rows: max-content max-content minmax(0, 1fr); padding: 20px 20px 8px; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; color: var(--ink);
   }
-  /* The author is an open signature on the map; disclosed surfaces keep MATERIAL / 01. */
+  /* Keep the shared mobile card at the same 12px inset in both map modes.
+     The introductory map field retains its own 20px inset. */
   .focused-home .site-header[data-material-surface] {
-    position: relative; inset: auto; width: 100%; min-width: 0; max-width: none; max-height: none;
-    margin: 0 0 12px; padding: 0; overflow: visible; background: none; border: 0; box-shadow: none;
-    backdrop-filter: none; -webkit-backdrop-filter: none;
+    position: relative; inset: auto; margin: -8px -8px var(--space-4);
   }
-  .focused-home .brand { max-height: none; }
-  /* The open author signature has no material between its text and the day field. */
-  .focused-home .brand__role { color: var(--ink); }
-  .focused-home .whoop-readout { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: var(--space-3); }
-  .focused-home .whoop-readout[hidden] { display: none; }
-  .focused-home .whoop-metrics { flex-basis: 100%; }
-  .focused-home .whoop-status { order: 1; margin-top: 0; }
-  .focused-home .whoop-foot { order: 2; }
-  .focused-home .whoop-readout[data-unavailable="true"] .whoop-foot time { display: none; }
   .focused-home__map { position: relative; overflow: clip;   }
   .focused-home .map-camera, .focused-home .map-labels { inset: 0; transform: none; }
   .focused-home .map-camera { perspective: none; transition: none; }
@@ -10606,8 +10596,6 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
   }
   .spatial-intro span { display: block; }
   .spatial-intro span + span { margin-top: 2px; }
-  .focused-home .site-header[data-material-surface] { margin-bottom: var(--space-4); }
-  .focused-home .whoop-readout[data-unavailable="true"] .whoop-metrics { display: none; }
   .focused-home__map {
     min-height: 0; touch-action: pan-y; isolation: isolate; container: focused-map / size;
   }
