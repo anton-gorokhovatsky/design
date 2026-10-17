@@ -10640,6 +10640,9 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
     translate: var(--spatial-dx, 0px) var(--spatial-dy, 0px);
   }
   .focused-home .map-labels .direction-landmark {
+    /* The spatial camera owns placement; legacy pointer parallax must not add
+       another offset after the caption-clearance calculation. */
+    --layer-mid-x: 0px; --layer-mid-y: 0px;
     translate: calc(var(--spatial-dx, 0px) + var(--spatial-label-dx, 0px))
       calc(var(--spatial-dy, 0px) + var(--spatial-label-dy, 0px));
   }
