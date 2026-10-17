@@ -15,6 +15,7 @@ const anchors = [camera, labels, header].map(element => {
 });
 const openMap = document.querySelector('[data-focused-map-open]');
 const returnHome = document.querySelector('[data-focused-return]');
+const mobileDock = document.querySelector('.mobile-first-dock');
 const preview = document.querySelector('.point-preview');
 const previewTitle = preview.querySelector('h2');
 const previewLink = preview.querySelector('a');
@@ -166,6 +167,9 @@ function syncReading() {
     || document.body.matches('.has-content-panel, .has-settings-panel, .has-constellation-nav, .has-command-focus');
   home.inert = reading || !document.body.classList.contains('has-focused-home');
   returnHome.inert = reading || !document.body.classList.contains('has-full-mobile-map');
+  camera.inert = compact.matches && reading;
+  labels.inert = compact.matches && reading;
+  mobileDock.inert = compact.matches && document.body.classList.contains('has-constellation-nav');
   preview.inert = reading || preview.hidden;
   if (wasReading && !reading && returnToPreview && previewId) {
     returnToPreview = false;

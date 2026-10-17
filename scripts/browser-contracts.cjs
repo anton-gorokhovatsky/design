@@ -226,7 +226,8 @@ const readMaterialAuditExpression = `(() => {
       const style = getComputedStyle(element);
       const backgroundDepth = element.matches(
         "body.has-reading-surface :is(.site-header, .system-dock), "
-        + "body:is(.has-constellation-nav, .has-command-focus) .site-header, "
+        + "body.has-constellation-nav:not(.has-focused-home) .site-header, "
+        + "body.has-command-focus .site-header, "
         + "body:is([data-case-open], .has-settings-panel) .control-console",
       ) || (mobile && element.matches(
         "body.has-content-panel .control-console :is(.constellation-nav, .command-dock)",
