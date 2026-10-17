@@ -35,7 +35,6 @@ const edges = relationships.map(([a, b]) => {
 const restYaw = -.16, restPitch = -.26, cameraDistance = 760;
 let width = 1, height = 1, request = 0;
 let yaw = restYaw, pitch = restPitch, selected = null, drag = null, coast = null;
-let clearView = null;
 let liftStarted = 0;
 const duration = 200;
 const coastDecay = duration / 2, coastDuration = 300;
@@ -110,6 +109,7 @@ const pathFrom = (points, geometry, endpoints = []) => {
   return result;
 };
 function measure() {
+  let reflow = width !== field.clientWidth || height !== field.clientHeight;
   width = field.clientWidth; height = field.clientHeight;
   for (const layer of [svg, relationSvg]) layer.setAttribute('viewBox', `0 0 ${width} ${height}`);
   for (const node of nodes) {
@@ -117,6 +117,7 @@ function measure() {
     node.baseY = parseFloat(node.button.style.getPropertyValue('--y')) * height / 100;
     node.radius = node.glyph.offsetWidth / 2;
     node.heading = Boolean(node.label.querySelector('small'));
+    reflow ||= node.labelBox?.width !== node.label.offsetWidth || node.labelBox?.height !== node.label.offsetHeight;
     const transform = new DOMMatrixReadOnly(getComputedStyle(node.label).transform);
     node.labelBox = { width: node.label.offsetWidth, height: node.label.offsetHeight,
       x: node.label.offsetLeft + transform.m41 - node.baseX,
@@ -140,9 +141,10 @@ function measure() {
         from.z + (to.z - from.z) * t + archDepth * arch), t };
     });
   });
+  if (reflow) nodes.forEach(node => { node.labelPosition = null; });
   draw();
 }
-function placeLabels(geometry) {
+function seedLabels(geometry) {
   const overlaps = (a, b, gap = 6) => a.left < b.right + gap && a.right > b.left - gap
     && a.top < b.bottom + gap && a.bottom > b.top - gap;
   const points = [...geometry.values()];
@@ -168,7 +170,7 @@ function placeLabels(geometry) {
         const left = Math.max(0, Math.min(width - size.width, x + (vertical ? 0 : shift)));
         const top = Math.max(0, Math.min(height - size.height, y + (vertical ? shift : rise)));
         const box = { left, right: left + size.width, top, bottom: top + size.height };
-        const key = `${side}:${shift}:${rise}`, position = `${left.toFixed(2)},${top.toFixed(2)}`;
+        const position = `${left.toFixed(2)},${top.toFixed(2)}`;
         if (seen.has(position) || box.right > width || box.bottom > height) continue;
         seen.add(position);
         if (points.some(other => {
@@ -176,11 +178,9 @@ function placeLabels(geometry) {
           const dy = other.y - Math.max(box.top, Math.min(box.bottom, other.y));
           return dx * dx + dy * dy < (other.radius + 4) ** 2;
         })) continue;
-        candidates.push({ ...box, key, node, dx: left - home[0], dy: top - home[1] });
+        candidates.push({ ...box, node });
       }
     }
-    // Retain a valid side during a gesture instead of oscillating at a boundary.
-    candidates.sort((a, b) => Number(b.key === node.labelPlacement) - Number(a.key === node.labelPlacement));
     return candidates;
   });
   let remaining = 2000, best = [];
@@ -203,15 +203,56 @@ function placeLabels(geometry) {
     return false;
   }
   if (best.length < ordered.length) fit(ordered.map((_, index) => index), []);
-  for (const node of nodes) node.label.toggleAttribute('data-spatial-no-space', !best.some(box => box.node === node));
   for (const box of best) {
-    box.node.labelPlacement = box.key;
-    box.node.label.style.setProperty('--spatial-label-dx', `${box.dx.toFixed(2)}px`);
-    box.node.label.style.setProperty('--spatial-label-dy', `${box.dy.toFixed(2)}px`);
+    const point = geometry.get(box.node.id);
+    box.node.labelPosition = { x: (box.left + box.right) / 2, y: (box.top + box.bottom) / 2,
+      px: point.x, py: point.y };
   }
-  return best.length === nodes.length;
 }
-function draw(restoring = false) {
+function placeLabels(geometry) {
+  if (nodes.every(node => !node.labelPosition)) seedLabels(geometry);
+  const items = nodes.map(node => {
+    const point = geometry.get(node.id), size = node.labelBox, old = node.labelPosition;
+    return { node, w: size.width / 2, h: size.height / 2, px: point.x, py: point.y,
+      x: old ? old.x + point.x - old.px : point.x + size.x + size.width / 2,
+      y: old ? old.y + point.y - old.py : point.y + size.y + size.height / 2 };
+  });
+  const contain = box => {
+    box.x = Math.max(box.w, Math.min(width - box.w, box.x));
+    box.y = Math.max(box.h, Math.min(height - box.h, box.y));
+  };
+  items.forEach(contain);
+  // Resolve only caption positions. Camera angles and momentum are independent.
+  for (let pass = 0; pass < 160; pass++) {
+    for (let i = 0; i < items.length; i++) for (let j = i + 1; j < items.length; j++) {
+      const a = items[i], b = items[j], dx = b.x - a.x, dy = b.y - a.y;
+      const ox = a.w + b.w + 4 - Math.abs(dx), oy = a.h + b.h + 4 - Math.abs(dy);
+      if (ox <= 0 || oy <= 0) continue;
+      if (ox < oy) { const push = (ox + .01) * Math.sign(dx || 1) / 2; a.x -= push; b.x += push; }
+      else { const push = (oy + .01) * Math.sign(dy || 1) / 2; a.y -= push; b.y += push; }
+      contain(a); contain(b);
+    }
+    for (const box of items) for (const point of geometry.values()) {
+      const dx = box.x + Math.max(-box.w, Math.min(box.w, point.x - box.x)) - point.x;
+      const dy = box.y + Math.max(-box.h, Math.min(box.h, point.y - box.y)) - point.y;
+      const distance = Math.hypot(dx, dy), radius = point.radius + 2;
+      if (distance >= radius) continue;
+      if (distance) { box.x += dx / distance * (radius - distance + .01); box.y += dy / distance * (radius - distance + .01); }
+      else {
+        const ox = box.w + radius - Math.abs(box.x - point.x), oy = box.h + radius - Math.abs(box.y - point.y);
+        if (ox < oy) box.x += ox * Math.sign(box.x - point.x || 1);
+        else box.y += oy * Math.sign(box.y - point.y || 1);
+      }
+      contain(box);
+    }
+  }
+  for (const box of items) {
+    box.node.labelPosition = { x: box.x, y: box.y, px: box.px, py: box.py };
+    box.node.label.style.setProperty('--spatial-label-dx', `${(box.x - box.w - box.px - box.node.labelBox.x).toFixed(2)}px`);
+    box.node.label.style.setProperty('--spatial-label-dy', `${(box.y - box.h - box.py - box.node.labelBox.y).toFixed(2)}px`);
+  }
+}
+function draw() {
   if (!active()) return;
   const connected = new Set([selected]);
   relationships.forEach(([a, b]) => { if (a === selected || b === selected) { connected.add(a); connected.add(b); } });
@@ -234,19 +275,7 @@ function draw(restoring = false) {
     node.button.style.setProperty('--spatial-scale', scale.toFixed(4));
     geometry.set(node.id, {...point, id: node.id, z: point.z + lift, viewScale, radius:node.radius * scale});
   }
-  const labelsFit = placeLabels(geometry);
-  if (!labelsFit && !restoring) {
-    const previous = clearView?.width === width && clearView.height === height
-      ? clearView : { yaw: restYaw, pitch: restPitch };
-    if (previous.yaw !== yaw || previous.pitch !== pitch) {
-      // A compact map cannot rotate into an unreadable arrangement. Stop at
-      // its last clear view before painting, retaining all eight captions.
-      yaw = previous.yaw; pitch = previous.pitch; coast = null;
-      draw(true);
-      return;
-    }
-  }
-  if (labelsFit) clearView = { yaw, pitch, width, height };
+  placeLabels(geometry);
   const occluders = [...geometry.values()];
   [...nodes].sort((a, b) => geometry.get(a.id).z - geometry.get(b.id).z)
     .forEach((node, index) => { node.button.style.zIndex = String(index + 1); });
@@ -306,7 +335,6 @@ function sync() {
       element.style.removeProperty('--spatial-dx'); element.style.removeProperty('--spatial-dy');
       element.style.removeProperty('--spatial-scale'); element.removeAttribute('data-spatial-muted');
       element.style.removeProperty('--spatial-label-dx'); element.style.removeProperty('--spatial-label-dy');
-      element.removeAttribute('data-spatial-no-space');
       element.style.removeProperty('z-index');
     }));
     return;

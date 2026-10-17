@@ -134,6 +134,9 @@ try {
       await page.mouse.up();
       await page.waitForTimeout(350);
       await checkCaptions();
+      if (side === 1) assert.ok(await page.locator('[data-map-id="running"]').evaluate(node =>
+        parseFloat(node.style.getPropertyValue('--spatial-dx')) > 20),
+      'Caption placement must not stop the map before the requested rotation');
     }
     await page.screenshot({ path: `${directory}/${engine}-${viewport.width}-introductory-captions.png` });
     await page.close();
