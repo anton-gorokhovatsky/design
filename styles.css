@@ -10608,8 +10608,10 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
     display: block; position: absolute; inset: 0; width: 100%; height: 100%;
     overflow: visible; pointer-events: none; z-index: 1;
   }
-  /* The field's axes and guides are behind the solid objects, within one stack. */
+  /* Construction guides stay behind the solid nodes. Semantic connections
+     are depth-clipped, so only their visible foreground can cross a sphere. */
   .focused-home .map-camera { z-index: 2; }
+  .focused-home .spatial-field--relations { z-index: 3; }
   .spatial-field path { fill: none; vector-effect: non-scaling-stroke; }
   .spatial-orbit { stroke: var(--content-ink); stroke-width: .65; opacity: .12; }
   .spatial-orbit--back { opacity: .07; }

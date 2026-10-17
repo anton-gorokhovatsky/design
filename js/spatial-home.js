@@ -19,15 +19,22 @@ const nodes = [...depths].map(([id, z]) => ({
 }));
 const svg = document.createElementNS(ns, 'svg');
 svg.classList.add('spatial-field'); svg.setAttribute('aria-hidden', 'true');
-field.prepend(svg);
-const makePath = name => {
-  const path = document.createElementNS(ns, 'path'); path.setAttribute('class', name); svg.append(path); return path;
+const relationSvg = document.createElementNS(ns, 'svg');
+relationSvg.classList.add('spatial-field', 'spatial-field--relations'); relationSvg.setAttribute('aria-hidden', 'true');
+field.prepend(svg, relationSvg);
+const makePath = (name, layer = svg) => {
+  const path = document.createElementNS(ns, 'path'); path.setAttribute('class', name); layer.append(path); return path;
 };
 const orbits = [-95, 0, 95].map((z, i) => ({ z, path: makePath(`spatial-orbit${i === 0 ? ' spatial-orbit--back' : ''}`) }));
 const axes = [makePath('spatial-axis'), makePath('spatial-axis')];
-const edges = relationships.map(([a, b]) => ({ a, b, path: makePath('spatial-relation') }));
+const edges = relationships.map(([a, b]) => {
+  const path = makePath('spatial-relation', relationSvg);
+  path.dataset.relationKey = `${a}:${b}`;
+  return { a, b, path, points: [] };
+});
+const restYaw = -.16, restPitch = -.26, cameraDistance = 760;
 let width = 1, height = 1, request = 0;
-let yaw = -.16, pitch = -.26, selected = null, drag = null;
+let yaw = restYaw, pitch = restPitch, selected = null, drag = null;
 let liftStarted = 0;
 const duration = 200;
 const timing = getComputedStyle(root).getPropertyValue('--motion-enter').match(/[\d.]+/g).map(Number);
@@ -48,25 +55,81 @@ const project = (x, y, z, turn = yaw, tilt = pitch) => {
   const z1 = -x * Math.sin(turn) + z * Math.cos(turn);
   const y1 = y * Math.cos(tilt) - z1 * Math.sin(tilt);
   const z2 = y * Math.sin(tilt) + z1 * Math.cos(tilt);
-  const scale = 760 / (760 - z2);
-  return { x: x1 * scale + width / 2, y: y1 * scale + height / 2, scale };
+  const scale = cameraDistance / (cameraDistance - z2);
+  return { x: x1 * scale + width / 2, y: y1 * scale + height / 2, z: z2, viewX: x1, viewY: y1, scale };
 };
-const pathFrom = points => points.map((p, i) => `${i ? 'L' : 'M'}${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(' ');
+const unrotate = (x, y, z, turn = yaw, tilt = pitch) => {
+  const y1 = y * Math.cos(tilt) + z * Math.sin(tilt);
+  const z1 = -y * Math.sin(tilt) + z * Math.cos(tilt);
+  return { x: x * Math.cos(turn) - z1 * Math.sin(turn), y: y1,
+    z: x * Math.sin(turn) + z1 * Math.cos(turn) };
+};
+// Intersect a viewing ray with a world-depth plane. This preserves the accepted
+// resting composition while giving every point of a connection a fixed 3D home.
+const unproject = (x, y, z) => {
+  const origin = unrotate(0, 0, cameraDistance, restYaw, restPitch);
+  const ray = unrotate((x - width / 2) / cameraDistance,
+    (y - height / 2) / cameraDistance, -1, restYaw, restPitch);
+  const distance = (z - origin.z) / ray.z;
+  return { x: origin.x + ray.x * distance, y: origin.y + ray.y * distance, z };
+};
+const interpolate = (a, b, t) => ({ x: a.x + (b.x - a.x) * t,
+  y: a.y + (b.y - a.y) * t, z: a.z + (b.z - a.z) * t });
+const pathFrom = (points, geometry, endpoints = []) => {
+  const visible = point => !geometry.some(node => {
+    const distanceSquared = (point.x - node.x) ** 2 + (point.y - node.y) ** 2;
+    // A small breathing space at the two anchors belongs to the connection;
+    // other nodes occlude only the parts actually behind their front surface.
+    if (endpoints.includes(node.id)) return distanceSquared < (node.radius + 4) ** 2;
+    if (distanceSquared >= node.radius ** 2) return false;
+    const surface = node.z + Math.sqrt(node.radius ** 2 - distanceSquared) / node.viewScale;
+    return point.z < surface;
+  });
+  const command = (letter, point) => `${letter}${point.x.toFixed(2)},${point.y.toFixed(2)}`;
+  let result = '', previous = null, wasVisible = false;
+  for (const point of points) {
+    const isVisible = visible(point);
+    if (previous && isVisible !== wasVisible) {
+      let low = previous, high = point;
+      // Resolve the silhouette between samples rather than letting a line's
+      // end jump by a whole segment as a sphere passes in front of it.
+      for (let i = 0; i < 8; i++) {
+        const middle = interpolate(low, high, .5);
+        if (visible(middle) === wasVisible) low = middle; else high = middle;
+      }
+      result += command(wasVisible ? 'L' : 'M', interpolate(low, high, .5));
+    }
+    if (isVisible) result += command(previous ? 'L' : 'M', point);
+    previous = point; wasVisible = isVisible;
+  }
+  return result;
+};
 function measure() {
   width = field.clientWidth; height = field.clientHeight;
-  svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+  for (const layer of [svg, relationSvg]) layer.setAttribute('viewBox', `0 0 ${width} ${height}`);
   for (const node of nodes) {
     node.baseX = parseFloat(node.button.style.getPropertyValue('--x')) * width / 100;
     node.baseY = parseFloat(node.button.style.getPropertyValue('--y')) * height / 100;
     node.radius = node.glyph.offsetWidth / 2;
-    let x = node.baseX - width / 2, y = node.baseY - height / 2;
-    for (let i = 0; i < 12; i++) {
-      const point = project(x, y, node.z, -.16, -.26);
-      x += node.baseX - point.x; y += node.baseY - point.y;
-    }
-    node.x = x; node.y = y;
-    node.restScale = project(x, y, node.z, -.16, -.26).scale;
+    const point = unproject(node.baseX, node.baseY, node.z);
+    node.x = point.x; node.y = point.y;
+    node.restScale = project(point.x, point.y, node.z, restYaw, restPitch).scale;
   }
+  edges.forEach(edge => {
+    const from = nodes.find(node => node.id === edge.a), to = nodes.find(node => node.id === edge.b);
+    const dx = to.baseX - from.baseX, dy = to.baseY - from.baseY;
+    const length = Math.hypot(dx, dy), archDepth = Math.min(48, length * .2);
+    const start = (from.radius + 4) / length, end = 1 - (to.radius + 4) / length;
+    edge.points = Array.from({ length: 81 }, (_, i) => {
+      const t = i / 80, arch = 4 * t * (1 - t);
+      // Extend the existing edge-to-edge arc inside the two nodes. Its visible
+      // silhouette is unchanged at rest; clipping finds the new exits on turn.
+      const u = (t - start) / Math.max(.1, end - start), bend = .14 * u * (1 - u);
+      return { ...unproject(from.baseX + dx * t - dy * bend,
+        from.baseY + dy * t + dx * bend,
+        from.z + (to.z - from.z) * t + archDepth * arch), t };
+    });
+  });
   draw();
 }
 function draw() {
@@ -79,8 +142,10 @@ function draw() {
     const point = project(node.x, node.y, node.z);
     const dx = point.x - node.baseX, dy = point.y - node.baseY;
     // Approach along the viewing ray: selection keeps its projected position.
-    const distance = 760 / point.scale;
-    const scale = point.scale / node.restScale * distance / (distance - (node.lift || 0));
+    const distance = cameraDistance / point.scale, lift = node.lift || 0;
+    const viewScale = cameraDistance / (distance - lift);
+    const scale = viewScale / node.restScale;
+    node.liftOffset = unrotate(-point.viewX * lift / distance, -point.viewY * lift / distance, lift);
     for (const element of [node.button, node.label]) {
       element.style.setProperty('--spatial-dx', `${dx.toFixed(2)}px`);
       element.style.setProperty('--spatial-dy', `${dy.toFixed(2)}px`);
@@ -88,23 +153,29 @@ function draw() {
       element.toggleAttribute('data-spatial-selected', chosen);
     }
     node.button.style.setProperty('--spatial-scale', scale.toFixed(4));
-    geometry.set(node.id, {...point, radius:node.radius * scale});
+    geometry.set(node.id, {...point, id: node.id, z: point.z + lift, viewScale, radius:node.radius * scale});
   }
+  const occluders = [...geometry.values()];
+  [...nodes].sort((a, b) => geometry.get(a.id).z - geometry.get(b.id).z)
+    .forEach((node, index) => { node.button.style.zIndex = String(index + 1); });
   orbits.forEach(({z, path}) => {
-    const points = Array.from({length:81}, (_, i) => {
-      const angle = i / 80 * Math.PI * 2;
+    const points = Array.from({length:161}, (_, i) => {
+      const angle = i / 160 * Math.PI * 2;
       return project(Math.cos(angle) * width * .47, Math.sin(angle) * height * .28, z);
     });
-    path.setAttribute('d', pathFrom(points));
+    path.setAttribute('d', pathFrom(points, occluders));
   });
-  axes[0].setAttribute('d', pathFrom([project(-width * .49, 0, 0), project(width * .49, 0, 0)]));
-  axes[1].setAttribute('d', pathFrom([project(0, -height * .47, 0), project(0, height * .47, 0)]));
-  edges.forEach(({a, b, path}) => {
-    const from = geometry.get(a), to = geometry.get(b);
-    const dx = to.x - from.x, dy = to.y - from.y, length = Math.hypot(dx, dy);
-    const sx = from.x + dx * (from.radius + 4) / length, sy = from.y + dy * (from.radius + 4) / length;
-    const ex = to.x - dx * (to.radius + 4) / length, ey = to.y - dy * (to.radius + 4) / length;
-    path.setAttribute('d', `M${sx},${sy} Q${(sx+ex)/2-dy*.07},${(sy+ey)/2+dx*.07} ${ex},${ey}`);
+  axes.forEach((path, axis) => path.setAttribute('d', pathFrom(Array.from({length:81}, (_, i) => {
+    const t = i / 80 * 2 - 1;
+    return project(axis ? 0 : t * width * .49, axis ? t * height * .47 : 0, 0);
+  }), occluders)));
+  edges.forEach(({a, b, path, points}) => {
+    const from = nodes.find(node => node.id === a).liftOffset, to = nodes.find(node => node.id === b).liftOffset;
+    const projected = points.map(point => {
+      const offset = interpolate(from, to, point.t);
+      return project(point.x + offset.x, point.y + offset.y, point.z + offset.z);
+    });
+    path.setAttribute('d', pathFrom(projected, occluders, [a, b]));
     path.toggleAttribute('data-selected', selected === a || selected === b);
     path.style.opacity = selected && !connected.has(a) ? '.14' : '';
   });
@@ -125,6 +196,7 @@ function sync() {
     nodes.forEach(({button, label}) => [button, label].forEach(element => {
       element.style.removeProperty('--spatial-dx'); element.style.removeProperty('--spatial-dy');
       element.style.removeProperty('--spatial-scale'); element.removeAttribute('data-spatial-muted');
+      element.style.removeProperty('z-index');
     }));
     return;
   }
