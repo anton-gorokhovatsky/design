@@ -10,6 +10,7 @@ const processPaths = new Set([
   'scripts/check-runner.mjs', 'scripts/check-signature.mjs',
   'scripts/check-signature-static.mjs', 'scripts/publication-assets.mjs',
   'scripts/point-address-scope.mjs', 'scripts/check-point-address.mjs',
+  'scripts/check-local-ui.mjs',
 ]);
 const signaturePath = /^signature\/(?:src\/[^/]+\.(?:js|css|svg)|(?:v1|\d+\.\d+\.\d+)\/signature\.js|build\.mjs|demo\.html|README\.md|codex\/(?:SKILL|AGENTS\.fragment)\.md)$/;
 export const ownedCheckComponent = path => signaturePath.test(path)

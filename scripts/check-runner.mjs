@@ -22,6 +22,12 @@ for (const engine of ['chromium', 'webkit']) {
   assert.deepEqual(address.browser.map(s => s.args), [['scripts/check-point-address.mjs', engine]]);
   assert.deepEqual(address.reels, []);
   assert.deepEqual(address.static, []);
+  for (const component of ['header', 'search-icon']) {
+    const localUi = plan(`--scope=${engine}`, `--checks=${component}`);
+    assert.deepEqual(localUi.browser.map(s => s.args), [['scripts/check-local-ui.mjs', engine, component]]);
+    assert.deepEqual(localUi.reels, []);
+    assert.deepEqual(localUi.static, []);
+  }
 }
 const checks = plan('--scope=checks');
 assert.deepEqual(checks.static.map(s => s.args[0]), ['scripts/check-release-scope.mjs', 'scripts/check-release-quality.mjs', 'scripts/check-runner.mjs', 'scripts/check-signature-static.mjs', 'diff']);

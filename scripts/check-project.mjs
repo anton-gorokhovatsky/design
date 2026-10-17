@@ -62,6 +62,7 @@ const contractScripts = [
   "scripts/check-scroll-lens.mjs",
   "scripts/check-case-flow.mjs",
   "scripts/check-command-placement.mjs",
+  "scripts/check-local-ui.mjs",
   "scripts/check-first-visit.mjs",
   "scripts/check-accessibility.mjs",
   "scripts/accessibility-audit.mjs",

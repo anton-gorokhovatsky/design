@@ -12,6 +12,8 @@ export const componentChecks = {
   "whoop-ui": "WHOOP daily UI",
   "first-visit": "First visit and named navigation",
   "command-placement": "Command popup placement",
+  header: "Author header and map mode switch",
+  "search-icon": "Search icon and its control",
   "sphere-motion": "Sphere axial motion",
   "case-view": "Expanded case view",
   "scroll-lens": "Rendered scroll lenses",
@@ -22,9 +24,10 @@ export const componentChecks = {
 // including consent and keyboard behavior, instead of duplicating a weaker test.
 export const componentCoverage = {
   signature: ["signature"],
-  checks: ["signature", "point-address"],
+  checks: ["signature", "point-address", "header", "search-icon"],
   "point-address": ["point-address"],
-  "search-icon": ["command-placement"],
+  header: ["header"],
+  "search-icon": ["search-icon"],
   media: ["reels", "case-view", "case-flow", "hover-layout", "observation-route"],
   settings: ["core", "accessibility", "whoop-ui"],
   whoop: ["core", "accessibility", "whoop-ui", "hover-layout", "first-visit"],
@@ -35,7 +38,7 @@ export const checkIds = ["core", "reels", ...Object.keys(componentChecks)];
 // measured WebKit timings; browsers still run serially inside each worker.
 const shards = {
   reading: ["case-flow", "personal-media", "case-view"],
-  interface: ["accessibility", "whoop-ui", "first-visit", "command-placement"],
+  interface: ["accessibility", "whoop-ui", "first-visit", "command-placement", "header", "search-icon"],
   map: ["map-routes", "hover-layout", "sphere-motion", "inspector-links", "point-address"],
   motion: ["scroll-lens", "observation-route"],
 };
@@ -45,7 +48,8 @@ export const browserSteps = (browser) => [
   { id: "core", label: `${browser} UI contracts`, args: [browser === "chromium"
     ? "scripts/check-ui-contracts.mjs" : "scripts/webkit-regression.cjs"] },
   ...Object.entries(componentChecks).map(([id, label]) => ({
-    id, label: `${label}: ${browser}`, args: [`scripts/check-${id}.mjs`, browser],
+    id, label: `${label}: ${browser}`, args: ["header", "search-icon"].includes(id)
+      ? ["scripts/check-local-ui.mjs", browser, id] : [`scripts/check-${id}.mjs`, browser],
   })),
 ].map((step) => ({ ...step, scope: browser, command: process.execPath }));
 

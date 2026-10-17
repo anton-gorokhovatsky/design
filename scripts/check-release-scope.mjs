@@ -141,6 +141,38 @@ scoped("styles.css", "", '.control-console .command-dock__mark svg {fill: none; 
 scoped("styles.css", '.control-console .command-dock__mark::before {content: ""}', "", "components", ["search-icon"]);
 scoped("styles.css", "", '.control-console .command-dock__mark svg, .map-node {fill: none}', "full");
 scoped("styles.css", "", '.control-console .command-dock__mark + input {display: none}', "full");
+for (const selector of ['.site-header', '.focused-home .site-header[data-material-surface]', '.brand__role', '.site-header .whoop-foot', '.whoop-readout[data-unavailable="true"] .whoop-stamp']) {
+  scoped('styles.css', '', `${selector} {padding: 12px; color: var(--content-ink)}`, 'components', ['header']);
+}
+scoped('styles.css', '', '.site-header {padding: 12px}\n.command-dock__mark svg {fill: none}', 'components', ['header', 'search-icon']);
+scoped('styles.css', '', '@media(max-width:900px){.site-header {padding: 12px}}', 'components', ['header']);
+for (const selector of [':root', '.site-headerish', '.site-header + .practice-map', ':is(.site-header, .practice-map)', 'body:has(.site-header)', '.site-header, .map-node']) {
+  scoped('styles.css', '', `${selector} {padding: 12px}`, 'full');
+}
+scoped('styles.css', '', '.site-header {padding: 12px}\n:root {--type-body: 2rem}', 'full');
+scoped('styles.css', '', '@layer local {.site-header {padding: 12px}}', 'full');
+const headerModule = `const header = document.querySelector('.site-header');\nfunction setScene(focused) {\n  header.dataset.materialActive = focused ? 'none' : 'mobile';\n  moveMap(focused);\n}\n`;
+const sharedHeader = headerModule.replace("  header.dataset.materialActive = focused ? 'none' : 'mobile';\n", '');
+scoped('js/focused-home.js', headerModule, sharedHeader, 'components', ['header']);
+scoped('js/focused-home.js', sharedHeader, headerModule, 'components', ['header']);
+for (const after of [
+  sharedHeader.replace('moveMap(focused)', 'moveMap(false)'),
+  headerModule.replace("'none'", 'chooseMaterial()'),
+  headerModule.replace("'.site-header'", "'.practice-map'"),
+  sharedHeader + '\nrun();',
+]) scoped('js/focused-home.js', headerModule, after, 'full');
+const headerShell = '<!doctype html><html><head><title>Test</title></head><body><header class="site-header"><p class="brand"><span class="brand__role">Author</span></p><button data-open-settings type="button">Settings</button></header></body></html>';
+scoped('index.html', headerShell, headerShell.replace('class="brand__role"', 'class="brand__role extra"'), 'components', ['header']);
+for (const after of [
+  headerShell.replace('data-open-settings', 'data-open-panel="work"'),
+  headerShell.replace('<span', '<span onclick="run()"'),
+  headerShell.replace('</header>', '<script>run()</script></header>'),
+  headerShell.replace('class="site-header"', 'class="site-header" hidden'),
+]) scoped('index.html', headerShell, after, 'full');
+const iconShell = '<!doctype html><html><head><title>Test</title></head><body><form><span class="command-dock__mark" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M0 0L10 10"/></svg></span><input data-command-input></form></body></html>';
+scoped('index.html', iconShell, iconShell.replace('M0 0L10 10', 'M1 1L11 11'), 'components', ['search-icon']);
+scoped('index.html', iconShell, iconShell.replace('M0 0L10 10', 'M1 1L11 11').replace('data-command-input', 'data-other-input'), 'full');
+scoped('index.html', iconShell, iconShell.replace('M0 0L10 10', 'M1 1L11 11').replace('aria-hidden="true"', 'aria-hidden="false"'), 'full');
 scoped("styles.css", styles, styles + "\n.settings-panel__note { margin-top: 8px; }", "components", ["settings"]);
 scoped("styles.css", styles + "\n.settings-whoop__disclosure { color: red; }", styles, "components", ["settings"]);
 for (const selector of [
@@ -210,7 +242,7 @@ scoped("scripts/reel-specs.json", specSource, changeSpec(spec => spec.run = "cod
 
 // The complete old browser inventory remains mandatory, once per engine;
 // WebKit core retains all four viewport/theme profiles. No shard may disappear.
-const retainedChecks = ["signature", "case-flow", "personal-media", "inspector-links", "point-address", "accessibility", "map-routes", "hover-layout", "whoop-ui", "first-visit", "command-placement", "sphere-motion", "case-view", "scroll-lens", "observation-route"];
+const retainedChecks = ["signature", "case-flow", "personal-media", "inspector-links", "point-address", "accessibility", "map-routes", "hover-layout", "whoop-ui", "first-visit", "command-placement", "header", "search-icon", "sphere-motion", "case-view", "scroll-lens", "observation-route"];
 const fullMatrix = browserMatrix("full").include;
 assert.equal(new Set(fullMatrix.map(({ artifact }) => artifact)).size, fullMatrix.length);
 for (const browser of ["chromium", "webkit"]) {
@@ -239,6 +271,11 @@ assert.deepEqual(browserMatrix("copy"), { include: [] });
 const addressMatrix = browserMatrix('components', ['point-address']).include;
 assert.equal(addressMatrix.length, 2);
 assert(addressMatrix.every(row => row.checks === 'point-address'));
+for (const components of [['header'], ['search-icon'], ['header', 'search-icon']]) {
+  const matrix = browserMatrix('components', components).include;
+  assert.equal(matrix.length, 2, 'A local UI release has one focused job per engine.');
+  assert(matrix.every(row => row.checks === components.join(',')));
+}
 assert.throws(() => browserMatrix("components", []));
 assert.throws(() => browserMatrix("components", ["unknown"]));
 assert.throws(() => browserMatrix("skip"));
@@ -257,11 +294,23 @@ try {
   writeFileSync(join(directory, "index.html"), shell);
   writeFileSync(join(directory, "styles.css"), '.map-node {color: black}');
   writeFileSync(join(directory, "js/whoop-day.js"), 'const interval = 1000;');
+  writeFileSync(join(directory, "js/focused-home.js"), headerModule);
   mkdirSync(join(directory, "assets/reels"), { recursive: true });
   writeFileSync(join(directory, "assets/reels/garage-site.mp4"), "original master");
   git("add", "."); git("commit", "-m", "published");
   const published = git("rev-parse", "HEAD");
   const plan = (options = {}) => planRelease({ projectRoot: directory, base: published, ...options });
+  writeFileSync(join(directory, 'js/focused-home.js'), sharedHeader);
+  writeFileSync(join(directory, 'styles.css'), '.map-node {color: black}\n.site-header {padding: 12px}');
+  assert.deepEqual(plan().components, ['header']);
+  assert.equal(plan().staticScope, 'copy', 'Header changes retain the base static checks without FFmpeg.');
+  git('add', '.'); git('commit', '-m', 'local header');
+  assert.deepEqual(plan({target: 'HEAD'}).matrix, browserMatrix('components', ['header']));
+  writeFileSync(join(directory, 'styles.css'), '.map-node {color: black}\n.site-header {padding: 12px}\n.command-dock__mark svg {fill: none}');
+  assert.deepEqual(plan().components, ['header', 'search-icon']);
+  writeFileSync(join(directory, 'styles.css'), '.map-node {color: red}\n.site-header {padding: 12px}');
+  assert.equal(plan().mode, 'full', 'A shared map change cannot hide behind a header fix.');
+  git('reset', '--hard', published);
   writeFileSync(join(directory, "assets/reels/garage-site.mp4"), "updated master");
   assert.equal(plan().mode, "components");
   assert.deepEqual(plan().components, ["media"]);
@@ -338,7 +387,7 @@ for (const path of ['signature/../styles.css', 'signature-other/src/component.js
 }
 for (const owner of ['signature', 'checks']) {
   const matrix = browserMatrix('components', [owner]).include;
-  assert.equal(matrix.length, owner === 'signature' ? 2 : 4);
+  assert.equal(matrix.length, owner === 'signature' ? 2 : 6);
   assert(matrix.filter(row => row.checks === 'signature').every(row => row.runner === 'ubuntu-latest'));
 }
 assert(fullMatrix.filter(row => row.browser === 'webkit' && row.checks !== 'signature').every(row => row.runner === 'macos-15'), 'Portfolio WebKit retains native media coverage');
