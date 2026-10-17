@@ -17,11 +17,11 @@ const ownsSelector = (selector) => selectorParser().astSync(selector).nodes.ever
   return owned;
 });
 
-const cssOutsideSettings = (source) => {
+const cssOutsideOwned = (source, owns = ownsSelector) => {
   const visit = (node) => {
     if (node.type === "comment") return null;
     if (node.type === "rule" && node.nodes.every((child) => ["decl", "comment"].includes(child.type))
-      && ownsSelector(node.selector)) return null;
+      && owns(node.selector)) return null;
     if (node.type === "root" || (node.type === "atrule" && ["media", "supports"].includes(node.name))) {
       const children = (node.nodes || []).map(visit).filter(Boolean);
       // Empty conditional groups have no effect. Other at-rules (@layer,
@@ -63,7 +63,12 @@ const settingsHtml = (source) => {
 export const affectedComponents = (path, before, after, maskHtmlCopy) => {
   if (before.includes("\0") || after.includes("\0")) return null;
   try {
-    if (path === "styles.css" && cssOutsideSettings(before) === cssOutsideSettings(after)) return ["settings"];
+    if (path === "styles.css" && cssOutsideOwned(before) === cssOutsideOwned(after)) return ["settings"];
+    // Decorative search mark only; the form, input, popup and shared tokens
+    // retain their existing coverage. Every selector branch must be local.
+    const ownsSearchIcon = (selector) => selector.split(",").every((branch) =>
+      /^\.(?:control-console|mobile-first-dock) \.command-dock__mark(?:::before|::after| svg)$/.test(branch.trim()));
+    if (path === "styles.css" && cssOutsideOwned(before, ownsSearchIcon) === cssOutsideOwned(after, ownsSearchIcon)) return ["search-icon"];
     if (path === "index.html" && maskHtmlCopy(settingsHtml(before)) === maskHtmlCopy(settingsHtml(after))) return ["settings"];
     if (path === "js/whoop-day.js") {
       const bindings = (source) => parseJs(source, { ecmaVersion: "latest", sourceType: "module" }).body

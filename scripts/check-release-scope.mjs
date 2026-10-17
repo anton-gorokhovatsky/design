@@ -137,6 +137,10 @@ const scoped = (path, before, after, mode, components = []) => {
   checks += 1;
 };
 const styles = read("styles.css");
+scoped("styles.css", "", '.control-console .command-dock__mark svg {fill: none; stroke: currentColor}', "components", ["search-icon"]);
+scoped("styles.css", '.control-console .command-dock__mark::before {content: ""}', "", "components", ["search-icon"]);
+scoped("styles.css", "", '.control-console .command-dock__mark svg, .map-node {fill: none}', "full");
+scoped("styles.css", "", '.control-console .command-dock__mark + input {display: none}', "full");
 scoped("styles.css", styles, styles + "\n.settings-panel__note { margin-top: 8px; }", "components", ["settings"]);
 scoped("styles.css", styles + "\n.settings-whoop__disclosure { color: red; }", styles, "components", ["settings"]);
 for (const selector of [

@@ -24,6 +24,7 @@ export const componentCoverage = {
   signature: ["signature"],
   checks: ["signature", "point-address"],
   "point-address": ["point-address"],
+  "search-icon": ["command-placement"],
   media: ["reels", "case-view", "case-flow", "hover-layout", "observation-route"],
   settings: ["core", "accessibility", "whoop-ui"],
   whoop: ["core", "accessibility", "whoop-ui", "hover-layout", "first-visit"],

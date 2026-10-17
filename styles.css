@@ -3631,27 +3631,13 @@ html[data-focus-modality="keyboard"]
   transform: translateY(-1px);
 }
 
-.control-console .command-dock__mark::before {
-  position: absolute;
-  top: 1px;
-  left: 1px;
-  width: 10px;
-  height: 10px;
-  border: 1.5px solid currentColor;
-  border-radius: 50%;
-  content: "";
-}
-
-.control-console .command-dock__mark::after {
-  position: absolute;
-  top: 11px;
-  left: 11px;
-  width: 7px;
-  height: 1.5px;
-  background: currentColor;
-  content: "";
-  transform: translateY(-50%) rotate(45deg);
-  transform-origin: left center;
+.control-console .command-dock__mark svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
 }
 
 .control-console .command-dock input {
@@ -10359,8 +10345,6 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
   }
   .mobile-first-dock .command-dock input { padding: 0; font-size: var(--type-body); width: 100%; }
   .mobile-first-dock .command-dock__mark { width: var(--dock-tool-size); height: var(--dock-tool-size); justify-self: center; }
-  .mobile-first-dock .command-dock__mark::before,
-  .mobile-first-dock .command-dock__mark::after { content: none; }
   .mobile-first-dock :is(.command-dock__mark, .focused-map-open, .mobile-first-composition) svg {
     display: block;
     flex: none;
