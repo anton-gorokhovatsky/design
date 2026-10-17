@@ -10631,7 +10631,8 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
   .focused-home .map-node__glyph { transition: none; }
   .focused-home .map-node.is-selected { z-index: 8; }
   .focused-home .map-labels .direction-landmark[data-spatial-selected] { z-index: 8; }
-  .focused-home .signal-constellation { opacity: .65; }
+  /* The field owns this gesture; the inner constellation must not capture it. */
+  .focused-home .signal-constellation { opacity: .65; pointer-events: none; }
 
   /* Text navigation uses alignment and proximity without a shared panel surface. */
   .mobile-first-dock[data-material-surface] {

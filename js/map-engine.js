@@ -378,13 +378,19 @@ const measureMapClearance = () => {
     const points = largeTextHome ? focusHomeLargeTextPoints : innerWidth < 360 ? focusHomeNarrowPoints : focusHomePoints;
     const shortField = !largeTextHome && mapFieldBounds.height <= 420;
     // Labels stay inside the available field, including the permitted tilt.
-    const museumTop = (mapLabels.get('garage').offsetHeight + 44 + (shortField ? 8 : 20)) / mapFieldBounds.height * 100;
+    const museumTop = (mapLabels.get('garage').offsetHeight + 44 + (shortField ? 20 : 40)) / mapFieldBounds.height * 100;
+    const topShift = Math.max(0, museumTop - points.get('garage').y);
     points.forEach((position, id) => {
-      let y = position.y;
-      if (id === 'garage') y = Math.max(y, museumTop);
+      // Borrow the spare lower field for the upper group, gradually reducing
+      // the shift toward the personal nodes so the whole composition still fits.
+      let y = position.y + (shortField ? 0 : topShift * Math.max(0, (86 - position.y) / (86 - points.get('garage').y)));
+      if (shortField && id === 'garage') y = Math.max(y, museumTop);
       if (shortField && id === 'running') y = 90;
       if (shortField && id === 'youtube') y = 84;
-      mapClearancePositions.set(id, { ...position, y });
+      // In the shortest field, separate the Museum's solid silhouette from
+      // the principle marker below it without pushing that label into YouTube.
+      const x = id === 'garage' && mapFieldBounds.height < 320 ? 35 : position.x;
+      mapClearancePositions.set(id, { x, y });
     });
     return;
   }

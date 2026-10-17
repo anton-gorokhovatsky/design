@@ -1,6 +1,6 @@
 import { mapItems, getMapPreviewPoster } from './map-data.js';
 import { updateWorkTags } from './work-tags.js';
-import { mapButtons, clearMapSelection, selectMapItem, requestMapLinksRender, syncMapNodeAvailability, setMapRovingId } from './map-engine.js';
+import { mapButtons, clearMapSelection, selectMapItem, requestMapLinksRender, syncMapNodeAvailability, setMapRovingId, setTimeMode } from './map-engine.js';
 
 const compact = matchMedia('(max-width: 900px)');
 const home = document.querySelector('.focused-home');
@@ -132,6 +132,7 @@ function closePreview({ focus = true, write = true } = {}) {
 }
 function setScene(focused, { write = false, focus = false } = {}) {
   focused = focused && compact.matches;
+  if (focused) setTimeMode(false, { updateHistory: false });
   document.body.classList.toggle('has-focused-home', focused);
   document.body.classList.toggle('has-full-mobile-map', compact.matches && !focused);
   document.body.toggleAttribute('data-mobile-preview-ui', compact.matches);
@@ -147,7 +148,7 @@ function setScene(focused, { write = false, focus = false } = {}) {
     closePreview({ focus: false, write: false });
     const url = new URL(location.href);
     url.searchParams.delete('preview');
-    if (focused) url.searchParams.delete('scene');
+    if (focused) { url.searchParams.delete('scene'); url.searchParams.delete('view'); }
     else url.searchParams.set('scene', 'map');
     history.pushState(null, '', url);
   }
@@ -189,7 +190,7 @@ function restoreScene() {
     url.searchParams.set('scene', 'map');
     history.replaceState(history.state, '', url);
   }
-  setScene(url.searchParams.get('scene') !== 'map');
+  setScene(url.searchParams.get('scene') !== 'map' && url.searchParams.get('view') !== 'time');
   const id = url.searchParams.get('preview');
   if (id && (!url.searchParams.has('point') || url.searchParams.get('point') === id)) {
     if (url.searchParams.has('point')) returnToPreview = true;
@@ -222,11 +223,15 @@ document.querySelector('[data-start-observation]').addEventListener('click', () 
   setScene(false);
 }, true);
 new MutationObserver(() => {
+  if (compact.matches && map.hasAttribute('data-time-view') && document.body.classList.contains('has-focused-home')) {
+    closePreview({ focus: false, write: false });
+    setScene(false);
+  }
   if (overviewReturn && !map.hasAttribute('data-observation-active')) {
     overviewReturn = false;
     setScene(true);
   }
-}).observe(map, { attributes: true, attributeFilter: ['data-observation-active'] });
+}).observe(map, { attributes: true, attributeFilter: ['data-observation-active', 'data-time-view'] });
 window.addEventListener('popstate', restoreScene);
 compact.addEventListener('change', restoreScene);
 window.addEventListener('resize', syncMeasurements);

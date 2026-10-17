@@ -34,9 +34,13 @@ const edges = relationships.map(([a, b]) => {
 });
 const restYaw = -.16, restPitch = -.26, cameraDistance = 760;
 let width = 1, height = 1, request = 0;
-let yaw = restYaw, pitch = restPitch, selected = null, drag = null;
+let yaw = restYaw, pitch = restPitch, selected = null, drag = null, coast = null;
 let liftStarted = 0;
 const duration = 200;
+const coastDecay = duration / 2, coastDuration = 300;
+const clampYaw = value => Math.max(-.5, Math.min(.35, value));
+const clampPitch = value => Math.max(-.42, Math.min(-.1, value));
+const clampSpeed = value => Math.max(-.08 / coastDecay, Math.min(.08 / coastDecay, value));
 const timing = getComputedStyle(root).getPropertyValue('--motion-enter').match(/[\d.]+/g).map(Number);
 function ease(progress) {
   const [x1, y1, x2, y2] = timing;
@@ -183,14 +187,31 @@ function draw() {
 function frame(time) {
   request = 0;
   if (!active() || document.hidden) return;
+  if (coast) {
+    // Integrate exponential friction exactly: equal travel at 60 and 120 Hz,
+    // no spring target, rebound or return to the resting angle.
+    const elapsed = Math.min(coastDuration, time - coast.started);
+    const travel = coastDecay * (1 - Math.exp(-elapsed / coastDecay));
+    yaw = clampYaw(coast.yaw + coast.yawSpeed * travel);
+    pitch = clampPitch(coast.pitch + coast.pitchSpeed * travel);
+    if (elapsed === coastDuration) coast = null;
+  }
   const progress = !motion() || root.dataset.focusModality === 'keyboard' ? 1 : Math.min(1, (time-liftStarted)/duration);
   const amount = progress === 1 ? 1 : ease(progress);
   nodes.forEach(node => { node.lift = (node.fromLift || 0) + ((node.toLift || 0)-(node.fromLift || 0))*amount; });
   draw();
-  if (progress < 1) request = requestAnimationFrame(frame);
+  if (progress < 1 || coast) request = requestAnimationFrame(frame);
 }
 function schedule() { if (!request) request = requestAnimationFrame(frame); }
+function stopMotion() {
+  coast = null;
+  const pointerId = drag?.id;
+  drag = null;
+  field.removeAttribute('data-dragging');
+  if (pointerId !== undefined && field.hasPointerCapture(pointerId)) field.releasePointerCapture(pointerId);
+}
 function sync() {
+  if (!active() || !motion() || document.body.matches('.has-reading-surface,.has-command-focus,.has-point-preview')) stopMotion();
   if (!active()) {
     cancelAnimationFrame(request); request = 0;
     nodes.forEach(({button, label}) => [button, label].forEach(element => {
@@ -208,8 +229,10 @@ function sync() {
   measure(); schedule();
 }
 field.addEventListener('pointerdown', event => {
-  if (!motion() || event.button !== 0 || event.target.closest('button,a,.map-node-label')) return;
-  drag = { id:event.pointerId, x:event.clientX, y:event.clientY, yaw, pitch, moved:false };
+  stopMotion();
+  if (!active() || !motion() || event.button !== 0 || event.target.closest('button,a,.map-node-label')) return;
+  drag = { id:event.pointerId, x:event.clientX, y:event.clientY, yaw, pitch, moved:false,
+    time:performance.now(), yawSpeed:0, pitchSpeed:0 };
 });
 field.addEventListener('pointermove', event => {
   if (!drag || drag.id !== event.pointerId) return;
@@ -217,12 +240,31 @@ field.addEventListener('pointermove', event => {
   if (!drag.moved && Math.abs(dx) < 7) return;
   if (!drag.moved && event.pointerType === 'touch' && Math.abs(dy) > Math.abs(dx)) { drag = null; return; }
   drag.moved = true; field.setPointerCapture(event.pointerId); field.setAttribute('data-dragging','');
-  yaw = Math.max(-.5, Math.min(.35, drag.yaw + dx / 420));
-  pitch = Math.max(-.42, Math.min(-.1, drag.pitch - dy / 650));
+  const now = performance.now(), delta = Math.max(8, now - drag.time);
+  const nextYaw = clampYaw(drag.yaw + dx / 420), nextPitch = clampPitch(drag.pitch - dy / 650);
+  const velocity = (previous, movement) => {
+    const sample = clampSpeed(movement / delta);
+    if (delta > 80 || Math.sign(previous) !== Math.sign(sample)) previous = 0;
+    return previous + (sample - previous) * .42;
+  };
+  drag.yawSpeed = velocity(drag.yawSpeed, nextYaw - yaw);
+  drag.pitchSpeed = velocity(drag.pitchSpeed, nextPitch - pitch);
+  drag.time = now;
+  yaw = nextYaw; pitch = nextPitch;
   schedule();
 });
-const stopDrag = () => { drag = null; field.removeAttribute('data-dragging'); };
-field.addEventListener('pointerup', stopDrag); field.addEventListener('pointercancel', stopDrag);
+field.addEventListener('pointerup', event => {
+  if (!drag || drag.id !== event.pointerId) return;
+  const now = performance.now();
+  const release = drag.moved && now - drag.time < 80 && motion()
+    ? { yaw, pitch, yawSpeed:drag.yawSpeed, pitchSpeed:drag.pitchSpeed, started:now } : null;
+  stopMotion();
+  coast = release;
+  if (coast) schedule();
+});
+field.addEventListener('pointercancel', stopMotion);
+field.addEventListener('lostpointercapture', () => { if (drag) stopMotion(); });
+document.addEventListener('keydown', stopMotion, true);
 window.addEventListener('map-layout', () => { if (active()) measure(); });
 let measureFrame = 0;
 new ResizeObserver(() => {
@@ -232,7 +274,7 @@ new ResizeObserver(() => {
 new MutationObserver(sync).observe(document.body, {attributes:true, attributeFilter:['class']});
 reducedMotion.addEventListener('change', sync);
 new MutationObserver(sync).observe(root, {attributes:true, attributeFilter:['data-reduce-motion']});
-document.addEventListener('visibilitychange', () => { if (document.hidden) { cancelAnimationFrame(request); request = 0; } else sync(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) { stopMotion(); cancelAnimationFrame(request); request = 0; } else sync(); });
 compact.addEventListener('change', sync);
 
 const search = document.querySelector('[data-spatial-search]');
