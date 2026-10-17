@@ -88,6 +88,57 @@ try {
     console.log(`PASS ${engine} ${width}: both map layouts, four relation families, no loops or disproportionate detours.`);
     await page.close();
   }
+  // Introductory captions use the projected map, including release momentum.
+  // The 740px viewport catches the gap between the former fixed breakpoints.
+  for (const viewport of [{ width: 390, height: 740 }, { width: 320, height: 568 }]) {
+    const page = await browser.newPage({ viewport, isMobile: true, hasTouch: true });
+    page.on('pageerror', error => errors.push(error.message));
+    await page.goto(origin);
+    await page.waitForFunction(() => document.querySelector('[data-whoop-recovery]').textContent.includes('77')
+      && document.querySelector('[data-map-label-id="narkomfin"]').style.getPropertyValue('--spatial-label-dx'));
+    const checkCaptions = async () => {
+      const state = await page.evaluate(() => {
+        const labels = [...document.querySelectorAll('.focused-home .direction-landmark')];
+        const field = document.querySelector('.focused-home__map').getBoundingClientRect();
+        const boxes = labels.map(label => ({ id: label.dataset.mapLabelId,
+          visible: getComputedStyle(label).visibility !== 'hidden', rect: label.getBoundingClientRect() }));
+        return {
+          visible: boxes.filter(box => box.visible).length,
+          clipped: boxes.filter(({ rect }) => rect.left < field.left - 1 || rect.right > field.right + 1
+            || rect.top < field.top - 1 || rect.bottom > field.bottom + 1).map(box => box.id),
+          overlaps: boxes.flatMap((a, index) => boxes.slice(index + 1).filter(b =>
+            a.rect.left < b.rect.right && a.rect.right > b.rect.left
+            && a.rect.top < b.rect.bottom && a.rect.bottom > b.rect.top).map(b => [a.id, b.id])),
+        };
+      });
+      assert.equal(state.visible, 8, `${engine} ${viewport.width}: all introductory captions remain available`);
+      assert.deepEqual(state.clipped, [], 'Introductory captions stay inside their field');
+      assert.deepEqual(state.overlaps, [], 'Introductory captions never overlap');
+    };
+    await checkCaptions();
+    for (const side of [1, -1]) {
+      const start = await page.evaluate(side => {
+        const field = document.querySelector('.focused-home__map'), box = field.getBoundingClientRect();
+        for (const x of [side > 0 ? .12 : .88, .5]) for (const y of [.72, .42, .2]) {
+          const point = { x: box.left + box.width * x, y: box.top + box.height * y };
+          const target = document.elementFromPoint(point.x, point.y);
+          if (field.contains(target) && !target.closest('button,a,.map-node-label')) return point;
+        }
+        return null;
+      }, side);
+      assert.ok(start, 'The map has a free area for the rotation gesture');
+      const field = await page.locator('.focused-home__map').boundingBox();
+      await page.mouse.move(start.x, start.y); await page.mouse.down();
+      await page.mouse.move(side > 0 ? viewport.width - 8 : 8,
+        field.y + field.height * (side > 0 ? .08 : .92), { steps: 16 });
+      await page.mouse.up();
+      await page.waitForTimeout(350);
+      await checkCaptions();
+    }
+    await page.screenshot({ path: `${directory}/${engine}-${viewport.width}-introductory-captions.png` });
+    await page.close();
+    console.log(`PASS ${engine} ${viewport.width}: eight introductory captions, rotation and momentum without overlap.`);
+  }
   assert.deepEqual(errors, []);
 } finally {
   await browser.close(); server.closeAllConnections(); await new Promise(done => server.close(done));

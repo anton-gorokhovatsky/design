@@ -35,6 +35,7 @@ const edges = relationships.map(([a, b]) => {
 const restYaw = -.16, restPitch = -.26, cameraDistance = 760;
 let width = 1, height = 1, request = 0;
 let yaw = restYaw, pitch = restPitch, selected = null, drag = null, coast = null;
+let clearView = null;
 let liftStarted = 0;
 const duration = 200;
 const coastDecay = duration / 2, coastDuration = 300;
@@ -115,6 +116,11 @@ function measure() {
     node.baseX = parseFloat(node.button.style.getPropertyValue('--x')) * width / 100;
     node.baseY = parseFloat(node.button.style.getPropertyValue('--y')) * height / 100;
     node.radius = node.glyph.offsetWidth / 2;
+    node.heading = Boolean(node.label.querySelector('small'));
+    const transform = new DOMMatrixReadOnly(getComputedStyle(node.label).transform);
+    node.labelBox = { width: node.label.offsetWidth, height: node.label.offsetHeight,
+      x: node.label.offsetLeft + transform.m41 - node.baseX,
+      y: node.label.offsetTop + transform.m42 - node.baseY };
     const point = unproject(node.baseX, node.baseY, node.z);
     node.x = point.x; node.y = point.y;
     node.restScale = project(point.x, point.y, node.z, restYaw, restPitch).scale;
@@ -136,7 +142,76 @@ function measure() {
   });
   draw();
 }
-function draw() {
+function placeLabels(geometry) {
+  const overlaps = (a, b, gap = 6) => a.left < b.right + gap && a.right > b.left - gap
+    && a.top < b.bottom + gap && a.bottom > b.top - gap;
+  const points = [...geometry.values()];
+  // Area headings keep their authored positions first. A bounded joint search
+  // can nudge an earlier caption when that gives every neighbour a legal slot.
+  const ordered = [...nodes].sort((a, b) => Number(b.heading) - Number(a.heading));
+  const choices = ordered.map(node => {
+    const point = geometry.get(node.id), size = node.labelBox;
+    const home = [point.x + size.x, point.y + size.y], gap = point.radius + 8;
+    const anchors = { home,
+      north: [point.x - size.width / 2, point.y - gap - size.height],
+      south: [point.x - size.width / 2, point.y + gap],
+      west: [point.x - gap - size.width, point.y - size.height / 2],
+      east: [point.x + gap, point.y - size.height / 2],
+      northeast: [point.x + gap, point.y - gap - size.height],
+      northwest: [point.x - gap - size.width, point.y - gap - size.height],
+      southeast: [point.x + gap, point.y + gap],
+      southwest: [point.x - gap - size.width, point.y + gap] };
+    const candidates = [], seen = new Set();
+    for (const [side, [x, y]] of Object.entries(anchors)) {
+      for (const shift of side.length > 5 ? [0] : [0, -12, 12, -24, 24]) for (const rise of side === 'home' || side.length > 5 ? [0, -6, 6] : [0]) {
+        const vertical = side === 'west' || side === 'east';
+        const left = Math.max(0, Math.min(width - size.width, x + (vertical ? 0 : shift)));
+        const top = Math.max(0, Math.min(height - size.height, y + (vertical ? shift : rise)));
+        const box = { left, right: left + size.width, top, bottom: top + size.height };
+        const key = `${side}:${shift}:${rise}`, position = `${left.toFixed(2)},${top.toFixed(2)}`;
+        if (seen.has(position) || box.right > width || box.bottom > height) continue;
+        seen.add(position);
+        if (points.some(other => {
+          const dx = other.x - Math.max(box.left, Math.min(box.right, other.x));
+          const dy = other.y - Math.max(box.top, Math.min(box.bottom, other.y));
+          return dx * dx + dy * dy < (other.radius + 4) ** 2;
+        })) continue;
+        candidates.push({ ...box, key, node, dx: left - home[0], dy: top - home[1] });
+      }
+    }
+    // Retain a valid side during a gesture instead of oscillating at a boundary.
+    candidates.sort((a, b) => Number(b.key === node.labelPlacement) - Number(a.key === node.labelPlacement));
+    return candidates;
+  });
+  let remaining = 2000, best = [];
+  for (const candidates of choices) {
+    const candidate = candidates.find(box => !best.some(other => overlaps(box, other)));
+    if (candidate) best.push(candidate);
+  }
+  const score = placed => placed.length + nodes.length * placed.filter(box => box.node.heading).length;
+  function fit(pending, placed) {
+    if (score(placed) > score(best)) best = [...placed];
+    if (!pending.length) return placed.length === ordered.length;
+    if (--remaining < 0) return false;
+    const next = pending.map(index => ({ index, candidates: choices[index]
+      .filter(box => !placed.some(other => overlaps(box, other))) }))
+      .sort((a, b) => a.candidates.length - b.candidates.length)[0];
+    const rest = pending.filter(index => index !== next.index);
+    for (const candidate of next.candidates) {
+      if (fit(rest, [...placed, candidate])) return true;
+    }
+    return false;
+  }
+  if (best.length < ordered.length) fit(ordered.map((_, index) => index), []);
+  for (const node of nodes) node.label.toggleAttribute('data-spatial-no-space', !best.some(box => box.node === node));
+  for (const box of best) {
+    box.node.labelPlacement = box.key;
+    box.node.label.style.setProperty('--spatial-label-dx', `${box.dx.toFixed(2)}px`);
+    box.node.label.style.setProperty('--spatial-label-dy', `${box.dy.toFixed(2)}px`);
+  }
+  return best.length === nodes.length;
+}
+function draw(restoring = false) {
   if (!active()) return;
   const connected = new Set([selected]);
   relationships.forEach(([a, b]) => { if (a === selected || b === selected) { connected.add(a); connected.add(b); } });
@@ -159,6 +234,19 @@ function draw() {
     node.button.style.setProperty('--spatial-scale', scale.toFixed(4));
     geometry.set(node.id, {...point, id: node.id, z: point.z + lift, viewScale, radius:node.radius * scale});
   }
+  const labelsFit = placeLabels(geometry);
+  if (!labelsFit && !restoring) {
+    const previous = clearView?.width === width && clearView.height === height
+      ? clearView : { yaw: restYaw, pitch: restPitch };
+    if (previous.yaw !== yaw || previous.pitch !== pitch) {
+      // A compact map cannot rotate into an unreadable arrangement. Stop at
+      // its last clear view before painting, retaining all eight captions.
+      yaw = previous.yaw; pitch = previous.pitch; coast = null;
+      draw(true);
+      return;
+    }
+  }
+  if (labelsFit) clearView = { yaw, pitch, width, height };
   const occluders = [...geometry.values()];
   [...nodes].sort((a, b) => geometry.get(a.id).z - geometry.get(b.id).z)
     .forEach((node, index) => { node.button.style.zIndex = String(index + 1); });
@@ -217,6 +305,8 @@ function sync() {
     nodes.forEach(({button, label}) => [button, label].forEach(element => {
       element.style.removeProperty('--spatial-dx'); element.style.removeProperty('--spatial-dy');
       element.style.removeProperty('--spatial-scale'); element.removeAttribute('data-spatial-muted');
+      element.style.removeProperty('--spatial-label-dx'); element.style.removeProperty('--spatial-label-dy');
+      element.removeAttribute('data-spatial-no-space');
       element.style.removeProperty('z-index');
     }));
     return;

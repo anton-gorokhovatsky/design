@@ -10639,6 +10639,13 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
   .focused-home .map-node, .focused-home .map-labels .direction-landmark {
     translate: var(--spatial-dx, 0px) var(--spatial-dy, 0px);
   }
+  .focused-home .map-labels .direction-landmark {
+    translate: calc(var(--spatial-dx, 0px) + var(--spatial-label-dx, 0px))
+      calc(var(--spatial-dy, 0px) + var(--spatial-label-dy, 0px));
+  }
+  .focused-home .map-labels .direction-landmark[data-spatial-no-space] {
+    visibility: hidden; pointer-events: none;
+  }
   .focused-home .map-node { transition: opacity 180ms var(--motion-enter); }
   .focused-home .map-node__glyph { scale: var(--spatial-scale, 1); }
   .focused-home .map-node[data-spatial-muted],
