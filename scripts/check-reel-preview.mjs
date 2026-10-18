@@ -105,7 +105,11 @@ try {
     }
   });
 
-  await page.goto(`${origin}/?reel=mosaic&preview=${expected.mapId}`, {
+  // Orbital satellites expose a title and open the project. Their full video
+  // receiver remains available on the original nodes in chronology view.
+  const isOrbitProject = mapItems.find(item => item.id === expected.mapId)?.parent === 'private-practice';
+  const coordinates = isOrbitProject ? '&scene=map&view=time' : '';
+  await page.goto(`${origin}/?reel=mosaic&preview=${expected.mapId}${coordinates}`, {
     // Streaming media need not become network-idle. Readiness is asserted below.
     waitUntil: "domcontentloaded",
   });

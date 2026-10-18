@@ -3,8 +3,6 @@ import { mapButtons, syncMapNodeAvailability, setMapRovingId } from './map-engin
 import { createSystem, STEP } from './orbit-physics.js';
 import { audienceWeights } from './practice-audience.js';
 
-const gravity = true;
-
 const projects = mapItems.filter(item => item.parent === 'private-practice');
 const cultural = new Set(['shirokostup', 'tarski']);
 const category = item => cultural.has(item.id) ? 'culture'
@@ -16,8 +14,7 @@ const groups = [
     color: [153,115,61], light: [208,174,116], surface: ['#e5cfac','#af8c5b','#71522e','#382716'] },
   { id: 'sport', title: 'Спортивные', radius: 1.16, phase: .12,
     color: [114,101,151], light: [180,162,213], surface: ['#d7cee6','#9e90ba','#5f5179','#312943'] },
-].map(group => ({ ...group, projects: projects.filter(item => category(item) === group.id),
-  period: 22 * (group.radius / .43) ** 1.5 }));
+].map(group => ({ ...group, projects: projects.filter(item => category(item) === group.id) }));
 
 const doc = document, win = window;
 function initializePracticeOrbits() {
@@ -33,7 +30,6 @@ function initializePracticeOrbits() {
     const tooltip = doc.createElement('div');tooltip.className = 'project-orbit-tooltip';tooltip.hidden = true;
     tooltip.dataset.materialSurface='map-node-label';tooltip.dataset.materialActive='always';
     const mobile=win.matchMedia('(max-width:900px)');
-    const mobileOpen=node;
     const nativeRoot=doc.querySelector('[data-map-nodes]'), map=doc.querySelector('[data-practice-map]');
     (doc.querySelector('main')||doc.body).append(layer,tooltip);
     let enabled=true;
@@ -44,12 +40,11 @@ function initializePracticeOrbits() {
     const project=(u,v)=>{
       return [u*Math.cos(angle)-v*Math.cos(tilt)*Math.sin(angle),u*Math.sin(angle)+v*Math.cos(tilt)*Math.cos(angle),v*Math.sin(tilt)];
     };
-    const point=(radius,theta)=>project(Math.cos(theta)*radius,Math.sin(theta)*radius);
     const xy=([x,y])=>[center+x*scale,center+y*scale];
     const reduced=win.matchMedia('(prefers-reduced-motion:reduce)');
     const stopped=()=>reduced.matches||doc.documentElement.dataset.reduceMotion==='true';
     const makeLayer=()=>{const c=doc.createElement('canvas');c.width=c.height=side;return c;};
-    const back=makeLayer(),front=makeLayer(),sphere=makeLayer();
+    const back=makeLayer(),sphere=makeLayer();
     const drawSphere=()=>{
       const sphereContext=sphere.getContext('2d'),r=bodyRadius*scale;
       const lighting=sphereContext.createRadialGradient(center-r*.35,center-r*.4,r*.03,center-r*.16,center-r*.2,r*1.18);
@@ -58,8 +53,7 @@ function initializePracticeOrbits() {
     };
     const tracks=()=>{
       const dark=doc.documentElement.dataset.theme==='dark';
-      for(const c of [back,front])c.getContext('2d').clearRect(0,0,side,side);
-      const c=back.getContext('2d');
+      const c=back.getContext('2d');c.clearRect(0,0,side,side);
       for(const orbit of groups){
         c.strokeStyle=`rgba(${(dark?orbit.light:orbit.color).join(',')},.58)`;
         c.lineWidth=2;c.beginPath();
@@ -67,7 +61,7 @@ function initializePracticeOrbits() {
         c.stroke();
       }
     };
-    let elapsed=0,last=0,raf=0,active=null,returnTo=null,hadDetail=false;
+    let last=0,raf=0,active=null,returnTo=null,hadDetail=false;
     const showTooltip=moon=>{
       if(mobile.matches)return;
       active=moon;tooltip.textContent=moon.item.label;tooltip.hidden=false;
@@ -91,8 +85,11 @@ function initializePracticeOrbits() {
     backButton.type='button';backButton.className='project-orbit-back';backButton.textContent='Все проекты';backButton.hidden=true;
     preview.querySelector('.point-preview__head').before(backButton);
     preview.querySelector('.point-preview__description').before(picker);
+    const motionStatus=doc.createElement('p');motionStatus.hidden=true;motionStatus.setAttribute('role','status');
+    motionStatus.textContent='Движение приостановлено. Проекты по-прежнему можно открыть.';
+    picker.before(motionStatus);
     let pickerSession=false;
-    const openPicker=()=>{pickerSession=true;returnTo=mobileOpen;node.click();};
+    const openPicker=()=>{pickerSession=true;returnTo=node;node.click();};
     node.addEventListener('click',()=>{pickerSession=true;returnTo=node;});backButton.addEventListener('click',openPicker);
     for(const group of groups){
       const section=doc.createElement('section'),heading=doc.createElement('h3');heading.textContent=group.title;
@@ -101,7 +98,7 @@ function initializePracticeOrbits() {
       for(const item of group.projects){
         const button=doc.createElement('button');button.type='button';button.dataset.pickerProject=item.id;
         button.textContent=doc.querySelector(`[data-map-label-id="${item.id}"]`)?.textContent||item.label;
-        button.addEventListener('click',()=>{pickerSession=true;returnTo=mobileOpen;doc.querySelector(`.map-node[data-map-id="${item.id}"]`)?.click();});
+        button.addEventListener('click',()=>{pickerSession=true;returnTo=node;doc.querySelector(`.map-node[data-map-id="${item.id}"]`)?.click();});
         section.append(button);
       }
       picker.append(section);
@@ -135,7 +132,7 @@ function initializePracticeOrbits() {
     mobile.addEventListener('change',syncInput);
     new MutationObserver(syncInput).observe(map,{attributes:true,attributeFilter:['data-time-view','data-observation-active']});
     syncInput();
-    const system=gravity?createSystem(moons.map(moon=>({id:moon.item.id,radius:moon.orbit.radius,phase:moon.phase})),{weights:audienceWeights}):null;
+    const system=createSystem(moons.map(moon=>({id:moon.item.id,radius:moon.orbit.radius,phase:moon.phase})),{weights:audienceWeights});
     let accumulator=0;
     const paint=()=>{
       const rect=canvas.getBoundingClientRect();
@@ -154,10 +151,10 @@ function initializePracticeOrbits() {
         const captionBottom=rect.top+rect.height*(.5-orbitHalfHeight/2.6)-10;
         label.style.setProperty('--project-caption-y',`${(captionBottom-rootRect.top)*labelRoot.offsetHeight/rootRect.height}px`);
       }
-      ctx.clearRect(0,0,side,side);ctx.drawImage(back,0,0);ctx.drawImage(sphere,0,0);ctx.drawImage(front,0,0);
+      ctx.clearRect(0,0,side,side);ctx.drawImage(back,0,0);ctx.drawImage(sphere,0,0);
       for(const [index,moon] of moons.entries()){
-        const body=system?.bodies[index+1],core=system?.bodies[0];
-        const p=body?project(body.x-core.x,body.y-core.y):point(moon.orbit.radius,moon.phase+elapsed*tau/moon.orbit.period),[cx,cy]=xy(p);
+        const body=system.bodies[index+1],core=system.bodies[0];
+        const p=project(body.x-core.x,body.y-core.y),[cx,cy]=xy(p);
         const x=rect.left+cx/side*rect.width,y=rect.top+cy/side*rect.height;
         moon.button.style.transform=`translate(${x-12}px,${y-12}px)`;
         moon.button.style.visibility=p[2]<0&&Math.hypot(p[0],p[1])<bodyRadius+.045?'hidden':'visible';
@@ -170,14 +167,17 @@ function initializePracticeOrbits() {
           tooltip.style.top=`${Math.max(12,Math.min(win.innerHeight-h-12,top))}px`;
         }
       }
-      canvas.dataset.orbitTime=elapsed.toFixed(2);canvas.dataset.projectCount=String(moons.length);
-      canvas.dataset.gravity=String(gravity);
+      canvas.dataset.orbitTime=system.time.toFixed(2);canvas.dataset.projectCount=String(moons.length);
+      canvas.dataset.gravity='true';
     };
     const tick=time=>{
       raf=0;if(doc.hidden)return;
-      if(enabled&&!layer.inert&&!stopped()&&!active){
-        const dt=last?Math.min(100,time-last)/1000:0;elapsed+=dt;
-        if(system){accumulator+=dt;while(accumulator>=STEP){system.step();accumulator-=STEP;}}
+      if(enabled&&!layer.inert&&!stopped()&&!active&&!system.failure){
+        const dt=last?Math.min(100,time-last)/1000:0;
+        accumulator+=dt;while(accumulator>=STEP){
+          if(!system.step()){motionStatus.hidden=false;canvas.dataset.physicsPaused=system.failure;accumulator=0;break;}
+          accumulator-=STEP;
+        }
       }
       last=time;paint();raf=requestAnimationFrame(tick);
     };

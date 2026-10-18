@@ -87,8 +87,24 @@ try {
       await page.locator('[data-focused-map-open]').click();
       await settle(page);
       const fullTargets = await readMapTargets(page);
-      assert.equal(fullTargets.length, mapItems.length, 'The full map retains every point.');
+      const orbitalProjects = mapItems.filter(item => item.parent === 'private-practice');
+      const nativePoints = mapItems.filter(item => item.parent !== 'private-practice');
+      assert.deepEqual(fullTargets.map(t => t.id).sort(), nativePoints.map(item => item.id).sort(),
+        'Every native point remains available; private projects use the touch picker.');
       assert.deepEqual(fullTargets.filter(t => t.misses.length || t.width < 24 || t.height < 24), []);
+      await page.locator('.map-node[data-map-id="private-practice"]').click();
+      await page.locator('.project-orbit-picker').waitFor({ state: 'visible' });
+      assert.deepEqual(await page.locator('[data-picker-project]').evaluateAll(rows => rows.map(row => row.dataset.pickerProject).sort()),
+        orbitalProjects.map(item => item.id).sort(), 'The picker retains every private project.');
+      for (const item of orbitalProjects) {
+        const row = page.locator(`[data-picker-project="${item.id}"]`);
+        assert.ok((await row.boundingBox()).height >= 44, 'Each project has a finger-sized row.');
+        await row.click();
+        assert.equal(await page.locator(`.map-node[data-map-id="${item.id}"]`).getAttribute('aria-expanded'), 'true',
+          `The touch row opens ${item.id}, not its neighbour.`);
+        await page.locator('.project-orbit-back').click();
+      }
+      await page.locator('.point-preview__close').click();
       await page.locator('[data-focused-return]').click();
     }
     await page.locator('.site-header').screenshot({ path: `${directory}/${engine}-author-${name}.png` });

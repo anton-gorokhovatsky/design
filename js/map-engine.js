@@ -308,8 +308,10 @@ let mapFieldBounds;
 let mapTargetSize = 24;
 let mapTargetScale = 1;
 const mapTargetDiameters = new Map();
+const mapTargetHeights = new Map();
 const mapTargetDiameter = item => mapTargetDiameters.get(item.id)
   || Math.max(mapTargetSize, item.size * mapTargetScale);
+const mapTargetHeight = item => mapTargetHeights.get(item.id) || mapTargetDiameter(item);
 let mapConsoleBounds = [];
 const mapClearancePositions = new Map();
 let mapSpaceGrowth = { x: 0, y: 0 };
@@ -371,7 +373,12 @@ const measureMapClearance = () => {
   mapTargetSize = parseFloat(getComputedStyle(mapNodesRoot).getPropertyValue("--map-target-size")) || 24;
   mapTargetScale = parseFloat(getComputedStyle(mapNodesRoot).getPropertyValue("--map-target-scale")) || 1;
   mapTargetDiameters.clear();
-  mapButtons.forEach((button, id) => mapTargetDiameters.set(id, parseFloat(getComputedStyle(button).width)));
+  mapTargetHeights.clear();
+  mapButtons.forEach((button, id) => {
+    const style = getComputedStyle(button);
+    mapTargetDiameters.set(id, parseFloat(style.width));
+    mapTargetHeights.set(id, parseFloat(style.height));
+  });
   const selectors = [".site-header", ".map-axis-label"];
   if (window.innerWidth > 900) selectors.push(".map-controls", ".map-control > span", ".display-control", ".control-console");
   else selectors.push(".command-dock", ".focused-return", ".mobile-first-dock");
@@ -409,6 +416,9 @@ const measureMapClearance = () => {
     return rank(a) - rank(b) || b.size - a.size;
   });
   sorted.forEach(item => {
+    // Orbit projects are positioned by their own layer. Reserving their old
+    // map positions leaves phantom obstacles and exhausts the compact field.
+    if (mapButtons.get(item.id)?.classList.contains('project-satellite')) return;
     const position = clearMapConsoles(item, getMapLayout(item));
     mapClearancePositions.set(item.id, position);
     const label = mapLabels.get(item.id);
@@ -421,8 +431,9 @@ const measureMapClearance = () => {
     const targetY = top + position.y * height / 100;
     const labelWidth = label.offsetWidth, labelHeight = label.offsetHeight;
     const radius = mapTargetDiameter(item) * width / mapNodesRoot.clientWidth / 2;
+    const radiusY = mapTargetHeight(item) * width / mapNodesRoot.clientWidth / 2;
     const gapX = radius + Math.abs(targetX - x) + 6;
-    const gapY = radius + Math.abs(targetY - y) + 6;
+    const gapY = radiusY + Math.abs(targetY - y) + 6;
     const sides = {
       north: [-labelWidth / 2, -gapY - labelHeight],
       south: [-labelWidth / 2, gapY],
@@ -435,8 +446,9 @@ const measureMapClearance = () => {
     mapClearancePositions.forEach((other, id) => {
       if (id === item.id) return;
       const radius = (mapTargetDiameters.get(id) || 24) * width / mapNodesRoot.clientWidth / 2;
+      const radiusY = (mapTargetHeights.get(id) || 24) * width / mapNodesRoot.clientWidth / 2;
       const cx = left + other.x * width / 100, cy = top + other.y * height / 100;
-      occupied.push({left: cx-radius, right:cx+radius, top:cy-radius, bottom:cy+radius});
+      occupied.push({left: cx-radius, right:cx+radius, top:cy-radiusY, bottom:cy+radiusY});
     });
     const collides = a => occupied.some(b => a.left < b.right+6 && a.right > b.left-6 && a.top < b.bottom+6 && a.bottom > b.top-6);
     let chosen = null;
@@ -460,13 +472,14 @@ const clearMapConsoles = (item, position) => {
   const { left, top, width, height } = mapFieldBounds;
   const padding = innerWidth > 900 ? 8 : 4;
   const radius = mapTargetDiameter(item) * width / mapNodesRoot.clientWidth / 2 + padding;
+  const radiusY = mapTargetHeight(item) * width / mapNodesRoot.clientWidth / 2 + padding;
   const point = [left + position.x * width / 100, top + position.y * height / 100];
   const covers = ([x, y], rect) => x > rect.left - radius && x < rect.right + radius
-    && y > rect.top - radius && y < rect.bottom + radius;
+    && y > rect.top - radiusY && y < rect.bottom + radiusY;
   const obstacle = mapConsoleBounds.find(rect => covers(point, rect));
   const [x, y] = point;
   const isFree = candidate => candidate[0] >= radius && candidate[0] <= innerWidth - radius
-    && candidate[1] >= radius && candidate[1] <= innerHeight - radius
+    && candidate[1] >= radiusY && candidate[1] <= innerHeight - radiusY
     && !mapConsoleBounds.some(rect => covers(candidate, rect))
     && !mapItems.some(other => {
       if (other.id === item.id) return false;
@@ -474,14 +487,16 @@ const clearMapConsoles = (item, position) => {
       if (!position) return false;
       // Reserve the whole pointer target, including on compact maps.
       const otherRadius = mapTargetDiameter(other) * width / mapNodesRoot.clientWidth / 2;
+      const otherRadiusY = mapTargetHeight(other) * width / mapNodesRoot.clientWidth / 2;
       const clearance = radius - padding + otherRadius + (innerWidth > 900 ? 4 : 2);
+      const clearanceY = radiusY - padding + otherRadiusY + (innerWidth > 900 ? 4 : 2);
       return Math.abs(candidate[0] - left - position.x * width / 100) < clearance
-        && Math.abs(candidate[1] - top - position.y * height / 100) < clearance;
+        && Math.abs(candidate[1] - top - position.y * height / 100) < clearanceY;
     });
   if (isFree(point)) return position;
   const candidates = (obstacle ? [
     [obstacle.left - radius, y], [obstacle.right + radius, y],
-    [x, obstacle.top - radius], [x, obstacle.bottom + radius],
+    [x, obstacle.top - radiusY], [x, obstacle.bottom + radiusY],
   ] : []).filter(isFree);
   // Find the nearest free ring when the edges are occupied.
   const increment = innerWidth > 900 ? 12 : 6;

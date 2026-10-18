@@ -318,7 +318,9 @@ function draw() {
   });
   axes.forEach((path, axis) => path.setAttribute('d', pathFrom(Array.from({length:81}, (_, i) => {
     const t = i / 80 * 2 - 1;
-    return project(axis ? 0 : t * width * .49, axis ? t * height * .47 : 0, 0);
+    // Extend the floor axis beneath the transparent navigation, without
+    // enlarging the area used to position nodes or receive rotation gestures.
+    return project(axis ? 0 : t * width * .49, axis ? t * (t > 0 ? height * 2 + 128 : height * .47) : 0, 0);
   }), occluders)));
   edges.forEach(({a, b, path, points}) => {
     const from = nodes.find(node => node.id === a).liftOffset, to = nodes.find(node => node.id === b).liftOffset;

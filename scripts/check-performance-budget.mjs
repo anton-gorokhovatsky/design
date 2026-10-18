@@ -27,16 +27,17 @@ const eagerMedia = [
 // Reviewed 18 October 2026: the requested ten-project orbital navigation adds
 // its canvas renderer, touch picker and Newtonian solver (~5 KiB gzip).
 // Its three modules are counted here, including audience weights; no libraries
-// or eager media were added. Source/CSS/font limits otherwise stay unchanged.
+// or eager media were added. The author approved 2 KiB additional runtime/gzip
+// headroom for close-encounter error control on 18 October; CSS/fonts unchanged.
 // Gzip is measured with this Node/zlib version, not the CDN or a connection.
 const budgets = {
   css: 280 * 1024,
-  runtime: 400 * 1024,
+  runtime: 402 * 1024,
   fonts: 160 * 1024,
   initialSource: 800 * 1024,
   cssGzip: 48 * 1024,
-  runtimeGzip: 120 * 1024,
-  initialCompressed: 278 * 1024,
+  runtimeGzip: 122 * 1024,
+  initialCompressed: 280 * 1024,
 };
 const cssGzip = gzipSync(readProjectFile("styles.css"), { level: 9 }).length;
 const runtimeGzip = runtimeFiles.reduce((total, path) => total
