@@ -24,20 +24,19 @@ const initialSourceBytes = cssBytes + runtimeBytes + fontBytes;
 const eagerMedia = [
   ...indexSource.matchAll(/<(?:video|source)[^>]+(?:src|srcset)="([^"]+\.(?:mp4|webm))"/g),
 ].map((match) => match[1]);
-// Reviewed 17 October 2026: introductory captions now resolve their own
-// collisions without constraining the camera. The source allowance includes
-// that placement code and recovery from crowded positions. The compressed
-// allowance includes the CI/local zlib difference observed in the prior run.
-// The total compressed-load budget remains unchanged. Gzip is measured with
-// this Node/zlib version, not the CDN or a real user's connection.
+// Reviewed 18 October 2026: the requested ten-project orbital navigation adds
+// its canvas renderer, touch picker and Newtonian solver (~5 KiB gzip).
+// Its three modules are counted here, including audience weights; no libraries
+// or eager media were added. Source/CSS/font limits otherwise stay unchanged.
+// Gzip is measured with this Node/zlib version, not the CDN or a connection.
 const budgets = {
   css: 280 * 1024,
-  runtime: 380 * 1024,
+  runtime: 400 * 1024,
   fonts: 160 * 1024,
   initialSource: 800 * 1024,
   cssGzip: 48 * 1024,
-  runtimeGzip: 115 * 1024,
-  initialCompressed: 272 * 1024,
+  runtimeGzip: 120 * 1024,
+  initialCompressed: 278 * 1024,
 };
 const cssGzip = gzipSync(readProjectFile("styles.css"), { level: 9 }).length;
 const runtimeGzip = runtimeFiles.reduce((total, path) => total

@@ -8,10 +8,10 @@ const ns = 'http://www.w3.org/2000/svg';
 // Depth groups follow the existing map's branches, not an importance ranking.
 const depths = new Map([
   ['garage', -56], ['narkomfin', -56],
-  ['private-practice', 0], ['eleven', 0], ['ks-fish', 0],
+  ['private-practice', 0],
   ['principle-data-intuition', 0], ['running', 56], ['youtube', 56],
 ]);
-const relationships = [['garage', 'narkomfin'], ['private-practice', 'eleven'], ['private-practice', 'ks-fish']];
+const relationships = [['garage', 'narkomfin']];
 const nodes = [...depths].map(([id, z]) => ({
   id, z, button: mapButtons.get(id),
   label: document.querySelector(`[data-map-label-id="${id}"]`),
@@ -115,7 +115,8 @@ function measure() {
   for (const node of nodes) {
     node.baseX = parseFloat(node.button.style.getPropertyValue('--x')) * width / 100;
     node.baseY = parseFloat(node.button.style.getPropertyValue('--y')) * height / 100;
-    node.radius = node.glyph.offsetWidth / 2;
+    // Orbit guides are transparent; the solid core owns occlusion and clearance.
+    node.radius = node.id === 'private-practice' ? 14 : node.glyph.offsetWidth / 2;
     reflow ||= node.labelBox?.width !== node.label.offsetWidth || node.labelBox?.height !== node.label.offsetHeight;
     const transform = new DOMMatrixReadOnly(getComputedStyle(node.label).transform);
     node.labelBox = { width: node.label.offsetWidth, height: node.label.offsetHeight,

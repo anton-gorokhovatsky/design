@@ -332,20 +332,26 @@ const measureMapSpace = () => {
     y: Math.max(0, Math.min(.2, (north - 24) * .75 / northSpan)),
   };
 };
+// Shared origin and angular anchors scale with the usable mobile map field.
+// The radii reserve room for each system's sphere, orbit and attached label.
+const homeAnchor = (degrees, radiusX, radiusY) => {
+  const angle = degrees * Math.PI / 180;
+  return { x: 50 + Math.cos(angle) * radiusX, y: 52 + Math.sin(angle) * radiusY };
+};
 const focusHomePoints = new Map([
-  ["garage", { x: 27, y: 18 }],
-  ["narkomfin", { x: 76, y: 22 }],
-  ["private-practice", { x: 73, y: 47 }],
+  ["garage", homeAnchor(-130, 35, 43)],
+  ["narkomfin", homeAnchor(-55, 42, 34)],
+  ["private-practice", homeAnchor(0, 23, 30)],
   ["eleven", { x: 87, y: 65 }],
   ["ks-fish", { x: 58, y: 63 }],
-  ["principle-data-intuition", { x: 19, y: 48 }],
-  ["running", { x: 55, y: 86 }],
-  ["youtube", { x: 19, y: 87 }],
+  ["principle-data-intuition", homeAnchor(180, 31, 30)],
+  ["running", homeAnchor(83, 40, 34)],
+  ["youtube", homeAnchor(136, 42, 44)],
 ]);
 const focusHomeNarrowPoints = new Map([...focusHomePoints,
   ["garage", {x:27,y:22}], ["narkomfin", {x:76,y:20}],
-  ["private-practice", {x:73,y:50}],
-  ["principle-data-intuition", {x:22,y:48}],
+  ["private-practice", {x:73,y:58}],
+  ["principle-data-intuition", {x:14,y:48}],
 ]);
 const focusHomeActive = () => innerWidth <= 900 && document.body.classList.contains("has-focused-home");
 const focusHomeLargeTextPoints = new Map([
@@ -513,6 +519,10 @@ const getMapLayout = (item) => {
     y = override?.y ?? y;
 
   } else if (viewportWidth <= 900) {
+    if (item.id === "private-practice" && !timeModeActive) {
+      x = 75;
+      y = 56;
+    }
     if (item.id === "garage-site") {
       x = viewportWidth <= 360 ? 63 : 60;
     }
@@ -827,6 +837,7 @@ const getNavigableMapItems = () => (
     const button = mapButtons.get(item.id);
 
     return button
+      && !button.hasAttribute("data-orbit-decorative")
       && (!focusHomeActive() || focusHomePoints.has(item.id))
       && (!timeModeActive || Number.isFinite(item.timeYear))
       && !button.classList.contains("is-search-miss")
@@ -844,7 +855,8 @@ const syncMapNodeAvailability = () => {
       return;
     }
 
-    const isAvailable = (!focusHomeActive() || focusHomePoints.has(item.id))
+    const isAvailable = !button.hasAttribute("data-orbit-decorative")
+      && (!focusHomeActive() || focusHomePoints.has(item.id))
       && (!timeModeActive || Number.isFinite(item.timeYear))
       && !button.classList.contains("is-search-miss")
       && (focusHomeActive() || activeMapFilters.has(item.kind));
@@ -861,6 +873,7 @@ const syncMapNodeAvailability = () => {
 };
 
 const setMapRovingId = (id, { focus = false } = {}) => {
+  if (mapButtons.get(id)?.hasAttribute("data-orbit-decorative")) id = "private-practice";
   const target = mapButtons.get(id);
 
   if (!target) {
@@ -895,12 +908,17 @@ const getDirectionalMapItem = (id, key) => {
 
   const isHorizontal = key === "ArrowLeft" || key === "ArrowRight";
   const direction = key === "ArrowLeft" || key === "ArrowUp" ? -1 : 1;
-  const currentPosition = resolveMapLayout(current);
+  const screenPosition = item => {
+    const rect = mapButtons.get(item.id).getBoundingClientRect();
+    return { x: (rect.left + rect.width / 2) / innerWidth * 100,
+      y: (rect.top + rect.height / 2) / innerHeight * 100 };
+  };
+  const currentPosition = screenPosition(current);
 
   return candidates
     .filter((item) => item.id !== id)
     .map((item) => {
-      const position = resolveMapLayout(item);
+      const position = screenPosition(item);
       const dx = ((position.x - currentPosition.x) / 100) * window.innerWidth;
       const dy = ((position.y - currentPosition.y) / 100) * window.innerHeight;
       const primary = isHorizontal ? dx : dy;
@@ -1276,6 +1294,7 @@ if (mapNodesRoot) {
     }
 
     const showLabel = () => {
+      if (button.classList.contains("project-satellite")) return;
       mapLabels.forEach((candidate) => {
         candidate.classList.remove("is-visible");
       });
@@ -1348,9 +1367,9 @@ if (mapNodesRoot) {
     button.addEventListener("blur", hideLabel);
 
     if (item.previewVideo) {
-      button.addEventListener("pointerenter", () => showMapPreview(item));
+      button.addEventListener("pointerenter", () => { if (!button.classList.contains("project-satellite")) showMapPreview(item); });
       button.addEventListener("pointerleave", () => hideMapPreview());
-      button.addEventListener("focus", () => showMapPreview(item));
+      button.addEventListener("focus", () => { if (!button.classList.contains("project-satellite")) showMapPreview(item); });
       button.addEventListener("blur", () => hideMapPreview());
     }
 

@@ -98,7 +98,8 @@ try {
       && document.querySelector('[data-map-label-id="narkomfin"]').style.getPropertyValue('--spatial-label-dx'));
     const checkCaptions = async () => {
       const state = await page.evaluate(() => {
-        const labels = [...document.querySelectorAll('.focused-home .direction-landmark')];
+        const labels = [...document.querySelectorAll('.focused-home .direction-landmark')]
+          .filter(label => getComputedStyle(label).visibility !== 'hidden');
         const field = document.querySelector('.focused-home__map').getBoundingClientRect();
         const boxes = labels.map(label => ({ id: label.dataset.mapLabelId,
           visible: getComputedStyle(label).visibility !== 'hidden', rect: label.getBoundingClientRect() }));
@@ -111,7 +112,9 @@ try {
             && a.rect.top < b.rect.bottom && a.rect.bottom > b.rect.top).map(b => [a.id, b.id])),
         };
       });
-      assert.equal(state.visible, 8, `${engine} ${viewport.width}: all introductory captions remain available`);
+      assert.equal(state.visible, 6, `${engine} ${viewport.width}: all introductory captions remain available; private projects share their orbit picker`);
+      assert.equal(await page.locator('.project-orbit-picker [data-picker-project]').count(), 10,
+        'Every private project remains available in the touch picker');
       assert.deepEqual(state.clipped, [], 'Introductory captions stay inside their field');
       assert.deepEqual(state.overlaps, [], 'Introductory captions never overlap');
     };
@@ -140,7 +143,7 @@ try {
     }
     await page.screenshot({ path: `${directory}/${engine}-${viewport.width}-introductory-captions.png` });
     await page.close();
-    console.log(`PASS ${engine} ${viewport.width}: eight introductory captions, rotation and momentum without overlap.`);
+    console.log(`PASS ${engine} ${viewport.width}: six introductory captions, ten picker projects, rotation and momentum without overlap.`);
   }
   assert.deepEqual(errors, []);
 } finally {
