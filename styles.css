@@ -10817,7 +10817,7 @@ body.has-practice-orbits :is(.focused-home,.practice-map) .map-node[data-map-id=
 body.has-practice-orbits :is(.focused-home,.practice-map) .map-node[data-map-id="private-practice"].is-selected .map-node__glyph {
   width:168px;height:168px;background:none;box-shadow:none;border:0;pointer-events:none;
 }
-.practice-orbits-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.practice-orbits-canvas{position:absolute;inset:50% 0 auto;width:100%;height:auto;aspect-ratio:1;transform:translateY(-50%);pointer-events:none}
 body.has-practice-orbits [data-map-label-id="shirokostup"],body.has-practice-orbits [data-map-label-id="tarski"],body.has-practice-orbits [data-map-label-id="herman"],body.has-practice-orbits [data-map-label-id="ks-fish"],body.has-practice-orbits [data-map-label-id="hotline-camp"],body.has-practice-orbits [data-map-label-id="dusty"],body.has-practice-orbits [data-map-label-id="dd-camp"],body.has-practice-orbits [data-map-label-id="eleven"],body.has-practice-orbits [data-map-label-id="doronin"],body.has-practice-orbits [data-map-label-id="krainiuk"],
 body.has-practice-orbits .map-links path[data-parent-id="private-practice"],
 body.has-practice-orbits .map-links path.is-orbit-project-link,
@@ -10832,9 +10832,10 @@ body.has-practice-orbits:not(.has-focused-home) .map-node-label[data-map-label-i
   body.has-practice-orbits .focused-home .map-labels [data-map-label-id="private-practice"]{transform:translate(-50%,calc(-100% - 50px))}
 }
 @media(min-width:901px){
-  body.has-practice-orbits .map-node[data-map-id="private-practice"]{--x:80%!important;--y:clamp(50%,calc(85dvh - 215px),61%)!important}
+  body.has-practice-orbits .map-node[data-map-id="private-practice"]{--x:70%!important;--y:clamp(42%,calc(85dvh - 265px),56%)!important}
   body.has-practice-orbits .practice-map .map-node[data-map-id="private-practice"] .map-node__glyph,
-  body.has-practice-orbits .practice-map .map-node[data-map-id="private-practice"].is-selected .map-node__glyph{width:clamp(260px,24vw,340px);height:clamp(260px,24vw,340px)}
+  body.has-practice-orbits .practice-map .map-node[data-map-id="private-practice"].is-selected .map-node__glyph{--practice-orbit-size:clamp(200px,min(24vw,calc(100dvh - 400px)),340px);width:var(--practice-orbit-size);height:calc(var(--practice-orbit-size)*.72)}
+  body.has-practice-orbits .map-axis-label--south{margin-top:8px}
   body .project-satellite>.map-node__glyph{width:10px;height:10px}
 }
 .project-satellites{position:fixed;left:0;top:0;z-index:11;pointer-events:none}

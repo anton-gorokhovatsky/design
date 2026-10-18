@@ -49,14 +49,15 @@ try {
         const positions = () => page.locator('[data-map-nodes] button').evaluateAll(nodes =>
           nodes.map(node => [node.dataset.mapId, node.style.getPropertyValue('--x'), node.style.getPropertyValue('--y')]));
         const before = await positions();
-        const labels = page.locator('.map-space-label');
+        const labels = page.locator('.map-space-label:visible');
         assert.ok(await labels.count() > 0 && await labels.count() <= 7, 'Bounded additional labels use the free field.');
         assert.ok(parseFloat(before.find(([id]) => id === 'garage')[2]) < 14, 'The upper group uses available headroom.');
         const intersections = await labels.evaluateAll(elements => elements.flatMap(label => {
           const rect = label.getBoundingClientRect();
           const outside = rect.left < 0 || rect.top < 0 || rect.right > innerWidth || rect.bottom > innerHeight;
           const overlaps = [...document.querySelectorAll('.map-controls,.display-control,.site-header,.control-console,.map-axis-label,.map-space-label,.map-anchor-label,[data-map-nodes] button')]
-            .filter(node => node !== label && node.dataset.mapId !== label.dataset.mapLabelId)
+            .filter(node => node !== label && node.dataset.mapId !== label.dataset.mapLabelId
+              && node.checkVisibility({ visibilityProperty: true }))
             .some(node => { const other = node.getBoundingClientRect(); return rect.left < other.right && rect.right > other.left && rect.top < other.bottom && rect.bottom > other.top; });
           return outside || overlaps ? [label.dataset.mapLabelId] : [];
         }));
@@ -141,6 +142,49 @@ try {
         parseFloat(node.style.getPropertyValue('--spatial-dx')) > 20),
       'Caption placement must not stop the map before the requested rotation');
     }
+    // The orbit picker has a generous transparent hit area. Starting a swipe
+    // there must rotate the map, while an ordinary tap still opens the picker.
+    const practice = page.locator('[data-map-id="private-practice"]');
+    const beforeSwipe = await practice.evaluate(node => node.style.getPropertyValue('--spatial-dx'));
+    const orbitBox = await practice.boundingBox();
+    const startX = orbitBox.x + orbitBox.width / 2, startY = orbitBox.y + orbitBox.height / 2;
+    // Chromium receives native touch input. WebKit's driver has no swipe API,
+    // so reproduce the same child-to-field capture handoff with pointer input.
+    const touch = engine === 'chromium' ? await page.context().newCDPSession(page) : null;
+    const touchEvent = (type, x, y) => touch.send('Input.dispatchTouchEvent', {
+      type, touchPoints: type === 'touchEnd' ? [] : [{ x, y, id: 0 }],
+    });
+    if (touch) await touchEvent('touchStart', startX, startY);
+    else {
+      await practice.evaluate(node => node.addEventListener('pointerdown', event =>
+        event.target.setPointerCapture(event.pointerId), { once: true }));
+      await page.mouse.move(startX, startY); await page.mouse.down();
+    }
+    if (touch) await touchEvent('touchMove', startX + 8, startY);
+    else await page.mouse.move(startX + 8, startY);
+    await page.waitForTimeout(25);
+    const firstMove = await practice.evaluate(node => parseFloat(node.style.getPropertyValue('--spatial-dx')));
+    const endX = Math.min(viewport.width - 8, startX + 70);
+    if (touch) {
+      for (let step = 1; step <= 10; step++) {
+        await touchEvent('touchMove', startX + 8 + (endX - startX - 8) * step / 10, startY);
+        await page.waitForTimeout(16);
+      }
+      await touchEvent('touchEnd'); await touch.detach();
+    } else {
+      await page.mouse.move(endX, startY, { steps: 10 }); await page.mouse.up();
+    }
+    await page.waitForTimeout(350);
+    assert.notEqual(await practice.evaluate(node => node.style.getPropertyValue('--spatial-dx')), beforeSwipe,
+      'A swipe starting on the orbit target rotates the map');
+    assert.ok(Math.abs((await practice.evaluate(node => parseFloat(node.style.getPropertyValue('--spatial-dx')))) - firstMove) > 1,
+      'The map keeps rotating after capture transfers from the touched child');
+    assert.equal(await page.locator('body').evaluate(body => body.classList.contains('has-point-preview')), false,
+      'Releasing a rotation gesture must not open a project picker');
+    await practice.tap();
+    assert.ok(await page.locator('.project-orbit-picker').isVisible(), 'A tap still opens the project picker');
+    await page.keyboard.press('Escape');
+    await checkCaptions();
     await page.screenshot({ path: `${directory}/${engine}-${viewport.width}-introductory-captions.png` });
     await page.close();
     console.log(`PASS ${engine} ${viewport.width}: six introductory captions, ten picker projects, rotation and momentum without overlap.`);

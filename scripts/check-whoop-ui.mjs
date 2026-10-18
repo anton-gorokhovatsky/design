@@ -36,7 +36,7 @@ try {
       assert.ok(Math.abs(header.x - console.x - console.width - 40) < .1, "The author panel has a 40px gap from desktop navigation.");
       assert.equal(console.y + console.height - header.y - header.height, 20, "The author panel starts 20px above the navigation baseline.");
     }
-    await page.waitForFunction(() => [...document.querySelectorAll(".map-node")].every(node => {
+    await page.waitForFunction(() => [...document.querySelectorAll(".map-node:not([inert])")].every(node => {
       const r = node.getBoundingClientRect();
       return document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)?.closest(".map-node") === node;
     }), null, { timeout: 6000 });

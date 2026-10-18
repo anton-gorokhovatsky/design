@@ -44,7 +44,8 @@ try {
         // Short screens and enlarged text scroll the introductory map. Audit
         // every point after bringing it into view, not through the fixed nav.
         const targets = await readMapTargets(page);
-        assert.equal(targets.length, 8);
+        assert.equal(targets.length, 6);
+        assert.equal(await page.locator('[data-picker-project]').count(), 10);
         assert.deepEqual(targets.filter(target => target.misses.length), [], `${name}: scrolled map targets`);
       }
       const state = await page.evaluate(() => {
@@ -87,7 +88,7 @@ try {
       assert.ok(state.authorVisible && state.author.left >= 0 && state.author.right <= width + 1);
       assert.equal(state.selected, "true");
       assert.equal(state.totalNodes, mapItems.length, "All points remain available through the full map.");
-      if (width <= 900) assert.equal(state.nodes.length, 8, "The introductory map exposes eight directions and examples.");
+      if (width <= 900) assert.equal(state.nodes.length, 6, "The introductory map exposes six anchors; private projects have a shared touch picker.");
       assert.deepEqual(state.blockedTargets, [], `${name} ${theme}: each point must receive input at its own center.`);
       assert.equal(state.route.trim().replace(/\s+/g, " "), "Короткий обзор Рассказ о проектах");
       assert.equal(state.routeName.replace(/\s+/g, " "), state.route.trim().replace(/\s+/g, " "), "The accessible name matches the visible overview label.");

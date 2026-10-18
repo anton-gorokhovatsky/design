@@ -1367,9 +1367,15 @@ if (mapNodesRoot) {
     button.addEventListener("blur", hideLabel);
 
     if (item.previewVideo) {
-      button.addEventListener("pointerenter", () => { if (!button.classList.contains("project-satellite")) showMapPreview(item); });
+      button.addEventListener("pointerenter", () => {
+        if (button.classList.contains("project-satellite")) hideMapPreview({ immediate: true });
+        else showMapPreview(item);
+      });
       button.addEventListener("pointerleave", () => hideMapPreview());
-      button.addEventListener("focus", () => { if (!button.classList.contains("project-satellite")) showMapPreview(item); });
+      button.addEventListener("focus", () => {
+        if (button.classList.contains("project-satellite")) hideMapPreview({ immediate: true });
+        else showMapPreview(item);
+      });
       button.addEventListener("blur", () => hideMapPreview());
     }
 

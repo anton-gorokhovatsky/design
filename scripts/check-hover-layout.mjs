@@ -39,6 +39,12 @@ try {
     const initial = (await page.evaluate(inspect)).author;
     for (const [index, item] of mapItems.filter(item => item.previewVideo).entries()) {
       const target = page.locator(`[data-map-id="${item.id}"]`);
+      if (width <= 900 && item.parent === 'private-practice') {
+        assert.equal(await target.getAttribute('inert'), '', 'Touch satellites are decorative; the picker owns selection.');
+        assert.equal(await page.locator(`[data-picker-project="${item.id}"]`).count(), 1,
+          'Every decorative satellite has its project in the touch picker.');
+        continue;
+      }
       if (index % 2) await target.focus();
       else await target.hover();
       if (width <= 900) {
@@ -46,6 +52,17 @@ try {
         const result = await page.evaluate(inspect);
         assert.equal(result.previewVisible, false, "Compact navigation opens media on selection, not hover.");
         assert.ok(result.authorVisible, "Compact hover/focus retains the author card.");
+        assert.deepEqual(result.author, initial);
+        continue;
+      }
+      if (item.parent === 'private-practice') {
+        await page.waitForFunction(label => {
+          const title = document.querySelector('.project-orbit-tooltip');
+          return !title.hidden && title.textContent === label;
+        }, item.label);
+        const result = await page.evaluate(inspect);
+        assert.equal(result.previewVisible, false, 'Orbit satellites show their title without a video preview.');
+        assert.ok(result.authorVisible);
         assert.deepEqual(result.author, initial);
         continue;
       }
@@ -82,7 +99,7 @@ try {
     await page.goto(origin + '/?scene=map');
     await page.evaluate(() => document.fonts.ready);
     await page.waitForFunction(() => !document.querySelector("[data-map-links][data-layout-pending]"));
-    await page.locator('[data-map-id="doronin"]').hover();
+    await page.locator('[data-map-id="narkomfin"]').hover();
     for (let frame = 0; frame < 24; frame++) {
       await page.evaluate(() => new Promise(requestAnimationFrame));
       const result = await page.evaluate(inspect);

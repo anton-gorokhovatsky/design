@@ -2142,6 +2142,16 @@ const auditBrowser = async (client, origin) => {
     configuration: "desktop",
   });
   await navigate(client, `${origin}/?scene=map&qa=ui-contracts-reel`);
+  // Orbit satellites expose a quiet title; native video receivers remain in
+  // chronology, where the projects return to their original map nodes.
+  await evaluate(client, 'document.querySelector(".project-satellite[data-map-id=\\"tarski\\"]").focus(); true');
+  const satelliteTitleReady = await waitForExpression(client, `(() => {
+    const tooltip = document.querySelector('.project-orbit-tooltip');
+    return tooltip && !tooltip.hidden && tooltip.textContent === 'Tarski'
+      && !document.querySelector('.map-hover-preview.is-visible');
+  })()`);
+  if (!satelliteTitleReady) fail('orbits: focusing Tarski must expose its title without a video preview.');
+  await navigate(client, `${origin}/?scene=map&view=time&qa=ui-contracts-reel`);
   await client.send("Input.dispatchMouseEvent", {
     type: "mouseMoved",
     x: 1,

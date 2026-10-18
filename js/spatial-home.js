@@ -35,6 +35,7 @@ const edges = relationships.map(([a, b]) => {
 const restYaw = -.16, restPitch = -.26, cameraDistance = 760;
 let width = 1, height = 1, request = 0;
 let yaw = restYaw, pitch = restPitch, selected = null, drag = null, coast = null;
+let suppressPointerClick = false;
 let liftStarted = 0;
 const duration = 200;
 const coastDecay = duration / 2, coastDuration = 300;
@@ -377,7 +378,11 @@ function sync() {
 }
 field.addEventListener('pointerdown', event => {
   stopMotion();
-  if (!active() || !motion() || event.button !== 0 || event.target.closest('button,a,.map-node-label')) return;
+  suppressPointerClick = false;
+  if (!active() || !motion() || event.button !== 0 || !event.isPrimary
+    || document.body.matches('.has-reading-surface,.has-command-focus,.has-point-preview')) return;
+  // A tap still selects its node; a swipe can start on its label or transparent
+  // orbit hit area as well as the background. Capture only after the threshold.
   drag = { id:event.pointerId, x:event.clientX, y:event.clientY, yaw, pitch, moved:false,
     time:performance.now(), yawSpeed:0, pitchSpeed:0 };
 });
@@ -403,14 +408,24 @@ field.addEventListener('pointermove', event => {
 field.addEventListener('pointerup', event => {
   if (!drag || drag.id !== event.pointerId) return;
   const now = performance.now();
+  suppressPointerClick = drag.moved;
   const release = drag.moved && now - drag.time < 80 && motion()
     ? { yaw, pitch, yawSpeed:drag.yawSpeed, pitchSpeed:drag.pitchSpeed, started:now } : null;
   stopMotion();
   coast = release;
   if (coast) schedule();
 });
+field.addEventListener('click', event => {
+  if (!suppressPointerClick || event.detail === 0) return;
+  suppressPointerClick = false;
+  event.preventDefault(); event.stopImmediatePropagation();
+}, true);
 field.addEventListener('pointercancel', stopMotion);
-field.addEventListener('lostpointercapture', () => { if (drag) stopMotion(); });
+field.addEventListener('lostpointercapture', event => {
+  // Touch initially belongs to the child under the finger. Transferring that
+  // implicit capture to the field must not be mistaken for losing the gesture.
+  if (event.target === field && drag?.id === event.pointerId) stopMotion();
+});
 document.addEventListener('keydown', stopMotion, true);
 window.addEventListener('map-layout', () => { if (active()) measure(); });
 let measureFrame = 0;

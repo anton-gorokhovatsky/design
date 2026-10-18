@@ -138,7 +138,7 @@ function initializePracticeOrbits() {
     const system=gravity?createSystem(moons.map(moon=>({id:moon.item.id,radius:moon.orbit.radius,phase:moon.phase})),{weights:audienceWeights}):null;
     let accumulator=0;
     const paint=()=>{
-      const rect=glyph.getBoundingClientRect();
+      const rect=canvas.getBoundingClientRect();
       const blocked=doc.body.matches('.has-reading-surface,.has-command-focus,.has-constellation-nav,.has-settings-panel');
       layer.inert=blocked;if(blocked){active=null;tooltip.hidden=true;}
       if(!enabled)return;
