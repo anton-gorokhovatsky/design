@@ -145,7 +145,12 @@ try {
     // The orbit picker has a generous transparent hit area. Starting a swipe
     // there must rotate the map, while an ordinary tap still opens the picker.
     const practice = page.locator('[data-map-id="private-practice"]');
-    const beforeSwipe = await practice.evaluate(node => node.style.getPropertyValue('--spatial-dx'));
+    // A near-axis point can barely move even while the volume turns. Measure
+    // the whole constellation, including depth, rather than that point's x.
+    const rotationPositions = () => page.locator('.focused-home .map-node:not([inert])').evaluateAll(nodes =>
+      nodes.map(node => ['--spatial-dx', '--spatial-dy'].map(key => parseFloat(node.style.getPropertyValue(key)))));
+    const displacement = (before, after) => Math.max(...after.map((p, i) => Math.hypot(p[0]-before[i][0], p[1]-before[i][1])));
+    const beforeSwipe = await rotationPositions();
     const orbitBox = await practice.boundingBox();
     const startX = orbitBox.x + orbitBox.width / 2, startY = orbitBox.y + orbitBox.height / 2;
     // Chromium receives native touch input. WebKit's driver has no swipe API,
@@ -162,8 +167,8 @@ try {
     }
     if (touch) await touchEvent('touchMove', startX + 8, startY);
     else await page.mouse.move(startX + 8, startY);
-    await page.waitForTimeout(25);
-    const firstMove = await practice.evaluate(node => parseFloat(node.style.getPropertyValue('--spatial-dx')));
+    await page.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done))));
+    const firstMove = await rotationPositions();
     const endX = Math.min(viewport.width - 8, startX + 70);
     if (touch) {
       for (let step = 1; step <= 10; step++) {
@@ -175,12 +180,44 @@ try {
       await page.mouse.move(endX, startY, { steps: 10 }); await page.mouse.up();
     }
     await page.waitForTimeout(350);
-    assert.notEqual(await practice.evaluate(node => node.style.getPropertyValue('--spatial-dx')), beforeSwipe,
+    const afterSwipe = await rotationPositions();
+    assert.ok(displacement(beforeSwipe, afterSwipe) > 1,
       'A swipe starting on the orbit target rotates the map');
-    assert.ok(Math.abs((await practice.evaluate(node => parseFloat(node.style.getPropertyValue('--spatial-dx')))) - firstMove) > 1,
+    assert.ok(displacement(firstMove, afterSwipe) > 1,
       'The map keeps rotating after capture transfers from the touched child');
     assert.equal(await page.locator('body').evaluate(body => body.classList.contains('has-point-preview')), false,
       'Releasing a rotation gesture must not open a project picker');
+    if (engine === 'webkit') {
+      const beforeTouch = await rotationPositions();
+      const ownership = await practice.evaluate(node => {
+        const field = node.closest('.focused-home__map'), r = node.getBoundingClientRect();
+        const send = (type, dx, dy) => {
+          // Desktop WebKit exposes Touch but forbids its constructor. Exercise
+          // the adapter with its event shape; Chromium above uses real touch.
+          const touch = { identifier: 19, target: node, clientX: r.x+r.width/2+dx, clientY: r.y+r.height/2+dy };
+          const event = new Event(type, { bubbles: true, cancelable: true });
+          Object.defineProperties(event, { touches: { value: type === 'touchend' ? [] : [touch] },
+            changedTouches: { value: [touch] } });
+          node.dispatchEvent(event); return event.defaultPrevented;
+        };
+        send('touchstart', 0, 0);
+        const first = send('touchmove', -10, 0);
+        // WebKit can cancel its pointer stream while the finger's touch stream
+        // continues. The native adapter must retain ownership of that drag.
+        for (const type of ['pointercancel', 'lostpointercapture']) field.dispatchEvent(new PointerEvent(type,
+          { bubbles: true, pointerType: 'touch', pointerId: 19 }));
+        const continued = send('touchmove', -70, 0);
+        send('touchend', -70, 0);
+        send('touchstart', 0, 0);
+        const vertical = send('touchmove', 1, -50);
+        send('touchend', 1, -50);
+        return { first, continued, vertical, dragging: field.hasAttribute('data-dragging') };
+      });
+      await page.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done))));
+      assert.deepEqual(ownership, { first: true, continued: true, vertical: false, dragging: false },
+        'Horizontal touch stays owned across pointer cancellation; vertical scrolling remains native');
+      assert.ok(displacement(beforeTouch, await rotationPositions()) > 1, 'The continuing touch stream rotates the map');
+    }
     await practice.tap();
     assert.ok(await page.locator('.project-orbit-picker').isVisible(), 'A tap still opens the project picker');
     await page.keyboard.press('Escape');

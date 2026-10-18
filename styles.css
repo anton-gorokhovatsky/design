@@ -10452,6 +10452,9 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
     transform-origin: 50% 55%;
     transition: opacity 200ms var(--motion-enter), transform 240ms var(--motion-enter);
   }
+  body.has-focused-home[data-mobile-large-text] .focused-home {
+    bottom: calc(var(--field-foot) - 8px); padding-bottom: 8px;
+  }
   body.has-focused-home.has-constellation-nav .focused-home {
     opacity: .48; transform: translateY(4px) scale(.97); pointer-events: none;
   }
@@ -10828,7 +10831,7 @@ body.has-practice-orbits .spatial-field--relations [data-relation-key^="private-
   body.has-practice-orbits .focused-home .map-labels [data-map-label-id="narkomfin"]{transform:translate(-50%,calc(-100% - 22px))!important}
 }
 @media(max-width:900px) and (max-height:700px){
-  body.has-practice-orbits .map-node[data-map-id="private-practice"] .map-node__glyph{width:132px;height:132px}
+  body.has-practice-orbits :is(.focused-home,.practice-map) .map-node[data-map-id="private-practice"] .map-node__glyph{width:132px;height:132px}
   body.has-practice-orbits .focused-home .map-labels [data-map-label-id="private-practice"]{transform:translate(-50%,calc(-100% - 50px))}
 }
 @media(min-width:901px){

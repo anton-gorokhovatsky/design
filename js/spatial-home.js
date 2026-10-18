@@ -354,7 +354,7 @@ function frame(time) {
 function schedule() { if (!request) request = requestAnimationFrame(frame); }
 function stopMotion() {
   coast = null;
-  const pointerId = drag?.id;
+  const pointerId = drag?.touch ? undefined : drag?.id;
   drag = null;
   field.removeAttribute('data-dragging');
   if (pointerId !== undefined && field.hasPointerCapture(pointerId)) field.releasePointerCapture(pointerId);
@@ -378,22 +378,21 @@ function sync() {
   }
   measure(); schedule();
 }
-field.addEventListener('pointerdown', event => {
+function beginDrag(id, x, y, touch = false) {
   stopMotion();
   suppressPointerClick = false;
-  if (!active() || !motion() || event.button !== 0 || !event.isPrimary
+  if (!active() || !motion()
     || document.body.matches('.has-reading-surface,.has-command-focus,.has-point-preview')) return;
   // A tap still selects its node; a swipe can start on its label or transparent
   // orbit hit area as well as the background. Capture only after the threshold.
-  drag = { id:event.pointerId, x:event.clientX, y:event.clientY, yaw, pitch, moved:false,
+  drag = { id, x, y, touch, yaw, pitch, moved:false,
     time:performance.now(), yawSpeed:0, pitchSpeed:0 };
-});
-field.addEventListener('pointermove', event => {
-  if (!drag || drag.id !== event.pointerId) return;
-  const dx = event.clientX - drag.x, dy = event.clientY - drag.y;
-  if (!drag.moved && Math.abs(dx) < 7) return;
-  if (!drag.moved && event.pointerType === 'touch' && Math.abs(dy) > Math.abs(dx)) { drag = null; return; }
-  drag.moved = true; field.setPointerCapture(event.pointerId); field.setAttribute('data-dragging','');
+}
+function moveDrag(x, y) {
+  const dx = x - drag.x, dy = y - drag.y;
+  if (!drag.moved && Math.abs(dx) < 7) return false;
+  if (!drag.moved && drag.touch && Math.abs(dy) > Math.abs(dx)) { drag = null; return false; }
+  drag.moved = true; field.setAttribute('data-dragging','');
   const now = performance.now(), delta = Math.max(8, now - drag.time);
   const nextYaw = clampYaw(drag.yaw + dx / 420), nextPitch = clampPitch(drag.pitch - dy / 650);
   const velocity = (previous, movement) => {
@@ -406,9 +405,9 @@ field.addEventListener('pointermove', event => {
   drag.time = now;
   yaw = nextYaw; pitch = nextPitch;
   schedule();
-});
-field.addEventListener('pointerup', event => {
-  if (!drag || drag.id !== event.pointerId) return;
+  return true;
+}
+function endDrag() {
   const now = performance.now();
   suppressPointerClick = drag.moved;
   const release = drag.moved && now - drag.time < 80 && motion()
@@ -416,17 +415,47 @@ field.addEventListener('pointerup', event => {
   stopMotion();
   coast = release;
   if (coast) schedule();
+}
+field.addEventListener('pointerdown', event => {
+  if (event.pointerType !== 'touch' && event.button === 0 && event.isPrimary)
+    beginDrag(event.pointerId, event.clientX, event.clientY);
+});
+field.addEventListener('pointermove', event => {
+  if (!drag || drag.touch || drag.id !== event.pointerId) return;
+  if (moveDrag(event.clientX, event.clientY) && !field.hasPointerCapture(event.pointerId))
+    field.setPointerCapture(event.pointerId);
+});
+field.addEventListener('pointerup', event => {
+  if (drag && !drag.touch && drag.id === event.pointerId) endDrag();
+});
+// Keep a finger's stream attached to its original target on iOS. Only an
+// accepted horizontal drag prevents native scrolling; vertical gestures pass.
+field.addEventListener('touchstart', event => {
+  if (event.touches.length !== 1) { stopMotion(); return; }
+  const touch = event.touches[0];
+  beginDrag(touch.identifier, touch.clientX, touch.clientY, true);
+}, { passive: true });
+field.addEventListener('touchmove', event => {
+  if (!drag?.touch) return;
+  const touch = [...event.touches].find(touch => touch.identifier === drag.id);
+  if (touch && moveDrag(touch.clientX, touch.clientY) && event.cancelable) event.preventDefault();
+}, { passive: false });
+field.addEventListener('touchend', event => {
+  if (drag?.touch && [...event.changedTouches].some(touch => touch.identifier === drag.id)) endDrag();
+});
+field.addEventListener('touchcancel', () => {
+  if (drag?.touch) stopMotion();
 });
 field.addEventListener('click', event => {
   if (!suppressPointerClick || event.detail === 0) return;
   suppressPointerClick = false;
   event.preventDefault(); event.stopImmediatePropagation();
 }, true);
-field.addEventListener('pointercancel', stopMotion);
+field.addEventListener('pointercancel', () => { if (!drag?.touch) stopMotion(); });
 field.addEventListener('lostpointercapture', event => {
   // Touch initially belongs to the child under the finger. Transferring that
   // implicit capture to the field must not be mistaken for losing the gesture.
-  if (event.target === field && drag?.id === event.pointerId) stopMotion();
+  if (!drag?.touch && event.target === field && drag?.id === event.pointerId) stopMotion();
 });
 document.addEventListener('keydown', stopMotion, true);
 window.addEventListener('map-layout', () => { if (active()) measure(); });
