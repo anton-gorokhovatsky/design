@@ -73,8 +73,8 @@ function initializePracticeOrbits() {
 
       const moon={item,orbit,phase:orbit.phase+index*tau/orbit.projects.length,button};
       button.addEventListener('pointerenter',()=>showTooltip(moon));
-      button.addEventListener('pointerleave',()=>{if(doc.activeElement!==button){active=null;tooltip.hidden=true;}});
-      button.addEventListener('focus',()=>showTooltip(moon));
+      button.addEventListener('pointerleave',()=>{if(!button.matches(':focus-visible')){active=null;tooltip.hidden=true;}});
+      button.addEventListener('focus',()=>{if(button.matches(':focus-visible'))showTooltip(moon);});
       button.addEventListener('blur',()=>{active=null;tooltip.hidden=true;});
       button.addEventListener('pointerdown',event=>event.stopPropagation());
       button.addEventListener('click',()=>{active=null;returnTo=mobile.matches?node:button;tooltip.hidden=true;});

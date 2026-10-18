@@ -10481,11 +10481,11 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
   .focused-home :is(.map-nodes, .map-links) { transform: none; }
   .focused-home :is(.origin-marker, .map-axis-label, .map-depth-grid, .map-specks) { display: none; }
   .focused-home .map-node:not([data-map-id="garage"], [data-map-id="narkomfin"], [data-map-id="private-practice"], [data-map-id="eleven"], [data-map-id="ks-fish"], [data-map-id="principle-data-intuition"], [data-map-id="running"], [data-map-id="youtube"]) { display: none; }
-  .focused-home .map-node { --node-scale: 1; --map-target-scale: 1; --map-target-size: 26px; transform: translate(-50%, -50%); }
-  .focused-home .map-node--garage { --map-target-size: 76px; }
-  .focused-home .map-node--garage .map-node__glyph { width: 76px; height: 76px; transform: none; }
-  .focused-home .map-node--running .map-node__glyph { width: 48px; height: 48px; transform: none; }
-  .focused-home .map-node--youtube .map-node__glyph { width: 30px; height: 30px; transform: none; }
+  .focused-home .map-node { --home-sphere-unit:clamp(.76px,min(.257cqw,.18cqh),.9px); --node-scale: 1; --map-target-scale: 1; --map-target-size: 26px; transform: translate(-50%, -50%); }
+  .focused-home .map-node--garage { --map-target-size: calc(76 * var(--home-sphere-unit)); }
+  .focused-home .map-node--garage .map-node__glyph { width: calc(76 * var(--home-sphere-unit)); height: calc(76 * var(--home-sphere-unit)); transform: none; }
+  .focused-home .map-node--running .map-node__glyph { width: calc(48 * var(--home-sphere-unit)); height: calc(48 * var(--home-sphere-unit)); transform: none; }
+  .focused-home .map-node--youtube .map-node__glyph { width: calc(30 * var(--home-sphere-unit)); height: calc(30 * var(--home-sphere-unit)); transform: none; }
   .focused-home .map-node[data-map-id="private-practice"] .map-node__glyph { width: 32px; height: 32px; transform: none; }
   .focused-home .map-node[data-map-id="narkomfin"] .map-node__glyph { width: 26px; height: 26px; transform: none; }
   .focused-home .map-links path { display: none !important; }
@@ -10569,7 +10569,7 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
 .work-tags__list {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-1) var(--space-3);
+  gap: var(--space-1) .45em;
   min-width: 0;
   margin: 0;
   padding: 0;
@@ -10586,15 +10586,8 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
 .map-readout__identity > .work-tags { margin-block: var(--space-3); }
 .point-preview > .work-tags { margin-block: var(--space-3) 0; }
 
-/* Open typographic boundaries, without a button surface. */
-.work-tags__list > li {
-  display: inline-flex;
-  align-items: baseline;
-  gap: .2em;
-}
-.work-tags__list > li > span { min-width: 0; }
-.work-tags__list > li::before { content: '['; margin: 0; }
-.work-tags__list > li::after { content: ']'; }
+/* Quiet metadata, read as one list rather than separate controls. */
+.work-tags__list > li:not(:last-child)::after { content: ','; }
 
 @media (max-width: 900px) {
   .content-panel .work-row > .work-tags { grid-column: 2; grid-row: 3; }
@@ -10819,7 +10812,7 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
 
 body.has-practice-orbits :is(.focused-home,.practice-map) .map-node[data-map-id="private-practice"] .map-node__glyph,
 body.has-practice-orbits :is(.focused-home,.practice-map) .map-node[data-map-id="private-practice"].is-selected .map-node__glyph {
-  width:168px;height:168px;background:none;box-shadow:none;border:0;pointer-events:none;
+  width:var(--practice-orbit-size,168px);height:var(--practice-orbit-size,168px);background:none;box-shadow:none;border:0;pointer-events:none;
 }
 .practice-orbits-canvas{position:absolute;inset:50% 0 auto;width:100%;height:auto;aspect-ratio:1;transform:translateY(-50%);pointer-events:none}
 body.has-practice-orbits [data-map-label-id="shirokostup"],body.has-practice-orbits [data-map-label-id="tarski"],body.has-practice-orbits [data-map-label-id="herman"],body.has-practice-orbits [data-map-label-id="ks-fish"],body.has-practice-orbits [data-map-label-id="hotline-camp"],body.has-practice-orbits [data-map-label-id="dusty"],body.has-practice-orbits [data-map-label-id="dd-camp"],body.has-practice-orbits [data-map-label-id="eleven"],body.has-practice-orbits [data-map-label-id="doronin"],body.has-practice-orbits [data-map-label-id="krainiuk"],
@@ -10827,15 +10820,15 @@ body.has-practice-orbits .map-links path[data-parent-id="private-practice"],
 body.has-practice-orbits .map-links path.is-orbit-project-link,
 body.has-practice-orbits .spatial-field--relations [data-relation-key^="private-practice:"] {visibility:hidden!important;pointer-events:none!important}
 @media(max-width:900px){
-  body.has-practice-orbits .focused-home .map-labels [data-map-label-id="private-practice"]{transform:translate(-50%,calc(-100% - 62px))}
+  body.has-practice-orbits{--practice-orbit-size:clamp(184px,62vw,272px)}
+  body.has-practice-orbits .focused-home .map-labels [data-map-label-id="private-practice"]{transform:translate(-50%,calc(-100% - var(--practice-orbit-size)*.32 - 12px))}
   body.has-practice-orbits .focused-home .map-labels [data-map-label-id="narkomfin"]{transform:translate(-50%,calc(-100% - 22px))!important}
 }
 @media(max-width:900px) and (max-height:700px){
-  body.has-practice-orbits :is(.focused-home,.practice-map) .map-node[data-map-id="private-practice"] .map-node__glyph{width:132px;height:132px}
-  body.has-practice-orbits .focused-home .map-labels [data-map-label-id="private-practice"]{transform:translate(-50%,calc(-100% - 50px))}
+  body.has-practice-orbits{--practice-orbit-size:clamp(160px,56vw,224px)}
 }
+body.has-practice-orbits:not(.has-focused-home) .map-node-label[data-map-label-id="private-practice"]{left:var(--project-caption-x)!important;top:var(--project-caption-y)!important;transform:translate(-50%,-100%)!important;translate:none!important}
 @media(min-width:901px){
-  body.has-practice-orbits .map-node-label[data-map-label-id="private-practice"]{left:var(--project-caption-x)!important;top:var(--project-caption-y)!important;transform:translate(-50%,-100%)!important;translate:none!important}
   body.has-practice-orbits .map-node[data-map-id="private-practice"]{--x:70%!important;--y:clamp(42%,calc(85dvh - 265px),56%)!important}
   body.has-practice-orbits .practice-map .map-node[data-map-id="private-practice"] .map-node__glyph,
   body.has-practice-orbits .practice-map .map-node[data-map-id="private-practice"].is-selected .map-node__glyph{--practice-orbit-size:clamp(200px,min(24vw,calc(100dvh - 400px)),340px);width:var(--practice-orbit-size);height:calc(var(--practice-orbit-size)*.72)}
@@ -10861,13 +10854,11 @@ html[data-theme="dark"] .project-orbit-picker h3{color:var(--group-light)}
 .point-preview h2{font-size:var(--type-item);line-height:1.2;font-weight:600}
 .point-preview .point-preview__kind{font-size:var(--type-caption);line-height:1.4;color:var(--content-muted)}
 .point-preview .point-preview__description{margin-top:16px;font-size:var(--type-detail);line-height:1.55}
-.point-preview>.work-tags{margin-top:12px;font-size:var(--type-caption);line-height:1.5}
-.point-preview .work-tags__list{gap:4px 12px}
+.point-preview>.work-tags{margin-top:12px;line-height:1.5}
 .point-preview>.project-orbit-back{display:block;margin:0 32px 12px 0;min-height:44px;font-size:var(--type-utility);line-height:1.4;font-weight:400}
 .point-preview>.project-orbit-back[hidden]{display:none}
 .point-preview .point-preview__link{margin-top:16px;font-size:var(--type-detail);font-weight:600}
-@media(max-width:900px){body.has-practice-orbits .map-node[data-map-id="private-practice"]{width:168px;height:118px;border-radius:50%}.project-satellites .project-satellite{pointer-events:none}}
-@media(max-width:900px) and (max-height:700px){body.has-practice-orbits .map-node[data-map-id="private-practice"]{width:132px;height:92px}}
+@media(max-width:900px){body.has-practice-orbits .map-node[data-map-id="private-practice"]{width:var(--practice-orbit-size);height:calc(var(--practice-orbit-size)*.72);border-radius:50%}.project-satellites .project-satellite{pointer-events:none}}
 @media(forced-colors:active){.practice-orbits-canvas{opacity:0}.project-satellite>.map-node__glyph{background:ButtonText}.map-node[data-map-id="private-practice"] .map-node__glyph{width:28px;height:28px;border:1px solid ButtonText}}
 
 .project-satellites .project-satellite{translate:none!important;inset:0 auto auto 0!important;transform-origin:center;--node-scale:1;--map-target-scale:1;opacity:1}

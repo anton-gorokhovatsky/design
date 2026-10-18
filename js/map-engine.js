@@ -343,16 +343,16 @@ const homeAnchor = (degrees, radiusX, radiusY) => {
 const focusHomePoints = new Map([
   ["garage", homeAnchor(-130, 35, 43)],
   ["narkomfin", homeAnchor(-55, 42, 34)],
-  ["private-practice", homeAnchor(0, 23, 30)],
+  ["private-practice", homeAnchor(14, 17, 30)],
   ["eleven", { x: 87, y: 65 }],
   ["ks-fish", { x: 58, y: 63 }],
   ["principle-data-intuition", homeAnchor(180, 31, 30)],
-  ["running", homeAnchor(83, 40, 34)],
-  ["youtube", homeAnchor(136, 42, 44)],
+  ["running", homeAnchor(83, 40, 42)],
+  ["youtube", homeAnchor(136, 42, 55)],
 ]);
 const focusHomeNarrowPoints = new Map([...focusHomePoints,
   ["garage", {x:27,y:22}], ["narkomfin", {x:76,y:20}],
-  ["private-practice", {x:73,y:58}],
+  ["private-practice", {x:67,y:58}],
   ["principle-data-intuition", {x:14,y:48}],
 ]);
 const focusHomeActive = () => innerWidth <= 900 && document.body.classList.contains("has-focused-home");
@@ -391,7 +391,7 @@ const measureMapClearance = () => {
     const points = largeTextHome ? focusHomeLargeTextPoints : innerWidth < 360 ? focusHomeNarrowPoints : focusHomePoints;
     const shortField = !largeTextHome && mapFieldBounds.height <= 420;
     // Labels stay inside the available field, including the permitted tilt.
-    const museumTop = (mapLabels.get('garage').offsetHeight + 44 + (shortField ? 20 : 40)) / mapFieldBounds.height * 100;
+    const museumTop = (mapLabels.get('garage').offsetHeight + mapTargetDiameters.get('garage')/2 + 6 + (shortField ? 20 : 40)) / mapFieldBounds.height * 100;
     const topShift = Math.max(0, museumTop - points.get('garage').y);
     points.forEach((position, id) => {
       // Borrow the spare lower field for the upper group, gradually reducing
@@ -400,10 +400,7 @@ const measureMapClearance = () => {
       if (shortField && id === 'garage') y = Math.max(y, museumTop);
       if (shortField && id === 'running') y = 90;
       if (shortField && id === 'youtube') y = 84;
-      // In the shortest field, separate the Museum's solid silhouette from
-      // the principle marker below it without pushing that label into YouTube.
-      const x = id === 'garage' && mapFieldBounds.height < 320 ? 35 : position.x;
-      mapClearancePositions.set(id, { x, y });
+      mapClearancePositions.set(id, { x: position.x, y });
     });
     return;
   }
@@ -535,7 +532,7 @@ const getMapLayout = (item) => {
 
   } else if (viewportWidth <= 900) {
     if (item.id === "private-practice" && !timeModeActive) {
-      x = 75;
+      x = 67;
       y = 56;
     }
     if (item.id === "garage-site") {
@@ -564,6 +561,8 @@ const getMapLayout = (item) => {
   }
 
   if (viewportWidth <= 900) {
+    // Keep the institutional anchor; open the lower sectors toward the dock.
+    if (!timeModeActive) y = 14 + (y - 14) * 1.18;
     const mobileYScale = Number.parseFloat(
       signalField?.style.getPropertyValue("--mobile-map-y-scale") || "1",
     );
@@ -1026,7 +1025,7 @@ const renderMapRelatedItems=(item=null)=>{
   const personalLinks=item?.kind==="personal";
   const explicitIds=item?.relatedTo||[];
   const incomingIds=personalLinks?mapItems.filter(candidate=>candidate.relatedTo?.includes(item.id)).map(candidate=>candidate.id):[];
-  const contextIds=item?.kind==="company"?mapItems.filter(candidate=>candidate.parent===item.id).map(candidate=>candidate.id):item?.parent?[item.parent]:[];
+  const contextIds=item?.kind==="company"||item?.id==="private-practice"?mapItems.filter(candidate=>candidate.parent===item.id).map(candidate=>candidate.id):item?.parent?[item.parent]:[];
   const nextIds=item?.id==="hotline-camp"?["eleven","dd-camp","dusty"]:peers.slice(0,3).map(candidate=>candidate.id);
   const ids=[...new Set([...explicitIds,...incomingIds,...contextIds,...nextIds])];
   const items=signalField?.hasAttribute("data-observation-active")?[]:ids.map(id=>mapItems.find(candidate=>candidate.id===id)).filter(Boolean);
