@@ -5955,6 +5955,19 @@ html[data-theme="light"] .orbital-radar i {
   transform: scale(0.78);
 }
 
+html[data-theme="light"] .map-node::after {
+  background: radial-gradient(
+    circle closest-side,
+    color-mix(in srgb, var(--node-accent) 25%, transparent) 0,
+    color-mix(in srgb, var(--node-accent) 12%, transparent) 28%,
+    color-mix(in srgb, var(--node-accent) 5%, transparent) 48%,
+    color-mix(in srgb, var(--node-accent) 1.5%, transparent) 68%,
+    color-mix(in srgb, var(--node-accent) 0.3%, transparent) 84%,
+    transparent 100%
+  );
+  filter: blur(5px);
+}
+
 .map-node:is(:hover, :focus-visible)::after {
   opacity: 0.7;
   transform: scale(0.94);
@@ -7257,43 +7270,16 @@ html[data-theme="light"]
   .map-node { border-radius: 0; }
 }
 
-.map-node[data-map-id="private-practice"] .map-node__glyph {
-  border-width: 1.5px;
-  border-color: color-mix(in srgb, var(--node-accent) 56%, var(--ink));
-  background: transparent;
-  box-shadow:
-    inset 0 0 0 4px color-mix(in srgb, var(--node-accent) 7%, transparent),
-    0 6px 14px color-mix(in srgb, var(--node-accent) 12%, transparent);
-}
-
-.map-node[data-map-id="private-practice"] .map-node__glyph::before {
-  position: absolute;
-  inset: 21%;
-  border: 1px solid color-mix(in srgb, var(--node-accent) 38%, transparent);
-  border-radius: 50%;
-  content: "";
-}
-
-.map-node[data-map-id="private-practice"] .map-node__glyph::after {
-  width: 17%;
-  height: 17%;
-  background: color-mix(in srgb, var(--node-accent) 74%, var(--ink));
-}
-
+.map-node[data-map-id="private-practice"] .map-node__glyph,
 .map-node[data-map-id="private-practice"].is-selected .map-node__glyph {
-  border-color: var(--node-accent);
-  background: transparent;
-  box-shadow:
-    inset 0 0 0 4px color-mix(in srgb, var(--node-accent) 11%, transparent),
-    0 7px 18px color-mix(in srgb, var(--node-accent) 18%, transparent);
+  border: 0;
+  background: url("assets/private-practice-orbits.svg") center / contain no-repeat;
+  box-shadow: none;
 }
 
-.map-node[data-map-id="private-practice"].is-selected .map-node__glyph::before {
-  border-color: color-mix(in srgb, var(--node-accent) 54%, transparent);
-}
-
-.map-node[data-map-id="private-practice"].is-selected .map-node__glyph::after {
-  background: var(--node-accent);
+.map-node[data-map-id="private-practice"] .map-node__glyph::before,
+.map-node[data-map-id="private-practice"] .map-node__glyph::after {
+  content: none;
 }
 
 .map-node-label {
@@ -7378,18 +7364,25 @@ html[data-theme="light"]
     display: none;
   }
 
-  .map-node[data-map-id="private-practice"] .map-node__glyph {
-    border-color: CanvasText;
+  .map-node[data-map-id="private-practice"] .map-node__glyph,
+  .map-node[data-map-id="private-practice"].is-selected .map-node__glyph {
+    border: 1.5px solid CanvasText;
     background: Canvas;
-    box-shadow: none;
   }
 
   .map-node[data-map-id="private-practice"] .map-node__glyph::before {
-    border-color: CanvasText;
+    position: absolute;
+    inset: 21%;
+    border: 1px solid CanvasText;
+    border-radius: 50%;
+    content: "";
   }
 
   .map-node[data-map-id="private-practice"] .map-node__glyph::after {
+    width: 17%;
+    height: 17%;
     background: CanvasText;
+    content: "";
   }
 }
 

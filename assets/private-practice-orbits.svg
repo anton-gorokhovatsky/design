@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+    <defs>
+      <linearGradient id="orbit-back" x1="15%" y1="0%" x2="85%" y2="100%">
+        <stop stop-color="#8b9d89"/><stop offset=".38" stop-color="#627c69"/><stop offset="1" stop-color="#273e31"/>
+      </linearGradient>
+      <linearGradient id="orbit-front" x1="0%" y1="10%" x2="100%" y2="90%">
+        <stop stop-color="#a7b79a"/><stop offset=".24" stop-color="#7c957b"/><stop offset=".64" stop-color="#465f4a"/><stop offset="1" stop-color="#233b2d"/>
+      </linearGradient>
+      <radialGradient id="orbit-core" cx="30%" cy="24%" r="82%">
+        <stop stop-color="#aebf9f"/><stop offset=".3" stop-color="#7c997b"/><stop offset=".7" stop-color="#48674b"/><stop offset="1" stop-color="#253c29"/>
+      </radialGradient>
+      <filter id="orbit-grain" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+        <feTurbulence type="fractalNoise" baseFrequency=".085" numOctaves="3" seed="317" result="grain"/>
+        <feColorMatrix in="grain" type="saturate" values="0"/>
+        <feComponentTransfer><feFuncA type="linear" slope=".32"/></feComponentTransfer>
+        <feBlend in="SourceGraphic" mode="soft-light"/>
+        <feComposite in2="SourceGraphic" operator="in"/>
+      </filter>
+    </defs>
+    <g fill="none" stroke-linecap="round" filter="url(#orbit-grain)">
+      <ellipse cx="50" cy="50" rx="42" ry="21" transform="rotate(-47 50 50)" stroke="url(#orbit-back)" stroke-width="8"/>
+      <ellipse cx="50" cy="50" rx="39" ry="22" transform="rotate(43 50 50)" stroke="url(#orbit-back)" stroke-width="8"/>
+      <circle cx="50" cy="50" r="12" fill="url(#orbit-core)"/>
+      <path d="M 24 78 C 42 92 86 52 81 27" stroke="url(#orbit-front)" stroke-width="8.5"/>
+      <path d="M 20 28 C 12 52 54 91 78 76" stroke="url(#orbit-front)" stroke-width="8.5"/>
+      <path d="M 20 29 C 16 45 34 65 49 74" stroke="#a7b79a" stroke-opacity=".22" stroke-width="1"/>
+    </g>
+  </svg>
