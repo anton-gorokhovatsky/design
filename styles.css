@@ -81,8 +81,8 @@
   --content-font: var(--font-sans);
 
   --material-01: rgba(255, 255, 255, 0.5);
-  --content-ink: #4d4d48;
-  --content-muted: #51514b;
+  --content-ink: #41413c;
+  --content-muted: #45453f;
   --day-rgb: 83, 142, 103;
   --day-enabled: 0;
   --author-card-width: clamp(20rem, 26vw, 24rem);
@@ -7043,8 +7043,8 @@ html[data-theme="dark"] {
   --tone-project: #6f86ff;
   --tone-personal: #b4abc3;
   --tone-practice: #89b5a3;
-  --content-ink: #d0d0c9;
-  --content-muted: #b8b8b1;
+  --content-ink: #deded7;
+  --content-muted: #c6c6bf;
 }
 
 .orbital-horizon {
@@ -10828,7 +10828,7 @@ body.has-practice-orbits:not(.has-focused-home) .map-node-label[data-map-label-i
 .project-satellite:focus-visible{outline:1px solid var(--signal);outline-offset:1px}
 .project-orbit-tooltip{position:fixed;z-index:40;left:0;top:0;max-width:230px;padding:7px 10px;border-radius:8px;background:var(--material-01);color:var(--ink);font:500 var(--type-caption)/1.4 var(--font-sans);pointer-events:none}
 .project-satellites[hidden],.project-orbit-picker[hidden],.project-orbit-back[hidden]{display:none}
-body:has(.point-preview.is-project-picker:not([hidden])) :is(.map-labels,.spatial-intro){opacity:.08;pointer-events:none}
+body:has(.point-preview.is-project-picker:not([hidden])) :is(.map-labels,.spatial-intro){pointer-events:none}
 .project-orbit-picker{margin-top:var(--space-4);overflow:auto;overscroll-behavior:contain;min-height:0;scrollbar-width:thin;scrollbar-color:var(--line) transparent;padding:0 4px 0 0;scroll-padding-block:var(--space-2)}
 .project-atlas-group{position:relative;isolation:isolate;padding-bottom:var(--space-2)}
 .project-atlas-group :is(h3,button){position:relative;z-index:1}
