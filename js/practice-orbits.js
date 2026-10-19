@@ -188,7 +188,7 @@ function initializePracticeOrbits() {
       const rect=canvas.getBoundingClientRect();
       const blocked=doc.body.matches('.has-reading-surface,.has-command-focus,.has-constellation-nav,.has-settings-panel');
       layer.inert=blocked;if(blocked){active=null;tooltip.hidden=true;}
-      if(!enabled)return;
+      if(!enabled)return syncMapAtmospherePosition();
       const detailOpen=doc.body.matches('.has-reading-surface,.has-point-preview');
       if(hadDetail&&!detailOpen&&returnTo){const target=returnTo;returnTo=null;target.focus({preventScroll:true});}
       hadDetail=detailOpen;
