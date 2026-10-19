@@ -262,8 +262,9 @@ try {
       await page.keyboard.press("Enter");
       assert.equal(await page.locator('[data-map-id="garage"]').getAttribute("aria-expanded"), "true");
       await page.waitForFunction(() => document.documentElement.hasAttribute('data-celestial-paused'));
-      assert.equal(await page.locator('.project-satellites').evaluate(layer =>
-        getComputedStyle(layer).opacity), '0.08', 'Private projects recede with the map while reading');
+      assert.deepEqual(await page.locator('.map-camera, .project-satellites').evaluateAll(layers =>
+        layers.map(layer => getComputedStyle(layer).opacity)), ['1', '1'],
+      'Reading windows use the shared glass without separately dimming its backdrop');
       const paused = await readCelestial(page);
       await page.waitForTimeout(160);
       assert.deepEqual(await readCelestial(page), paused, 'Bodies pause while reading');

@@ -5796,12 +5796,6 @@ html[data-theme="dark"] .practice-map::before {
   will-change: transform;
 }
 
-/* In reading mode, quiet the scene behind the shared translucent material.
-   The map and the spatial overview retain their full contrast. */
-body:is(.has-content-panel:not(.has-contact-consoles), [data-case-open], .has-settings-panel, :has(.point-preview.is-project-picker:not([hidden]))) :is(.map-camera, .project-satellites) {
-  opacity: .08;
-}
-
 .practice-map[data-camera-view="work"] .map-camera {
   transform: translate3d(-3.5%, -1.5%, 0) scale(1.055);
 }
