@@ -708,12 +708,9 @@ const applyMapLayout = () => {
     label?.classList.toggle("is-time-undated", timeModeActive && !Number.isFinite(item.timeYear));
     if (label?.classList.contains("is-visible")) placeMapLabel(item, label);
 
-    if (item.id === atmosphereMapId && signalField) {
-      signalField.style.setProperty("--focus-x", `${position.x}%`);
-      signalField.style.setProperty("--focus-y", `${position.y}%`);
-    }
   });
   if (!focusHomeActive()) placeMapRestLabels();
+  syncMapAtmospherePosition();
   window.dispatchEvent(new Event("map-layout"));
 };
 
@@ -767,6 +764,17 @@ const setSearchRelationshipPreview = (id = null) => {
   syncMapRelationships();
 };
 
+const syncMapAtmospherePosition = () => {
+  const point = mapButtons.get(atmosphereMapId)?.getBoundingClientRect();
+  if (!point) return;
+  const field = signalField.getBoundingClientRect(), style = signalField.style;
+  const x = (point.x + point.width / 2 - field.x) / field.width * 100;
+  const y = (point.y + point.height / 2 - field.y) / field.height * 100;
+  style.setProperty("--focus-x", `${x}%`);
+  style.setProperty("--focus-y", `${y}%`);
+  if (signalField.dataset.focusPlane) style.setProperty("--focus-horizon-x", `${(x + 12) / 1.24}%`);
+};
+
 const setMapAtmosphere = (item = null) => {
   if (!signalField) {
     return;
@@ -786,21 +794,17 @@ const setMapAtmosphere = (item = null) => {
   }
 
   atmosphereMapId = item.id;
-  const position = resolveMapLayout(item);
   signalField.dataset.focusId = item.id;
   signalField.dataset.focusKind = item.accentKind || item.kind;
-  signalField.style.setProperty("--focus-x", `${position.x}%`);
-  signalField.style.setProperty("--focus-y", `${position.y}%`);
 
   // The plane belongs to the map sector, even when controls displace its target.
   if (getMapLayout(item).y >= 74) {
-    const horizonX = ((position.x + 12) / 124) * 100;
     signalField.dataset.focusPlane = "ground";
-    signalField.style.setProperty("--focus-horizon-x", `${horizonX}%`);
   } else {
     delete signalField.dataset.focusPlane;
     signalField.style.removeProperty("--focus-horizon-x");
   }
+  syncMapAtmospherePosition();
   syncMapRelationships();
   syncMapNote();
 };
@@ -2055,6 +2059,7 @@ export {
   stopObservation,
   exitObservation,
   syncMapNodeAvailability,
+  syncMapAtmospherePosition,
   timeModeActive,
   writeUrlState,
 };

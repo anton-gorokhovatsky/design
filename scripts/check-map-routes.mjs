@@ -14,6 +14,17 @@ const directory = process.env.PORTFOLIO_UI_ARTIFACT_DIR || ".qa-artifacts/map-ro
 mkdirSync(directory, { recursive: true });
 const errors = [];
 
+// The light pool follows the painted target, including CSS placement and depth.
+const focusOffset = () => {
+  const field = document.querySelector('[data-practice-map]');
+  const node = document.querySelector(`[data-map-id="${field.dataset.focusId}"]`);
+  if (!node) return Infinity;
+  const bounds = field.getBoundingClientRect(), target = node.getBoundingClientRect();
+  const x = bounds.x + parseFloat(field.style.getPropertyValue('--focus-x')) * bounds.width / 100;
+  const y = bounds.y + parseFloat(field.style.getPropertyValue('--focus-y')) * bounds.height / 100;
+  return Math.hypot(x - target.x - target.width / 2, y - target.y - target.height / 2);
+};
+
 // Inspect the painted path in screen pixels, independently of its control points.
 const routeProblems = () => [...document.querySelectorAll('[data-map-links] path:not([hidden])')].flatMap(path => {
   const length = path.getTotalLength(), matrix = path.getScreenCTM();
@@ -79,6 +90,8 @@ try {
         if (width <= 900) await page.locator(`[data-map-id="${id}"]`).click();
         else await page.locator(`[data-map-id="${id}"]`).focus();
         await page.waitForFunction(() => !document.querySelector('[data-relation-morphing]'));
+        assert.ok(await page.evaluate(focusOffset) < 1,
+          `${engine} ${width} ${view} ${id}: highlight is centered on its visible object.`);
         assert.ok(await page.locator('[data-map-links] .is-active-relation').count() > 0);
         assert.ok(await page.locator('[data-map-links] .is-active-relation').evaluateAll(paths =>
           paths.every(path => getComputedStyle(path).strokeDasharray === 'none')),

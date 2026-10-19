@@ -1,4 +1,4 @@
-import { mapButtons, selectedMapId } from './map-engine.js';
+import { mapButtons, selectedMapId, syncMapAtmospherePosition } from './map-engine.js';
 import { reducedMotion } from './preferences.js';
 
 const field = document.querySelector('.focused-home__map');
@@ -306,6 +306,7 @@ function draw() {
     geometry.set(node.id, {...point, id: node.id, z: point.z + lift, viewScale, radius:node.radius * scale});
   }
   placeLabels(geometry);
+  syncMapAtmospherePosition();
   const occluders = [...geometry.values()];
   [...nodes].sort((a, b) => geometry.get(a.id).z - geometry.get(b.id).z)
     .forEach((node, index) => { node.button.style.zIndex = String(index + 1); });

@@ -1,5 +1,5 @@
 import { mapItems } from './map-data.js';
-import { mapButtons, syncMapNodeAvailability, setMapRovingId } from './map-engine.js';
+import { mapButtons, syncMapNodeAvailability, setMapRovingId, syncMapAtmospherePosition } from './map-engine.js';
 import { createSystem, STEP } from './orbit-physics.js';
 import { audienceWeights } from './practice-audience.js';
 
@@ -217,6 +217,7 @@ function initializePracticeOrbits() {
           tooltip.style.top=`${Math.max(12,Math.min(win.innerHeight-h-12,top))}px`;
         }
       }
+      syncMapAtmospherePosition();
       canvas.dataset.orbitTime=system.time.toFixed(2);canvas.dataset.projectCount=String(moons.length);
       canvas.dataset.gravity='true';
     };
