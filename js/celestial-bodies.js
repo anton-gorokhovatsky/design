@@ -195,7 +195,9 @@ function mountVolumes(doc){
   painters.forEach(p=>visibility.observe(p.canvas));
   const nodeState=new MutationObserver(sync);
   painters.forEach(p=>nodeState.observe(p.canvas.closest('[data-map-id]'),{attributes:true,attributeFilter:['aria-hidden']}));
-  win.addEventListener('pagehide',()=>{win.cancelAnimationFrame(frame);visibility.disconnect();nodeState.disconnect();},{once:true});sync();
+  // Observers belong to the retained document and must survive cached returns.
+  win.addEventListener('pagehide',()=>{win.cancelAnimationFrame(frame);frame=0;last=0;});
+  win.addEventListener('pageshow',sync);sync();
 }
 
 // Decorative bodies stay inside the map's existing navigation buttons.
@@ -206,5 +208,6 @@ root.setAttribute('data-celestial-volume','');
 const syncPause=()=>root.toggleAttribute('data-celestial-paused',doc.hidden
   ||doc.body.matches('.has-reading-surface,.has-point-preview,.has-settings-panel,.has-constellation-nav,.has-command-focus'));
 new MutationObserver(syncPause).observe(doc.body,{attributes:true,attributeFilter:['class']});
-doc.addEventListener('visibilitychange',syncPause);syncPause();
+doc.addEventListener('visibilitychange',syncPause);
+doc.defaultView.addEventListener('pageshow',syncPause);syncPause();
 mountVolumes(doc);

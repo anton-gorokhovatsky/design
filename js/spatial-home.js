@@ -468,6 +468,7 @@ new MutationObserver(sync).observe(document.body, {attributes:true, attributeFil
 reducedMotion.addEventListener('change', sync);
 new MutationObserver(sync).observe(root, {attributes:true, attributeFilter:['data-reduce-motion']});
 document.addEventListener('visibilitychange', () => { if (document.hidden) { stopMotion(); cancelAnimationFrame(request); request = 0; } else sync(); });
+window.addEventListener('pageshow', sync);
 compact.addEventListener('change', sync);
 document.fonts.ready.then(() => { if (active()) measure(); });
 

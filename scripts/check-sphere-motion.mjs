@@ -88,6 +88,45 @@ const assertStopped = async (page) => {
   }
 };
 
+// Headless engines need a deterministic lifecycle contract; actual cached navigation
+// is additionally checked in a headed browser before publishing a lifecycle change.
+const assertPageRestoration = async (page) => {
+  const inventory = () => page.evaluate(() => ({
+    ids: [...document.querySelectorAll('.map-node')].map(node => node.dataset.mapId).sort(),
+    satellites: document.querySelectorAll('.project-satellites .project-satellite').length,
+    volumes: document.querySelectorAll('.celestial-volume').length,
+    layers: document.querySelectorAll('.project-satellites').length,
+  }));
+  const before = await inventory();
+  assert.equal(before.ids.length, 53, 'All map objects exist before leaving');
+  assert.equal(new Set(before.ids).size, 53, 'Map objects have unique identities');
+  assert.equal(before.satellites, 10, 'All private projects exist before leaving');
+  for (let cycle = 0; cycle < 2; cycle++) {
+    const bodies = await readCelestial(page);
+    const orbitTime = await page.locator('.practice-orbits-canvas').getAttribute('data-orbit-time');
+    await page.evaluate(() => dispatchEvent(new PageTransitionEvent('pagehide', { persisted: true })));
+    assert.deepEqual(await inventory(), before, 'Leaving retains the complete map document');
+    await page.evaluate(() => dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true })));
+    await page.waitForFunction(previous => {
+      const orbit = document.querySelector('.practice-orbits-canvas');
+      return orbit.dataset.orbitTime !== previous.orbitTime
+        && [...document.querySelectorAll('.celestial-volume')]
+          .every((canvas, index) => canvas.dataset.renderTime !== previous.times[index]);
+    }, { orbitTime, times: bodies.map(body => body.time) });
+    assert.deepEqual(await inventory(), before, 'Returning preserves objects without duplicate layers');
+  }
+  // A cached return must retain the observers, including offscreen pause/resume.
+  const volume = page.locator('.celestial-volume--garage');
+  await volume.evaluate(canvas => { canvas.style.transform = 'translateX(300vw)'; });
+  await page.waitForTimeout(160);
+  const hiddenTime = await volume.getAttribute('data-render-time');
+  await page.waitForTimeout(160);
+  assert.equal(await volume.getAttribute('data-render-time'), hiddenTime, 'Restored body pauses offscreen');
+  await volume.evaluate(canvas => { canvas.style.transform = ''; });
+  await page.waitForFunction(previous => document.querySelector('.celestial-volume--garage')
+    .dataset.renderTime !== previous, hiddenTime);
+};
+
 // Exercise the production sampler at identical phases, without debug APIs on the site.
 const assertMaterials = () => {
   const source = readFileSync(join(projectRoot, "js/sphere-surfaces.js"), "utf8")
@@ -229,8 +268,16 @@ try {
       await page.keyboard.press("Escape");
       await page.waitForFunction(previous => document.querySelector('.celestial-volume--running').dataset.renderTime !== previous, paused[1].time);
     }
+    if (['desktop-light', 'mobile-390-light'].includes(scenario.label)) await assertPageRestoration(page);
     await page.emulateMedia({ reducedMotion: "reduce" });
     await assertStopped(page);
+    if (scenario.label === 'mobile-390-light') {
+      await page.evaluate(() => {
+        dispatchEvent(new PageTransitionEvent('pagehide', { persisted: true }));
+        dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true }));
+      });
+      await assertStopped(page);
+    }
     await capture(page, scenario.label + "-system-static");
     if (engine === "chromium") {
       await page.emulateMedia({ reducedMotion: "no-preference", forcedColors: "active" });

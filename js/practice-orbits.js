@@ -184,7 +184,9 @@ function initializePracticeOrbits() {
     const sync=()=>{cancelAnimationFrame(raf);last=0;tracks();paint();if(!doc.hidden)raf=requestAnimationFrame(tick);};
     new MutationObserver(sync).observe(doc.documentElement,{attributes:true,attributeFilter:['data-theme','data-reduce-motion']});
     doc.addEventListener('visibilitychange',sync);reduced.addEventListener('change',sync);
-    win.addEventListener('pagehide',()=>{cancelAnimationFrame(raf);layer.remove();tooltip.remove();});
+    // Back/Forward can retain this document: pause it without detaching its projects.
+    win.addEventListener('pagehide',()=>{cancelAnimationFrame(raf);last=0;active=null;tooltip.hidden=true;});
+    win.addEventListener('pageshow',()=>{syncInput();sync();});
     sync();
 }
 initializePracticeOrbits();
