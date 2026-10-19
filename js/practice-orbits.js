@@ -4,12 +4,6 @@ import { createSystem, STEP } from './orbit-physics.js';
 import { audienceWeights } from './practice-audience.js';
 
 const projects = mapItems.filter(item => item.parent === 'private-practice');
-const projectIcons = {
-  shirokostup:'assets/project-icons/shirokostup.svg',tarski:'assets/project-icons/tarski.png',
-  herman:'assets/project-icons/herman.png','ks-fish':'assets/project-icons/ks-fish.png',
-  'hotline-camp':'assets/project-icons/hotline-camp.svg',eleven:'assets/project-icons/eleven.svg',
-  doronin:'assets/project-icons/doronin.svg',krainiuk:'assets/project-icons/krainiuk.svg',
-};
 const cultural = new Set(['shirokostup', 'tarski']);
 const category = item => cultural.has(item.id) ? 'culture'
   : item.relatedTo?.includes('running') ? 'sport' : 'commercial';
@@ -99,51 +93,16 @@ function initializePracticeOrbits() {
     node.addEventListener('click',()=>{pickerSession=true;returnTo=node;});backButton.addEventListener('click',openPicker);
     for(const group of groups){
       const section=doc.createElement('section'),heading=doc.createElement('h3');heading.textContent=group.title;
-      section.className='project-atlas-group';
-      const track=doc.createElementNS('http://www.w3.org/2000/svg','svg');
-      track.classList.add('project-atlas-track');track.setAttribute('aria-hidden','true');
-      track.append(doc.createElementNS(track.namespaceURI,'path'));section.append(track);
       section.style.setProperty('--group-color',`rgb(${group.color.join(',')})`);
       section.style.setProperty('--group-light',`rgb(${group.light.join(',')})`);section.append(heading);
-      for(const [index,item] of group.projects.entries()){
+      for(const item of group.projects){
         const button=doc.createElement('button');button.type='button';button.dataset.pickerProject=item.id;
-        button.style.setProperty('--atlas-bend',`${Math.round((1-Math.sin(Math.PI*(index+.5)/group.projects.length))*24)}px`);
-        const mark=doc.createElement('span'),name=doc.createElement('span');
-        mark.className='project-atlas-mark';mark.setAttribute('aria-hidden','true');
-        mark.textContent=({shirokostup:'ОШ',tarski:'T',herman:'ГВ','ks-fish':'КС','hotline-camp':'H',dusty:'DM','dd-camp':'DD',eleven:'11',doronin:'Д',krainiuk:'К'})[item.id];
-        if(projectIcons[item.id]){
-          const image=doc.createElement('img');image.alt='';image.width=image.height=24;image.loading='lazy';image.decoding='async';
-          image.src=projectIcons[item.id];
-          image.addEventListener('load',()=>mark.replaceChildren(image));
-          image.addEventListener('error',()=>image.remove());mark.append(image);
-        }
-        name.className='project-atlas-name';
-        name.textContent=doc.querySelector(`[data-map-label-id="${item.id}"]`)?.textContent||item.label;
-        button.append(mark,name);
+        button.textContent=doc.querySelector(`[data-map-label-id="${item.id}"]`)?.textContent||item.label;
         button.addEventListener('click',()=>{pickerSession=true;returnTo=node;doc.querySelector(`.map-node[data-map-id="${item.id}"]`)?.click();});
         section.append(button);
       }
       picker.append(section);
     }
-    // Follow the real icon centres after wrapping and text-size changes.
-    const layoutAtlas=()=>{
-      if(picker.hidden)return;
-      for(const section of picker.querySelectorAll('.project-atlas-group')){
-        const rect=section.getBoundingClientRect(),track=section.querySelector('svg');
-        const points=[...section.querySelectorAll('.project-atlas-mark')].map(mark=>{
-          const box=mark.getBoundingClientRect();return [box.left-rect.left+box.width/2,box.top-rect.top+box.height/2];
-        });
-        const first=points[0],last=points.at(-1),top=section.querySelector('h3').getBoundingClientRect().bottom-rect.top+4;
-        let path=`M${rect.width-4} ${top} Q${first[0]} ${top} ${first.join(' ')}`;
-        for(let i=1;i<points.length;i++){
-          const a=points[i-1],b=points[i],middle=(a[1]+b[1])/2;
-          path+=`C${a[0]} ${middle} ${b[0]} ${middle} ${b.join(' ')}`;
-        }
-        path+=`Q${last[0]} ${rect.height-4} ${rect.width-4} ${rect.height-8}`;
-        track.setAttribute('viewBox',`0 0 ${rect.width} ${rect.height}`);track.querySelector('path').setAttribute('d',path);
-      }
-    };
-    const atlasResize=new ResizeObserver(layoutAtlas);for(const section of picker.children)atlasResize.observe(section);
     const syncPicker=()=>{
       const selected=mobile.matches&&!preview.hidden&&node.getAttribute('aria-expanded')==='true';
       preview.classList.toggle('is-project-picker',selected);picker.hidden=!selected;

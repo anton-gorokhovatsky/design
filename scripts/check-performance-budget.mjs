@@ -32,12 +32,10 @@ const eagerMedia = [
 // Reviewed 19 October: the accepted celestial bodies add ~12.3 KiB source
 // and ~6.2 KiB gzip including styles. No libraries, fonts or media are added.
 // The limits include this approved feature with a small measured margin.
-// The selected Atlas picker adds ~1.5 KiB styles and ~2.7 KiB runtime source;
-// its local favicons load lazily. Existing compressed limits remain unchanged.
 // Gzip is measured with this Node/zlib version, not the CDN or a connection.
 const budgets = {
-  css: 284 * 1024,
-  runtime: 418 * 1024,
+  css: 282 * 1024,
+  runtime: 416 * 1024,
   fonts: 160 * 1024,
   initialSource: 812 * 1024,
   cssGzip: 50 * 1024,
