@@ -7,7 +7,7 @@ import {
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
-import { runtimeFiles } from "./runtime-files.mjs";
+import { runtimeFiles, runtimeDataFiles } from "./runtime-files.mjs";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(scriptDirectory, "..");
@@ -34,6 +34,8 @@ const eagerMedia = [
 // The limits include this approved feature with a small measured margin.
 // The selected Atlas picker adds ~1.5 KiB styles and ~2.7 KiB runtime source;
 // its local favicons load lazily. Existing compressed limits remain unchanged.
+// Details are requested only by a reader or search. All JS still counts above;
+// the deferred authored payload has its own additional bounds below.
 // Gzip is measured with this Node/zlib version, not the CDN or a connection.
 const budgets = {
   css: 284 * 1024,
@@ -43,6 +45,8 @@ const budgets = {
   cssGzip: 50 * 1024,
   runtimeGzip: 128 * 1024,
   initialCompressed: 288 * 1024,
+  deferredData: 56 * 1024,
+  deferredDataGzip: 18 * 1024,
 };
 const cssGzip = gzipSync(readProjectFile("styles.css"), { level: 9 }).length;
 const runtimeGzip = runtimeFiles.reduce((total, path) => total
@@ -50,6 +54,8 @@ const runtimeGzip = runtimeFiles.reduce((total, path) => total
 const measured = {
   css: cssBytes, runtime: runtimeBytes, fonts: fontBytes, initialSource: initialSourceBytes,
   cssGzip, runtimeGzip, initialCompressed: cssGzip + runtimeGzip + fontBytes,
+  deferredData: runtimeDataFiles.reduce((total, path) => total + fileBytes(path), 0),
+  deferredDataGzip: runtimeDataFiles.reduce((total, path) => total + gzipSync(readProjectFile(path), { level: 9 }).length, 0),
 };
 const failures = [];
 

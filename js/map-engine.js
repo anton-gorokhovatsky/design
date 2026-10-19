@@ -1,4 +1,5 @@
 // Spatial map geometry, relations, filters and selection.
+import { getCaseContent, loadCaseContent } from "./case-content.js";
 import { trackPortfolioEvent } from "./analytics.js";
 import { updateWorkTags } from "./work-tags.js";
 import {
@@ -41,9 +42,10 @@ const mapEvidenceIdea = document.querySelector("[data-map-evidence-idea]");
 const mapEvidenceResult = document.querySelector("[data-map-evidence-result]");
 const mapEvidenceFeature = document.querySelector("[data-map-evidence-feature]");
 const mapEvidenceDetails = document.querySelector("[data-map-evidence-details]");
-const mapEvidenceById = JSON.parse(
-  document.querySelector("#map-evidence-data")?.textContent || "{}",
-);
+const detailState = document.querySelector("[data-case-load-state]");
+const detailStatus = detailState.querySelector("[role=status]");
+const detailRetry = detailState.querySelector("button");
+let detailRequest = 0;
 const mapNote = document.querySelector("[data-map-note]");
 const timeToggles = Array.from(document.querySelectorAll("[data-time-toggle]"));
 const hoverCapable = window.matchMedia("(hover: hover) and (pointer: fine)");
@@ -1151,10 +1153,34 @@ const selectMapItem = (
     setMapMetaText(overview?.meta ?? (hasWorkTags && item.kind === 'project' ? '' : caseStudy?.meta ?? item.meta));
   }
 
-  setMapDescription(overview?.description || caseStudy?.description || item.description, item.descriptionCredit);
-  setMapQuotation(overview ? null : item.quote);
-
-  setMapEvidence(overview ? null : mapEvidenceById[item.id], overview ? null : item);
+  const renderDetails = () => {
+    setMapDescription(overview?.description || caseStudy?.description || item.description, item.descriptionCredit);
+    setMapQuotation(overview ? null : item.quote);
+    setMapEvidence(overview ? null : getCaseContent()?.evidence[item.id], overview ? null : item);
+  };
+  const request = ++detailRequest;
+  const current = () => request === detailRequest && selectedMapId === id && mapInspector.classList.contains("is-open");
+  detailState.hidden = true;
+  renderDetails();
+  if (!overview && reveal && !getCaseContent()) {
+    const loadDetails = () => {
+      detailState.hidden = false;
+      detailStatus.textContent = "Загружаются подробности…";
+      detailRetry.hidden = true;
+      loadCaseContent().then(() => {
+        if (!current()) return;
+        renderDetails();
+        if (document.activeElement === detailRetry) mapTitle.focus({ preventScroll: true });
+        detailState.hidden = true;
+      }).catch(() => {
+        if (!current()) return;
+        detailStatus.textContent = "Не удалось загрузить подробности.";
+        detailRetry.hidden = false;
+      });
+    };
+    detailRetry.onclick = loadDetails;
+    loadDetails();
+  }
 
   if (mapLink) {
     const itemHref = overview ? `?point=${item.id}` : item.href || (item.kind === "practice" ? principlesSourceHref : "");

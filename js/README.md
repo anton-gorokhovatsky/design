@@ -1,8 +1,8 @@
 # Runtime modules
 
-The portfolio has no build step, framework, or production dependency. Eighteen
+The portfolio has no build step, framework, or production dependency. Twenty-eight
 native ES modules keep top-level names out of the browser global scope.
-`scripts/runtime-files.mjs` is the authoritative manifest, in this order:
+`scripts/runtime-files.mjs` is the complete, authoritative manifest. Core responsibilities:
 
 1. `preferences.js` — preferences, typography, theme, clock and the shared
    visible-tab-stop query; no imports.
@@ -17,8 +17,9 @@ native ES modules keep top-level names out of the browser global scope.
 7. `cipher-field.js` — deterministic point-to-cipher composition; no imports.
 8. `signal-field.js` — decorative Canvas and depth grid; imports preferences
    and cipher field.
-9. `map-data.js` — authored portfolio data and generated media metadata;
-   no imports.
+9. `map-data.js` — initial map metadata, exact short descriptions and generated
+   media metadata; no imports. `case-content.js` hydrates full descriptions and
+   figure metadata only when details or search are requested.
 10. `observation-route.js` — route steps, timing, controls and keyboard flow;
     imports analytics, map data, preferences and signal field.
 11. `personal-media.js` — user-started YouTube iframe, desktop persistence,
@@ -44,7 +45,11 @@ native ES modules keep top-level names out of the browser global scope.
 18. `favicon.js` — variant 01 and visibility lifecycle; imports lifecycle APIs
     from map media, preferences and signal field.
 
-`index.html` loads the same eighteen module URLs and contains a generated import
+The remaining modules own celestial volumes, map controls, contribution tags,
+mobile composition, focused/spatial layouts, orbital physics and the project
+picker. Their ordering and complete paths live only in the manifest.
+
+`index.html` loads all twenty-eight module URLs and contains a generated import
 map so every direct and transitive request uses its own `?v=<content-hash>`.
 `pnpm cache` and the release command update the managed block. The structural
 checks enforce parity between this manifest and the loaded modules.
@@ -52,3 +57,14 @@ checks enforce parity between this manifest and the loaded modules.
 Media source settings live in `scripts/reel-specs.json`; `pnpm media:prepare`
 regenerates posters, chapters, measured durations and content hashes together.
 See the root README for capture and release commands.
+
+Detailed case copy and figure metadata live in `case-content.json`. The small
+`case-content.js` controller requests this versioned payload when works, a full
+point card or search is opened. The initial map retains the exact existing short
+descriptions; loading hydrates the full descriptions and figures on the same
+items. Search waits for the complete index before accepting an early Enter.
+Failed requests can be retried, and responses cannot reopen dismissed cards.
+
+`runtimeDataFiles` keeps the payload in the cache/import-map manifest and public
+asset verification. Static content checks read it, and the performance gate
+bounds it separately while preserving every existing JavaScript/CSS limit.

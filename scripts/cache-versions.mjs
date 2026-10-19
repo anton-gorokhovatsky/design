@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { runtimeFiles } from "./runtime-files.mjs";
+import { runtimeFiles, runtimeDataFiles } from "./runtime-files.mjs";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const defaultProjectRoot = resolve(scriptDirectory, "..");
@@ -17,6 +17,7 @@ const importMapEnd = "    <!-- runtime-import-map:end -->";
 export const cacheVersionFiles = [
   stylesheetPath,
   ...runtimeFiles,
+  ...runtimeDataFiles,
 ];
 
 const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -31,7 +32,7 @@ export const getCacheVersions = (projectRoot = defaultProjectRoot) => new Map(
 );
 
 const renderImportMap = (versions) => {
-  const imports = Object.fromEntries(runtimeFiles.map((path) => [
+  const imports = Object.fromEntries([...runtimeFiles, ...runtimeDataFiles].map((path) => [
     `./${path}`,
     `./${path}?v=${versions.get(path)}`,
   ]));

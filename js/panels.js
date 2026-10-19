@@ -1,3 +1,4 @@
+import { getCaseContent, loadCaseContent } from "./case-content.js";
 import { isMapPreviewActive, hideMapPreview } from "./map-media.js";
 import {
   openSettingsPanel,
@@ -334,6 +335,7 @@ const openContentPanel = (
   contentPanel?.classList.toggle("is-restoring-position", Boolean(position));
   if (observationRoute.active) stopObservation({ updateHistory: false });
 
+  if (view === "work") loadCaseContent().catch(() => {});
   activePanelView = view;
   lastPanelTrigger = trigger instanceof HTMLElement && mapInspector.contains(trigger)
     ? view === "work" && compactConstellationNav.matches
@@ -752,11 +754,8 @@ const normalizeSearch = (value) => String(value || "")
   .trim();
 
 const tokenizeSearch = (value) => normalizeSearch(value).split(" ").filter(Boolean);
-const mapSearchEvidence = JSON.parse(
-  document.querySelector("#map-evidence-data")?.textContent || "{}",
-);
 const getMapItemSearchFields = (item) => {
-  const evidence = mapSearchEvidence[item.id] || {};
+  const evidence = getCaseContent()?.evidence[item.id] || {};
 
   return [
     item.label,
@@ -1110,21 +1109,39 @@ const runCommandResult = (result) => {
   commandInput?.blur();
 };
 
+let searchRequest = 0;
+const refreshCommandSearch = async () => {
+  const request = ++searchRequest;
+  if (!getCaseContent()) {
+    renderCommandResults(commandInput.value);
+    setCommandStatus("Загружается поиск…");
+    try { await loadCaseContent(); }
+    catch {
+      if (request === searchRequest && commandForm.classList.contains("is-open"))
+        setCommandStatus("Не удалось загрузить поиск по описаниям. Повторите запрос.");
+      return false;
+    }
+  }
+  if (request !== searchRequest || !commandForm.classList.contains("is-open")) return false;
+  applySearchHighlight(commandInput.value);
+  renderCommandResults(commandInput.value);
+  return true;
+};
+
 commandInput?.addEventListener("focus", () => {
   if (observationRoute.active) stopObservation();
   hideMapPreview({ immediate: true });
   setInspectorOpen(false);
   renderCommandResults(commandInput.value);
+  refreshCommandSearch();
 });
 
-commandInput?.addEventListener("input", () => {
-  applySearchHighlight(commandInput.value);
-  renderCommandResults(commandInput.value);
-});
+commandInput?.addEventListener("input", refreshCommandSearch);
 
-commandInput?.addEventListener("keydown", (event) => {
+commandInput?.addEventListener("keydown", async (event) => {
   if (event.key === "Enter" && !event.isComposing) {
     event.preventDefault();
+    if (!getCaseContent() && !await refreshCommandSearch()) return;
     runCommandResult(
       currentCommandResults[activeCommandIndex]
       || currentCommandResults[0]
@@ -1206,8 +1223,9 @@ commandResults?.addEventListener("click", (event) => {
   )));
 });
 
-commandForm?.addEventListener("submit", (event) => {
+commandForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
+  if (!getCaseContent() && !await refreshCommandSearch()) return;
   runCommandResult(
     currentCommandResults[activeCommandIndex]
     || currentCommandResults[0]

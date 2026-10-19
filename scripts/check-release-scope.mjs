@@ -22,6 +22,11 @@ const panels = read("js/panels.js");
 const map = read("js/map-data.js");
 const route = read("js/observation-route.js");
 const html = read("index.html");
+// Keep the legacy embedded-copy contract while current details are external data.
+const caseData = read("js/case-content.json");
+const embeddedHtml = html.replace("</body>", `<script type="application/json" id="map-evidence-data">${JSON.stringify(JSON.parse(caseData).evidence, null, 2)}</script></body>`);
+change("js/case-content.json", caseData, "Развивать цифровые продукты Музея", "Развивать цифровую среду Музея", false);
+
 // Reproduce the one-address release that previously selected the whole site.
 const addressFixture = {
   'js/map-data.js': 'const mapItems = [{id: "parfyonov", x: 29, y: 73}];',
@@ -93,12 +98,12 @@ change("js/map-data.js", map, "Самый важный профессионал�
 change("js/observation-route.js", route, "Почти четыре года развивал", "Развивал", true);
 change("index.html", html, ">МОЯ РОЛЬ<", ">МОЙ ВКЛАД<", true);
 change("index.html", html, 'aria-label="Управление обзором"', 'aria-label="Новая подпись"', true);
-change("index.html", html, "Развивать цифровые продукты Музея", "Развивать цифровую среду Музея", true);
-change("index.html", html, "Визуальный язык связали", "Визуальное решение связали", true);
-change("index.html", html, "Цветовой цикл учитывает сезон", "Цветовой цикл следует сезону", true);
-change("index.html", html, "UV-индекс меняет насыщенность палитры", "UV-индекс влияет на насыщенность палитры", true);
-change("index.html", html, "В футере можно «прожить день в Сочи»", "Внизу сайта можно «прожить день в Сочи»", true);
-change("index.html", html, "регулируется в OKLCH", "меняется в OKLCH", true);
+change("index.html", embeddedHtml, "Развивать цифровые продукты Музея", "Развивать цифровую среду Музея", true);
+change("index.html", embeddedHtml, "Визуальный язык связали", "Визуальное решение связали", true);
+change("index.html", embeddedHtml, "Цветовой цикл учитывает сезон", "Цветовой цикл следует сезону", true);
+change("index.html", embeddedHtml, "UV-индекс меняет насыщенность палитры", "UV-индекс влияет на насыщенность палитры", true);
+change("index.html", embeddedHtml, "В футере можно «прожить день в Сочи»", "Внизу сайта можно «прожить день в Сочи»", true);
+change("index.html", embeddedHtml, "регулируется в OKLCH", "меняется в OKLCH", true);
 change("index.html", html, /styles\.css\?v=[a-f0-9]{12}/.exec(html)[0], "styles.css?v=aaaaaaaaaaaa", true);
 change("index.html", html, /\.\/js\/panels\.js\?v=[a-f0-9]{12}/.exec(html)[0], "./js/panels.js?v=aaaaaaaaaaaa", true);
 
@@ -118,7 +123,7 @@ change("index.html", html, ">МОЯ РОЛЬ<", ">МОЯ <b>РОЛЬ</b><", fal
 change("index.html", html, "data-map-evidence-role-label", "data-different-role-label", false);
 change("index.html", html, 'href="styles.css', 'href="other.css', false);
 change("index.html", html, '"./js/panels.js":', '"./js/other.js":', false);
-change("index.html", html, '"role": "Старший менеджер', '"href": "Старший менеджер', false);
+change("index.html", embeddedHtml, '"role": "Старший менеджер', '"href": "Старший менеджер', false);
 change("index.html", html, "<main>", '<main onclick="run()">', false);
 change("index.html", html, 'aria-label="', 'onclick="', false);
 assert.equal(isCopyOnly("index.html", '<script>const a="one"</script>', '<script>const a="two"</script>'), false);

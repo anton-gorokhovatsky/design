@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict";
+import { checkDeferredCaseContent } from "./case-content-contract.mjs";
 import { mkdirSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join, resolve } from "node:path";
@@ -23,6 +24,7 @@ const select = async (page, id) => {
     (await import(script)).selectMapItem(point, { reveal: true });
     await new Promise(requestAnimationFrame);
   }, id);
+  await page.waitForFunction(() => document.querySelector("[data-case-load-state]").hidden);
   // Even a reduced-motion transition needs a committed frame after the
   // dialog is mounted. Measure the finished surface, not its entrance matrix.
   await page.waitForFunction(() => document.querySelector('[data-map-inspector]')
@@ -62,6 +64,7 @@ const calibrateCapture = async (browser) => {
 
 try {
   browser = await ({ chromium, webkit })[engine].launch({ headless: true });
+  await checkDeferredCaseContent(browser, origin);
   await calibrateCapture(browser);
   for (const theme of ["light", "dark"]) {
     for (const [label, width, height] of [

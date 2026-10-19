@@ -151,7 +151,7 @@ function playbackState() {
   const visible = !document.hidden
     && style.visibility !== 'hidden' && style.display !== 'none'
     && getComputedStyle(root).getPropertyValue('--day-enabled').trim() === '1';
-  const play = visible && !reduced.matches && !contrast.matches && root.dataset.reduceMotion !== 'true';
+  const play = visible && !root.hasAttribute("data-celestial-paused") && !reduced.matches && !contrast.matches && root.dataset.reduceMotion !== 'true';
   return { visible, play };
 }
 

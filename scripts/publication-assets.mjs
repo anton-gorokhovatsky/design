@@ -1,3 +1,4 @@
+import { runtimeDataFiles } from "./runtime-files.mjs";
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -8,6 +9,7 @@ export const getPublicationAssets = (root, plan) => {
   const html = independent ? null : readFileSync(resolve(root, 'index.html'), 'utf8');
   const references = html ? [...html.matchAll(/(?:src|href)=["']((?:styles\.css|(?:js|assets)\/[^"'?#]+)(?:\?[^"']*)?)["']/g)].map(m => m[1]) : [];
   const linkedReferences = new Set(references);
+  if (html) references.push(...runtimeDataFiles);
   if (independent || plan.components.includes('signature')) {
     const version = readFileSync(resolve(root, 'signature/src/component.js'), 'utf8').match(/VERSION = "([\d.]+)"/)[1];
     references.push('signature/v1/signature.js', `signature/${version}/signature.js`, 'signature/demo.html', 'signature/README.md');
@@ -22,11 +24,11 @@ export const getPublicationAssets = (root, plan) => {
     assets: [...new Set(references)].map(reference => {
       const path = reference.split(/[?#]/, 1)[0];
       if (!existsSync(resolve(root, path))) {
-        if (independent) throw new Error(`Missing publication asset: ${path}`);
+        if (independent || runtimeDataFiles.includes(path)) throw new Error(`Missing publication asset: ${path}`);
         return null;
       }
       const digest = hash(readFileSync(resolve(root, path)));
-      return { path, hash: digest, linked: linkedReferences.has(reference), reference: independent ? `${reference}?v=${digest.slice(0,12)}` : reference,
+      return { path, hash: digest, linked: linkedReferences.has(reference), reference: (independent || runtimeDataFiles.includes(path)) ? `${reference}?v=${digest.slice(0,12)}` : reference,
         module: /^signature\/.*\/signature\.js$/.test(path) };
     }).filter(Boolean),
   };

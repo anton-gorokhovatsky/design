@@ -8,7 +8,7 @@ import {
 } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { readRuntimeSource } from "./runtime-files.mjs";
+import { readRuntimeSource, runtimeDataFiles } from "./runtime-files.mjs";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(scriptDirectory, "..");
@@ -31,6 +31,7 @@ const source = [
   readProjectFile("index.html"),
   readProjectFile("styles.css"),
   readRuntimeSource(projectRoot),
+  ...runtimeDataFiles.map(readProjectFile),
   readProjectFile("README.md"),
   ...sharePageSources,
 ].join("\n");

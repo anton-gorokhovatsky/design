@@ -275,6 +275,23 @@ try {
       await page.keyboard.press("Escape");
       await page.waitForFunction(previous => document.querySelector('.celestial-volume--running').dataset.renderTime !== previous, paused[1].time);
     }
+    if (scenario.label.startsWith("mobile-390")) {
+      await page.locator('[data-open-panel="work"]:visible').last().click();
+      await page.waitForFunction(() => document.querySelector(".map-camera").inert
+        && document.documentElement.hasAttribute("data-celestial-paused"));
+      assert.deepEqual(await page.evaluate(() => ({
+        home: getComputedStyle(document.querySelector(".focused-home")).visibility,
+        input: document.querySelector(".focused-home").inert,
+        labels: getComputedStyle(document.querySelector(".map-labels")).visibility,
+        opacity: getComputedStyle(document.querySelector(".map-camera")).opacity,
+      })), { home: "visible", input: true, labels: "hidden", opacity: "0.4" });
+      const frozen = await page.locator(".focused-home canvas").evaluateAll(canvases => canvases.map(canvas => canvas.toDataURL()));
+      await page.waitForTimeout(160);
+      assert.deepEqual(await page.locator(".focused-home canvas").evaluateAll(canvases => canvases.map(canvas => canvas.toDataURL())), frozen,
+        "Mobile glass retains the stationary, unavailable map background");
+      await page.locator("[data-close-panel]").click();
+      await page.waitForFunction(() => !document.querySelector(".map-camera").inert);
+    }
     if (['desktop-light', 'mobile-390-light'].includes(scenario.label)) await assertPageRestoration(page);
     await page.emulateMedia({ reducedMotion: "reduce" });
     await assertStopped(page);

@@ -11,6 +11,7 @@ export const runtimeFiles = [
   "js/cipher-field.js",
   "js/signal-field.js",
   "js/map-data.js",
+  "js/case-content.js",
   "js/observation-route.js",
   "js/personal-media.js",
   "js/sphere-surfaces.js",
@@ -30,6 +31,8 @@ export const runtimeFiles = [
   "js/practice-audience.js",
   "js/practice-orbits.js",
 ];
+
+export const runtimeDataFiles = ["js/case-content.json"];
 
 export const readRuntimeSource = (projectRoot) => runtimeFiles
   .map((path) => readFileSync(join(projectRoot, path), "utf8"))

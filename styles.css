@@ -10534,8 +10534,8 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
   .point-preview__link svg { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.5; }
   .point-preview :is(a,button):focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
   body.has-constellation-nav .point-preview,
-  body:is(.has-content-panel,[data-case-open],.has-settings-panel,.has-command-focus) :is(.focused-home,.focused-return,.point-preview),
-  body:has(.map-inspector.is-open) :is(.focused-home,.focused-return,.point-preview) { visibility: hidden; pointer-events: none; }
+  body:is(.has-content-panel,[data-case-open],.has-settings-panel,.has-command-focus) :is(.focused-home .site-header,.spatial-intro,.focused-return,.point-preview),
+  body:has(.map-inspector.is-open) :is(.focused-home .site-header,.spatial-intro,.focused-return,.point-preview) { visibility: hidden; pointer-events: none; }
   body.has-command-focus .focused-map-open { visibility: hidden; }
 }
 
@@ -10863,7 +10863,8 @@ html[data-theme="dark"] .project-atlas-track{stroke:var(--group-light)}
 .project-satellites .project-satellite>.map-node__glyph{transform:none;position:static;border:0;display:block;flex:none}
 .project-satellites .project-satellite>.map-node__glyph::before,.project-satellites .project-satellite>.map-node__glyph::after{content:none}
 .project-satellites .project-satellite:is(.is-filter-miss,.is-search-miss){opacity:.15;pointer-events:none}
-.project-satellites[inert]{pointer-events:none;opacity:.4}
+.map-camera[inert],.project-satellites[inert]{pointer-events:none;opacity:.4}
+.map-labels[inert]{visibility:hidden;pointer-events:none}
 .project-satellites[inert] .project-satellite{pointer-events:none}
 body:not(.has-practice-orbits) .practice-orbits-canvas{display:none}
 

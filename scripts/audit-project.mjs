@@ -134,7 +134,9 @@ const extractEmbeddedJson = (id) => {
 };
 
 const mapItems = extractMapItems();
-const mapEvidenceById = extractEmbeddedJson("map-evidence-data");
+const caseContent = JSON.parse(readFileSync(join(projectRoot, "js/case-content.json"), "utf8"));
+const mapEvidenceById = caseContent.evidence;
+for (const item of mapItems) item.description = caseContent.descriptions[item.id] || item.description;
 const allowedKinds = new Set(["company", "project", "personal", "practice"]);
 const ids = new Set();
 const duplicateIds = new Set();
@@ -243,6 +245,15 @@ const incompleteHhExperience = hhExperienceIds.filter((id) => {
     typeof evidence[field] !== "string" || !evidence[field].trim()
   ));
 });
+for (const key of ["descriptions", "figures"]) {
+  requireContract(Object.keys(caseContent[key]).every(id => ids.has(id)),
+    "deferred-content-ids", `Deferred ${key} must belong to existing map points.`);
+}
+for (const figures of Object.values(caseContent.figures)) for (const figure of figures) {
+  requireContract(existsSync(join(projectRoot, figure.src.split("?")[0]))
+    && Boolean(figure.alt && figure.caption && figure.width > 0 && figure.height > 0),
+  "deferred-figure", "Case figures retain their source, alternative text, caption and dimensions.", figure.src);
+}
 const orphanEvidenceIds = Object.keys(mapEvidenceById).filter((id) => !ids.has(id));
 
 requireContract(

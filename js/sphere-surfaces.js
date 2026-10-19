@@ -99,7 +99,8 @@ const paint = (surface) => {
   surface.context.putImageData(surface.image, 0, 0);
 };
 
-const allowed = () => !document.hidden && !reducedMotion.matches && !forcedColors.matches;
+const allowed = () => !document.hidden && !reducedMotion.matches && !forcedColors.matches
+  && !document.documentElement.hasAttribute("data-celestial-paused");
 const active = (surface) => surface.visible
   && surface.canvas.closest("[data-map-id]")?.getAttribute("aria-hidden") !== "true";
 const tick = (time) => {
@@ -143,6 +144,7 @@ if (nodes) {
     subtree: true, attributes: true, attributeFilter: ["aria-hidden"],
   });
 }
+new MutationObserver(sync).observe(document.documentElement, { attributes: true, attributeFilter: ["data-celestial-paused"] });
 reducedMotion.addEventListener("change", sync);
 forcedColors.addEventListener("change", sync);
 document.addEventListener("visibilitychange", sync);

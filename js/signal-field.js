@@ -477,6 +477,7 @@ const drawSignalConstellation = (time = performance.now()) => {
 };
 
 const renderSignalConstellation = (time = performance.now()) => {
+  if (root.hasAttribute("data-celestial-paused")) { signalFrame = 0; return; }
   const renderInterval = signalDrag.active ? 15 : 30;
 
   if (time - lastSignalRender > renderInterval || time === 0) {
@@ -498,6 +499,7 @@ const resumeSignalConstellation = () => {
   if (
     !signalConstellation
     || document.hidden
+    || root.hasAttribute("data-celestial-paused")
     || reducedMotion.matches
     || captureMode
   ) {
@@ -570,6 +572,11 @@ new MutationObserver(() => drawSignalConstellation()).observe(root, {
   attributes: true,
   attributeFilter: ["data-theme", "data-contrast"],
 });
+
+new MutationObserver(() => {
+  if (root.hasAttribute("data-celestial-paused")) pauseSignalConstellation();
+  else resumeSignalConstellation();
+}).observe(root, { attributes: true, attributeFilter: ["data-celestial-paused"] });
 
 const drawSignalAfterInteraction = () => {
   if (reducedMotion.matches || captureMode) {
