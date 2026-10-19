@@ -221,11 +221,20 @@ try {
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0);
         await capture(page, label + "-parfenov");
         await page.locator("[data-map-link]").focus();
+        const quoteDocument = await page.evaluateHandle(() => document);
         await page.keyboard.press("Escape");
         await page.waitForFunction(mobile => mobile
           ? document.activeElement?.matches('.point-preview__link')
           : document.activeElement?.dataset.mapId === 'parfenov', width <= 900);
-        await select(page, "youtube");
+        // Exercise the real keyboard transition after Escape rather than
+        // re-importing the controller through Chromium's evaluation context.
+        await page.locator('[data-map-id="youtube"]').focus();
+        await page.keyboard.press("Enter");
+        if (width <= 900) await page.locator('.point-preview__link').click();
+        await player.waitFor({ state: "visible" });
+        assert.equal(await quoteDocument.evaluate(saved => saved === document), true,
+          "Leaving a quotation and opening another point preserves the document.");
+        await quoteDocument.dispose();
         assert.equal(await page.locator("[data-map-quotation]").isVisible(), false,
           "The quotation must not remain in another point's card.");
         assert.equal(await page.locator("[data-map-quote]").innerText(), "");
