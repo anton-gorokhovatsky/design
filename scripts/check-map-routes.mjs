@@ -6,7 +6,9 @@ import { chromium, webkit } from "playwright";
 const { startStaticServer } = createRequire(import.meta.url)("./browser-contracts.cjs");
 const engine = process.argv[2] || "chromium";
 assert.ok(["chromium", "webkit"].includes(engine));
-const { server, origin } = await startStaticServer({ projectRoot: process.cwd() });
+// Geometry and navigation do not depend on presence. Keep departing-document
+// keepalive out of this fixture; check-live-surface covers the service lifecycle.
+const { server, origin } = await startStaticServer({ projectRoot: process.cwd(), presence: false });
 const browser = await ({ chromium, webkit })[engine].launch();
 const directory = process.env.PORTFOLIO_UI_ARTIFACT_DIR || ".qa-artifacts/map-routes";
 mkdirSync(directory, { recursive: true });
