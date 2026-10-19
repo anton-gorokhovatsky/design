@@ -677,7 +677,7 @@ floatingConsoleModules.forEach((module) => {
   });
 });
 
-const syncFloatingConsoleBounds = () => {
+const syncConsoleBounds = () => {
   if (!floatingConsoleMedia.matches) {
     floatingConsoleModules.forEach((module) => setConsoleOffset(module, 0, 0));
     return;
@@ -692,10 +692,10 @@ const syncFloatingConsoleBounds = () => {
   scheduleDetachedCommandResultsPosition();
 };
 
-const consoleResize = new ResizeObserver(syncFloatingConsoleBounds);
+const consoleResize = new ResizeObserver(() => requestAnimationFrame(syncConsoleBounds));
 floatingConsoleModules.forEach(module => consoleResize.observe(module));
-window.addEventListener("resize", syncFloatingConsoleBounds);
-floatingConsoleMedia.addEventListener?.("change", syncFloatingConsoleBounds);
+window.addEventListener("resize", syncConsoleBounds);
+floatingConsoleMedia.addEventListener?.("change", syncConsoleBounds);
 
 export {
   observeScrollEdges,
