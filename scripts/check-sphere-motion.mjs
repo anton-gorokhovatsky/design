@@ -16,7 +16,7 @@ const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const { server, origin } = await startStaticServer({ projectRoot });
 const directory = process.env.PORTFOLIO_UI_ARTIFACT_DIR;
 if (directory) mkdirSync(directory, { recursive: true });
-const ids = ["garage", "optimal", "ilmix", "running", "youtube", "parfenov"];
+const ids = ["optimal", "ilmix", "youtube", "parfenov"];
 const scenarios = chromiumScenarioCatalog.filter((state) => (
   /^(desktop-(light|dark)|tablet-(light|dark)|mobile-(390|320)-(light|dark)|zoom-200-light)$/.test(state.label)
 ));
@@ -61,12 +61,25 @@ const capture = async (page, name) => {
     }
   }
 };
+const readCelestial = page => page.evaluate(() => [...document.querySelectorAll('.celestial-volume')].map(canvas => {
+  const pixels = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
+  let signature = 2166136261, painted = 0;
+  for (let i = 3; i < pixels.length; i += 16) {
+    signature = Math.imul(signature ^ pixels[i] ^ pixels[i - 3], 16777619) >>> 0;
+    if (pixels[i]) painted++;
+  }
+  return { id: canvas.closest('[data-map-id]').dataset.mapId, signature, painted,
+    hidden: canvas.getAttribute('aria-hidden'), pointer: getComputedStyle(canvas).pointerEvents,
+    time: canvas.dataset.renderTime, period: canvas.dataset.rotationPeriod };
+}));
 const assertStopped = async (page) => {
   await page.waitForFunction(() => [...document.querySelectorAll(".map-node__surface")]
     .every((surface) => getComputedStyle(surface).display === "none"
       && surface.dataset.sphereMotion === "paused"));
   const before = await read(page);
+  const bodiesBefore = await readCelestial(page);
   await page.waitForTimeout(160);
+  assert.deepEqual(await readCelestial(page), bodiesBefore, 'Celestial bodies stop with reduced motion or forced colours');
   const after = await read(page);
   for (const [index, state] of after.entries()) {
     assert.equal(state.display, "none", state.id);
@@ -144,6 +157,14 @@ try {
       .some((canvas) => canvas.dataset.sphereMotion === "running"
         && canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height).data
           .some((value, index) => index % 4 === 3 && value > 0)));
+    const bodiesBefore = await readCelestial(page);
+    assert.deepEqual(bodiesBefore.map(body => body.id), ['garage', 'running']);
+    for (const body of bodiesBefore) {
+      assert.equal(body.hidden, 'true');
+      assert.equal(body.pointer, 'none');
+      assert.ok(body.painted > 0, body.id + ': painted volume');
+    }
+    assert.equal(bodiesBefore[1].period, '8');
     const before = await read(page);
     assert.deepEqual(before.map((state) => state.id), ids);
     for (const state of before) {
@@ -156,6 +177,9 @@ try {
     }
     await page.waitForTimeout(350);
     const after = await read(page);
+    const bodiesAfter = await readCelestial(page);
+    bodiesAfter.forEach((body, index) => assert.notEqual(body.signature, bodiesBefore[index].signature,
+      body.id + ': emitted light changes with motion'));
     after.forEach((state, index) => {
       const previous = before[index];
       if (state.motion === "running" && previous.motion === "running") {
@@ -180,7 +204,7 @@ try {
       await toggle.click();
       await page.waitForFunction(() => document.documentElement.dataset.reduceMotion !== "true");
       await page.waitForFunction(() => document.querySelector(".map-node__surface")?.dataset.sphereMotion === "running");
-      const surface = page.locator('[data-map-id="garage"] .map-node__surface');
+      const surface = page.locator('[data-map-id="optimal"] .map-node__surface');
       await surface.evaluate((canvas) => { canvas.style.transform = "translateX(300vw)"; });
       await page.waitForFunction(() => document.querySelector(".map-node__surface")?.dataset.sphereMotion === "paused");
       const offscreen = (await read(page))[0];
@@ -198,7 +222,12 @@ try {
       await page.locator('[data-map-id="garage"]').focus();
       await page.keyboard.press("Enter");
       assert.equal(await page.locator('[data-map-id="garage"]').getAttribute("aria-expanded"), "true");
+      await page.waitForFunction(() => document.documentElement.hasAttribute('data-celestial-paused'));
+      const paused = await readCelestial(page);
+      await page.waitForTimeout(160);
+      assert.deepEqual(await readCelestial(page), paused, 'Bodies pause while reading');
       await page.keyboard.press("Escape");
+      await page.waitForFunction(previous => document.querySelector('.celestial-volume--running').dataset.renderTime !== previous, paused[1].time);
     }
     await page.emulateMedia({ reducedMotion: "reduce" });
     await assertStopped(page);
