@@ -240,6 +240,33 @@ scoped("scripts/reel-specs.json", specSource, changeSpec(spec => spec.itemId = "
 scoped("scripts/reel-specs.json", specSource, changeSpec(spec => spec.chapters[0].duration = 500), "full");
 scoped("scripts/reel-specs.json", specSource, changeSpec(spec => spec.run = "code"), "full");
 
+// The console ResizeObserver fix must not run unrelated media/signature jobs.
+// Everything outside these two private callbacks still requires full coverage.
+const viewport = read("js/viewport-ui.js");
+const consoleFix = viewport.replace('requestAnimationFrame(syncConsoleBounds)', 'syncConsoleBounds()');
+scoped("js/viewport-ui.js", viewport, consoleFix, "components", ["console-bounds"]);
+scoped("js/viewport-ui.js", consoleFix.replaceAll('syncConsoleBounds', 'syncFloatingConsoleBounds'), viewport, "components", ["console-bounds"]);
+for (const mutate of [
+  value => value.replace('new ResizeObserver', 'new MutationObserver'),
+  value => value.replace('observeScrollEdges,', 'observeScrollEdges as edges,'),
+  value => value + '\nwindow.addEventListener("resize", unrelated);',
+  value => 'import "./unrelated.js";\n' + value,
+  value => value.replace('const syncConsoleBounds = () =>', 'const syncConsoleBounds = async () =>'),
+  value => value.replace('window.addEventListener("resize", syncConsoleBounds)', 'window.addEventListener("scroll", syncConsoleBounds)'),
+  value => value.replace('const consoleResize =', 'const consoleResize = ;'),
+]) {
+  const changed = mutate(consoleFix);
+  assert.notEqual(changed, consoleFix, 'Boundary fixture must change source');
+  scoped("js/viewport-ui.js", viewport, changed, "full");
+}
+const consoleMatrix = browserMatrix("components", ["console-bounds"]).include;
+assert.equal(consoleMatrix.length, 6);
+for (const engine of ["chromium", "webkit"]) assert.deepEqual(
+  new Set(consoleMatrix.filter(job => job.browser === engine).flatMap(job => job.checks.split(','))),
+  new Set(componentCoverage["console-bounds"]),
+);
+assert.ok(consoleMatrix.filter(job => job.browser === 'webkit').every(job => job.runner === 'macos-15'));
+
 // The complete old browser inventory remains mandatory, once per engine;
 // WebKit core retains all four viewport/theme profiles. No shard may disappear.
 const retainedChecks = ["signature", "case-flow", "personal-media", "inspector-links", "point-address", "accessibility", "map-routes", "hover-layout", "whoop-ui", "first-visit", "command-placement", "header", "search-icon", "sphere-motion", "case-view", "scroll-lens", "observation-route"];
@@ -295,11 +322,17 @@ try {
   writeFileSync(join(directory, "styles.css"), '.map-node {color: black}');
   writeFileSync(join(directory, "js/whoop-day.js"), 'const interval = 1000;');
   writeFileSync(join(directory, "js/focused-home.js"), headerModule);
+  writeFileSync(join(directory, "js/viewport-ui.js"), viewport);
   mkdirSync(join(directory, "assets/reels"), { recursive: true });
   writeFileSync(join(directory, "assets/reels/garage-site.mp4"), "original master");
   git("add", "."); git("commit", "-m", "published");
   const published = git("rev-parse", "HEAD");
   const plan = (options = {}) => planRelease({ projectRoot: directory, base: published, ...options });
+  writeFileSync(join(directory, 'js/viewport-ui.js'), consoleFix);
+  assert.deepEqual(plan().components, ['console-bounds']);
+  assert.equal(plan().matrix.include.length, 6);
+  writeFileSync(join(directory, 'js/viewport-ui.js'), viewport);
+
   writeFileSync(join(directory, 'js/focused-home.js'), sharedHeader);
   writeFileSync(join(directory, 'styles.css'), '.map-node {color: black}\n.site-header {padding: 12px}');
   assert.deepEqual(plan().components, ['header']);

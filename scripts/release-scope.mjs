@@ -139,7 +139,7 @@ export const planRelease = ({ projectRoot, base = "origin/gh-pages", target } = 
       const [status, path] = entries.slice(index, index + 2);
       const owner = ownedCheckComponent(path);
       let classification = owner ? { mode: "components", components: [owner] } : { mode: "full", components: [] };
-      if (status === "M" && (copyArrays[path] || ["index.html", "404.html", "styles.css", "js/focused-home.js", "js/whoop-day.js", "scripts/reel-specs.json", "README.md", "AGENTS.md"].includes(path) || /^docs\/.*\.md$/.test(path))) {
+      if (status === "M" && (copyArrays[path] || ["index.html", "404.html", "styles.css", "js/focused-home.js", "js/whoop-day.js", "js/viewport-ui.js", "scripts/reel-specs.json", "README.md", "AGENTS.md"].includes(path) || /^docs\/.*\.md$/.test(path))) {
         const before = git("show", `${baseSha}:${path}`);
         const after = targetSha ? git("show", `${targetSha}:${path}`) : readFileSync(resolve(projectRoot, path), "utf8");
         classification = classifyChange(path, before, after);

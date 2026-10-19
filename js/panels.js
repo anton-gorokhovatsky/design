@@ -17,7 +17,6 @@ import {
   observationSteps,
   requestMapLinksRender,
   rovingMapId,
-  selectedMapId,
   selectMapItem,
   setApplyingUrlState,
   setInspectorOpen,

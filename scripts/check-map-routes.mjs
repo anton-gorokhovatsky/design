@@ -237,6 +237,21 @@ try {
     assert.ok(await page.locator('.project-orbit-picker').isVisible(), 'A tap still opens the project picker');
     await page.keyboard.press('Escape');
     await checkCaptions();
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    // Media changes and the closing selection can still own transition frames.
+    // Measure idle work only after those observable updates have settled.
+    await page.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done))));
+    await page.waitForFunction(() => !document.querySelector('[data-map-links][data-layout-pending]')
+      && !document.getAnimations().some(animation => animation instanceof CSSTransition && animation.playState === 'running'));
+    const idle = await page.locator('.practice-orbits-canvas').evaluate(canvas => new Promise(resolve => {
+      let paints = 0;
+      const observer = new MutationObserver(records => { paints += records.length; });
+      observer.observe(canvas, { attributes: true, attributeFilter: ['data-orbit-time'] });
+      setTimeout(() => { observer.disconnect(); resolve({ paints, time: canvas.dataset.orbitTime }); }, 500);
+    }));
+    assert.equal(idle.paints, 0, 'A settled reduced-motion map does not repaint the orbits');
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await page.waitForFunction(time => Number(document.querySelector('.practice-orbits-canvas').dataset.orbitTime) > Number(time), idle.time);
     await page.screenshot({ path: `${directory}/${engine}-${viewport.width}-introductory-captions.png` });
     await page.close();
     console.log(`PASS ${engine} ${viewport.width}: six introductory captions, ten picker projects, rotation and momentum without overlap.`);

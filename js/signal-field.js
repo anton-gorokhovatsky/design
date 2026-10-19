@@ -6,38 +6,6 @@ import {
 } from "./preferences.js";
 import { composeCipher } from "./cipher-field.js";
 
-const asciiCharacters = " .·:+*#%@";
-const createSignal = (columns, rows, phase = 0, seed = 0) => {
-  const output = [];
-  const aspect = columns / rows;
-
-  for (let row = 0; row < rows; row += 1) {
-    let line = "";
-
-    for (let column = 0; column < columns; column += 1) {
-      const x = ((column / (columns - 1)) * 2 - 1) * aspect * 0.54;
-      const y = (row / (rows - 1)) * 2 - 1;
-      const radius = Math.sqrt(x * x + y * y);
-      const angle = Math.atan2(y, x);
-      const petal = Math.sin(angle * 5 + phase * 0.7 + seed) * 0.11;
-      const orbit = 0.5 + petal + Math.sin(angle * 2 - phase) * 0.035;
-      const ring = Math.max(0, 1 - Math.abs(radius - orbit) * 10.5);
-      const inner = Math.max(0, 1 - Math.abs(radius - 0.24 - Math.sin(angle * 3 + phase) * 0.028) * 18);
-      const ray = Math.max(0, Math.cos(angle * 7 - phase * 0.5) - 0.72) * Math.max(0, 0.88 - radius);
-      const noise = (Math.sin(column * 1.73 + row * 2.17 + seed * 3.1) + 1) * 0.035;
-      const fade = Math.max(0, 1 - Math.pow(radius / 0.98, 3));
-      const intensity = Math.min(1, (ring * 0.72 + inner * 0.46 + ray * 0.52 + noise) * fade);
-      const characterIndex = Math.floor(intensity * (asciiCharacters.length - 1));
-
-      line += intensity > 0.07 ? asciiCharacters[characterIndex] : " ";
-    }
-
-    output.push(line.trimEnd());
-  }
-
-  return output.join("\n");
-};
-
 const signalField = document.querySelector("[data-signal-field]");
 const signalConstellation = document.querySelector("[data-signal-constellation]");
 const signalCore = document.querySelector("[data-signal-core]");

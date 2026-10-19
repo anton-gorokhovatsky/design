@@ -30,6 +30,9 @@ export const componentCoverage = {
   "search-icon": ["search-icon"],
   media: ["reels", "case-view", "case-flow", "hover-layout", "observation-route"],
   settings: ["core", "accessibility", "whoop-ui"],
+  // Console bounds also move the author aura and detached search results.
+  // WHOOP includes live-surface: 404 return, ResizeObserver and page errors.
+  "console-bounds": ["header", "hover-layout", "command-placement", "whoop-ui", "map-routes", "accessibility", "case-flow"],
   whoop: ["core", "accessibility", "whoop-ui", "hover-layout", "first-visit"],
 };
 export const checkIds = ["core", "reels", ...Object.keys(componentChecks)];

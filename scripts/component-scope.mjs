@@ -135,9 +135,47 @@ const settingsHtml = (source) => {
   return source.slice(0, location.startTag.endOffset) + "\0SETTINGS\0" + source.slice(location.endTag.startOffset);
 };
 
+// Only the console resize callback and its observer belong to this lane.
+// Imports, subscriptions, exported APIs, drag behavior and scroll lenses stay
+// outside the mask. Normalize the earlier private callback name for its rename.
+const consoleBoundsOutside = source => {
+  const tree = parseJs(source, { ecmaVersion: "latest", sourceType: "module" });
+  const found = new Set();
+  tree.body = tree.body.map(statement => {
+    if (statement.type !== "VariableDeclaration" || statement.declarations.length !== 1) return statement;
+    const { id, init } = statement.declarations[0];
+    const name = id.name === "syncFloatingConsoleBounds" ? "syncConsoleBounds" : id.name;
+    if (!["syncConsoleBounds", "consoleResize"].includes(name)) return statement;
+    if (found.has(name) || statement.kind !== "const") throw new Error("Ambiguous console owner");
+    const callback = name === "syncConsoleBounds" ? init
+      : init?.type === "NewExpression" && init.callee.name === "ResizeObserver" && init.arguments.length === 1
+        ? init.arguments[0] : null;
+    if (callback?.type !== "ArrowFunctionExpression" || callback.async) throw new Error("Unknown console callback");
+    found.add(name);
+    return { type: "ConsoleBoundsOwner", name };
+  });
+  if (found.size !== 2) throw new Error("Missing console owner");
+  for (const statement of tree.body) {
+    const expression = statement.expression;
+    const call = expression?.type === 'ChainExpression' ? expression.expression : expression;
+    if (call?.type !== 'CallExpression' || call.callee.type !== 'MemberExpression'
+      || call.callee.computed || call.callee.property.name !== 'addEventListener') continue;
+    const event = { window: 'resize', floatingConsoleMedia: 'change' }[call.callee.object.name];
+    if (event && call.arguments[0]?.value === event && call.arguments[1]?.name === 'syncFloatingConsoleBounds') {
+      call.arguments[1].name = 'syncConsoleBounds';
+    }
+  }
+
+  return JSON.stringify(tree, (key, value) => {
+    if (["start", "end", "raw"].includes(key)) return undefined;
+    return value;
+  });
+};
+
 export const affectedComponents = (path, before, after, maskHtmlCopy) => {
   if (before.includes("\0") || after.includes("\0")) return null;
   try {
+    if (path === "js/viewport-ui.js" && consoleBoundsOutside(before) === consoleBoundsOutside(after)) return ["console-bounds"];
     if (path === "styles.css") return cssComponents(before, after);
     if (path === "index.html") {
       try {

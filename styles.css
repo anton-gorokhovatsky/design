@@ -9093,9 +9093,6 @@ html[data-focus-modality="keyboard"]
   font-weight: 400;
 }
 .whoop-readout[hidden] { display: none; }
-.whoop-heading { display: flex; justify-content: space-between; align-items: baseline; gap: .75rem; margin: 0 0 .875rem; }
-.whoop-heading strong { font-family: var(--font-author); font-weight: 400; }
-.whoop-heading time { color: var(--content-muted); }
 .whoop-metrics { display: flex; flex-wrap: wrap; gap: var(--space-3); margin: 0; }
 .whoop-metrics div { flex: 1 1 auto; min-width: 0; }
 .whoop-metrics dt { color: var(--content-muted); margin: 0 0 .3125rem; }
@@ -9141,7 +9138,6 @@ html[data-focus-modality="keyboard"]
     bottom: 16px;
   }
   @container (max-width: 18rem) {
-    .whoop-heading { display: none; }
     .whoop-readout { margin-top: .75rem; }
     .whoop-metrics { gap: var(--space-2); }
     .whoop-foot { margin-top: .5rem; }
@@ -9152,7 +9148,7 @@ html[data-focus-modality="keyboard"]
   .site-header .brand { padding-right: 38px;  }
   .site-header .brand__name { gap: .3125rem; }
   .whoop-readout { margin-top: .875rem; padding-right: 1.125rem; }
-  .whoop-heading, .whoop-foot { display: none; }
+  .whoop-foot { display: none; }
   .whoop-metrics {  gap: .4375rem; }
   .whoop-compact-trigger { display: block; position: absolute; inset: 0; width: 100%; height: 100%; border-radius: inherit; background: none; cursor: pointer; }
   .whoop-compact-trigger::after { content: ''; position: absolute; right: 0; top: calc(50% - 3px); width: 7px; height: 7px; border: solid currentColor; border-width: 1px 1px 0 0; transform: rotate(45deg); }
@@ -9162,13 +9158,11 @@ html[data-focus-modality="keyboard"]
 /* Tight viewports keep the author's content while returning space to the map. */
 @media (min-width: 901px) and (max-width: 1100px) {
   .site-header[data-material-surface="whoop-readout"] { padding: 14px 16px 10px; }
-  .site-header .author-entry { margin-top: var(--space-1); }
   .display-control { width: max(216px, 13.5rem); }
 }
 @media (max-width: 900px) and (max-height: 680px) {
   .site-header[data-material-surface="whoop-readout"] { padding: 8px 12px; }
   .site-header .brand { gap: 2px; }
-  .site-header .author-entry { margin-top: 0; }
   .whoop-readout { margin-top: 0; }
   .whoop-metrics dt { margin-bottom: 2px; }
   .whoop-level { margin-top: 2px; }
@@ -9815,7 +9809,6 @@ html[data-reduce-motion="true"] [style*="scroll-ink-"] { filter: none !important
 }
 
 /* Reading windows sit above the stationary map consoles. */
-.author-entry { display: inline-flex; align-items: center; min-height: var(--control-target); margin-top: var(--space-2); font-weight: 500; pointer-events: auto; }
 body.has-reading-surface:not(.has-contact-consoles) :is(.site-header, .whoop-field, .system-dock),
 body:is(.has-constellation-nav, .has-command-focus) :is(.site-header, .whoop-field),
 body:is([data-case-open], .has-settings-panel) .control-console {
@@ -9943,7 +9936,6 @@ html[data-reduce-motion="true"] :is(.ui-close, .work-row, .map-related__item, .c
 .map-axis-label,
 .display-control__service [data-map-note],
 .display-control__presence,
-.whoop-heading time,
 .whoop-metrics dt,
 .whoop-metrics dd small,
 .whoop-level,
@@ -10045,7 +10037,6 @@ html[data-reduce-motion="true"] :is(.ui-close, .work-row, .map-related__item, .c
 .settings-whoop__zones,
 .settings-presence > p,
 .case-entry,
-.author-entry,
 .case-figure figcaption,
 .map-quotation figcaption {
   font-size: var(--type-detail);
@@ -10089,7 +10080,6 @@ html[data-reduce-motion="true"] :is(.ui-close, .work-row, .map-related__item, .c
 .content-panel .work-row__title,
 .content-panel .approach-grid h3,
 .site-header .brand,
-.whoop-heading strong,
 .whoop-metrics dd,
 .personal-media__caption h3 {
   font-size: var(--type-item);

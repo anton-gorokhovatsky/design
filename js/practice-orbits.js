@@ -177,11 +177,10 @@ function initializePracticeOrbits() {
       }
       syncMapNodeAvailability();
       if(doc.activeElement?.hasAttribute('data-orbit-decorative'))setMapRovingId('private-practice',{focus:true});
-      active=null;tooltip.hidden=true;syncPicker();
+      active=null;tooltip.hidden=true;syncPicker();schedule();
     };
     mobile.addEventListener('change',syncInput);
     new MutationObserver(syncInput).observe(map,{attributes:true,attributeFilter:['data-time-view','data-observation-active']});
-    syncInput();
     const system=createSystem(moons.map(moon=>({id:moon.item.id,radius:moon.orbit.radius,phase:moon.phase})),{weights:audienceWeights});
     let accumulator=0;
     const paint=()=>{
@@ -221,23 +220,34 @@ function initializePracticeOrbits() {
       canvas.dataset.orbitTime=system.time.toFixed(2);canvas.dataset.projectCount=String(moons.length);
       canvas.dataset.gravity='true';
     };
+    const playing=()=>enabled&&!layer.inert&&!stopped()&&!active&&!system.failure;
+    const schedule=()=>{if(!raf&&!doc.hidden)raf=requestAnimationFrame(tick);};
     const tick=time=>{
       raf=0;if(doc.hidden)return;
-      if(enabled&&!layer.inert&&!stopped()&&!active&&!system.failure){
+      if(playing()){
         const dt=last?Math.min(100,time-last)/1000:0;
         accumulator+=dt;while(accumulator>=STEP){
           if(!system.step()){motionStatus.hidden=false;canvas.dataset.physicsPaused=system.failure;accumulator=0;break;}
           accumulator-=STEP;
         }
       }
-      last=time;paint();raf=requestAnimationFrame(tick);
+      last=time;paint();
+      // Paused physics still follows CSS placement until the transition settles.
+      if(playing()||doc.getAnimations().some(a=>a instanceof CSSTransition&&a.playState==='running'
+        &&(a.effect.target.matches('.map-node')||a.effect.target.contains(node))))schedule();
+      else last=0;
     };
-    const sync=()=>{cancelAnimationFrame(raf);last=0;tracks();paint();if(!doc.hidden)raf=requestAnimationFrame(tick);};
+    const sync=()=>{cancelAnimationFrame(raf);raf=0;last=0;tracks();schedule();};
+    const placement=new MutationObserver(schedule);
+    for(const target of [node,doc.body])placement.observe(target,{attributes:true,attributeFilter:['style','class']});
+    new ResizeObserver(schedule).observe(canvas);
+    win.addEventListener('map-layout',schedule);doc.addEventListener('transitionrun',schedule);
+    for(const type of ['pointerenter','pointerleave','focus','blur','click'])layer.addEventListener(type,schedule,true);
     new MutationObserver(sync).observe(doc.documentElement,{attributes:true,attributeFilter:['data-theme','data-reduce-motion']});
     doc.addEventListener('visibilitychange',sync);reduced.addEventListener('change',sync);
     // Back/Forward can retain this document: pause it without detaching its projects.
-    win.addEventListener('pagehide',()=>{cancelAnimationFrame(raf);last=0;active=null;tooltip.hidden=true;});
+    win.addEventListener('pagehide',()=>{cancelAnimationFrame(raf);raf=0;last=0;active=null;tooltip.hidden=true;});
     win.addEventListener('pageshow',()=>{syncInput();sync();});
-    sync();
+    syncInput();sync();
 }
 initializePracticeOrbits();
