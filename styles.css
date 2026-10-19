@@ -5798,7 +5798,7 @@ html[data-theme="dark"] .practice-map::before {
 
 /* In reading mode, quiet the scene behind the shared translucent material.
    The map and the spatial overview retain their full contrast. */
-body:is(.has-content-panel:not(.has-contact-consoles), [data-case-open], .has-settings-panel) .map-camera {
+body:is(.has-content-panel:not(.has-contact-consoles), [data-case-open], .has-settings-panel) :is(.map-camera, .project-satellites) {
   opacity: .08;
 }
 
