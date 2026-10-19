@@ -47,15 +47,12 @@
       .not-found {
         position: relative;
         isolation: isolate;
-        display: grid;
-        grid-template-rows: 1fr auto;
-        gap: clamp(3rem, 6svh, 5rem);
+        display: flex;
         align-items: center;
         height: auto;
         min-height: 100svh;
         overflow: hidden;
         padding: clamp(24px, 8vw, 144px);
-        padding-bottom: clamp(2rem, 4vw, 4rem);
       }
       .not-found__map {
         position: absolute;
@@ -122,20 +119,6 @@
       }
       .not-found__actions { margin-top: 1.5rem; }
       .not-found__action { display: inline-flex; align-items: center; min-height: 44px; font-size: var(--type-body); }
-      .not-found__credit {
-        justify-self: end;
-        max-width: 100%;
-        min-width: 0;
-      }
-      .not-found__credit ag-signature {
-        --ag-signature-ink: var(--content-ink);
-        --ag-signature-muted: var(--content-muted);
-        --ag-signature-node-ink: var(--content-ink);
-        --ag-signature-accent: var(--signal);
-        --ag-signature-personal: var(--running-dusk);
-        --ag-signature-name-size: var(--type-item);
-        --ag-signature-role-size: var(--type-detail);
-      }
       .not-found__motion {
         position: absolute;
         top: 1rem;
@@ -150,7 +133,6 @@
         .not-found { padding: 5.5rem 12px 2rem; }
         .not-found__terrain { right: -70%; width: 160%; height: 90%; }
         .not-found__card { border-radius: var(--window-radius); }
-        .not-found__credit { justify-self: start; margin-inline: var(--window-pad); }
       }
       @media (forced-colors: active), (prefers-contrast: more) {
         .not-found__terrain, .not-found__map { display: none; }
@@ -180,11 +162,6 @@
           </a>
         </nav>
       </section>
-      <footer class="not-found__credit">
-        <ag-signature controls="external" role-label="Дизайн и разработка">
-          <a href="https://gorokhovatsky.tech/" rel="author">Антон Гороховатский — Дизайн и разработка</a>
-        </ag-signature>
-      </footer>
       <button class="not-found__motion text-link" type="button" data-terrain-motion hidden>Остановить движение</button>
     </main>
     <script>
@@ -210,6 +187,5 @@
       })();
     </script>
     <script type="module" src="/js/atlas-motion.js?v=06ea7b7c7898"></script>
-    <script type="module" src="/signature/v1/signature.js"></script>
   </body>
 </html>
