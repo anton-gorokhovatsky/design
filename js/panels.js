@@ -1112,15 +1112,15 @@ const runCommandResult = (result) => {
 let searchRequest = 0;
 const refreshCommandSearch = async () => {
   const request = ++searchRequest;
-  if (!getCaseContent()) {
-    renderCommandResults(commandInput.value);
-    setCommandStatus("Загружается поиск…");
-    try { await loadCaseContent(); }
-    catch {
-      if (request === searchRequest && commandForm.classList.contains("is-open"))
-        setCommandStatus("Не удалось загрузить поиск по описаниям. Повторите запрос.");
-      return false;
-    }
+  applySearchHighlight(commandInput.value);
+  renderCommandResults(commandInput.value);
+  if (getCaseContent()) return true;
+  setCommandStatus("Загружается поиск…");
+  try { await loadCaseContent(); }
+  catch {
+    if (request === searchRequest && commandForm.classList.contains("is-open"))
+      setCommandStatus("Не удалось загрузить поиск по описаниям. Повторите запрос.");
+    return false;
   }
   if (request !== searchRequest || !commandForm.classList.contains("is-open")) return false;
   applySearchHighlight(commandInput.value);

@@ -139,8 +139,10 @@ const assertMaterials = () => {
   ].join("\n"), {
     reducedMotion: { matches: false, addEventListener() {} },
     matchMedia: () => ({ matches: false, addEventListener() {} }),
-    document: { querySelector: () => null, addEventListener() {} },
+    document: { querySelector: () => null, addEventListener() {},
+      documentElement: { hasAttribute: () => false } },
     window: { addEventListener() {} }, IntersectionObserver: class { observe() {} },
+    MutationObserver: class { observe() {} },
     cancelAnimationFrame() {}, requestAnimationFrame() {},
   });
   const signatures = new Set();
@@ -278,7 +280,8 @@ try {
     if (scenario.label.startsWith("mobile-390")) {
       await page.locator('[data-open-panel="work"]:visible').last().click();
       await page.waitForFunction(() => document.querySelector(".map-camera").inert
-        && document.documentElement.hasAttribute("data-celestial-paused"));
+        && document.documentElement.hasAttribute("data-celestial-paused")
+        && getComputedStyle(document.querySelector(".map-camera")).opacity === "0.4");
       assert.deepEqual(await page.evaluate(() => ({
         home: getComputedStyle(document.querySelector(".focused-home")).visibility,
         input: document.querySelector(".focused-home").inert,
