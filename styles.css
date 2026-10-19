@@ -10842,13 +10842,20 @@ body.has-practice-orbits:not(.has-focused-home) .map-node-label[data-map-label-i
 .project-satellite:focus-visible{outline:1px solid var(--signal);outline-offset:1px}
 .project-orbit-tooltip{position:fixed;z-index:40;left:0;top:0;max-width:230px;padding:7px 10px;border-radius:8px;background:var(--material-01);color:var(--ink);font:500 var(--type-caption)/1.4 var(--font-sans);pointer-events:none}
 .project-satellites[hidden],.project-orbit-picker[hidden],.project-orbit-back[hidden]{display:none}
-.project-orbit-picker{margin-top:12px;overflow:auto;overscroll-behavior:contain;min-height:0}
-.project-orbit-picker section+section{margin-top:14px;padding-top:12px;border-top:1px solid var(--line-soft)}
-.project-orbit-picker h3{margin:0 0 4px;color:var(--group-color);font:500 var(--type-caption)/1.4 var(--font-sans);letter-spacing:.02em}
+.project-orbit-picker{margin-top:var(--space-4);overflow:auto;overscroll-behavior:contain;min-height:0;scrollbar-width:thin;scrollbar-color:var(--line) transparent;padding:0 4px 0 0;scroll-padding-block:var(--space-2)}
+.project-atlas-group{position:relative;isolation:isolate;padding-bottom:var(--space-4)}
+.project-atlas-group+section{margin-top:var(--space-4)}
+.project-atlas-track{position:absolute;inset:0;width:100%;height:100%;z-index:-1;fill:none;stroke:var(--group-color);stroke-width:1;opacity:.45;pointer-events:none}
+.project-orbit-picker h3{margin:0 0 var(--space-1);color:color-mix(in srgb,var(--group-color) 80%,var(--content-ink));font:400 var(--type-utility)/1.4 var(--font-author);overflow-wrap:anywhere}
 html[data-theme="dark"] .project-orbit-picker h3{color:var(--group-light)}
-.project-orbit-picker button{display:flex;align-items:baseline;justify-content:space-between;gap:12px;width:100%;min-height:44px;padding:10px 0;border:0;background:none;color:inherit;text-align:left;font:400 var(--type-detail)/1.45 var(--font-sans)}
+html[data-theme="dark"] .project-atlas-track{stroke:var(--group-light)}
+.project-orbit-picker button{display:flex;align-items:flex-start;gap:var(--space-3);width:100%;min-height:48px;padding:var(--space-2) var(--space-1) var(--space-2) var(--atlas-bend);border:0;background:none;color:inherit;text-align:left;font:400 var(--type-body)/1.3 var(--font-sans);touch-action:pan-y;cursor:pointer}
+.project-atlas-mark{position:relative;display:grid;place-items:center;flex:0 0 32px;width:32px;height:32px;border-radius:50%;background:#f3f2ed;color:#252820;box-shadow:0 0 0 1px color-mix(in srgb,var(--group-color) 30%,transparent);font:500 var(--type-utility)/1 var(--font-sans)}
+.project-atlas-mark img{position:absolute;width:24px;height:24px;object-fit:contain}
+.project-orbit-picker [data-picker-project="eleven"] img{width:28px}
+.project-atlas-name{min-width:0;padding-block:5px;overflow-wrap:anywhere}
 .project-orbit-picker button:is(:hover,:focus-visible){color:var(--signal)}.point-preview.is-project-picker .point-preview__kind{display:none}
-.point-preview.is-project-picker{display:flex;flex-direction:column;overflow:hidden}
+.point-preview.is-project-picker{display:flex;flex-direction:column;overflow:hidden;top:min(calc(var(--focused-author-bottom,120px) + 12px),max(12px,calc(100dvh - var(--mobile-first-dock-height,48px) - var(--mobile-console-bottom) - 24px - 18rem)));bottom:calc(var(--mobile-first-dock-height,48px) + var(--mobile-console-bottom) + 12px);max-height:none}
 .point-preview.is-project-picker>.point-preview__description,.point-preview.is-project-picker>.point-preview__link,.point-preview.is-project-picker>.work-tags{display:none}
 .project-orbit-back{min-height:44px;margin-top:8px;padding:6px 0;border:0;background:none;color:var(--content-muted);font:400 var(--type-utility)/1.4 var(--font-sans);text-align:left;text-decoration:underline;text-underline-offset:3px}
 .point-preview h2{font-size:var(--type-item);line-height:1.2;font-weight:600}
