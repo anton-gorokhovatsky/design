@@ -651,7 +651,7 @@ requireContract(
   "Map labels need a dedicated sibling layer so MATERIAL / 01 can blur the map instead of inheriting each transformed node.",
 );
 
-const overviewEntryRule = styleSource.match(/\.content-panel \.work-overview\s*\{([^}]*)\}/)?.[1] ?? "";
+const overviewEntryRule = [...styleSource.matchAll(/\.content-panel \.work-overview\s*\{([^}]*)\}/g)].map(match => match[1]).join("\n");
 requireContract(
   /background:\s*transparent/.test(overviewEntryRule)
     && !/backdrop-filter/.test(overviewEntryRule)
@@ -661,11 +661,12 @@ requireContract(
 );
 requireContract(
   /min-height:\s*var\(--control-target\)/.test(overviewEntryRule)
-    && /\.work-overview__text > :first-child\s*\{\s*font-size:\s*var\(--type-body\);/.test(styleSource)
-    && indexSource.includes('class="work-overview" data-start-observation')
-    && indexSource.includes('aria-labelledby="observation-start-title observation-start-caption"'),
+    && /font-size:\s*var\(--type-body\)/.test(overviewEntryRule)
+    && /text-decoration:\s*underline/.test(overviewEntryRule)
+    && indexSource.includes('class="work-overview" data-start-observation>Посмотреть обзор · 3 минуты</button>')
+    && indexSource.includes('class="overview-entry" data-start-map-observation>Посмотреть обзор · 3 минуты</button>'),
   "overview-entry-geometry",
-  "The work-section overview entry keeps a full control target, a subordinate body-size title and its title and duration in the accessible name.",
+  "The map and work overview entries use an open body-size text command with a full control target and the visible action and duration as their accessible name.",
 );
 
 const controlConsoleStart = indexSource.indexOf('class="control-console"');

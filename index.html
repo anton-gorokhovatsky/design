@@ -119,7 +119,7 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=f885e0e2f9bd">
+    <link rel="stylesheet" href="styles.css?v=52c27420ee96">
     <style>
       .map-evidence [data-map-evidence-role-label]{font-family:var(--font-author);font-size:.6rem;font-weight:400;letter-spacing:0}
     </style>
@@ -137,7 +137,7 @@
           "./js/signal-field.js": "./js/signal-field.js?v=094035f045bd",
           "./js/map-data.js": "./js/map-data.js?v=95eb1b257c28",
           "./js/case-content.js": "./js/case-content.js?v=9efebbbe7d3c",
-          "./js/observation-route.js": "./js/observation-route.js?v=8b7268f82031",
+          "./js/observation-route.js": "./js/observation-route.js?v=d0b3e61a5e7f",
           "./js/personal-media.js": "./js/personal-media.js?v=ee51495df325",
           "./js/sphere-surfaces.js": "./js/sphere-surfaces.js?v=019656696ae9",
           "./js/map-media.js": "./js/map-media.js?v=2a08dd031f9a",
@@ -145,7 +145,7 @@
           "./js/celestial-bodies.js": "./js/celestial-bodies.js?v=e4fcf955f676",
           "./js/map-controls.js": "./js/map-controls.js?v=0132166b4155",
           "./js/viewport-ui.js": "./js/viewport-ui.js?v=def4a55e282f",
-          "./js/panels.js": "./js/panels.js?v=d5e03d1d1ced",
+          "./js/panels.js": "./js/panels.js?v=8a89fde26f48",
           "./js/case-view.js": "./js/case-view.js?v=e8a055990537",
           "./js/favicon.js": "./js/favicon.js?v=ef61cd158b18",
           "./js/work-tags.js": "./js/work-tags.js?v=fcc7c42f8c58",
@@ -171,7 +171,7 @@
     <script type="module" src="js/cipher-field.js?v=646034d9be18"></script>
     <script type="module" src="js/signal-field.js?v=094035f045bd"></script>
     <script type="module" src="js/map-data.js?v=95eb1b257c28"></script>
-    <script type="module" src="js/observation-route.js?v=8b7268f82031"></script>
+    <script type="module" src="js/observation-route.js?v=d0b3e61a5e7f"></script>
     <script type="module" src="js/personal-media.js?v=ee51495df325"></script>
     <script type="module" src="js/sphere-surfaces.js?v=019656696ae9"></script>
     <script type="module" src="js/map-media.js?v=2a08dd031f9a"></script>
@@ -179,7 +179,7 @@
     <script type="module" src="js/celestial-bodies.js?v=e4fcf955f676"></script>
     <script type="module" src="js/map-controls.js?v=0132166b4155"></script>
     <script type="module" src="js/viewport-ui.js?v=def4a55e282f"></script>
-    <script type="module" src="js/panels.js?v=d5e03d1d1ced"></script>
+    <script type="module" src="js/panels.js?v=8a89fde26f48"></script>
     <script type="module" src="js/case-view.js?v=e8a055990537"></script>
     <script type="module" src="js/favicon.js?v=ef61cd158b18"></script>
     <script type="module" src="js/work-tags.js?v=fcc7c42f8c58"></script>
@@ -410,6 +410,7 @@
               <span class="origin-marker__cross" aria-hidden="true"></span>
               <span class="signal-pulse" aria-hidden="true"></span>
             </div>
+            <button type="button" class="overview-entry" data-start-map-observation>Посмотреть обзор · 3 минуты</button>
           </div>
 
           <div
@@ -1123,14 +1124,7 @@
           </p>
         </div>
 
-        <button type="button" class="work-overview" data-start-observation
-          aria-labelledby="observation-start-title observation-start-caption">
-          <svg class="observation-play-glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8.625 5.25 18.75 12 8.625 18.75Z"/></svg>
-          <span class="work-overview__text">
-            <span id="observation-start-title">Короткий обзор</span>
-            <span id="observation-start-caption">Рассказ о&nbsp;проектах</span>
-          </span>
-        </button>
+        <button type="button" class="work-overview" data-start-observation>Посмотреть обзор · 3 минуты</button>
 
         <div class="work-list">
           <a

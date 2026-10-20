@@ -435,12 +435,27 @@ const closeContentPanel = (
 };
 
 const workOverview = document.querySelector("[data-start-observation]");
+const mapOverview = document.querySelector("[data-start-map-observation]");
+mapOverview.addEventListener("click", () => {
+  document.body.dataset.overviewFromMap = "";
+  startObservation({ source: "map" });
+  requestAnimationFrame(() => inspectorClose.focus());
+});
+new MutationObserver(() => {
+  if (!signalField.hasAttribute("data-observation-active")) delete document.body.dataset.overviewFromMap;
+}).observe(signalField, { attributes: true, attributeFilter: ["data-observation-active"] });
 observationRoute.setExitHandler(() => {
+  if (document.body.hasAttribute("data-overview-from-map")) {
+    delete document.body.dataset.overviewFromMap;
+    requestAnimationFrame(() => mapOverview.focus({ preventScroll: true }));
+    return;
+  }
   const position = history.state?.overviewWorkOrigin || { view: "work", scrollTop: 0 };
   openContentPanel("work", null, { replaceHistory: true, position });
   requestAnimationFrame(() => workOverview.focus({ preventScroll: true }));
 });
 workOverview.addEventListener("click", () => {
+  delete document.body.dataset.overviewFromMap;
   const origin = { view: "work", scrollTop: contentPanelBody.scrollTop };
   history.replaceState({ ...history.state, panelPosition: origin }, "", location.href);
   closeContentPanel({ restoreFocus: false, updateHistory: false });

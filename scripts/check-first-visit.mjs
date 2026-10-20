@@ -64,8 +64,6 @@ try {
           overflow: document.documentElement.scrollWidth - innerWidth,
           selected: document.querySelector("[data-map-inspector]").getAttribute("aria-hidden"),
           route: document.querySelector("[data-start-observation]").textContent,
-          routeName: document.querySelector("[data-start-observation]").getAttribute("aria-labelledby")
-            .split(" ").map(id => document.getElementById(id).textContent).join(" "),
           totalNodes: document.querySelectorAll(".map-node").length,
           nodes: [...document.querySelectorAll(".map-node:not([inert])")].map(box),
           signs: [...document.querySelectorAll(".map-node__glyph")].map(box),
@@ -90,8 +88,8 @@ try {
       assert.equal(state.totalNodes, mapItems.length, "All points remain available through the full map.");
       if (width <= 900) assert.equal(state.nodes.length, 6, "The introductory map exposes six anchors; private projects have a shared touch picker.");
       assert.deepEqual(state.blockedTargets, [], `${name} ${theme}: each point must receive input at its own center.`);
-      assert.equal(state.route.trim().replace(/\s+/g, " "), "Короткий обзор Рассказ о проектах");
-      assert.equal(state.routeName.replace(/\s+/g, " "), state.route.trim().replace(/\s+/g, " "), "The accessible name matches the visible overview label.");
+      assert.equal(state.route.trim().replace(/\s+/g, " "), "Посмотреть обзор · 3 минуты");
+      assert.equal(await page.getByRole("button", { name: "Посмотреть обзор · 3 минуты", exact: true, includeHidden: true }).count(), 2, "Both native overview buttons expose the visible action and duration as their accessible name.");
       assert.ok(!state.nodes.some((node) => state.authorLines.some((line) => overlaps(node, line))), "Authorship must not collide with a map target: " + JSON.stringify({ name, state }));
       if (width > 900) {
         assert.ok(!state.signs.some(sign => state.obstacles.some(panel => overlaps(sign, panel))),

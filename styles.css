@@ -10624,7 +10624,38 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
   }
 }
 
-/* Work index includes overview; one mobile work entry. */
+/* One open text command for the map and work index. */
+.overview-entry,
+.content-panel .work-overview {
+  font-family: var(--font-sans);
+  font-size: var(--type-body);
+  font-weight: 400;
+  line-height: var(--leading-control);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: .22em;
+}
+.overview-entry {
+  position: absolute;
+  z-index: 6;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, calc(-100% - 2rem));
+  appearance: none;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  padding: var(--space-2);
+  min-height: var(--control-target);
+  white-space: nowrap;
+  pointer-events: auto;
+  cursor: pointer;
+}
+.overview-entry:hover { color: var(--signal); }
+.overview-entry:focus-visible { outline: var(--focus-width) solid var(--signal); outline-offset: var(--focus-offset); }
+.practice-map:is([data-observation-active], [data-time-view]) .overview-entry,
+body:is(.has-reading-surface, .has-point-preview, .has-command-focus, .has-settings-panel, .has-constellation-nav) .overview-entry { visibility: hidden; pointer-events: none; }
+@media (max-width: 900px) { .overview-entry { display: none; } }
 .content-panel .work-overview {
   appearance: none;
   pointer-events: auto;
@@ -10639,14 +10670,9 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
   border-radius: var(--space-1);
   background: transparent;
   color: var(--content-ink);
-  font-family: var(--content-font);
   text-align: left;
   cursor: pointer;
 }
-.work-overview > svg { flex: 0 0 20px; width: 20px; height: 20px; margin-top: 2px; fill: currentColor; }
-.work-overview__text { display: grid; gap: var(--space-1); min-width: 0; }
-.work-overview__text > :first-child { font-size: var(--type-body); font-weight: 600; line-height: var(--leading-body); }
-.work-overview__text > :last-child { font-size: var(--type-utility); font-weight: 400; line-height: var(--leading-label); color: var(--content-muted); }
 .content-panel .work-overview:is(:hover, :active) { color: var(--signal); }
 .content-panel .work-overview:focus-visible { outline: var(--focus-width) solid var(--signal); outline-offset: var(--focus-offset); }
 @media (max-width: 900px) {

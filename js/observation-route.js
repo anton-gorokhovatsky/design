@@ -66,7 +66,9 @@ const createObservationRoute = ({
     playback.title = label;
     playback.dataset.paused = String(paused);
     playbackState.textContent = last ? "Обзор завершён" : paused ? "На паузе" : "Автопоказ";
-    next.setAttribute("aria-label", last ? "К работам" : "Следующий шаг");
+    const exitLabel = document.body.hasAttribute("data-overview-from-map") ? "К карте" : "К работам";
+    next.querySelector(".observation-controls__finish").textContent = exitLabel;
+    next.setAttribute("aria-label", last ? exitLabel : "Следующий шаг");
     next.title = next.getAttribute("aria-label");
     next.classList.toggle("is-last", last);
     indexList.value = stepIndex;
