@@ -6781,6 +6781,8 @@ body:has(.practice-map:is([data-selected-kind=personal],[data-selected-kind=prac
 
 
 .map-node {
+  /* Keep the hover filter composited after its transition; Chrome can drop the family for a frame. */
+  will-change: filter;
   transition:
     top 820ms var(--motion-shift),
     left 820ms var(--motion-shift),
