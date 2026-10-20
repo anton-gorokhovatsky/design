@@ -3,7 +3,11 @@ import { mapItems } from "./map-data.js";
 let content, request;
 export const getCaseContent = () => content;
 // One request for readers and search; failed requests can be retried.
-export const loadCaseContent = () => request ||= fetch(import.meta.resolve("./case-content.json"))
+export const loadCaseContent = () => {
+  if (request) return request;
+  const controller = new AbortController();
+  const deadline = setTimeout(() => controller.abort(), 10_000);
+  request = fetch(import.meta.resolve("./case-content.json"), { signal: controller.signal })
   .then(response => {
     if (!response.ok) throw new Error("Case content unavailable");
     return response.json();
@@ -15,4 +19,7 @@ export const loadCaseContent = () => request ||= fetch(import.meta.resolve("./ca
     }
     return content = data;
   })
-  .catch(error => { request = null; throw error; });
+  .catch(error => { request = null; throw error; })
+  .finally(() => clearTimeout(deadline));
+  return request;
+};

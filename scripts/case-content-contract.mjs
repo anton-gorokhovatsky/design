@@ -29,6 +29,45 @@ export async function checkDeferredCaseContent(browser, origin) {
     assert.ok(await page.locator(".case-figure img").count(), "Figures arrive with complete details");
   } finally { await page.close(); }
 
+  // A stalled response must release the shared request, not keep every reader waiting.
+  for (const entry of ["card", "search"]) {
+    page = await open();
+    let heldRoute, attempts = 0;
+    try {
+      await page.clock.install();
+      await page.route("**/case-content.json*", route => {
+        if (++attempts === 1) { heldRoute = route; return; }
+        return route.continue();
+      });
+      await page.goto(origin + (entry === "card" ? "/?point=ks-fish" : "/"));
+      if (entry === "search") {
+        await page.locator("[data-spatial-search]").click();
+        await page.locator("[data-command-input]").fill("51 420");
+        await page.locator("[data-command-status]").filter({ hasText: "Загружается поиск" }).waitFor();
+      } else {
+        await page.locator("[data-case-load-state]").waitFor({ state: "visible" });
+      }
+      await page.clock.fastForward(10_001);
+      assert.equal(attempts, 1, "Readers share one pending request");
+      if (entry === "card") {
+        await page.locator("[data-case-retry]").waitFor({ state: "visible" });
+        assert.match(await page.locator("[data-map-description]").innerText(), /первый.*давний/s);
+        await page.locator("[data-case-retry]").click();
+        await page.waitForFunction(() => document.querySelector("[data-case-load-state]").hidden
+          && document.querySelector("[data-map-evidence-result]").textContent.trim());
+      } else {
+        await page.locator("[data-command-status]").filter({ hasText: "Не удалось загрузить" }).waitFor();
+        assert.equal(await page.locator("[data-command-input]").inputValue(), "51 420");
+        await page.keyboard.press("Enter");
+        await page.waitForFunction(() => document.querySelector("[data-map-inspector]").dataset.selectedMapId === "narkomfin");
+      }
+      assert.equal(attempts, 2, "Timeout permits a fresh, successful request");
+    } finally {
+      await heldRoute?.abort().catch(() => {});
+      await page.close();
+    }
+  }
+
   page = await open();
   let release;
   try {

@@ -63,7 +63,9 @@ Detailed case copy and figure metadata live in `case-content.json`. The small
 point card or search is opened. The initial map retains the exact existing short
 descriptions; loading hydrates the full descriptions and figures on the same
 items. Search waits for the complete index before accepting an early Enter.
-Failed requests can be retried, and responses cannot reopen dismissed cards.
+Failed requests can be retried. A shared request has a 10-second deadline, including
+its response body; aborting releases it for a fresh attempt. Responses cannot
+reopen dismissed cards.
 
 `runtimeDataFiles` keeps the payload in the cache/import-map manifest and public
 asset verification. Static content checks read it, and the performance gate

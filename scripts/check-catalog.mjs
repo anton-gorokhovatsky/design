@@ -38,12 +38,13 @@ export const componentCoverage = {
 export const checkIds = ["core", "reels", ...Object.keys(componentChecks)];
 
 // Bound the longest serial component job. These groups are balanced using the
-// measured WebKit timings; browsers still run serially inside each worker.
+// 19 October WebKit timings (about 6–7 min per group, formerly up to 9.5 min).
+// Browsers still run serially inside each worker; the full inventory is unchanged.
 const shards = {
-  reading: ["case-flow", "personal-media", "case-view"],
-  interface: ["accessibility", "whoop-ui", "first-visit", "command-placement", "header", "search-icon"],
-  map: ["map-routes", "hover-layout", "sphere-motion", "inspector-links", "point-address"],
-  motion: ["scroll-lens", "observation-route"],
+  reading: ["case-flow", "personal-media", "case-view", "whoop-ui"],
+  interface: ["accessibility", "first-visit", "command-placement", "header", "search-icon"],
+  map: ["map-routes", "hover-layout", "sphere-motion", "point-address"],
+  motion: ["scroll-lens", "observation-route", "inspector-links"],
 };
 const webkitScenarios = ["390x844-light", "390x844-dark", "320x568-light", "320x568-dark"];
 

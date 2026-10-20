@@ -14,6 +14,7 @@ const projectRoot = resolve(scriptDirectory, "..");
 const readProjectFile = (path) => readFileSync(join(projectRoot, path), "utf8");
 const fileBytes = (path) => statSync(join(projectRoot, path)).size;
 const indexSource = readProjectFile("index.html");
+const htmlBytes = Buffer.byteLength(indexSource);
 const cssBytes = fileBytes("styles.css");
 const runtimeBytes = runtimeFiles.reduce((total, path) => total + fileBytes(path), 0);
 const fontPaths = [
@@ -47,12 +48,21 @@ const budgets = {
   initialCompressed: 288 * 1024,
   deferredData: 56 * 1024,
   deferredDataGzip: 18 * 1024,
+  // Add HTML and a complete-page ceiling; all prior ceilings remain unchanged.
+  // 20 October baseline: ~70 KiB HTML / 15.1 KiB gzip; includes the import map.
+  html: 76 * 1024,
+  htmlGzip: 17 * 1024,
+  initialPage: 880 * 1024,
+  initialPageCompressed: 300 * 1024,
 };
+const htmlGzip = gzipSync(indexSource, { level: 9 }).length;
 const cssGzip = gzipSync(readProjectFile("styles.css"), { level: 9 }).length;
 const runtimeGzip = runtimeFiles.reduce((total, path) => total
   + gzipSync(readProjectFile(path), { level: 9 }).length, 0);
 const measured = {
   css: cssBytes, runtime: runtimeBytes, fonts: fontBytes, initialSource: initialSourceBytes,
+  html: htmlBytes, htmlGzip, initialPage: initialSourceBytes + htmlBytes,
+  initialPageCompressed: htmlGzip + cssGzip + runtimeGzip + fontBytes,
   cssGzip, runtimeGzip, initialCompressed: cssGzip + runtimeGzip + fontBytes,
   deferredData: runtimeDataFiles.reduce((total, path) => total + fileBytes(path), 0),
   deferredDataGzip: runtimeDataFiles.reduce((total, path) => total + gzipSync(readProjectFile(path), { level: 9 }).length, 0),
@@ -81,8 +91,9 @@ console.log(
     + `${(cssBytes / 1024).toFixed(1)} KiB CSS, `
     + `${(runtimeBytes / 1024).toFixed(1)} KiB runtime, `
     + `${(fontBytes / 1024).toFixed(1)} KiB preloaded fonts, `
-    + `${(initialSourceBytes / 1024).toFixed(1)} KiB first-party source; `
+    + `${((initialSourceBytes + htmlBytes) / 1024).toFixed(1)} KiB initial HTML/CSS/JS/fonts; `
     + `${(cssGzip / 1024).toFixed(1)} KiB CSS gzip, ${(runtimeGzip / 1024).toFixed(1)} KiB runtime gzip; `
+    + `${(htmlGzip / 1024).toFixed(1)} KiB HTML gzip; ${(measured.initialPageCompressed / 1024).toFixed(1)} KiB initial compressed; `
     + "zero eager video.\n"
     + Object.entries(budgets).map(([name, limit]) => `${name}: ${limit - measured[name]} bytes headroom`).join("; "),
 );

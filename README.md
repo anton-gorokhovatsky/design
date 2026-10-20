@@ -428,7 +428,9 @@ to compare the entire unpublished change against `origin/gh-pages`:
   profiles remain. Do not duplicate the full CI locally as a release ritual.
 
 `scripts/check-catalog.mjs` defines executable checks, component dependencies and
-CI shards in one place. Mixed changes union their coverage; a single full-scope
+CI shards in one place. The four component shards retain the same inventory;
+WHOOP runs with reading, and inspector links run with motion, balancing measured
+WebKit durations without parallel browsers inside a worker. Mixed changes union their coverage; a single full-scope
 change wins. Add a component lane only with an explicit ownership boundary and
 coverage of its interactions. Source classification, full inventory preservation
 and the final gate have regression checks.
@@ -450,3 +452,16 @@ or a blind rerun of Quality.
 
 Akt is self-hosted under the SIL Open Font License 1.1; the
 license is included at `assets/fonts/OFL-Akt.txt`.
+
+### Initial-page budgets
+
+The performance gate retains all existing CSS, JavaScript, fonts and deferred-data
+ceilings. It also counts the complete `index.html`, including its import map:
+76 KiB source and 17 KiB gzip. The combined HTML/CSS/JS/preloaded-font ceilings
+are 880 KiB source and 300 KiB compressed. Fonts are already WOFF2; gzip is measured
+per text resource with Node/zlib, not claimed as a CDN transfer measurement.
+The original `initialSource`/`initialCompressed` subtotals remain enforced as well.
+Boundary fixtures reject HTML-only growth and combined-page overflows.
+
+Long CSS explanations live in [CSS rationale](docs/css-rationale.md); short
+comments remain beside the unchanged selectors and declarations.

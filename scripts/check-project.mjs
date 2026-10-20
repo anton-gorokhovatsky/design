@@ -52,6 +52,7 @@ const contractScripts = [
   "scripts/cache-versions.mjs",
   "scripts/check-assets.mjs",
   "scripts/check-performance-budget.mjs",
+  "scripts/check-performance-budget.test.mjs",
   "scripts/check-css-cascade.mjs",
   "scripts/check-publication-assets.mjs",
   "scripts/check-reel-preview.mjs",
@@ -144,6 +145,11 @@ const staticContractSteps = [
     label: "Asset graph contracts",
     command: process.execPath,
     args: ["scripts/check-assets.mjs"],
+  },
+  {
+    label: "Performance budget boundary cases",
+    command: process.execPath,
+    args: ["--test", "scripts/check-performance-budget.test.mjs"],
   },
   {
     label: "Performance budget",

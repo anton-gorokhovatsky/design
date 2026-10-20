@@ -1,3 +1,4 @@
+/* Full CSS rationale: docs/css-rationale.md. */
 @font-face{font-family:Akt;src:url(assets/fonts/Akt-Variable.woff2) format("woff2");font-weight:100 900;font-display:swap;}
 @font-face{font-family:Rene;src:url(assets/fonts/Rene-Regular.woff2);font-display:swap;}
 
@@ -567,9 +568,7 @@ html[data-capture="og"] .map-grid {
   transform: translate(-50%, -50%) rotate(90deg);
 }
 
-/* Decorative field noise must never attach itself to an interactive mark.
-   The runtime clearance pass keeps these points at least 10px away from every
-   rendered glyph across responsive scales. */
+/* Decorative noise: keep 10px clear of glyphs. */
 .map-speck.is-node-adjacent {
   opacity: 0;
 }
@@ -3276,8 +3275,7 @@ body.has-content-panel .constellation-nav {
   }
 }
 
-/* Motion follows interface intent: decisive entrance, accelerated exit,
-   continuous travel between two visible positions. */
+/* Motion: decisive entrance, quick exit, continuous travel. */
 
 .map-hover-preview,
 .map-inspector,
@@ -3341,8 +3339,7 @@ body.has-content-panel .constellation-nav {
   }
 }
 
-/* Akt carries interface, content, and independently positioned canvas glyphs.
-   One local glass material remains shared across every interface surface. */
+/* Shared Akt typography and MATERIAL / 01. */
 
 .map-hover-preview,
 .command-results {
@@ -3426,9 +3423,7 @@ body.has-content-panel .constellation-nav {
     corner-shape:var(--corner-card-shape);
   }
 
-  /* Touch already identifies the row spatially. Do not let iOS retain a
-     pointer hover or the combobox's automatic active option as a false
-     selected surface after the finger leaves the screen. */
+  /* Touch must not retain hover or combobox afterimages. */
   html[data-focus-modality="pointer"] .command-result:hover,
   html[data-focus-modality="pointer"] .command-result:focus,
   html[data-focus-modality="pointer"] .command-result:focus-visible,
@@ -3693,8 +3688,7 @@ html[data-focus-modality="keyboard"]
   transform: none;
 }
 
-/* A clipped neighbouring row reveals that the list continues without adding
-   a texture or another control. Forced colours keep the native affordance. */
+/* Clipped rows signal continuation; forced colours stay native. */
 .command-results {
   --command-results-inset: 7px;
   scrollbar-width: none;
@@ -4211,8 +4205,7 @@ body:has(.command-dock.is-open) .map-axis-label {
   }
 }
 
-/* The selected node remains the anchor object. Its readout is assembled from
-   small material fragments instead of becoming another dominant screen. */
+/* Readout fragments stay subordinate to the selected node. */
 
 .map-inspector {
   right: 178px;
@@ -4858,9 +4851,7 @@ body:has(.command-dock.is-open) .map-axis-label {
   }
 }
 
-/* A reel is a source-faithful window with one stable silhouette. The video is
-   captured in the receiver's native ratio, so the frame never stretches it or
-   manufactures empty fields. */
+/* Reels preserve their native ratio and complete source. */
 
 .map-hover-preview.has-video {
   width: min(
@@ -4933,8 +4924,7 @@ body:has(.command-dock.is-open) .map-axis-label {
   }
 }
 
-/* Keep the visual scale of every map mark while giving its button a real
-   24px pointer target. Scaling belongs to the glyph, not the hit area. */
+/* 24px hit targets; scale the glyph, not its button. */
 
 .map-node {
   --node-accent: var(--signal);
@@ -5201,9 +5191,7 @@ body:has(.command-dock.is-open) .map-links.has-active-relation {
   opacity: 0;
 }
 
-/* Directional affordances use one geometric construction. Decorative
-   Unicode arrows are intentionally absent from links, cards and labels.
-   The resume route uses a document metaphor rather than an abstract slash. */
+/* Geometric arrows; resume uses a document icon. */
 
 .control-console .constellation-nav__cluster,
 .control-console .constellation-nav__cluster::before,
@@ -5669,10 +5657,7 @@ body:has(.command-dock.is-open) .map-links.has-active-relation {
   }
 }
 
-/* Observatory layer.
-   The map behaves as one optical instrument: a camera moves the complete
-   field, its planes answer the pointer at different amplitudes, and colour
-   appears only when a semantic object becomes relevant. */
+/* One optical field, shared camera and semantic colour. */
 
 .practice-map {
   --core-x: 0px;
@@ -5787,8 +5772,7 @@ html[data-theme="dark"] .practice-map::before {
   inset: 0;
   transform: translate3d(0, 0, 0) scale(1);
   transform-origin: 50% 54%;
-  /* Project depth inside the fading scene so opacity cannot flatten and then
-     suddenly restore a perspective inherited from outside the scene. */
+  /* Depth belongs inside the fading scene. */
   perspective: 1100px;
   perspective-origin: 50% 54%;
   opacity: 1;
@@ -6092,8 +6076,7 @@ html[data-theme="dark"] .map-node--sphere .map-node__glyph {
     0 13px 30px rgba(0, 0, 0, 0.3);
 }
 
-/* Reels remain unframed content. Their title and timing live in a separate
-   registered MATERIAL / 01 readout, like an observation instrument. */
+/* Unframed reels; metadata uses MATERIAL / 01. */
 
 .map-hover-preview.has-video,
 .map-hover-preview.has-video.is-landscape {
@@ -6198,8 +6181,7 @@ html[data-theme="dark"] .map-node--sphere .map-node__glyph {
   grid-column: 2;
 }
 
-/* Reel mosaic: one complete narrative stays dominant while two
-   source-faithful chapters loop independently at their native playback rate. */
+/* One full reel narrative and two native-rate chapters. */
 
 .map-hover-preview[data-reel-layout="mosaic"].has-reel-mosaic {
   width: min(
@@ -6303,8 +6285,7 @@ html[data-theme="dark"] .map-node--sphere .map-node__glyph {
   justify-self: center;
 }
 
-/* Keep the complete main reel when the surrounding consoles leave no room
-   for its two supplementary chapters. */
+/* Keep the main reel when supplementary chapters cannot fit. */
 .map-hover-preview.is-compact-preview .map-hover-preview__mosaic { display: none; }
 .map-hover-preview.is-compact-preview .map-hover-preview__media { aspect-ratio: auto; }
 .map-hover-preview.is-compact-preview .map-hover-preview__media > .map-hover-preview__mosaic-main {
@@ -6317,8 +6298,7 @@ html[data-theme="dark"] .map-node--sphere .map-node__glyph {
 .map-hover-preview.is-compact-preview .map-hover-preview__index { display: none; }
 .map-hover-preview.is-compact-preview .map-hover-preview__readout > :is(strong, span:last-child) { grid-column: 1; }
 
-/* Section changes move the map camera and tint only the field beneath the
-   common material. The surfaces themselves keep the exact shared recipe. */
+/* Section changes tint the field, never the shared material. */
 
 .content-panel::before {
   position: fixed;
@@ -6378,8 +6358,7 @@ html[data-theme="dark"] .map-node--sphere .map-node__glyph {
   color: var(--panel-accent);
 }
 
-/* The running node lives low in the field, so its readout moves above it
-   instead of covering the active object and erasing the state cue. */
+/* Place the running readout above its low anchor. */
 
 .map-inspector[data-selected-map-id="running"] {
   top: 112px;
@@ -6488,9 +6467,7 @@ html[data-theme="dark"] .map-node--sphere .map-node__glyph {
   }
 }
 
-/* Text enlargement keeps every content family in a one-dimensional reflow.
-   Container inputs preserve the normal composition without letting rem-based
-   minima become wider than a 320px card at 200% reader text size. */
+/* 200% text reflows in one dimension, including 320px cards. */
 
 @media (max-width: 900px) {
   .content-panel .work-intro h2,
@@ -7033,9 +7010,7 @@ html[data-theme="dark"] .signal-constellation {
   }
 }
 
-/* Accessibility and orbital-observatory pass.
-   The horizon gives the field a physical lower plane; the radar rings explain
-   distance from the origin without adding another moving or interactive layer. */
+/* Orbital horizon and radar rings provide static depth cues. */
 
 html[data-theme="dark"] {
   --signal-dark: #050918;
@@ -7173,9 +7148,7 @@ html[data-theme="light"] .orbital-horizon::after {
   -webkit-mask-image: linear-gradient(#000 0, rgba(0, 0, 0, 0.5) 54%, transparent 90%);
 }
 
-/* A low map focus lights the lower plane instead of letting one screen-space
-   halo ignore the horizon. The plane clips this broad, faint reflection to
-   its own curved edge. */
+/* Low focus reflects inside the curved horizon. */
 
 .practice-map[data-focus-plane="ground"] .orbital-horizon::before {
   position: absolute;
@@ -7380,8 +7353,7 @@ html[data-theme="light"]
   }
 }
 
-/* First-visit authorship stays a quiet textual coordinate. Project cards expose
-   the role already present in the source instead of hiding it on compact views. */
+/* Quiet authorship; retain role labels on mobile. */
 .brand {
   letter-spacing: 0.02em;
   display: grid;
@@ -7644,16 +7616,14 @@ html[data-theme="light"]
 }
 
 @media (max-width: 900px) {
-  /* Keep the search row on the material's true centerline. The 48px controls
-     must not be offset by additional block padding or desktop optical nudges. */
+  /* Centre the search row within its 48px controls. */
 
   .control-console .command-dock__mark,
   .control-console .command-dock__submit {
     transform: none;
   }
 
-  /* Compact maps use direct selection and the inspector. Floating labels
-     and hover reels cannot share a reliable collision-free touch surface. */
+  /* Touch uses direct selection, without hover labels or reels. */
   .map-labels,
   .map-hover-preview.has-video,
   .map-hover-preview.has-video.is-landscape {
@@ -7669,8 +7639,7 @@ html[data-theme="light"]
 
 
 
-/* Pointer and touch already identify the target spatially. Keep the focus
-   affordance for keyboard navigation without leaving tap/click afterimages. */
+/* Keyboard focus without persistent pointer or touch afterimages. */
 html[data-focus-modality="pointer"] :focus-visible,
 html[data-focus-modality="pointer"] :focus-visible::before,
 html[data-focus-modality="pointer"] :focus-visible::after,
@@ -7699,9 +7668,7 @@ html[data-focus-modality="pointer"]
   }
 }
 
-/* Mobile framing follows the real upper edge of the lower console (panels.js
-   supplies exact values after Safari resolves its visible viewport). These
-   values are stable first-paint fallbacks for a tall portrait phone. */
+/* Safari: panels.js replaces these portrait geometry fallbacks. */
 @media (max-width: 900px) {
 
   .map-camera {
@@ -7970,8 +7937,7 @@ html[data-focus-modality="pointer"]
   background: currentColor;
 }
 
-/* The screen readout is one compact service instrument. The author signature
-   remains an independent corner mark, preserving the original composition. */
+/* Compact screen readout; independent author signature. */
 .display-control__service {
   display: none;
 }
@@ -8184,8 +8150,7 @@ html[data-contrast="true"] .map-node__glyph {
   filter: contrast(1.18);
 }
 
-/* Map composition and chronology are independent controls. The five category
-   cells stay in the mobile dock; chronology moves to the navigation utilities. */
+/* Composition and chronology remain independent controls. */
 .map-control-group {
   display: grid;
   gap: 2px;
@@ -8204,9 +8169,7 @@ html[data-contrast="true"] .map-node__glyph {
   padding-top: 7px;
 }
 
-/* Hover identifies a target but never impersonates its selected state. The
-   signal symbol and rail belong only to an active filter, so a click remains
-   legible even while the pointer stays over the same row. */
+/* Only selected filters own the signal rail. */
 .system-dock
   .map-control:not(.is-active):is(:hover, :focus-visible)::after {
   height: 0;
@@ -8480,11 +8443,7 @@ html[data-focus-modality="keyboard"]
   }
 }
 
-/* In the complete composition the aggregate owns the visible signal. The
-   four category controls remain semantically pressed because they still
-   describe visible content, but repeating the same blue rail five times adds
-   no information. Partial compositions return the signal to each included
-   category. */
+/* All visible: signal on aggregate only; categories stay pressed. */
 body:has(.practice-map[data-active-kind="all"])
   .map-control-group--filters
   .map-control.is-active::after,
@@ -8994,7 +8953,7 @@ html[data-focus-modality="keyboard"]
   }
 }
 
-/* Section variants select a reading measure; shell, type and spacing are shared. */
+/* Section variants change measure, not shared shell/type/spacing. */
 .content-panel[data-view="approach"] { --panel-width: 52.5rem; }
 .content-panel[data-view="approach"] .content-panel__frame {
   bottom: auto;
@@ -9149,7 +9108,7 @@ html[data-focus-modality="keyboard"]
   .whoop-compact-trigger:focus-visible { border-radius: inherit; outline: 2px solid var(--signal); outline-offset: 3px; }
   .whoop-readout:is([data-stale="true"], [data-unavailable="true"]) .whoop-stamp { display: block; padding-top: .4rem; color: var(--content-muted); }
 }
-/* Tight viewports keep the author's content while returning space to the map. */
+/* Tight viewports preserve authorship while freeing map space. */
 @media (min-width: 901px) and (max-width: 1100px) {
   .site-header[data-material-surface="whoop-readout"] { padding: 14px 16px 10px; }
   .display-control { width: max(216px, 13.5rem); }
@@ -9314,22 +9273,19 @@ html[data-reduce-motion="true"] .personal-media__play { transition: none; }
   }
 }
 
-/* Every popup arrives with the same short, soft expansion. Individual transform
-   properties preserve each window's existing anchor and responsive geometry. */
+/* Shared popup expansion preserves each anchor. */
 @keyframes window-reveal {
   from { translate: 0 18px; scale: .96; }
   to { translate: 0 0; scale: 1; }
 }
 
-/* A placed hover preview expands inside its reserved bounds. Translating the
-   whole group during entrance would cross a neighbouring console again. */
+/* Hover previews expand inside their reserved bounds. */
 @keyframes map-preview-reveal {
   from { transform: translate(-50%, -50%) scale(.96); }
   to { transform: translate(-50%, -50%) scale(1); }
 }
 
-/* Opacity on a container would turn it into a backdrop root and leave its
-   glass children unblurred for the duration of the entrance. */
+/* No parent opacity: a new backdrop root breaks child glass. */
 .map-inspector.is-open,
 .map-hover-preview.is-visible,
 .command-results.is-open { transition: none; }
@@ -9353,8 +9309,7 @@ html[data-reduce-motion="true"] .personal-media__play { transition: none; }
 
 .map-hover-preview.is-visible { animation-name: map-preview-reveal; }
 
-/* Returning to a reading position keeps that content still; only its header
-   reappears. A fresh section continues to use the full entrance. */
+/* Restored reading stays still; only its header enters. */
 .content-panel.is-restoring-position .content-panel__body { animation: none; }
 
 @media (max-width: 900px) {
@@ -9404,8 +9359,7 @@ html[data-reduce-motion="true"] :is(
 }
 
 /* Only the open professional case changes; the map retains its release layout. */
-/* The map is a non-interactive backdrop while reading a case. Its labels
-   must not peek out from card corners or compete with the case's own text. */
+/* While reading: inert map, hidden competing labels. */
 body[data-case-open] :is(.map-axis-label, .map-labels, .map-node-label) {
   visibility: hidden;
   pointer-events: none;
@@ -9658,13 +9612,13 @@ body[data-case-open] :is(.map-axis-label, .map-labels, .map-node-label) {
   }
 }
 
-/* Preferences suppress optical content effects even before the next scroll frame. */
+/* Preferences suppress optical effects before the next frame. */
 html[data-reduce-motion="true"] [style*="scroll-ink-"] { filter: none !important; }
 @media (prefers-reduced-motion: reduce), (forced-colors: active) {
   [style*="scroll-ink-"] { filter: none !important; }
 }
 
-/* A reading window keeps one rounded, stationary shell in every scroll state. */
+/* Reading shell stays rounded and stationary during scroll. */
 .map-inspector.has-reading-frame:not(.is-case-view) {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -9716,7 +9670,7 @@ html[data-reduce-motion="true"] [style*="scroll-ink-"] { filter: none !important
 }
 .case-scroll:has(.scroll-lens-video, .scroll-lens-frost),
 .case-scroll:has(:focus-visible) { mask-image: none; -webkit-mask-image: none; }
-/* Shared section shell. CSS owns the measure; JS only measures the live header. */
+/* CSS owns shell measure; JS measures the live header. */
 .content-panel { --panel-bottom: max(var(--window-edge), calc(var(--console-clearance, 88px) + var(--window-gap))); }
 .content-panel__frame {
   position: absolute;
@@ -9874,7 +9828,7 @@ body.has-reading-surface:not(.has-contact-consoles) .system-dock :is(.map-contro
   outline: var(--focus-width) solid var(--signal);
   outline-offset: var(--focus-offset);
 }
-/* The border of an inner scrolling viewport needs an inset ring to stay visible. */
+/* Inset focus ring on inner scroll viewports. */
 :is(.case-scroll, .content-panel__body, .settings-panel__body):focus-visible {
   outline: var(--focus-width) solid var(--signal);
   outline-offset: -4px;
@@ -9899,7 +9853,7 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
   .whoop-metrics dd { white-space: normal; }
   .site-header[data-material-surface="whoop-readout"] { max-height: min(42svh, calc(100svh - 200px)); overflow-y: auto; overscroll-behavior: contain; }
 }
-/* Standalone controls may grow with text; fixed row heights must not overlap. */
+/* Controls grow with text; fixed rows must not overlap. */
 @media (min-width: 901px) {
   .display-control :is(.theme-toggle, .display-control__service button) {
     height: auto;
@@ -10101,8 +10055,7 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
   font-weight: 400;
 }
 
-/* Index: navigation and authorship are typographic coordinates on the map.
-   Only disclosed mobile surfaces use the shared MATERIAL / 01 contract. */
+/* Map index/authorship; material on disclosed mobile surfaces. */
 .nav-external { display: none; }
 .constellation-nav__destination { color: var(--content-muted); font-size: var(--type-caption); line-height: var(--leading-label); }
 .site-header .brand { gap: var(--space-2); }
@@ -10422,11 +10375,11 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
   .mobile-landmark[data-mobile-no-space] { opacity: 0; pointer-events: none; }
 }
 
-/* Local variant 04: the same map-first journey, with lighter framing and readable relationships. */
+/* Accepted map-first layout, lighter framing. */
 .focused-home, .focused-map-open, .focused-return, .point-preview { display: none; }
 .direction-landmark__kind { display: none; }
 @media (max-width: 900px) {
-  /* Switching map scope must not move a target while the visitor taps it. */
+  /* Changing scope keeps touch targets stationary. */
   body[data-mobile-preview-ui] .practice-map:not([data-observation-active],[data-time-view]) .map-node { transition-property: opacity, transform, filter; }
   body[data-mobile-preview-ui] .practice-map:not([data-observation-active],[data-time-view]) .map-node-label { transition-property: opacity; }
   body.has-focused-home .focused-home {
@@ -10454,8 +10407,7 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
   @media (prefers-reduced-motion: reduce) {
     body.has-focused-home .focused-home { transform: none !important; transition: none; }
   }
-  /* Keep the shared mobile card at the same 12px inset in both map modes.
-     The introductory map field retains its own 20px inset. */
+  /* Shared card inset 12px; introductory field inset 20px. */
   .focused-home .site-header[data-material-surface] {
     position: relative; inset: auto; margin: -8px -8px var(--space-4);
   }
@@ -10465,8 +10417,7 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
   .focused-home :is(.map-nodes, .map-links) { transform: none; }
   .focused-home :is(.origin-marker, .map-axis-label, .map-depth-grid, .map-specks) { display: none; }
   .focused-home .map-node:not([data-map-id="garage"], [data-map-id="narkomfin"], [data-map-id="private-practice"], [data-map-id="eleven"], [data-map-id="ks-fish"], [data-map-id="principle-data-intuition"], [data-map-id="running"], [data-map-id="youtube"]) { display: none; }
-  /* Keep each moving node and its filtered artwork in one composited layer.
-     iOS Safari can otherwise paint the artwork at a stale offset inside the clipped field. */
+  /* iOS: composite each moving node with its filtered artwork. */
   .focused-home .map-node { --home-sphere-unit:clamp(.76px,min(.257cqw,.18cqh),.9px); --node-scale: 1; --map-target-scale: 1; --map-target-size: 26px; transform: translate3d(-50%, -50%, 0); }
   .focused-home .map-node--garage { --map-target-size: calc(76 * var(--home-sphere-unit)); }
   .focused-home .map-node--garage .map-node__glyph { width: calc(76 * var(--home-sphere-unit)); height: calc(76 * var(--home-sphere-unit)); transform: none; }
@@ -10602,8 +10553,7 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
     display: block; position: absolute; inset: 0; width: 100%; height: 100%;
     overflow: visible; pointer-events: none; z-index: 1;
   }
-  /* Construction guides stay behind the solid nodes. Semantic connections
-     are depth-clipped, so only their visible foreground can cross a sphere. */
+  /* Guides behind solids; connections clipped by sphere depth. */
   .focused-home .map-camera { z-index: 2; }
   .focused-home .spatial-field--relations { z-index: 3; }
   .spatial-field path { fill: none; vector-effect: non-scaling-stroke; }
@@ -10616,8 +10566,7 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
     translate: var(--spatial-dx, 0px) var(--spatial-dy, 0px);
   }
   .focused-home .map-labels .direction-landmark {
-    /* The spatial camera owns placement; legacy pointer parallax must not add
-       another offset after the caption-clearance calculation. */
+    /* Spatial camera owns placement; no extra legacy parallax. */
     --layer-mid-x: 0px; --layer-mid-y: 0px;
     translate: calc(var(--spatial-dx, 0px) + var(--spatial-label-dx, 0px))
       calc(var(--spatial-dy, 0px) + var(--spatial-label-dy, 0px));
@@ -10632,10 +10581,10 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
   .focused-home .map-node__glyph { transition: none; }
   .focused-home .map-node.is-selected { z-index: 8; }
   .focused-home .map-labels .direction-landmark[data-spatial-selected] { z-index: 8; }
-  /* The field owns this gesture; the inner constellation must not capture it. */
+  /* The field, not the inner constellation, owns this gesture. */
   .focused-home .signal-constellation { opacity: .65; pointer-events: none; }
 
-  /* Text navigation uses alignment and proximity without a shared panel surface. */
+  /* Text navigation uses alignment/proximity, without a panel. */
   .mobile-first-dock[data-material-surface] {
     inset-inline: 20px;
     background: none; border: 0; border-radius: 0; box-shadow: none;
@@ -10673,7 +10622,7 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
   }
 }
 
-/* The work index includes the overview; mobile keeps one primary work link. */
+/* Work index includes overview; one mobile work entry. */
 .content-panel .work-overview {
   appearance: none;
   pointer-events: auto;
@@ -10758,10 +10707,7 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
   .mobile-first-dock .mobile-entry:active { color: var(--signal); }
 }
 
-/* MATERIAL / 01 CASCADE CONTRACT
-   The registry controls the rendered material. Component rules may define
-   geometry and type, but cannot substitute a local fill, border, shadow, or
-   blur for an active registered interface surface. */
+/* MATERIAL / 01 CASCADE CONTRACT: registry owns fill, border, shadow and blur. */
 
 [data-material-surface][data-material-active="always"]:not(
     .is-content-stack-hidden
@@ -10880,8 +10826,7 @@ html[data-celestial-volume] [data-map-id="running"] .map-node__glyph{transform:s
   html[data-celestial-volume] :is(.celestial-form,.celestial-volume){display:none}
   html[data-celestial-volume] .map-node:is([data-map-id="garage"],[data-map-id="running"],[data-map-id="early-career"]) .map-node__glyph{border:1px solid ButtonText!important}
 }
-/* One hierarchy across the map: project system, named anchors, background field.
-   The existing shared type and surface tokens remain the source of UI styling. */
+/* Hierarchy: project system, named anchors, background field. */
 html[data-celestial-volume] {
   --celestial-field-opacity: .58;
   --celestial-practice-light: brightness(1.24) saturate(.9);
@@ -10895,8 +10840,7 @@ html[data-celestial-volume][data-theme="light"] {
 html[data-celestial-volume] body:not(.has-reading-surface,.has-point-preview,.has-settings-panel,.has-command-focus,.has-constellation-nav) .signal-constellation {
   opacity: var(--celestial-field-opacity);
 }
-/* Keep the coordinate field and its surface, quiet only the idle light pools.
-   Selected-point feedback remains controlled by the original map styles. */
+/* Preserve coordinates; quiet idle light pools only. */
 html[data-celestial-volume][data-theme="dark"] .practice-map:not([data-focus-id])::before {
   background:
     radial-gradient(circle at var(--focus-x) var(--focus-y), color-mix(in srgb, var(--map-focus-accent) 6%, transparent) 0, transparent 24%),
@@ -10921,8 +10865,7 @@ html[data-celestial-volume][data-theme="light"] .celestial-volume--garage {
 html[data-celestial-volume][data-theme="light"] .celestial-volume--running {
   filter: brightness(.96) saturate(.85);
 }
-/* The project system gains weight through its lit bodies, not a larger halo.
-   Geometry, canvas bounds and satellite hit targets stay with the native map. */
+/* Weight comes from lit bodies; preserve orbit hit geometry. */
 html[data-celestial-volume] .practice-orbits-canvas {
   filter: var(--celestial-practice-light);
 }
