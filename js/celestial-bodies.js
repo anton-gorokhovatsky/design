@@ -1,4 +1,5 @@
-import "./map-engine.js";
+import { requestMapLinksRender } from "./map-engine.js";
+import { initializeBlackHoleLens } from "./signal-field.js";
 
 // Illustrative light transport: art-directed disk warp, 3D pulsar projection.
 // One restrained scattering profile for the two self-luminous objects.
@@ -211,3 +212,5 @@ new MutationObserver(syncPause).observe(doc.body,{attributes:true,attributeFilte
 doc.addEventListener('visibilitychange',syncPause);
 doc.defaultView.addEventListener('pageshow',syncPause);syncPause();
 mountVolumes(doc);
+initializeBlackHoleLens();
+requestMapLinksRender();

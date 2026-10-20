@@ -1483,7 +1483,7 @@ if (mapLinksRoot) {
       return {
         centerX: rect.left + rect.width / 2 - bounds.left,
         centerY: rect.top + rect.height / 2 - bounds.top,
-        radius: Math.max(rect.width, rect.height) / 2,
+        radius: (item.id === "garage" && glyph.querySelector(".celestial-volume--garage")?.getBoundingClientRect().width * (.434 / 2.7)) || Math.max(rect.width, rect.height) / 2,
       };
     };
 

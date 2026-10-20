@@ -6,6 +6,8 @@ import {
 } from "./preferences.js";
 import { composeCipher } from "./cipher-field.js";
 
+let blackHoleProjection = null;
+
 const signalField = document.querySelector("[data-signal-field]");
 const signalConstellation = document.querySelector("[data-signal-constellation]");
 const signalCore = document.querySelector("[data-signal-core]");
@@ -332,12 +334,14 @@ const drawSignalConstellation = (time = performance.now()) => {
       1.58,
     );
 
-    return {
+    const point = {
       x: xAfterZ * perspective,
       y: yAfterZ * perspective,
       z: zAfterY,
       perspective,
     };
+    blackHoleProjection?.(point);
+    return point;
   };
 
   signalContext.save();
@@ -709,7 +713,163 @@ signalField?.addEventListener("pointerleave", () => {
   signalField.style.setProperty("--layer-near-y", "0px");
 });
 
+// Accepted screen-space lens: shared projection for grid, axes and signal field.
+// It tracks existing layout transitions; no idle animation loop is introduced.
+const initializeBlackHoleLens = () => {
+  const model = { strength: 0, cx: 0, cy: 0, core: 0, signalBounds: null };
+  // A softened point-lens displacement with compact C2 support. R = 7 core radii;
+  // p' = c + (p-c) [1 + E²/(r²+s²) (1-r²/R²)^3], for r<R.
+  // E=1.35a, s=.9a. Finite at the centre; displacement and two derivatives
+  // vanish at R. This is an illustrative screen mapping, not a GR simulation.
+  const warp = (x, y) => {
+    if (!model.core || !model.strength) return { x, y };
+    const dx=x-model.cx,dy=y-model.cy,r2=dx*dx+dy*dy,a2=model.core*model.core,R2=49*a2;
+    if(r2>=R2)return {x,y};
+    const envelope=1-r2/R2;
+    const gain=model.strength*1.8225*a2/(r2+.81*a2)*envelope*envelope*envelope;
+    return {x:x+dx*gain,y:y+dy*gain};
+  };
+  const project=(point)=>{
+    const {x,y}=point;
+    const box=model.signalBounds;
+    if(!box)return;
+    const p=warp(box.x+(x+box.width/2)*box.sx,box.y+(y+box.height/2)*box.sy);
+    point.x=(p.x-box.x)/box.sx-box.width/2;point.y=(p.y-box.y)/box.sy-box.height/2;
+  };
+  const garage=document.querySelector('[data-map-id="garage"]'),field=document.querySelector('.map-grid'),signal=document.querySelector('.signal-constellation');
+  if(!garage||!field)return;
+  const ns=svgNamespace,forced=matchMedia('(forced-colors: active)'),map=document.querySelector('[data-practice-map]');
+  const available=()=>!document.hidden&&!forced.matches&&!root.hasAttribute('data-celestial-paused')&&!map.hasAttribute('data-time-view')&&garage.getAttribute('aria-hidden')!=='true';
+  let signalState='';
+  let grid,gridPath;
+  {
+    grid=document.createElementNS(ns,'svg');grid.setAttribute('aria-hidden','true');
+    grid.style.cssText='position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none';
+    gridPath=document.createElementNS(ns,'path');gridPath.setAttribute('fill','none');gridPath.setAttribute('stroke-width','1');
+    grid.append(gridPath);field.append(grid);field.style.backgroundImage='none';
+  }
+  const line=(x1,y1,x2,y2,b,w,h)=>{
+    const steps=Math.max(2,Math.ceil(Math.hypot(x2-x1,y2-y1)/4));let d='';
+    for(let i=0;i<=steps;i++){
+      const t=i/steps,p=warp(b.x+(x1+(x2-x1)*t)*b.width/w,b.y+(y1+(y2-y1)*t)*b.height/h);
+      d+=(i?'L':'M')+((p.x-b.x)*w/b.width).toFixed(2)+' '+((p.y-b.y)*h/b.height).toFixed(2);
+    }
+    return d;
+  };
+  const axes=[...document.querySelectorAll('.map-axis')].map(el=>{
+    const svg=document.createElementNS(ns,'svg'),path=document.createElementNS(ns,'path');
+    svg.style.cssText='position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none';
+    path.setAttribute('fill','none');path.setAttribute('stroke-width','1');svg.append(path);el.append(svg);
+    el.style.background='none';
+    return {el,svg,path};
+  });
+  // Fade only Garage relations near the visible shadow. Keeping one mask
+  // preserves the existing keyed paths, their curves and hover morphs.
+  const links=document.querySelector('[data-map-links]');
+  let rayMask,rayFade;
+  if(links){
+    const defs=document.createElementNS(ns,'defs');
+    const gradient=document.createElementNS(ns,'radialGradient');
+    gradient.id='garage-ray-fade';
+    for(let i=0;i<=8;i++){
+      const stop=document.createElementNS(ns,'stop'),t=i/8,light=t*t*(3-2*t);
+      stop.setAttribute('stop-color',`rgb(${light*255} ${light*255} ${light*255})`);
+      gradient.append(stop);
+    }
+    rayMask=document.createElementNS(ns,'mask');rayMask.id='garage-ray-mask';
+    rayMask.setAttribute('maskUnits','userSpaceOnUse');rayMask.setAttribute('maskContentUnits','userSpaceOnUse');
+    rayMask.setAttribute('x','0');rayMask.setAttribute('y','0');rayMask.setAttribute('width','100');rayMask.setAttribute('height','100');
+    rayMask.style.maskType='luminance';
+    const background=document.createElementNS(ns,'rect');
+    background.setAttribute('width','100');background.setAttribute('height','100');background.setAttribute('fill','white');
+    rayFade=document.createElementNS(ns,'ellipse');rayFade.setAttribute('fill','url(#garage-ray-fade)');
+    rayMask.append(background,rayFade);defs.append(gradient,rayMask);links.prepend(defs);
+  }
+  const updateRayFade=()=>{
+    if(!rayMask)return;
+    const b=links.getBoundingClientRect();if(!b.width||!b.height)return;
+    const inner=model.core+3,outer=inner+Math.min(18,Math.max(8,model.core*.75));
+    rayFade.setAttribute('cx',(model.cx-b.x)*100/b.width);rayFade.setAttribute('cy',(model.cy-b.y)*100/b.height);
+    rayFade.setAttribute('rx',outer*100/b.width);rayFade.setAttribute('ry',outer*100/b.height);
+    links.querySelectorAll('#garage-ray-fade stop').forEach((stop,i)=>stop.setAttribute('offset',(inner+(outer-inner)*i/8)/outer));
+    links.querySelectorAll('path[data-parent-id="garage"]').forEach(path=>{
+      if(!path.hasAttribute('mask'))path.setAttribute('mask','url(#garage-ray-mask)');
+    });
+  };
+  const update=()=>{
+    const canvas=garage.querySelector('.celestial-volume--garage');
+    if(!canvas)return;
+    const c=canvas.getBoundingClientRect();model.cx=c.x+c.width/2;model.cy=c.y+c.height/2;model.core=c.width*.434/2.7;
+    if(!available())model.core=0;
+    if(signal&&signal.clientWidth&&signal.clientHeight){const b=signal.getBoundingClientRect();model.signalBounds={x:b.x,y:b.y,width:signal.clientWidth,height:signal.clientHeight,sx:b.width/signal.clientWidth,sy:b.height/signal.clientHeight};}
+    if(grid&&field.clientWidth&&field.clientHeight){
+      const b=field.getBoundingClientRect(),w=field.clientWidth,h=field.clientHeight;
+      grid.setAttribute('viewBox',`0 0 ${w} ${h}`);
+      let d='';
+      // Match the phase and spacing of the existing centred CSS grid.
+      for(let i=-1;i<=8;i++){const x=w*.0625+i*w*.125;d+=line(x,0,x,h,b,w,h);}
+      for(let i=-1;i<=4;i++){const y=h*.125+i*h*.25;d+=line(0,y,w,y,b,w,h);}
+      gridPath.setAttribute('d',d);gridPath.setAttribute('stroke',getComputedStyle(document.documentElement).getPropertyValue('--line-soft').trim());
+      axes.forEach(({el,svg,path})=>{
+        const b=el.getBoundingClientRect(),w=el.clientWidth,h=el.clientHeight;if(!w||!h)return;
+        svg.setAttribute('viewBox',`0 0 ${w} ${h}`);
+        path.setAttribute('d',w>h?line(0,.5,w,.5,b,w,h):line(.5,0,.5,h,b,w,h));
+        path.setAttribute('stroke',getComputedStyle(document.documentElement).getPropertyValue('--line').trim());
+      });
+    }
+    updateRayFade();
+    blackHoleProjection=model.strength&&model.core?project:null;
+    const state=[model.cx,model.cy,model.core,model.strength,signal?.clientWidth,signal?.clientHeight].join(',');
+    if(state!==signalState&&(reducedMotion.matches||captureMode||root.hasAttribute('data-celestial-paused')))drawSignalConstellation();
+    signalState=state;
+  };
+  let frame=0,until=0,hovered=false;
+  let tween={from:0,to:0,start:0,duration:0};
+  const reduceMotion=()=>reducedMotion.matches;
+  const sample=time=>{
+    const t=tween.duration?Math.min(1,Math.max(0,(time-tween.start)/tween.duration)):1;
+    model.strength=tween.from+(tween.to-tween.from)*(1-(1-t)**3);
+  };
+  const tick=time=>{frame=0;sample(time);update();if(time<until&&!document.hidden)frame=requestAnimationFrame(tick)};
+  const schedule=(duration=1000)=>{until=Math.max(until,performance.now()+duration);if(!frame)frame=requestAnimationFrame(tick)};
+  const syncInteraction=()=>{
+    const now=performance.now(),target=available()&&(hovered||garage.matches(':focus-visible'))?1:0;
+    sample(now);
+    if(target!==tween.to||reduceMotion()){
+      tween={from:model.strength,to:target,start:now,duration:reduceMotion()?0:target?320:260};
+      sample(now);
+      if(reduceMotion())update();
+    }
+    schedule();
+  };
+  new ResizeObserver(()=>schedule()).observe(field);
+  new MutationObserver(records=>{
+    if(records.some(record=>['data-reduce-motion','data-celestial-paused'].includes(record.attributeName)))syncInteraction();
+    else schedule();
+  }).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme','data-celestial-volume','data-reduce-motion','data-celestial-paused']});
+  reducedMotion.addEventListener('change',syncInteraction);
+  forced.addEventListener('change',syncInteraction);
+  new MutationObserver(syncInteraction).observe(map,{attributes:true,attributeFilter:['data-time-view','data-active-kind']});
+  new MutationObserver(syncInteraction).observe(garage,{attributes:true,attributeFilter:['aria-hidden']});
+  document.querySelector('.map-camera').addEventListener('transitionrun',event=>{
+    if(event.propertyName==='transform'&&event.target.matches('.map-camera,.map-grid,.map-nodes,.map-links,[data-map-id="garage"],[data-map-id="garage"] .map-node__glyph'))schedule(1100);
+  });
+  garage.addEventListener('pointerenter',event=>{if(event.pointerType!=='touch'){hovered=true;syncInteraction()}});
+  const leave=()=>{hovered=false;syncInteraction()};
+  garage.addEventListener('pointerleave',leave);garage.addEventListener('pointercancel',leave);
+  garage.addEventListener('focus',syncInteraction);garage.addEventListener('blur',syncInteraction);
+  addEventListener('resize',()=>schedule());
+  const suspend=()=>{
+    cancelAnimationFrame(frame);frame=0;until=0;hovered=false;
+    tween={from:0,to:0,start:0,duration:0};model.strength=0;blackHoleProjection=null;
+  };
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)suspend();else syncInteraction()});
+  addEventListener('pagehide',suspend);addEventListener('pageshow',syncInteraction);
+  schedule(1100);
+};
+
 export {
+  initializeBlackHoleLens,
   pauseSignalConstellation,
   resumeSignalConstellation,
   signalField,
