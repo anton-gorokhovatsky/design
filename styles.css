@@ -9822,7 +9822,7 @@ body.has-reading-surface:not(.has-contact-consoles) .system-dock :is(.map-contro
   outline-offset: var(--focus-offset);
 }
 :is(.content-panel .work-row, .map-related__item, .contact-links a):is(:hover, :active, :focus-visible) {
-  color: var(--signal);
+  color: color-mix(in srgb, var(--signal) 80%, var(--ink));
   background: transparent;
   transform: none;
 }
