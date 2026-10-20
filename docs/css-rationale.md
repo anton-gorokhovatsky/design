@@ -49,7 +49,7 @@ Observatory layer. The map behaves as one optical instrument: a camera moves the
 
 Project depth inside the fading scene so opacity cannot flatten and then suddenly restore a perspective inherited from outside the scene.
 
-## Unframed reels; metadata uses MATERIAL / 01.
+## Reels remain unframed content. Metadata uses MATERIAL / 01.
 
 Reels remain unframed content. Their title and timing live in a separate registered MATERIAL / 01 readout, like an observation instrument.
 

@@ -6076,7 +6076,7 @@ html[data-theme="dark"] .map-node--sphere .map-node__glyph {
     0 13px 30px rgba(0, 0, 0, 0.3);
 }
 
-/* Unframed reels; metadata uses MATERIAL / 01. */
+/* Reels remain unframed content. Metadata uses MATERIAL / 01. */
 
 .map-hover-preview.has-video,
 .map-hover-preview.has-video.is-landscape {
