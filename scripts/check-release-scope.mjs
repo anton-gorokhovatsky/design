@@ -193,7 +193,7 @@ for (const selector of [
   'body:has(.settings-panel) .map-node', '.settings-panelish',
 ]) scoped("styles.css", "", `${selector} { color: red; }`, "full");
 scoped("styles.css", "", "@media(max-width: 600px) {.settings-panel__note {margin: 8px}}", "components", ["settings"]);
-scoped("styles.css", "@media(min-width: 900px){.map-node {opacity: 1}}", "@media(min-width: 800px){.map-node {opacity: 1}}", "full");
+scoped("styles.css", "@media(min-width: 900px){.map-grid {opacity: 1}}", "@media(min-width: 800px){.map-grid {opacity: 1}}", "full");
 scoped("styles.css", "", "@layer ui { .settings-panel { margin: 8px; } }", "full");
 scoped("styles.css", "", "@keyframes show { from {opacity: 0} to {opacity: 1} }", "full");
 scoped("styles.css", "", '.settings-panel { & + .map-node {opacity: 0} }', "full");
@@ -312,6 +312,58 @@ assert.throws(() => browserMatrix("components", []));
 assert.throws(() => browserMatrix("components", ["unknown"]));
 assert.throws(() => browserMatrix("skip"));
 
+// New owners prove actual boundaries; shared code, syntax errors and unknown
+// test helpers still select the complete suite.
+for (const path of ['js/panels.js', 'js/map-media.js', 'js/observation-route.js']) {
+  const before = read(path);
+  const needle = path === 'js/panels.js' ? 'requestAnimationFrame(() => mapOverview.focus({ preventScroll: true }))'
+    : path === 'js/map-media.js' ? 'observationVideo.hidden = false' : 'duration: 20000';
+  const after = before.replace(needle, path === 'js/panels.js' ? 'requestAnimationFrame(() => mapOverview.focus())'
+    : path === 'js/map-media.js' ? 'observationVideo.hidden = true' : 'duration: 21000');
+  assert.notEqual(before, after);
+  scoped(path, before, after, 'components', ['overview']);
+  scoped(path, before, after + '\nwindow.addEventListener("unrelated", () => {});', 'full');
+  scoped(path, before, 'import "./unrelated.js";\n' + after, 'full');
+  scoped(path, before, after + '\nconst broken = ;', 'full');
+}
+const mediaSource = read('js/map-media.js');
+scoped('js/map-media.js', mediaSource, mediaSource.replace('const pauseReelMosaic = () => {', 'const pauseReelMosaic = () => { previewHideTimer = 1;'), 'full');
+scoped('js/panels.js', panels, panels.replace('const openPointFromContentPanel = (pointId, sourceRow = null)', 'const openPointFromContentPanel = (pointId, sourceRow = document.body)'), 'full');
+scoped('styles.css', '', '.overview-entry {padding: 12px}', 'components', ['overview']);
+scoped('styles.css', '', '.observation-video {opacity: .9}', 'components', ['overview']);
+scoped('styles.css', '', '.map-node {will-change: filter}', 'components', ['map-presentation']);
+for (const selector of ['.overview-entry + .map-grid', ':has(.overview-entry)', '.observation-video, .map-grid', '.map-node + .control-console']) {
+  scoped('styles.css', '', `${selector} {opacity: 0}`, 'full');
+}
+const entry = '<button type="button" class="overview-entry" data-start-map-observation>Посмотреть обзор · 3 минуты</button>';
+assert(html.includes(entry));
+scoped('index.html', html.replace(entry, ''), html, 'components', ['overview']);
+const interior = html.replace('data-start-observation>Посмотреть', 'data-start-observation><span aria-hidden="true">→</span>Посмотреть');
+scoped('index.html', html, interior, 'components', ['overview']);
+for (const changed of [interior.replace('data-start-observation>', 'data-start-observation onclick="run()">'),
+  interior.replace('data-start-observation>', 'data-start-observation><script>run()</script>'),
+  interior.replace('class="work-overview"', 'class="unrelated"'),
+  html.replace(entry, entry + entry), html.replace('class="map-camera"', 'class="elsewhere"')]) {
+  scoped('index.html', html, changed, 'full');
+}
+const notFound = read('404.html');
+scoped('404.html', notFound, notFound.replace('margin: 1rem 0 0', 'margin: 2rem 0 0'), 'components', ['not-found']);
+scoped('404.html', notFound, notFound.replace('let paused = false', 'let paused = true'), 'full');
+scoped('404.html', notFound, notFound.replace('class="not-found__copy"', 'class="not-found__copy" onclick="run()"'), 'full');
+for (const id of ['observation-route', 'first-visit', 'case-flow', 'accessibility']) {
+  scoped(`scripts/check-${id}.mjs`, 'before', 'after', 'components', [`check:${id}`]);
+  for (const engine of ['chromium', 'webkit']) assert.deepEqual(browserMatrix('components', [`check:${id}`]).include
+    .filter(job => job.browser === engine).flatMap(job => job.checks.split(',')), [id]);
+}
+scoped('scripts/audit-project.mjs', 'before', 'after', 'copy');
+scoped('scripts/browser-contracts.cjs', 'before', 'after', 'full');
+scoped('scripts/unregistered-check.mjs', 'before', 'after', 'full');
+for (const owner of ['overview', 'not-found', 'map-presentation']) {
+  const matrix = browserMatrix('components', [owner]).include;
+  for (const engine of ['chromium', 'webkit']) assert.deepEqual(new Set(matrix.filter(job => job.browser === engine).flatMap(job => job.checks.split(','))), new Set(componentCoverage[owner]));
+  assert(matrix.length < fullMatrix.length);
+}
+
 // Exercise actual git history: an innocent last commit must not hide an
 // unpublished behavior change, and staged/untracked changes count as well.
 const directory = mkdtempSync(join(tmpdir(), "portfolio-release-scope-"));
@@ -324,12 +376,13 @@ try {
   writeFileSync(join(directory, "js/panels.js"), panels);
   writeFileSync(join(directory, "js/observation-route.js"), route);
   writeFileSync(join(directory, "index.html"), shell);
-  writeFileSync(join(directory, "styles.css"), '.map-node {color: black}');
+  writeFileSync(join(directory, "styles.css"), '.map-grid {color: black}');
   writeFileSync(join(directory, "js/whoop-day.js"), 'const interval = 1000;');
   writeFileSync(join(directory, "js/focused-home.js"), headerModule);
   writeFileSync(join(directory, "js/viewport-ui.js"), viewport);
   mkdirSync(join(directory, "assets/reels"), { recursive: true });
   writeFileSync(join(directory, "assets/reels/garage-site.mp4"), "original master");
+  writeFileSync(join(directory, "README.md"), "Published");
   git("add", "."); git("commit", "-m", "published");
   const published = git("rev-parse", "HEAD");
   const plan = (options = {}) => planRelease({ projectRoot: directory, base: published, ...options });
@@ -339,14 +392,14 @@ try {
   writeFileSync(join(directory, 'js/viewport-ui.js'), viewport);
 
   writeFileSync(join(directory, 'js/focused-home.js'), sharedHeader);
-  writeFileSync(join(directory, 'styles.css'), '.map-node {color: black}\n.site-header {padding: 12px}');
+  writeFileSync(join(directory, 'styles.css'), '.map-grid {color: black}\n.site-header {padding: 12px}');
   assert.deepEqual(plan().components, ['header']);
   assert.equal(plan().staticScope, 'copy', 'Header changes retain the base static checks without FFmpeg.');
   git('add', '.'); git('commit', '-m', 'local header');
   assert.deepEqual(plan({target: 'HEAD'}).matrix, browserMatrix('components', ['header']));
-  writeFileSync(join(directory, 'styles.css'), '.map-node {color: black}\n.site-header {padding: 12px}\n.command-dock__mark svg {fill: none}');
+  writeFileSync(join(directory, 'styles.css'), '.map-grid {color: black}\n.site-header {padding: 12px}\n.command-dock__mark svg {fill: none}');
   assert.deepEqual(plan().components, ['header', 'search-icon']);
-  writeFileSync(join(directory, 'styles.css'), '.map-node {color: red}\n.site-header {padding: 12px}');
+  writeFileSync(join(directory, 'styles.css'), '.map-grid {color: red}\n.site-header {padding: 12px}');
   assert.equal(plan().mode, 'full', 'A shared map change cannot hide behind a header fix.');
   git('reset', '--hard', published);
   writeFileSync(join(directory, "assets/reels/garage-site.mp4"), "updated master");
@@ -363,7 +416,7 @@ try {
   writeFileSync(join(directory, "unexpected.txt"), "new file");
   assert.equal(plan().mode, "full", "Untracked files cannot evade preflight");
   rmSync(join(directory, "unexpected.txt"));
-  writeFileSync(join(directory, "styles.css"), '.map-node {color: black}\n.settings-panel__note {margin: 8px}');
+  writeFileSync(join(directory, "styles.css"), '.map-grid {color: black}\n.settings-panel__note {margin: 8px}');
   writeFileSync(join(directory, "index.html"), shell.replace('<p>Details</p>', '<section>Details</section>'));
   assert.equal(plan().mode, "components");
   git("add", "."); git("commit", "-m", "settings layout");
@@ -372,8 +425,10 @@ try {
   assert.deepEqual(plan({ target: "HEAD" }).components, ["settings", "whoop"], "Component coverage combines unpublished commits");
   assert.deepEqual(plan({ target: "HEAD" }).matrix, browserMatrix("components", ["settings", "whoop"]));
   writeFileSync(join(directory, "js/observation-route.js"), route.replace("20000", "10000"));
-  git("add", "."); git("commit", "-m", "unpublished timing");
-  writeFileSync(join(directory, "js/panels.js"), panels);
+  assert.ok(plan().components.includes("overview"), "Unpublished route timing requires overview coverage");
+  writeFileSync(join(directory, "js/panels.js"), panels + '\nwindow.addEventListener("resize", () => {});\n');
+  git("add", "."); git("commit", "-m", "unpublished shared navigation");
+  writeFileSync(join(directory, "README.md"), "Another copy edit");
   git("add", "."); git("commit", "-m", "another copy edit");
   assert.equal(plan({ base: "HEAD^", target: "HEAD" }).mode, "copy");
   assert.equal(plan({ target: "HEAD" }).mode, "full", "Entire unpublished range determines the gate");
@@ -435,7 +490,7 @@ try {
   const put = (path, text) => { mkdirSync(dirname(join(isolatedDirectory, path)), { recursive: true }); writeFileSync(join(isolatedDirectory, path), text); };
   git('init', '-b', 'main');
   put('signature/src/component.js', 'export const VERSION = "1.0.2";');
-  put('styles.css', '.map-node {color: black}');
+  put('styles.css', '.map-grid {color: black}');
   put('README.md', 'Published');
   git('add', '.'); git('commit', '-m', 'published');
   const base = git('rev-parse', 'HEAD');
@@ -449,7 +504,7 @@ try {
   assert.equal(plan().staticScope, 'signature', 'Selection uses the complete unpublished signature range');
   put('scripts/check-project.mjs', 'check runner');
   assert.equal(plan().staticScope, 'checks', 'Tooling changes run chooser and execution contracts');
-  put('styles.css', '.map-node {color: red}');
+  put('styles.css', '.map-grid {color: red}');
   assert.equal(plan().mode, 'full', 'A signature cannot hide a shared portfolio style change');
   assert.equal(plan().staticScope, 'static');
   assert.deepEqual(plan().matrix, browserMatrix('full'));

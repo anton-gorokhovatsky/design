@@ -1,4 +1,5 @@
 import postcss from "postcss";
+import { overviewOutside, overviewHtmlOutside, notFoundBindings } from "./overview-scope.mjs";
 import selectorParser from "postcss-selector-parser";
 import { parse as parseHtml } from "parse5";
 import { parse as parseJs } from "acorn";
@@ -18,6 +19,10 @@ const ownsClass = (matches) => (selector) => selectorParser().astSync(selector).
 });
 const cssOwners = {
   settings: ownsClass(settingsClass),
+  overview: ownsClass(/^(?:overview-entry|work-overview(?:__[\w-]+)?|observation-[\w-]+)$/),
+  "map-presentation": selector => selectorParser().astSync(selector).nodes.every(branch =>
+    branch.nodes[0]?.type === "class" && /^map-node(?:$|__|--)/.test(branch.nodes[0].value))
+    && ownsClass(/^map-node(?:$|__|--)/)(selector),
   header: ownsClass(/^(?:site-header|brand(?:__[\w-]+)?|whoop-(?:readout|metrics|status|foot|stamp|level|compact-trigger))$/),
   "search-icon": ownsClass(/^command-dock__mark$/),
 };
@@ -175,9 +180,15 @@ const consoleBoundsOutside = source => {
 export const affectedComponents = (path, before, after, maskHtmlCopy) => {
   if (before.includes("\0") || after.includes("\0")) return null;
   try {
+    if (["js/observation-route.js", "js/map-media.js", "js/panels.js"].includes(path)
+      && overviewOutside(path, before) === overviewOutside(path, after)) return ["overview"];
+    if (path === "404.html" && notFoundBindings(maskHtmlCopy(before).replaceAll("\0", "")) === notFoundBindings(maskHtmlCopy(after).replaceAll("\0", ""))) return ["not-found"];
     if (path === "js/viewport-ui.js" && consoleBoundsOutside(before) === consoleBoundsOutside(after)) return ["console-bounds"];
     if (path === "styles.css") return cssComponents(before, after);
     if (path === "index.html") {
+      try {
+        if (overviewHtmlOutside(maskHtmlCopy(before).replaceAll("\0", "")) === overviewHtmlOutside(maskHtmlCopy(after).replaceAll("\0", ""))) return ["overview"];
+      } catch { /* Other local owners may still prove the edit. */ }
       try {
         if (maskHtmlCopy(settingsHtml(before)) === maskHtmlCopy(settingsHtml(after))) return ["settings"];
       } catch { /* Missing settings do not prevent a local header/icon proof. */ }

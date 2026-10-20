@@ -1,3 +1,4 @@
+import { componentChecks } from "./check-catalog.mjs";
 // Ownership boundaries for independently published artifacts and check tooling.
 // Runtime outside these boundaries keeps the portfolio's existing coverage.
 const processPaths = new Set([
@@ -10,11 +11,18 @@ const processPaths = new Set([
   'scripts/check-runner.mjs', 'scripts/check-signature.mjs',
   'scripts/check-signature-static.mjs', 'scripts/publication-assets.mjs',
   'scripts/point-address-scope.mjs', 'scripts/check-point-address.mjs',
-  'scripts/check-local-ui.mjs',
+  'scripts/check-local-ui.mjs', 'scripts/overview-scope.mjs',
 ]);
 const signaturePath = /^signature\/(?:src\/[^/]+\.(?:js|css|svg)|(?:v1|\d+\.\d+\.\d+)\/signature\.js|build\.mjs|demo\.html|README\.md|codex\/(?:SKILL|AGENTS\.fragment)\.md)$/;
+const browserCheckPaths = new Map(Object.keys(componentChecks).filter(id => !["header", "search-icon"].includes(id)).map(id => [`scripts/check-${id}.mjs`, `check:${id}`]));
+browserCheckPaths.set('scripts/check-live-surface.mjs', 'check:whoop-ui');
+browserCheckPaths.set('scripts/check-ui-contracts.mjs', 'check:core');
+browserCheckPaths.set('scripts/webkit-regression.cjs', 'check:core');
+export const staticCheckPaths = new Set(['scripts/audit-project.mjs', 'scripts/check-assets.mjs',
+  'scripts/check-css-cascade.mjs', 'scripts/check-performance-budget.mjs',
+  'scripts/check-performance-budget.test.mjs', 'scripts/check-publication-assets.mjs']);
 export const ownedCheckComponent = path => signaturePath.test(path)
-  ? 'signature' : processPaths.has(path) ? 'checks' : null;
+  ? 'signature' : processPaths.has(path) ? 'checks' : browserCheckPaths.get(path) || null;
 
 const step = script => ({ label: script, command: process.execPath, args: [script] });
 export const checkProfiles = {
@@ -31,7 +39,7 @@ export const checkProfiles = {
 };
 export const staticScopeFor = (mode, components) => {
   if (mode === 'full' || components.some(id => !['signature', 'checks'].includes(id))) {
-    return mode === 'full' || components.some(id => ['media', 'signature', 'checks'].includes(id)) ? 'static' : 'copy';
+    return mode === 'full' || components.some(id => ['media', 'signature'].includes(id)) ? 'static' : 'copy';
   }
   return components.includes('checks') ? 'checks' : components.includes('signature') ? 'signature' : 'copy';
 };

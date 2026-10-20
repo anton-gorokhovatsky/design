@@ -485,6 +485,7 @@ const openPointFromContentPanel = (pointId, sourceRow = null) => {
 setInspectorReturnHandler(() => {
   const step = window.history.state?.inspectorOverviewStep;
   if (Number.isInteger(step)) {
+    if (history.state.inspectorOverviewFromMap) document.body.dataset.overviewFromMap = "";
     startObservation({ step, autoplay: false, updateHistory: false });
     return true;
   }
@@ -500,9 +501,10 @@ document.querySelector("[data-map-link]").addEventListener("click", event => {
   if (!mapButtons.has(point)) return;
   event.preventDefault();
   const step = observationRoute.step;
+  const fromMap = document.body.hasAttribute("data-overview-from-map");
   stopObservation({ updateHistory: false });
   selectMapItem(point, { reveal: true });
-  history.replaceState({ ...history.state, inspectorOverviewStep: step }, "", location.href);
+  history.replaceState({ ...history.state, inspectorOverviewStep: step, inspectorOverviewFromMap: fromMap }, "", location.href);
 });
 
 panelOpenButtons.forEach((button) => {

@@ -24,6 +24,9 @@ export const componentChecks = {
 // including consent and keyboard behavior, instead of duplicating a weaker test.
 export const componentCoverage = {
   signature: ["signature"],
+  overview: ["observation-route", "first-visit", "case-flow", "case-view", "hover-layout", "accessibility", "inspector-links"],
+  "map-presentation": ["map-routes", "hover-layout", "sphere-motion", "first-visit", "accessibility", "observation-route"],
+  "not-found": ["whoop-ui", "accessibility"],
   checks: ["signature", "point-address", "header", "search-icon"],
   "point-address": ["point-address"],
   header: ["header"],
@@ -36,6 +39,9 @@ export const componentCoverage = {
   whoop: ["core", "accessibility", "whoop-ui", "hover-layout", "first-visit"],
 };
 export const checkIds = ["core", "reels", ...Object.keys(componentChecks)];
+// Editing a browser assertion selects that assertion in both engines. Helpers
+// shared by multiple checks remain unclassified and therefore run the full lane.
+for (const id of checkIds) componentCoverage[`check:${id}`] = [id];
 
 // Bound the longest serial component job. These groups are balanced using the
 // 19 October WebKit timings (about 6–7 min per group, formerly up to 9.5 min).

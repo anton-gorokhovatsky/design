@@ -76,6 +76,7 @@ const contractScripts = [
   "scripts/check-release-quality.mjs",
   "scripts/release-scope.mjs",
   "scripts/component-scope.mjs",
+  "scripts/overview-scope.mjs",
   "scripts/media-scope.mjs",
   "scripts/reel-specs.mjs",
   "scripts/reel-metadata.mjs",
@@ -105,6 +106,7 @@ const syntaxSteps = [
 ];
 
 const staticContractSteps = [
+  { label: "Check command runner", command: process.execPath, args: ["scripts/check-runner.mjs"] },
   ...checkProfiles.signature.static,
   {
     label: "WHOOP service authorization and publication",

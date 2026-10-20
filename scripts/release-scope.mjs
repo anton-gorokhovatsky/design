@@ -9,7 +9,7 @@ import { parse as parseHtml } from "parse5";
 import { cacheVersionFiles } from "./cache-versions.mjs";
 import { affectedComponents } from "./component-scope.mjs";
 import { isMediaOnly, mediaAssetPaths } from "./media-scope.mjs";
-import { ownedCheckComponent, staticScopeFor } from "./check-profiles.mjs";
+import { ownedCheckComponent, staticCheckPaths, staticScopeFor } from "./check-profiles.mjs";
 import { browserMatrix } from "./check-catalog.mjs";
 import { pointAddressPaths, pointAddressRename } from "./point-address-scope.mjs";
 
@@ -109,6 +109,7 @@ export const isCopyOnly = (path, before, after) => {
 };
 
 export const classifyChange = (path, before, after) => {
+  if (staticCheckPaths.has(path)) return { mode: "copy", components: [] };
   const owner = ownedCheckComponent(path);
   if (owner) return { mode: "components", components: [owner] };
   if (isCopyOnly(path, before, after)) return { mode: "copy", components: [] };
@@ -138,8 +139,8 @@ export const planRelease = ({ projectRoot, base = "origin/gh-pages", target } = 
     for (let index = 0; index < entries.length; index += 2) {
       const [status, path] = entries.slice(index, index + 2);
       const owner = ownedCheckComponent(path);
-      let classification = owner ? { mode: "components", components: [owner] } : { mode: "full", components: [] };
-      if (status === "M" && (copyArrays[path] || ["index.html", "404.html", "styles.css", "js/focused-home.js", "js/whoop-day.js", "js/viewport-ui.js", "scripts/reel-specs.json", "README.md", "AGENTS.md"].includes(path) || /^docs\/.*\.md$/.test(path))) {
+      let classification = staticCheckPaths.has(path) ? { mode: "copy", components: [] } : owner ? { mode: "components", components: [owner] } : { mode: "full", components: [] };
+      if (status === "M" && (copyArrays[path] || ["index.html", "404.html", "styles.css", "js/focused-home.js", "js/map-media.js", "js/whoop-day.js", "js/viewport-ui.js", "scripts/reel-specs.json", "README.md", "AGENTS.md"].includes(path) || /^docs\/.*\.md$/.test(path))) {
         const before = git("show", `${baseSha}:${path}`);
         const after = targetSha ? git("show", `${targetSha}:${path}`) : readFileSync(resolve(projectRoot, path), "utf8");
         classification = classifyChange(path, before, after);
@@ -160,8 +161,9 @@ export const planRelease = ({ projectRoot, base = "origin/gh-pages", target } = 
       pointAddresses: pointRename ? [{ from: pointRename.from, to: pointRename.to }] : [],
       reason: fullPaths.length ? `Shared or unclassified changes: ${fullPaths.join(", ")}`
         : components.length ? `Affected components and their integration checks: ${components.join(", ")}`
-          : "Only display text, generated cache keys or documentation changed.",
+          : "Only display text, generated cache keys, documentation or registered static checks changed.",
       files: changes.map(({ path }) => path),
+      changes,
     };
   } catch (error) {
     return { mode: "full", staticScope: "static", components: [], matrix: browserMatrix("full"), reason: `Cannot prove a narrower scope: ${error.message}`, files: [] };

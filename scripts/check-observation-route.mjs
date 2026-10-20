@@ -94,6 +94,38 @@ try {
     }
   }
 
+  // The map entry must survive a round trip through project details. A delayed
+  // or failed video must leave the new project's poster, never the old frame.
+  const mapReader = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  mapReader.on("pageerror", error => errors.push(error.message));
+  await mapReader.goto(`${origin}/?scene=map`);
+  await mapReader.locator('[data-start-map-observation]').focus();
+  await mapReader.keyboard.press('Enter');
+  await mapReader.locator('[data-observation-steps]').selectOption('2');
+  await mapReader.locator('[data-observation-pause]').click();
+  await mapReader.waitForFunction(() => document.querySelector('.observation-video')?.readyState >= 2);
+  let blockedVideo;
+  await mapReader.route('**/assets/reels/shirokostup.mp4*', route => { blockedVideo = route; });
+  await mapReader.locator('[data-observation-steps]').selectOption('4');
+  await mapReader.locator('[data-observation-pause]').click();
+  await mapReader.waitForFunction(() => document.querySelector('.observation-showcase__plane.is-active img')?.naturalWidth > 0);
+  assert.equal(await mapReader.locator('.observation-video').isVisible(), false, 'A previous video frame is hidden until the selected video is ready.');
+  assert.equal(await mapReader.locator('.observation-showcase__plane.is-active').getAttribute('data-observation-showcase-id'), 'shirokostup');
+  if (blockedVideo) await blockedVideo.abort();
+  await mapReader.unrouteAll({ behavior: 'ignoreErrors' });
+  await mapReader.locator('[data-observation-steps]').selectOption('2');
+  await mapReader.locator('[data-map-link]').click();
+  await mapReader.waitForFunction(() => document.body.hasAttribute('data-case-open'));
+  await mapReader.locator('[data-close-inspector]').click();
+  await mapReader.waitForFunction(() => !document.querySelector('[data-observation-controls]').hidden);
+  assert.equal(await progress(mapReader), '3 / 9');
+  await mapReader.locator('[data-observation-steps]').selectOption('8');
+  assert.equal(await mapReader.locator('[data-observation-next]').getAttribute('aria-label'), 'К карте');
+  await mapReader.locator('[data-observation-next]').click();
+  await mapReader.waitForFunction(() => document.activeElement.matches('[data-start-map-observation]'));
+  assert.equal(new URL(mapReader.url()).searchParams.has('route'), false);
+  await mapReader.close();
+
   const durations = [20000, 20000, 22000, 24000, 18000, 18000, 32000, 26000];
   assert.equal(durations.reduce((sum, duration) => sum + duration, 0), 180000);
   const page = await browser.newPage();

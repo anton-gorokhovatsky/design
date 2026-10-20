@@ -96,10 +96,13 @@ const setObservationPlayback = (paused) => {
   }
 };
 observationVideo.addEventListener("loadeddata", () => {
+  if (observationVideo.readyState < 2) return;
+  observationVideo.hidden = false;
   const start = observationMediaStep?.scenes?.[0]?.[0] || 0;
   if (start) observationVideo.currentTime = start;
   setObservationPlayback(observationMediaPaused);
 });
+observationVideo.addEventListener("error", () => { observationVideo.hidden = true; });
 observationVideo.addEventListener("timeupdate", () => {
   const scenes = observationMediaStep?.scenes;
   if (!scenes || observationVideo.seeking || observationVideo.paused) return;
@@ -164,6 +167,7 @@ const renderObservationShowcase = (step = {}) => {
     delete observationVideo.dataset.previewId;
     observationVideo.load();
   } else if (observationVideo.dataset.previewId !== activeId) {
+    observationVideo.hidden = true;
     observationVideo.dataset.previewId = activeId;
     observationVideo.poster = getMapPreviewPoster(item);
     observationVideo.src = item.previewVideo;
