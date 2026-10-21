@@ -755,6 +755,7 @@ const buffer = atmosphere.canvas.cloneNode().getContext("2d"), backdrops = new M
 let backdropSize, backdropFrame;
 atmosphere.canvas.addEventListener("contextrestored", () => { backdropFrame = null; syncMapAtmospherePosition(); });
 const drawMapAtmosphere = ({width, height}, x, y) => {
+  if (innerWidth <= 900) return;
   const dpr = Math.min(devicePixelRatio || 1, 1.5), w = Math.ceil(width*dpr), h = Math.ceil(height*dpr);
   const size = `${w}/${h}`;
   if (size !== backdropSize) { backdrops.clear(); backdropSize = size; }
