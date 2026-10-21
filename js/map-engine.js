@@ -74,19 +74,11 @@ const personalMedia = createPersonalMedia({
   },
 });
 
+const mapNoteDefault = mapNote?.textContent.trim();
 const syncMapNote = () => {
-  if (!mapNote) {
-    return;
-  }
-
-  if (!timeModeActive) {
-    mapNote.textContent = "КООРДИНАТЫ СУБЪЕКТИВНЫ: ПОЛОЖЕНИЕ — СМЫСЛОВАЯ БЛИЗОСТЬ, РАЗМЕР — ЛИЧНЫЙ ВЕС ОПЫТА.";
-    return;
-  }
-
-  mapNote.textContent = atmosphereMapId === "private-practice"
-    ? "ЧАСТНАЯ ПРАКТИКА — 2020—СЕЙЧАС. ДЕВЯТЬ ПРОЕКТОВ ПОКАЗАНЫ ПО\u00a0ГОДАМ ЗАПУСКА."
-    : "КОЛЬЦА — ГОДЫ: БЛИЖЕ К\u00a0ЦЕНТРУ — НОВЕЕ.";
+  if (!mapNote) return;
+  mapNote.textContent = !timeModeActive ? mapNoteDefault
+    : mapNote.dataset[atmosphereMapId === "private-practice" ? "practiceTime" : "time"];
 };
 
 const parseMapLinkCurve = (value) => {
@@ -1052,21 +1044,22 @@ const setMapEvidence = (evidence = null, item = null) => {
 };
 
 const renderMapRelatedItems=(item=null)=>{
-  const peers=item?.kind==="project"?mapItems.filter((candidate)=>candidate.kind==="project"&&candidate.parent===item.parent&&candidate!==item):[];
-  const personalLinks=item?.kind==="personal";
-  const explicitIds=item?.relatedTo||[];
-  const incomingIds=personalLinks?mapItems.filter(candidate=>candidate.relatedTo?.includes(item.id)).map(candidate=>candidate.id):[];
-  const contextIds=item?.kind==="company"||item?.id==="private-practice"?mapItems.filter(candidate=>candidate.parent===item.id).map(candidate=>candidate.id):item?.parent?[item.parent]:[];
-  const nextIds=item?.id==="hotline-camp"?["eleven","dd-camp","dusty"]:peers.slice(0,3).map(candidate=>candidate.id);
-  const ids=[...new Set([...explicitIds,...incomingIds,...contextIds,...nextIds])];
-  const items=signalField?.hasAttribute("data-observation-active")?[]:ids.map(id=>mapItems.find(candidate=>candidate.id===id)).filter(Boolean);
+  const links=new Map();
+  if(item&&!observationRoute.active){
+    const ids=[...(item.relatedTo||[]),...mapItems.filter(candidate=>
+      item.kind==="personal"&&candidate.relatedTo?.includes(item.id)
+      ||candidate.parent===item.id||candidate.id===item.parent).map(candidate=>candidate.id)];
+    for(const id of ids)links.set(id,null);
+    for(const [id,reason] of getCaseContent()?.related?.[item.id]||[])links.set(id,reason);
+  }
+  const items=[...links].map(([id,reason])=>({item:mapItems.find(item=>item.id===id),reason})).filter(({item})=>item);
   mapRelated.hidden=!items.length;
-  mapRelated.dataset.relatedKind=personalLinks?"personal":"project";
-  mapRelatedTitle.textContent=items.every(candidate=>candidate.kind==="project")?"СВЯЗАННЫЕ ПРОЕКТЫ":"СВЯЗАННЫЕ ТОЧКИ";
-  mapRelatedTrack.innerHTML=items.map(candidate=>{
-    const {id,label,timeLabel,timeYear,kindLabel}=candidate;
-    const poster=getMapPreviewPoster(candidate);
-    return `<li><a class="map-related__item" href="?point=${id}"><strong>${label}</strong><span>${kindLabel.split(" / ")[0]}${timeLabel||timeYear?` / ${timeLabel||timeYear}`:""}</span>${poster?`<img class="map-related__preview${candidate.relatedPosterShape==="circle"?" map-related__preview--circle":""}" data-preview-src="${poster}" alt="" decoding="async" width="72" height="48">`:""}</a></li>`;
+  mapRelated.dataset.relatedKind=item?.kind==="personal"?"personal":"project";
+  mapRelatedTitle.textContent=items.every(({item})=>item.kind==="project")?"СВЯЗАННЫЕ ПРОЕКТЫ":"СВЯЗАННЫЕ ТОЧКИ";
+  mapRelatedTrack.innerHTML=items.map(({item,reason})=>{
+    const {id,label,timeLabel,timeYear,kindLabel}=item,poster=getMapPreviewPoster(item);
+    const caption=typographUiText(reason||[kindLabel.split(" / ")[0],timeLabel||timeYear].filter(Boolean).join(" / "));
+    return `<li><a class="map-related__item" href="?point=${id}"><strong>${label}</strong><span>${caption}</span>${poster?`<img class="map-related__preview${item.relatedPosterShape==="circle"?" map-related__preview--circle":""}" data-preview-src="${poster}" alt="" decoding="async" width="72" height="48">`:""}</a></li>`;
   }).join("");
 };
 const loadRelatedPreview = event => {
@@ -1195,6 +1188,7 @@ const selectMapItem = (
       loadCaseContent().then(() => {
         if (!current()) return;
         renderDetails();
+        renderMapRelatedItems(item);
         if (document.activeElement === detailRetry) mapTitle.focus({ preventScroll: true });
         detailState.hidden = true;
       }).catch(() => {

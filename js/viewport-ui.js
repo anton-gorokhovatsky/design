@@ -2,7 +2,7 @@ import { reducedMotion } from "./preferences.js";
 
 // Shared keyboard scrolling; wheel and touch stay native.
 const scrollRegionFromKey = (event, region, reduceMotion) => {
-  if (!["ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End"].includes(event.key)) return;
+  if (event.target.matches("input, select, textarea") || !["ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End"].includes(event.key)) return;
   const maximum = region.scrollHeight - region.clientHeight;
   const step = event.key.startsWith("Page") ? region.clientHeight * 0.82 : 48;
   const top = event.key === "Home" ? 0 : event.key === "End" ? maximum

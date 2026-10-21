@@ -51,6 +51,20 @@ const clickVisiblePlaybackControl=async(page)=>{
   await page.mouse.click(state.x,state.y);
   return state;
 };
+// Choices are native radios: one visible figure, arrow navigation and no autoplay.
+const checkStudy = async (page, root, name) => {
+  const study = page.locator(root);
+  await study.locator('fieldset').waitFor();
+  for (const value of ['a', 'b', 'c']) {
+    await study.locator(`input[value="${value}"]`).check();
+    assert.equal(await study.locator('figure:visible').count(), 1);
+    assert.equal(await study.locator('figure:visible').getAttribute('data-state'), value);
+    for (const image of await study.locator('figure:visible img').all()) await image.evaluate(image => image.decode());
+  }
+  await study.locator('input[value="a"]').focus();
+  await page.keyboard.press('ArrowDown');
+  assert.equal(await study.locator(`input[name="${name}"]:checked`).getAttribute('value'), 'b');
+};
 try {
 for(const engine of [process.argv[2]||'chromium']) {
   assert.ok(['chromium','webkit'].includes(engine));
@@ -82,6 +96,10 @@ for(const engine of [process.argv[2]||'chromium']) {
       assert.equal(geometry.metaAnimation,'none','Full metadata wraps; no marquee');
       await page.screenshot({path:dir+engine+'-'+id+'.jpg',type:'jpeg',quality:84});
       if(id==='eleven') {
+        await checkStudy(page, '#light-study', 'eleven-light');
+        assert.match(await page.locator('[data-map-related] a[href="?point=narkomfin"]').textContent(), /Свет как часть цифрового опыта/);
+        await page.locator('.case-scroll').evaluate(element => element.scrollTop = 0);
+
         const reading=page.locator('.case-scroll');
         const closeBefore=await page.locator('[data-close-inspector]').boundingBox();
         const bounds=await reading.boundingBox();
@@ -284,6 +302,25 @@ for(const engine of [process.argv[2]||'chromium']) {
     assert.equal(await page.locator('[data-observation-pause]').isVisible(), false, 'The final step has no meaningless Continue action');
     await page.locator('[data-observation-previous]').click();
     assert.equal(await page.locator('[data-observation-pause]').isVisible(), true);
+    // Both entries use the same reading window, real URL and return path.
+    for (const width of [1440, 390]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(origin + (width === 1440 ? '/?scene=map' : '/#work'));
+      if (width === 1440) await page.locator('.map-about-trigger').click();
+      await page.locator((width === 1440 ? '#map-about' : '#work') + ' [data-open-panel="map-making"]').click();
+      await checkStudy(page, '#map-making', 'map-lens');
+      assert.equal(new URL(page.url()).hash, '#map-making');
+      assert.equal(await page.locator('#light-study').isVisible(), false);
+      await page.keyboard.press('Escape');
+      await page.waitForFunction(selector => document.activeElement?.matches(selector),
+        width === 1440 ? '.map-about-trigger' : '.mobile-first-cases');
+    }
+    await page.route('**/js/case-content.json*', route => route.abort());
+    await page.goto(origin + '/?study-error=1#map-making');
+    await page.getByText('Не удалось загрузить разбор.', { exact: true }).waitFor();
+    await page.unroute('**/js/case-content.json*');
+    await page.getByRole('button', { name: 'Повторить загрузку' }).click();
+    await page.locator('#map-making fieldset').waitFor();
     assert.deepEqual(result.errors,[]);
   } catch(error) {
     result.status='FAIL';result.error=error.stack||error.message;

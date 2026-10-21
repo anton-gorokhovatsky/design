@@ -139,6 +139,7 @@ const schedulePanelMore = () => {
 const moreResize = new ResizeObserver(schedulePanelMore);
 moreResize.observe(contentPanelBody);
 moreResize.observe(document.querySelector(".work-section"));
+moreResize.observe(document.querySelector("#map-making"));
 contentPanelBody.addEventListener("scroll", schedulePanelMore, { passive: true });
 panelMore.addEventListener("click", () => contentPanelBody.scrollTo({
   top: panelMore.dataset.direction === "up" ? 0
@@ -238,6 +239,7 @@ const contactConsoleHomes = [".site-header", ".system-dock"].map(selector => {
 let activePanelView = null;
 let lastPanelTrigger = null;
 const panelViews = {
+  "map-making": { title: "О КАРТЕ" },
   work: {
     title: "Работы",
   },
@@ -335,9 +337,10 @@ const openContentPanel = (
   contentPanel?.classList.toggle("is-restoring-position", Boolean(position));
   if (observationRoute.active) stopObservation({ updateHistory: false });
 
-  if (view === "work") loadCaseContent().catch(() => {});
+  if (["work", "map-making"].includes(view)) loadCaseContent().catch(() => {});
   activePanelView = view;
-  lastPanelTrigger = trigger instanceof HTMLElement && mapInspector.contains(trigger)
+  lastPanelTrigger = trigger?.closest("#map-about") ? document.querySelector(".map-about-trigger")
+    : trigger instanceof HTMLElement && mapInspector.contains(trigger)
     ? view === "work" && compactConstellationNav.matches
       ? document.querySelector(".mobile-first-cases")
       : constellationNavItems.find(item => item.dataset.navView === view)
@@ -358,7 +361,7 @@ const openContentPanel = (
 
   if (panelIndex) {
     const navItem = constellationNavItems.find(item => item.dataset.navView === view);
-    panelIndex.textContent = `${navItem.dataset.navIndex} / ${navItem.querySelector(".constellation-nav__label").textContent}`;
+    panelIndex.textContent = navItem ? `${navItem.dataset.navIndex} / ${navItem.querySelector(".constellation-nav__label").textContent}` : config.title;
   }
 
   hideMapPreview({ immediate: true });
@@ -423,6 +426,8 @@ const closeContentPanel = (
   }
 
   if (restoreFocus && lastPanelTrigger instanceof HTMLElement) {
+    if (lastPanelTrigger.closest("#work")) lastPanelTrigger = compactConstellationNav.matches
+      ? document.querySelector(".mobile-first-cases") : constellationNavHome;
     const triggerIsInCompactNavigation = compactConstellationNav.matches
       && Boolean(lastPanelTrigger.closest("[data-constellation-nav-orbit]"));
 
@@ -1305,7 +1310,7 @@ const applyUrlState = () => {
     const requestedFilters = normalizeMapFilters(url.searchParams.get("filter"));
     const requestedTimeMode = url.searchParams.get("view") === "time";
 
-    if (["work", "approach", "contact"].includes(panelView)) {
+    if (Object.hasOwn(panelViews, panelView)) {
       if (observationRoute.active) {
         stopObservation({
           updateHistory: false,

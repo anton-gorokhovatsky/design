@@ -277,5 +277,221 @@
         "height": 600
       }
     ]
+  },
+  "related": {
+    "garage-site": [
+      [
+        "collection",
+        "Каталог коллекции музея"
+      ],
+      [
+        "narkomfin",
+        "Отдельный сайт музея"
+      ]
+    ],
+    "narkomfin": [
+      [
+        "eleven",
+        "Свет связан с местом и временем"
+      ],
+      [
+        "hotline-camp",
+        "Свет и погода места"
+      ]
+    ],
+    "collection": [
+      [
+        "garage-archives",
+        "Доступ к культурным архивам"
+      ],
+      [
+        "shirokostup",
+        "Архив кураторской практики"
+      ]
+    ],
+    "garage-archives": [
+      [
+        "collection",
+        "Каталог и открытое хранение"
+      ],
+      [
+        "shirokostup",
+        "Личный архив проектов"
+      ]
+    ],
+    "garage-courses": [
+      [
+        "garage-app",
+        "Другой способ знакомства с музеем"
+      ],
+      [
+        "garage-webzine",
+        "Тексты в самостоятельном веб-формате"
+      ]
+    ],
+    "garage-app": [
+      [
+        "tarski",
+        "Доступность в культурном проекте"
+      ],
+      [
+        "collection",
+        "Маршрут к посещению музея"
+      ]
+    ],
+    "garage-webzine": [
+      [
+        "shirokostup",
+        "Авторские тексты и архив"
+      ],
+      [
+        "tarski",
+        "Редакционные материалы об искусстве"
+      ]
+    ],
+    "garage-institutions": [
+      [
+        "tarski",
+        "Сайт молодой институции"
+      ],
+      [
+        "garage-webzine",
+        "Небольшой самостоятельный веб-проект"
+      ]
+    ],
+    "garage-endowment": [
+      [
+        "garage-site",
+        "Основной сайт музея"
+      ],
+      [
+        "garage-institutions",
+        "Другие культурные проекты"
+      ]
+    ],
+    "shirokostup": [
+      [
+        "ks-fish",
+        "Авторский архив в основе сайта"
+      ],
+      [
+        "garage-archives",
+        "Доступ к культурным архивам"
+      ]
+    ],
+    "tarski": [
+      [
+        "garage-app",
+        "Доступность в культурной среде"
+      ],
+      [
+        "shirokostup",
+        "Практики и художественные проекты"
+      ]
+    ],
+    "herman": [
+      [
+        "krainiuk",
+        "Личный сайт специалиста"
+      ],
+      [
+        "ks-fish",
+        "Владелец становится героем сайта"
+      ]
+    ],
+    "hotline-camp": [
+      [
+        "eleven",
+        "Свет, время и погода"
+      ],
+      [
+        "dd-camp",
+        "Программа спортивного кэмпа"
+      ]
+    ],
+    "dusty": [
+      [
+        "doronin",
+        "Магазин мерча"
+      ],
+      [
+        "dd-camp",
+        "Сообщество Dusty Dumbbells"
+      ]
+    ],
+    "dd-camp": [
+      [
+        "hotline-camp",
+        "Программа и участие в кэмпе"
+      ],
+      [
+        "dusty",
+        "Другой проект клуба"
+      ]
+    ],
+    "eleven": [
+      [
+        "narkomfin",
+        "Свет как часть цифрового опыта"
+      ],
+      [
+        "hotline-camp",
+        "Время и погода места"
+      ]
+    ],
+    "ks-fish": [
+      [
+        "shirokostup",
+        "Личный архив и авторский голос"
+      ],
+      [
+        "herman",
+        "Владелец становится героем сайта"
+      ]
+    ],
+    "doronin": [
+      [
+        "eleven",
+        "Ещё один проект Виктора"
+      ],
+      [
+        "dusty",
+        "Мерч спортивного сообщества"
+      ]
+    ],
+    "krainiuk": [
+      [
+        "herman",
+        "Личный сайт специалиста"
+      ],
+      [
+        "hotline-camp",
+        "Тренировки и спортивные события"
+      ]
+    ],
+    "optimal": [
+      [
+        "garage-courses",
+        "Образовательный веб-продукт"
+      ],
+      [
+        "garage-site",
+        "Развитие после запуска"
+      ]
+    ],
+    "ilmix": [
+      [
+        "garage-site",
+        "Развитие цифровых продуктов"
+      ],
+      [
+        "ks-fish",
+        "Долгое сотрудничество"
+      ]
+    ]
+  },
+  "studies": {
+    "map-making": "<div class=\"approach-intro\"><h2 id=\"map-making-title\">Как устроена эта карта</h2><p>Карта соединяет работу, принципы и личное. Положение показывает смысловую близость, размер — личный вес опыта.</p></div><fieldset class=\"study\"><legend>Искривление вокруг «Гаража»</legend><label><input type=\"radio\" name=\"map-lens\" value=\"a\" checked>Сетка</label><label><input type=\"radio\" name=\"map-lens\" value=\"b\">Область влияния</label><label><input type=\"radio\" name=\"map-lens\" value=\"c\">Искривление</label><figure data-state=\"a\"><svg viewBox=\"0 0 600 340\" role=\"img\" aria-label=\"Без наведения линии остаются прямыми.\"><use href=\"assets/studies/map-lens.svg#plain\"/></svg><figcaption>Без наведения линии остаются прямыми.</figcaption></figure><figure data-state=\"b\"><svg viewBox=\"0 0 600 340\" role=\"img\" aria-label=\"Радиус влияния равен семи радиусам ядра. За его границей сетка не меняется.\"><use href=\"assets/studies/map-lens.svg#area\"/></svg><figcaption>Радиус влияния равен семи радиусам ядра. За его границей сетка не меняется.</figcaption></figure><figure data-state=\"c\"><svg viewBox=\"0 0 600 340\" role=\"img\" aria-label=\"При наведении точки смещаются от центра. Сила плавно затухает к границе области.\"><use href=\"assets/studies/map-lens.svg#warped\"/></svg><figcaption>При наведении точки смещаются от центра. Сила плавно затухает к границе области.</figcaption></figure></fieldset><p>Это художественная модель. В ней смещение зависит от расстояния до центра; у границы плавно исчезают и само смещение, и скорость его изменения. Сетка и поле знаков используют одно преобразование.</p>",
+    "light-study": "<fieldset class=\"study\"><legend>Свет в течение дня</legend><label><input type=\"radio\" name=\"eleven-light\" value=\"a\" checked>Утро</label><label><input type=\"radio\" name=\"eleven-light\" value=\"b\">Закат</label><label><input type=\"radio\" name=\"eleven-light\" value=\"c\">Ночь</label><figure data-state=\"a\"><img src=\"assets/studies/eleven-morning.jpg\" width=\"1200\" height=\"840\" loading=\"lazy\" alt=\"Песочный утренний свет.\"><figcaption>07:15 в Дубае · Песочный утренний свет.</figcaption></figure><figure data-state=\"b\"><img src=\"assets/studies/eleven-sunset.jpg\" width=\"1200\" height=\"840\" loading=\"lazy\" alt=\"Тёплый свет низкого солнца.\"><figcaption>17:05 в Дубае · Тёплый свет низкого солнца.</figcaption></figure><figure data-state=\"c\"><img src=\"assets/studies/eleven-night.jpg\" width=\"1200\" height=\"840\" loading=\"lazy\" alt=\"Холодные голубые оттенки.\"><figcaption>21:00 в Дубае · Холодные голубые оттенки.</figcaption></figure><p>Три состояния сайта на 1 декабря 2026 года. Меняется солнечный свет; это демонстрация, а не прогноз погоды.</p></fieldset>"
   }
 }

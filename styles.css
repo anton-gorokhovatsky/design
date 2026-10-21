@@ -9577,7 +9577,7 @@ body[data-case-open] :is(.map-axis-label, .map-labels, .map-node-label) {
 .case-media[data-orientation="portrait"] .map-hover-preview__mosaic-main { aspect-ratio: 4 / 5; }
 .case-media video { display: block; width: 100%; height: 100%; object-fit: contain; }
 .case-media figcaption { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0 var(--case-space-medium); color: var(--content-muted); }
-.case-media button { flex: 0 0 auto; min-height: 44px; margin-inline-start: auto; padding-block: 10px; border: 0; background: transparent; cursor: pointer; }
+.case-media button { flex: 0 0 auto; max-width: 100%; min-height: 44px; margin-inline-start: auto; padding-block: 10px; border: 0; background: transparent; cursor: pointer; }
 .case-inline-media:empty, .case-media[hidden] { display: none; }
 .map-inspector.is-case-view[data-case-media="false"] { max-width: 840px; }
 .is-case-view[data-case-media="false"] .case-layout { grid-template-columns: minmax(0, 1fr); }
@@ -11004,3 +11004,22 @@ html[data-celestial-volume] .direction-landmark__kind {
     max-width: min(13rem, calc(100% - var(--space-4)));
   }
 }
+
+/* Native choices share the existing reading window and keyboard behavior. */
+.study { margin: var(--space-5) 0; padding: 0; border: 0; min-width: 0; }
+.study legend { margin-bottom: var(--space-2); font: 600 var(--type-item)/var(--leading-item) var(--font-sans); }
+.study label { max-width: calc(100% - var(--space-3)); overflow-wrap: anywhere; display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--control-target); margin-right: var(--space-3); cursor: pointer; }
+.study input { accent-color: var(--signal); }
+.study label:has(:checked) { color: var(--signal); }
+.study figure { display: none; margin: var(--space-3) 0; }
+.study:has([value="a"]:checked) [data-state="a"], .study:has([value="b"]:checked) [data-state="b"], .study:has([value="c"]:checked) [data-state="c"] { display: block; }
+.study :is(img, svg) { display: block; width: 100%; height: auto; border-radius: var(--window-radius); }
+.study figcaption { margin-top: var(--space-2); color: var(--content-muted); }
+.study, #map-making > p { font: 400 var(--type-body)/var(--leading-body) var(--font-sans); }
+.eleven-study { display: none; }
+.map-inspector.is-case-view[data-selected-map-id="eleven"] .eleven-study { display: block; }
+.content-panel[data-view="map-making"] { --panel-width: 52.5rem; }
+
+.work-entries { display: flex; flex-direction: column; align-items: flex-start; margin-bottom: var(--space-5); }
+.work-entries .work-overview { margin: 0; }
+.map-making-link { display: inline-flex; align-items: center; min-height: var(--control-target); pointer-events: auto; }

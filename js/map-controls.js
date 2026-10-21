@@ -73,7 +73,7 @@ const initializeMapControls = () => {
   const about = createDisclosure('map-about', 'О КАРТЕ', view);
   about.trigger.classList.add('map-about-trigger');
   view.append(about.trigger);
-  about.panel.append(note);
+  about.panel.append(note, document.querySelector(".map-making-link"));
 
   for (const id of ['garage', 'private-practice', 'running']) {
     const label = document.querySelector('[data-map-label-id="' + id + '"]');
@@ -87,7 +87,7 @@ const initializeMapControls = () => {
 
   const closePopovers = () => popovers.forEach(panel => { if (panel.matches(':popover-open')) panel.hidePopover(); });
   document.addEventListener('click', event => {
-    if (event.target.closest('[data-open-settings], [data-nav-view], [data-map-id]')) closePopovers();
+    if (event.target.closest('[data-open-settings], [data-open-panel], [data-nav-view], [data-map-id]')) closePopovers();
   });
   desktop.addEventListener('change', closePopovers);
   window.addEventListener('reading-surface-change', closePopovers);

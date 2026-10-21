@@ -1,8 +1,9 @@
 import { mapItems } from "./map-data.js";
 
+const retry = document.querySelector("[data-load-map-study]");
 let content, request;
 export const getCaseContent = () => content;
-// One request for readers and search; failed requests can be retried.
+// Share one request; allow retry after failure.
 export const loadCaseContent = () => {
   if (request) return request;
   const controller = new AbortController();
@@ -17,9 +18,16 @@ export const loadCaseContent = () => {
       item.description = data.descriptions[item.id] || item.description;
       item.figures = data.figures[item.id] || [];
     }
+    for (const id of ["map-making", "light-study"]) document.getElementById(id).innerHTML = data.studies[id];
     return content = data;
   })
-  .catch(error => { request = null; throw error; })
+  .catch(error => {
+    document.querySelector("#map-study-status")?.replaceChildren("Не удалось загрузить разбор.");
+    retry.hidden = false;
+    request = null; throw error;
+  })
   .finally(() => clearTimeout(deadline));
   return request;
 };
+
+retry.onclick = () => location.reload();
