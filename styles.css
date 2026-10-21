@@ -271,6 +271,11 @@ button {
   content: "";
 }
 
+/* The CSS gradient remains the colour source; publish complete canvas frames. */
+.map-atmosphere { position: absolute; z-index: -1; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.practice-map[data-atmosphere-buffered]::before { visibility: hidden; }
+@media (forced-colors: active) { .map-atmosphere { display: none; } }
+
 .map-grid {
   position: absolute;
   z-index: -2;
@@ -686,6 +691,9 @@ html[data-capture="og"] .map-grid {
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
 }
+
+/* Keep label ink separate from Chrome's animated backdrop surface. */
+.map-node-label > span { transform: translateZ(0); }
 
 .map-node-label.is-visible {
   opacity: 1;

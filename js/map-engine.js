@@ -1,4 +1,4 @@
-// Spatial map geometry, relations, filters and selection.
+// Spatial map. Layout rationale: docs/map-layout-notes.md.
 import { getCaseContent, loadCaseContent } from "./case-content.js";
 import { trackPortfolioEvent } from "./analytics.js";
 import { updateWorkTags } from "./work-tags.js";
@@ -305,7 +305,6 @@ const getTimeLayout = (item) => {
   };
 };
 
-// Keep map points clear of controls.
 let mapFieldBounds;
 let mapTargetSize = 24;
 let mapTargetScale = 1;
@@ -327,8 +326,6 @@ const measureMapSpace = () => {
     top + item.y * height / 100 - Math.max(24, item.size) * scale / 2));
   const east = Math.max(...professional.map(item =>
     left + item.x * width / 100 + Math.max(24, item.size) * scale / 2));
-  // Use three quarters of the available outer field, with a bounded stretch.
-  // The existing clearance pass then fits this target around actual controls.
   const northSpan = (54 - Math.min(...professional.map(item => item.y))) * height / 100;
   const eastSpan = (Math.max(...professional.map(item => item.x)) - 50) * width / 100;
   mapSpaceGrowth = {
@@ -336,8 +333,6 @@ const measureMapSpace = () => {
     y: Math.max(0, Math.min(.2, (north - 24) * .75 / northSpan)),
   };
 };
-// Shared origin and angular anchors scale with the usable mobile map field.
-// The radii reserve room for each system's sphere, orbit and attached label.
 const homeAnchor = (degrees, radiusX, radiusY) => {
   const angle = degrees * Math.PI / 180;
   return { x: 50 + Math.cos(angle) * radiusX, y: 52 + Math.sin(angle) * radiusY };
@@ -392,12 +387,9 @@ const measureMapClearance = () => {
   if (focusHomeActive()) {
     const points = largeTextHome ? focusHomeLargeTextPoints : innerWidth < 360 ? focusHomeNarrowPoints : focusHomePoints;
     const shortField = !largeTextHome && mapFieldBounds.height <= 420;
-    // Labels stay inside the available field, including the permitted tilt.
     const museumTop = (mapLabels.get('garage').offsetHeight + mapTargetDiameters.get('garage')/2 + 6 + (shortField ? 20 : 40)) / mapFieldBounds.height * 100;
     const topShift = Math.max(0, museumTop - points.get('garage').y);
     points.forEach((position, id) => {
-      // Borrow the spare lower field for the upper group, gradually reducing
-      // the shift toward the personal nodes so the whole composition still fits.
       let y = position.y + (shortField ? 0 : topShift * Math.max(0, (86 - position.y) / (86 - points.get('garage').y)));
       if (shortField && id === 'garage') y = Math.max(y, museumTop);
       if (shortField && id === 'running') y = 90;
@@ -406,8 +398,6 @@ const measureMapClearance = () => {
     });
     return;
   }
-  // Mobile titles reserve space alongside the consoles.
-  // First place the author's named landmarks, then fit other nodes around them.
   const mobileTitles = innerWidth <= 900 && !timeModeActive;
   const priorities = ["garage", "private-practice", "running", "narkomfin", "eleven", "ks-fish", "principle-data-intuition"];
   const sorted = [...mapItems].sort((a, b) => {
@@ -415,8 +405,6 @@ const measureMapClearance = () => {
     return rank(a) - rank(b) || b.size - a.size;
   });
   sorted.forEach(item => {
-    // Orbit projects are positioned by their own layer. Reserving their old
-    // map positions leaves phantom obstacles and exhausts the compact field.
     if (mapButtons.get(item.id)?.classList.contains('project-satellite')) return;
     const position = clearMapConsoles(item, getMapLayout(item));
     mapClearancePositions.set(item.id, position);
@@ -484,7 +472,6 @@ const clearMapConsoles = (item, position) => {
       if (other.id === item.id) return false;
       const position = mapClearancePositions.get(other.id);
       if (!position) return false;
-      // Reserve the whole pointer target, including on compact maps.
       const otherRadius = mapTargetDiameter(other) * width / mapNodesRoot.clientWidth / 2;
       const otherRadiusY = mapTargetHeight(other) * width / mapNodesRoot.clientWidth / 2;
       const clearance = radius - padding + otherRadius + (innerWidth > 900 ? 4 : 2);
@@ -497,7 +484,6 @@ const clearMapConsoles = (item, position) => {
     [obstacle.left - radius, y], [obstacle.right + radius, y],
     [x, obstacle.top - radiusY], [x, obstacle.bottom + radiusY],
   ] : []).filter(isFree);
-  // Find the nearest free ring when the edges are occupied.
   const increment = innerWidth > 900 ? 12 : 6;
   for (let distance = increment; !candidates.length && distance < Math.max(innerWidth, innerHeight); distance += increment) {
     const steps = innerWidth > 900 ? 24 : Math.max(24, Math.ceil(2 * Math.PI * distance / 6));
@@ -563,7 +549,6 @@ const getMapLayout = (item) => {
   }
 
   if (viewportWidth <= 900) {
-    // Keep the institutional anchor; open the lower sectors toward the dock.
     if (!timeModeActive) y = 14 + (y - 14) * 1.18;
     const mobileYScale = Number.parseFloat(
       signalField?.style.getPropertyValue("--mobile-map-y-scale") || "1",
@@ -593,7 +578,6 @@ const getMapLayout = (item) => {
       Math.min(94, 50 + (y - 50) * safeMobileYScale),
     );
   } else if (["company", "project"].includes(item.kind)) {
-    // The center, personal sector and principles retain their authored anchors.
     x += Math.max(0, x - 50) * mapSpaceGrowth.x;
     y -= Math.max(0, 54 - y) * mapSpaceGrowth.y;
   }
@@ -675,8 +659,6 @@ const placeMapRestLabels = () => {
     return { left, right: left + width, top, bottom: top + height };
   };
   ["garage", "private-practice", "running"].forEach(id => occupied.push(labelRect(mapItems.find(item => item.id === id), "west")));
-  // Authored emphasis, independent of case order and node size.
-  // Herman is considered last, after the main labels have claimed their space.
   const featured = ["early-career", "ilmix", "narkomfin", "eleven", "ks-fish", "principle-data-intuition", "herman"];
   for (const id of featured) {
     const item = mapItems.find(candidate => candidate.id === id);
@@ -766,16 +748,57 @@ const setSearchRelationshipPreview = (id = null) => {
   syncMapRelationships();
 };
 
+// Publish the cached backdrop and spotlight as one canvas frame.
+const atmosphere = Object.assign(document.createElement("canvas"), { className: "map-atmosphere", ariaHidden: "true" }).getContext("2d");
+signalField.prepend(atmosphere.canvas);
+const buffer = atmosphere.canvas.cloneNode().getContext("2d"), backdrops = new Map();
+let backdropSize, backdropFrame;
+atmosphere.canvas.addEventListener("contextrestored", () => { backdropFrame = null; syncMapAtmospherePosition(); });
+const drawMapAtmosphere = ({width, height}, x, y) => {
+  const dpr = Math.min(devicePixelRatio || 1, 1.5), w = Math.ceil(width*dpr), h = Math.ceil(height*dpr);
+  const size = `${w}/${h}`;
+  if (size !== backdropSize) { backdrops.clear(); backdropSize = size; }
+  // The first gradient is the moving spotlight, painted below from the same token.
+  const bg = getComputedStyle(signalField, "::before").backgroundImage.replace(/^radial-gradient.*?%\),\s*/, "");
+  let image = backdrops.get(bg);
+  if (!image) {
+    image = new Image(); backdrops.set(bg, image); image.onload = syncMapAtmospherePosition;
+    image.src = "data:image/svg+xml," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><foreignObject width="100%" height="100%"><div xmlns="http://www.w3.org/1999/xhtml" style="width:100%;height:100%;background:${bg}"/></foreignObject></svg>`);
+  }
+  if (!image.naturalWidth) return;
+  const color = getComputedStyle(signalField).getPropertyValue("--map-focus-accent").trim();
+  const frame = `${size}/${bg}/${x}/${y}/${color}`;
+  if (frame === backdropFrame) return;
+  if (atmosphere.canvas.width !== w || atmosphere.canvas.height !== h) {
+    atmosphere.canvas.width = buffer.canvas.width = w; atmosphere.canvas.height = buffer.canvas.height = h;
+  }
+  x *= w/100; y *= h/100;
+  const idle = !atmosphereMapId && document.documentElement.hasAttribute("data-celestial-volume");
+  const radius = Math.hypot(Math.max(x,w-x), Math.max(y,h-y)) * (idle ? .24 : .21);
+  buffer.globalCompositeOperation = "copy"; buffer.drawImage(image,0,0); buffer.globalCompositeOperation = "source-over";
+  const light = buffer.createRadialGradient(x,y,0,x,y,radius);
+  light.addColorStop(0,color); light.addColorStop(1,"transparent");
+  const lightTheme = document.documentElement.dataset.theme === "light";
+  buffer.globalAlpha = idle ? (lightTheme ? .04 : .06) : (lightTheme ? .1 : .14);
+  buffer.fillStyle = light; buffer.fillRect(0,0,w,h); buffer.globalAlpha = 1;
+  atmosphere.globalCompositeOperation = "copy"; atmosphere.drawImage(buffer.canvas,0,0);
+  signalField.dataset.atmosphereBuffered = "";
+  backdropFrame = frame;
+};
+
 const syncMapAtmospherePosition = () => {
   const point = mapButtons.get(atmosphereMapId)?.getBoundingClientRect();
-  if (!point) return;
   const field = signalField.getBoundingClientRect(), style = signalField.style;
-  const x = (point.x + point.width / 2 - field.x) / field.width * 100;
-  const y = (point.y + point.height / 2 - field.y) / field.height * 100;
+  if (!field.width || !field.height) return;
+  const x = point ? (point.x + point.width / 2 - field.x) / field.width * 100 : 50;
+  const y = point ? (point.y + point.height / 2 - field.y) / field.height * 100 : 54;
+  drawMapAtmosphere(field, x, y);
   style.setProperty("--focus-x", `${x}%`);
   style.setProperty("--focus-y", `${y}%`);
   if (signalField.dataset.focusPlane) style.setProperty("--focus-horizon-x", `${(x + 12) / 1.24}%`);
 };
+
+new MutationObserver(() => syncMapAtmospherePosition()).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme", "data-contrast", "data-celestial-volume"] });
 
 const setMapAtmosphere = (item = null) => {
   if (!signalField) {
@@ -790,6 +813,7 @@ const setMapAtmosphere = (item = null) => {
     signalField.style.removeProperty("--focus-x");
     signalField.style.removeProperty("--focus-y");
     signalField.style.removeProperty("--focus-horizon-x");
+    syncMapAtmospherePosition();
     syncMapRelationships();
     syncMapNote();
     return;
@@ -1315,7 +1339,7 @@ if (mapNodesRoot) {
       label.dataset.timeYear = String(item.timeYear);
       label.dataset.timeLabel = item.timeLabel || String(item.timeYear);
     }
-    label.textContent = typographUiText(item.label);
+    label.append(Object.assign(document.createElement("span"), { textContent: typographUiText(item.label) }));
     label.style.setProperty("--x", `${position.x}%`);
     label.style.setProperty("--y", `${position.y}%`);
     label.style.setProperty("--label-offset", `${glyphDiameter / 2 + 7}px`);
