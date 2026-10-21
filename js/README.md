@@ -65,7 +65,9 @@ descriptions; loading hydrates the full descriptions and figures on the same
 items. Search waits for the complete index before accepting an early Enter.
 Failed requests can be retried. A shared request has a 10-second deadline, including
 its response body; aborting releases it for a fresh attempt. Responses cannot
-reopen dismissed cards.
+reopen dismissed cards. Reselecting a point whose reading window is already open
+keeps the current detail request: cached data still hydrates the visible text,
+evidence and editorial links after a reload.
 
 `runtimeDataFiles` keeps the payload in the cache/import-map manifest and public
 asset verification. Static content checks read it, and the performance gate

@@ -174,6 +174,7 @@ for (const engine of [process.argv[2] || 'chromium']) {
         // Verify the system preference on entry: after screenshots Chromium can
         // update matchMedia without notifying the document's existing listeners.
         await page.reload({waitUntil:'load'});
+        await page.waitForFunction(()=>!document.querySelector('[data-map-evidence]').hidden);
         await waitForCaseLayout(page);
         await page.waitForFunction(()=>!document.querySelector('.case-media video').paused
           && document.querySelector('[data-case-pause]').textContent==='Пауза');

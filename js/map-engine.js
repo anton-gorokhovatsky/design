@@ -1180,7 +1180,7 @@ const selectMapItem = (
   const current = () => request === detailRequest && selectedMapId === id && mapInspector.classList.contains("is-open");
   detailState.hidden = true;
   renderDetails();
-  if (!overview && reveal && !getCaseContent()) {
+  if (!overview && (reveal || mapInspector.classList.contains("is-open")) && !getCaseContent()) {
     const loadDetails = () => {
       detailState.hidden = false;
       detailStatus.textContent = "Загружаются подробности…";
