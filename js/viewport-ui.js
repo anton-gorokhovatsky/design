@@ -18,13 +18,11 @@ const lensNamespace = "http://www.w3.org/2000/svg";
 const lensForcedColors = matchMedia("(forced-colors: active)");
 const lensDepth = 56;
 const lensBleed = 32;
-// Refraction enlarges foreground content as it enters the matte edge. Keep
-// baselines intact: vertical displacement clips glyphs in browser SVG pipelines.
+// Lens invariants: js/README.md#scroll-lens-invariants.
 const drawScrollLensMap = (record, width, height, top, bottom) => {
   const extent = height + lensBleed * 2;
   const textureHeight = lensDepth + lensBleed;
-  // Decode each edge texture once. Replacing a PNG data URL on every scroll
-  // frame made WebKit alternate between the previous and newly decoded map.
+  // Reuse decoded edge textures.
   if (record.textureWidth !== width) {
     const canvas = record.canvas;
     canvas.height = textureHeight;
@@ -69,8 +67,7 @@ const drawScrollLensMap = (record, width, height, top, bottom) => {
     const edge = index ? bottom : top;
     const start = edge - (index ? lensDepth : lensBleed);
     const visible = edge !== null && start < height + lensBleed && start + textureHeight > -lensBleed;
-    // WebKit can discard the whole filter when a merged feImage lies entirely
-    // outside its bounds. Keep unused textures in bounds and merge transparency.
+    // Keep inactive textures in bounds.
     image.setAttribute("y", visible ? start / height : 0);
     image.setAttribute("height", textureHeight / height);
     record.mapLayers[index].setAttribute("in", visible ? (index ? "lower" : "upper") : "empty");
@@ -93,9 +90,7 @@ const lensRow = (g, y) => {
     left: g.left * (1 - flare) + corner,
     right: g.left + g.width + (g.portWidth - g.left - g.width) * flare - corner };
 };
-// Keep the raster attached to its picture so native/inertial scrolling moves
-// both together. A viewport-sized copy repositioned from scroll events lags
-// behind Safari's compositor and leaves torn bands at the frame boundary.
+// Raster lifetime follows its media.
 const createLensMedia = video => {
   const moving = video.matches("video");
   const background = getComputedStyle(video.closest(".personal-media__screen") || video.parentElement).backgroundColor;
@@ -126,8 +121,7 @@ const createLensMedia = video => {
       sourceContext.drawImage(video,(width-w)/2,moving?0:(height-h)/2,w,h);
     }
     context.clearRect(0,0,pw,ph);
-    // Copy the undistorted centre in one operation. Only the two narrow edge
-    // bands need row sampling, even when a tall reel scrolls past the window.
+    // Sample only the edge bands.
     context.save();
     context.beginPath();
     const r = Math.min(g.radius*density,width/2,height/2), x = g.left*density;
@@ -185,8 +179,7 @@ const createLensMedia = video => {
     canvas.remove();
   } };
 };
-// Project the live iframe: cross-origin pixels cannot be sampled, and WebKit
-// loses accelerated video under SVG URL filters (222757).
+// Cross-origin media uses projection.
 const createLensPlayer = element => {
   const transform = element.style.transform, origin = element.style.transformOrigin;
   const screen = element.parentElement, overflow = screen.style.overflow, clip = screen.style.clipPath;

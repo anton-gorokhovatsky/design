@@ -70,3 +70,20 @@ reopen dismissed cards.
 `runtimeDataFiles` keeps the payload in the cache/import-map manifest and public
 asset verification. Static content checks read it, and the performance gate
 bounds it separately while preserving every existing JavaScript/CSS limit.
+
+## Scroll lens invariants
+
+Detailed rendering rationale for `viewport-ui.js` is kept here rather than
+in the initial download. The adjacent source comments identify each invariant.
+
+- Refraction enlarges foreground content as it enters the matte edge. Keep baselines intact: vertical displacement clips glyphs in browser SVG pipelines.
+
+- Decode each edge texture once. Replacing a PNG data URL on every scroll frame made WebKit alternate between the previous and newly decoded map.
+
+- WebKit can discard the whole filter when a merged feImage lies entirely outside its bounds. Keep unused textures in bounds and merge transparency.
+
+- Keep the raster attached to its picture so native/inertial scrolling moves both together. A viewport-sized copy repositioned from scroll events lags behind Safari's compositor and leaves torn bands at the frame boundary.
+
+- Copy the undistorted centre in one operation. Only the two narrow edge bands need row sampling, even when a tall reel scrolls past the window.
+
+- Project the live iframe: cross-origin pixels cannot be sampled, and WebKit loses accelerated video under SVG URL filters (222757).
