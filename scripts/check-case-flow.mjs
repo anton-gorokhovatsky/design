@@ -97,7 +97,7 @@ for(const engine of [process.argv[2]||'chromium']) {
       await page.screenshot({path:dir+engine+'-'+id+'.jpg',type:'jpeg',quality:84});
       if(id==='eleven') {
         await checkStudy(page, '#light-study', 'eleven-light');
-        assert.match(await page.locator('[data-map-related] a[href="?point=narkomfin"]').textContent(), /Свет как часть цифрового опыта/);
+        assert.match(await page.locator('[data-map-related] a[href="?point=narkomfin"]').textContent(), /Здание\s+в\s+разное время суток/);
         await page.locator('.case-scroll').evaluate(element => element.scrollTop = 0);
 
         const reading=page.locator('.case-scroll');
