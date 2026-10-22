@@ -6,7 +6,7 @@ import { createTextField, attractPoint } from '/assets/map-story/text-field.js';
 import { mapItems } from '/js/map-data.js';
 import { blackHole, pulsar, practiceGroups, createPracticePlane, warpMapPoint } from '/js/map-scene-primitives.js';
 import { createSystem, STEP } from '/js/orbit-physics.js';
-import { audienceMassWeights } from '/js/practice-audience.js';
+import { audienceMassWeights, audienceSizeScales } from '/js/practice-audience.js';
 
 const root = document.documentElement;
 const systemTheme = matchMedia('(prefers-color-scheme: dark)');
@@ -119,32 +119,23 @@ function makePractice(figure) {
   const plane=createPracticePlane(base);sceneNote(figure);
   const seeds=practiceGroups.flatMap(group=>group.projects.map((item,i)=>({id:item.id,radius:group.radius,phase:group.phase+i*TAU/group.projects.length,group,item})));
   const system=createSystem(seeds,{weights:audienceMassWeights});
-  let w=400,h=350,angle=-16*Math.PI/180,tilt=48*Math.PI/180,carry=0,paused=false,drag=null,hovered=false,selected=null,pinned=false;
+  let w=400,h=350,carry=0,paused=false,hovered=false,selected=null,pinned=false;
   let points=seeds.map(()=>({x:0,y:0}));
   const buttons=targetToolbar(host,seeds.map(s=>s.item),()=>points,(item,source)=>{
     selected=item.id;pinned=source!=='hover';readout(figure,item);draw(0);
   });
   buttons.forEach((button,i)=>{
     const moon=document.createElement('span');moon.className='orbit-moon';moon.setAttribute('aria-hidden','true');
+    moon.style.setProperty('--audience-size',audienceSizeScales[seeds[i].id]);
     seeds[i].group.surface.forEach((color,j)=>moon.style.setProperty('--moon-'+j,color));button.append(moon);
   });
   const clearSelection=()=>{selected=null;pinned=false;buttons.forEach(b=>b.setAttribute('aria-pressed','false'));readout(figure,null);draw(0);};
   dismissSceneNote(figure,buttons,clearSelection);
   host.addEventListener('pointerleave',()=>{hovered=false;if(!pinned&&!host.contains(document.activeElement))clearSelection();});
-  const pauseButton=figure.querySelector('[data-scene-pause]');
-  function updatePause(){const limited=systemMotion.matches||stored('anton-signal-reduced-motion')==='1';pauseButton.disabled=limited;pauseButton.textContent=limited?'Пауза':paused||!motion?'Продолжить':'Пауза';}
-  updatePause();
-  pauseButton.addEventListener('click',()=>{if(!motion){setMotion(true);paused=false;}else paused=!paused;updatePause();});
-  const setView=()=>{plane.view(angle,tilt);plane.paint();draw(0);};
-  figure.querySelectorAll('[data-rotate]').forEach(button=>button.addEventListener('click',()=>{angle+=Number(button.dataset.rotate)*.2;setView();}));
-  figure.querySelector('[data-view-reset]').addEventListener('click',()=>{angle=-16*Math.PI/180;tilt=48*Math.PI/180;setView();});
-  host.addEventListener('pointerdown',e=>{if(e.target.closest('button,a,.scene-readout')||e.button!==0)return;drag={x:e.clientX,start:angle,id:e.pointerId};host.setPointerCapture(e.pointerId);});
-  host.addEventListener('pointermove',e=>{if(!drag)return;angle=drag.start+(e.clientX-drag.x)/w*1.4;setView();});
-  const end=()=>{drag=null;};host.addEventListener('pointerup',end);host.addEventListener('pointercancel',end);host.addEventListener('lostpointercapture',end);
   host.addEventListener('pointerover',e=>{if(e.target.closest('.scene-target,.scene-readout'))hovered=true;});
   host.addEventListener('pointerout',e=>{hovered=!!e.relatedTarget?.closest?.('.scene-target,.scene-readout');});
   function draw(dt) {
-    if(dt && !paused && !drag && !hovered && !host.contains(document.activeElement)) {
+    if(dt && !paused && !hovered && !host.contains(document.activeElement)) {
       carry+=Math.min(dt,.06); while(carry>=STEP){if(!system.step(STEP)){paused=true;const error=document.createElement('p');error.className='scene-error';error.setAttribute('role','status');error.textContent='Движение остановлено. Можно продолжить на основной карте.';figure.append(error);break;}carry-=STEP;}
     }
     const core=system.bodies[0];
@@ -157,7 +148,7 @@ function makePractice(figure) {
     });
     positionReadout(figure,points[seeds.findIndex(seed=>seed.id===selected)],w,h);
   }
-  return {draw,resize(){if(host.clientWidth<1||host.clientHeight<1)return;w=host.clientWidth;h=host.clientHeight;plane.sphere(.13);plane.tracks(dark);plane.paint();draw(0);},theme(){plane.tracks(dark);plane.paint();},motion:updatePause,getState:()=>({time:system.time,paused,angle,selected,failure:system.failure})};
+  return {draw,resize(){if(host.clientWidth<1||host.clientHeight<1)return;w=host.clientWidth;h=host.clientHeight;plane.sphere(.13);plane.tracks(dark);plane.paint();draw(0);},theme(){plane.tracks(dark);plane.paint();},getState:()=>({time:system.time,paused,selected,failure:system.failure})};
 }
 
 function makeGarage(figure) {
@@ -226,6 +217,7 @@ function makeMap(figure) {
   const host=figure.querySelector('.scene'), field=host.querySelector('canvas'), chrono=figure.dataset.scene==='time';
   const items=mapItems, positions=items.map(()=>({x:0,y:0}));sceneNote(figure);
   const satelliteSeeds=new Map(practiceGroups.flatMap(group=>group.projects.map((item,i)=>[item.id,{group,phase:group.phase+i*TAU/group.projects.length}])));let c,w=900,h=550,t=chrono?1:0,target=chrono?1:0,selected=null,pinned=false,elapsed=0;
+  let personalInk=getComputedStyle(root).getPropertyValue('--muted').trim();
   const levels=new Float32Array(items.length),edges=[];
   items.forEach((item,i)=>[item.parent,...(item.relatedTo||[])].filter(Boolean).forEach(parent=>{const from=items.findIndex(p=>p.id===parent);if(from>=0)edges.push({from,to:i,level:0});}));
   const black=canvas(),paintBlack=blackHole(black),pulse=canvas(),paintPulse=pulsar(pulse);
@@ -292,10 +284,13 @@ function makeMap(figure) {
       else if(item.id==='private-practice'){
         const size=width*.32;ctx.globalAlpha*=1-progress;ctx.drawImage(practice,p.x-size/2,p.y-size/2,size,size);ctx.globalAlpha=1;
         if(progress>0)sphere(ctx,p.x,p.y,Math.max(5,width*.013),['#bac7ad','#8c9f83','#4e6652','#101d16']);
-      }else if(satelliteSeeds.has(item.id)){sphere(ctx,p.x,p.y,Math.max(2.5,width*.0045),satelliteSeeds.get(item.id).group.surface);
+      }else if(satelliteSeeds.has(item.id)){sphere(ctx,p.x,p.y,Math.max(2.5,width*.0045)*audienceSizeScales[item.id],satelliteSeeds.get(item.id).group.surface);
       }else if(item.kind==='company'){sphere(ctx,p.x,p.y,r,['#a1a392','#43483d','#151a13','#090d08']);}
       else if(item.kind==='practice'){ctx.strokeStyle=ink(d);ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(p.x-4,p.y);ctx.lineTo(p.x+4,p.y);ctx.moveTo(p.x,p.y-4);ctx.lineTo(p.x,p.y+4);ctx.stroke();}
-      else if(item.kind==='personal'){sphere(ctx,p.x,p.y,Math.max(3,r),item.id==='youtube'?['#ffb4b4','#d51b30','#64051b','#360710']:['#d4c1cb','#86435a','#43182c','#230c19']);}
+      else if(item.kind==='personal'){
+        if(item.shape==='sphere')sphere(ctx,p.x,p.y,Math.max(3,r),item.id==='youtube'?['#ffb4b4','#d51b30','#64051b','#360710']:['#d4c1cb','#86435a','#43182c','#230c19']);
+        else{ctx.fillStyle=personalInk;ctx.beginPath();ctx.arc(p.x,p.y,Math.max(2.5,r*.65),0,TAU);ctx.fill();}
+      }
       else {ctx.strokeStyle=ink(d);ctx.lineWidth=1;ctx.beginPath();ctx.arc(p.x,p.y,Math.max(3,r*.65),0,TAU);ctx.stroke();ctx.fillStyle=ink(d);ctx.beginPath();ctx.arc(p.x,p.y,1.3,0,TAU);ctx.fill();}
       ctx.restore();
     });
@@ -325,7 +320,7 @@ function makeMap(figure) {
     paint(c,w,h,dark,t,positions);
     positionReadout(figure,positions[items.findIndex(item=>item.id===selected)],w,h);
   }
-  return {draw,resize(){if(host.clientWidth<1||host.clientHeight<1)return;w=host.clientWidth;h=host.clientHeight;c=contextFor(field,w,h);draw(0);},theme(){practicePlane.tracks(dark);practicePlane.paint();draw(0);},motion(){if(!motion){t=target;draw(0);}},getState:()=>({layout:t,selected,levels:[...levels],positions:items.map((item,i)=>({id:item.id,...positions[i],dated:Number.isFinite(item.timeYear)}))})};
+  return {draw,resize(){if(host.clientWidth<1||host.clientHeight<1)return;w=host.clientWidth;h=host.clientHeight;c=contextFor(field,w,h);draw(0);},theme(){personalInk=getComputedStyle(root).getPropertyValue('--muted').trim();practicePlane.tracks(dark);practicePlane.paint();draw(0);},motion(){if(!motion){t=target;draw(0);}},getState:()=>({layout:t,selected,levels:[...levels],positions:items.map((item,i)=>({id:item.id,...positions[i],dated:Number.isFinite(item.timeYear)}))})};
 }
 
 function mount(figure){

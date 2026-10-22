@@ -2,7 +2,7 @@ import {pane} from './pane-viewport.js';
 import { mapItems } from './map-data.js';
 import { mapButtons, syncMapNodeAvailability, setMapRovingId, syncMapAtmospherePosition } from './map-engine.js';
 import { createSystem, STEP } from './orbit-physics.js';
-import { audienceMassWeights } from './practice-audience.js';
+import { audienceMassWeights, audienceSizeScales } from './practice-audience.js';
 
 const projects = mapItems.filter(item => item.parent === 'private-practice');
 const projectIcons = {
@@ -76,6 +76,7 @@ function initializePracticeOrbits() {
     const moons=groups.flatMap(orbit=>orbit.projects.map((item,index)=>{
       const button=mapButtons.get(item.id);button.classList.add('project-satellite');
       button.dataset.projectId=item.id;button.dataset.orbit=orbit.id;
+      button.style.setProperty('--audience-size', audienceSizeScales[item.id]);
       orbit.surface.forEach((color,i)=>button.style.setProperty(`--moon-${i}`,color));
 
       const moon={item,orbit,phase:orbit.phase+index*tau/orbit.projects.length,button};

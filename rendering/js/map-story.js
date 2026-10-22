@@ -6,6 +6,7 @@ import {observeScrollLens} from './viewport-ui.js';
 const map=document.getElementById('map-pane'),story=document.getElementById('story-pane');
 const bridge=document.getElementById('story-bridge');
 const compact=matchMedia('(max-width:999px)'),reduce=matchMedia('(prefers-reduced-motion:reduce)');
+const menu=map.querySelector('[data-constellation-nav]');
 let opened=false,opener=null,readingPosition=0,loaded=false,loading,contentLoading,contentReady=false,activeTransition,showRevision=0;
 observeScrollLens(story,()=>story.querySelectorAll('h1,h2,p,figcaption,.gravity-texture'),{
   owner:document.body,enabled:()=>opened&&!document.body.classList.contains('story-is-moving')
@@ -34,7 +35,16 @@ function restoreReading(){
 story.addEventListener('scroll',()=>{if(story.clientWidth===readingWidth)rememberReading();},{passive:true});
 new ResizeObserver(()=>{if(readingFrame)return;readingFrame=requestAnimationFrame(()=>{readingFrame=0;restoreReading();});}).observe(story);
 function sync(){
-  map.inert=opened&&compact.matches;story.inert=!opened;bridge.inert=!opened;
+  const menuAbove=opened&&compact.matches&&menu.classList.contains('is-open');
+  map.inert=false;story.inert=!opened||menuAbove;bridge.inert=!opened||menuAbove;
+  document.body.classList.toggle('story-menu-open',menuAbove);
+  if(menuAbove){
+    menu.setAttribute('popover','manual');
+    if(!menu.matches(':popover-open'))menu.showPopover();
+  }else if(menu.hasAttribute('popover')){
+    if(menu.matches(':popover-open'))menu.hidePopover();
+    menu.removeAttribute('popover');
+  }
   for(const entry of document.querySelectorAll('.map-about-trigger,[data-map-story],.map-story-link')){
     entry.setAttribute('aria-expanded',String(opened));entry.setAttribute('aria-controls','story-pane');
   }
@@ -106,6 +116,10 @@ document.addEventListener('click',event=>{
   const entry=event.target.closest('.map-about-trigger,[data-map-story],.map-story-link');
   if(entry&&!event.ctrlKey&&!event.metaKey&&!event.shiftKey&&!event.altKey){event.preventDefault();event.stopImmediatePropagation();opener=entry;void show(true,{animate:event.detail>0});return;}
   if(event.target.closest('[data-close-story]')){event.preventDefault();void show(false,{animate:event.detail>0});return;}
+  if(opened&&compact.matches&&map.contains(event.target)&&event.target.closest('[data-nav-view],[data-nav-utility],[data-open-settings]')){
+    void show(false,{focus:false,animate:event.detail>0});
+    return;
+  }
   if(!story.contains(event.target))return;
   if(event.target.closest('[data-story-retry]')){void show(true,{write:false});return;}
   if(event.target.closest('[data-close-story],a[href="/?scene=map"]')){event.preventDefault();void show(false,{animate:event.detail>0});return;}
@@ -118,6 +132,7 @@ story.addEventListener('keydown',event=>{if(event.key==='Escape'&&!event.default
 window.addEventListener('popstate',()=>{void show(new URL(location.href).searchParams.has('story'),{write:false});});
 compact.addEventListener('change',()=>{activeTransition?.skipTransition();document.body.classList.remove('story-is-moving','story-uses-snapshot');sync();});
 new MutationObserver(sync).observe(map.querySelector('.map-inspector'),{attributes:true,attributeFilter:['class']});
+new MutationObserver(sync).observe(menu,{attributes:true,attributeFilter:['class']});
 document.addEventListener('keydown',event=>{
   if(opened&&event.key==='Escape'&&!event.defaultPrevented&&(document.activeElement===opener||document.activeElement===document.body)){event.preventDefault();void show(false);return;}
   if(!opened||event.key!=='Tab'||event.defaultPrevented)return;

@@ -10798,11 +10798,11 @@ width:var(--practice-orbit-size,168px);height:var(--practice-orbit-size,168px);b
 .map-surface.has-practice-orbits .map-node[data-map-id="private-practice"]{--x:70%!important;--y:clamp(42%,calc(calc(var(--pane-vh) * 85) - 265px),56%)!important}
 .map-surface.has-practice-orbits .practice-map .map-node[data-map-id="private-practice"] .map-node__glyph,.map-surface.has-practice-orbits .practice-map .map-node[data-map-id="private-practice"].is-selected .map-node__glyph{--practice-orbit-size:clamp(200px,min(calc(var(--pane-vw) * 24),calc(calc(var(--pane-vh) * 100) - 400px)),340px);width:var(--practice-orbit-size);height:calc(var(--practice-orbit-size)*.72)}
 .map-surface.has-practice-orbits .map-axis-label--south{translate:0 8px}
-.map-surface .project-satellite>.map-node__glyph{width:10px;height:10px}
+.map-surface .project-satellite>.map-node__glyph{--satellite-diameter:10px}
 }
 .project-satellites{position:fixed;left:0;top:0;z-index:11;pointer-events:none}
 .project-satellites .project-satellite{position:absolute;left:0;top:0;display:grid;place-items:center;width:24px;height:24px;min-width:0;min-height:0;padding:0;border:0;background:none;pointer-events:auto;border-radius:50%;color:var(--ink);cursor:pointer;transition:none;touch-action:manipulation}
-.project-satellite>.map-node__glyph{width:7px;height:7px;border-radius:50%;background:radial-gradient(circle at 32% 27%,var(--moon-0) 0%,var(--moon-1) 33%,var(--moon-2) 70%,var(--moon-3) 100%);box-shadow:0 0 0 .6px color-mix(in srgb,var(--ink) 22%,transparent)}
+.project-satellite>.map-node__glyph{width:calc(var(--satellite-diameter,7px) * var(--audience-size,1));height:calc(var(--satellite-diameter,7px) * var(--audience-size,1));border-radius:50%;background:radial-gradient(circle at 32% 27%,var(--moon-0) 0%,var(--moon-1) 33%,var(--moon-2) 70%,var(--moon-3) 100%);box-shadow:0 0 0 .6px color-mix(in srgb,var(--ink) 22%,transparent)}
 .project-satellite:is(:hover,:focus-visible)>.map-node__glyph{box-shadow:0 0 0 3px color-mix(in srgb,var(--signal) 18%,transparent),0 0 0 1px var(--signal)}
 .project-satellite:focus-visible{outline:1px solid var(--signal);outline-offset:1px}
 .project-orbit-tooltip{position:fixed;z-index:40;left:0;top:0;max-width:230px;padding:7px 10px;border-radius:8px;background:var(--material-01);color:var(--ink);font:500 var(--type-caption)/1.4 var(--font-sans);pointer-events:none}
@@ -10905,8 +10905,7 @@ html[data-celestial-volume] .practice-orbits-canvas {
 filter: var(--celestial-practice-light);
 }
 html[data-celestial-volume] .project-satellite > .map-node__glyph {
-width: 12px;
-height: 12px;
+--satellite-diameter: 12px;
 filter: var(--celestial-satellite-light);
 background: radial-gradient(circle at 32% 27%,
 color-mix(in srgb, var(--moon-0) 88%, #f3efdf) 0%,
@@ -10914,8 +10913,7 @@ var(--moon-1) 30%, var(--moon-2) 68%, var(--moon-3) 100%);
 }
 @container map-viewport (max-width: 900px) {
 html[data-celestial-volume] .project-satellite > .map-node__glyph {
-width: 8.5px;
-height: 8.5px;
+--satellite-diameter: 8.5px;
 }
 }
 html[data-celestial-volume] [data-map-id="early-career"] .celestial-form {
@@ -11065,8 +11063,10 @@ body.split-page{font-size:var(--type-body)}
 @media(max-width:999px){
  #split-shell{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) 0 minmax(0,0fr)}
  .has-story-pane #split-shell{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,min(28dvh,calc(var(--focused-author-bottom,140px) + 10px))) 12px minmax(0,1fr)}
- .has-story-pane #map-pane{pointer-events:none}
  .has-story-pane .map-surface{height:calc(100dvh - 12px);bottom:auto}
+ .has-story-pane .constellation-nav[popover]{margin:0}
+ .has-story-pane #story-pane{transition:filter var(--duration-feedback) var(--ease-out),opacity var(--duration-feedback) var(--ease-out)}
+ .story-menu-open #story-pane{filter:blur(3px);opacity:.45}
  #story-pane .page{max-width:760px}
  #story-bridge button{width:calc(var(--control-target) + var(--space-4));height:var(--control-target)}
  #story-bridge button::before{width:var(--space-6);height:3px}
@@ -11075,6 +11075,8 @@ body.split-page{font-size:var(--type-body)}
 @media(prefers-reduced-motion:reduce){.story-is-moving #split-shell,.story-is-moving #story-pane{transition:none}.story-is-moving #map-pane{animation:none}}
 html[data-reduce-motion="true"] .story-is-moving #split-shell,html[data-reduce-motion="true"] .story-is-moving #story-pane{transition:none}
 html[data-reduce-motion="true"] .story-is-moving #map-pane{animation:none}
+@media(prefers-reduced-motion:reduce){.has-story-pane #story-pane{transition:none}}
+html[data-reduce-motion="true"] .has-story-pane #story-pane{transition:none}
 
 /* Visible entry in the existing mobile command row. */
 .mobile-map-story{display:none}

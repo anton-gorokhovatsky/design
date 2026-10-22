@@ -25,6 +25,18 @@ try{
   const story=page.locator('#story-pane');await page.waitForSelector('#story-pane[data-ready="true"]');
   await page.waitForFunction(()=>document.activeElement?.id==='story-title');
   assert.equal(await story.evaluate(e=>e.inert),false);
+  if(width===390){
+   const menu=page.locator('[data-constellation-nav-toggle]');
+   await menu.click();
+   await page.waitForFunction(()=>document.querySelector('[data-constellation-nav]').matches(':popover-open'));
+   assert.equal(await story.evaluate(e=>e.inert),true,'Only the reader rests behind the menu');
+   const menuItem=page.locator('[data-nav-view="work"]');
+   assert.equal(await menuItem.evaluate(e=>{const r=e.getBoundingClientRect();return e.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}),true,'The menu remains clickable outside the top pane');
+   await page.keyboard.press('Escape');
+   await page.waitForFunction(()=>!document.querySelector('#story-pane').inert);
+   assert.equal(new URL(page.url()).searchParams.has('story'),true,'Closing the menu preserves the story');
+   await story.locator('h1').focus();
+  }
   await page.keyboard.press('Escape');
   await page.waitForFunction(selector=>document.activeElement?.matches(selector),width===1440?'.map-about-trigger':'.mobile-map-story');
   // Three complete roundtrips catch accumulated offsets from hidden panels.
