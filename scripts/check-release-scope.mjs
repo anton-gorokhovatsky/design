@@ -142,6 +142,15 @@ const scoped = (path, before, after, mode, components = []) => {
   checks += 1;
 };
 const styles = read("styles.css");
+for (const selector of ['#story-bridge button', '#story-bridge button::before', '.has-story-pane #story-bridge', '#story-bridge button:hover::before,#story-bridge button:focus-visible::before']) {
+  scoped('styles.css', '', `${selector}{opacity:.8}`, 'components', ['story-bridge']);
+}
+scoped('styles.css', '', '@media(max-width:999px){#story-bridge button::before{width:32px}}', 'components', ['story-bridge']);
+for (const selector of ['#story-bridge + #story-pane', ':is(#story-bridge,#map-pane)', 'body:has(#story-bridge)', '#story-bridge button,#map-pane', '#split-shell']) {
+  scoped('styles.css', '', `${selector}{opacity:.8}`, 'full');
+}
+scoped('styles.css', '', '#story-bridge button{opacity:.8}:root{--line:red}', 'full');
+assert.deepEqual(componentCoverage['story-bridge'], ['map-story', 'accessibility']);
 scoped("styles.css", "", '.control-console .command-dock__mark svg {fill: none; stroke: currentColor}', "components", ["search-icon"]);
 scoped("styles.css", '.control-console .command-dock__mark::before {content: ""}', "", "components", ["search-icon"]);
 scoped("styles.css", "", '.control-console .command-dock__mark svg, .map-node {fill: none}', "full");

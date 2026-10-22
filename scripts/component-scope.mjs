@@ -18,6 +18,10 @@ const ownsClass = (matches) => (selector) => selectorParser().astSync(selector).
   return owned;
 });
 const cssOwners = {
+  "story-bridge": selector => selectorParser().astSync(selector).nodes.every(branch =>
+    branch.nodes.some(node => node.type === "id" && node.value === "story-bridge")
+    && branch.nodes.every(node => node.type !== "nesting"
+      && (node.type !== "combinator" || ["", ">"].includes(node.value.trim())))),
   settings: ownsClass(settingsClass),
   overview: ownsClass(/^(?:overview-entry|work-overview(?:__[\w-]+)?|observation-[\w-]+)$/),
   "map-presentation": selector => selectorParser().astSync(selector).nodes.every(branch =>
