@@ -30,7 +30,8 @@ try{
    await menu.click();
    await page.waitForFunction(()=>document.querySelector('[data-constellation-nav]').matches(':popover-open'));
    assert.equal(await story.evaluate(e=>e.inert),true,'Only the reader rests behind the menu');
-   const menuItem=page.locator('[data-nav-view="work"]');
+   const menuItem=page.locator('[data-nav-view="contact"]');
+   await menuItem.click({trial:true});
    assert.equal(await menuItem.evaluate(e=>{const r=e.getBoundingClientRect();return e.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}),true,'The menu remains clickable outside the top pane');
    await page.keyboard.press('Escape');
    await page.waitForFunction(()=>!document.querySelector('#story-pane').inert);
