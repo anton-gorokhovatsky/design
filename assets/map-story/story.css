@@ -25,14 +25,26 @@
 .map-story .scene-readout--anchored.is-visible{transition-delay:0s}
 .map-story .story-loading{padding-top:var(--space-7)}
 
-/* The first reader snapshot contains its text; a short defocus reveals the new plane. */
-@keyframes pair-reader-in{from{opacity:0;filter:blur(4px);transform:translateX(12px) scale(.99)}to{opacity:1;filter:none;transform:none}}
-@keyframes pair-reader-out{to{opacity:0;filter:blur(3px);transform:translateX(8px) scale(.99)}}
-@media(max-width:999px){
- @keyframes pair-reader-in{from{opacity:0;filter:blur(4px);transform:translateY(12px) scale(.99)}to{opacity:1;filter:none;transform:none}}
- @keyframes pair-reader-out{to{opacity:0;filter:blur(3px);transform:translateY(8px) scale(.99)}}
-}
-::view-transition-group(paired-map){overflow:clip}
-::view-transition-group(paired-story){overflow:clip;z-index:1}
-.story-is-moving:not(.story-uses-snapshot).has-story-pane #story-pane{animation:reader-unfold 420ms var(--ease-out) both}
-@keyframes reader-unfold{from{opacity:0;filter:blur(4px);transform:translateY(12px)}to{opacity:1;filter:none;transform:none}}
+/* Clear joint; progressive defocus toward each moving outer edge. */
+.story-is-moving:not(.story-uses-snapshot) #split-shell{transition:grid-template-columns 420ms var(--ease-out),grid-template-rows 420ms var(--ease-out),padding 420ms var(--ease-out)}
+.story-is-moving #story-pane{transition:none;will-change:opacity}
+.story-is-moving:not(.story-uses-snapshot) #story-pane{height:var(--story-reading-height);width:var(--story-reading-pane-width);align-self:start;justify-self:start}
+.story-is-moving.story-is-closing #story-pane{visibility:visible;opacity:1}
+.story-is-moving:not(.story-uses-snapshot) #story-pane>.page{width:var(--story-reading-width);max-width:none;--pane-vw:var(--story-reading-unit)}
+@media(prefers-reduced-motion:reduce){.story-is-moving #split-shell{transition:none}}
+html[data-reduce-motion=true] .story-is-moving #split-shell{transition:none}
+
+/* Desktop snapshots keep the map reflow to one layout; the reader focuses in place. */
+#map-pane{view-transition-name:paired-map}
+#story-pane{view-transition-name:paired-story}
+::view-transition{pointer-events:none}
+::view-transition-group(paired-map),::view-transition-group(paired-story){animation-duration:420ms;animation-timing-function:var(--ease-out);overflow:clip;border-radius:var(--window-radius);corner-shape:var(--corner-card-shape)}
+::view-transition-old(paired-map),::view-transition-new(paired-map),::view-transition-old(paired-story),::view-transition-new(paired-story){width:100%;height:100%;object-fit:none;object-position:left top}
+::view-transition-old(paired-map){animation:pair-map-out 420ms var(--ease-out) both}
+::view-transition-new(paired-map){animation:pair-map-in 420ms var(--ease-out) both}
+::view-transition-new(paired-story){filter:url(#pair-focus-story);animation:pair-reader-in 420ms var(--ease-out) both}
+::view-transition-old(paired-story){filter:url(#pair-focus-story);animation:pair-reader-out 420ms var(--ease-out) both}
+@keyframes pair-map-out{to{opacity:0}}
+@keyframes pair-map-in{from{opacity:0}to{opacity:1}}
+@keyframes pair-reader-in{from{opacity:0}to{opacity:1}}
+@keyframes pair-reader-out{to{opacity:0}}

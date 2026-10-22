@@ -100,14 +100,18 @@ export async function checkLiveSurface(browser, origin, engine) {
     assert.equal(await panel.isVisible(), false);
     assert.equal(await trigger.evaluate(el => document.activeElement === el), true, `${id}: Escape returns focus`);
   }
-  phase = 'map story shared surface';
+  phase = 'map story shared joint';
   await page.locator('.map-about-trigger').click();
   await page.waitForSelector('#story-pane[data-ready="true"]');
   const storySurface = await page.locator('#story-bridge [data-close-story]').evaluate(el => {
     const css = getComputedStyle(el);
-    return { blur: css.backdropFilter || css.webkitBackdropFilter, shadow: css.boxShadow, border: css.borderTopWidth };
+    const grip = getComputedStyle(el, '::before');
+    return { blur: css.backdropFilter || css.webkitBackdropFilter, shadow: css.boxShadow, border: css.borderTopWidth, background: css.backgroundColor, target: el.getBoundingClientRect().width, gripWidth: grip.width };
   });
-  assert.ok(storySurface.blur.includes('blur(24px)'), 'Story uses the shared material');
+  assert.equal(storySurface.blur, 'none', 'The shared joint has no separate glass button');
+  assert.equal(storySurface.background, 'rgba(0, 0, 0, 0)');
+  assert.equal(storySurface.gripWidth, '3px', 'The vertical joint has a visible grip');
+  assert.ok(storySurface.target >= 44, 'The compact grip retains its accessible hit target');
   assert.equal(storySurface.shadow, 'none');
   assert.equal(storySurface.border, '0px');
   await page.keyboard.press('Escape');

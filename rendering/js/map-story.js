@@ -7,6 +7,7 @@ const map=document.getElementById('map-pane'),story=document.getElementById('sto
 const bridge=document.getElementById('story-bridge');
 const compact=matchMedia('(max-width:999px)'),reduce=matchMedia('(prefers-reduced-motion:reduce)');
 const menu=map.querySelector('[data-constellation-nav]');
+let focusPlane;
 let opened=false,opener=null,readingPosition=0,loaded=false,loading,contentLoading,contentReady=false,activeTransition,showRevision=0;
 observeScrollLens(story,()=>story.querySelectorAll('h1,h2,p,figcaption,.gravity-texture'),{
   owner:document.body,enabled:()=>opened&&!document.body.classList.contains('story-is-moving')
@@ -61,7 +62,7 @@ async function prepareStory(){
     if(!style){style=document.createElement('link');style.rel='stylesheet';style.href=import.meta.resolve('../assets/map-story/story.css');style.dataset.storyStyle='';styleReady=new Promise((resolve,reject)=>{style.addEventListener('load',resolve,{once:true});style.addEventListener('error',reject,{once:true});});document.head.append(style);}
     const response=await fetch(import.meta.resolve('../assets/map-story/content.html'));
     if(!response.ok)throw new Error('story-content-'+response.status);
-    const html=await response.text();await styleReady;story.innerHTML=html;contentReady=true;
+    const html=await response.text();await Promise.all([styleReady,import('../assets/map-story/focus.js').then(module=>{focusPlane=module.focusPlane;})]);story.innerHTML=html;contentReady=true;
   })();
   try{await contentLoading;}finally{contentLoading=null;}
 }
@@ -74,6 +75,50 @@ async function loadStory(transition,content){
     throw error;
   }finally{loading=null;}
 }
+function snapshotUnfold(apply){
+  const previousBounds=story.getBoundingClientRect();
+  document.body.classList.add('story-is-moving','story-uses-snapshot');
+  const view=document.startViewTransition(()=>{apply();pane.refresh();});
+  let svg,surface,frame=0,cancelled=false;
+  const cleanup=()=>{cancelled=true;cancelAnimationFrame(frame);surface?.clear();svg?.remove();if(activeTransition===controller)document.body.classList.remove('story-is-moving','story-uses-snapshot');};
+  const controller={skipTransition(){view.skipTransition();cleanup();}};activeTransition=controller;
+  void view.ready.then(()=>{
+    if(cancelled)return;
+    svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('width','0');svg.setAttribute('height','0');svg.setAttribute('aria-hidden','true');svg.style.position='absolute';document.body.append(svg);
+    // The browser's viewport-sized image avoids repainting the live map each frame.
+    surface=focusPlane(svg,story,{bounds:opened?story.getBoundingClientRect():previousBounds,portrait:compact.matches,attach:false});
+    const start=performance.now(),opening=opened;
+    const paint=()=>{const t=Math.min(1,(performance.now()-start)/420);surface.paint(Math.pow(opening?1-t:t,1.3));if(t<1)frame=requestAnimationFrame(paint);};paint();
+  }).catch(()=>{});
+  return view.finished.catch(()=>{}).then(cleanup);
+}
+function unfold(apply,value){
+  const shell=document.getElementById('split-shell');
+  // Keep line breaks stable while the window reveals the reading surface.
+  const wasOpen=document.body.classList.contains('has-story-pane');
+  document.body.classList.add('has-story-pane');
+  const width=story.clientWidth,readingBounds=story.getBoundingClientRect();
+  document.body.classList.toggle('has-story-pane',wasOpen);
+  story.style.setProperty('--story-reading-width',width+'px');
+  story.style.setProperty('--story-reading-unit',width/100+'px');
+  story.style.setProperty('--story-reading-height',readingBounds.height+'px');story.style.setProperty('--story-reading-pane-width',readingBounds.width+'px');
+  shell.getBoundingClientRect();
+  document.body.classList.add('story-is-moving');
+  document.body.classList.toggle('story-is-closing',!value);
+  apply();
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('width','0');svg.setAttribute('height','0');svg.setAttribute('aria-hidden','true');svg.style.position='absolute';document.body.append(svg);
+  const surface=focusPlane(svg,story,{bounds:readingBounds,portrait:compact.matches});
+  const timing={duration:420,easing:getComputedStyle(document.documentElement).getPropertyValue('--ease-out').trim(),fill:'both'};
+  const clock=story.animate([{opacity:value?0:1},{opacity:value?1:0}],timing);
+  const animations=[clock,...shell.getAnimations().filter(a=>a.effect?.getTiming().iterations!==Infinity)];
+  let frame=0;
+  const paint=()=>{const t=Math.min(1,Math.max(0,Number(clock.currentTime||0)/timing.duration));surface.paint(Math.pow(value?1-t:t,1.3));frame=requestAnimationFrame(paint);};
+  paint();
+  const cleanup=()=>{cancelAnimationFrame(frame);animations.forEach(a=>a.cancel());surface.clear();svg.remove();story.style.removeProperty('--story-reading-width');story.style.removeProperty('--story-reading-unit');story.style.removeProperty('--story-reading-height');story.style.removeProperty('--story-reading-pane-width');document.body.classList.remove('story-is-moving','story-is-closing');};
+  activeTransition={skipTransition:cleanup};
+  return Promise.all(animations.map(a=>a.finished.catch(()=>{}))).then(()=>{if(svg.isConnected)cleanup();});
+}
 async function show(value,{write=true,focus=true,animate=false}={}){
   const revision=++showRevision;
   if(!value&&opened){rememberReading();readingPosition=story.scrollTop;}
@@ -81,16 +126,12 @@ async function show(value,{write=true,focus=true,animate=false}={}){
   const moving=changed&&animate&&!reduce.matches&&document.documentElement.dataset.reduceMotion!=='true';
   activeTransition?.skipTransition();
   const content=value?prepareStory():Promise.resolve();void content.catch(()=>{});
-  const snapshot=moving&&!compact.matches&&typeof document.startViewTransition==='function';
-  document.body.classList.toggle('story-uses-snapshot',snapshot);
-  document.body.classList.toggle('story-is-moving',moving);
   const apply=()=>{if(revision!==showRevision)return;document.body.classList.toggle('has-story-pane',value);sync();};
+  await content.catch(()=>{});
+  if(revision!==showRevision)return;
   let transition;
-  if(snapshot){
-    const view=document.startViewTransition(async()=>{await content;apply();pane.refresh();});
-    void view.ready.catch(()=>{});activeTransition=view;transition=view.finished.catch(()=>{});
-  }else{await content.catch(()=>{});apply();transition=Promise.all(moving?document.getElementById('split-shell').getAnimations({subtree:true}).filter(a=>a.effect?.getTiming().iterations!==Infinity).map(a=>a.finished.catch(()=>{})):[]);}
-  if(moving)void transition.then(()=>{if(revision===showRevision)document.body.classList.remove('story-is-moving','story-uses-snapshot');});
+  if(moving)transition=!compact.matches&&typeof document.startViewTransition==='function'?snapshotUnfold(apply):unfold(apply,value);
+  else{apply();transition=Promise.resolve();}
   if(write&&changed){const url=new URL(location.href);if(value)url.searchParams.set('story','1');else url.searchParams.delete('story');history.pushState(history.state,'',url);}
   if(value){
     document.querySelector('[data-constellation-nav-toggle][aria-expanded="true"]')?.click();
@@ -130,7 +171,7 @@ document.addEventListener('click',event=>{
 bridge.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();void show(false);}});
 story.addEventListener('keydown',event=>{if(event.key==='Escape'&&!event.defaultPrevented){event.stopPropagation();if(event.target.closest('.scene-target,.scene-readout'))return;event.preventDefault();void show(false);}});
 window.addEventListener('popstate',()=>{void show(new URL(location.href).searchParams.has('story'),{write:false});});
-compact.addEventListener('change',()=>{activeTransition?.skipTransition();document.body.classList.remove('story-is-moving','story-uses-snapshot');sync();});
+compact.addEventListener('change',()=>{activeTransition?.skipTransition();document.body.classList.remove('story-is-moving','story-is-closing','story-uses-snapshot');sync();});
 new MutationObserver(sync).observe(map.querySelector('.map-inspector'),{attributes:true,attributeFilter:['class']});
 new MutationObserver(sync).observe(menu,{attributes:true,attributeFilter:['class']});
 document.addEventListener('keydown',event=>{

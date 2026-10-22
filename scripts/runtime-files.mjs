@@ -41,4 +41,4 @@ export const readRuntimeSource = (projectRoot) => runtimeFiles
   .join("\n");
 
 // Loaded only after the reader opens “О карте”; all bytes remain versioned and bounded.
-export const storyFiles = ["assets/map-story/content.html", "assets/map-story/story.css", "assets/map-story/story.js", "assets/map-story/gravity-lens.js", "assets/map-story/null-geodesics.js", "assets/map-story/text-field.js", "js/map-scene-primitives.js"];
+export const storyFiles = ["assets/map-story/content.html", "assets/map-story/story.css", "assets/map-story/story.js", "assets/map-story/focus.js", "assets/map-story/gravity-lens.js", "assets/map-story/null-geodesics.js", "assets/map-story/text-field.js", "js/map-scene-primitives.js"];
