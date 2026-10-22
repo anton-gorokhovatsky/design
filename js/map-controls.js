@@ -1,3 +1,4 @@
+import {pane} from './pane-viewport.js';
 // Enhance the existing controls after map labels have been created.
 import "./map-engine.js";
 
@@ -5,7 +6,7 @@ const initializeMapControls = () => {
   const display = document.querySelector('.display-control');
   const view = document.querySelector('.map-controls');
   if (!display || !view || !('showPopover' in HTMLElement.prototype)) return;
-  const desktop = matchMedia('(min-width: 901px)');
+  const desktop = pane.media('(min-width: 901px)');
   const closeIcon = '<svg class="ui-close__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 7 17 17M17 7 7 17"/></svg>';
   const chevron = '<svg class="map-disclosure__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>';
   const popovers = [];
@@ -33,13 +34,13 @@ const initializeMapControls = () => {
       const width = panel.offsetWidth || parseFloat(getComputedStyle(panel).width) || 240;
       const left = id === 'screen-controls' ? rect.right - width : rect.left;
       const bottom = id === 'screen-controls' ? display.getBoundingClientRect().bottom : rect.bottom;
-      panel.style.maxHeight = Math.max(80, innerHeight - 32) + 'px';
+      panel.style.maxHeight = Math.max(80, pane.height - 32) + 'px';
       const height = panel.offsetHeight;
-      const top = bottom + 8 + height <= innerHeight - 16
+      const top = bottom + 8 + height <= pane.height - 16
         ? bottom + 8 : Math.max(16, rect.top - height - 8);
-      panel.style.left = Math.max(16, Math.min(left, innerWidth - width - 16)) + 'px';
+      panel.style.left = Math.max(16, Math.min(left, pane.width - width - 16)) + 'px';
       panel.style.top = top + 'px';
-      panel.style.maxHeight = Math.max(80, innerHeight - top - 16) + 'px';
+      panel.style.maxHeight = Math.max(80, pane.height - top - 16) + 'px';
     };
     panel.addEventListener('beforetoggle', event => { if (event.newState === 'open') place(); });
     panel.addEventListener('pointerdown', event => event.stopPropagation());

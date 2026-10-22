@@ -1,3 +1,4 @@
+import {pane} from './pane-viewport.js';
 import { hideMapPreview } from "./map-media.js";
 import { mapItems } from "./map-data.js";
 import { mapInspector, observationRoute } from "./map-engine.js";
@@ -44,7 +45,7 @@ sheet.dataset.materialSurface = "case-story";
 sheet.dataset.materialActive = "always";
 const inlineSlot = document.createElement("div");
 inlineSlot.className = "case-inline-media";
-const inlineMedia = matchMedia("(max-width: 900px)");
+const inlineMedia = pane.media("(max-width: 900px)");
 let activeId = null;
 let caseMode = false;
 const frameMaterials = new Map();
@@ -292,6 +293,7 @@ new MutationObserver(reflect).observe(body, { attributes: true, attributeFilter:
 close.addEventListener("click", resumeBackground, true);
 document.addEventListener("keydown", event => {
   if (!activeId || !caseMode || document.querySelector("dialog[open]")) return;
+  if(body.classList.contains("has-story-pane")&&!matchMedia("(max-width:999px)").matches && (!pane.surface.contains(event.target)||event.key==="Tab"))return;
   if (event.key === "Escape") {
     event.preventDefault();
     event.stopImmediatePropagation();

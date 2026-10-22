@@ -1,3 +1,4 @@
+import {pane} from './pane-viewport.js';
 // Spatial map. Layout rationale: docs/map-layout-notes.md.
 import { getCaseContent, loadCaseContent } from "./case-content.js";
 import { trackPortfolioEvent } from "./analytics.js";
@@ -49,7 +50,7 @@ let detailRequest = 0;
 const mapNote = document.querySelector("[data-map-note]");
 const timeToggles = Array.from(document.querySelectorAll("[data-time-toggle]"));
 const hoverCapable = window.matchMedia("(hover: hover) and (pointer: fine)");
-const compactMapViewport = window.matchMedia("(max-width: 900px)");
+const compactMapViewport = pane.media("(max-width: 900px)");
 const mapButtons = new Map();
 const mapLabels = new Map();
 let selectedMapId = null;
@@ -283,7 +284,7 @@ const getTimeLayout = (item) => {
     : year >= 2015
       ? 25 + (2021 - year) * 1.33
       : 33 + Math.max(0, Math.min(1, (2015 - year) / 5)) * 8;
-  const compact = window.innerWidth <= 900;
+  const compact = pane.width <= 900;
   const compactRadiusXScale = compact ? 1.35 : 1;
   const groupAngle = getTimeSectorAngle(item, compact);
   const rootAngles = timeRootAngles[item.id];
@@ -310,7 +311,7 @@ const mapClearancePositions = new Map();
 let mapSpaceGrowth = { x: 0, y: 0 };
 const measureMapSpace = () => {
   mapSpaceGrowth = { x: 0, y: 0 };
-  if (innerWidth <= 900 || timeModeActive || !mapFieldBounds?.width) return;
+  if (pane.width <= 900 || timeModeActive || !mapFieldBounds?.width) return;
   const { left, top, width, height } = mapFieldBounds;
   const scale = width / mapNodesRoot.clientWidth;
   const professional = mapItems.filter(item => ["company", "project"].includes(item.kind));
@@ -321,7 +322,7 @@ const measureMapSpace = () => {
   const northSpan = (54 - Math.min(...professional.map(item => item.y))) * height / 100;
   const eastSpan = (Math.max(...professional.map(item => item.x)) - 50) * width / 100;
   mapSpaceGrowth = {
-    x: Math.max(0, Math.min(.2, (innerWidth - 24 - east) * .75 / eastSpan)),
+    x: Math.max(0, Math.min(.2, (pane.width - 24 - east) * .75 / eastSpan)),
     y: Math.max(0, Math.min(.2, (north - 24) * .75 / northSpan)),
   };
 };
@@ -344,7 +345,7 @@ const focusHomeNarrowPoints = new Map([...focusHomePoints,
   ["private-practice", {x:67,y:58}],
   ["principle-data-intuition", {x:14,y:48}],
 ]);
-const focusHomeActive = () => innerWidth <= 900 && document.body.classList.contains("has-focused-home");
+const focusHomeActive = () => pane.width <= 900 && document.body.classList.contains("has-focused-home");
 const focusHomeLargeTextPoints = new Map([
   ["garage", { x: 20, y: 12 }],
   ["narkomfin", { x: 76, y: 26 }],
@@ -369,7 +370,7 @@ const measureMapClearance = () => {
     mapTargetHeights.set(id, parseFloat(style.height));
   });
   const selectors = [".site-header", ".map-axis-label"];
-  if (window.innerWidth > 900) selectors.push(".map-controls", ".map-control > span", ".display-control", ".control-console");
+  if (pane.width > 900) selectors.push(".map-controls", ".map-control > span", ".display-control", ".control-console");
   else selectors.push(".command-dock", ".focused-return", ".mobile-first-dock");
   mapConsoleBounds = [...document.querySelectorAll(selectors.join(","))]
     .map(element => element.getBoundingClientRect())
@@ -377,7 +378,7 @@ const measureMapClearance = () => {
   measureMapSpace();
   mapClearancePositions.clear();
   if (focusHomeActive()) {
-    const points = largeTextHome ? focusHomeLargeTextPoints : innerWidth < 360 ? focusHomeNarrowPoints : focusHomePoints;
+    const points = largeTextHome ? focusHomeLargeTextPoints : pane.width < 360 ? focusHomeNarrowPoints : focusHomePoints;
     const shortField = !largeTextHome && mapFieldBounds.height <= 420;
     const museumTop = (mapLabels.get('garage').offsetHeight + mapTargetDiameters.get('garage')/2 + 6 + (shortField ? 20 : 40)) / mapFieldBounds.height * 100;
     const topShift = Math.max(0, museumTop - points.get('garage').y);
@@ -390,7 +391,7 @@ const measureMapClearance = () => {
     });
     return;
   }
-  const mobileTitles = innerWidth <= 900 && !timeModeActive;
+  const mobileTitles = pane.width <= 900 && !timeModeActive;
   const priorities = ["garage", "private-practice", "running", "narkomfin", "eleven", "ks-fish", "principle-data-intuition"];
   const sorted = [...mapItems].sort((a, b) => {
     const rank = item => mobileTitles && priorities.includes(item.id) ? priorities.indexOf(item.id) : 100;
@@ -434,7 +435,7 @@ const measureMapClearance = () => {
     for (const side of [preferred, ...Object.keys(sides).filter(side => side !== preferred)]) {
       const [dx,dy] = sides[side];
       const box = {left:x+dx, right:x+dx+labelWidth, top:y+dy, bottom:y+dy+labelHeight};
-      if (box.left < 12 || box.right > innerWidth-12 || box.top < top || box.bottom > top+height || collides(box)) continue;
+      if (box.left < 12 || box.right > pane.width-12 || box.top < top || box.bottom > top+height || collides(box)) continue;
       chosen = {box,dx,dy};
       break;
     }
@@ -449,7 +450,7 @@ const measureMapClearance = () => {
 const clearMapConsoles = (item, position) => {
   if (!mapFieldBounds?.width || !mapConsoleBounds.length) return position;
   const { left, top, width, height } = mapFieldBounds;
-  const padding = innerWidth > 900 ? 8 : 4;
+  const padding = pane.width > 900 ? 8 : 4;
   const radius = mapTargetDiameter(item) * width / mapNodesRoot.clientWidth / 2 + padding;
   const radiusY = mapTargetHeight(item) * width / mapNodesRoot.clientWidth / 2 + padding;
   const point = [left + position.x * width / 100, top + position.y * height / 100];
@@ -457,8 +458,8 @@ const clearMapConsoles = (item, position) => {
     && y > rect.top - radiusY && y < rect.bottom + radiusY;
   const obstacle = mapConsoleBounds.find(rect => covers(point, rect));
   const [x, y] = point;
-  const isFree = candidate => candidate[0] >= radius && candidate[0] <= innerWidth - radius
-    && candidate[1] >= radiusY && candidate[1] <= innerHeight - radiusY
+  const isFree = candidate => candidate[0] >= radius && candidate[0] <= pane.width - radius
+    && candidate[1] >= radiusY && candidate[1] <= pane.height - radiusY
     && !mapConsoleBounds.some(rect => covers(candidate, rect))
     && !mapItems.some(other => {
       if (other.id === item.id) return false;
@@ -466,8 +467,8 @@ const clearMapConsoles = (item, position) => {
       if (!position) return false;
       const otherRadius = mapTargetDiameter(other) * width / mapNodesRoot.clientWidth / 2;
       const otherRadiusY = mapTargetHeight(other) * width / mapNodesRoot.clientWidth / 2;
-      const clearance = radius - padding + otherRadius + (innerWidth > 900 ? 4 : 2);
-      const clearanceY = radiusY - padding + otherRadiusY + (innerWidth > 900 ? 4 : 2);
+      const clearance = radius - padding + otherRadius + (pane.width > 900 ? 4 : 2);
+      const clearanceY = radiusY - padding + otherRadiusY + (pane.width > 900 ? 4 : 2);
       return Math.abs(candidate[0] - left - position.x * width / 100) < clearance
         && Math.abs(candidate[1] - top - position.y * height / 100) < clearanceY;
     });
@@ -476,9 +477,9 @@ const clearMapConsoles = (item, position) => {
     [obstacle.left - radius, y], [obstacle.right + radius, y],
     [x, obstacle.top - radiusY], [x, obstacle.bottom + radiusY],
   ] : []).filter(isFree);
-  const increment = innerWidth > 900 ? 12 : 6;
-  for (let distance = increment; !candidates.length && distance < Math.max(innerWidth, innerHeight); distance += increment) {
-    const steps = innerWidth > 900 ? 24 : Math.max(24, Math.ceil(2 * Math.PI * distance / 6));
+  const increment = pane.width > 900 ? 12 : 6;
+  for (let distance = increment; !candidates.length && distance < Math.max(pane.width, pane.height); distance += increment) {
+    const steps = pane.width > 900 ? 24 : Math.max(24, Math.ceil(2 * Math.PI * distance / 6));
     for (let step = 0; step < steps; step++) {
       const angle = step * 2 * Math.PI / steps;
       const candidate = [x + Math.cos(angle) * distance, y + Math.sin(angle) * distance];
@@ -491,7 +492,7 @@ const clearMapConsoles = (item, position) => {
 };
 
 const getMapLayout = (item) => {
-  const viewportWidth = window.innerWidth;
+  const viewportWidth = pane.width;
   let x = item.x;
   let y = item.y;
 
@@ -556,7 +557,7 @@ const getMapLayout = (item) => {
     );
     const cameraHeight = Math.max(
       1,
-      (signalField?.clientHeight || window.innerHeight)
+      (signalField?.clientHeight || pane.height)
         - mobileMapReserve
         - mobileMapTop,
     );
@@ -615,7 +616,7 @@ const placeMapLabel = (item, label) => {
   const top = y - height / 2;
   const score = left => {
     const right = left + width;
-    return (Math.max(0, 8 - left) + Math.max(0, right - innerWidth + 8)) * height
+    return (Math.max(0, 8 - left) + Math.max(0, right - pane.width + 8)) * height
       + mapConsoleBounds.reduce((area, panel) => area
         + Math.max(0, Math.min(right, panel.right + 8) - Math.max(left, panel.left - 8))
         * Math.max(0, Math.min(top + height, panel.bottom + 8) - Math.max(top, panel.top - 8)), 0);
@@ -627,7 +628,7 @@ const placeMapLabel = (item, label) => {
 
 const placeMapRestLabels = () => {
   mapLabels.forEach(label => label.classList.remove("map-space-label", "map-space-label--north", "map-space-label--south"));
-  if (innerWidth <= 900 || timeModeActive || !document.documentElement.dataset.mapControlsReady) return;
+  if (pane.width <= 900 || timeModeActive || !document.documentElement.dataset.mapControlsReady) return;
   const field = mapLabelsRoot.getBoundingClientRect();
   const scale = field.width / mapLabelsRoot.clientWidth;
   const overlaps = (a, b, gap = 12) => a.left < b.right + gap && a.right > b.left - gap
@@ -658,7 +659,7 @@ const placeMapRestLabels = () => {
     const sides = item.x >= 72 ? ["west", "east", "north", "south"] : ["east", "west", "north", "south"];
     for (const side of sides) {
       const rect = labelRect(item, side);
-      if (rect.left < 24 || rect.right > innerWidth - 24 || rect.top < 24 || rect.bottom > innerHeight - 24
+      if (rect.left < 24 || rect.right > pane.width - 24 || rect.top < 24 || rect.bottom > pane.height - 24
         || occupied.some(obstacle => obstacle.id !== item.id && overlaps(rect, obstacle))) continue;
       label.classList.toggle("map-node-label--west", side === "west");
       label.classList.toggle("map-space-label--north", side === "north");
@@ -747,7 +748,7 @@ const buffer = atmosphere.canvas.cloneNode().getContext("2d"), backdrops = new M
 let backdropSize, backdropFrame;
 atmosphere.canvas.addEventListener("contextrestored", () => { backdropFrame = null; syncMapAtmospherePosition(); });
 const drawMapAtmosphere = ({width, height}, x, y) => {
-  if (innerWidth <= 900) return;
+  if (pane.width <= 900) return;
   const dpr = Math.min(devicePixelRatio || 1, 1.5), w = Math.ceil(width*dpr), h = Math.ceil(height*dpr);
   const size = `${w}/${h}`;
   if (size !== backdropSize) { backdrops.clear(); backdropSize = size; }
@@ -947,8 +948,8 @@ const getDirectionalMapItem = (id, key) => {
   const direction = key === "ArrowLeft" || key === "ArrowUp" ? -1 : 1;
   const screenPosition = item => {
     const rect = mapButtons.get(item.id).getBoundingClientRect();
-    return { x: (rect.left + rect.width / 2) / innerWidth * 100,
-      y: (rect.top + rect.height / 2) / innerHeight * 100 };
+    return { x: (rect.left + rect.width / 2) / pane.width * 100,
+      y: (rect.top + rect.height / 2) / pane.height * 100 };
   };
   const currentPosition = screenPosition(current);
 
@@ -956,8 +957,8 @@ const getDirectionalMapItem = (id, key) => {
     .filter((item) => item.id !== id)
     .map((item) => {
       const position = screenPosition(item);
-      const dx = ((position.x - currentPosition.x) / 100) * window.innerWidth;
-      const dy = ((position.y - currentPosition.y) / 100) * window.innerHeight;
+      const dx = ((position.x - currentPosition.x) / 100) * pane.width;
+      const dy = ((position.y - currentPosition.y) / 100) * pane.height;
       const primary = isHorizontal ? dx : dy;
       const cross = isHorizontal ? dy : dx;
 

@@ -3,6 +3,8 @@ import { join } from "node:path";
 
 export const runtimeFiles = [
   "js/preferences.js",
+  "js/pane-viewport.js",
+  "js/map-story.js",
   "js/whoop-day.js",
   "js/whoop-aura.js",
   "js/presence.js",
@@ -37,3 +39,6 @@ export const runtimeDataFiles = ["js/case-content.json"];
 export const readRuntimeSource = (projectRoot) => runtimeFiles
   .map((path) => readFileSync(join(projectRoot, path), "utf8"))
   .join("\n");
+
+// Loaded only after the reader opens “О карте”; all bytes remain versioned and bounded.
+export const storyFiles = ["assets/map-story/content.html", "assets/map-story/story.css", "assets/map-story/story.js", "assets/map-story/gravity-lens.js", "assets/map-story/null-geodesics.js", "assets/map-story/text-field.js", "js/map-scene-primitives.js"];

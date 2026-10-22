@@ -7,7 +7,9 @@ import {
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
-import { runtimeFiles, runtimeDataFiles } from "./runtime-files.mjs";
+import * as manifest from "./runtime-files.mjs";
+const {runtimeFiles,runtimeDataFiles}=manifest;
+const storyFiles=manifest.storyFiles||[];
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(scriptDirectory, "..");
@@ -46,6 +48,8 @@ const budgets = {
   cssGzip: 50 * 1024,
   runtimeGzip: 128 * 1024,
   initialCompressed: 288 * 1024,
+  story: 80 * 1024,
+  storyGzip: 26 * 1024,
   deferredData: 56 * 1024,
   deferredDataGzip: 18 * 1024,
   // Add HTML and a complete-page ceiling; all prior ceilings remain unchanged.
@@ -60,6 +64,8 @@ const cssGzip = gzipSync(readProjectFile("styles.css"), { level: 9 }).length;
 const runtimeGzip = runtimeFiles.reduce((total, path) => total
   + gzipSync(readProjectFile(path), { level: 9 }).length, 0);
 const measured = {
+  story: storyFiles.reduce((sum,path)=>sum+fileBytes(path),0),
+  storyGzip: storyFiles.reduce((sum,path)=>sum+gzipSync(readProjectFile(path),{level:9}).length,0),
   css: cssBytes, runtime: runtimeBytes, fonts: fontBytes, initialSource: initialSourceBytes,
   html: htmlBytes, htmlGzip, initialPage: initialSourceBytes + htmlBytes,
   initialPageCompressed: htmlGzip + cssGzip + runtimeGzip + fontBytes,

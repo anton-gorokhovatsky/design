@@ -1,3 +1,4 @@
+import {pane} from './pane-viewport.js';
 import { reducedMotion } from "./preferences.js";
 
 // Shared keyboard scrolling; wheel and touch stay native.
@@ -259,7 +260,7 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
       svg.setAttribute("height", "0");
       svg.setAttribute("aria-hidden", "true");
       svg.style.position = "absolute";
-      document.body.append(svg);
+      pane.surface.append(svg);
     }
     const id = `scroll-ink-${++scrollLensId}`;
     const filter = document.createElementNS(lensNamespace, "filter");
@@ -411,7 +412,7 @@ observeScrollEdges(document.querySelector(".settings-panel__body"), {
   owner: document.querySelector("[data-settings-panel]"),
 });
 observeScrollEdges(lensPanel, { owner: document.querySelector("[data-content-panel]") });
-const compactCommandViewport = window.matchMedia("(max-width: 900px)");
+const compactCommandViewport = pane.media("(max-width: 900px)");
 const commandViewportProperties = [
   "--command-focus-left",
   "--command-focus-top",
@@ -431,13 +432,13 @@ const setCommandGeometry = (element, group, values) => {
   }
 };
 const getCommandVisualViewport = () => {
-  const viewport = window.visualViewport;
+  const viewport = pane.visualViewport;
 
   return {
-    height: viewport?.height || window.innerHeight,
+    height: viewport?.height || pane.height,
     left: viewport?.offsetLeft || 0,
     top: viewport?.offsetTop || 0,
-    width: viewport?.width || window.innerWidth,
+    width: viewport?.width || pane.width,
   };
 };
 const positionDetachedCommandResults = () => {
@@ -498,7 +499,7 @@ const positionDetachedCommandResults = () => {
           : "auto",
       bottom: opensBelow || focusedMobile
         ? "auto"
-        : window.innerHeight - anchorTop + gap,
+        : pane.height - anchorTop + gap,
     });
   });
 };
@@ -510,12 +511,12 @@ const scheduleDetachedCommandResultsPosition = () => {
   );
 };
 
-window.visualViewport?.addEventListener(
+pane.visualViewport?.addEventListener(
   "resize",
   scheduleDetachedCommandResultsPosition,
   { passive: true },
 );
-window.visualViewport?.addEventListener(
+pane.visualViewport?.addEventListener(
   "scroll",
   scheduleDetachedCommandResultsPosition,
   { passive: true },
@@ -584,7 +585,7 @@ const setConsoleOffset = (module, x, y) => {
   module.style.setProperty("--console-drag-y", `${y.toFixed(2)}px`);
   if (module.classList.contains("control-console")) {
     const { top, height } = module.getBoundingClientRect();
-    document.documentElement.style.setProperty("--console-clearance", `${height ? innerHeight - top + y : 0}px`);
+    document.documentElement.style.setProperty("--console-clearance", `${height ? pane.height - top + y : 0}px`);
   }
   if (module === authorCard) syncAuthorField();
 };
@@ -596,9 +597,9 @@ const clampConsoleOffset = (module, desiredX, desiredY, basePosition = null) => 
   const baseLeft = basePosition?.left ?? rect.left - currentOffset.x;
   const baseTop = basePosition?.top ?? rect.top - currentOffset.y;
   const minimumX = margin - baseLeft;
-  const maximumX = window.innerWidth - margin - baseLeft - rect.width;
+  const maximumX = pane.width - margin - baseLeft - rect.width;
   const minimumY = margin - baseTop;
-  const maximumY = window.innerHeight - margin - baseTop - rect.height;
+  const maximumY = pane.height - margin - baseTop - rect.height;
 
   return {
     x: Math.min(Math.max(desiredX, minimumX), Math.max(minimumX, maximumX)),

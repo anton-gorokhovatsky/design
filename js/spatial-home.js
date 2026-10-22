@@ -1,9 +1,10 @@
+import {pane} from './pane-viewport.js';
 import { mapButtons, selectedMapId, syncMapAtmospherePosition } from './map-engine.js';
 import { reducedMotion } from './preferences.js';
 
 const field = document.querySelector('.focused-home__map');
 const root = document.documentElement;
-const compact = matchMedia('(max-width: 900px)');
+const compact = pane.media('(max-width: 900px)');
 const ns = 'http://www.w3.org/2000/svg';
 // Depth groups follow the existing map's branches, not an importance ranking.
 const depths = new Map([

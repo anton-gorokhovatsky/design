@@ -4,7 +4,7 @@ import { spawn } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { checkProfiles } from "./check-profiles.mjs";
-import { runtimeFiles } from "./runtime-files.mjs";
+import { runtimeFiles, storyFiles } from "./runtime-files.mjs";
 import { browserSteps, checkIds } from "./check-catalog.mjs";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
@@ -88,7 +88,7 @@ const contractScripts = [
 ];
 
 const syntaxSteps = [
-  ...runtimeFiles.map((path) => ({
+  ...[...runtimeFiles,...storyFiles.filter(path=>path.endsWith('.js'))].map((path) => ({
     label: `Runtime syntax: ${path}`,
     command: process.execPath,
     args: ["--check", path],

@@ -1,4 +1,5 @@
-const compact = matchMedia('(max-width: 900px)');
+import {pane} from './pane-viewport.js';
+const compact = pane.media('(max-width: 900px)');
 const dock = document.querySelector('.mobile-first-dock');
 const composition = document.querySelector('.system-dock');
 const toggle = document.querySelector('[data-mobile-composition]');

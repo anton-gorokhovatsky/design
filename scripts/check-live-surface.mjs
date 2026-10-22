@@ -78,7 +78,7 @@ export async function checkLiveSurface(browser, origin, engine) {
   assert.ok(await page.locator('.site-header').evaluate(e => Number(getComputedStyle(e).opacity) <= .16), 'Reading subordinates the background card.');
   await page.keyboard.press('Escape');
   await page.locator('[data-close-panel]').click();
-  for (const id of ['screen-controls', 'map-about']) {
+  for (const id of ['screen-controls']) {
     phase = `popover ${id}`;
     const trigger = page.locator(`[popovertarget="${id}"]:not([popovertargetaction])`);
     const panel = page.locator(`#${id}`);
@@ -100,6 +100,19 @@ export async function checkLiveSurface(browser, origin, engine) {
     assert.equal(await panel.isVisible(), false);
     assert.equal(await trigger.evaluate(el => document.activeElement === el), true, `${id}: Escape returns focus`);
   }
+  phase = 'map story shared surface';
+  await page.locator('.map-about-trigger').click();
+  await page.waitForSelector('#story-pane[data-ready="true"]');
+  const storySurface = await page.locator('#story-pane .story-nav').evaluate(el => {
+    const css = getComputedStyle(el);
+    return { blur: css.backdropFilter || css.webkitBackdropFilter, shadow: css.boxShadow, border: css.borderTopWidth };
+  });
+  assert.ok(storySurface.blur.includes('blur(24px)'), 'Story uses the shared material');
+  assert.equal(storySurface.shadow, 'none');
+  assert.equal(storySurface.border, '0px');
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => document.querySelector('#story-pane').inert);
+  assert.equal(await page.locator('.map-about-trigger').evaluate(el => document.activeElement === el), true);
   phase = 'motion pause and resume';
   await page.locator('[popovertarget="screen-controls"]:not([popovertargetaction])').click();
   await page.locator('.display-control [data-motion-toggle]').click();

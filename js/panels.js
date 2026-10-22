@@ -1,3 +1,4 @@
+import {pane} from './pane-viewport.js';
 import { getCaseContent, loadCaseContent } from "./case-content.js";
 import { isMapPreviewActive, hideMapPreview } from "./map-media.js";
 import {
@@ -53,7 +54,7 @@ const constellationNavToggleLabel = document.querySelector("[data-constellation-
 const constellationNavOrbit = document.querySelector("[data-constellation-nav-orbit]");
 const constellationNavItems = Array.from(document.querySelectorAll("[data-nav-view]"));
 const constellationNavHome = document.querySelector('[data-nav-view="map"]');
-const compactConstellationNav = window.matchMedia("(max-width: 900px)");
+const compactConstellationNav = pane.media("(max-width: 900px)");
 const controlConsole = document.querySelector(".control-console");
 let isConstellationNavOpen = false;
 const isModifiedLinkClick = event => event.currentTarget.matches("a")
@@ -626,7 +627,7 @@ const syncCommandFocusViewport = () => {
 
   scheduleDetachedCommandResultsPosition();
 };
-const compactMapFrame = window.matchMedia("(max-width: 900px)");
+const compactMapFrame = pane.media("(max-width: 900px)");
 let mobileMapFrame = 0;
 const syncMobileMapFrame = () => {
   window.cancelAnimationFrame(mobileMapFrame);
@@ -741,7 +742,7 @@ compactCommandViewport.addEventListener?.("change", () => {
 compactMapFrame.addEventListener?.("change", syncMobileMapFrame);
 window.addEventListener("resize", syncMobileMapFrame, { passive: true });
 window.addEventListener("pageshow", syncMobileMapFrame, { passive: true });
-window.visualViewport?.addEventListener("resize", syncMobileMapFrame, {
+pane.visualViewport?.addEventListener("resize", syncMobileMapFrame, {
   passive: true,
 });
 const authorship = document.querySelector(".site-header");

@@ -1,3 +1,4 @@
+import {pane} from './pane-viewport.js';
 import { trackPortfolioEvent } from "./analytics.js";
 import { mapItems } from "./map-data.js";
 import { reducedMotion } from "./preferences.js";
@@ -132,7 +133,7 @@ const createObservationRoute = ({
     setMapFilter("all", { updateHistory: false });
     hideMapPreview({ immediate: true });
     active = true;
-    paused = !autoplay || reducedMotion.matches || matchMedia("(max-width: 900px)").matches;
+    paused = !autoplay || reducedMotion.matches || pane.media("(max-width: 900px)").matches;
     signalField.setAttribute("data-observation-active", "");
     controls.hidden = false;
     indexMenu.hidden = false;

@@ -1,3 +1,4 @@
+import {pane} from './pane-viewport.js';
 import { mapItems, getMapPreviewPoster, reelChapterSources } from "./map-data.js";
 import { reducedMotion, typographUiText } from "./preferences.js";
 
@@ -14,7 +15,7 @@ const mapPreviewMeta = document.querySelector("[data-map-preview-meta]");
 const playVideo = video => video.play().catch(() => {});
 const reelItems = mapItems.filter((item) => item.previewVideo);
 const hoverCapable = window.matchMedia("(hover: hover) and (pointer: fine)");
-const compactMapViewport = window.matchMedia("(max-width: 900px)");
+const compactMapViewport = pane.media("(max-width: 900px)");
 const reelMosaicQuery = new URLSearchParams(window.location.search);
 const reelMosaicMode = reelMosaicQuery.get("reel");
 const reelMosaicEnabled = reelMosaicMode !== "single";
@@ -267,8 +268,8 @@ const placeMapPreview = () => {
   const findPosition = () => {
     const boxes = frames(), xs = new Set([0]), ys = new Set([0]);
     for (const box of boxes) {
-      xs.add(gap - box.left); xs.add(innerWidth - gap - box.right);
-      ys.add(gap - box.top); ys.add(innerHeight - gap - box.bottom);
+      xs.add(gap - box.left); xs.add(pane.width - gap - box.right);
+      ys.add(gap - box.top); ys.add(pane.height - gap - box.bottom);
       for (const obstacle of consoles) {
         xs.add(obstacle.left - gap - box.right); xs.add(obstacle.right + gap - box.left);
         ys.add(obstacle.top - gap - box.bottom); ys.add(obstacle.bottom + gap - box.top);
@@ -277,8 +278,8 @@ const placeMapPreview = () => {
     let best = null;
     for (const x of xs) for (const y of ys) {
       if (best && x*x + y*y >= best.distance) continue;
-      if (boxes.some(box => box.left+x < gap-.5 || box.right+x > innerWidth-gap+.5
-        || box.top+y < gap-.5 || box.bottom+y > innerHeight-gap+.5
+      if (boxes.some(box => box.left+x < gap-.5 || box.right+x > pane.width-gap+.5
+        || box.top+y < gap-.5 || box.bottom+y > pane.height-gap+.5
         || consoles.some(obstacle => box.left+x < obstacle.right+gap-.5 && box.right+x > obstacle.left-gap+.5
           && box.top+y < obstacle.bottom+gap-.5 && box.bottom+y > obstacle.top-gap+.5))) continue;
       best = { x, y, distance: x*x + y*y };
@@ -289,7 +290,7 @@ const placeMapPreview = () => {
   if (!position) {
     mapPreview.classList.add('is-compact-preview');
     const starts = [gap, ...consoles.map(rect => rect.right + gap)];
-    const ends = [innerWidth - gap, ...consoles.map(rect => rect.left - gap)];
+    const ends = [pane.width - gap, ...consoles.map(rect => rect.left - gap)];
     const widths = new Set(starts.flatMap(left => ends.map(right => Math.min(naturalWidth, right - left))));
     for (let width = naturalWidth; width >= 176; width = Math.floor(width * .86)) widths.add(width);
     for (const width of [...widths].filter(width => width >= 176).sort((a, b) => b - a)) {

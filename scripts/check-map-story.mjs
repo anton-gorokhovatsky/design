@@ -1,0 +1,63 @@
+import assert from 'node:assert/strict';
+import {createRequire} from 'node:module';
+import {fileURLToPath} from 'node:url';
+import {resolve,dirname} from 'node:path';
+import {mkdirSync} from 'node:fs';
+import {chromium,webkit} from 'playwright';
+const require=createRequire(import.meta.url);
+const {startStaticServer}=require('./browser-contracts.cjs');
+const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
+const engine=process.argv[2]||'chromium';
+const {origin,server}=await startStaticServer({projectRoot:root});
+const browser=await({chromium,webkit}[engine]).launch();
+try{
+ for(const width of [1440,390]){
+  const page=await browser.newPage({viewport:{width,height:900},colorScheme:width===1440?'light':'dark'});
+  const errors=[],requests=[];page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>requests.push(r.url()));
+  await page.goto(origin+'/');
+  const entry=page.locator(width===1440?'.map-about-trigger':'.mobile-map-story');
+  await entry.waitFor({state:'visible'});
+  assert.equal(requests.some(url=>url.includes('/assets/map-story/')),false,'Scenes wait for the reader');
+  await entry.focus();await page.keyboard.press('Enter');
+  const story=page.locator('#story-pane');await page.waitForSelector('#story-pane[data-ready="true"]');
+  await page.waitForFunction(()=>document.activeElement?.id==='story-title');
+  assert.equal(await story.evaluate(e=>e.inert),false);
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(selector=>document.activeElement?.matches(selector),width===1440?'.map-about-trigger':'.mobile-map-story');
+  await entry.click();await page.waitForFunction(()=>!document.querySelector('#story-pane').inert);
+  await page.locator('#story-motion').click();assert.equal(await page.locator('html').getAttribute('data-reduce-motion'),'true');
+  await page.locator('#story-motion').click();assert.equal(await page.locator('html').getAttribute('data-reduce-motion'),null);
+  await page.locator('#practice').evaluate(e=>e.scrollIntoView());
+  const target=page.locator('#scene-practice button[data-point="tarski"]');await target.focus();await target.press('Enter');
+  const label=page.locator('#scene-practice .scene-readout.is-visible');await label.locator('a').focus();await label.locator('a').press('Escape');
+  assert.equal(await story.evaluate(e=>e.inert),false);assert.equal(await label.count(),0);
+  await target.press('Enter');const scroll=await story.evaluate(e=>e.scrollTop);
+  await page.locator('#scene-practice .scene-readout a').click();
+  assert.equal(new URL(page.url()).searchParams.get('point'),'tarski');
+  assert.equal(await page.locator('#map-pane').evaluate(e=>e.inert),false);
+  await page.waitForSelector('.map-inspector.is-case-view.is-open');
+  if(width===1440){
+   await page.waitForFunction(()=>document.querySelector('.map-inspector').getAttribute('aria-modal')==='false');
+   await page.evaluate(async()=>{const{getTabStops}=await import('/js/preferences.js');getTabStops(document.querySelector('.map-inspector')).at(-1).focus({preventScroll:true});});
+   await page.keyboard.press('Tab');assert.equal(await story.evaluate(e=>e.contains(document.activeElement)),true);
+   assert.ok(Math.abs(await story.evaluate(e=>e.scrollTop)-scroll)<2,'Tab preserves reading position');
+   const close=await page.locator('[data-close-story]').boundingBox();await page.mouse.click(close.x+close.width/2,close.y+close.height/2);
+   await page.keyboard.press('Escape');await entry.click();
+   await page.waitForFunction(y=>Math.abs(document.querySelector('#story-pane').scrollTop-y)<2,scroll);
+  }else{
+   assert.equal(await story.evaluate(e=>e.inert),true);await page.goBack();await page.waitForFunction(()=>!document.querySelector('#story-pane').inert);
+  }
+  assert.equal(await story.evaluate(e=>e.scrollWidth>e.clientWidth+1),false);
+  assert.deepEqual(errors,[]);
+  if(process.env.PORTFOLIO_UI_ARTIFACT_DIR){mkdirSync(process.env.PORTFOLIO_UI_ARTIFACT_DIR,{recursive:true});await page.screenshot({path:resolve(process.env.PORTFOLIO_UI_ARTIFACT_DIR,`story-${width}.png`)});}
+  await page.close();
+ }
+ const retry=await browser.newPage({viewport:{width:320,height:700},reducedMotion:'reduce'});
+ let failed=false;await retry.route('**/assets/map-story/content.html*',route=>{if(!failed){failed=true;return route.fulfill({status:503,body:'Unavailable'});}return route.continue();});
+ await retry.goto(origin+'/?story=1');await retry.locator('[data-story-retry]').click();await retry.waitForSelector('#story-pane[data-ready="true"]');
+ await retry.evaluate(()=>document.documentElement.style.fontSize='200%');
+ await retry.waitForFunction(()=>document.querySelector('#story-motion')?.disabled);
+ assert.equal(await retry.locator('#story-pane').evaluate(e=>e.scrollWidth>e.clientWidth+1),false);
+ await retry.close();
+ console.log(`Map story ${engine}: visible entry, lazy scenes, shared motion, nearby labels, case return, keyboard, retry and 320px/200% passed.`);
+}finally{await browser.close();await new Promise(resolve=>server.close(resolve));}

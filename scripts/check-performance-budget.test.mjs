@@ -9,14 +9,15 @@ import { createHash } from "node:crypto";
 const entropy = length => Buffer.concat(Array.from({ length: Math.ceil(length / 40) },
   (_, index) => createHash("sha256").update(String(index)).digest()))
   .toString("base64").slice(0, length);
-const check = ({ html = "", css = "", runtime = "", font = 0 } = {}) => {
+const check = ({ html = "", css = "", runtime = "", font = 0, story = "" } = {}) => {
   const root = mkdtempSync(join(tmpdir(), "portfolio-budget-"));
   try {
     for (const dir of ["scripts", "js", "assets"]) mkdirSync(join(root, dir));
     copyFileSync(new URL("./check-performance-budget.mjs", import.meta.url), join(root, "scripts/check-performance-budget.mjs"));
-    writeFileSync(join(root, "scripts/runtime-files.mjs"), 'export const runtimeFiles=["js/test.js"];export const runtimeDataFiles=["js/test.json"];');
+    writeFileSync(join(root, "scripts/runtime-files.mjs"), 'export const runtimeFiles=["js/test.js"];export const runtimeDataFiles=["js/test.json"];export const storyFiles=["assets/story.js"];');
     writeFileSync(join(root, "index.html"), '<link rel="preload" href="assets/test.woff2"><main>' + html + '</main>');
     writeFileSync(join(root, "styles.css"), css);
+    writeFileSync(join(root, "assets/story.js"), story);
     writeFileSync(join(root, "js/test.js"), runtime);
     writeFileSync(join(root, "js/test.json"), "{}");
     writeFileSync(join(root, "assets/test.woff2"), Buffer.alloc(font));
@@ -53,4 +54,14 @@ test("combined compressed page includes HTML", () => {
 test("prior CSS ceiling is still enforced", () => {
   const result = check({ css: "a".repeat(285 * 1024) });
   assert.equal(result.status, 1); assert.match(result.stderr, /css: .* exceeds/);
+});
+
+test("deferred story source has its own ceiling", () => {
+  const result = check({story: "a".repeat(81 * 1024)});
+  assert.equal(result.status, 1); assert.match(result.stderr, /story: .* exceeds/);
+  assert.doesNotMatch(result.stderr, /\n- initialPage: /);
+});
+test("deferred story compressed bytes remain bounded", () => {
+  const result = check({story: entropy(40_000)});
+  assert.equal(result.status, 1); assert.match(result.stderr, /storyGzip: .* exceeds/);
 });

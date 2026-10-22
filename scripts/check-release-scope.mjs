@@ -274,7 +274,7 @@ assert.ok(consoleMatrix.filter(job => job.browser === 'webkit').every(job => job
 
 // The complete old browser inventory remains mandatory, once per engine;
 // WebKit core retains all four viewport/theme profiles. No shard may disappear.
-const retainedChecks = ["signature", "case-flow", "personal-media", "inspector-links", "point-address", "accessibility", "map-routes", "hover-layout", "whoop-ui", "first-visit", "command-placement", "header", "search-icon", "sphere-motion", "case-view", "scroll-lens", "observation-route"];
+const retainedChecks = ["map-story", "signature", "case-flow", "personal-media", "inspector-links", "point-address", "accessibility", "map-routes", "hover-layout", "whoop-ui", "first-visit", "command-placement", "header", "search-icon", "sphere-motion", "case-view", "scroll-lens", "observation-route"];
 const fullMatrix = browserMatrix("full").include;
 assert.equal(new Set(fullMatrix.map(({ artifact }) => artifact)).size, fullMatrix.length);
 for (const browser of ["chromium", "webkit"]) {

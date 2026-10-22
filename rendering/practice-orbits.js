@@ -1,7 +1,8 @@
+import {pane} from './pane-viewport.js';
 import { mapItems } from './map-data.js';
 import { mapButtons, syncMapNodeAvailability, setMapRovingId, syncMapAtmospherePosition } from './map-engine.js';
 import { createSystem, STEP } from './orbit-physics.js';
-import { audienceWeights } from './practice-audience.js';
+import { audienceMassWeights } from './practice-audience.js';
 
 const projects = mapItems.filter(item => item.parent === 'private-practice');
 const projectIcons = {
@@ -35,7 +36,7 @@ function initializePracticeOrbits() {
     layer.setAttribute('role', 'group');layer.setAttribute('aria-label', `${projects.length} проектов частной практики на трёх орбитах`);
     const tooltip = doc.createElement('div');tooltip.className = 'project-orbit-tooltip';tooltip.hidden = true;
     tooltip.dataset.materialSurface='map-node-label';tooltip.dataset.materialActive='always';
-    const mobile=win.matchMedia('(max-width:900px)');
+    const mobile=pane.media('(max-width:900px)');
     const nativeRoot=doc.querySelector('[data-map-nodes]'), map=doc.querySelector('[data-practice-map]');
     (doc.querySelector('main')||doc.body).append(layer,tooltip);
     let enabled=true;
@@ -191,7 +192,7 @@ function initializePracticeOrbits() {
     };
     mobile.addEventListener('change',syncInput);
     new MutationObserver(syncInput).observe(map,{attributes:true,attributeFilter:['data-time-view','data-observation-active']});
-    const system=createSystem(moons.map(moon=>({id:moon.item.id,radius:moon.orbit.radius,phase:moon.phase})),{weights:audienceWeights});
+    const system=createSystem(moons.map(moon=>({id:moon.item.id,radius:moon.orbit.radius,phase:moon.phase})),{weights:audienceMassWeights});
     let accumulator=0;
     const paint=()=>{
       const rect=canvas.getBoundingClientRect();
@@ -201,7 +202,7 @@ function initializePracticeOrbits() {
       const detailOpen=doc.body.matches('.has-reading-surface,.has-point-preview');
       if(hadDetail&&!detailOpen&&returnTo){const target=returnTo;returnTo=null;target.focus({preventScroll:true});}
       hadDetail=detailOpen;
-      if(Math.abs(rect.width-previousWidth)>.2){previousWidth=rect.width;bodyRadius=(win.innerWidth>900?34:28)/Math.max(1,rect.width)*1.3;drawSphere();}
+      if(Math.abs(rect.width-previousWidth)>.2){previousWidth=rect.width;bodyRadius=(pane.width>900?34:28)/Math.max(1,rect.width)*1.3;drawSphere();}
       const labelRoot=label.offsetParent;
       if(labelRoot){
         const rootRect=labelRoot.getBoundingClientRect();
@@ -222,8 +223,8 @@ function initializePracticeOrbits() {
           const w=tooltip.offsetWidth,h=tooltip.offsetHeight;
           const left=x<rect.left+rect.width/2?x-w-14:x+14;
           const top=y<rect.top+rect.height/2?y-h-12:y+12;
-          tooltip.style.left=`${Math.max(12,Math.min(win.innerWidth-w-12,left))}px`;
-          tooltip.style.top=`${Math.max(12,Math.min(win.innerHeight-h-12,top))}px`;
+          tooltip.style.left=`${Math.max(12,Math.min(pane.width-w-12,left))}px`;
+          tooltip.style.top=`${Math.max(12,Math.min(pane.height-h-12,top))}px`;
         }
       }
       syncMapAtmospherePosition();

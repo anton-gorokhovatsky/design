@@ -8,6 +8,7 @@ export const componentChecks = {
   "point-address": "Canonical and legacy point addresses",
   accessibility: "Accessibility, painted contrast and text reflow",
   "map-routes": "Map route geometry",
+  "map-story": "Map story and split reading",
   "hover-layout": "Hover preview and persistent consoles",
   "whoop-ui": "WHOOP daily UI",
   "first-visit": "First visit and named navigation",
@@ -25,7 +26,7 @@ export const componentChecks = {
 export const componentCoverage = {
   signature: ["signature"],
   overview: ["observation-route", "first-visit", "case-flow", "case-view", "hover-layout", "accessibility", "inspector-links"],
-  "map-presentation": ["map-routes", "hover-layout", "sphere-motion", "first-visit", "accessibility", "observation-route"],
+  "map-presentation": ["map-story", "map-routes", "hover-layout", "sphere-motion", "first-visit", "accessibility", "observation-route"],
   "not-found": ["whoop-ui", "accessibility"],
   checks: ["signature", "point-address", "header", "search-icon"],
   "point-address": ["point-address"],
@@ -49,7 +50,7 @@ for (const id of checkIds) componentCoverage[`check:${id}`] = [id];
 const shards = {
   reading: ["case-flow", "personal-media", "case-view", "whoop-ui"],
   interface: ["accessibility", "first-visit", "command-placement", "header", "search-icon"],
-  map: ["map-routes", "hover-layout", "sphere-motion", "point-address"],
+  map: ["map-story", "map-routes", "hover-layout", "sphere-motion", "point-address"],
   motion: ["scroll-lens", "observation-route", "inspector-links"],
 };
 const webkitScenarios = ["390x844-light", "390x844-dark", "320x568-light", "320x568-dark"];

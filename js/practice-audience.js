@@ -1,17 +1,1 @@
-// Audience snapshot: unique visitors, 18 September–17 October 2026.
-// Missing counters use the measured median, explicitly approved by the author.
-// These are relative weights, not live analytics and not a quality ranking.
-export const audiencePeriod = { start: '2026-09-18', end: '2026-10-17' };
-export const neutralAudienceProjects = ['dusty', 'dd-camp', 'doronin'];
-export const audienceWeights = {
-  'ks-fish': 0.532051282051,
-  'eleven': 0.134615384615,
-  'herman': 0.018589743590,
-  'tarski': 0.042948717949,
-  'hotline-camp': 0.046153846154,
-  'krainiuk': 0.085897435897,
-  'shirokostup': 0.001282051282,
-  'dusty': 0.046153846154,
-  'dd-camp': 0.046153846154,
-  'doronin': 0.046153846154,
-};
+export const audiencePeriod={start:"2026-09-18",end:"2026-10-17"};export const neutralAudienceProjects=["dusty","dd-camp","doronin"];export const audienceWeights={"ks-fish":.532051282051,eleven:.134615384615,herman:.01858974359,tarski:.042948717949,"hotline-camp":.046153846154,krainiuk:.085897435897,shirokostup:.001282051282,dusty:.046153846154,"dd-camp":.046153846154,doronin:.046153846154};const e=Object.entries(audienceWeights).filter(([e])=>!neutralAudienceProjects.includes(e)).map(([,e])=>e).sort((e,t)=>e-t),t=(e[Math.floor(e.length/2)]+e[Math.floor((e.length-1)/2)])/2;export const audienceMassWeights=Object.fromEntries(Object.entries(audienceWeights).map(([e,n])=>[e,1+Math.log1p(n/t)]));

@@ -318,27 +318,20 @@ for(const engine of [process.argv[2]||'chromium']) {
     assert.equal(await page.locator('[data-observation-pause]').isVisible(), false, 'The final step has no meaningless Continue action');
     await page.locator('[data-observation-previous]').click();
     assert.equal(await page.locator('[data-observation-pause]').isVisible(), true);
-    // The map note stays inline in its disclosure, without a second reading window.
+    // “О карте” opens the requested adjacent reader; Escape preserves the map.
     for (const width of [1440, 390]) {
       await page.setViewportSize({ width, height: 900 });
       await page.goto(origin + '/?scene=map');
       assert.equal(await page.locator('[data-open-panel="map-making"], #map-making').count(), 0);
       assert.equal(await page.locator('#light-study').isVisible(), false);
-      if (width === 1440) {
-        await page.locator('.map-about-trigger').click();
-        const note = await page.locator('#map-about').evaluate(panel => ({
-          text: panel.querySelector('[data-map-note]').textContent,
-          overflow: panel.scrollHeight - panel.clientHeight,
-        }));
-        assert.match(note.text, /смысловая близость/i);
-        assert.equal(note.overflow, 0);
-      } else {
-        await page.locator('.mobile-first-cases').click();
-        await page.locator('#work .work-overview').waitFor();
-      }
+      const selector = width === 1440 ? '.map-about-trigger' : '.mobile-map-story';
+      await page.locator(selector).click();
+      await page.waitForSelector('#story-pane[data-ready="true"]');
+      assert.match(await page.locator('#story-pane').innerText(), /Близость передаёт родство/);
+      assert.equal(await page.locator('#story-pane').evaluate(e => e.scrollWidth > e.clientWidth + 1), false);
       await page.keyboard.press('Escape');
-      await page.waitForFunction(selector => document.activeElement?.matches(selector),
-        width === 1440 ? '.map-about-trigger' : '.mobile-first-cases');
+      await page.waitForFunction(() => document.querySelector('#story-pane').inert);
+      await page.waitForFunction(selector => document.activeElement?.matches(selector), selector);
     }
     // The remaining case study retains the same failed-load and retry contract.
     await page.route('**/js/case-content.json*', route => route.abort());
