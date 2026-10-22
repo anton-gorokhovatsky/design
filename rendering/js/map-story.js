@@ -130,7 +130,7 @@ async function show(value,{write=true,focus=true,animate=false}={}){
   await content.catch(()=>{});
   if(revision!==showRevision)return;
   let transition;
-  if(moving)transition=!compact.matches&&typeof document.startViewTransition==='function'?snapshotUnfold(apply):unfold(apply,value);
+  if(moving&&contentReady)transition=!compact.matches&&typeof document.startViewTransition==='function'?snapshotUnfold(apply):unfold(apply,value);
   else{apply();transition=Promise.resolve();}
   if(write&&changed){const url=new URL(location.href);if(value)url.searchParams.set('story','1');else url.searchParams.delete('story');history.pushState(history.state,'',url);}
   if(value){

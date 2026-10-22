@@ -96,6 +96,13 @@ try{
   if(process.env.PORTFOLIO_UI_ARTIFACT_DIR){mkdirSync(process.env.PORTFOLIO_UI_ARTIFACT_DIR,{recursive:true});await page.screenshot({path:resolve(process.env.PORTFOLIO_UI_ARTIFACT_DIR,`story-${width}.png`)});}
   await page.close();
  }
+ const failedOpening=await browser.newPage({viewport:{width:390,height:844}});
+ const retryErrors=[];failedOpening.on('pageerror',error=>retryErrors.push(error.message));
+ let failedOpeningOnce=false;await failedOpening.route('**/assets/map-story/content.html*',route=>{if(!failedOpeningOnce){failedOpeningOnce=true;return route.fulfill({status:503,body:'Unavailable'});}return route.continue();});
+ await failedOpening.goto(origin+'/');await failedOpening.locator('.mobile-map-story').click();await failedOpening.locator('[data-story-retry]').click();await failedOpening.waitForSelector('#story-pane[data-ready="true"]');
+ assert.deepEqual(retryErrors,[],'A failed first opening keeps the retry usable');
+ assert.equal(await failedOpening.locator('body').evaluate(e=>e.classList.contains('story-is-moving')),false);
+ await failedOpening.close();
  const retry=await browser.newPage({viewport:{width:320,height:700},reducedMotion:'reduce'});
  let failed=false;await retry.route('**/assets/map-story/content.html*',route=>{if(!failed){failed=true;return route.fulfill({status:503,body:'Unavailable'});}return route.continue();});
  await retry.goto(origin+'/?story=1');await retry.locator('[data-story-retry]').click();await retry.waitForSelector('#story-pane[data-ready="true"]');
