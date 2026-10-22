@@ -837,7 +837,7 @@ const initializeBlackHoleLens = () => {
     const now=performance.now(),target=available()&&(hovered||garage.matches(':focus-visible'))?1:0;
     sample(now);
     if(target!==tween.to||reduceMotion()){
-      tween={from:model.strength,to:target,start:now,duration:reduceMotion()?0:target?320:260};
+      tween={from:model.strength,to:target,start:now,duration:reduceMotion()?0:target?440:320};
       sample(now);
       if(reduceMotion())update();
     }

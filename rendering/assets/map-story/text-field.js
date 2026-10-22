@@ -13,7 +13,7 @@ void main(){
  vec2 pixel=vec2(uv.x,1.-uv.y)*size,origin=bounds.xy+bounds.zw*.5;
  vec2 axis=normalize(center-origin),side=vec2(-axis.y,axis.x),delta=pixel-origin;
  float halfLength=dot(abs(axis),bounds.zw)*.5,span=min(halfLength*1.4,radius*2.2),start=halfLength-span;
- float target=dot(delta,axis),base=.025*strength,load=.32*strength,q=(target-base*halfLength)/(1.+base);
+ float target=dot(delta,axis),base=.03*strength,load=.43*strength,q=(target-base*halfLength)/(1.+base);
  // One material frame keeps a row's cross-section coherent. Solve the smooth
  // longitudinal stretch, then undo its compensating transverse compression.
  for(int i=0;i<5;i++){

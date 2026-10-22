@@ -678,6 +678,10 @@ const syncConsoleBounds = () => {
   }
 
   floatingConsoleModules.forEach((module) => {
+    // A hidden compact-panel has no box. Clamping that zero rect writes a
+    // fictitious drag offset which used to survive when the reader closed.
+    const rect = module.getBoundingClientRect();
+    if (!rect.width || !rect.height || pane.width <= 900) return;
     const currentOffset = getConsoleOffset(module);
     const nextOffset = clampConsoleOffset(module, currentOffset.x, currentOffset.y);
     setConsoleOffset(module, nextOffset.x, nextOffset.y);

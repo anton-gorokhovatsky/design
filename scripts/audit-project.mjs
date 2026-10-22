@@ -505,6 +505,7 @@ const requiredMaterialSurfaces = [
   "reel-readout",
   "content-window",
   "settings-panel",
+  "story-return",
   "personal-media-play",
 ];
 const materialSurfaceTags = [

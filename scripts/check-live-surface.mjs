@@ -103,7 +103,7 @@ export async function checkLiveSurface(browser, origin, engine) {
   phase = 'map story shared surface';
   await page.locator('.map-about-trigger').click();
   await page.waitForSelector('#story-pane[data-ready="true"]');
-  const storySurface = await page.locator('#story-pane .story-nav').evaluate(el => {
+  const storySurface = await page.locator('#story-bridge [data-close-story]').evaluate(el => {
     const css = getComputedStyle(el);
     return { blur: css.backdropFilter || css.webkitBackdropFilter, shadow: css.boxShadow, border: css.borderTopWidth };
   });
@@ -112,6 +112,7 @@ export async function checkLiveSurface(browser, origin, engine) {
   assert.equal(storySurface.border, '0px');
   await page.keyboard.press('Escape');
   await page.waitForFunction(() => document.querySelector('#story-pane').inert);
+  await page.waitForFunction(() => document.activeElement === document.querySelector('.map-about-trigger'));
   assert.equal(await page.locator('.map-about-trigger').evaluate(el => document.activeElement === el), true);
   phase = 'motion pause and resume';
   await page.locator('[popovertarget="screen-controls"]:not([popovertargetaction])').click();

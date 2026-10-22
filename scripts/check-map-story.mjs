@@ -18,16 +18,41 @@ try{
   const entry=page.locator(width===1440?'.map-about-trigger':'.mobile-map-story');
   await entry.waitFor({state:'visible'});
   assert.equal(requests.some(url=>url.includes('/assets/map-story/')),false,'Scenes wait for the reader');
+  await page.evaluate(()=>document.fonts.ready);
+  const mapGeometry=()=>page.locator('[data-floating-console]').evaluateAll(nodes=>nodes.map(e=>{const r=e.getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height};}));
+  const originalGeometry=await mapGeometry();
   await entry.focus();await page.keyboard.press('Enter');
   const story=page.locator('#story-pane');await page.waitForSelector('#story-pane[data-ready="true"]');
   await page.waitForFunction(()=>document.activeElement?.id==='story-title');
   assert.equal(await story.evaluate(e=>e.inert),false);
   await page.keyboard.press('Escape');
   await page.waitForFunction(selector=>document.activeElement?.matches(selector),width===1440?'.map-about-trigger':'.mobile-map-story');
+  // Three complete roundtrips catch accumulated offsets from hidden panels.
+  for(let round=0;round<3;round++){
+   await entry.click();await page.waitForFunction(()=>!document.querySelector('#story-pane').inert);
+   await page.locator('[data-close-story]').click();
+   await page.waitForFunction(()=>!document.body.classList.contains('story-is-moving'));
+   await page.waitForFunction(selector=>document.activeElement?.matches(selector),width===1440?'.map-about-trigger':'.mobile-map-story');
+   const geometry=await mapGeometry();
+   geometry.forEach((box,i)=>Object.keys(box).forEach(key=>assert.ok(Math.abs(box[key]-originalGeometry[i][key])<1,`Closing restores panel ${i} ${key}: ${box[key]} vs ${originalGeometry[i][key]}`)));
+  }
   await entry.click();await page.waitForFunction(()=>!document.querySelector('#story-pane').inert);
-  await page.locator('#story-motion').click();assert.equal(await page.locator('html').getAttribute('data-reduce-motion'),'true');
-  await page.locator('#story-motion').click();assert.equal(await page.locator('html').getAttribute('data-reduce-motion'),null);
+  await page.waitForFunction(()=>!document.body.classList.contains('story-is-moving'));
+  assert.equal(await page.locator('.story-nav,#story-motion').count(),0,'The reader has no duplicate settings bar');
+  const panels=await page.locator('#map-pane,#story-pane').evaluateAll(es=>es.map(e=>{const b=e.getBoundingClientRect();return{x:b.x,y:b.y,w:b.width,h:b.height};}));
+  assert.ok(width>999?panels[1].x>panels[0].x+panels[0].w:panels[1].y>panels[0].y+panels[0].h,'The shared bridge joins both visible panes');
+  await page.evaluate(()=>document.querySelector('[data-motion-toggle]').click());assert.equal(await page.locator('html').getAttribute('data-reduce-motion'),'true');
+  await page.evaluate(()=>document.querySelector('[data-motion-toggle]').click());assert.equal(await page.locator('html').getAttribute('data-reduce-motion'),null);
   await page.locator('#practice').evaluate(e=>e.scrollIntoView());
+  if(width===1440){
+   const chapterOffset=()=>page.locator('#practice').evaluate(e=>e.getBoundingClientRect().top-document.querySelector('#story-pane').getBoundingClientRect().top);
+   const offset=await chapterOffset();
+   for(const nextWidth of [390,1440]){
+    await page.setViewportSize({width:nextWidth,height:900});
+    await page.waitForFunction(y=>Math.abs(document.querySelector('#practice').getBoundingClientRect().top-document.querySelector('#story-pane').getBoundingClientRect().top-y)<2,offset);
+    assert.ok(Math.abs(await chapterOffset()-offset)<2,'Resizing retains the chapter being read');
+   }
+  }
   const target=page.locator('#scene-practice button[data-point="tarski"]');await target.focus();await target.press('Enter');
   const label=page.locator('#scene-practice .scene-readout.is-visible');await label.locator('a').focus();await label.locator('a').press('Escape');
   assert.equal(await story.evaluate(e=>e.inert),false);assert.equal(await label.count(),0);
@@ -39,7 +64,7 @@ try{
   if(width===1440){
    await page.waitForFunction(()=>document.querySelector('.map-inspector').getAttribute('aria-modal')==='false');
    await page.evaluate(async()=>{const{getTabStops}=await import('/js/preferences.js');getTabStops(document.querySelector('.map-inspector')).at(-1).focus({preventScroll:true});});
-   await page.keyboard.press('Tab');assert.equal(await story.evaluate(e=>e.contains(document.activeElement)),true);
+   await page.keyboard.press('Tab');assert.equal(await page.locator('#story-bridge').evaluate(e=>e.contains(document.activeElement)),true,'Tab leaves the map through the shared return control');
    assert.ok(Math.abs(await story.evaluate(e=>e.scrollTop)-scroll)<2,'Tab preserves reading position');
    const close=await page.locator('[data-close-story]').boundingBox();await page.mouse.click(close.x+close.width/2,close.y+close.height/2);
    await page.keyboard.press('Escape');await entry.click();
@@ -47,6 +72,7 @@ try{
   }else{
    assert.equal(await story.evaluate(e=>e.inert),true);await page.goBack();await page.waitForFunction(()=>!document.querySelector('#story-pane').inert);
   }
+  await page.waitForFunction(()=>!document.body.classList.contains('story-is-moving'));
   assert.equal(await story.evaluate(e=>e.scrollWidth>e.clientWidth+1),false);
   assert.deepEqual(errors,[]);
   if(process.env.PORTFOLIO_UI_ARTIFACT_DIR){mkdirSync(process.env.PORTFOLIO_UI_ARTIFACT_DIR,{recursive:true});await page.screenshot({path:resolve(process.env.PORTFOLIO_UI_ARTIFACT_DIR,`story-${width}.png`)});}
@@ -56,8 +82,9 @@ try{
  let failed=false;await retry.route('**/assets/map-story/content.html*',route=>{if(!failed){failed=true;return route.fulfill({status:503,body:'Unavailable'});}return route.continue();});
  await retry.goto(origin+'/?story=1');await retry.locator('[data-story-retry]').click();await retry.waitForSelector('#story-pane[data-ready="true"]');
  await retry.evaluate(()=>document.documentElement.style.fontSize='200%');
- await retry.waitForFunction(()=>document.querySelector('#story-motion')?.disabled);
+ await retry.waitForFunction(()=>document.documentElement.dataset.reduceMotion==='true');
+ assert.equal(await retry.locator('#story-motion').count(),0);
  assert.equal(await retry.locator('#story-pane').evaluate(e=>e.scrollWidth>e.clientWidth+1),false);
  await retry.close();
- console.log(`Map story ${engine}: visible entry, lazy scenes, shared motion, nearby labels, case return, keyboard, retry and 320px/200% passed.`);
+ console.log(`Map story ${engine}: repeated geometry roundtrip, joined responsive panes, visible entry, lazy scenes, shared motion, nearby labels, case return, keyboard, retry and 320px/200% passed.`);
 }finally{await browser.close();await new Promise(resolve=>server.close(resolve));}

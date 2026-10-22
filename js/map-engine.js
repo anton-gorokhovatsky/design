@@ -1550,7 +1550,10 @@ if (mapLinksRoot) {
         const distance = Math.hypot(dx, dy) || 1;
         const nx = -dy / distance, ny = dx / distance;
         const gap = Math.max(1, distance - parent.radius - geometry.radius - 5);
-        const preferred = distance * Math.tan(ports[index] - angle + 0.04) / 2;
+        const garageFlow = parentId === "garage";
+        const restBend = garageFlow ? 0.08 : 0.84;
+        const preferred = garageFlow ? gap * 0.22
+          : distance * Math.tan(ports[index] - angle + 0.04) / 2;
         const neighbours = obstacles.flatMap(([id, node]) => {
           if (id === parentId || id === item.id) return [];
           const x = node.centerX - parent.centerX, y = node.centerY - parent.centerY;
@@ -1568,7 +1571,7 @@ if (mapLinksRoot) {
             + (Math.max(0, spacing - port + previousPort) * distance) ** 2;
           let obstruction = 0;
           neighbours.forEach(({ factor, offset, radius }) => {
-            const base = offset - factor * candidate * 0.84;
+            const base = offset - factor * candidate * restBend;
             const active = offset - factor * candidate;
             const clearance = base * active < 0 ? 0 : Math.min(Math.abs(base), Math.abs(active));
             obstruction += Math.max(0, radius - clearance) ** 2;
@@ -1610,7 +1613,7 @@ if (mapLinksRoot) {
             ...end,
           ].map((value, i) => value * 100 / (i % 2 ? bounds.height : bounds.width)));
         };
-        const baseD = curve(bend * 0.84);
+        const baseD = curve(bend * restBend);
         const reactiveD = curve(bend);
         const relationKey = `${parentId}:${item.id}`;
         const path = mapLinksRoot.querySelector(`path[data-relation-key="${relationKey}"]`)
