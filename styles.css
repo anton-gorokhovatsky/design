@@ -11040,9 +11040,10 @@ body.split-page{font-size:var(--type-body)}
 .has-story-pane #map-pane,.has-story-pane #story-pane{border-radius:var(--window-radius);corner-shape:var(--corner-card-shape)}
 #story-bridge{position:relative;z-index:350;min-width:0;min-height:0;visibility:hidden}
 .has-story-pane #story-bridge{visibility:visible}
-#story-bridge button{position:absolute;left:50%;top:16px;transform:translateX(-50%);width:var(--control-target);height:var(--control-target);padding:10px;border:0;border-radius:var(--window-radius);color:var(--ink);background:var(--material-01);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);cursor:pointer}
-#story-bridge svg{display:block;width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
-#story-bridge button:hover{color:var(--signal)}
+#story-bridge button{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:var(--control-target);height:calc(var(--control-target) + var(--space-4));padding:0;border:0;border-radius:var(--space-2);color:var(--ink);background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;cursor:pointer}
+#story-bridge button::before{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:3px;height:var(--space-6);border-radius:var(--space-1);background:currentColor;opacity:.45;transition:opacity 160ms var(--ease-out)}
+#story-bridge svg{display:none}
+#story-bridge button:hover::before,#story-bridge button:focus-visible::before{opacity:.8}
 #story-bridge button:focus-visible{outline:var(--focus-width) solid var(--signal);outline-offset:var(--focus-offset)}
 .story-is-moving:not(.story-uses-snapshot) #split-shell{transition:grid-template-columns 420ms var(--ease-out),padding 420ms var(--ease-out),grid-template-rows 420ms var(--ease-out)}
 .story-is-moving:not(.story-uses-snapshot) #story-pane{transition:opacity 320ms var(--ease-out),visibility 420ms;will-change:opacity}
@@ -11067,8 +11068,8 @@ body.split-page{font-size:var(--type-body)}
  .has-story-pane #map-pane{pointer-events:none}
  .has-story-pane .map-surface{height:calc(100dvh - 12px);bottom:auto}
  #story-pane .page{max-width:760px}
- #story-bridge button{top:50%;left:26px;transform:translateY(-50%)}
- #story-bridge svg{transform:rotate(90deg)}
+ #story-bridge button{width:calc(var(--control-target) + var(--space-4));height:var(--control-target)}
+ #story-bridge button::before{width:var(--space-6);height:3px}
  #story-bridge::before{content:"";position:absolute;bottom:0;left:0;width:100%;height:calc(16dvh + 12px);max-height:144px;pointer-events:none}
 }
 @media(prefers-reduced-motion:reduce){.story-is-moving #split-shell,.story-is-moving #story-pane{transition:none}.story-is-moving #map-pane{animation:none}}
