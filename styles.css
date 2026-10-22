@@ -10742,7 +10742,7 @@ line-height: 24px;
 
 
 @container map-viewport (max-width: 360px) {
-.mobile-first-dock[data-material-surface], .mobile-first-tools { column-gap: var(--space-2); }
+.mobile-first-dock[data-material-surface], .mobile-first-tools { column-gap: var(--space-1); }
 }
 
 /* MATERIAL / 01 CASCADE CONTRACT: registry owns fill, border, shadow and blur. */
@@ -11029,7 +11029,7 @@ html[data-celestial-volume] .map-node--garage:not([data-gravity-ready]) .map-nod
 /* The map and its story are one joined pair; both retain their live state. */
 html,body.split-page{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:var(--font-sans);-webkit-font-smoothing:antialiased}
 body.split-page{font-size:var(--type-body)}
-#split-shell{position:fixed;inset:0;display:grid;grid-template-columns:minmax(0,1fr) 0 minmax(0,0fr);overflow:hidden;padding:0;isolation:isolate}
+#split-shell{position:fixed;inset:0;display:grid;grid-template-columns:minmax(0,1fr) 0 minmax(0,0fr);overflow:clip;padding:0;isolation:isolate}
 #split-shell::before{content:"";position:absolute;inset:0;background:var(--line);z-index:-1;pointer-events:none;opacity:0}
 .has-story-pane #split-shell{grid-template-columns:minmax(0,1fr) 12px minmax(0,1fr);padding:6px}
 .has-story-pane #split-shell::before{opacity:1}
