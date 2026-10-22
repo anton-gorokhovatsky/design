@@ -366,9 +366,3 @@ document.fonts.ready.then(()=>controllers.forEach(({scene})=>scene.resize()));
 // Theme follows the map preference; this page has no independent theme control.
 window.addEventListener('storage',e=>{if(e.key==='anton-signal-theme')changeTheme(stored(e.key)==='dark'||(!stored(e.key)&&systemTheme.matches));if(e.key==='anton-signal-reduced-motion')setMotion(!systemMotion.matches&&stored(e.key)!=='1');});
 new MutationObserver(()=>{const next=root.dataset.theme==='dark';if(next!==dark)changeTheme(next);}).observe(root,{attributes:true,attributeFilter:['data-theme']});
-const share=storyRoot.querySelector('#share-story'),shareStatus=storyRoot.querySelector('#share-status');
-share.addEventListener('click',async()=>{
- const shared=new URL('/?scene=map&story=1',location.origin);const url=shared.href;
- try{if(navigator.share){await navigator.share({title:document.title,url});shareStatus.textContent='';}else{await navigator.clipboard.writeText(url);shareStatus.textContent='Ссылка скопирована.';}}
- catch(error){if(error.name==='AbortError')return;const link=document.createElement('a');link.className='text-link';link.href=url;link.textContent=url;shareStatus.replaceChildren(document.createTextNode('Ссылка на рассказ: '),link);}
-});

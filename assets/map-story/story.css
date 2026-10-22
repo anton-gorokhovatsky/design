@@ -20,11 +20,10 @@
 @media print{.scene-readout--anchored{display:none}}
 
 /* Keep optical edges on the reading axis while retaining 44px hit targets. */
-.map-story .scene-controls{grid-template-columns:var(--control-target) minmax(0,1fr) var(--control-target) var(--control-target);width:100%;gap:var(--space-2)}
+.map-story .scene-controls{grid-template-columns:var(--control-target) minmax(7.5rem,max-content) var(--control-target) var(--control-target);width:fit-content;max-width:100%;gap:var(--space-2)}
 .map-story .scene-controls [data-rotate="-1"]{justify-content:flex-start}
 .map-story .scene-controls [data-rotate="-1"] svg{margin-left:-3px}
-.map-story .scene-controls [data-view-reset]{margin:0;justify-content:flex-end}
-.map-story .scene-controls [data-view-reset] svg{margin-right:-2px}
+.map-story .scene-controls [data-view-reset]{margin:0;justify-content:center}
 .map-story .scene-controls [data-scene-pause]{justify-self:center}
 .map-story .reading>p:last-child,.map-story .intro>p:last-child{margin-bottom:0}
 .map-story .chapter>h2{margin-bottom:var(--space-4)}

@@ -1,11 +1,15 @@
 import {selectMapItem,mapButtons} from './map-engine.js';
 import {getTabStops} from './preferences.js';
 import {pane} from './pane-viewport.js';
+import {observeScrollLens} from './viewport-ui.js';
 
 const map=document.getElementById('map-pane'),story=document.getElementById('story-pane');
 const bridge=document.getElementById('story-bridge');
 const compact=matchMedia('(max-width:999px)'),reduce=matchMedia('(prefers-reduced-motion:reduce)');
 let opened=false,opener=null,readingPosition=0,loaded=false,loading,contentLoading,contentReady=false,activeTransition,showRevision=0;
+observeScrollLens(story,()=>story.querySelectorAll('h1,h2,p,figcaption,.gravity-texture'),{
+  owner:document.body,enabled:()=>opened&&!document.body.classList.contains('story-is-moving')
+});
 let readingAnchor=null,readingWidth=0,readingFrame=0,readingMetrics=[];
 function anchorAt(scroll){
   const top=scroll+24,metric=readingMetrics.find(m=>m.top+m.height>top+1);

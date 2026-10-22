@@ -39,6 +39,11 @@ try{
   await entry.click();await page.waitForFunction(()=>!document.querySelector('#story-pane').inert);
   await page.waitForFunction(()=>!document.body.classList.contains('story-is-moving'));
   assert.equal(await page.locator('.story-nav,#story-motion').count(),0,'The reader has no duplicate settings bar');
+  assert.equal(await story.locator('footer,#share-story').count(),0,'The reader does not duplicate the visible map or expose sharing');
+  const paragraph=story.locator('.intro p').last();
+  await paragraph.evaluate(e=>{const s=e.closest('#story-pane');s.scrollTop+=e.getBoundingClientRect().top-s.getBoundingClientRect().top-12;});
+  await page.waitForFunction(()=>document.querySelector('.intro p:last-child').style.filter.includes('scroll-ink'));
+  await story.evaluate(e=>e.scrollTop=0);
   const panels=await page.locator('#map-pane,#story-pane').evaluateAll(es=>es.map(e=>{const b=e.getBoundingClientRect();return{x:b.x,y:b.y,w:b.width,h:b.height};}));
   assert.ok(width>999?panels[1].x>panels[0].x+panels[0].w:panels[1].y>panels[0].y+panels[0].h,'The shared bridge joins both visible panes');
   await page.evaluate(()=>document.querySelector('[data-motion-toggle]').click());assert.equal(await page.locator('html').getAttribute('data-reduce-motion'),'true');

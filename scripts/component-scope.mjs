@@ -18,6 +18,10 @@ const ownsClass = (matches) => (selector) => selectorParser().astSync(selector).
   return owned;
 });
 const cssOwners = {
+  "map-story": selector => selectorParser().astSync(selector).nodes.every(branch =>
+    branch.nodes.some(node => node.type === "id" && node.value === "story-pane")
+    && branch.nodes.every(node => node.type !== "nesting"
+      && (node.type !== "combinator" || ["", ">"].includes(node.value.trim())))),
   "story-bridge": selector => selectorParser().astSync(selector).nodes.every(branch =>
     branch.nodes.some(node => node.type === "id" && node.value === "story-bridge")
     && branch.nodes.every(node => node.type !== "nesting"

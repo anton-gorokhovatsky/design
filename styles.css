@@ -11050,7 +11050,7 @@ body.split-page{font-size:var(--type-body)}
 .story-is-moving:not(.story-uses-snapshot) #map-pane{animation:story-unfold 420ms var(--ease-out) both}
 @keyframes story-unfold{0%,100%{filter:brightness(1) blur(0)}35%{filter:brightness(.88) blur(1.2px)}}
 #story-pane .page{padding-inline:clamp(22px,calc(var(--pane-vw) * 4.5),40px)}
-#story-pane .opening{padding-top:var(--space-7);margin-left:0}
+#story-pane .opening{padding-top:var(--space-5);margin-left:0}
 #story-pane .chapter>h2,#story-pane .reading,#story-pane .spread,#story-pane .figure--garage,#story-pane .figure--geography,#story-pane .figure--time,#story-pane .footer{margin-left:0}
 #story-pane .spread,#story-pane .gravity-spread{display:flex;flex-direction:column;align-items:stretch;gap:0}
 #story-pane .spread .live-figure{position:relative;top:auto;margin:var(--space-4) 0 var(--space-5)}
@@ -11059,7 +11059,7 @@ body.split-page{font-size:var(--type-body)}
 #story-pane .figure--garage .scene{aspect-ratio:1.25}
 #story-pane .chapter{padding-top:var(--space-7)}
 #story-pane .live-figure figcaption{max-width:none}
-#story-pane h1{font-size:var(--type-story-title)}
+#story-pane h1{font-size:var(--type-story-title);margin-top:0}
 #story-pane #story-title:focus-visible{outline:var(--focus-width) solid var(--signal);outline-offset:var(--focus-offset)}
 #story-pane .footer{gap:var(--space-2);flex-direction:column;align-items:start}
 @media(max-width:999px){

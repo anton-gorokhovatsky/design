@@ -22,7 +22,10 @@ export const staticCheckPaths = new Set(['scripts/audit-project.mjs', 'scripts/c
   'scripts/check-css-cascade.mjs', 'scripts/check-performance-budget.mjs',
   'scripts/check-performance-budget.test.mjs', 'scripts/check-publication-assets.mjs']);
 export const ownedCheckComponent = path => signaturePath.test(path)
-  ? 'signature' : processPaths.has(path) ? 'checks' : browserCheckPaths.get(path) || null;
+  ? 'signature' : processPaths.has(path) ? 'checks'
+    : ['js/map-story.js', 'rendering/js/map-story.js', 'assets/map-story/content.html',
+      'assets/map-story/story.css', 'assets/map-story/story.js', 'rendering/assets/map-story/story.js'].includes(path)
+      ? 'map-story' : browserCheckPaths.get(path) || null;
 
 const step = script => ({ label: script, command: process.execPath, args: [script] });
 export const checkProfiles = {

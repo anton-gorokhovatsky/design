@@ -151,6 +151,14 @@ for (const selector of ['#story-bridge + #story-pane', ':is(#story-bridge,#map-p
 }
 scoped('styles.css', '', '#story-bridge button{opacity:.8}:root{--line:red}', 'full');
 assert.deepEqual(componentCoverage['story-bridge'], ['map-story', 'accessibility']);
+scoped('styles.css', '', '#story-pane .opening{padding-top:24px}', 'components', ['map-story']);
+scoped('styles.css', '', '#story-pane + #map-pane{opacity:0}', 'full');
+scoped('styles.css', '', '#story-pane .opening{padding-top:24px}#map-pane{opacity:0}', 'full');
+scoped('js/map-story.js', 'before', 'after', 'components', ['map-story']);
+scoped('assets/map-story/content.html', 'before', 'after', 'components', ['map-story']);
+scoped('assets/map-story/black-hole.js', 'before', 'after', 'full');
+scoped('js/viewport-ui.js', 'before', 'after', 'full');
+assert.deepEqual(componentCoverage['map-story'], ['map-story', 'scroll-lens', 'accessibility']);
 scoped("styles.css", "", '.control-console .command-dock__mark svg {fill: none; stroke: currentColor}', "components", ["search-icon"]);
 scoped("styles.css", '.control-console .command-dock__mark::before {content: ""}', "", "components", ["search-icon"]);
 scoped("styles.css", "", '.control-console .command-dock__mark svg, .map-node {fill: none}', "full");
