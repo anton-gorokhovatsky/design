@@ -1,7 +1,7 @@
 import {pane} from './pane-viewport.js';
 import { reducedMotion } from "./preferences.js";
 
-// Shared keyboard scrolling; wheel and touch stay native.
+
 const scrollRegionFromKey = (event, region, reduceMotion) => {
   if (event.target.matches("input, select, textarea") || !["ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End"].includes(event.key)) return;
   const maximum = region.scrollHeight - region.clientHeight;
@@ -12,18 +12,18 @@ const scrollRegionFromKey = (event, region, reduceMotion) => {
   region.scrollTo({ top: Math.max(0, Math.min(maximum, top)), behavior: reduceMotion ? "auto" : "smooth" });
 };
 
-// Refract content inside its fixed frame.
+
 const scrollLensControllers = new Map();
 let scrollLensId = 0;
 const lensNamespace = "http://www.w3.org/2000/svg";
 const lensForcedColors = matchMedia("(forced-colors: active)");
 const lensDepth = 56;
 const lensBleed = 32;
-// Lens invariants: js/README.md#scroll-lens-invariants.
+
 const drawScrollLensMap = (record, width, height, top, bottom) => {
   const extent = height + lensBleed * 2;
   const textureHeight = lensDepth + lensBleed;
-  // Reuse decoded edge textures.
+
   if (record.textureWidth !== width) {
     const canvas = record.canvas;
     canvas.height = textureHeight;
@@ -52,7 +52,7 @@ const drawScrollLensMap = (record, width, height, top, bottom) => {
     record.images[1].setAttribute("href", canvas.toDataURL());
     record.textureWidth = width;
   }
-  // Keep displaced glyphs inside the Safari filter bounds.
+
   for (const primitive of [record.filter, ...record.filter.children]) {
     primitive.setAttribute("x", "0");
     primitive.setAttribute("y", -lensBleed / height);
@@ -68,7 +68,7 @@ const drawScrollLensMap = (record, width, height, top, bottom) => {
     const edge = index ? bottom : top;
     const start = edge - (index ? lensDepth : lensBleed);
     const visible = edge !== null && start < height + lensBleed && start + textureHeight > -lensBleed;
-    // Keep inactive textures in bounds.
+
     image.setAttribute("y", visible ? start / height : 0);
     image.setAttribute("height", textureHeight / height);
     record.mapLayers[index].setAttribute("in", visible ? (index ? "lower" : "upper") : "empty");
@@ -80,7 +80,7 @@ const lensDepthAt = (position, edge, upper) => edge === null ? 0
 const lensRow = (g, y) => {
   const upper = lensDepthAt(y, g.top, true), lower = lensDepthAt(y, g.bottom, false);
   const bend = Math.max(upper, lower) ** 2;
-  // Meet the frame vertically before its corner begins: no angled join or ear.
+
   const t = Math.min(1, Math.max(upper, lower) * lensDepth / (lensDepth - g.frameRadius));
   const flare = g.insetMedia ? 0 : t * t * (3 - 2 * t);
   const r = Math.min(g.radius, g.width / 2, g.height / 2);
@@ -91,7 +91,7 @@ const lensRow = (g, y) => {
     left: g.left * (1 - flare) + corner,
     right: g.left + g.width + (g.portWidth - g.left - g.width) * flare - corner };
 };
-// Raster lifetime follows its media.
+
 const createLensMedia = video => {
   const moving = video.matches("video");
   const background = getComputedStyle(video.closest(".personal-media__screen") || video.parentElement).backgroundColor;
@@ -122,7 +122,7 @@ const createLensMedia = video => {
       sourceContext.drawImage(video,(width-w)/2,moving?0:(height-h)/2,w,h);
     }
     context.clearRect(0,0,pw,ph);
-    // Sample only the edge bands.
+
     context.save();
     context.beginPath();
     const r = Math.min(g.radius*density,width/2,height/2), x = g.left*density;
@@ -152,7 +152,7 @@ const createLensMedia = video => {
         if (dw<=0) continue;
         const sw=Math.min(width,dw/(1+.16*edge.bend));
         const sy=Math.max(0,Math.min(height-1,edge.sample*density-.5));
-        // Complete source rows avoid subpixel raster gaps in WebKit.
+
         context.drawImage(source,(width-sw)/2,sy,sw,1,edge.left*density,row,dw,1);
       }
     }
@@ -180,7 +180,7 @@ const createLensMedia = video => {
     canvas.remove();
   } };
 };
-// Cross-origin media uses projection.
+
 const createLensPlayer = element => {
   const transform = element.style.transform, origin = element.style.transformOrigin;
   const screen = element.parentElement, overflow = screen.style.overflow, clip = screen.style.clipPath;
@@ -198,7 +198,7 @@ const createLensPlayer = element => {
     const span = y1 - y0, z0 = 1 + .16 * upper ** 2, z1 = 1 + .16 * lower ** 2;
     const s0 = y0 + Math.min(8 * upper ** 2, span * .3);
     const s1 = y1 - Math.min(8 * lower ** 2, span * .3);
-    // Bounded offsets keep the two-edge projection invertible.
+
     const c = (z1 - z0) / span, d = z0 - c * y0;
     const a = (s1 * z1 - s0 * z0) / span, b = s0 * z0 - a * y0;
     element.style.transform = `matrix3d(${a*d-b*c},0,0,0,0,${d},0,${-c},0,0,1,0,0,${-b},0,${a})`;
@@ -315,7 +315,7 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
       const depths = [top && rect.top < port.top + lensDepth * scale && rect.bottom > port.top,
         bottom && rect.bottom > port.bottom - lensDepth * scale && rect.top < port.bottom];
       let record = records.get(element);
-      // Materials, controls and live keyboard selection retain their native rendering.
+
       const control = element.closest("a, button, iframe");
       const focused = control ? control.matches(":focus-visible")
         || (element.matches("iframe") && element === document.activeElement
@@ -375,7 +375,7 @@ observeScrollLens(lensPanel, () => lensPanel.querySelectorAll(
   ".work-intro > *, .approach-intro > *, .work-row > :not(img), .approach-grid li > *, .contact-intro > :not(.contact-resume), .contact-links a > *",
 ), { owner: document.querySelector("[data-content-panel]") });
 
-// Keep a short continuation cue inside text lists without reshaping cards.
+
 const observeScrollEdges = (region, { owner = region } = {}) => {
   if (!region) return;
   let frame = 0;
@@ -457,7 +457,7 @@ const positionDetachedCommandResults = () => {
   const focusedMobile = compact && dock.classList.contains("is-open");
   let anchorTop = surfaceBounds.top;
   let anchorBottom = surfaceBounds.bottom;
-  // Results share the console's right edge.
+
   const resultWidth = compact ? surfaceBounds.right - bounds.left
     : Math.max(surfaceBounds.right - bounds.left, Math.min(surfaceBounds.width, 640));
   let width = Math.min(resultWidth, Math.max(0, viewport.width - gap * 2));
@@ -485,7 +485,7 @@ const positionDetachedCommandResults = () => {
     const contentHeight = element.scrollHeight;
     const opensBelow = !focusedMobile && (contentHeight > spaceAbove && spaceBelow > spaceAbove);
     let maxHeight = opensBelow ? spaceBelow : spaceAbove;
-    // A partial row signals that the list continues.
+
     const peek = [...element.children].map(row => row.offsetTop + row.offsetHeight / 2)
       .filter(height => height <= maxHeight).at(-1);
     if (contentHeight > maxHeight && peek) maxHeight = peek;
@@ -678,8 +678,8 @@ const syncConsoleBounds = () => {
   }
 
   floatingConsoleModules.forEach((module) => {
-    // A hidden compact-panel has no box. Clamping that zero rect writes a
-    // fictitious drag offset which used to survive when the reader closed.
+
+
     const rect = module.getBoundingClientRect();
     if (!rect.width || !rect.height || pane.width <= 900) return;
     const currentOffset = getConsoleOffset(module);
