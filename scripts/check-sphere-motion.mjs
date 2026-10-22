@@ -198,6 +198,11 @@ try {
       .some((canvas) => canvas.dataset.sphereMotion === "running"
         && canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height).data
           .some((value, index) => index % 4 === 3 && value > 0)));
+    // The geodesic table is prepared asynchronously; assert the real painted
+    // surface, not a fixed delay or a renderer-ready flag.
+    await page.waitForFunction(() => [...document.querySelectorAll('.celestial-volume')]
+      .every(canvas => canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data
+        .some((value, index) => index % 4 === 3 && value > 0)));
     const bodiesBefore = await readCelestial(page);
     assert.deepEqual(bodiesBefore.map(body => body.id), ['garage', 'running']);
     for (const body of bodiesBefore) {

@@ -797,9 +797,10 @@ const initializeBlackHoleLens = () => {
     });
   };
   const update=()=>{
-    const canvas=garage.querySelector('.celestial-volume--garage');
-    if(!canvas)return;
-    const c=canvas.getBoundingClientRect();model.cx=c.x+c.width/2;model.cy=c.y+c.height/2;model.core=c.width*.434/2.7;
+    const glyph=garage.querySelector('.map-node__glyph');
+    if(!glyph)return;
+    // Keep the accepted shadow radius independent of the renderer's glow extent.
+    const c=glyph.getBoundingClientRect();model.cx=c.x+c.width/2;model.cy=c.y+c.height/2;model.core=c.width*1.6*.434/2.7;
     if(!available())model.core=0;
     if(signal&&signal.clientWidth&&signal.clientHeight){const b=signal.getBoundingClientRect();model.signalBounds={x:b.x,y:b.y,width:signal.clientWidth,height:signal.clientHeight,sx:b.width/signal.clientWidth,sy:b.height/signal.clientHeight};}
     if(grid&&field.clientWidth&&field.clientHeight){
