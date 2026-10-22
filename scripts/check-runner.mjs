@@ -45,6 +45,11 @@ assert.equal(assets.html, null);
 assert(assets.assets.every(asset => asset.path.startsWith('signature/')), 'Signature publication does not wait on portfolio assets');
 const tooling = getPublicationAssets(root, { staticScope: 'checks', components: ['checks'] });
 assert(tooling.assets.some(a => a.path === 'scripts/check-profiles.mjs'), 'A check-only release proves its own Pages payload');
+const changedTooling = getPublicationAssets(root, { staticScope: 'checks', components: ['checks'],
+  files: ['scripts/release-scope.mjs', 'scripts/component-scope.mjs', '.github/workflows/quality.yml', 'AGENTS.md'] });
+assert(changedTooling.assets.some(a => a.path === 'scripts/release-scope.mjs'));
+assert(changedTooling.assets.some(a => a.path === 'scripts/component-scope.mjs'), 'Unchanged helper hashes cannot prove deployment of the changed classifier');
+assert(!changedTooling.assets.some(a => a.path.startsWith('.github/')), 'GitHub Pages does not serve hidden workflow files');
 const mixedAssets = getPublicationAssets(root, { staticScope: 'static', components: ['signature'] });
 assert(mixedAssets.html !== null);
 assert(mixedAssets.assets.some(a => a.path.startsWith('signature/') && !a.linked), 'Mixed releases verify the shared module without requiring its demo link in portfolio HTML');

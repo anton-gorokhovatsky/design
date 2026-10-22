@@ -9,6 +9,12 @@ on:
 permissions:
   contents: read
 
+# Only the newest candidate can be published. A superseded run must not occupy
+# runners needed by its replacement; cancellation never satisfies the gate.
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   static-contracts:
     runs-on: ubuntu-latest

@@ -118,6 +118,14 @@ export const classifyChange = (path, before, after) => {
   return { mode: components ? "components" : "full", components: components || [] };
 };
 
+export const requireReleaseBase = (plan, includeUnpublished = false) => {
+  if (!plan.base) throw new Error(`Cannot verify the published baseline: ${plan.reason}`);
+  if (plan.files.length && !includeUnpublished) {
+    throw new Error(`HEAD contains unpublished changes: ${plan.files.join(", ")}. `
+      + "Isolate a small fix from origin/gh-pages, or pass --include-unpublished to continue an intentional combined release. Nothing was pushed.");
+  }
+};
+
 export const planRelease = ({ projectRoot, base = "origin/gh-pages", target } = {}) => {
   const git = (...args) => execFileSync("git", args, { cwd: projectRoot, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
   try {
@@ -140,7 +148,7 @@ export const planRelease = ({ projectRoot, base = "origin/gh-pages", target } = 
       const [status, path] = entries.slice(index, index + 2);
       const owner = ownedCheckComponent(path);
       let classification = staticCheckPaths.has(path) ? { mode: "copy", components: [] } : owner ? { mode: "components", components: [owner] } : { mode: "full", components: [] };
-      if (status === "M" && (copyArrays[path] || ["index.html", "404.html", "styles.css", "js/focused-home.js", "js/map-media.js", "js/whoop-day.js", "js/viewport-ui.js", "scripts/reel-specs.json", "README.md", "AGENTS.md"].includes(path) || /^docs\/.*\.md$/.test(path))) {
+      if (status === "M" && (copyArrays[path] || ["index.html", "404.html", "styles.css", "js/focused-home.js", "js/map-media.js", "js/map-engine.js", "js/whoop-day.js", "js/viewport-ui.js", "scripts/reel-specs.json", "README.md", "AGENTS.md"].includes(path) || /^docs\/.*\.md$/.test(path))) {
         const before = git("show", `${baseSha}:${path}`);
         const after = targetSha ? git("show", `${targetSha}:${path}`) : readFileSync(resolve(projectRoot, path), "utf8");
         classification = classifyChange(path, before, after);

@@ -18,6 +18,7 @@ export const getPublicationAssets = (root, plan) => {
     // Changed public tooling also proves that this Pages deployment has arrived,
     // even though the signature and all portfolio runtime bytes are unchanged.
     references.push('scripts/check-project.mjs', 'scripts/check-profiles.mjs', 'scripts/publication-assets.mjs');
+    references.push(...(plan.files || []).filter(path => path.startsWith('scripts/') && existsSync(resolve(root, path))));
   }
   return {
     html, htmlHash: html === null ? null : hash(html),

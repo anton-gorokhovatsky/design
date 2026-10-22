@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 import { waitForQuality } from "./release-quality.mjs";
 import { onlyIndependentChecks, localScopeFor } from "./check-profiles.mjs";
 import { getPublicationAssets } from "./publication-assets.mjs";
-import { planRelease } from "./release-scope.mjs";
+import { planRelease, requireReleaseBase } from "./release-scope.mjs";
 import {
   syncRuntimeAssetVersions,
   verifyRuntimeAssetVersions,
@@ -78,6 +78,7 @@ const parseArguments = () => {
     message: "",
     publicUrl: defaultPublicUrl,
     resume: "",
+    includeUnpublished: false,
   };
 
   for (let index = 0; index < args.length; index += 1) {
@@ -92,6 +93,8 @@ const parseArguments = () => {
     } else if (argument === "--resume") {
       options.resume = args[index + 1] || "";
       index += 1;
+    } else if (argument === "--include-unpublished") {
+      options.includeUnpublished = true;
     } else if (argument === "--url") {
       options.publicUrl = args[index + 1] || "";
       index += 1;
@@ -256,7 +259,7 @@ const options = parseArguments();
 if (options.resume) {
   const [head] = await readGitLines(["rev-parse", "HEAD"]);
   const status = await readGitLines(["status", "--porcelain=v1", "--untracked-files=all"]);
-  if (options.files.length || options.message || status.length || options.resume !== head) {
+  if (options.files.length || options.message || options.includeUnpublished || status.length || options.resume !== head) {
     fail("--resume requires the exact current commit, a clean checkout, and no --file/--message.");
   }
   try {
@@ -319,11 +322,14 @@ try {
 }
 
 try {
+  await run("git", ["fetch", "origin", "gh-pages:refs/remotes/origin/gh-pages"], {
+    label: "Read the published baseline before assembling the release",
+  });
+  requireReleaseBase(planRelease({ projectRoot, target: "HEAD" }), options.includeUnpublished);
   cacheUpdate = onlyIndependentChecks(planRelease({ projectRoot })) ? { changedPaths: [] } : syncRuntimeAssetVersions(projectRoot);
 } catch (error) {
   fail(
-    "could not update CSS/JS content hashes: "
-    + (error instanceof Error ? error.message : String(error)),
+    error instanceof Error ? error.message : String(error),
   );
 }
 
@@ -365,11 +371,9 @@ try {
     ["push", "--dry-run", "origin", "HEAD:main", "HEAD:gh-pages"],
     { label: "Verify the real GitHub push path" },
   );
-  await run("git", ["fetch", "origin", "gh-pages:refs/remotes/origin/gh-pages"], {
-    label: "Read the published baseline for release scope selection",
-  });
   const plan = planRelease({ projectRoot });
   console.log(`\nRelease checks: ${plan.mode}. ${plan.reason}`);
+  console.log(`Browser jobs: ${plan.matrix.include.length}; checks: ${[...new Set(plan.matrix.include.flatMap(job => job.checks.split(",")))].join(", ") || "none"}.`);
   // Full browser coverage runs once in Quality. Local work includes a focused
   // render of the actual change; repeating the entire CI matrix adds no evidence.
   await run(process.execPath, ["scripts/check-project.mjs", `--scope=${localScopeFor(plan)}`], {

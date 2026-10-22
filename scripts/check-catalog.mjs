@@ -32,6 +32,8 @@ export const componentCoverage = {
   "point-address": ["point-address"],
   header: ["header"],
   "search-icon": ["search-icon"],
+  // Reuse the complete existing geometry, hover/focus and reflow contracts.
+  "map-labels": ["map-routes", "hover-layout", "accessibility"],
   media: ["reels", "case-view", "case-flow", "hover-layout", "observation-route"],
   settings: ["core", "accessibility", "whoop-ui"],
   // Console bounds also move the author aura and detached search results.

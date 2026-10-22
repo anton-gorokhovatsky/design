@@ -25,6 +25,7 @@ const cssOwners = {
     && ownsClass(/^map-node(?:$|__|--)/)(selector),
   header: ownsClass(/^(?:site-header|brand(?:__[\w-]+)?|whoop-(?:readout|metrics|status|foot|stamp|level|compact-trigger))$/),
   "search-icon": ownsClass(/^command-dock__mark$/),
+  "map-labels": ownsClass(/^map-(?:node-label|anchor-label|space-label)(?:$|--)/),
 };
 
 const cssOutsideOwned = (source, owns) => {
@@ -32,7 +33,7 @@ const cssOutsideOwned = (source, owns) => {
     if (node.type === "comment") return null;
     if (node.type === "rule" && node.nodes.every((child) => ["decl", "comment"].includes(child.type))
       && owns(node.selector)) return null;
-    if (node.type === "root" || (node.type === "atrule" && ["media", "supports"].includes(node.name))) {
+    if (node.type === "root" || (node.type === "atrule" && ["media", "supports", "container"].includes(node.name))) {
       const children = (node.nodes || []).map(visit).filter(Boolean);
       // Empty conditional groups have no effect. Other at-rules (@layer,
       // @property, @font-face, keyframes, imports) must be byte-identical.
@@ -177,6 +178,45 @@ const consoleBoundsOutside = source => {
   });
 };
 
+// Label placement may change without rechecking media playback, WHOOP or the
+// signature. All node geometry, links, events and exports remain outside this
+// boundary. The two numeric offset expressions cannot execute arbitrary code.
+const mapLabelsOutside = source => {
+  const tree = parseJs(source, { ecmaVersion: "latest", sourceType: "module" });
+  const found = new Set(), ranges = [];
+  const numeric = node => (node?.type === "Literal" && typeof node.value === "number" && Number.isFinite(node.value))
+    || (node?.type === "Identifier" && node.name === "glyphDiameter")
+    || (node?.type === "BinaryExpression" && ["+", "-", "*", "/"].includes(node.operator)
+      && numeric(node.left) && numeric(node.right));
+  for (const statement of tree.body) {
+    if (statement.type !== "VariableDeclaration" || statement.kind !== "const" || statement.declarations.length !== 1) continue;
+    const { id, init } = statement.declarations[0];
+    if (!["placeMapLabel", "placeMapRestLabels"].includes(id.name)) continue;
+    if (found.has(id.name) || init?.type !== "ArrowFunctionExpression" || init.async) throw new Error("Unknown label placement owner");
+    found.add(id.name);
+    ranges.push([init.body.start, init.body.end]);
+  }
+  const visit = node => {
+    if (!node || typeof node !== "object") return;
+    if (node.type === "CallExpression" && source.slice(node.callee.start, node.callee.end) === "label.style.setProperty"
+      && ["--label-offset", "--garage-label-offset"].includes(node.arguments[0]?.value)) {
+      const [key, value] = node.arguments;
+      if (found.has(key.value) || node.arguments.length !== 2 || value?.type !== "TemplateLiteral"
+        || value.expressions.length !== 1 || value.quasis[0].value.raw !== "" || value.quasis[1].value.raw !== "px"
+        || !numeric(value.expressions[0])) throw new Error("Unknown label offset");
+      found.add(key.value);
+      ranges.push([value.start, value.end]);
+    }
+    for (const value of Object.values(node)) {
+      if (Array.isArray(value)) value.forEach(visit);
+      else if (value && typeof value === "object") visit(value);
+    }
+  };
+  visit(tree);
+  if (found.size !== 4) throw new Error("Missing label placement owner");
+  return ranges.sort((a, b) => b[0] - a[0]).reduce((text, [start, end]) => text.slice(0, start) + "\0LABEL\0" + text.slice(end), source);
+};
+
 export const affectedComponents = (path, before, after, maskHtmlCopy) => {
   if (before.includes("\0") || after.includes("\0")) return null;
   try {
@@ -184,6 +224,7 @@ export const affectedComponents = (path, before, after, maskHtmlCopy) => {
       && overviewOutside(path, before) === overviewOutside(path, after)) return ["overview"];
     if (path === "404.html" && notFoundBindings(maskHtmlCopy(before).replaceAll("\0", "")) === notFoundBindings(maskHtmlCopy(after).replaceAll("\0", ""))) return ["not-found"];
     if (path === "js/viewport-ui.js" && consoleBoundsOutside(before) === consoleBoundsOutside(after)) return ["console-bounds"];
+    if (path === "js/map-engine.js" && mapLabelsOutside(before) === mapLabelsOutside(after)) return ["map-labels"];
     if (path === "styles.css") return cssComponents(before, after);
     if (path === "index.html") {
       try {

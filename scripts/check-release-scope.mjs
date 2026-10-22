@@ -4,7 +4,7 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { classifyChange, isCopyOnly, planRelease } from "./release-scope.mjs";
+import { classifyChange, isCopyOnly, planRelease, requireReleaseBase } from "./release-scope.mjs";
 import { reelSpecs } from "./reel-specs.mjs";
 import { browserMatrix, browserSteps, componentCoverage } from "./check-catalog.mjs";
 import { pointAddressPaths, pointAddressRename } from "./point-address-scope.mjs";
@@ -151,6 +151,9 @@ for (const selector of ['.site-header', '.focused-home .site-header[data-materia
 }
 scoped('styles.css', '', '.site-header {padding: 12px}\n.command-dock__mark svg {fill: none}', 'components', ['header', 'search-icon']);
 scoped('styles.css', '', '@media(max-width:900px){.site-header {padding: 12px}}', 'components', ['header']);
+scoped('styles.css', '', '@container map-viewport (max-width:900px){.site-header {padding: 12px}}', 'components', ['header']);
+scoped('styles.css', '', '@container map-viewport (max-width:900px){.site-header {padding: 12px}.map-grid {opacity:0}}', 'full');
+scoped('styles.css', '@container map-viewport (max-width:900px){.map-grid {opacity:1}}', '@container map-viewport (max-width:800px){.map-grid {opacity:1}}', 'full');
 for (const selector of [':root', '.site-headerish', '.site-header + .practice-map', ':is(.site-header, .practice-map)', 'body:has(.site-header)', '.site-header, .map-node']) {
   scoped('styles.css', '', `${selector} {padding: 12px}`, 'full');
 }
@@ -358,6 +361,30 @@ for (const id of ['observation-route', 'first-visit', 'case-flow', 'accessibilit
 scoped('scripts/audit-project.mjs', 'before', 'after', 'copy');
 scoped('scripts/browser-contracts.cjs', 'before', 'after', 'full');
 scoped('scripts/unregistered-check.mjs', 'before', 'after', 'full');
+
+// The actual caption move is local even inside map-engine.js. A nearby change
+// to node placement, relationships or an executable offset remains full scope.
+const mapEngine = read('js/map-engine.js');
+const movedCaption = mapEngine.replace('glyphDiameter * .65 + 12', 'glyphDiameter * .7 + 14')
+  .replace('item.id === "garage" ? y + offset', 'item.id === "garage" ? y + offset + 2');
+assert.notEqual(movedCaption, mapEngine);
+scoped('js/map-engine.js', mapEngine, movedCaption, 'components', ['map-labels']);
+for (const after of [
+  movedCaption.replace('const duration = shouldMorph ? 440 : 320', 'const duration = shouldMorph ? 600 : 400'),
+  movedCaption.replace('const glyphDiameter = Math.max(10, item.size * glyphScale)', 'const glyphDiameter = Math.max(20, item.size * glyphScale)'),
+  movedCaption.replace('glyphDiameter * .7 + 14', 'moveNodes()'),
+  movedCaption + '\nwindow.addEventListener("resize", () => {});',
+  movedCaption + '\nconst broken = ;',
+]) scoped('js/map-engine.js', mapEngine, after, 'full');
+for (const selector of ['.map-node-label', 'html[data-map-controls-ready] .map-anchor-label[data-map-label-id="garage"]', '.focused-home .map-space-label--south']) {
+  scoped('styles.css', '', `@container map-viewport (min-width:901px){${selector} {transform:translate(-50%, 30px)}}`, 'components', ['map-labels']);
+}
+for (const selector of ['.map-anchor-label + .map-node', ':is(.map-anchor-label,.map-grid)', '.map-anchor-label,.map-grid']) {
+  scoped('styles.css', '', `${selector} {opacity:0}`, 'full');
+}
+for (const engine of ['chromium', 'webkit']) assert.deepEqual(
+  new Set(browserMatrix('components', ['map-labels']).include.filter(job => job.browser === engine).flatMap(job => job.checks.split(','))),
+  new Set(['map-routes', 'hover-layout', 'accessibility']), 'Caption placement retains existing complete contracts in both engines');
 for (const owner of ['overview', 'not-found', 'map-presentation']) {
   const matrix = browserMatrix('components', [owner]).include;
   for (const engine of ['chromium', 'webkit']) assert.deepEqual(new Set(matrix.filter(job => job.browser === engine).flatMap(job => job.checks.split(','))), new Set(componentCoverage[owner]));
@@ -386,6 +413,13 @@ try {
   git("add", "."); git("commit", "-m", "published");
   const published = git("rev-parse", "HEAD");
   const plan = (options = {}) => planRelease({ projectRoot: directory, base: published, ...options });
+  requireReleaseBase(plan({ target: 'HEAD' }));
+  writeFileSync(join(directory, 'js/map-engine.js'), mapEngine);
+  git('add', '.'); git('commit', '-m', 'caption fixture');
+  const labelBase = git('rev-parse', 'HEAD');
+  writeFileSync(join(directory, 'js/map-engine.js'), movedCaption);
+  assert.deepEqual(planRelease({ projectRoot: directory, base: labelBase }).components, ['map-labels']);
+  git('reset', '--hard', published);
   writeFileSync(join(directory, 'js/viewport-ui.js'), consoleFix);
   assert.deepEqual(plan().components, ['console-bounds']);
   assert.equal(plan().matrix.include.length, 6);
@@ -432,6 +466,11 @@ try {
   git("add", "."); git("commit", "-m", "another copy edit");
   assert.equal(plan({ base: "HEAD^", target: "HEAD" }).mode, "copy");
   assert.equal(plan({ target: "HEAD" }).mode, "full", "Entire unpublished range determines the gate");
+  assert.throws(() => requireReleaseBase(plan({ target: 'HEAD' })), /HEAD contains unpublished changes/,
+    'A small fix cannot silently publish a committed feature backlog');
+  requireReleaseBase(plan({ target: 'HEAD' }), true);
+  assert.equal(plan({ target: 'HEAD' }).mode, 'full', 'Explicit bundling does not narrow or bypass checks');
+  assert.throws(() => requireReleaseBase(plan({ base: 'missing-ref', target: 'HEAD' }), true), /Cannot verify/);
   writeFileSync(join(directory, "assets/reels/garage-site.mp4"), "updated master");
   assert.equal(plan().mode, "full", "Media cannot hide an unpublished behavior change");
   assert.equal(plan().staticScope, "static");
@@ -470,6 +509,8 @@ for (const [scope, staticResult, browserResult, pass] of [
 assert.match(workflow, /matrix: \$\{\{ fromJSON\(needs.static-contracts.outputs.matrix\) \}\}/);
 assert.match(workflow, /--checks=\$\{\{ matrix.checks \}\}/);
 assert.match(workflow, /if: steps.scope.outputs.static-scope == 'static'/, "Full and media lanes require FFmpeg");
+assert.match(workflow, /concurrency:\n  group: quality-\$\{\{ github.ref \}\}\n  cancel-in-progress: true/,
+  'Only a newer candidate on the same ref cancels obsolete work; PRs stay independent');
 // Independently published signatures keep one component job per engine. Known
 // check tooling uses its own contracts; neither boundary masks runtime edits.
 for (const path of ['signature/src/component.js', 'signature/src/motion.css', 'signature/src/mark.svg', 'signature/build.mjs', 'signature/demo.html', 'signature/v1/signature.js', 'signature/1.0.3/signature.js']) {
