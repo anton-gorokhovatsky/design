@@ -1241,15 +1241,14 @@ transition-duration: 0s !important;
 /* Map-first interface */
 
 .map-surface {
-min-width: 320px;
+min-width: 0;
 margin: 0;
-overflow-x: hidden;
 line-height: var(--leading-body);
 transition:
 background-color 320ms var(--ease-out),
 color 320ms var(--ease-out);
-height: calc(var(--pane-vh) * 100);
-overflow: hidden;
+height: auto;
+overflow: clip;
 }
 
 main {
@@ -11045,9 +11044,9 @@ body.split-page{font-size:var(--type-body)}
 #story-bridge svg{display:block;width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 #story-bridge button:hover{color:var(--signal)}
 #story-bridge button:focus-visible{outline:var(--focus-width) solid var(--signal);outline-offset:var(--focus-offset)}
-.story-is-moving #split-shell{transition:grid-template-columns 420ms var(--ease-out),padding 420ms var(--ease-out),grid-template-rows 420ms var(--ease-out)}
-.story-is-moving #story-pane{transition:opacity 320ms var(--ease-out),visibility 420ms;will-change:opacity}
-.story-is-moving #map-pane{animation:story-unfold 420ms var(--ease-out) both}
+.story-is-moving:not(.story-uses-snapshot) #split-shell{transition:grid-template-columns 420ms var(--ease-out),padding 420ms var(--ease-out),grid-template-rows 420ms var(--ease-out)}
+.story-is-moving:not(.story-uses-snapshot) #story-pane{transition:opacity 320ms var(--ease-out),visibility 420ms;will-change:opacity}
+.story-is-moving:not(.story-uses-snapshot) #map-pane{animation:story-unfold 420ms var(--ease-out) both}
 @keyframes story-unfold{0%,100%{filter:brightness(1) blur(0)}35%{filter:brightness(.88) blur(1.2px)}}
 #story-pane .page{padding-inline:clamp(22px,calc(var(--pane-vw) * 4.5),40px)}
 #story-pane .opening{padding-top:var(--space-7);margin-left:0}
@@ -11083,3 +11082,21 @@ html[data-reduce-motion="true"] .story-is-moving #map-pane{animation:none}
 .map-about-trigger::after,.mobile-map-story::after{content:"→";display:inline-block;margin-inline-start:.45em;text-decoration:none}
 .mobile-map-story{gap:0;font-size:var(--type-detail);line-height:24px}
 @container map-viewport (max-width:360px){.mobile-map-story::after{margin-inline-start:.2em}}
+
+/* Browser snapshots keep the unfolding on the compositor; the live map reflows once. */
+#map-pane{view-transition-name:paired-map}
+#story-pane{view-transition-name:paired-story}
+::view-transition{pointer-events:none}
+::view-transition-group(paired-map),::view-transition-group(paired-story){animation-duration:420ms;animation-timing-function:var(--ease-out)}
+::view-transition-old(paired-map){animation:pair-map-out 420ms var(--ease-out) both}
+::view-transition-new(paired-map){animation:pair-map-in 420ms var(--ease-out) both}
+::view-transition-new(paired-story){animation:pair-reader-in 420ms var(--ease-out) both}
+::view-transition-old(paired-story){animation:pair-reader-out 260ms var(--ease-out) both}
+@keyframes pair-map-out{to{opacity:0;filter:brightness(.88) blur(1px)}}
+@keyframes pair-map-in{from{opacity:0;filter:brightness(.88) blur(1px)}to{opacity:1;filter:none}}
+@keyframes pair-reader-in{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:none}}
+@keyframes pair-reader-out{to{opacity:0;transform:translateX(12px)}}
+@media(max-width:999px){
+ @keyframes pair-reader-in{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+ @keyframes pair-reader-out{to{opacity:0;transform:translateY(12px)}}
+}

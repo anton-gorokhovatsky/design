@@ -24,6 +24,7 @@ const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const canvas = () => document.createElement('canvas');
 const byId = new Map(mapItems.map(i => [i.id, i]));
 const controllers = new Map();
+const transitioning=()=>document.body.classList.contains('story-is-moving');
 const nodeLink = item => {const url=new URL(location.href);url.searchParams.set('point',item.id);return url.href;};
 
 function contextFor(element, w, h) {
@@ -332,12 +333,12 @@ function mount(figure){
   const id=figure.dataset.scene;
   const scene=id==='practice'?makePractice(figure):id==='garage'?makeGarage(figure):makeMap(figure);
   entry={id,figure,scene,visible:false,last:0};controllers.set(id,entry);scene.resize();
-  let pending=0;const resizeObserver=new ResizeObserver(()=>{if(pending)return;pending=requestAnimationFrame(()=>{pending=0;scene.resize();});});resizeObserver.observe(figure.querySelector('.scene'));if(id==='garage')resizeObserver.observe(figure.querySelector('.gravity-spread'));
+  let pending=0;const resizeObserver=new ResizeObserver(()=>{if(pending)return;pending=requestAnimationFrame(()=>{pending=0;if(!transitioning())scene.resize();});});resizeObserver.observe(figure.querySelector('.scene'));if(id==='garage')resizeObserver.observe(figure.querySelector('.gravity-spread'));
   return entry;
 }
 let raf=0,last=0;
 function tick(now){
-  raf=0;if(!motion||document.hidden)return;
+  raf=0;if(!motion||document.hidden||transitioning())return;
   const dt=last?Math.min((now-last)/1000,.065):0;
   if(dt<1/30-.001 && dt!==0){raf=requestAnimationFrame(tick);return;}
   last=now;
@@ -348,8 +349,11 @@ function wake(){if(!raf&&motion&&!document.hidden){last=0;raf=requestAnimationFr
 function stop(){if(raf)cancelAnimationFrame(raf);raf=0;last=0;}
 function setMotion(value){motion=value&&!sharedMotion.matches;root.dataset.motion=String(motion);for(const {scene} of controllers.values())scene.motion?.();if(motion)wake();else stop();}
 setMotion(motion);
-const observer=new IntersectionObserver(entries=>{for(const item of entries){if(item.isIntersecting){const entry=mount(item.target);entry.visible=true;}else{const entry=controllers.get(item.target.dataset.scene);if(entry)entry.visible=false;}}wake();},{threshold:.06});
+const visibleFigures=new Set();
+const observer=new IntersectionObserver(entries=>{for(const item of entries){if(item.isIntersecting)visibleFigures.add(item.target);else visibleFigures.delete(item.target);if(transitioning())continue;if(item.isIntersecting){const entry=mount(item.target);entry.visible=true;}else{const entry=controllers.get(item.target.dataset.scene);if(entry)entry.visible=false;}}if(!transitioning())wake();},{threshold:.06});
 storyRoot.querySelectorAll('[data-scene]').forEach(figure=>observer.observe(figure));
+let moving=transitioning();
+new MutationObserver(()=>{const next=transitioning();if(next===moving)return;moving=next;if(moving){stop();return;}for(const figure of visibleFigures)mount(figure);controllers.forEach(entry=>{entry.visible=visibleFigures.has(entry.figure);if(entry.visible)entry.scene.resize();});wake();}).observe(document.body,{attributes:true,attributeFilter:['class']});
 document.addEventListener('visibilitychange',()=>document.hidden?stop():wake());
 window.addEventListener('pagehide',stop);window.addEventListener('pageshow',()=>{controllers.forEach(({scene})=>scene.resize());wake();});
 systemMotion.addEventListener('change',()=>setMotion(!systemMotion.matches && stored('anton-signal-reduced-motion')!=='1'));
