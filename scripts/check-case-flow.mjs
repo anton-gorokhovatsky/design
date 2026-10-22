@@ -69,7 +69,7 @@ try {
 for(const engine of [process.argv[2]||'chromium']) {
   assert.ok(['chromium','webkit'].includes(engine));
   const browser=await ({chromium,webkit})[engine].launch();
-  const page=await browser.newPage({viewport:{width:1440,height:900},reducedMotion:'reduce'});
+  let page=await browser.newPage({viewport:{width:1440,height:900},reducedMotion:'reduce'});
   page.setDefaultTimeout(5000);
   // Cold browser/document startup in CI is separate from UI response time.
   page.setDefaultNavigationTimeout(15000);
@@ -202,8 +202,14 @@ for(const engine of [process.argv[2]||'chromium']) {
     await page.waitForFunction(()=>!document.body.hasAttribute('data-case-open'));
     assert.equal(await page.locator('.map-inspector').evaluate(el=>getComputedStyle(el).opacity),'0','No flash of the old small readout on close');
     await page.screenshot({path:dir+engine+'-restored-map.jpg',type:'jpeg',quality:84});
-    // Restore this fixture's preference after the explicit playback checks.
-    await page.emulateMedia({reducedMotion:'reduce'});
+    // The case lifecycle above finishes on the map. Give the independent work
+    // route its own document and input state instead of inheriting the native
+    // video session, media overrides and same-document navigation history.
+    await page.close();
+    page=await browser.newPage({viewport:{width:1440,height:900},reducedMotion:'reduce'});
+    page.setDefaultTimeout(5000);
+    page.setDefaultNavigationTimeout(15000);
+    page.on('pageerror',error=>result.errors.push(error.message));
     // Check the route around a case, including the place the reader returns to.
     for (const width of [1440, 390]) {
       await page.setViewportSize({ width, height: 900 });
@@ -230,11 +236,21 @@ for(const engine of [process.argv[2]||'chromium']) {
           .filter(animation => animation.effect?.getTiming().iterations !== Infinity)
           .map(animation => animation.finished.catch(() => {})),
       ));
+      await continuation.evaluate(button => {
+        window.__continuationInput = [];
+        for (const type of ['keydown', 'click']) button.addEventListener(type, event => {
+          window.__continuationInput.push({ type, key:event.key, trusted:event.isTrusted });
+        }, { once:true });
+      });
       await continuation.focus();
       assert.equal(await continuation.evaluate(button => document.activeElement === button), true,
         'The continuation owns keyboard focus before activation');
       await page.keyboard.press('Enter');
       await page.waitForFunction(() => document.querySelector('.content-panel__body').scrollTop > 20);
+      assert.deepEqual(await page.evaluate(() => window.__continuationInput), [
+        { type:'keydown', key:'Enter', trusted:true },
+        { type:'click', key:undefined, trusted:true },
+      ], 'Enter activates the native button');
       assert.equal(new URL(page.url()).hash, '#work', 'Continuation scrolls the existing list');
       await page.locator('.content-panel__body').focus();
       await page.keyboard.press('End');
@@ -338,6 +354,7 @@ for(const engine of [process.argv[2]||'chromium']) {
       active:document.activeElement?.outerHTML.slice(0,240),
       scroll:document.querySelector('.case-scroll')?.scrollTop,
       panelScroll:document.querySelector('.content-panel__body')?.scrollTop,
+      continuationInput:window.__continuationInput,
       panelPosition:history.state?.panelPosition,
       panelAnimation:getComputedStyle(document.querySelector('.content-panel__body')).animationName,
       keyRegionFocused:document.activeElement===document.querySelector('.case-scroll'),
