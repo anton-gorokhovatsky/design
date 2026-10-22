@@ -17,8 +17,9 @@ const report = async () => {
   busy = true;
   const controller = requestController = new AbortController();
   try {
+    // Navigation can start before pagehide; let that last poll reach the server.
     const response = await fetch(endpoint, {
-      method: active ? 'POST' : 'GET', credentials: 'omit', cache: 'no-store',
+      method: active ? 'POST' : 'GET', credentials: 'omit', cache: 'no-store', keepalive: true,
       ...(active ? { body: JSON.stringify({ id, action: 'beat' }), headers: { 'content-type': 'text/plain' } } : {}),
       signal: AbortSignal.any([controller.signal, AbortSignal.timeout(7000)]),
     });
