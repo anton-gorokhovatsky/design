@@ -47,11 +47,11 @@ async function prepareStory(){
   if(contentLoading)return contentLoading;
   story.innerHTML='<div class="page"><p class="story-loading" role="status">Открываю рассказ…</p></div>';
   contentLoading=(async()=>{
-    let style=document.querySelector('[data-story-style]');
-    if(!style){style=document.createElement('link');style.rel='stylesheet';style.href=import.meta.resolve('../assets/map-story/story.css');style.dataset.storyStyle='';document.head.append(style);}
+    let style=document.querySelector('[data-story-style]'),styleReady=Promise.resolve();
+    if(!style){style=document.createElement('link');style.rel='stylesheet';style.href=import.meta.resolve('../assets/map-story/story.css');style.dataset.storyStyle='';styleReady=new Promise((resolve,reject)=>{style.addEventListener('load',resolve,{once:true});style.addEventListener('error',reject,{once:true});});document.head.append(style);}
     const response=await fetch(import.meta.resolve('../assets/map-story/content.html'));
     if(!response.ok)throw new Error('story-content-'+response.status);
-    story.innerHTML=await response.text();contentReady=true;
+    const html=await response.text();await styleReady;story.innerHTML=html;contentReady=true;
   })();
   try{await contentLoading;}finally{contentLoading=null;}
 }
@@ -71,15 +71,15 @@ async function show(value,{write=true,focus=true,animate=false}={}){
   const moving=changed&&animate&&!reduce.matches&&document.documentElement.dataset.reduceMotion!=='true';
   activeTransition?.skipTransition();
   const content=value?prepareStory():Promise.resolve();void content.catch(()=>{});
-  const snapshot=moving&&typeof document.startViewTransition==='function';
+  const snapshot=moving&&!compact.matches&&typeof document.startViewTransition==='function';
   document.body.classList.toggle('story-uses-snapshot',snapshot);
   document.body.classList.toggle('story-is-moving',moving);
   const apply=()=>{if(revision!==showRevision)return;document.body.classList.toggle('has-story-pane',value);sync();};
   let transition;
   if(snapshot){
-    const view=document.startViewTransition(()=>{apply();pane.refresh();});
+    const view=document.startViewTransition(async()=>{await content;apply();pane.refresh();});
     void view.ready.catch(()=>{});activeTransition=view;transition=view.finished.catch(()=>{});
-  }else{apply();transition=Promise.all(moving?document.getElementById('split-shell').getAnimations().map(a=>a.finished.catch(()=>{})):[]);}
+  }else{await content.catch(()=>{});apply();transition=Promise.all(moving?document.getElementById('split-shell').getAnimations({subtree:true}).filter(a=>a.effect?.getTiming().iterations!==Infinity).map(a=>a.finished.catch(()=>{})):[]);}
   if(moving)void transition.then(()=>{if(revision===showRevision)document.body.classList.remove('story-is-moving','story-uses-snapshot');});
   if(write&&changed){const url=new URL(location.href);if(value)url.searchParams.set('story','1');else url.searchParams.delete('story');history.pushState(history.state,'',url);}
   if(value){

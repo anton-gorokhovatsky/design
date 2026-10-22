@@ -250,11 +250,11 @@ function makeMap(figure) {
   figure.querySelectorAll('[data-layout]').forEach(b=>b.addEventListener('change',()=>setMode(b.dataset.layout)));
   const timeRadius=year=>year>=2021?.46+(2026-year)*.036:year>=2015?.64+(2021-year)*.035:.85+(2015-year)*.03;
   const familyAngles=new Map();
-  for(const [family,start,end] of [['garage',-1.4,-.45],['private-practice',.25,2.55]]){
+  for(const [family,start,end] of [['garage',-.2,.65],['private-practice',-2.8,-1.15]]){
     const children=items.filter(item=>item.parent===family&&Number.isFinite(item.timeYear));
     children.forEach((item,i)=>familyAngles.set(item.id,start+(end-start)*i/Math.max(1,children.length-1)));
   }
-  const companyAngles={'early-career':-2.35,ilmix:-2.93,garage:-1.98,optimal:-2.64,'private-practice':-.08};
+  const companyAngles={'early-career':-2.35,ilmix:2.9,garage:1.35,optimal:2.15,'private-practice':-.8};
   const coords=(item,width,height,progress)=>{
     const pad=width<450?24:32,project=p=>({x:pad+(p.x-2)/92*(width-2*pad),y:pad+(p.y-4)/90*(height-2*pad)});
     let a=project(item),b=a;

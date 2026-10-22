@@ -22,6 +22,20 @@ const settle = async page => {
     || (!animation.pending && animation.playState !== 'running')));
   await page.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done))));
 };
+// The spatial caption solver can run after the map's layout callback. Never
+// compare ink coordinates from one layout with background pixels from another.
+const paintedContrast = async page => {
+  const geometry = () => page.locator('[data-map-label-id]').evaluateAll(labels => JSON.stringify(labels.map(label => {
+    const r = label.getBoundingClientRect();
+    return [r.x, r.y, r.width, r.height, getComputedStyle(label).opacity];
+  })));
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const before = await geometry(), measured = await contrast(page), after = await geometry();
+    if (before === after) return measured;
+    await settle(page);
+  }
+  throw new Error('Painted contrast requires stable caption geometry.');
+};
 const capture = (page, name) => page.screenshot({ path: `${directory}/${engine}-${name}.png` });
 const axe = async (page, name) => {
   await page.addScriptTag({ path: require.resolve("axe-core/axe.min.js") });
@@ -32,7 +46,7 @@ const axe = async (page, name) => {
     });
     return { violations, incomplete };
   });
-  const measured = await contrast(page);
+  const measured = await paintedContrast(page);
   const review = await reviewIncomplete(page, result.incomplete, measured);
   report.push({ name, axe: result, contrast: measured, review });
   assertTextContrast(measured, name);
@@ -66,7 +80,7 @@ try {
       for (const [palette, rgb] of [["high", "83,142,103"], ["medium", "175,143,60"], ["low", "185,101,83"]]) {
         await page.evaluate(rgb => document.documentElement.style.setProperty('--day-rgb', rgb), rgb);
         await settle(page);
-        const measured = await contrast(page);
+        const measured = await paintedContrast(page);
         report.push({ name, palette, contrast: measured });
         assert.ok(measured.length >= 8, 'Measure visible text, not an empty selection.');
         assertTextContrast(measured, `${name} ${palette}`);
