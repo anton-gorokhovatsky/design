@@ -10814,7 +10814,7 @@ body.has-practice-orbits:not(.has-focused-home) .map-node-label[data-map-label-i
 .project-orbit-tooltip{position:fixed;z-index:40;left:0;top:0;max-width:230px;padding:7px 10px;border-radius:8px;background:var(--material-01);color:var(--ink);font:500 var(--type-caption)/1.4 var(--font-sans);pointer-events:none}
 .project-satellites[hidden],.project-orbit-picker[hidden],.project-orbit-back[hidden]{display:none}
 body:has(.point-preview.is-project-picker:not([hidden])) :is(.map-labels,.spatial-intro){pointer-events:none}
-.project-orbit-picker{margin-top:var(--space-4);overflow:auto;overscroll-behavior:contain;min-height:0;scrollbar-width:thin;scrollbar-color:var(--line) transparent;padding:0 4px 0 0;scroll-padding-block:var(--space-2)}
+.project-orbit-picker{margin:0;overflow:auto;overscroll-behavior:contain;min-height:0;scrollbar-width:thin;scrollbar-color:var(--line) transparent;padding:calc(var(--picker-head-height) + var(--space-4)) var(--window-pad) var(--window-pad);scroll-padding-block:calc(var(--picker-head-height) + var(--space-2)) var(--space-2);position:absolute;inset:0;z-index:1}
 .project-atlas-group{position:relative;isolation:isolate;padding-bottom:var(--space-2)}
 .project-atlas-group :is(h3,button){position:relative;z-index:1}
 .project-atlas-group+section{margin-top:var(--space-4)}
@@ -10832,6 +10832,11 @@ html[data-theme="dark"] .project-atlas-track{stroke:var(--group-light)}
 .project-atlas-name{min-width:0;padding-block:5px;overflow-wrap:anywhere}
 .project-orbit-picker button:is(:hover,:focus-visible){color:var(--signal)}.point-preview.is-project-picker .point-preview__kind{display:none}
 .point-preview.is-project-picker{display:flex;flex-direction:column;overflow:hidden;top:min(calc(var(--focused-author-bottom,120px) + 12px),max(12px,calc(100dvh - var(--mobile-first-dock-height,48px) - var(--mobile-console-bottom) - 24px - 18rem)));bottom:calc(var(--mobile-first-dock-height,48px) + var(--mobile-console-bottom) + 12px);max-height:none}
+.point-preview.is-project-picker[data-material-surface]{background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none}
+.point-preview.is-project-picker>.point-preview__head{position:absolute;inset:0 0 auto;z-index:2;padding:var(--window-pad) calc(var(--window-pad) + 32px) var(--space-3) var(--window-pad);border-radius:0}
+.point-preview.is-project-picker>.point-preview__close{z-index:3}
+.project-picker-glass{position:absolute;inset:var(--picker-head-height) 0 0;z-index:0;border-radius:0;pointer-events:none}
+.project-picker-glass[hidden]{display:none}
 .point-preview.is-project-picker>.point-preview__description,.point-preview.is-project-picker>.point-preview__link,.point-preview.is-project-picker>.work-tags{display:none}
 .project-orbit-back{min-height:44px;margin-top:8px;padding:6px 0;border:0;background:none;color:var(--content-muted);font:400 var(--type-utility)/1.4 var(--font-sans);text-align:left;text-decoration:underline;text-underline-offset:3px}
 .point-preview h2{font-size:var(--type-item);line-height:1.2;font-weight:600}
