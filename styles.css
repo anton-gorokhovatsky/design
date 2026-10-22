@@ -10223,7 +10223,7 @@ body:has(.practice-map[data-observation-active][data-selected-kind="practice"]) 
   .map-popover__header h2 { margin: 0; font: 500 var(--type-panel-heading)/var(--leading-label) var(--font-sans); letter-spacing: .06em; }
   .map-popover .map-popover__close { background: transparent; }
   #screen-controls > .theme-toggle { margin-bottom: calc(var(--space-1) / 2); }
-  #map-about { width: min(320px, calc(100vw - 32px)); }
+  #map-about { width: min(20rem, calc(100vw - 32px)); }
   #map-about [data-map-note] { margin: 0; padding: var(--space-2) 7px; font: 400 var(--type-detail)/var(--leading-body) var(--font-sans); text-transform: lowercase; }
   #map-about [data-map-note]::first-letter { text-transform: uppercase; }
   html[data-map-controls-ready] body:not(.has-reading-surface):not(.has-command-focus) .practice-map:not([data-time-view]):not(:has(.map-inspector.is-open, .map-hover-preview.is-visible)) .map-anchor-label:not(.map-anchor-hidden) { opacity: 1; }
@@ -11015,11 +11015,6 @@ html[data-celestial-volume] .direction-landmark__kind {
 .study:has([value="a"]:checked) [data-state="a"], .study:has([value="b"]:checked) [data-state="b"], .study:has([value="c"]:checked) [data-state="c"] { display: block; }
 .study :is(img, svg) { display: block; width: 100%; height: auto; border-radius: var(--window-radius); }
 .study figcaption { margin-top: var(--space-2); color: var(--content-muted); }
-.study, #map-making > p { font: 400 var(--type-body)/var(--leading-body) var(--font-sans); }
+.study { font: 400 var(--type-body)/var(--leading-body) var(--font-sans); }
 .eleven-study { display: none; }
 .map-inspector.is-case-view[data-selected-map-id="eleven"] .eleven-study { display: block; }
-.content-panel[data-view="map-making"] { --panel-width: 52.5rem; }
-
-.work-entries { display: flex; flex-direction: column; align-items: flex-start; margin-bottom: var(--space-5); }
-.work-entries .work-overview { margin: 0; }
-.map-making-link { display: inline-flex; align-items: center; min-height: var(--control-target); pointer-events: auto; }

@@ -302,25 +302,35 @@ for(const engine of [process.argv[2]||'chromium']) {
     assert.equal(await page.locator('[data-observation-pause]').isVisible(), false, 'The final step has no meaningless Continue action');
     await page.locator('[data-observation-previous]').click();
     assert.equal(await page.locator('[data-observation-pause]').isVisible(), true);
-    // Both entries use the same reading window, real URL and return path.
+    // The map note stays inline in its disclosure, without a second reading window.
     for (const width of [1440, 390]) {
       await page.setViewportSize({ width, height: 900 });
-      await page.goto(origin + (width === 1440 ? '/?scene=map' : '/#work'));
-      if (width === 1440) await page.locator('.map-about-trigger').click();
-      await page.locator((width === 1440 ? '#map-about' : '#work') + ' [data-open-panel="map-making"]').click();
-      await checkStudy(page, '#map-making', 'map-lens');
-      assert.equal(new URL(page.url()).hash, '#map-making');
+      await page.goto(origin + '/?scene=map');
+      assert.equal(await page.locator('[data-open-panel="map-making"], #map-making').count(), 0);
       assert.equal(await page.locator('#light-study').isVisible(), false);
+      if (width === 1440) {
+        await page.locator('.map-about-trigger').click();
+        const note = await page.locator('#map-about').evaluate(panel => ({
+          text: panel.querySelector('[data-map-note]').textContent,
+          overflow: panel.scrollHeight - panel.clientHeight,
+        }));
+        assert.match(note.text, /смысловая близость/i);
+        assert.equal(note.overflow, 0);
+      } else {
+        await page.locator('.mobile-first-cases').click();
+        await page.locator('#work .work-overview').waitFor();
+      }
       await page.keyboard.press('Escape');
       await page.waitForFunction(selector => document.activeElement?.matches(selector),
         width === 1440 ? '.map-about-trigger' : '.mobile-first-cases');
     }
+    // The remaining case study retains the same failed-load and retry contract.
     await page.route('**/js/case-content.json*', route => route.abort());
-    await page.goto(origin + '/?study-error=1#map-making');
-    await page.getByText('Не удалось загрузить разбор.', { exact: true }).waitFor();
+    await page.goto(origin + '/?point=eleven');
+    await page.getByText('Не удалось загрузить подробности.', { exact: true }).waitFor();
     await page.unroute('**/js/case-content.json*');
-    await page.getByRole('button', { name: 'Повторить загрузку' }).click();
-    await page.locator('#map-making fieldset').waitFor();
+    await page.locator('[data-case-load-state] button').click();
+    await page.locator('#light-study fieldset').waitFor();
     assert.deepEqual(result.errors,[]);
   } catch(error) {
     result.status='FAIL';result.error=error.stack||error.message;

@@ -139,7 +139,6 @@ const schedulePanelMore = () => {
 const moreResize = new ResizeObserver(schedulePanelMore);
 moreResize.observe(contentPanelBody);
 moreResize.observe(document.querySelector(".work-section"));
-moreResize.observe(document.querySelector("#map-making"));
 contentPanelBody.addEventListener("scroll", schedulePanelMore, { passive: true });
 panelMore.addEventListener("click", () => contentPanelBody.scrollTo({
   top: panelMore.dataset.direction === "up" ? 0
@@ -239,7 +238,6 @@ const contactConsoleHomes = [".site-header", ".system-dock"].map(selector => {
 let activePanelView = null;
 let lastPanelTrigger = null;
 const panelViews = {
-  "map-making": { title: "О КАРТЕ" },
   work: {
     title: "Работы",
   },
@@ -337,10 +335,9 @@ const openContentPanel = (
   contentPanel?.classList.toggle("is-restoring-position", Boolean(position));
   if (observationRoute.active) stopObservation({ updateHistory: false });
 
-  if (["work", "map-making"].includes(view)) loadCaseContent().catch(() => {});
+  if (view === "work") loadCaseContent().catch(() => {});
   activePanelView = view;
-  lastPanelTrigger = trigger?.closest("#map-about") ? document.querySelector(".map-about-trigger")
-    : trigger instanceof HTMLElement && mapInspector.contains(trigger)
+  lastPanelTrigger = trigger instanceof HTMLElement && mapInspector.contains(trigger)
     ? view === "work" && compactConstellationNav.matches
       ? document.querySelector(".mobile-first-cases")
       : constellationNavItems.find(item => item.dataset.navView === view)

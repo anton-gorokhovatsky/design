@@ -33,7 +33,10 @@ const initializeMapControls = () => {
       const width = panel.offsetWidth || parseFloat(getComputedStyle(panel).width) || 240;
       const left = id === 'screen-controls' ? rect.right - width : rect.left;
       const bottom = id === 'screen-controls' ? display.getBoundingClientRect().bottom : rect.bottom;
-      const top = Math.min(bottom + 8, innerHeight - 100);
+      panel.style.maxHeight = Math.max(80, innerHeight - 32) + 'px';
+      const height = panel.offsetHeight;
+      const top = bottom + 8 + height <= innerHeight - 16
+        ? bottom + 8 : Math.max(16, rect.top - height - 8);
       panel.style.left = Math.max(16, Math.min(left, innerWidth - width - 16)) + 'px';
       panel.style.top = top + 'px';
       panel.style.maxHeight = Math.max(80, innerHeight - top - 16) + 'px';
@@ -73,7 +76,7 @@ const initializeMapControls = () => {
   const about = createDisclosure('map-about', 'О КАРТЕ', view);
   about.trigger.classList.add('map-about-trigger');
   view.append(about.trigger);
-  about.panel.append(note, document.querySelector(".map-making-link"));
+  about.panel.append(note);
 
   for (const id of ['garage', 'private-practice', 'running']) {
     const label = document.querySelector('[data-map-label-id="' + id + '"]');
