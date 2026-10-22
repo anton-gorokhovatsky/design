@@ -10863,7 +10863,7 @@ html[data-celestial-volume] [data-map-id="running"] .map-node__glyph{transform:s
 .celestial-volume--running{inset:-190%;width:480%;height:480%;filter:brightness(.84) saturate(.8)}
 @media(forced-colors:active){
   html[data-celestial-volume] :is(.celestial-form,.celestial-volume){display:none}
-  html[data-celestial-volume] .map-node:is([data-map-id="garage"][data-gravity-ready],[data-map-id="running"],[data-map-id="early-career"]) .map-node__glyph{border:1px solid ButtonText!important}
+  html[data-celestial-volume] .map-node:is([data-map-id="garage"],[data-map-id="running"],[data-map-id="early-career"]) .map-node__glyph{border:1px solid ButtonText!important}
 }
 /* Hierarchy: project system, named anchors, background field. */
 html[data-celestial-volume] {
