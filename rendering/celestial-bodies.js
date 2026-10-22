@@ -146,13 +146,15 @@ function blackHole(canvas){
   const node=canvas.closest('[data-map-id]'),surface=document.createElement('canvas'),context=canvas.getContext('2d');
   let lens,last=1.8,dark=false,observer;
   canvas.style.display='none';
-  const paint=()=>{if(lens){lens.draw(last,dark);context.clearRect(0,0,canvas.width,canvas.height);context.drawImage(surface,0,0);}};
+  const paint=()=>{if(lens&&canvas.clientWidth){lens.draw(last,dark);context.clearRect(0,0,canvas.width,canvas.height);context.drawImage(surface,0,0);}};
   const fallback=()=>{lens=null;observer?.disconnect();delete node.dataset.gravityReady;canvas.style.display='none';};
   surface.addEventListener('lens-unavailable',fallback);
   createGravityLens(surface).then(renderer=>{
     if(!renderer)return;
     lens=renderer;canvas.style.display='';node.dataset.gravityReady='';canvas.dataset.renderer='geodesic';
-    const resize=()=>{lens?.resize(canvas.clientWidth);canvas.width=surface.width;canvas.height=surface.height;paint();};
+    // Forced colours hide the canvas. Keep its paused pixels until it has a
+    // visible layout again instead of resizing a hidden surface to the minimum.
+    const resize=()=>{if(!canvas.clientWidth)return;lens?.resize(canvas.clientWidth);canvas.width=surface.width;canvas.height=surface.height;paint();};
     observer=new ResizeObserver(resize);observer.observe(canvas);resize();
   }).catch(fallback);
   return(seconds,theme)=>{last=seconds;dark=theme;paint();};

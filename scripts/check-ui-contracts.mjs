@@ -2384,7 +2384,7 @@ const auditBrowser = async (client, origin) => {
   });
   await navigate(client, `${origin}/?scene=map&qa=ui-contracts-mobile-navigation`);
   await evaluate(client, "document.querySelector('[data-constellation-nav-toggle]')?.click()");
-  await delay(120);
+  await waitForGeometryTransition(client, ".constellation-nav, .constellation-nav__orbit");
   const mobileNavigationState = await evaluate(client, geometryExpression);
   const mobileNavigationContract = await evaluate(client, `(() => {
     const toggle = document.querySelector("[data-constellation-nav-toggle]");
