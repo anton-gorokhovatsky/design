@@ -645,9 +645,9 @@ const placeMapRestLabels = () => {
     const width = label.offsetWidth * scale, height = label.offsetHeight * scale;
     const offset = parseFloat(label.style.getPropertyValue(item.id === "garage" ? "--garage-label-offset" : "--label-offset")) * scale;
     const x = field.left + position.x * field.width / 100, y = field.top + position.y * field.height / 100;
-    const centered = item.id === "private-practice" || side === "north" || side === "south";
+    const centered = ["garage", "private-practice"].includes(item.id) || side === "north" || side === "south";
     const left = centered ? x - width / 2 : side === "west" ? x - offset - width : x + offset;
-    const top = item.id === "private-practice" || side === "north" ? y - offset - height
+    const top = item.id === "garage" ? y + offset : item.id === "private-practice" || side === "north" ? y - offset - height
       : side === "south" ? y + offset : y - height / 2;
     return { left, right: left + width, top, bottom: top + height };
   };
@@ -1339,7 +1339,7 @@ if (mapNodesRoot) {
     label.style.setProperty("--x", `${position.x}%`);
     label.style.setProperty("--y", `${position.y}%`);
     label.style.setProperty("--label-offset", `${glyphDiameter / 2 + 7}px`);
-    label.style.setProperty("--garage-label-offset", `${glyphDiameter / 2 + 18}px`);
+    label.style.setProperty("--garage-label-offset", `${glyphDiameter * .65 + 12}px`);
 
     if (item.id === "garage") {
       label.classList.add("map-node-label--garage");

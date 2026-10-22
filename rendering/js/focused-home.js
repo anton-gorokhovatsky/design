@@ -138,6 +138,7 @@ function setScene(focused, { write = false, focus = false } = {}) {
   document.body.classList.toggle('has-focused-home', focused);
   document.body.classList.toggle('has-full-mobile-map', compact.matches && !focused);
   document.body.toggleAttribute('data-mobile-preview-ui', compact.matches);
+  pane.syncState();
   for (const [id, [direction]] of Object.entries(landmarks)) {
     const label = document.querySelector(`[data-map-label-id="${id}"]`);
     label.dataset.materialActive = focused && (direction || id === 'youtube') ? 'none' : 'always';

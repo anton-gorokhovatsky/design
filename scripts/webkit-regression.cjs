@@ -1556,7 +1556,7 @@ const accessibilityAcceptanceAudit = async (browser) => {
         waitUntil: "networkidle",
       });
       const noScriptFallback = noScriptPage.locator(".no-script-fallback");
-      const noScriptNormalMain = noScriptPage.locator("body > main:not(.no-script-fallback)");
+      const noScriptNormalMain = noScriptPage.locator("#map-pane main:not(.no-script-fallback)");
       report.noScript = {
         visible: await noScriptFallback.isVisible(),
         linkCount: await noScriptFallback.locator("a").count(),

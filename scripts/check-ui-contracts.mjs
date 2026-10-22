@@ -3036,7 +3036,7 @@ const auditBrowser = async (client, origin) => {
   const noScriptContract = await evaluate(client, `(() => {
     const fallback = document.querySelector(".no-script-fallback");
     const fallbackStyle = fallback ? getComputedStyle(fallback) : null;
-    const normalMain = Array.from(document.querySelectorAll("body > main"))
+    const normalMain = Array.from(document.querySelectorAll("#map-pane main"))
       .find((element) => !element.classList.contains("no-script-fallback"));
     return {
       visible: fallbackStyle?.display !== "none",
