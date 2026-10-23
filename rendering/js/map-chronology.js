@@ -10,8 +10,8 @@ const timeGroupSectors = {
   "private-practice": {
     parent: -0.32,
     compactParent: -0.55,
-    children: [-1.4, -1.12, -.84, -.56, -.28, 0, .28, .56, .84, 1.12],
-    compactChildren: [-1.4, -1.12, -.84, -.56, -.28, 0, .28, .56, .84, 1.12],
+    children: [-2.65, -2.37, -2.09, -1.81, -1.53, -1.25, -.97, -.69, -.41, -.13],
+    compactChildren: [-2.65, -2.37, -2.09, -1.81, -1.53, -1.25, -.97, -.69, -.41, -.13],
     order: [
       "shirokostup",
       "dusty",
