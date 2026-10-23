@@ -10,7 +10,7 @@ const menu=map.querySelector('[data-constellation-nav]');
 let focusPlane;
 let opened=false,opener=null,readingPosition=0,loaded=false,loading,contentLoading,contentReady=false,activeTransition,showRevision=0;
 observeScrollLens(story,()=>story.querySelectorAll('h1,h2,p,figcaption,.gravity-texture'),{
-  owner:document.body,enabled:()=>opened&&!document.body.classList.contains('story-is-moving')
+  owner:document.body,fullWidth:true,enabled:()=>opened&&!document.body.classList.contains('story-is-moving')
 });
 let readingAnchor=null,readingWidth=0,readingFrame=0,readingMetrics=[];
 function anchorAt(scroll){

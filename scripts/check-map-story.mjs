@@ -10,6 +10,32 @@ const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 const engine=process.argv[2]||'chromium';
 const {origin,server}=await startStaticServer({projectRoot:root});
 const browser=await({chromium,webkit}[engine]).launch();
+async function checkFamilies(page){
+ await page.emulateMedia({reducedMotion:'reduce'});
+ await page.waitForFunction(()=>document.documentElement.dataset.reduceMotion==='true');
+ await page.locator('#scene-time').evaluate(e=>e.scrollIntoView());
+ await page.locator('[data-layout="map"]').check();
+ const failures=await page.locator('#scene-time').evaluate(async scene=>{
+  const {mapItems}=await import('/js/map-data.js');
+  const button=id=>scene.querySelector(`[data-point="${id}"]`),center=id=>{const r=button(id).getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2};};
+  const p=center('private-practice'),w=scene.clientWidth;
+  return mapItems.filter(item=>item.id!=='private-practice'&&item.parent!=='private-practice')
+   .filter(item=>{const q=center(item.id);return Math.abs(q.x-p.x)<w*.15+4&&Math.abs(q.y-p.y)<w*.105+4;}).map(item=>({id:item.id,relative:{x:center(item.id).x-p.x,y:center(item.id).y-p.y},scene:{w,h:scene.clientHeight}}));
+ });
+ assert.deepEqual(failures,[],'Foreign families stay outside the full private-practice orbits');
+ if(page.viewportSize().width>=390)assert.equal(await page.locator('#scene-time .scene-label').evaluateAll(labels=>labels.filter(e=>+getComputedStyle(e).opacity>.9).length),5,'All principal captions remain visible in the spatial scene');
+ await page.locator('[data-layout="time"]').check();
+ const remote=await page.locator('#scene-time').evaluate(scene=>{
+  const ids=['garage','early-career','ilmix','private-practice','optimal','running'];
+  return [...scene.querySelectorAll('.scene-label')].flatMap((label,i)=>{
+   if(+getComputedStyle(label).opacity<.9)return [];
+   const a=label.getBoundingClientRect(),b=scene.querySelector(`[data-point="${ids[i]}"]`).getBoundingClientRect(),x=b.x+b.width/2,y=b.y+b.height/2;
+   const gap=Math.hypot(Math.max(a.x-x,0,x-a.right),Math.max(a.y-y,0,y-a.bottom));
+   return gap>(ids[i]==='garage'?scene.clientWidth*.12+30:scene.clientWidth*.035+30)?[{id:ids[i],gap}]:[];
+  });
+ });
+ assert.deepEqual(remote,[],'Captions remain close to their own visible object, including the glow');
+}
 try{
  for(const width of [1440,390]){
   const page=await browser.newPage({viewport:{width,height:900},colorScheme:width===1440?'light':'dark'});
@@ -102,6 +128,7 @@ try{
   await page.waitForFunction(()=>!document.body.classList.contains('story-is-moving'));
   assert.equal(await story.evaluate(e=>e.scrollWidth>e.clientWidth+1),false);
   assert.deepEqual(errors,[]);
+  await checkFamilies(page);
   if(process.env.PORTFOLIO_UI_ARTIFACT_DIR){mkdirSync(process.env.PORTFOLIO_UI_ARTIFACT_DIR,{recursive:true});await page.screenshot({path:resolve(process.env.PORTFOLIO_UI_ARTIFACT_DIR,`story-${width}.png`)});}
   await page.close();
  }
@@ -129,6 +156,7 @@ try{
  await retry.waitForFunction(()=>document.documentElement.dataset.reduceMotion==='true');
  assert.equal(await retry.locator('#story-motion').count(),0);
  assert.equal(await retry.locator('#story-pane').evaluate(e=>e.scrollWidth>e.clientWidth+1),false);
+ await checkFamilies(retry);
  // A stacked map remains a usable window when the author card needs more room.
  await retry.setViewportSize({width:320,height:568});
  await retry.locator('#scene-time').evaluate(e=>e.scrollIntoView());

@@ -23,8 +23,9 @@ const lensBleed = 32;
 const drawScrollLensMap = (record, width, height, top, bottom) => {
   const extent = height + lensBleed * 2;
   const textureHeight = lensDepth + lensBleed;
+  const span=record.span||width, left=record.left||0, displacement=record.span?Math.max(64,2*left+4):64;
   // Reuse decoded edge textures.
-  if (record.textureWidth !== width) {
+  if (record.textureWidth !== `${width}:${span}:${left}`) {
     const canvas = record.canvas;
     canvas.height = textureHeight;
     const context = canvas.getContext("2d");
@@ -33,10 +34,11 @@ const drawScrollLensMap = (record, width, height, top, bottom) => {
       const depth = Math.max(0, Math.min(1, 1 - (y - lensBleed) / lensDepth));
       for (let x = 0; x < canvas.width; x++) {
         const u = x / (canvas.width - 1);
-        const shift = record.media ? 0 : -(u - .5) * Math.min(width * .42, 168)
-          * depth ** 2 * Math.sin(Math.PI * u) ** 2;
+        const spread=1+Math.min(.5,2*left/Math.max(1,span-2*left))*depth**2;
+        const shift = record.media ? 0 : record.span ? (u-.5)*span*(1/spread-1)
+          : -(u - .5) * Math.min(width * .42, 168)*depth ** 2 * Math.sin(Math.PI * u) ** 2;
         const offset = (y * canvas.width + x) * 4;
-        pixels.data[offset] = 128 + shift / 64 * 255;
+        pixels.data[offset] = 128 + shift / displacement * 255;
         pixels.data[offset + 1] = 128;
         pixels.data[offset + 2] = 255 * depth;
         pixels.data[offset + 3] = 255;
@@ -50,16 +52,16 @@ const drawScrollLensMap = (record, width, height, top, bottom) => {
       pixels.data.subarray(y * stride, (y + 1) * stride), (textureHeight - y - 1) * stride);
     context.putImageData(flipped, 0, 0);
     record.images[1].setAttribute("href", canvas.toDataURL());
-    record.textureWidth = width;
+    record.textureWidth = `${width}:${span}:${left}`;
   }
   // Keep displaced glyphs inside the Safari filter bounds.
   for (const primitive of [record.filter, ...record.filter.children]) {
-    primitive.setAttribute("x", "0");
+    primitive.setAttribute("x", -left/width);
     primitive.setAttribute("y", -lensBleed / height);
-    primitive.setAttribute("width", "1");
+    primitive.setAttribute("width", span/width);
     primitive.setAttribute("height", extent / height);
   }
-  record.displaceX.setAttribute("scale", 64 / width);
+  record.displaceX.setAttribute("scale", displacement / width);
   const blur = record.media ? 2.2 : 2.6;
   record.blur.setAttribute("stdDeviation", `${blur / width} ${blur / height}`);
   record.fade.setAttribute("amplitude", record.media ? ".28" : ".72");
@@ -226,7 +228,7 @@ const createLensPlayer = element => {
   } };
 };
 const clearScrollLenses = region => scrollLensControllers.get(region)?.reset();
-const observeScrollLens = (region, targets, { owner = region, enabled = () => true } = {}) => {
+const observeScrollLens = (region, targets, { owner = region, enabled = () => true, fullWidth = false } = {}) => {
   if (!region) return;
   const records = new Map();
   let frame = 0;
@@ -328,6 +330,7 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
         continue;
       }
       record ||= makeRecord(element);
+      if(fullWidth&&!record.media&&!record.player){record.span=region.clientWidth;record.left=(rect.left-port.left)/scale;}
       if (record.player || record.media) {
         const frameStyle = getComputedStyle(element.closest(".personal-media__screen, .map-hover-preview__mosaic-main"));
         const shape = frameStyle.cornerShape || "round";

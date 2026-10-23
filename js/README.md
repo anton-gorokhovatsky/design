@@ -79,6 +79,7 @@ Detailed rendering rationale for `viewport-ui.js` is kept here rather than
 in the initial download. The adjacent source comments identify each invariant.
 
 - Refraction enlarges foreground content as it enters the matte edge. Keep baselines intact: vertical displacement clips glyphs in browser SVG pipelines.
+- The story opts into `fullWidth`: its text can expand across the reading gutters up to the fixed pane outline. The displacement map uses pane coordinates and extended filter bounds. Other readers and media keep their existing profile; the glass shell and its rounded corners never deform.
 
 - Decode each edge texture once. Replacing a PNG data URL on every scroll frame made WebKit alternate between the previous and newly decoded map.
 

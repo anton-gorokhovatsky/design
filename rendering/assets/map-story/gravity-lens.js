@@ -1,3 +1,7 @@
+// An opaque, dim plunging flow continues inside the innermost stable orbit.
+// Its emissivity is an art-directed model, not a GRMHD simulation.
+// Coherent shearing filaments: no frame-random noise or blinking points.
+// Fixed subpixel samples preserve the thin high-order image at the shadow boundary.
 import { makeGeodesics, MAX_IMPACT, MAX_ANGLE, TABLE_WIDTH, TABLE_HEIGHT } from './null-geodesics.js';
 let geometry;
 const vertex=`#version 300 es
@@ -21,8 +25,6 @@ vec4 disk(vec2 q){
  float phi=atan(sn,-t.y);vec3 light=vec3(0.);float trans=1.,absorption=0.;
  for(int k=0;k<3;k++){
    float f=phi+float(k)*PI;float u=orbit(b,f);float r=1./max(u,.00001);
-   // An opaque, dim plunging flow continues inside the innermost stable orbit.
-   // Its emissivity is an art-directed model, not a GRMHD simulation.
    if(r>1.&&r<3.1)absorption=max(absorption,1.-smoothstep(2.9,3.1,r));
    if(r>3.&&r<13.){
      vec3 p=n*cos(f)+t*sin(f);float angle=atan(p.z,p.x);
@@ -30,7 +32,6 @@ vec4 disk(vec2 q){
      float g=sqrt(1.-1.5/r)/(1.+omega*q.x*cs);
      float flux=pow(3./r,3.)*(1.-sqrt(3./r))*18.;
      float edge=smoothstep(3.,3.12,r)*(1.-smoothstep(8.5,13.,r));
-     // Coherent shearing filaments: no frame-random noise or blinking points.
      float a=angle-time*omega*.9;
      float flow=1.+.10*sin(5.*a+2.3*log(r))+.065*sin(13.*a-6.*log(r))+.04*sin(31.*a+13.*log(r));
      float fine=.95+.032*sin(49.*log(r)+1.8*sin(3.*a))+.018*sin(113.*log(r)-4.*a);
@@ -46,7 +47,6 @@ vec4 disk(vec2 q){
 void main(){
  vec2 p=(uv-.5)*28.;float turn=-.18;mat2 rotation=mat2(cos(turn),sin(turn),-sin(turn),cos(turn));
  vec4 traced=disk(rotation*p);
- // Fixed subpixel samples preserve the thin high-order image at the shadow boundary.
  if(abs(length(p)-2.598)<.13){
    vec2 radial=normalize(p),tangent=vec2(-radial.y,radial.x);float pixel=28./resolution.x;traced=vec4(0.);
    for(int i=0;i<8;i++){float offset=(float(i)+.5)/8.-.5;for(int j=0;j<2;j++){vec2 samplePoint=p+radial*offset*pixel+tangent*(float(j)-.5)*pixel*.5;traced+=disk(rotation*samplePoint);}}
@@ -105,5 +105,5 @@ export async function createGravityLens(canvas){
   gl.viewport(0,0,size,size);gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.useProgram(finish);gl.uniform1i(gl.getUniformLocation(finish,'glowImage'),3);gl.uniform1i(gl.getUniformLocation(finish,'image'),1);gl.uniform1f(gl.getUniformLocation(finish,'dark'),dark?1:0);gl.uniform2f(gl.getUniformLocation(finish,'resolution'),size,size);gl.drawArrays(gl.TRIANGLES,0,3);
  }
  canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();lost=true;canvas.dispatchEvent(new CustomEvent('lens-unavailable'));});
- return {draw,resize,getState:()=>({size,lost,time:lastTime,dark:lastDark,model:'Schwarzschild, thin disk, RK4'})};
+ return {draw,resize};
 }

@@ -1,6 +1,6 @@
-/* Background attraction and a coherent material frame for browser-laid-out text.
- * The body stretches toward the hole while its cross-sections contract together.
- * There are no independently falling points, glyphs, words or timers. */
+/* Browser-laid-out text transported by a radial free-fall field. The inverse
+ * of dr/dt = -sqrt(2GM/r) stretches radially and compresses transversely.
+ * Exposure is bounded for reading; this is a tidal illustration, not GR. */
 export function attractPoint(x,y,cx,cy,radius,strength){
   const dx=x-cx,dy=y-cy,s=radius*radius;
   const pull=.88*strength*radius*s/Math.pow(dx*dx+dy*dy+s,1.5);
@@ -10,20 +10,12 @@ const vertex=`attribute vec2 point;varying vec2 uv;void main(){uv=point*.5+.5;gl
 const fragment=`precision highp float;
 varying vec2 uv;uniform sampler2D words;uniform vec2 size,center;uniform vec4 bounds;uniform float radius,strength;
 void main(){
- vec2 pixel=vec2(uv.x,1.-uv.y)*size,origin=bounds.xy+bounds.zw*.5;
- vec2 axis=normalize(center-origin),side=vec2(-axis.y,axis.x),delta=pixel-origin;
- float halfLength=dot(abs(axis),bounds.zw)*.5,span=min(halfLength*1.4,radius*2.2),start=halfLength-span;
- float target=dot(delta,axis),base=.03*strength,load=.43*strength,q=(target-base*halfLength)/(1.+base);
- // One material frame keeps a row's cross-section coherent. Solve the smooth
- // longitudinal stretch, then undo its compensating transverse compression.
- for(int i=0;i<5;i++){
-   float z=clamp((q-start)/span,0.,1.),strain=2.*load*z*z*z;
-   float shift=load*.5*span*z*z*z*z+2.*load*max(0.,q-halfLength);
-   q-=((1.+base)*q+base*halfLength+shift-target)/(1.+base+strain);
- }
- float z=clamp((q-start)/span,0.,1.),stretch=1.+base+2.*load*z*z*z;
- float crossSection=dot(delta,side)*sqrt(stretch);
- vec2 source=(origin+axis*q+side*crossSection)/size;
+ vec2 pixel=vec2(uv.x,1.-uv.y)*size,delta=pixel-center;
+ float r=max(length(delta),1.);
+ float near=length(max(abs(center-bounds.xy-bounds.zw*.5)-bounds.zw*.5,vec2(0.)));
+ float fall=.92*strength*pow(max(near,radius*.6),1.5);
+ float original=pow(pow(r,1.5)+fall,2./3.);
+ vec2 source=(center+delta*(original/r))/size;
  if(source.x<0.||source.x>1.||source.y<0.||source.y>1.){gl_FragColor=vec4(0.);return;}
  gl_FragColor=texture2D(words,source);
 }`;
@@ -40,12 +32,12 @@ export function createTextField(spread,copy){
  const texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,texture);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,true);
  const uniforms=Object.fromEntries(['words','size','center','bounds','radius','strength'].map(key=>[key,gl.getUniformLocation(program,key)]));
- const source=document.createElement('canvas');let w=1,h=1,lost=false,lines=0,uploads=0,level=0;
+ const source=document.createElement('canvas');let w=1,h=1,lost=false,level=0;
  function resize(){
   if(lost)return;
   const bounds=spread.getBoundingClientRect();w=bounds.width;h=bounds.height;
   const dpr=Math.min(2,devicePixelRatio||1,3072/Math.max(w,h));source.width=canvas.width=Math.ceil(w*dpr);source.height=canvas.height=Math.ceil(h*dpr);
-  const c=source.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);c.textBaseline='alphabetic';lines=0;
+  const c=source.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);c.textBaseline='alphabetic';
   // Range measurements preserve the actual responsive line breaks, NBSP and font.
   // They run on resize/font/theme changes only, never in the animation loop.
   for(const paragraph of copy.querySelectorAll('h2,p')){
@@ -62,10 +54,10 @@ export function createTextField(spread,copy){
     const value=text.slice(row.start,row.end).replace(/[ \t]+$/,'');
     const ascent=metrics.fontBoundingBoxAscent??metrics.actualBoundingBoxAscent,descent=metrics.fontBoundingBoxDescent??metrics.actualBoundingBoxDescent;
     const baseline=row.top-bounds.top+(row.height-ascent-descent)/2+ascent;
-    c.fillText(value,row.left-bounds.left,baseline);lines++;
+    c.fillText(value,row.left-bounds.left,baseline);
    }
   }
-  gl.bindTexture(gl.TEXTURE_2D,texture);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,source);uploads++;
+  gl.bindTexture(gl.TEXTURE_2D,texture);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,source);
   gl.viewport(0,0,canvas.width,canvas.height);gl.uniform2f(uniforms.size,w,h);gl.uniform1i(uniforms.words,0);
   const box=copy.getBoundingClientRect();gl.uniform4f(uniforms.bounds,box.left-bounds.left,box.top-bounds.top,box.width,box.height);
  }
@@ -76,5 +68,5 @@ export function createTextField(spread,copy){
   gl.uniform2f(uniforms.center,cx,cy);gl.uniform1f(uniforms.radius,radius);gl.uniform1f(uniforms.strength,level);gl.drawArrays(gl.TRIANGLES,0,3);
  }
  canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();lost=true;canvas.hidden=true;copy.dataset.warped='false';});
- return {resize,draw,getState:()=>({lines,uploads,level,lost,width:canvas.width,height:canvas.height})};
+ return {resize,draw};
 }
