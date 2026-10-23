@@ -86,6 +86,7 @@ try{
   assert.equal(new URL(page.url()).searchParams.get('point'),'tarski');
   assert.equal(await page.locator('#map-pane').evaluate(e=>e.inert),false);
   await page.waitForSelector('.map-inspector.is-case-view.is-open');
+  await page.waitForFunction(()=>document.activeElement?.matches('.map-inspector h2'));
   if(width===1440){
    await page.waitForFunction(()=>document.querySelector('.map-inspector').getAttribute('aria-modal')==='false');
    await page.evaluate(async()=>{const{getTabStops}=await import('/js/preferences.js');getTabStops(document.querySelector('.map-inspector')).at(-1).focus({preventScroll:true});});
@@ -119,6 +120,18 @@ try{
   }
   await page.close();
  }
+ // A short field with 200% text retains the full point descriptions without
+ // stacking permanent captions or intermediate axis years over one another.
+ const enlarged=await browser.newPage({viewport:{width:320,height:568},reducedMotion:'reduce'});
+ await enlarged.goto(origin+'/?qa&font=200&scene=map&view=time#map');
+ await enlarged.evaluate(()=>document.fonts.ready);
+ await enlarged.waitForFunction(()=>!document.querySelector('[data-map-links]').hasAttribute('data-layout-pending'));
+ assert.equal(await enlarged.locator('[data-time-captions]').count(),0);
+ assert.equal(await enlarged.locator('.orbital-radar i span:visible').count(),2);
+ await enlarged.locator('[data-map-id="ilmix"]').focus();await enlarged.keyboard.press('Enter');
+ await enlarged.locator('.point-preview:not([hidden])').waitFor();
+ assert.equal(await enlarged.locator('.point-preview h2').evaluate(e=>e.scrollWidth>e.clientWidth+1),false,'A large-text point title stays readable beside or below its logo');
+ await enlarged.close();
  const failedOpening=await browser.newPage({viewport:{width:390,height:844}});
  const retryErrors=[];failedOpening.on('pageerror',error=>retryErrors.push(error.message));
  let failedOpeningOnce=false;await failedOpening.route('**/assets/map-story/content.html*',route=>{if(!failedOpeningOnce){failedOpeningOnce=true;return route.fulfill({status:503,body:'Unavailable'});}return route.continue();});

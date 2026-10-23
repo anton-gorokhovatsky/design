@@ -10280,12 +10280,12 @@ max-height: min(calc(var(--pane-vh) * 52), 460px, calc(calc(var(--pane-vh) * 100
 .point-preview__close { position: absolute; inset: calc(var(--window-pad) - 12px) calc(var(--window-pad) - 12px) auto auto; width: 44px; height: 44px; display: grid; place-items: center; padding: 0; background: none; color: inherit; }
 .point-preview__close svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.5; }
 .point-preview__head { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); padding-right: 32px; align-items: start; }
-.point-preview.has-image .point-preview__head { grid-template-columns: 72px minmax(0, 1fr); }
-.point-preview__head > div { min-width: 0; }
+.point-preview.has-image .point-preview__head { display:flex;flex-wrap:wrap; }
+.point-preview__head > div { min-width:0;flex:1 1 10rem; }
 .point-preview__image { width: 72px; height: 48px; object-fit: contain; border-radius: 6px; }
 .point-preview__image[hidden] { display: none; }
 .point-preview__kind { margin: 0 0 4px; font-size: var(--type-caption); line-height: 1.35; }
-.point-preview h2 { margin: 0; font-size: var(--type-item); line-height: var(--leading-item); font-weight: 600; letter-spacing: -.02em; }
+.point-preview h2 { overflow-wrap:anywhere;margin: 0; font-size: var(--type-item); line-height: var(--leading-item); font-weight: 600; letter-spacing: -.02em; }
 .point-preview h2:focus-visible { outline: 2px solid var(--signal); outline-offset: 4px; }
 .point-preview__description { margin: var(--space-4) 0 0; font-size: var(--type-detail); line-height: var(--leading-body); }
 .point-preview__link { display: flex; align-items: flex-end; justify-content: flex-start; gap: .5em; min-height: 44px; margin-top: 0; color: inherit; font-size: var(--type-detail); font-weight: 600; text-decoration: none; }
@@ -10850,7 +10850,7 @@ body.split-page{font-size:var(--type-body)}
 #story-bridge button:focus-visible{outline:var(--focus-width) solid var(--signal);outline-offset:var(--focus-offset)}
 #story-pane .page{padding-inline:var(--story-gutter)}
 #story-pane .opening{padding-top:var(--space-5);margin-left:0}
-#story-pane .chapter>h2,#story-pane .reading,#story-pane .spread,#story-pane .figure--garage,#story-pane .figure--geography,#story-pane .figure--time,#story-pane .footer{margin-left:0}
+#story-pane .chapter>h2,#story-pane .reading,#story-pane .spread,#story-pane .figure--garage,#story-pane .figure--geography,#story-pane .figure--time{margin-left:0}
 #story-pane .gravity-formula math{font-size:var(--type-lead);margin:0}
 #story-pane .spread,#story-pane .gravity-spread{display:flex;flex-direction:column;align-items:stretch;gap:0}
 #story-pane .spread .live-figure{position:relative;top:auto;margin:var(--space-4) 0 var(--space-5)}
@@ -10861,7 +10861,6 @@ body.split-page{font-size:var(--type-body)}
 #story-pane .live-figure figcaption{max-width:none}
 #story-pane h1{font-size:var(--type-story-title);margin-top:0}
 #story-pane #story-title:focus-visible{outline:var(--focus-width) solid var(--signal);outline-offset:var(--focus-offset)}
-#story-pane .footer{gap:var(--space-2);flex-direction:column;align-items:start}
 @media(max-width:999px){
  #split-shell{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) 0 minmax(0,0fr)}
  #story-pane,.pair-glass--story{grid-area:3 / 1}
@@ -10896,5 +10895,7 @@ html[data-reduce-motion="true"] .has-story-pane #story-pane{transition:none}
 .content-panel .work-row:has(img.work-row__preview)>.work-tags{grid-column:2;grid-row:4}
 .content-panel .work-row:has(img.work-row__preview) .work-row__domain{grid-column:2;grid-row:5}
 }
-html[data-celestial-volume] .practice-map[data-time-view] .map-node-label[data-time-anchor]{opacity:1;display:block;max-width:min(15rem,40cqw);white-space:normal;text-align:left;transform:translate(var(--time-caption-x,32px),var(--time-caption-y,-50%));font-size:var(--type-detail);font-weight:500}
-.practice-map[data-time-view] .map-node-label[data-time-anchor]::after{display:block;margin:var(--space-1) 0 0;font-weight:400}
+html[data-celestial-volume] .practice-map[data-time-view] [data-time-captions] .map-node-label[data-time-anchor]{opacity:1;display:block;max-width:min(15rem,40cqw);white-space:normal;text-align:left;transform:translate(var(--time-caption-x,32px),var(--time-caption-y,-50%));font-size:var(--type-detail);font-weight:500}
+.practice-map[data-time-view] [data-time-captions] .map-node-label[data-time-anchor]::after{display:block;margin:var(--space-1) 0 0;font-weight:400}
+
+.practice-map[data-time-view]:has(.map-labels:not([data-time-captions])) .orbital-radar i:is(:nth-child(2),:nth-child(3)) span{display:none}
