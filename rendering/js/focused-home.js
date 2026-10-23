@@ -4,6 +4,7 @@ import { updateWorkTags } from './work-tags.js';
 import { mapButtons, clearMapSelection, selectMapItem, requestMapLinksRender, syncMapNodeAvailability, setMapRovingId, setTimeMode } from './map-engine.js';
 
 const compact = pane.media('(max-width: 900px)');
+const stackedStory = matchMedia('(max-width: 999px)');
 const home = document.querySelector('.focused-home');
 const field = home.querySelector('.focused-home__map');
 const camera = document.querySelector('[data-map-camera]');
@@ -165,14 +166,16 @@ function setScene(focused, { write = false, focus = false } = {}) {
   if (focus) (focused ? openMap : returnHome).focus({ preventScroll: true });
 }
 function syncReading() {
+  const folded = stackedStory.matches && document.body.classList.contains('has-story-pane');
   const reading = Boolean(document.querySelector('.map-inspector.is-open'))
     || document.body.matches('.has-content-panel, .has-settings-panel, .has-constellation-nav, .has-command-focus');
   home.inert = reading || !document.body.classList.contains('has-focused-home');
-  returnHome.inert = reading || !document.body.classList.contains('has-full-mobile-map');
-  camera.inert = compact.matches && reading;
-  labels.inert = compact.matches && reading;
-  mobileDock.inert = compact.matches && document.body.classList.contains('has-constellation-nav');
-  preview.inert = reading || preview.hidden;
+  field.inert = folded;
+  returnHome.inert = folded || reading || !document.body.classList.contains('has-full-mobile-map');
+  camera.inert = folded || compact.matches && reading;
+  labels.inert = folded || compact.matches && reading;
+  mobileDock.inert = folded || compact.matches && document.body.classList.contains('has-constellation-nav');
+  preview.inert = folded || reading || preview.hidden;
   if (wasReading && !reading && returnToPreview && previewId) {
     returnToPreview = false;
     requestAnimationFrame(() => {
@@ -240,6 +243,7 @@ new MutationObserver(() => {
 }).observe(map, { attributes: true, attributeFilter: ['data-observation-active', 'data-time-view'] });
 window.addEventListener('popstate', restoreScene);
 compact.addEventListener('change', restoreScene);
+stackedStory.addEventListener('change', syncReading);
 window.addEventListener('resize', syncMeasurements);
 window.addEventListener('reading-surface-change', syncReading);
 new MutationObserver(syncReading).observe(document.body, { attributes: true, attributeFilter: ['class', 'data-case-open'] });

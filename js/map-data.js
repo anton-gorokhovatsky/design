@@ -101,7 +101,7 @@ const mapItems = [
     title: "«ИльмиксГрупп»",
     caseStudy: { title: "Цифровые продукты «ИльмиксГрупп»" },
     // Final Russian logo: https://readymag.website/hors/next/
-    relatedPoster: "assets/project-logos/ilmix.webp",
+    relatedPoster: "assets/project-logos/ilmix-cutout.png",
     previewKind: "logo",
     meta: "ОКОЛО 5 ЛЕТ В СУММЕ / ЦИФРОВОЕ НАПРАВЛЕНИЕ",
     description: "Перезапустил шесть сайтов, занимался разработкой логотипа и остального брендинга.",

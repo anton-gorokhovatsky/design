@@ -4,7 +4,7 @@ import { createRequire } from "node:module";
 import { chromium, webkit } from "playwright";
 import { mapItems } from "../js/map-data.js";
 
-const { startStaticServer } = createRequire(import.meta.url)("./browser-contracts.cjs");
+const { startStaticServer, readMaterialAuditExpression } = createRequire(import.meta.url)("./browser-contracts.cjs");
 const engine = process.argv[2] || "chromium";
 assert.ok(["chromium", "webkit"].includes(engine));
 const { server, origin } = await startStaticServer({ projectRoot: process.cwd() });
@@ -92,6 +92,51 @@ try {
     await page.waitForFunction(selector => document.activeElement === document.querySelector(selector), settingsTrigger);
     console.log(`PASS ${engine} ${width} ${theme}: ${mapItems.filter(item => item.previewVideo).length} hover/focus targets, persistent card, clear consoles, settings.`);
     await page.close();
+  }
+  // A narrow map pane still has desktop pointer/keyboard interaction.
+  {
+    const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, reducedMotion: "reduce" });
+    page.on("pageerror", error => errors.push(error.message));
+    await page.goto(origin + '/?story=1');
+    await page.locator('#story-pane[data-ready="true"]').waitFor();
+    const feedback = async selector => {
+      const target = page.locator(selector);
+      await page.mouse.move(0, 0);
+      await page.evaluate(() => document.activeElement?.blur());
+      const color = await target.evaluate(element => getComputedStyle(element).color);
+      const box = await target.boundingBox();
+      await target.hover();
+      await page.waitForFunction(({ selector, color }) => getComputedStyle(document.querySelector(selector)).color !== color, { selector, color });
+      assert.deepEqual(await target.boundingBox(), box, selector + ': hover must not move the control');
+      assert.equal(await target.evaluate(element => getComputedStyle(element).cursor), 'pointer');
+      await page.mouse.move(0, 0);
+      await page.keyboard.press('Tab');
+      await target.focus();
+      assert.equal(await target.evaluate(element => element.matches(':focus-visible')), true);
+    };
+    await feedback('[data-constellation-nav-toggle]');
+    await page.keyboard.press('Enter');
+    assert.equal(await page.locator('[data-constellation-nav-toggle]').getAttribute('aria-expanded'), 'true');
+    await page.keyboard.press('Escape');
+    await page.locator('[data-focused-map-open]').click();
+    await feedback('[data-focused-return]');
+    await page.keyboard.press('Enter');
+    assert.ok(await page.locator('[data-focused-map-open]').isVisible(), 'Return restores the compact map');
+    assert.ok(await page.locator('#story-pane').isVisible(), 'Map controls retain the paired story');
+    await page.locator('.map-node[data-map-id="private-practice"]').click();
+    await page.locator('.project-orbit-picker').waitFor();
+    assert.deepEqual((await page.evaluate(readMaterialAuditExpression)).failures, [], 'The paired picker retains the common glass material');
+    await page.setViewportSize({ width: 320, height: 568 });
+    await page.evaluate(() => document.documentElement.style.fontSize = '200%');
+    await page.waitForFunction(() => document.querySelector('.point-preview').inert);
+    assert.equal(await page.locator('.point-preview').isVisible(), false, 'The folded map cannot cover its author/menu with a preview');
+    await page.locator('#story-pane [data-close-story]').click();
+    await page.locator('[data-picker-project="krainiuk"]').click();
+    await page.locator('.project-orbit-back').click();
+    assert.ok(await page.locator('.project-orbit-picker').isVisible(), 'Unfolding restores the working picker, including its last project');
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+    await page.close();
+    console.log(`PASS ${engine}: paired compact map retains pointer feedback, keyboard activation and return.`);
   }
   for (const [width, height] of [[1440, 900], [1024, 768], [720, 450]]) {
     const page = await browser.newPage({ viewport: { width, height }, reducedMotion: "no-preference" });

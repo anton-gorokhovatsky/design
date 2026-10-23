@@ -90,11 +90,8 @@ function initializePracticeOrbits() {
     }));
     const preview=doc.querySelector('.point-preview'),picker=doc.createElement('div'),backButton=doc.createElement('button');
     picker.className='project-orbit-picker';picker.hidden=true;
-    // The scroll crosses the header. Adjacent glass planes avoid a double tint.
-    const pickerHead=preview.querySelector('.point-preview__head'),pickerGlass=doc.createElement('div');
-    pickerGlass.className='project-picker-glass';pickerGlass.hidden=true;pickerGlass.setAttribute('aria-hidden','true');
-    pickerGlass.dataset.materialSurface='project-picker-body';pickerGlass.dataset.materialActive='always';
-    preview.prepend(pickerGlass);
+    // One glass shell; only the list scrolls below its fixed, transparent header.
+    const pickerHead=preview.querySelector('.point-preview__head');
     const sizePickerHead=()=>{if(!picker.hidden)preview.style.setProperty('--picker-head-height',`${pickerHead.getBoundingClientRect().height}px`);};
     new ResizeObserver(sizePickerHead).observe(pickerHead);
     backButton.type='button';backButton.className='project-orbit-back';backButton.textContent='Все проекты';backButton.hidden=true;
@@ -165,9 +162,7 @@ function initializePracticeOrbits() {
     const syncPicker=()=>{
       const selected=mobile.matches&&!preview.hidden&&node.getAttribute('aria-expanded')==='true';
       preview.classList.toggle('is-project-picker',selected);picker.hidden=!selected;
-      pickerGlass.hidden=!selected;preview.dataset.materialActive=selected?'none':'always';
-      if(selected){pickerHead.dataset.materialSurface='project-picker-header';pickerHead.dataset.materialActive='always';sizePickerHead();}
-      else{delete pickerHead.dataset.materialSurface;delete pickerHead.dataset.materialActive;}
+      if(selected)sizePickerHead();
       if(preview.hidden)pickerSession=false;
       backButton.hidden=!mobile.matches||!pickerSession||selected||preview.hidden;
       if(selected){pickerSession=true;scheduleAtlas();}
