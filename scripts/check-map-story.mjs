@@ -30,7 +30,7 @@ try{
   assert.equal(await story.evaluate(e=>e.inert),false);
   const materials=await page.evaluate(readMaterialAuditExpression);
   assert.equal(materials.active.filter(s=>s.surface.startsWith('paired-')).length,2,'Both panes register the shared material');
-  assert.deepEqual(materials.failures.filter(s=>s.surface.startsWith('paired-')),[],'The paired surfaces share fill, blur and border treatment');
+  assert.deepEqual(materials.failures,[],'The paired composition shares one glass recipe without nested material ancestors');
   if(width===390){
    const menu=page.locator('[data-constellation-nav-toggle]');
    await menu.click();
@@ -78,6 +78,7 @@ try{
    }
   }
   const target=page.locator('#scene-practice button[data-point="tarski"]');await target.focus();await target.press('Enter');
+  assert.deepEqual((await page.evaluate(readMaterialAuditExpression)).failures,[],'Scene readouts keep the same material without a filtered ancestor');
   const label=page.locator('#scene-practice .scene-readout.is-visible');await label.locator('a').focus();await label.locator('a').press('Escape');
   assert.equal(await story.evaluate(e=>e.inert),false);assert.equal(await label.count(),0);
   await target.press('Enter');const scroll=await story.evaluate(e=>e.scrollTop);
@@ -103,6 +104,21 @@ try{
   if(process.env.PORTFOLIO_UI_ARTIFACT_DIR){mkdirSync(process.env.PORTFOLIO_UI_ARTIFACT_DIR,{recursive:true});await page.screenshot({path:resolve(process.env.PORTFOLIO_UI_ARTIFACT_DIR,`story-${width}.png`)});}
   await page.close();
  }
+ // Always-visible periods must fit together, including the narrowest map.
+ for (const width of [1440,390,320]) {
+  const page=await browser.newPage({viewport:{width,height:900},reducedMotion:'reduce'});
+  await page.goto(origin+'/?scene=map&view=time#map');
+  await page.evaluate(()=>document.fonts.ready);
+  await page.waitForFunction(()=>!document.querySelector('[data-map-links]').hasAttribute('data-layout-pending'));
+  const captions=await page.locator('[data-time-anchor]').evaluateAll(es=>es.map(e=>{const r=e.getBoundingClientRect();return {id:e.dataset.mapLabelId,left:r.left,top:r.top,right:r.right,bottom:r.bottom,opacity:getComputedStyle(e).opacity};}));
+  assert.equal(captions.length,5);
+  for(const [i,a] of captions.entries()){
+   assert.equal(a.opacity,'1');
+   assert.ok(a.left>=0&&a.right<=width,`${a.id} remains inside ${width}px`);
+   for(const b of captions.slice(i+1))assert.ok(a.right<=b.left||a.left>=b.right||a.bottom<=b.top||a.top>=b.bottom,`${a.id} and ${b.id} remain separate at ${width}px`);
+  }
+  await page.close();
+ }
  const failedOpening=await browser.newPage({viewport:{width:390,height:844}});
  const retryErrors=[];failedOpening.on('pageerror',error=>retryErrors.push(error.message));
  let failedOpeningOnce=false;await failedOpening.route('**/assets/map-story/content.html*',route=>{if(!failedOpeningOnce){failedOpeningOnce=true;return route.fulfill({status:503,body:'Unavailable'});}return route.continue();});
@@ -119,6 +135,10 @@ try{
  assert.equal(await retry.locator('#story-pane').evaluate(e=>e.scrollWidth>e.clientWidth+1),false);
  // A stacked map remains a usable window when the author card needs more room.
  await retry.setViewportSize({width:320,height:568});
+ await retry.locator('#scene-time').evaluate(e=>e.scrollIntoView());
+ await retry.locator('#scene-time .scene-year').first().waitFor({state:'visible'});
+ assert.ok(await retry.locator('#scene-time .scene-year').first().evaluate(e=>parseFloat(getComputedStyle(e).fontSize)>=24),'Year labels enlarge with the 200% text preference');
+ assert.equal(await retry.locator('#story-pane').evaluate(e=>e.scrollWidth>e.clientWidth+1),false);
  const dataLink=retry.locator('.whoop-compact-trigger');
  await retry.keyboard.press('Tab');await dataLink.focus();
  await retry.waitForFunction(()=>{

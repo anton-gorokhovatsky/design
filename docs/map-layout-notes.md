@@ -16,3 +16,20 @@ performance limits. This move changes no layout logic.
 - Keep the institutional anchor; open the lower sectors toward the dock.
 - The center, personal sector and principles retain their authored anchors.
 - Authored emphasis, independent of case order and node size. Herman is considered last, after the main labels have claimed their space.
+
+## Rendering and interaction constraints
+
+These existing implementation notes are preserved here alongside the layout
+rationale; moving comments does not change the startup code.
+
+- Keep SVG paths alive to avoid empty WebKit frames.
+- Publish the cached backdrop and spotlight as one canvas frame.
+- The first gradient is the moving spotlight, painted below from the same token.
+- The plane belongs to the map sector, even when controls displace its target.
+- A mobile preview or parent panel may already have restored its own focus.
+- Rotate sphere surfaces, keeping glyph geometry and lighting fixed.
+- Cross-subject relationships supplement the professional parent without changing the point's chronology or layout rules.
+- Hidden points cannot bend the few relationships shown on the introductory map.
+- Open the circular order at its largest empty sector, never through a fan.
+- Clear other nodes first; spacing chooses between equally clear arcs.
+- One quadratic arc, expressed as a cubic for the existing in-place morph.

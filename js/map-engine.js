@@ -1,3 +1,4 @@
+import { getTimeLayout, placeTimeCaptions } from './map-chronology.js';
 import {pane} from './pane-viewport.js';
 // Spatial map. Layout rationale: docs/map-layout-notes.md.
 import { getCaseContent, loadCaseContent } from "./case-content.js";
@@ -140,7 +141,6 @@ const setMapLinkReactiveState = (path, isReactive) => {
   const startedAt = window.performance.now();
   const duration = shouldMorph ? 440 : 320;
 
-  // Keep SVG paths alive to avoid empty WebKit frames.
   path.dataset.relationMorphing = "true";
   const renderFrame = (timestamp) => {
     if (!path.isConnected) {
@@ -202,100 +202,6 @@ const writeUrlState = (changes, { replace = false } = {}) => {
     state.inspectorOverviewStep = null;
   }
   window.history[method](state, "", nextUrl);
-};
-
-const timeGroupSectors = {
-  garage: {
-    parent: -2.28,
-    compactParent: -2.28,
-    children: [-3.08, -2.72, -1.82, -1.48],
-    compactChildren: [-2.95, -2.58, -1.9, -1.45],
-    order: ["garage-site", "collection", "narkomfin", "garage-app"],
-  },
-  "private-practice": {
-    parent: -0.32,
-    compactParent: -0.55,
-    children: [0.02, 0.3, 0.58, 0.86, 1.14, 1.42, 1.7, 1.98, 2.26],
-    compactChildren: [-0.08, 0.25, 0.58, 0.91, 1.24, 1.57, 1.9, 2.23, 2.56],
-    order: [
-      "shirokostup",
-      "dusty",
-      "tarski",
-      "ks-fish",
-      "herman",
-      "dd-camp",
-      "hotline-camp",
-      "doronin",
-      "eleven",
-    ],
-  },
-};
-
-const timeRootAngles = {
-  optimal: [-2.98, -3],
-  "early-career": [-2.3, -2.08],
-  ilmix: [-2.54, -1.95],
-};
-
-const getTimeSectorAngle = (item, compact) => {
-  const groupId = item.parent && timeGroupSectors[item.parent]
-    ? item.parent
-    : timeGroupSectors[item.id]
-      ? item.id
-      : null;
-
-  if (!groupId) {
-    return null;
-  }
-
-  const sector = timeGroupSectors[groupId];
-
-  if (item.id === groupId) {
-    return compact ? sector.compactParent : sector.parent;
-  }
-
-  const index = sector.order.indexOf(item.id);
-  const angles = compact ? sector.compactChildren : sector.children;
-
-  return angles[index] ?? sector.parent;
-};
-
-const getTimeLayout = (item) => {
-  if (!Number.isFinite(item.timeYear)) {
-    return { x: item.x, y: item.y };
-  }
-
-  const centerX = 50;
-  const centerY = 54;
-  const getSourceAngle = ({ x, y }) => Math.atan2((y - centerY) / 34, (x - centerX) / 44);
-  const sourceAngle = getSourceAngle(item);
-  const peers = mapItems
-    .filter((candidate) => candidate.timeYear === item.timeYear)
-    .sort((left, right) => getSourceAngle(left) - getSourceAngle(right));
-  const lane = peers.findIndex(({ id }) => id === item.id) - (peers.length - 1) / 2;
-  const year = item.timeYear;
-  const radiusX = year >= 2021
-    ? 22 + (2026 - year) * 2.4
-    : year >= 2015
-      ? 34 + (2021 - year) * 1.83
-      : 45 + Math.max(0, Math.min(1, (2015 - year) / 5)) * 11;
-  const radiusY = year >= 2021
-    ? 17 + (2026 - year) * 1.6
-    : year >= 2015
-      ? 25 + (2021 - year) * 1.33
-      : 33 + Math.max(0, Math.min(1, (2015 - year) / 5)) * 8;
-  const compact = pane.width <= 900;
-  const compactRadiusXScale = compact ? 1.35 : 1;
-  const groupAngle = getTimeSectorAngle(item, compact);
-  const rootAngles = timeRootAngles[item.id];
-  const angle = groupAngle
-    ?? rootAngles?.[compact ? 1 : 0]
-    ?? sourceAngle + lane * 0.18;
-
-  return {
-    x: centerX + Math.cos(angle) * radiusX * compactRadiusXScale,
-    y: centerY + Math.sin(angle) * radiusY,
-  };
 };
 
 let mapFieldBounds;
@@ -497,7 +403,7 @@ const getMapLayout = (item) => {
   let y = item.y;
 
   if (timeModeActive && Number.isFinite(item.timeYear)) {
-    return getTimeLayout(item);
+    return getTimeLayout(item, pane.width <= 900);
   }
 
   if (viewportWidth >= 901 && viewportWidth <= 1100) {
@@ -687,6 +593,7 @@ const applyMapLayout = () => {
 
   });
   if (!focusHomeActive()) placeMapRestLabels();
+  if (timeModeActive) placeTimeCaptions(mapLabelsRoot, mapLabels, mapButtons);
   syncMapAtmospherePosition();
   window.dispatchEvent(new Event("map-layout"));
 };
@@ -741,7 +648,6 @@ const setSearchRelationshipPreview = (id = null) => {
   syncMapRelationships();
 };
 
-// Publish the cached backdrop and spotlight as one canvas frame.
 const atmosphere = Object.assign(document.createElement("canvas"), { className: "map-atmosphere", ariaHidden: "true" }).getContext("2d");
 signalField.prepend(atmosphere.canvas);
 const buffer = atmosphere.canvas.cloneNode().getContext("2d"), backdrops = new Map();
@@ -752,7 +658,6 @@ const drawMapAtmosphere = ({width, height}, x, y) => {
   const dpr = Math.min(devicePixelRatio || 1, 1.5), w = Math.ceil(width*dpr), h = Math.ceil(height*dpr);
   const size = `${w}/${h}`;
   if (size !== backdropSize) { backdrops.clear(); backdropSize = size; }
-  // The first gradient is the moving spotlight, painted below from the same token.
   const bg = getComputedStyle(signalField, "::before").backgroundImage.replace(/^radial-gradient.*?%\),\s*/, "");
   let image = backdrops.get(bg);
   if (!image) {
@@ -817,7 +722,6 @@ const setMapAtmosphere = (item = null) => {
   signalField.dataset.focusId = item.id;
   signalField.dataset.focusKind = item.accentKind || item.kind;
 
-  // The plane belongs to the map sector, even when controls displace its target.
   if (getMapLayout(item).y >= 74) {
     signalField.dataset.focusPlane = "ground";
   } else {
@@ -1260,12 +1164,10 @@ inspectorClose?.addEventListener("click", () => {
   clearMapSelection({ updateHistory: true });
   selectedButton?.focus();
   if (document.activeElement !== selectedButton) requestAnimationFrame(() => {
-    // A mobile preview or parent panel may already have restored its own focus.
     if (document.activeElement === document.body || mapInspector.contains(document.activeElement)) selectedButton?.focus();
   });
 });
 
-// Rotate sphere surfaces, keeping glyph geometry and lighting fixed.
 const sphereTurnSeconds = new Map([
   ["optimal", 96], ["ilmix", 108],
   ["youtube", 88], ["parfenov", 104],
@@ -1333,6 +1235,7 @@ if (mapNodesRoot) {
     label.dataset.materialActive = "always";
     if (Number.isFinite(item.timeYear)) {
       label.dataset.timeYear = String(item.timeYear);
+      if (["garage", "early-career", "ilmix", "optimal", "private-practice"].includes(item.id)) label.dataset.timeAnchor = "";
       label.dataset.timeLabel = item.timeLabel || String(item.timeYear);
     }
     label.append(Object.assign(document.createElement("span"), { textContent: typographUiText(item.label) }));
@@ -1467,8 +1370,6 @@ if (mapLinksRoot) {
   const childrenByParent = new Map();
 
   mapItems.forEach((item) => {
-    // Cross-subject relationships supplement the professional parent without
-    // changing the point's chronology or layout rules.
     const connections = new Set([item.parent, ...(item.relatedTo || [])].filter(Boolean));
     connections.forEach((id) => {
       if (id === item.id || !itemById.has(id)) return;
@@ -1507,7 +1408,6 @@ if (mapLinksRoot) {
       };
     };
 
-    // Hidden points cannot bend the few relationships shown on the introductory map.
     const visibleItems = focusHomeActive() ? mapItems.filter(item => focusHomePoints.has(item.id)) : mapItems;
     const nodeGeometry = new Map(visibleItems.map(item => [item.id, getNodeGeometry(item)]));
     const obstacles = [...nodeGeometry].filter(([id]) => (
@@ -1524,7 +1424,6 @@ if (mapLinksRoot) {
         ) };
       }).sort((a, b) => a.angle - b.angle);
       if (!measured.length) return;
-      // Open the circular order at its largest empty sector, never through a fan.
       const gaps = measured.map((child, i) => (
         (measured[(i + 1) % measured.length].angle - child.angle + Math.PI * 2) % (Math.PI * 2)
       ));
@@ -1576,7 +1475,6 @@ if (mapLinksRoot) {
             const clearance = base * active < 0 ? 0 : Math.min(Math.abs(base), Math.abs(active));
             obstruction += Math.max(0, radius - clearance) ** 2;
           });
-          // Clear other nodes first; spacing chooses between equally clear arcs.
           if (obstruction < leastObstruction || (obstruction === leastObstruction && score < bestScore)) {
             leastObstruction = obstruction;
             bestScore = score;
@@ -1605,7 +1503,6 @@ if (mapLinksRoot) {
             start[0] + (to - from) * (dx / 2 + nx * (1 - 2 * from) * bow),
             start[1] + (to - from) * (dy / 2 + ny * (1 - 2 * from) * bow),
           ];
-          // One quadratic arc, expressed as a cubic for the existing in-place morph.
           return formatMapLinkCurve([
             ...start,
             ...start.map((value, i) => value + (control[i] - value) * 2 / 3),

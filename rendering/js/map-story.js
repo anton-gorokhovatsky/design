@@ -129,7 +129,7 @@ async function show(value,{write=true,focus=true,animate=false}={}){
   const moving=changed&&animate&&!reduce.matches&&document.documentElement.dataset.reduceMotion!=='true';
   activeTransition?.skipTransition();
   const content=value?prepareStory():Promise.resolve();void content.catch(()=>{});
-  const apply=()=>{if(revision!==showRevision)return;document.body.classList.toggle('has-story-pane',value);map.dataset.materialActive=value?'always':'none';sync();};
+  const apply=()=>{if(revision!==showRevision)return;document.body.classList.toggle('has-story-pane',value);sync();};
   await content.catch(()=>{});
   if(revision!==showRevision)return;
   let transition;

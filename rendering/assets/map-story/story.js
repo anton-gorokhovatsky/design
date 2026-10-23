@@ -1,3 +1,4 @@
+import { getTimeAngle } from '/js/map-chronology.js';
 import {reducedMotion as sharedMotion} from '/js/preferences.js';
 const storyRoot=document.getElementById('story-pane');
 import { typographUiText } from '/js/preferences.js';
@@ -17,7 +18,6 @@ let dark = root.dataset.theme ? root.dataset.theme === 'dark' : systemTheme.matc
 const walker=document.createTreeWalker(storyRoot.querySelector('.page'),NodeFilter.SHOW_TEXT);
 while(walker.nextNode())walker.currentNode.textContent=typographUiText(walker.currentNode.textContent);
 const ink = d => d ? '#f2f1ec' : '#10110f';
-const bg = d => d ? '#11120f' : '#eeede7';
 const signal = d => d ? '#91a1ff' : '#2448ed';
 const TAU = Math.PI * 2;
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -47,7 +47,7 @@ function targetToolbar(host, items, positions, onSelect, hoverSelect=true) {
   const toolbar = host.querySelector('.scene-targets');
   const buttons = items.map((item, i) => {
     const button = document.createElement('button'); button.type='button'; button.className='scene-target';
-    button.setAttribute('aria-label',item.label); button.setAttribute('aria-pressed','false'); button.tabIndex=i ? -1 : 0;
+    button.setAttribute('aria-label',[item.label,item.timeLabel].filter(Boolean).join('. ')); button.setAttribute('aria-pressed','false'); button.tabIndex=i ? -1 : 0;
     button.dataset.point=item.id; toolbar.append(button);
     const choose = source => { buttons.forEach(b=>{b.tabIndex=b===button?0:-1;b.setAttribute('aria-pressed',String(b===button));});onSelect(item,source); };
     button.addEventListener('click',()=>choose('select'));
@@ -76,7 +76,7 @@ const sceneNotes=new WeakMap();
 function sceneNote(figure){
   let note=sceneNotes.get(figure);if(note)return note;
   const out=figure.querySelector('.scene-readout'),host=figure.querySelector('.scene');
-  host.append(out);out.classList.add('scene-readout--anchored','map-node-label');out.inert=true;
+  host.append(out);out.classList.add('scene-readout--anchored','map-node-label');out.dataset.materialSurface='story-readout';out.dataset.materialActive='always';out.inert=true;
   note={out,dirty:true,width:0,height:0,sceneWidth:0};sceneNotes.set(figure,note);
   new ResizeObserver(()=>{note.dirty=true;}).observe(out);
   return note;
@@ -216,6 +216,12 @@ function makeGarage(figure) {
 function makeMap(figure) {
   const host=figure.querySelector('.scene'), field=host.querySelector('canvas'), chrono=figure.dataset.scene==='time';
   const items=mapItems, positions=items.map(()=>({x:0,y:0}));sceneNote(figure);
+  const caption=(text,kind)=>{const node=document.createElement('span');node.className=kind;node.setAttribute('aria-hidden','true');node.textContent=text;host.append(node);return node;};
+  const years=[2010,2015,2021,2026].map(year=>caption(year,'scene-year'));
+  const labelsById=new Map(['garage','early-career','ilmix','private-practice','optimal','running'].map(id=>{
+    const label=caption(typographUiText(byId.get(id).label),'scene-label');label.dataset.materialSurface='story-map-label';label.dataset.materialActive='always';return [id,label];
+  })),labelMetrics=new Map();
+
   const satelliteSeeds=new Map(practiceGroups.flatMap(group=>group.projects.map((item,i)=>[item.id,{group,phase:group.phase+i*TAU/group.projects.length}])));let c,w=900,h=550,t=chrono?1:0,target=chrono?1:0,selected=null,pinned=false,elapsed=0;
   let personalInk=getComputedStyle(root).getPropertyValue('--muted').trim();
   const levels=new Float32Array(items.length),edges=[];
@@ -241,17 +247,11 @@ function makeMap(figure) {
   function setMode(value){target=value==='time'?1:0;if(target&&!Number.isFinite(byId.get(selected)?.timeYear)){clearSelection();buttons.forEach((button,i)=>button.tabIndex=i?-1:0);}figure.querySelectorAll('[data-layout]').forEach(b=>b.checked=b.dataset.layout===value);if(!motion)t=target;draw(0);}
   figure.querySelectorAll('[data-layout]').forEach(b=>b.addEventListener('change',()=>setMode(b.dataset.layout)));
   const timeRadius=year=>year>=2021?.46+(2026-year)*.036:year>=2015?.64+(2021-year)*.035:.85+(2015-year)*.03;
-  const familyAngles=new Map();
-  for(const [family,start,end] of [['garage',-.2,.65],['private-practice',-2.8,-1.15]]){
-    const children=items.filter(item=>item.parent===family&&Number.isFinite(item.timeYear));
-    children.forEach((item,i)=>familyAngles.set(item.id,start+(end-start)*i/Math.max(1,children.length-1)));
-  }
-  const companyAngles={'early-career':-2.35,ilmix:2.9,garage:1.35,optimal:2.15,'private-practice':-.8};
   const coords=(item,width,height,progress)=>{
     const pad=width<450?24:32,project=p=>({x:pad+(p.x-2)/92*(width-2*pad),y:pad+(p.y-4)/90*(height-2*pad)});
     let a=project(item),b=a;
     if(Number.isFinite(item.timeYear)){
-      const angle=familyAngles.get(item.id)??companyAngles[item.id]??0,r=timeRadius(item.timeYear);
+      const angle=getTimeAngle(item,width<500)??Math.atan2(item.y-54,item.x-50),r=timeRadius(item.timeYear);
       b={x:width*.5+Math.cos(angle)*width*.44*r,y:height*.5+Math.sin(angle)*height*.43*r};
     }
     const seed=satelliteSeeds.get(item.id);
@@ -265,8 +265,7 @@ function makeMap(figure) {
     for(let x=width*.1;x<width;x+=width*.16){ctx.beginPath();ctx.moveTo(x,10);ctx.lineTo(x,height-10);ctx.stroke();}
     for(let y=height*.15;y<height;y+=height*.22){ctx.beginPath();ctx.moveTo(8,y);ctx.lineTo(width-8,y);ctx.stroke();}
     ctx.save();ctx.translate(center.x,center.y);ctx.strokeStyle=d?'rgba(129,145,233,.3)':'rgba(57,79,172,.17)';
-    const years=[2010,2015,2021,2026];
-    [1,.85,.64,.46].forEach((ratio,i)=>{ctx.beginPath();ctx.ellipse(0,0,width*.44*ratio,height*.43*ratio,0,0,TAU);ctx.stroke();if(progress>.25){ctx.fillStyle=ink(d);ctx.globalAlpha=progress*.65;ctx.font='11px Akt';ctx.textAlign='right';ctx.fillText(String(years[i]),-12,-height*.43*ratio-8);ctx.textAlign='left';ctx.globalAlpha=1;}});ctx.restore();
+    [1,.85,.64,.46].forEach((ratio,i)=>{ctx.beginPath();ctx.ellipse(0,0,width*.44*ratio,height*.43*ratio,0,0,TAU);ctx.stroke();const year=years[i];year.hidden=progress===0;year.style.opacity=progress;year.style.transform=`translate(${center.x-12}px,${center.y-height*.43*ratio-8}px) translate(-100%,-100%)`;});ctx.restore();
     const selectedItem=byId.get(selected);
     for(const edge of edges){
       if(edge.level<.002)continue;
@@ -295,17 +294,18 @@ function makeMap(figure) {
       ctx.restore();
     });
     const labels=progress>.5?['garage','early-career','ilmix','private-practice','optimal']:['garage','private-practice','running','ilmix','early-career'];
-    ctx.font=`500 ${width<500?12:14}px Akt`;ctx.fillStyle=ink(d);
-    const occupied=[];
-    labels.forEach(id=>{const i=items.findIndex(item=>item.id===id),item=items[i],p=allPoints[i];let label=item.label;
-      const measure=ctx.measureText(label).width, offset=id==='private-practice'&&progress<.5?width*.13+18:id==='garage'?width*.065+18:26;
+    labelsById.forEach(label=>label.style.opacity=0);
+    const yearSize=labelMetrics.get('year');
+    const occupied=progress>.25&&yearSize?[1,.85,.64,.46].map(r=>({x:center.x-12-yearSize.w,y:center.y-height*.43*r-8-yearSize.h,w:yearSize.w,h:yearSize.h})):[];
+    labels.forEach(id=>{const i=items.findIndex(item=>item.id===id),p=allPoints[i];
+      const size=labelMetrics.get(id);if(!size)return;const measure=size.w, offset=id==='private-practice'&&progress<.5?width*.13+18:id==='garage'?width*.065+18:26;
       const candidates=[...(id==='garage'?[{x:p.x-measure/2,y:p.y+offset+14}]:[]),{x:p.x-measure/2,y:p.y-offset},{x:p.x-measure-26,y:p.y-9},{x:p.x+26,y:p.y-9},{x:p.x-measure/2,y:p.y+offset+14}];
       let rect=null;
-      for(const q of candidates){const box={x:clamp(q.x,8,width-measure-8)-5,y:clamp(q.y,20,height-12)-15,w:measure+10,h:23};
+      for(const q of candidates){const box={x:clamp(q.x,8,width-measure-8),y:clamp(q.y-size.h/2,8,height-size.h-8),w:measure,h:size.h};
         if(occupied.some(a=>box.x<a.x+a.w+10&&box.x+box.w+10>a.x&&box.y<a.y+a.h+8&&box.y+box.h+8>a.y))continue;
         if(allPoints.some((pt,j)=>j!==i&&(progress<.5||Number.isFinite(items[j].timeYear))&&pt.x>box.x-8&&pt.x<box.x+box.w+8&&pt.y>box.y-8&&pt.y<box.y+box.h+8))continue;
         rect=box;break;}
-      if(!rect)return;occupied.push(rect);ctx.globalAlpha=1-levels[i];ctx.fillStyle=bg(d);ctx.fillRect(rect.x,rect.y,rect.w,rect.h);ctx.fillStyle=ink(d);ctx.fillText(label,rect.x+5,rect.y+15);ctx.globalAlpha=1;
+      if(!rect)return;occupied.push(rect);const caption=labelsById.get(id);caption.style.transform=`translate(${rect.x}px,${rect.y}px)`;caption.style.opacity=1-levels[i];
 
     });
     ctx.strokeStyle=signal(d);ctx.lineWidth=.8;ctx.beginPath();ctx.arc(center.x,center.y,9,0,TAU);ctx.moveTo(center.x-17,center.y);ctx.lineTo(center.x+17,center.y);ctx.moveTo(center.x,center.y-17);ctx.lineTo(center.x,center.y+17);ctx.stroke();
@@ -320,7 +320,7 @@ function makeMap(figure) {
     paint(c,w,h,dark,t,positions);
     positionReadout(figure,positions[items.findIndex(item=>item.id===selected)],w,h);
   }
-  return {draw,resize(){if(host.clientWidth<1||host.clientHeight<1)return;w=host.clientWidth;h=host.clientHeight;c=contextFor(field,w,h);draw(0);},theme(){personalInk=getComputedStyle(root).getPropertyValue('--muted').trim();practicePlane.tracks(dark);practicePlane.paint();draw(0);},motion(){if(!motion){t=target;draw(0);}},getState:()=>({layout:t,selected,levels:[...levels],positions:items.map((item,i)=>({id:item.id,...positions[i],dated:Number.isFinite(item.timeYear)}))})};
+  return {draw,resize(){if(host.clientWidth<1||host.clientHeight<1)return;w=host.clientWidth;h=host.clientHeight;labelsById.forEach((label,id)=>labelMetrics.set(id,{w:label.offsetWidth,h:label.offsetHeight}));years[0].hidden=false;labelMetrics.set('year',{w:years[0].offsetWidth,h:years[0].offsetHeight});c=contextFor(field,w,h);draw(0);},theme(){personalInk=getComputedStyle(root).getPropertyValue('--muted').trim();practicePlane.tracks(dark);practicePlane.paint();draw(0);},motion(){if(!motion){t=target;draw(0);}},getState:()=>({layout:t,selected,levels:[...levels],positions:items.map((item,i)=>({id:item.id,...positions[i],dated:Number.isFinite(item.timeYear)}))})};
 }
 
 function mount(figure){

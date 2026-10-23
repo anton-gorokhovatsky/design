@@ -19,6 +19,7 @@ export const runtimeFiles = [
   "js/sphere-surfaces.js",
   "js/map-media.js",
   "js/map-engine.js",
+  "js/map-chronology.js",
   "js/celestial-bodies.js",
   "js/map-controls.js",
   "js/viewport-ui.js",

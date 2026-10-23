@@ -205,7 +205,7 @@ const readMaterialAuditExpression = `(() => {
   const expectedBackground = getComputedStyle(probe).backgroundColor;
   probe.remove();
 
-  const mobile = matchMedia("(max-width: 900px)").matches;
+  const mobile = (document.getElementById("map-pane")?.clientWidth ?? innerWidth) <= 900;
   const active = Array.from(document.querySelectorAll("[data-material-surface]"))
     .filter((element) => {
       const mode = element.dataset.materialActive;
@@ -232,8 +232,18 @@ const readMaterialAuditExpression = `(() => {
       ) || (mobile && element.matches(
         "body.has-content-panel .control-console :is(.constellation-nav, .command-dock)",
       ));
+      let materialAncestor = null;
+      for (let parent = element.parentElement; parent; parent = parent.parentElement) {
+        if (!parent.hasAttribute("data-material-surface")) continue;
+        const parentStyle = getComputedStyle(parent);
+        if ((parentStyle.backdropFilter || parentStyle.webkitBackdropFilter || "none") !== "none") {
+          materialAncestor = parent.dataset.materialSurface;
+          break;
+        }
+      }
       return {
         surface: element.dataset.materialSurface,
+        materialAncestor,
         backgroundDepth,
         opacity: Number(style.opacity),
         pointerEvents: style.pointerEvents,
@@ -250,6 +260,7 @@ const readMaterialAuditExpression = `(() => {
     active,
     failures: active.filter((surface) => (
       surface.background !== expectedBackground
+      || surface.materialAncestor !== null
       || !surface.backdrop.includes("blur(24px)")
       || surface.shadow !== "none"
       || surface.filter !== (surface.backgroundDepth ? "blur(3px)" : "none")
