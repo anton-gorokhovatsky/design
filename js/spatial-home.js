@@ -115,15 +115,18 @@ function measure() {
   width = field.clientWidth; height = field.clientHeight;
   for (const layer of [svg, relationSvg]) layer.setAttribute('viewBox', `0 0 ${width} ${height}`);
   for (const node of nodes) {
-    node.baseX = parseFloat(node.button.style.getPropertyValue('--x')) * width / 100;
-    node.baseY = parseFloat(node.button.style.getPropertyValue('--y')) * height / 100;
+    const x = parseFloat(node.button.style.getPropertyValue('--x')) * width / 100;
+    const y = parseFloat(node.button.style.getPropertyValue('--y')) * height / 100;
+    reflow ||= node.baseX !== x || node.baseY !== y;
+    node.baseX = x; node.baseY = y;
     // Orbit guides are transparent; the solid core owns occlusion and clearance.
     node.radius = node.id === 'private-practice' ? 14 : node.glyph.offsetWidth / 2;
-    reflow ||= node.labelBox?.width !== node.label.offsetWidth || node.labelBox?.height !== node.label.offsetHeight;
     const transform = new DOMMatrixReadOnly(getComputedStyle(node.label).transform);
-    node.labelBox = { width: node.label.offsetWidth, height: node.label.offsetHeight,
+    const box = { width: node.label.offsetWidth, height: node.label.offsetHeight,
       x: node.label.offsetLeft + transform.m41 - node.baseX,
       y: node.label.offsetTop + transform.m42 - node.baseY };
+    reflow ||= Object.keys(box).some(key => box[key] !== node.labelBox?.[key]);
+    node.labelBox = box;
     const point = unproject(node.baseX, node.baseY, node.z);
     node.x = point.x; node.y = point.y;
     node.restScale = project(point.x, point.y, node.z, restYaw, restPitch).scale;
@@ -190,9 +193,7 @@ function seedLabels(geometry) {
     }
     return candidates.sort((a, b) => a.cost - b.cost);
   });
-  // Search nearby slots first; only widen the displacement when neighbours
-  // cannot all fit. This keeps labels near their points instead of picking
-  // the first available slot on the opposite side of the field.
+  // Prefer nearby slots; widen only when neighbours cannot all fit.
   let solution;
   for (const limit of [64, 256, 1024, 4096, Infinity]) {
     let remaining = 2000;

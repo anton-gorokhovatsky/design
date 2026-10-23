@@ -207,6 +207,7 @@ function makeGarage(figure) {
     });c.restore();
   }
   function draw(dt){
+    if(!c)return;
     time+=dt;const rate=dt?1-Math.exp(-dt*(target?3.6:5)):0;
     if(Math.abs(target-strength)<.0001)strength=target;else strength+=(target-strength)*rate;
     if(lens)lens.draw(time,dark);else paintFallback(time,dark);
@@ -370,6 +371,7 @@ function makeMap(figure) {
     ctx.globalAlpha=progress;ctx.strokeStyle=signal(d);ctx.lineWidth=.8;ctx.beginPath();ctx.arc(center.x,center.y,9,0,TAU);ctx.moveTo(center.x-17,center.y);ctx.lineTo(center.x+17,center.y);ctx.moveTo(center.x,center.y-17);ctx.lineTo(center.x,center.y+17);ctx.stroke();ctx.globalAlpha=1;
   }
   function draw(dt){
+    if(!c)return;
     elapsed+=dt;if(Math.abs(t-target)<.0005)t=target;else if(dt)t+=(target-t)*(1-Math.exp(-dt*8));
     if(mapLens)mapLens.draw(elapsed,dark);else paintBlack(elapsed,dark);paintPulse(elapsed,dark);
     items.forEach((item,i)=>{const p=coords(item,w,h,t);positions[i]=p;buttons[i].style.transform=`translate(${p.x.toFixed(2)}px,${p.y.toFixed(2)}px)`;buttons[i].inert=t>.8&&!Number.isFinite(item.timeYear);});
@@ -385,7 +387,7 @@ function mount(figure){
   let entry=controllers.get(figure.dataset.scene);if(entry)return entry;
   const id=figure.dataset.scene;
   const scene=id==='practice'?makePractice(figure):id==='garage'?makeGarage(figure):makeMap(figure);
-  entry={id,figure,scene,visible:false,last:0};controllers.set(id,entry);scene.resize();
+  entry={id,figure,scene,visible:false};controllers.set(id,entry);scene.resize();
   let pending=0;const resizeObserver=new ResizeObserver(()=>{if(pending)return;pending=requestAnimationFrame(()=>{pending=0;if(!transitioning())scene.resize();});});resizeObserver.observe(figure.querySelector('.scene'));if(id==='garage')resizeObserver.observe(figure.querySelector('.gravity-spread'));
   return entry;
 }
