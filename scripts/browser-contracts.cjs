@@ -232,6 +232,15 @@ const readMaterialAuditExpression = `(() => {
       ) || (mobile && element.matches(
         "body.has-content-panel .control-console :is(.constellation-nav, .command-dock)",
       ));
+      // The play glass samples the opaque poster inside the reading window,
+      // not the window's already-filtered backdrop. Verify the actual coverage.
+      const poster = element.parentElement.querySelector(":scope > [data-personal-media-poster]");
+      const mediaRect = poster?.getBoundingClientRect();
+      const controlRect = element.getBoundingClientRect();
+      const localMediaBackdrop = !!(poster?.complete && poster.naturalWidth > 0
+        && getComputedStyle(poster).opacity === "1"
+        && mediaRect.left <= controlRect.left && mediaRect.top <= controlRect.top
+        && mediaRect.right >= controlRect.right && mediaRect.bottom >= controlRect.bottom);
       let materialAncestor = null;
       for (let parent = element.parentElement; parent; parent = parent.parentElement) {
         if (!parent.hasAttribute("data-material-surface")) continue;
@@ -244,6 +253,7 @@ const readMaterialAuditExpression = `(() => {
       return {
         surface: element.dataset.materialSurface,
         materialAncestor,
+        localMediaBackdrop,
         backgroundDepth,
         opacity: Number(style.opacity),
         pointerEvents: style.pointerEvents,
@@ -260,7 +270,7 @@ const readMaterialAuditExpression = `(() => {
     active,
     failures: active.filter((surface) => (
       surface.background !== expectedBackground
-      || surface.materialAncestor !== null
+      || (surface.materialAncestor !== null && !surface.localMediaBackdrop)
       || !surface.backdrop.includes("blur(24px)")
       || surface.shadow !== "none"
       || surface.filter !== (surface.backgroundDepth ? "blur(3px)" : "none")

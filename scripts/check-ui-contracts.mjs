@@ -489,7 +489,13 @@ const readReactiveRelationsContract = async (client, mapId) => {
     };
     opacityFrame = window.requestAnimationFrame(sampleActiveOpacity);
     const getRelativeCurveDeflection = window.__portfolioCurveDeflection;
-    window.setTimeout(() => {
+    const started = performance.now();
+    const finish = () => {
+      if (performance.now() - started < 6000 && paths.some(path =>
+        path.dataset.relationMorphing === "true" || path.querySelector("animate"))) {
+        requestAnimationFrame(finish);
+        return;
+      }
       window.cancelAnimationFrame(opacityFrame);
       const active = paths.filter((path) => path.classList.contains("is-active-relation"));
       // Only deformation away from the current base curve is a hover reaction.
@@ -516,7 +522,8 @@ const readReactiveRelationsContract = async (client, mapId) => {
           + Number(path.dataset.relationMorphing === "true")
         ), 0),
       });
-    }, 620);
+    };
+    window.setTimeout(finish, 620);
   }))(${JSON.stringify(mapId)})`,
   true,
 );
