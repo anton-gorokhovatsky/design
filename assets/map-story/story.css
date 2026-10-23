@@ -52,3 +52,4 @@ html[data-reduce-motion=true] .story-is-moving #split-shell{transition:none}
 .map-story .story-actions{position:sticky;top:var(--story-gutter);height:0;z-index:300;display:flex;justify-content:flex-end;margin-inline:var(--story-gutter);pointer-events:none}
 .map-story .story-actions .ui-close{pointer-events:auto}
 .map-story .opening h1{max-width:min(16ch,calc(100% - var(--control-target) - var(--space-3)))}
+@container story-viewport (max-width:18rem){#story-pane .opening{padding-top:calc(var(--story-gutter) + var(--control-target) + var(--space-2))}.map-story .opening h1{max-width:16ch;margin-top:0}}
