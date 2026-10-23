@@ -152,6 +152,10 @@ function measure() {
   if (reflow) nodes.forEach(node => { node.labelPosition = null; });
   draw();
 }
+const nearAnchor = (left, top, boxWidth, boxHeight, point) => Math.hypot(
+  Math.max(0, left - point.x - point.rx, point.x - point.rx - left - boxWidth),
+  Math.max(0, top - point.y - point.ry, point.y - point.ry - top - boxHeight),
+) <= 24;
 function seedLabels(geometry) {
   const gap = 4, points = [...geometry.values()];
   const overlaps = (a, b) => a.left < b.right + gap && a.right > b.left - gap
@@ -182,8 +186,7 @@ function seedLabels(geometry) {
       const left = Math.max(0, Math.min(width - size.width, x));
       const top = Math.max(0, Math.min(height - size.height, y));
       const box = { left, right: left + size.width, top, bottom: top + size.height, node };
-      if (Math.hypot(left + size.width / 2 - point.x, top + size.height / 2 - point.y)
-          > Math.max(point.rx, point.ry) + Math.hypot(size.width, size.height) / 2 + 36) continue;
+      if (!nearAnchor(left, top, size.width, size.height, point)) continue;
       const key = `${left.toFixed(2)},${top.toFixed(2)}`;
       if (seen.has(key) || box.right > width || box.bottom > height) continue;
       seen.add(key);
@@ -277,6 +280,7 @@ function placeLabels(geometry) {
   // caption. Reassign nearby free slots instead of stopping the camera.
   const crowded = items.some((a, i) => items.slice(i + 1).some(b =>
     Math.abs(a.x - b.x) < a.w + b.w + 1 && Math.abs(a.y - b.y) < a.h + b.h + 1))
+    || items.some(b => !nearAnchor(b.x - b.w, b.y - b.h, b.w * 2, b.h * 2, geometry.get(b.node.id)))
     || items.some(b => [...geometry.values()].some(p => Math.hypot(
       Math.max(0, Math.abs(b.x - p.x) - b.w) / p.rx, Math.max(0, Math.abs(b.y - p.y) - b.h) / p.ry)
       < .999 || (b.node.id !== p.id && Math.abs(b.x - p.x) < b.w + 14 && Math.abs(b.y - p.y) < b.h + 14)));

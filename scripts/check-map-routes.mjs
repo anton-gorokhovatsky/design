@@ -106,7 +106,7 @@ try {
   }
   // Introductory captions use the projected map, including release momentum.
   // The 740px viewport catches the gap between the former fixed breakpoints.
-  for (const viewport of [{ width: 390, height: 740 }, { width: 320, height: 568 }]) {
+  for (const viewport of [{ width: 390, height: 740 }, { width: 320, height: 568 }, { width: 390, height: 568 }]) {
     const page = await browser.newPage({ viewport, isMobile: true, hasTouch: true });
     page.on('pageerror', error => errors.push(error.message));
     await page.goto(origin);
@@ -144,6 +144,15 @@ try {
       assert.deepEqual(state.satelliteOverlaps, [], 'Moving satellites never cover introductory captions');
     };
     await checkCaptions();
+    const detachedCaptions = await page.locator('.focused-home .direction-landmark').evaluateAll(labels =>
+      labels.filter(label => getComputedStyle(label).visibility !== 'hidden').flatMap(label => {
+        const caption = label.getBoundingClientRect();
+        const glyph = document.querySelector(`[data-map-id="${label.dataset.mapLabelId}"] .map-node__glyph`).getBoundingClientRect();
+        const gap = Math.hypot(Math.max(0, caption.left - glyph.right, glyph.left - caption.right),
+          Math.max(0, caption.top - glyph.bottom, glyph.top - caption.bottom));
+        return gap > 32 ? [{ id: label.dataset.mapLabelId, gap }] : [];
+      }));
+    assert.deepEqual(detachedCaptions, [], 'Resting captions stay beside their own objects');
     for (let frame = 0; frame < 12; frame++) { await page.waitForTimeout(80); await checkCaptions(); }
     // Short screens scroll the complete constellation above the fixed controls.
     // Exercise gestures in that visible field, not at offscreen coordinates.
