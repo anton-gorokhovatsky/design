@@ -38,6 +38,7 @@ function initializePracticeOrbits() {
     tooltip.dataset.materialSurface='map-node-label';tooltip.dataset.materialActive='always';
     const mobile=pane.media('(max-width:900px)');
     const nativeRoot=doc.querySelector('[data-map-nodes]'), map=doc.querySelector('[data-practice-map]');
+    const home=doc.querySelector('.focused-home');
     (doc.querySelector('main')||doc.body).append(layer,tooltip);
     let enabled=true;
     const ctx = canvas.getContext('2d');
@@ -197,6 +198,9 @@ function initializePracticeOrbits() {
     let accumulator=0;
     const paint=()=>{
       const rect=canvas.getBoundingClientRect();
+      const bounds=doc.body.classList.contains('has-focused-home')?home.getBoundingClientRect():null;
+      const clip=bounds?`rect(${bounds.top}px,${bounds.right}px,${bounds.bottom}px,${bounds.left}px)`:'';
+      if(layer.style.clip!==clip)layer.style.clip=clip;
       const blocked=doc.body.matches('.has-reading-surface,.has-command-focus,.has-constellation-nav,.has-settings-panel');
       layer.inert=blocked;if(blocked){active=null;tooltip.hidden=true;}
       if(!enabled)return syncMapAtmospherePosition();
@@ -253,6 +257,7 @@ function initializePracticeOrbits() {
     const placement=new MutationObserver(schedule);
     for(const target of [node,doc.body])placement.observe(target,{attributes:true,attributeFilter:['style','class']});
     new ResizeObserver(schedule).observe(canvas);
+    home.addEventListener('scroll',schedule,{passive:true});
     win.addEventListener('map-layout',schedule);doc.addEventListener('transitionrun',schedule);
     for(const type of ['pointerenter','pointerleave','focus','blur','click'])layer.addEventListener(type,schedule,true);
     new MutationObserver(sync).observe(doc.documentElement,{attributes:true,attributeFilter:['data-theme','data-reduce-motion']});

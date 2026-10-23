@@ -110,7 +110,9 @@ try {
     const page = await browser.newPage({ viewport, isMobile: true, hasTouch: true });
     page.on('pageerror', error => errors.push(error.message));
     await page.goto(origin);
+    await page.evaluate(()=>document.fonts.ready);
     await page.waitForFunction(() => document.querySelector('[data-whoop-recovery]').textContent.includes('77')
+      && !document.querySelector('[data-map-links][data-layout-pending]')
       && document.querySelector('[data-map-label-id="narkomfin"]').style.getPropertyValue('--spatial-label-dx'));
     const checkCaptions = async () => {
       const state = await page.evaluate(() => {
@@ -119,11 +121,17 @@ try {
         const field = document.querySelector('.focused-home__map').getBoundingClientRect();
         const boxes = labels.map(label => ({ id: label.dataset.mapLabelId,
           visible: getComputedStyle(label).visibility !== 'hidden', rect: label.getBoundingClientRect() }));
+        const satellites = [...document.querySelectorAll('.project-satellite .map-node__glyph')]
+          .filter(node => node.checkVisibility({ visibilityProperty: true, opacityProperty: true }))
+          .map(node => ({ id: node.closest('[data-map-id]').dataset.mapId, rect: node.getBoundingClientRect() }));
         return {
           visible: boxes.filter(box => box.visible).length,
           clipped: boxes.filter(({ rect }) => rect.left < field.left - 1 || rect.right > field.right + 1
             || rect.top < field.top - 1 || rect.bottom > field.bottom + 1).map(box => box.id),
           overlaps: boxes.flatMap((a, index) => boxes.slice(index + 1).filter(b =>
+            a.rect.left < b.rect.right && a.rect.right > b.rect.left
+            && a.rect.top < b.rect.bottom && a.rect.bottom > b.rect.top).map(b => [a.id, b.id])),
+          satelliteOverlaps: boxes.flatMap(a => satellites.filter(b =>
             a.rect.left < b.rect.right && a.rect.right > b.rect.left
             && a.rect.top < b.rect.bottom && a.rect.bottom > b.rect.top).map(b => [a.id, b.id])),
         };
@@ -133,7 +141,14 @@ try {
         'Every private project remains available in the touch picker');
       assert.deepEqual(state.clipped, [], 'Introductory captions stay inside their field');
       assert.deepEqual(state.overlaps, [], 'Introductory captions never overlap');
+      assert.deepEqual(state.satelliteOverlaps, [], 'Moving satellites never cover introductory captions');
     };
+    await checkCaptions();
+    for (let frame = 0; frame < 12; frame++) { await page.waitForTimeout(80); await checkCaptions(); }
+    // Short screens scroll the complete constellation above the fixed controls.
+    // Exercise gestures in that visible field, not at offscreen coordinates.
+    await page.locator('.focused-home__map').scrollIntoViewIfNeeded();
+    await page.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done))));
     await checkCaptions();
     for (const side of [1, -1]) {
       const start = await page.evaluate(side => {

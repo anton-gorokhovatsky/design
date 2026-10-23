@@ -49,6 +49,11 @@ The remaining modules own celestial volumes, map controls, contribution tags,
 mobile composition, focused/spatial layouts, orbital physics and the project
 picker. Their ordering and complete paths live only in the manifest.
 
+The readable source of `spatial-home.js` is `rendering/js/spatial-home.js`;
+the runtime copy is compressed with Terser (`--module --compress passes=3 --mangle`).
+Its caption clearance includes the complete private-practice orbit envelope,
+while connection-line occlusion still follows the solid core.
+
 `index.html` loads all twenty-eight module URLs and contains a generated import
 map so every direct and transitive request uses its own `?v=<content-hash>`.
 `pnpm cache` and the release command update the managed block. The structural
