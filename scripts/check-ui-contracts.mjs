@@ -1731,7 +1731,6 @@ const auditBrowser = async (client, origin) => {
       ),
       misplacedGarageIds,
       fanSpanDegrees: (Math.PI * 2 - Math.max(...fanGaps)) * 180 / Math.PI,
-      note: document.querySelector("[data-map-note]")?.textContent?.trim(),
     };
   })()`);
   const expectedPrivatePracticeYears = {
@@ -1761,8 +1760,6 @@ const auditBrowser = async (client, origin) => {
     || chronologyPrivatePracticeContract.misplacedGarageIds.length !== 0
     || chronologyPrivatePracticeContract.fanSpanDegrees < 50
     || chronologyPrivatePracticeContract.fanSpanDegrees > 80
-    || !chronologyPrivatePracticeContract.note
-      ?.includes("ПРОЕКТЫ ПОКАЗАНЫ ПО\u00a0ГОДАМ ЗАПУСКА")
   ) {
     fail(
       "chronology: private practice must reveal ten separated projects in a calm relation fan.",
@@ -1836,6 +1833,23 @@ const auditBrowser = async (client, origin) => {
     || searchCloseContract.query !== "сайт герман"
   ) {
     fail("search-close: the visible close action does not dismiss only the results list.", searchCloseContract);
+  }
+
+  await evaluate(client, `(() => {
+    const input = document.querySelector("[data-command-input]");
+    input.focus();
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    return true;
+  })()`);
+  await client.send("Input.dispatchKeyEvent", { type: "keyDown", key: "Escape", code: "Escape", windowsVirtualKeyCode: 27, nativeVirtualKeyCode: 27 });
+  await client.send("Input.dispatchKeyEvent", { type: "keyUp", key: "Escape", code: "Escape", windowsVirtualKeyCode: 27, nativeVirtualKeyCode: 27 });
+  const desktopSearchEscapeContract = await evaluate(client, `(() => {
+    const input = document.querySelector("[data-command-input]");
+    return { focused: document.activeElement === input, expanded: input.getAttribute("aria-expanded"), query: input.value };
+  })()`);
+  if (!desktopSearchEscapeContract.focused || desktopSearchEscapeContract.expanded !== "false"
+      || desktopSearchEscapeContract.query !== "сайт герман") {
+    fail("search: Escape must retain the desktop query and keyboard position.", desktopSearchEscapeContract);
   }
 
   await evaluate(client, `(() => {

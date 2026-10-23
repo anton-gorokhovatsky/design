@@ -119,7 +119,7 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=3e430b527b05">
+    <link rel="stylesheet" href="styles.css?v=2c0d65371d98">
     <style>
       .map-evidence [data-map-evidence-role-label]{font-family:var(--font-author);font-size:.6rem;font-weight:400;letter-spacing:0}
     </style>
@@ -129,7 +129,7 @@
         "imports": {
           "./js/preferences.js": "./js/preferences.js?v=e1339eed1d3a",
           "./js/pane-viewport.js": "./js/pane-viewport.js?v=077a2aba65b6",
-          "./js/map-story.js": "./js/map-story.js?v=bf688a840517",
+          "./js/map-story.js": "./js/map-story.js?v=883f8f253339",
           "./js/whoop-day.js": "./js/whoop-day.js?v=cca4864e7168",
           "./js/whoop-aura.js": "./js/whoop-aura.js?v=d276af4806f2",
           "./js/presence.js": "./js/presence.js?v=f9321316d550",
@@ -143,12 +143,12 @@
           "./js/personal-media.js": "./js/personal-media.js?v=ee51495df325",
           "./js/sphere-surfaces.js": "./js/sphere-surfaces.js?v=019656696ae9",
           "./js/map-media.js": "./js/map-media.js?v=94007ecfc3fc",
-          "./js/map-engine.js": "./js/map-engine.js?v=f71ab4329cfa",
+          "./js/map-engine.js": "./js/map-engine.js?v=5e122ad5c7c2",
           "./js/map-chronology.js": "./js/map-chronology.js?v=2d842e071b71",
           "./js/celestial-bodies.js": "./js/celestial-bodies.js?v=bf4cd5dacbf3",
-          "./js/map-controls.js": "./js/map-controls.js?v=74716d3adeb7",
+          "./js/map-controls.js": "./js/map-controls.js?v=e40ca9bf7279",
           "./js/viewport-ui.js": "./js/viewport-ui.js?v=e8cb2bba3c7d",
-          "./js/panels.js": "./js/panels.js?v=6ca4ad099312",
+          "./js/panels.js": "./js/panels.js?v=4d530c02be53",
           "./js/case-view.js": "./js/case-view.js?v=8fc63b957f9c",
           "./js/favicon.js": "./js/favicon.js?v=ef61cd158b18",
           "./js/work-tags.js": "./js/work-tags.js?v=fcc7c42f8c58",
@@ -187,11 +187,11 @@
     <script type="module" src="js/sphere-surfaces.js?v=019656696ae9"></script>
     <script type="module" src="js/map-media.js?v=94007ecfc3fc"></script>
     <script type="module" src="js/map-chronology.js?v=2d842e071b71"></script>
-    <script type="module" src="js/map-engine.js?v=f71ab4329cfa"></script>
+    <script type="module" src="js/map-engine.js?v=5e122ad5c7c2"></script>
     <script type="module" src="js/celestial-bodies.js?v=bf4cd5dacbf3"></script>
-    <script type="module" src="js/map-controls.js?v=74716d3adeb7"></script>
+    <script type="module" src="js/map-controls.js?v=e40ca9bf7279"></script>
     <script type="module" src="js/viewport-ui.js?v=e8cb2bba3c7d"></script>
-    <script type="module" src="js/panels.js?v=6ca4ad099312"></script>
+    <script type="module" src="js/panels.js?v=4d530c02be53"></script>
     <script type="module" src="js/case-view.js?v=8fc63b957f9c"></script>
     <script type="module" src="js/favicon.js?v=ef61cd158b18"></script>
     <script type="module" src="js/work-tags.js?v=fcc7c42f8c58"></script>
@@ -202,7 +202,7 @@
     <script type="module" src="js/practice-audience.js?v=71986799128e"></script>
     <script type="module" src="js/practice-orbits.js?v=5f44f34c2f63"></script>
     <script type="module" src="js/pane-viewport.js?v=077a2aba65b6"></script>
-    <script type="module" src="js/map-story.js?v=bf688a840517"></script>
+    <script type="module" src="js/map-story.js?v=883f8f253339"></script>
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -1002,12 +1002,7 @@
                 <span>ХРОНОЛОГИЯ</span>
               </button>
             </div>
-          <button type="button" id="map-about-trigger" class="map-disclosure map-about-trigger" popovertarget="map-about" aria-controls="map-about" aria-expanded="false"><span>О КАРТЕ</span><svg class="map-disclosure__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg></button>
-<div id="map-about" popover="auto" class="map-popover" data-material-surface="map-about" data-material-active="desktop" role="region" aria-labelledby="map-about-title"><div class="map-popover__header"><h2 id="map-about-title">О КАРТЕ</h2><button class="ui-close map-popover__close" type="button" aria-label="Закрыть" popovertarget="map-about" popovertargetaction="hide"><svg class="ui-close__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 7 17 17M17 7 7 17"/></svg></button></div>
-              <p data-map-note data-time="КОЛЬЦА — ГОДЫ: БЛИЖЕ К&#160;ЦЕНТРУ — НОВЕЕ." data-practice-time="ЧАСТНАЯ ПРАКТИКА — 2020—СЕЙЧАС. ПРОЕКТЫ ПОКАЗАНЫ ПО&#160;ГОДАМ ЗАПУСКА.">
-                КООРДИНАТЫ СУБЪЕКТИВНЫ: ПОЛОЖЕНИЕ — СМЫСЛОВАЯ БЛИЗОСТЬ, РАЗМЕР — ЛИЧНЫЙ ВЕС ОПЫТА.
-              </p>
-</div>
+          <a id="map-about-trigger" class="map-disclosure map-about-trigger" href="?story=1" aria-controls="story-pane" aria-expanded="false"><span>О КАРТЕ</span></a>
           </nav>
           <div class="display-control" data-floating-console="display" data-context="ЭКРАН">
             <div class="map-screen-top">

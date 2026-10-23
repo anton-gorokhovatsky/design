@@ -45,7 +45,6 @@ const initializeMapControls = () => {
   };
 
   connectDisclosure('screen-controls');
-  connectDisclosure('map-about');
 
   for (const id of ['garage', 'private-practice', 'running']) {
     const label = document.querySelector('[data-map-label-id="' + id + '"]');

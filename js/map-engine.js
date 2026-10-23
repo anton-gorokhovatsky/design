@@ -48,7 +48,6 @@ const detailState = document.querySelector("[data-case-load-state]");
 const detailStatus = detailState.querySelector("[role=status]");
 const detailRetry = detailState.querySelector("button");
 let detailRequest = 0;
-const mapNote = document.querySelector("[data-map-note]");
 const timeToggles = Array.from(document.querySelectorAll("[data-time-toggle]"));
 const hoverCapable = window.matchMedia("(hover: hover) and (pointer: fine)");
 const compactMapViewport = pane.media("(max-width: 900px)");
@@ -75,13 +74,6 @@ const personalMedia = createPersonalMedia({
     target?.focus({ preventScroll: true });
   },
 });
-
-const mapNoteDefault = mapNote?.textContent.trim();
-const syncMapNote = () => {
-  if (!mapNote) return;
-  mapNote.textContent = !timeModeActive ? mapNoteDefault
-    : mapNote.dataset[atmosphereMapId === "private-practice" ? "practiceTime" : "time"];
-};
 
 const parseMapLinkCurve = (value) => {
   const numbers = value.match(/-?\d+(?:\.\d+)?/g)?.map(Number) || [];
@@ -713,7 +705,6 @@ const setMapAtmosphere = (item = null) => {
     signalField.style.removeProperty("--focus-horizon-x");
     syncMapAtmospherePosition();
     syncMapRelationships();
-    syncMapNote();
     return;
   }
 
@@ -729,7 +720,6 @@ const setMapAtmosphere = (item = null) => {
   }
   syncMapAtmospherePosition();
   syncMapRelationships();
-  syncMapNote();
 };
 
 const restoreSelectedMapAtmosphere = () => {
@@ -1871,8 +1861,6 @@ const setTimeMode = (
       `ХРОНОЛОГИЯ. ${nextEnabled ? "Вернуть смысловую карту" : "Показывать хронологию"}`,
     );
   });
-
-  syncMapNote();
 
   applyMapLayout();
   syncMapNodeAvailability();

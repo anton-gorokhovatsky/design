@@ -574,6 +574,7 @@ const readMobileSearchArrowExpression = `(() => ({
 }))()`;
 
 const readMobileSearchRestoredExpression = `(() => ({
+  triggerFocused: document.activeElement?.matches?.("[data-spatial-search]") || false,
   focused: document.activeElement?.matches?.("[data-command-input]") || false,
   searchTriggerVisible: document.querySelector("[data-spatial-search]").checkVisibility({visibilityProperty:true}),
   bodyHasFocus: document.body.classList.contains("has-command-focus"),
@@ -724,7 +725,8 @@ const validateMobileSearchContract = ({
   }
 
   const restoredStateFails = (state) => (
-    state.focused
+    !state.triggerFocused
+    || state.focused
     || state.bodyHasFocus
     || state.expanded !== "false"
     || state.pageScrollY !== 0

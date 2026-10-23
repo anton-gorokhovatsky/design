@@ -49,7 +49,6 @@ function sync(){
   for(const entry of document.querySelectorAll('.map-about-trigger,[data-map-story],.map-story-link')){
     entry.setAttribute('aria-expanded',String(opened));entry.setAttribute('aria-controls','story-pane');
   }
-  map.querySelector('.map-about-trigger')?.removeAttribute('popovertarget');
   const inspector=map.querySelector('.map-inspector.is-case-view');
   inspector?.setAttribute('aria-modal',String(!(opened&&!compact.matches)));
 }

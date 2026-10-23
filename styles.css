@@ -5343,10 +5343,12 @@ transition:
 background-color 180ms var(--motion-shift),
 color 180ms var(--motion-shift);
 --nav-size: 26px;
-height: 44px;
+height: auto;
+min-height: 44px;
 grid-template-columns: 30px minmax(0, 1fr);
+grid-template-rows: auto;
 gap: 8px;
-padding: 0 8px;
+padding: var(--space-2) 8px;
 border-radius: 13px;
 }
 
@@ -8147,7 +8149,28 @@ color: var(--signal);
 }
 
 .control-console .constellation-nav.is-open {
-height: 398px;
+height: auto;
+max-height: calc(var(--pane-vh) * 100 - 32px);
+padding-top: 46px;
+}
+.control-console .constellation-nav.is-open .constellation-nav__orbit {
+position: relative;
+inset: auto;
+height: auto;
+max-height: calc(var(--pane-vh) * 100 - 78px);
+padding: 0 8px 12px;
+overflow-y: auto;
+overscroll-behavior: contain;
+}
+.control-console .constellation-nav__item .constellation-nav__label { white-space: normal; }
+.control-console .constellation-nav__item.is-current .constellation-nav__label {
+text-decoration: underline;
+text-underline-offset: .3em;
+text-decoration-thickness: 1.5px;
+}
+.constellation-nav__utility[data-time-toggle][aria-pressed="true"] > span:last-child {
+text-decoration: underline;
+text-underline-offset: .25em;
 }
 
 .constellation-nav__utilities {
@@ -8161,7 +8184,8 @@ border-top: 1px solid var(--line-soft);
 .control-console .constellation-nav__utility {
 display: grid;
 width: 100%;
-height: 36px;
+min-height: var(--control-target);
+height: auto;
 grid-template-columns: 30px minmax(0, 1fr);
 align-items: center;
 gap: 8px;
@@ -8176,10 +8200,8 @@ letter-spacing: 0.01em;
 text-align: left;
 }
 
-.control-console .constellation-nav__utility:is(:hover, :focus-visible) {
-color: var(--signal);
-outline: none;
-}
+.control-console .constellation-nav__utility:is(:hover, :focus-visible) { color: var(--signal); }
+.control-console .constellation-nav__utility:focus-visible { outline: var(--focus-width) solid var(--signal); outline-offset: -2px; }
 
 .constellation-nav__utility-mark {
 position: relative;
@@ -10014,9 +10036,6 @@ color: var(--content-ink);
 .map-popover__header h2 { margin: 0; font: 500 var(--type-panel-heading)/var(--leading-label) var(--font-sans); letter-spacing: .06em; }
 .map-popover .map-popover__close { background: transparent; }
 #screen-controls > .theme-toggle { margin-bottom: calc(var(--space-1) / 2); }
-#map-about { width: min(20rem, calc(calc(var(--pane-vw) * 100) - 32px)); }
-#map-about [data-map-note] { margin: 0; padding: var(--space-2) 7px; font: 400 var(--type-detail)/var(--leading-body) var(--font-sans); text-transform: lowercase; }
-#map-about [data-map-note]::first-letter { text-transform: uppercase; }
 html[data-map-controls-ready] .map-surface:not(.has-reading-surface):not(.has-command-focus) .practice-map:not([data-time-view]):not(:has(.map-inspector.is-open, .map-hover-preview.is-visible)) .map-anchor-label:not(.map-anchor-hidden) { opacity: 1; }
 html[data-map-controls-ready] .map-anchor-label[data-map-label-id="garage"] { transform: translate(-50%, var(--garage-label-offset)); }
 html[data-map-controls-ready] .map-anchor-label[data-map-label-id="private-practice"] { transform: translate(-50%, -100%); }

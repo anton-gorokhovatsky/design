@@ -1208,7 +1208,7 @@ commandSubmit?.addEventListener("click", (event) => {
   event.preventDefault();
   setCommandOpen(false);
   setCommandStatus("");
-  if (compactCommandViewport.matches) commandInput?.blur();
+  if (compactCommandViewport.matches) document.querySelector("[data-spatial-search]")?.focus({ preventScroll: true });
   clearSearchHighlight();
 });
 
@@ -1265,8 +1265,8 @@ document.addEventListener("keydown", (event) => {
     event.preventDefault();
     setCommandOpen(false);
     setCommandStatus("");
-    commandInput?.blur();
-    // Finish Escape before the next click; blur is delayed.
+    if (compactCommandViewport.matches) document.querySelector("[data-spatial-search]")?.focus({ preventScroll: true });
+    // Preserve the query and a visible keyboard position after closing results.
     syncCommandFocusViewport();
     clearSearchHighlight();
   } else if (isMapPreviewActive()) {
