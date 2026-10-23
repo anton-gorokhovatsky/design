@@ -4,7 +4,7 @@ import { createRequire } from "node:module";
 import { chromium, webkit } from "playwright";
 import { mapItems } from "../js/map-data.js";
 
-const { startStaticServer, readMaterialAuditExpression } = createRequire(import.meta.url)("./browser-contracts.cjs");
+const { startStaticServer, readMaterialAuditExpression, readRenderedFrameCorners } = createRequire(import.meta.url)("./browser-contracts.cjs");
 const engine = process.argv[2] || "chromium";
 assert.ok(["chromium", "webkit"].includes(engine));
 const { server, origin } = await startStaticServer({ projectRoot: process.cwd() });
@@ -126,6 +126,23 @@ try {
     await page.locator('.map-node[data-map-id="private-practice"]').click();
     await page.locator('.project-orbit-picker').waitFor();
     assert.deepEqual((await page.evaluate(readMaterialAuditExpression)).failures, [], 'The paired picker retains the common glass material');
+    const pickerHeader = await page.locator('.point-preview__head').boundingBox();
+    const list = page.locator('.project-orbit-picker');
+    await list.evaluate(element => element.scrollTop = 64);
+    const glass = await page.evaluate(() => {
+      const header = document.querySelector('.point-preview__head');
+      const body = document.querySelector('.project-picker-glass');
+      const list = document.querySelector('.project-orbit-picker');
+      return { header: getComputedStyle(header).backdropFilter || getComputedStyle(header).webkitBackdropFilter,
+        body: getComputedStyle(body).backgroundColor, headerFill: getComputedStyle(header).backgroundColor,
+        listTop: list.getBoundingClientRect().top, headerBottom: header.getBoundingClientRect().bottom };
+    });
+    assert.equal(glass.header, 'blur(24px)', 'The pinned header must soften the scrolling projects with shared glass');
+    assert.equal(glass.headerFill, glass.body, 'Header and body use the same material');
+    assert.ok(glass.listTop < glass.headerBottom, 'Projects scroll beneath the glass, not into a hard crop below it');
+    assert.deepEqual(await page.locator('.point-preview__head').boundingBox(), pickerHeader, 'Scrolling keeps the glass header fixed');
+    assert.ok((await readRenderedFrameCorners(page, '.point-preview')).every(delta => delta < 12), 'Shared glass stays within rounded corners');
+    await page.screenshot({ path: `${directory}/${engine}-picker-glass.png` });
     await page.setViewportSize({ width: 320, height: 568 });
     await page.evaluate(() => document.documentElement.style.fontSize = '200%');
     await page.waitForFunction(() => document.querySelector('.point-preview').inert);
