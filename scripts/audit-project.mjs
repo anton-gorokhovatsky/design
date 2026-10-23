@@ -498,14 +498,16 @@ const requiredMaterialSurfaces = [
   "search-results",
   "search-status",
   "mobile-system-dock",
-  "desktop-view-console",
-  "desktop-display-console",
+  "screen-controls",
+  "map-about",
   "panel-heading",
   "panel-close",
   "reel-readout",
   "content-window",
   "settings-panel",
   "story-return",
+  "paired-map",
+  "paired-story",
   "personal-media-play",
 ];
 const materialSurfaceTags = [
@@ -533,16 +535,6 @@ const dynamicMaterialSurfaces = [
     name: "story-close",
     assignment: 'data-material-surface="story-close"',
     mode: 'data-material-active="always"',
-  },
-  {
-    name: "screen-controls",
-    assignment: "createDisclosure('screen-controls', 'ЭКРАН', display)",
-    mode: "panel.dataset.materialActive = 'desktop';",
-  },
-  {
-    name: "map-about",
-    assignment: "createDisclosure('map-about', 'О КАРТЕ', view)",
-    mode: "panel.dataset.materialActive = 'desktop';",
   },
   {
     name: "case-story",

@@ -7,28 +7,11 @@ const initializeMapControls = () => {
   const view = document.querySelector('.map-controls');
   if (!display || !view || !('showPopover' in HTMLElement.prototype)) return;
   const desktop = pane.media('(min-width: 901px)');
-  const closeIcon = '<svg class="ui-close__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 7 17 17M17 7 7 17"/></svg>';
-  const chevron = '<svg class="map-disclosure__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>';
   const popovers = [];
 
-  const createDisclosure = (id, title, host) => {
-    const trigger = document.createElement('button');
-    trigger.type = 'button';
-    trigger.className = 'map-disclosure';
-    trigger.setAttribute('popovertarget', id);
-    trigger.setAttribute('aria-controls', id);
-    trigger.setAttribute('aria-expanded', 'false');
-    trigger.innerHTML = '<span>' + title + '</span>' + chevron;
-    const panel = document.createElement('div');
-    panel.id = id;
-    panel.popover = 'auto';
-    panel.className = 'map-popover';
-    panel.dataset.materialSurface = id;
-    panel.dataset.materialActive = 'desktop';
-    panel.setAttribute('role', 'region');
-    panel.setAttribute('aria-labelledby', id + '-title');
-    panel.innerHTML = '<div class="map-popover__header"><h2 id="' + id + '-title">' + title + '</h2><button class="ui-close map-popover__close" type="button" aria-label="Закрыть" popovertarget="' + id + '" popovertargetaction="hide">' + closeIcon + '</button></div>';
-    host.append(panel);
+  const connectDisclosure = id => {
+    const panel = document.getElementById(id);
+    const trigger = document.getElementById(id + '-trigger');
     const place = () => {
       const rect = trigger.getBoundingClientRect();
       const width = panel.offsetWidth || parseFloat(getComputedStyle(panel).width) || 240;
@@ -61,23 +44,8 @@ const initializeMapControls = () => {
     return { trigger, panel };
   };
 
-  const meta = display.querySelector('.map-meta');
-  const theme = display.querySelector('.theme-toggle');
-  const service = display.querySelector('.display-control__service');
-  const note = service.querySelector('[data-map-note]');
-  const screen = createDisclosure('screen-controls', 'ЭКРАН', display);
-  const top = document.createElement('div');
-  top.className = 'map-screen-top';
-  top.append(meta, screen.trigger);
-  display.prepend(top);
-  screen.panel.append(theme, service);
-  display.dataset.materialActive = 'none';
-  view.dataset.materialActive = 'none';
-
-  const about = createDisclosure('map-about', 'О КАРТЕ', view);
-  about.trigger.classList.add('map-about-trigger');
-  view.append(about.trigger);
-  about.panel.append(note);
+  connectDisclosure('screen-controls');
+  connectDisclosure('map-about');
 
   for (const id of ['garage', 'private-practice', 'running']) {
     const label = document.querySelector('[data-map-label-id="' + id + '"]');

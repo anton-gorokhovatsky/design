@@ -5,7 +5,7 @@ import {resolve,dirname} from 'node:path';
 import {mkdirSync} from 'node:fs';
 import {chromium,webkit} from 'playwright';
 const require=createRequire(import.meta.url);
-const {startStaticServer}=require('./browser-contracts.cjs');
+const {startStaticServer,readMaterialAuditExpression}=require('./browser-contracts.cjs');
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 const engine=process.argv[2]||'chromium';
 const {origin,server}=await startStaticServer({projectRoot:root});
@@ -28,6 +28,9 @@ try{
   const story=page.locator('#story-pane');await page.waitForSelector('#story-pane[data-ready="true"]');
   await page.waitForFunction(()=>document.activeElement?.id==='story-title');
   assert.equal(await story.evaluate(e=>e.inert),false);
+  const materials=await page.evaluate(readMaterialAuditExpression);
+  assert.equal(materials.active.filter(s=>s.surface.startsWith('paired-')).length,2,'Both panes register the shared material');
+  assert.deepEqual(materials.failures.filter(s=>s.surface.startsWith('paired-')),[],'The paired surfaces share fill, blur and border treatment');
   if(width===390){
    const menu=page.locator('[data-constellation-nav-toggle]');
    await menu.click();
@@ -114,6 +117,22 @@ try{
  await retry.waitForFunction(()=>document.documentElement.dataset.reduceMotion==='true');
  assert.equal(await retry.locator('#story-motion').count(),0);
  assert.equal(await retry.locator('#story-pane').evaluate(e=>e.scrollWidth>e.clientWidth+1),false);
+ // A stacked map remains a usable window when the author card needs more room.
+ await retry.setViewportSize({width:320,height:568});
+ const dataLink=retry.locator('.whoop-compact-trigger');
+ await retry.keyboard.press('Tab');await dataLink.focus();
+ await retry.waitForFunction(()=>{
+  const target=document.querySelector('.whoop-compact-trigger'),r=target.getBoundingClientRect();
+  const pane=document.querySelector('#map-pane').getBoundingClientRect();
+  return r.top>=pane.top&&r.bottom<=pane.bottom&&target.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));
+ });
+ await retry.keyboard.press('Enter');
+ await retry.waitForFunction(()=>document.querySelector('.settings-panel').contains(document.activeElement));
+ await retry.keyboard.press('Escape');
+ await retry.waitForFunction(()=>{
+  const target=document.querySelector('.whoop-compact-trigger'),r=target.getBoundingClientRect();
+  return target===document.activeElement&&target.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));
+ });
  await retry.close();
  console.log(`Map story ${engine}: repeated geometry roundtrip, joined responsive panes, visible entry, lazy scenes, shared motion, nearby labels, case return, keyboard, retry and 320px/200% passed.`);
 }finally{await browser.close();await new Promise(resolve=>server.close(resolve));}

@@ -30,6 +30,45 @@ let returnToPreview = false;
 let wasReading = false;
 let overviewReturn = false;
 let restoring = false;
+let sceneRevision = 0, sceneAnimations = [];
+
+function stopSceneMotion() {
+  sceneRevision++;
+  sceneAnimations.forEach(animation => animation.cancel());
+  sceneAnimations = [];
+  document.body.classList.remove('is-map-switching');
+}
+async function changeScene(focused, event) {
+  const planes = [camera, labels, ...document.querySelectorAll('.spatial-field, .project-satellites')];
+  const current = planes.map(element => {
+    const style = getComputedStyle(element);
+    return { opacity: style.opacity, filter: style.filter };
+  });
+  stopSceneMotion();
+  const apply = () => setScene(focused, { write: true, focus: true });
+  if (!event.detail || document.documentElement.dataset.reduceMotion === 'true'
+      || matchMedia('(prefers-reduced-motion: reduce)').matches) return apply();
+  const revision = sceneRevision;
+  const soft = { opacity: 0, filter: 'blur(6px)' };
+  const tokens = getComputedStyle(document.documentElement);
+  const animate = (frames, duration, role) => {
+    sceneAnimations = planes.map((element, index) => element.animate(frames(index), {
+      duration, easing: tokens.getPropertyValue('--motion-' + role).trim(), fill: 'both',
+    }));
+    return Promise.all(sceneAnimations.map(animation => animation.finished.catch(() => {})));
+  };
+  document.body.classList.add('is-map-switching');
+  pane.syncState();
+  await animate(index => [current[index], soft], 80, 'exit');
+  if (revision !== sceneRevision) return;
+  apply();
+  // Reparent once, then let both the map and its label solver settle while soft.
+  await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  if (revision !== sceneRevision) return;
+  sceneAnimations.forEach(animation => animation.cancel());
+  await animate(() => [soft, { opacity: 1, filter: 'blur(0px)' }], 200, 'enter');
+  if (revision === sceneRevision) stopSceneMotion();
+}
 
 const landmarks = {
   garage: ['ИНСТИТУЦИИ', 'Музей «Гараж»'],
@@ -191,6 +230,7 @@ function syncMeasurements() {
 }
 function restoreScene() {
   if (restoring) return;
+  stopSceneMotion();
   restoring = true;
   const url = new URL(location.href);
   // A direct case link needs the complete map as its return destination.
@@ -223,8 +263,8 @@ document.addEventListener('keydown', event => {
     closePreview();
   }
 }, true);
-openMap.addEventListener('click', () => setScene(false, { write: true, focus: true }));
-returnHome.addEventListener('click', () => setScene(true, { write: true, focus: true }));
+openMap.addEventListener('click', event => changeScene(false, event));
+returnHome.addEventListener('click', event => changeScene(true, event));
 document.querySelector('[data-start-observation]').addEventListener('click', () => {
   closePreview({ focus: false });
   if (!document.body.classList.contains('has-focused-home')) return;

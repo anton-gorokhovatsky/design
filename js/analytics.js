@@ -126,7 +126,10 @@ const closeSettingsPanel = ({ restoreFocus = true } = {}) => {
   window.dispatchEvent(new Event("reading-surface-change"));
 
   if (restoreFocus && lastSettingsTrigger?.isConnected) {
-    lastSettingsTrigger.focus({ preventScroll: true });
+    // The reading surfaces release their inert state after the dialog closes.
+    requestAnimationFrame(() => {
+      if (!settingsPanel.open) lastSettingsTrigger.focus();
+    });
   }
 };
 

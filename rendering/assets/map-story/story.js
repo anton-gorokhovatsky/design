@@ -266,7 +266,7 @@ function makeMap(figure) {
     for(let y=height*.15;y<height;y+=height*.22){ctx.beginPath();ctx.moveTo(8,y);ctx.lineTo(width-8,y);ctx.stroke();}
     ctx.save();ctx.translate(center.x,center.y);ctx.strokeStyle=d?'rgba(129,145,233,.3)':'rgba(57,79,172,.17)';
     const years=[2010,2015,2021,2026];
-    [1,.85,.64,.46].forEach((ratio,i)=>{ctx.beginPath();ctx.ellipse(0,0,width*.44*ratio,height*.43*ratio,0,0,TAU);ctx.stroke();if(progress>.25){ctx.fillStyle=ink(d);ctx.globalAlpha=progress*.65;ctx.font='11px Akt';ctx.textAlign='center';ctx.fillText(String(years[i]),0,-height*.43*ratio-8);ctx.textAlign='left';ctx.globalAlpha=1;}});ctx.restore();
+    [1,.85,.64,.46].forEach((ratio,i)=>{ctx.beginPath();ctx.ellipse(0,0,width*.44*ratio,height*.43*ratio,0,0,TAU);ctx.stroke();if(progress>.25){ctx.fillStyle=ink(d);ctx.globalAlpha=progress*.65;ctx.font='11px Akt';ctx.textAlign='right';ctx.fillText(String(years[i]),-12,-height*.43*ratio-8);ctx.textAlign='left';ctx.globalAlpha=1;}});ctx.restore();
     const selectedItem=byId.get(selected);
     for(const edge of edges){
       if(edge.level<.002)continue;

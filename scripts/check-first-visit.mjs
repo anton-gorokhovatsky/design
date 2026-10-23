@@ -17,6 +17,24 @@ const browser = await ({ chromium, webkit })[engine].launch({ headless: true });
 const errors = [];
 const capture = (page, name) => page.screenshot({ path: join(directory, `${engine}-first-${name}.jpg`), quality: 82 });
 try {
+  // The shipped controls must already be compact before their module can run.
+  const boot = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  let releaseControls;
+  const controlsHeld = new Promise(resolve => { releaseControls = resolve; });
+  await boot.route('**/js/map-controls.js*', async route => { await controlsHeld; await route.continue(); });
+  const bootLoaded = boot.goto(origin);
+  await boot.locator('.display-control').waitFor();
+  assert.equal(await boot.locator('html').getAttribute('data-map-controls-ready'), null);
+  assert.deepEqual(await boot.locator('.map-controls, .display-control').evaluateAll(nodes => nodes.map(e => getComputedStyle(e).backgroundColor)), ['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0)'], 'No legacy card surfaces appear before initialization');
+  assert.equal(await boot.locator('#screen-controls').isVisible(), false, 'Advanced settings start inside the closed native popover');
+  assert.equal(await boot.locator('.map-screen-top .map-disclosure').isVisible(), true);
+  releaseControls();
+  await bootLoaded;
+  await boot.waitForFunction(() => document.documentElement.dataset.mapControlsReady === 'true');
+  await boot.locator('.map-screen-top .map-disclosure').click();
+  await boot.waitForFunction(() => document.querySelector('#screen-controls').matches(':popover-open'));
+  await boot.keyboard.press('Escape');
+  await boot.close();
   for (const theme of ["light", "dark"]) {
     for (const [name, width, height, scale] of [
       ["desktop", 1440, 900, 1], ["short", 1440, 650, 1],
@@ -140,6 +158,25 @@ try {
       await page.close();
     }
   }
+  const switching = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  switching.on('pageerror', error => errors.push(error.message));
+  await switching.goto(origin);
+  await switching.waitForFunction(() => document.querySelector('.whoop-level'));
+  const author = await switching.locator('.site-header').boundingBox();
+  for (const focused of [false, true, false]) {
+    await switching.locator(focused ? '[data-focused-return]' : '[data-focused-map-open]').tap();
+    await switching.waitForFunction(focused => document.body.classList.contains('has-focused-home') === focused, focused);
+  }
+  await switching.waitForFunction(() => !document.body.classList.contains('is-map-switching'));
+  assert.equal(new URL(switching.url()).searchParams.get('scene'), 'map', 'Rapid switching keeps the last requested scene');
+  assert.deepEqual(await switching.locator('.site-header').boundingBox(), author, 'The author card stays stationary');
+  assert.equal(await switching.locator('.map-camera, .map-labels, .project-satellites').evaluateAll(planes => planes.every(e => !e.getAnimations().length)), true, 'No abandoned transition keeps a map plane faded');
+  await switching.locator('[data-focused-return]').focus();await switching.keyboard.press('Enter');
+  assert.equal(await switching.locator('body').evaluate(e => e.classList.contains('has-focused-home') && !e.classList.contains('is-map-switching')), true, 'Keyboard changes scene immediately');
+  await switching.emulateMedia({ reducedMotion: 'reduce' });
+  await switching.locator('[data-focused-map-open]').tap();
+  assert.equal(await switching.locator('body').evaluate(e => e.classList.contains('has-full-mobile-map') && !e.classList.contains('is-map-switching')), true, 'Reduced motion retains both scenes without defocus');
+  await switching.close();
   assert.deepEqual(errors, []);
 } finally {
   await browser.close();
