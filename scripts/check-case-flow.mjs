@@ -328,7 +328,7 @@ for(const engine of [process.argv[2]||'chromium']) {
       if (width === 390) await page.locator('[data-constellation-nav-toggle]').click();
       await page.locator(selector).click();
       await page.waitForSelector('#story-pane[data-ready="true"]');
-      assert.match(await page.locator('#story-pane').innerText(), /Близость передаёт родство/);
+      assert.match(await page.locator('#story-pane').innerText(), /Соседство здесь определяется связями/);
       assert.equal(await page.locator('#story-pane').evaluate(e => e.scrollWidth > e.clientWidth + 1), false);
       await page.keyboard.press('Escape');
       await page.waitForFunction(() => document.querySelector('#story-pane').inert);

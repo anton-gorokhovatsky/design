@@ -1755,10 +1755,10 @@ const auditBrowser = async (client, origin) => {
     || chronologyPrivatePracticeContract.fanSpanDegrees < 50
     || chronologyPrivatePracticeContract.fanSpanDegrees > 80
     || !chronologyPrivatePracticeContract.note
-      ?.includes("ДЕВЯТЬ ПРОЕКТОВ ПОКАЗАНЫ ПО\u00a0ГОДАМ ЗАПУСКА")
+      ?.includes("ПРОЕКТЫ ПОКАЗАНЫ ПО\u00a0ГОДАМ ЗАПУСКА")
   ) {
     fail(
-      "chronology: private practice must reveal nine separated projects in a calm relation fan.",
+      "chronology: private practice must reveal ten separated projects in a calm relation fan.",
       chronologyPrivatePracticeContract,
     );
   }

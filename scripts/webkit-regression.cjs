@@ -659,9 +659,15 @@ const firstPaintAudit = async (browser, viewport, colorScheme) => {
     const sample = () => {
       const surface = Array.from(document.querySelectorAll("[data-material-surface]"))
         .find((element) => {
+          const mobile = matchMedia("(max-width: 900px)").matches;
+          const mode = element.dataset.materialActive;
+          const modeActive = mode === "always"
+            || (mode === "mobile" && mobile)
+            || (mode === "desktop" && !mobile);
           const rect = element.getBoundingClientRect();
           const style = getComputedStyle(element);
-          return rect.width > 0
+          return modeActive
+            && rect.width > 0
             && rect.height > 0
             && style.display !== "none"
             && style.visibility !== "hidden";
