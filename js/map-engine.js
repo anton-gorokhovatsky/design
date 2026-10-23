@@ -1,4 +1,4 @@
-import { getTimeLayout, placeTimeCaptions } from './map-chronology.js';
+import { getTimeLayout } from './map-chronology.js';
 import {pane} from './pane-viewport.js';
 // Spatial map. Layout rationale: docs/map-layout-notes.md.
 import { getCaseContent, loadCaseContent } from "./case-content.js";
@@ -593,7 +593,6 @@ const applyMapLayout = () => {
 
   });
   if (!focusHomeActive()) placeMapRestLabels();
-  if (timeModeActive) placeTimeCaptions(mapLabelsRoot, mapLabels, mapButtons);
   syncMapAtmospherePosition();
   window.dispatchEvent(new Event("map-layout"));
 };
@@ -1235,7 +1234,6 @@ if (mapNodesRoot) {
     label.dataset.materialActive = "always";
     if (Number.isFinite(item.timeYear)) {
       label.dataset.timeYear = String(item.timeYear);
-      if (["garage", "early-career", "ilmix", "optimal", "private-practice"].includes(item.id)) label.dataset.timeAnchor = "";
       label.dataset.timeLabel = item.timeLabel || String(item.timeYear);
     }
     label.append(Object.assign(document.createElement("span"), { textContent: typographUiText(item.label) }));

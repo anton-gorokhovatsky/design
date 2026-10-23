@@ -82,27 +82,3 @@ export const getTimeLayout = (item, compact) => {
     y: centerY + Math.sin(angle) * radiusY,
   };
 };
-
-// Place the five period captions against the rendered glyphs, including the
-// compact map's perspective. Prefer above; keep the museum's glow unobscured.
-export const placeTimeCaptions = (root, labels, buttons) => {
-  const field=root.getBoundingClientRect(),scale=field.width/root.clientWidth;
-  if(!scale)return;
-  root.setAttribute("data-time-captions", "");
-  let fits=true;
-  const placed=[];
-  for(const [id,label] of labels){
-    if(!label.hasAttribute('data-time-anchor'))continue;
-    const r=buttons.get(id).querySelector('.map-node__glyph').getBoundingClientRect();
-    const x=(r.left+r.width/2-field.left)/scale,y=(r.top+r.height/2-field.top)/scale;
-    const w=label.offsetWidth,h=label.offsetHeight,gap=r.height/scale/2+12;
-    const top=y-gap-h,bottom=y+gap;
-    const candidates=(id==='garage'?[bottom,top]:[top,bottom]).map(y=>({x:Math.max(8,Math.min(root.clientWidth-w-8,x-w/2)),y:Math.max(8,Math.min(root.clientHeight-h-8,y)),w,h}));
-    const rect=candidates.find(a=>!placed.some(b=>a.x<b.x+b.w+6&&a.x+a.w+6>b.x&&a.y<b.y+b.h+6&&a.y+a.h+6>b.y));
-    if(!rect||h>root.clientHeight-16){fits=false;continue;}
-    placed.push(rect);
-    label.style.setProperty('--time-caption-x',`${rect.x-label.offsetLeft}px`);
-    label.style.setProperty('--time-caption-y',`${rect.y-label.offsetTop}px`);
-  }
-  root.toggleAttribute('data-time-captions',fits);
-};

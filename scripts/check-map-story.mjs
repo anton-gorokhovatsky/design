@@ -105,28 +105,11 @@ try{
   if(process.env.PORTFOLIO_UI_ARTIFACT_DIR){mkdirSync(process.env.PORTFOLIO_UI_ARTIFACT_DIR,{recursive:true});await page.screenshot({path:resolve(process.env.PORTFOLIO_UI_ARTIFACT_DIR,`story-${width}.png`)});}
   await page.close();
  }
- // Always-visible periods must fit together, including the narrowest map.
- for (const width of [1440,390,320]) {
-  const page=await browser.newPage({viewport:{width,height:900},reducedMotion:'reduce'});
-  await page.goto(origin+'/?scene=map&view=time#map');
-  await page.evaluate(()=>document.fonts.ready);
-  await page.waitForFunction(()=>!document.querySelector('[data-map-links]').hasAttribute('data-layout-pending'));
-  const captions=await page.locator('[data-time-anchor]').evaluateAll(es=>es.map(e=>{const r=e.getBoundingClientRect();return {id:e.dataset.mapLabelId,left:r.left,top:r.top,right:r.right,bottom:r.bottom,opacity:getComputedStyle(e).opacity};}));
-  assert.equal(captions.length,5);
-  for(const [i,a] of captions.entries()){
-   assert.equal(a.opacity,'1');
-   assert.ok(a.left>=0&&a.right<=width,`${a.id} remains inside ${width}px`);
-   for(const b of captions.slice(i+1))assert.ok(a.right<=b.left||a.left>=b.right||a.bottom<=b.top||a.top>=b.bottom,`${a.id} and ${b.id} remain separate at ${width}px`);
-  }
-  await page.close();
- }
- // A short field with 200% text retains the full point descriptions without
- // stacking permanent captions or intermediate axis years over one another.
+ // Short fields retain readable endpoints and full point descriptions at 200% text.
  const enlarged=await browser.newPage({viewport:{width:320,height:568},reducedMotion:'reduce'});
  await enlarged.goto(origin+'/?qa&font=200&scene=map&view=time#map');
  await enlarged.evaluate(()=>document.fonts.ready);
  await enlarged.waitForFunction(()=>!document.querySelector('[data-map-links]').hasAttribute('data-layout-pending'));
- assert.equal(await enlarged.locator('[data-time-captions]').count(),0);
  assert.equal(await enlarged.locator('.orbital-radar i span:visible').count(),2);
  await enlarged.locator('[data-map-id="ilmix"]').focus();await enlarged.keyboard.press('Enter');
  await enlarged.locator('.point-preview:not([hidden])').waitFor();

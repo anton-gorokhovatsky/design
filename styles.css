@@ -10895,7 +10895,4 @@ html[data-reduce-motion="true"] .has-story-pane #story-pane{transition:none}
 .content-panel .work-row:has(img.work-row__preview)>.work-tags{grid-column:2;grid-row:4}
 .content-panel .work-row:has(img.work-row__preview) .work-row__domain{grid-column:2;grid-row:5}
 }
-html[data-celestial-volume] .practice-map[data-time-view] [data-time-captions] .map-node-label[data-time-anchor]{opacity:1;display:block;max-width:min(15rem,40cqw);white-space:normal;text-align:left;transform:translate(var(--time-caption-x,32px),var(--time-caption-y,-50%));font-size:var(--type-detail);font-weight:500}
-.practice-map[data-time-view] [data-time-captions] .map-node-label[data-time-anchor]::after{display:block;margin:var(--space-1) 0 0;font-weight:400}
-
-.practice-map[data-time-view]:has(.map-labels:not([data-time-captions])) .orbital-radar i:is(:nth-child(2),:nth-child(3)) span{display:none}
+@container map-viewport (max-height:20rem){.practice-map[data-time-view] .orbital-radar i:is(:nth-child(2),:nth-child(3)) span{display:none}}
