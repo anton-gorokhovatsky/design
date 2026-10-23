@@ -15,12 +15,15 @@ try{
   const page=await browser.newPage({viewport:{width,height:900},colorScheme:width===1440?'light':'dark'});
   const errors=[],requests=[];page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>requests.push(r.url()));
   await page.goto(origin+'/');
-  const entry=page.locator(width===1440?'.map-about-trigger':'.mobile-map-story');
-  await entry.waitFor({state:'visible'});
+  const entry=page.locator(width===1440?'.map-about-trigger':'.map-story-link');
+  const openStory=async()=>{if(width===390)await page.locator('[data-constellation-nav-toggle]').click();await entry.click();};
   assert.equal(requests.some(url=>url.includes('/assets/map-story/')),false,'Scenes wait for the reader');
   await page.evaluate(()=>document.fonts.ready);
   const mapGeometry=()=>page.locator('[data-floating-console]').evaluateAll(nodes=>nodes.map(e=>{const r=e.getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height};}));
+  await page.evaluate(()=>Promise.all(document.getAnimations().filter(a=>a.effect?.getTiming().iterations!==Infinity).map(a=>a.finished.catch(()=>{}))));
   const originalGeometry=await mapGeometry();
+  if(width===390)await page.locator('[data-constellation-nav-toggle]').click();
+  await entry.waitFor({state:'visible'});
   await entry.focus();await page.keyboard.press('Enter');
   const story=page.locator('#story-pane');await page.waitForSelector('#story-pane[data-ready="true"]');
   await page.waitForFunction(()=>document.activeElement?.id==='story-title');
@@ -39,17 +42,17 @@ try{
    await story.locator('h1').focus();
   }
   await page.keyboard.press('Escape');
-  await page.waitForFunction(selector=>document.activeElement?.matches(selector),width===1440?'.map-about-trigger':'.mobile-map-story');
+  await page.waitForFunction(selector=>document.activeElement?.matches(selector),width===1440?'.map-about-trigger':'[data-constellation-nav-toggle]');
   // Three complete roundtrips catch accumulated offsets from hidden panels.
   for(let round=0;round<3;round++){
-   await entry.click();await page.waitForFunction(()=>!document.querySelector('#story-pane').inert);
-   await page.locator('[data-close-story]').click();
+   await openStory();await page.waitForFunction(()=>!document.querySelector('#story-pane').inert);
+   await page.locator('#story-pane [data-close-story]').click();
    await page.waitForFunction(()=>!document.body.classList.contains('story-is-moving'));
-   await page.waitForFunction(selector=>document.activeElement?.matches(selector),width===1440?'.map-about-trigger':'.mobile-map-story');
+   await page.waitForFunction(selector=>document.activeElement?.matches(selector),width===1440?'.map-about-trigger':'[data-constellation-nav-toggle]');
    const geometry=await mapGeometry();
    geometry.forEach((box,i)=>Object.keys(box).forEach(key=>assert.ok(Math.abs(box[key]-originalGeometry[i][key])<1,`Closing restores panel ${i} ${key}: ${box[key]} vs ${originalGeometry[i][key]}`)));
   }
-  await entry.click();await page.waitForFunction(()=>!document.querySelector('#story-pane').inert);
+  await openStory();await page.waitForFunction(()=>!document.querySelector('#story-pane').inert);
   await page.waitForFunction(()=>!document.body.classList.contains('story-is-moving'));
   assert.equal(await page.locator('.story-nav,#story-motion').count(),0,'The reader has no duplicate settings bar');
   assert.equal(await story.locator('footer,#share-story').count(),0,'The reader does not duplicate the visible map or expose sharing');
@@ -84,8 +87,9 @@ try{
    await page.evaluate(async()=>{const{getTabStops}=await import('/js/preferences.js');getTabStops(document.querySelector('.map-inspector')).at(-1).focus({preventScroll:true});});
    await page.keyboard.press('Tab');assert.equal(await page.locator('#story-bridge').evaluate(e=>e.contains(document.activeElement)),true,'Tab leaves the map through the shared return control');
    assert.ok(Math.abs(await story.evaluate(e=>e.scrollTop)-scroll)<2,'Tab preserves reading position');
-   const close=await page.locator('[data-close-story]').boundingBox();await page.mouse.click(close.x+close.width/2,close.y+close.height/2);
-   await page.keyboard.press('Escape');await entry.click();
+   const close=await page.locator('#story-pane [data-close-story]').boundingBox();await page.mouse.click(close.x+close.width/2,close.y+close.height/2);
+   await page.waitForFunction(()=>document.activeElement?.matches('[data-close-inspector]'));
+   await page.keyboard.press('Escape');await openStory();
    await page.waitForFunction(y=>Math.abs(document.querySelector('#story-pane').scrollTop-y)<2,scroll);
   }else{
    assert.equal(await story.evaluate(e=>e.inert),true);await page.goBack();await page.waitForFunction(()=>!document.querySelector('#story-pane').inert);
@@ -99,7 +103,7 @@ try{
  const failedOpening=await browser.newPage({viewport:{width:390,height:844}});
  const retryErrors=[];failedOpening.on('pageerror',error=>retryErrors.push(error.message));
  let failedOpeningOnce=false;await failedOpening.route('**/assets/map-story/content.html*',route=>{if(!failedOpeningOnce){failedOpeningOnce=true;return route.fulfill({status:503,body:'Unavailable'});}return route.continue();});
- await failedOpening.goto(origin+'/');await failedOpening.locator('.mobile-map-story').click();await failedOpening.locator('[data-story-retry]').click();await failedOpening.waitForSelector('#story-pane[data-ready="true"]');
+ await failedOpening.goto(origin+'/');await failedOpening.locator('[data-constellation-nav-toggle]').click();await failedOpening.locator('.map-story-link').click();await failedOpening.locator('[data-story-retry]').click();await failedOpening.waitForSelector('#story-pane[data-ready="true"]');
  assert.deepEqual(retryErrors,[],'A failed first opening keeps the retry usable');
  assert.equal(await failedOpening.locator('body').evaluate(e=>e.classList.contains('story-is-moving')),false);
  await failedOpening.close();

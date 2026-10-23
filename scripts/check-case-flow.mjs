@@ -324,14 +324,15 @@ for(const engine of [process.argv[2]||'chromium']) {
       await page.goto(origin + '/?scene=map');
       assert.equal(await page.locator('[data-open-panel="map-making"], #map-making').count(), 0);
       assert.equal(await page.locator('#light-study').isVisible(), false);
-      const selector = width === 1440 ? '.map-about-trigger' : '.mobile-map-story';
+      const selector = width === 1440 ? '.map-about-trigger' : '.map-story-link';
+      if (width === 390) await page.locator('[data-constellation-nav-toggle]').click();
       await page.locator(selector).click();
       await page.waitForSelector('#story-pane[data-ready="true"]');
       assert.match(await page.locator('#story-pane').innerText(), /Близость передаёт родство/);
       assert.equal(await page.locator('#story-pane').evaluate(e => e.scrollWidth > e.clientWidth + 1), false);
       await page.keyboard.press('Escape');
       await page.waitForFunction(() => document.querySelector('#story-pane').inert);
-      await page.waitForFunction(selector => document.activeElement?.matches(selector), selector);
+      await page.waitForFunction(selector => document.activeElement?.matches(selector), width === 1440 ? selector : '[data-constellation-nav-toggle]');
     }
     // The remaining case study retains the same failed-load and retry contract.
     await page.route('**/js/case-content.json*', route => route.abort());

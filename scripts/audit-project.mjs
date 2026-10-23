@@ -530,6 +530,11 @@ const invalidMaterialModes = materialSurfaceTags.filter(
 );
 const dynamicMaterialSurfaces = [
   {
+    name: "story-close",
+    assignment: 'data-material-surface="story-close"',
+    mode: 'data-material-active="always"',
+  },
+  {
     name: "screen-controls",
     assignment: "createDisclosure('screen-controls', 'ЭКРАН', display)",
     mode: "panel.dataset.materialActive = 'desktop';",

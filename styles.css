@@ -9333,15 +9333,16 @@ transition: opacity 180ms var(--motion-enter), transform 240ms var(--motion-ente
 }
 }
 
-/* Inner text lists fade only where more content exists. */
+/* Text lists fade at their edges; work imagery retains its original contrast. */
 .settings-panel__body,
-.content-panel__body {
+.content-panel:not([data-view="work"]) .content-panel__body {
 mask-image: linear-gradient(to bottom, transparent, #000 var(--scroll-fade-top, 0px),
 #000 calc(100% - var(--scroll-fade-bottom, 0px)), transparent);
 -webkit-mask-image: linear-gradient(to bottom, transparent, #000 var(--scroll-fade-top, 0px),
 #000 calc(100% - var(--scroll-fade-bottom, 0px)), transparent);
-scroll-padding-block: 18px;
 }
+.settings-panel__body,
+.content-panel__body { scroll-padding-block: 18px; }
 
 .map-inspector:not(.is-case-view) .map-readout__description {
 max-height: none;
@@ -11033,7 +11034,7 @@ body.split-page{font-size:var(--type-body)}
 .has-story-pane #split-shell::before{opacity:1}
 #map-pane{position:relative;min-width:0;min-height:0;height:100%;container:map-viewport / size;overflow:clip}
 .map-surface{position:absolute;inset:0;transform:translateZ(0)}
-#story-pane{position:relative;min-width:0;min-height:0;overflow:auto;overflow-x:hidden;overflow-anchor:none;overscroll-behavior:contain;container:story-viewport / inline-size;scrollbar-gutter:stable;scroll-behavior:auto;background:var(--bg);visibility:hidden;opacity:0;line-height:var(--leading-body);scroll-padding-block:24px}
+#story-pane{--story-gutter:clamp(22px,calc(var(--pane-vw) * 4.5),40px);position:relative;min-width:0;min-height:0;overflow:auto;overflow-x:hidden;overflow-anchor:none;overscroll-behavior:contain;container:story-viewport / inline-size;scrollbar-gutter:stable;scroll-behavior:auto;background:var(--bg);visibility:hidden;opacity:0;line-height:var(--leading-body);scroll-padding-block:24px}
 .has-story-pane #story-pane{visibility:visible;opacity:1}
 .has-story-pane #map-pane,.has-story-pane #story-pane{border-radius:var(--window-radius);corner-shape:var(--corner-card-shape)}
 #story-bridge{position:relative;z-index:350;min-width:0;min-height:0;visibility:hidden}
@@ -11043,7 +11044,7 @@ body.split-page{font-size:var(--type-body)}
 #story-bridge svg{display:none}
 #story-bridge button:hover::before,#story-bridge button:focus-visible::before{opacity:.8}
 #story-bridge button:focus-visible{outline:var(--focus-width) solid var(--signal);outline-offset:var(--focus-offset)}
-#story-pane .page{padding-inline:clamp(22px,calc(var(--pane-vw) * 4.5),40px)}
+#story-pane .page{padding-inline:var(--story-gutter)}
 #story-pane .opening{padding-top:var(--space-5);margin-left:0}
 #story-pane .chapter>h2,#story-pane .reading,#story-pane .spread,#story-pane .figure--garage,#story-pane .figure--geography,#story-pane .figure--time,#story-pane .footer{margin-left:0}
 #story-pane .spread,#story-pane .gravity-spread{display:flex;flex-direction:column;align-items:stretch;gap:0}
@@ -11074,10 +11075,6 @@ html[data-reduce-motion="true"] .story-is-moving #map-pane{animation:none}
 @media(prefers-reduced-motion:reduce){.has-story-pane #story-pane{transition:none}}
 html[data-reduce-motion="true"] .has-story-pane #story-pane{transition:none}
 
-/* Visible entry in the existing mobile command row. */
-.mobile-map-story{display:none}
-@container map-viewport (max-width:900px){.mobile-map-story{display:inline-flex;align-items:center;min-height:48px;min-width:48px;padding:0;font:inherit;line-height:24px;color:inherit;text-decoration:none}.map-surface.has-command-focus .mobile-map-story{visibility:hidden}}
+/* The direct entry remains beside the desktop map. */
 .map-about-trigger .map-disclosure__chevron{display:none}
-.map-about-trigger::after,.mobile-map-story::after{content:"→";display:inline-block;margin-inline-start:.45em;text-decoration:none}
-.mobile-map-story{gap:0;font-size:var(--type-detail);line-height:24px}
-@container map-viewport (max-width:360px){.mobile-map-story::after{margin-inline-start:.2em}}
+.map-about-trigger::after{content:"→";display:inline-block;margin-inline-start:.45em;text-decoration:none}

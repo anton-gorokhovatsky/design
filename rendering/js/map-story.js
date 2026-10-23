@@ -53,16 +53,19 @@ function sync(){
   const inspector=map.querySelector('.map-inspector.is-case-view');
   inspector?.setAttribute('aria-modal',String(!(opened&&!compact.matches)));
 }
+function renderStory(html){
+  story.innerHTML='<div class="story-actions"><button type="button" class="ui-close" data-close-story data-material-surface="story-close" data-material-active="always" aria-label="Закрыть рассказ и вернуться к карте"><svg class="ui-close__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 7 17 17M17 7 7 17"/></svg></button></div>'+html;
+}
 async function prepareStory(){
   if(contentReady)return;
   if(contentLoading)return contentLoading;
-  story.innerHTML='<div class="page"><p class="story-loading" role="status">Открываю рассказ…</p></div>';
+  renderStory('<div class="page"><p class="story-loading" role="status">Открываю рассказ…</p></div>');
   contentLoading=(async()=>{
     let style=document.querySelector('[data-story-style]'),styleReady=Promise.resolve();
     if(!style){style=document.createElement('link');style.rel='stylesheet';style.href=import.meta.resolve('../assets/map-story/story.css');style.dataset.storyStyle='';styleReady=new Promise((resolve,reject)=>{style.addEventListener('load',resolve,{once:true});style.addEventListener('error',reject,{once:true});});document.head.append(style);}
     const response=await fetch(import.meta.resolve('../assets/map-story/content.html'));
     if(!response.ok)throw new Error('story-content-'+response.status);
-    const html=await response.text();await Promise.all([styleReady,import('../assets/map-story/focus.js').then(module=>{focusPlane=module.focusPlane;})]);story.innerHTML=html;contentReady=true;
+    const html=await response.text();await Promise.all([styleReady,import('../assets/map-story/focus.js').then(module=>{focusPlane=module.focusPlane;})]);renderStory(html);contentReady=true;
   })();
   try{await contentLoading;}finally{contentLoading=null;}
 }
@@ -71,7 +74,7 @@ async function loadStory(transition,content){
   if(loading)return loading;
   loading=(async()=>{await content;await transition;await import('../assets/map-story/story.js');loaded=true;story.dataset.ready='true';})();
   try{await loading;}catch(error){
-    story.innerHTML='<div class="page"><p role="alert">Рассказ не загрузился. Можно попробовать ещё раз.</p><button type="button" class="text-link" data-story-retry>Повторить</button></div>';
+    renderStory('<div class="page"><p role="alert">Рассказ не загрузился. Можно попробовать ещё раз.</p><button type="button" class="text-link" data-story-retry>Повторить</button></div>');
     throw error;
   }finally{loading=null;}
 }
@@ -147,8 +150,10 @@ async function show(value,{write=true,focus=true,animate=false}={}){
     requestAnimationFrame(()=>requestAnimationFrame(()=>{
       if(opened||revision!==showRevision)return;
       const modal=map.querySelector('.map-inspector.is-case-view.is-open');
-      const entry=[...document.querySelectorAll('.map-about-trigger,.mobile-map-story')].find(el=>el.getClientRects().length);
-      const target=modal?.querySelector('[data-close-inspector]')||(opener?.getClientRects().length?opener:entry);
+      const menuToggle=map.querySelector('[data-constellation-nav-toggle]');
+      const entry=compact.matches?menuToggle:map.querySelector('.map-about-trigger');
+      const origin=opener?.closest('[data-constellation-nav]')?menuToggle:opener;
+      const target=modal?.querySelector('[data-close-inspector]')||(origin?.getClientRects().length&&getComputedStyle(origin).visibility!=='hidden'?origin:entry);
       target?.focus({preventScroll:true});
     }));
   }
@@ -168,8 +173,8 @@ document.addEventListener('click',event=>{
   const url=new URL(link.href),point=url.searchParams.get('point');
   if(point&&url.origin===location.origin){event.preventDefault();if(compact.matches)void show(false,{write:false,focus:false});selectMapItem(point,{reveal:true,updateHistory:true});if(compact.matches){const next=new URL(location.href);next.searchParams.delete('story');history.replaceState(history.state,'',next);}mapButtons.get(point)?.focus({preventScroll:true});}
 },true);
-bridge.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();void show(false);}});
-story.addEventListener('keydown',event=>{if(event.key==='Escape'&&!event.defaultPrevented){event.stopPropagation();if(event.target.closest('.scene-target,.scene-readout'))return;event.preventDefault();void show(false);}});
+bridge.addEventListener('keydown',event=>{if(opened&&event.key==='Escape'){event.preventDefault();void show(false);}});
+story.addEventListener('keydown',event=>{if(opened&&event.key==='Escape'&&!event.defaultPrevented){event.stopPropagation();if(event.target.closest('.scene-target,.scene-readout'))return;event.preventDefault();void show(false);}});
 window.addEventListener('popstate',()=>{void show(new URL(location.href).searchParams.has('story'),{write:false});});
 compact.addEventListener('change',()=>{activeTransition?.skipTransition();document.body.classList.remove('story-is-moving','story-is-closing','story-uses-snapshot');sync();});
 new MutationObserver(sync).observe(map.querySelector('.map-inspector'),{attributes:true,attributeFilter:['class']});
