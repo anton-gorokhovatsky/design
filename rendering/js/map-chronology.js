@@ -3,15 +3,15 @@ const timeGroupSectors = {
   garage: {
     parent: 2.1,
     compactParent: 2.1,
-    children: [1.6, 1.85, 2.35, 2.6],
-    compactChildren: [1.6, 1.85, 2.35, 2.6],
+    children: [1.3, 1.55, 2.7, 2.95],
+    compactChildren: [1.3, 1.55, 2.7, 2.95],
     order: ["garage-site", "collection", "narkomfin", "garage-app"],
   },
   "private-practice": {
     parent: -0.32,
     compactParent: -0.55,
-    children: [0.02, 0.3, 0.58, 0.86, 1.14, 1.42, 1.7, 1.98, 2.26, 2.54],
-    compactChildren: [-0.08, 0.25, 0.58, 0.91, 1.24, 1.57, 1.9, 2.23, 2.56, 2.89],
+    children: [-1.4, -1.12, -.84, -.56, -.28, 0, .28, .56, .84, 1.12],
+    compactChildren: [-1.4, -1.12, -.84, -.56, -.28, 0, .28, .56, .84, 1.12],
     order: [
       "shirokostup",
       "dusty",

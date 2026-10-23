@@ -148,7 +148,7 @@ function makePractice(figure) {
     });
     positionReadout(figure,points[seeds.findIndex(seed=>seed.id===selected)],w,h);
   }
-  return {draw,resize(){if(host.clientWidth<1||host.clientHeight<1)return;w=host.clientWidth;h=host.clientHeight;plane.sphere(.13);plane.tracks(dark);plane.paint();draw(0);},theme(){plane.tracks(dark);plane.paint();},getState:()=>({time:system.time,paused,selected,failure:system.failure})};
+  return {draw,resize(){if(host.clientWidth<1||host.clientHeight<1)return;w=host.clientWidth;h=host.clientHeight;plane.resize(w*(devicePixelRatio||1));plane.sphere(.13);plane.tracks(dark);plane.paint();draw(0);},theme(){plane.tracks(dark);plane.paint();},getState:()=>({time:system.time,paused,selected,failure:system.failure})};
 }
 
 function makeGarage(figure) {
@@ -298,12 +298,12 @@ function makeMap(figure) {
     const yearSize=labelMetrics.get('year');
     const occupied=progress>.25&&yearSize?[1,.85,.64,.46].map(r=>({x:center.x-12-yearSize.w,y:center.y-height*.43*r-8-yearSize.h,w:yearSize.w,h:yearSize.h})):[];
     labels.forEach(id=>{const i=items.findIndex(item=>item.id===id),p=allPoints[i];
-      const size=labelMetrics.get(id);if(!size)return;const measure=size.w, offset=id==='private-practice'&&progress<.5?width*.13+18:id==='garage'?width*.065+18:26;
-      const candidates=[...(id==='garage'?[{x:p.x-measure/2,y:p.y+offset+14}]:[]),{x:p.x-measure/2,y:p.y-offset},{x:p.x-measure-26,y:p.y-9},{x:p.x+26,y:p.y-9},{x:p.x-measure/2,y:p.y+offset+14}];
+      const size=labelMetrics.get(id);if(!size)return;const measure=size.w, offset=id==='private-practice'&&progress<.5?width*.13+18:id==='garage'?width*.06+12:26;
+      const candidates=[{x:p.x-measure/2,y:p.y-offset},{x:p.x-measure-26,y:p.y-9},{x:p.x+26,y:p.y-9},{x:p.x-measure/2,y:p.y+offset+14}];
       let rect=null;
       for(const q of candidates){const box={x:clamp(q.x,8,width-measure-8),y:clamp(q.y-size.h/2,8,height-size.h-8),w:measure,h:size.h};
         if(occupied.some(a=>box.x<a.x+a.w+10&&box.x+box.w+10>a.x&&box.y<a.y+a.h+8&&box.y+box.h+8>a.y))continue;
-        if(allPoints.some((pt,j)=>j!==i&&(progress<.5||Number.isFinite(items[j].timeYear))&&pt.x>box.x-8&&pt.x<box.x+box.w+8&&pt.y>box.y-8&&pt.y<box.y+box.h+8))continue;
+        if(allPoints.some((pt,j)=>{if(j===i||(progress>=.5&&!Number.isFinite(items[j].timeYear)))return false;const large=items[j].id==='garage',rx=large?width*.14:8,ry=large?width*.07:8;return pt.x>box.x-rx&&pt.x<box.x+box.w+rx&&pt.y>box.y-ry&&pt.y<box.y+box.h+ry;}))continue;
         rect=box;break;}
       if(!rect)return;occupied.push(rect);const caption=labelsById.get(id);caption.style.transform=`translate(${rect.x}px,${rect.y}px)`;caption.style.opacity=1-levels[i];
 

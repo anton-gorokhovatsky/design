@@ -5551,12 +5551,7 @@ transparent 58%
 ),
 linear-gradient(90deg, transparent 49.95%, var(--line-soft) 50%, transparent 50.05%),
 linear-gradient(transparent 49.95%, var(--line-soft) 50%, transparent 50.05%),
-linear-gradient(
-180deg,
-color-mix(in srgb, #fff 34%, var(--bg)) 0,
-var(--bg) 48%,
-color-mix(in srgb, var(--ink) 2%, var(--surface)) 100%
-);
+var(--map-ground);
 }
 
 html[data-theme="dark"] .practice-map::before {
@@ -10696,7 +10691,7 @@ radial-gradient(ellipse at 49% 82%, color-mix(in srgb, var(--tone-personal) 6%, 
 radial-gradient(ellipse at 50% 106%, color-mix(in srgb, var(--ink) 3%, transparent) 0, transparent 58%),
 linear-gradient(90deg, transparent 49.95%, var(--line-soft) 50%, transparent 50.05%),
 linear-gradient(transparent 49.95%, var(--line-soft) 50%, transparent 50.05%),
-linear-gradient(180deg, color-mix(in srgb, #fff 34%, var(--bg)) 0, var(--bg) 48%, color-mix(in srgb, var(--ink) 2%, var(--surface)) 100%);
+var(--map-ground);
 }
 html[data-celestial-volume][data-theme="light"] .celestial-volume--running {
 filter: brightness(.96) saturate(.85);
@@ -10815,7 +10810,6 @@ max-width: min(13rem, calc(100% - var(--space-4)));
 .map-inspector.is-case-view[data-selected-map-id="eleven"] .eleven-study { display: block; }
 
 /* Full map story keeps a normal page address and the existing navigation. */
-#map-about > [data-map-story] { display: inline-flex; align-items: center; min-height: var(--control-target); margin: 0 7px; font-size: var(--type-detail); }
 @container map-viewport (max-width: 900px) {
 
 .control-console .constellation-nav__utility.map-story-link { min-height: var(--control-target); text-decoration: none; }
@@ -10838,12 +10832,13 @@ body.split-page{font-size:var(--type-body)}
 #map-pane{grid-area:1 / 1}
 #story-pane{grid-area:1 / 3}
 #map-pane{position:relative;min-width:0;min-height:0;height:100%;container:map-viewport / size;overflow:clip}
-.map-surface{position:absolute;inset:0;transform:translateZ(0)}
+.map-surface{position:absolute;inset:0;transform:translateZ(0);--map-ground:linear-gradient(180deg, color-mix(in srgb, #fff 34%, var(--bg)) 0, var(--bg) 48%, color-mix(in srgb, var(--ink) 2%, var(--surface)) 100%)}
+.map-surface.has-story-pane{background:transparent;--map-ground:linear-gradient(transparent,transparent)}
 #story-pane{--story-gutter:clamp(22px,calc(var(--pane-vw) * 4.5),40px);position:relative;min-width:0;min-height:0;overflow:auto;overflow-x:hidden;overflow-anchor:none;overscroll-behavior:contain;container:story-viewport / inline-size;scrollbar-gutter:stable;scroll-behavior:auto;visibility:hidden;opacity:0;line-height:var(--leading-body);scroll-padding-block:24px}
 .has-story-pane #story-pane{visibility:visible;opacity:1}
 .has-story-pane #map-pane,.has-story-pane #story-pane{border-radius:var(--window-radius);corner-shape:var(--corner-card-shape)}
 #story-bridge{grid-area:1 / 2;position:relative;z-index:350;min-width:0;min-height:0;visibility:hidden}
-.has-story-pane #story-bridge{visibility:visible;background:var(--line)}
+.has-story-pane #story-bridge{visibility:visible}
 #story-bridge button{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:var(--control-target);height:calc(var(--control-target) + var(--space-4));padding:0;border:0;border-radius:var(--space-2);color:var(--ink);background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;cursor:pointer}
 #story-bridge button::before{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:3px;height:var(--space-6);border-radius:var(--space-1);background:currentColor;opacity:.45;transition:opacity 160ms var(--ease-out)}
 #story-bridge button:hover::before,#story-bridge button:focus-visible::before{opacity:.8}

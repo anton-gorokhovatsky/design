@@ -48,7 +48,7 @@ export function createTextField(spread,copy){
   const c=source.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);c.textBaseline='alphabetic';lines=0;
   // Range measurements preserve the actual responsive line breaks, NBSP and font.
   // They run on resize/font/theme changes only, never in the animation loop.
-  for(const paragraph of copy.querySelectorAll('p')){
+  for(const paragraph of copy.querySelectorAll('h2,p')){
    const style=getComputedStyle(paragraph),node=paragraph.firstChild;if(!node||node.nodeType!==Node.TEXT_NODE)continue;
    const text=node.textContent,range=document.createRange(),rows=[];let row;
    c.font=`${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;c.fillStyle=style.color;c.fontKerning='normal';

@@ -154,7 +154,8 @@ export const practiceGroups = [
 
 export function createPracticePlane(canvas, groups = practiceGroups) {
   const doc=canvas.ownerDocument,ctx=canvas.getContext('2d');
-  const side=672,center=side/2,scale=side/2.6,tau=Math.PI*2;
+  let side=672,center=side/2,scale=side/2.6;
+  const tau=Math.PI*2;
   canvas.width=canvas.height=side;
   let angle=-16*Math.PI/180,tilt=48*Math.PI/180,dark=false;
   const project=(u,v)=>[u*Math.cos(angle)-v*Math.cos(tilt)*Math.sin(angle),u*Math.sin(angle)+v*Math.cos(tilt)*Math.cos(angle),v*Math.sin(tilt)];
@@ -171,10 +172,11 @@ export function createPracticePlane(canvas, groups = practiceGroups) {
     const c=back.getContext('2d');c.clearRect(0,0,side,side);
     for(const orbit of groups){
       c.strokeStyle=`rgba(${(dark?orbit.light:orbit.color).join(',')},.58)`;
-      c.lineWidth=2;c.beginPath();c.ellipse(center,center,orbit.radius*scale,orbit.radius*scale*Math.cos(tilt),angle,0,tau);c.stroke();
+      c.lineWidth=side/336;c.beginPath();c.ellipse(center,center,orbit.radius*scale,orbit.radius*scale*Math.cos(tilt),angle,0,tau);c.stroke();
     }
   };
   return {project,sphere:drawSphere,tracks,
+    resize:pixels=>{const next=Math.max(1,Math.ceil(pixels));if(next===side)return;side=next;center=side/2;scale=side/2.6;for(const layer of [canvas,back,sphere])layer.width=layer.height=side;},
     view:(rotation,inclination)=>{angle=rotation;tilt=inclination;tracks(dark);},
     paint:()=>{ctx.clearRect(0,0,side,side);ctx.drawImage(back,0,0);ctx.drawImage(sphere,0,0);}
   };
