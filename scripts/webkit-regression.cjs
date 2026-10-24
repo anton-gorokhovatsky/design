@@ -911,7 +911,7 @@ const analyticsConsentAudit = async (page, viewport, label) => {
     const activeStyle = document.activeElement
       ? getComputedStyle(document.activeElement)
       : null;
-    const theme = read("#settings-panel [data-theme-toggle]");
+    const theme = read("#settings-panel .preference-choices");
     const motion = read("#settings-panel [data-motion-toggle]");
     return {
       visible: Boolean(consent && !consent.hidden && consent.classList.contains("is-open")),
@@ -948,12 +948,12 @@ const analyticsConsentAudit = async (page, viewport, label) => {
       navigation: read(".constellation-nav"),
       theme,
       motion,
-      themeLabel: document.querySelector("[data-theme-panel-state]")
-        ?.textContent.trim() || "",
-      analyticsLauncherLabel: document.querySelector("[data-analytics-summary]")
+      themeLabel: document.querySelector("#settings-panel [data-theme-choice]:checked")
+        ?.value || "",
+      analyticsLauncherLabel: document.querySelector("[data-privacy-label]")
         ?.textContent.trim() || "",
       analyticsLauncherWhiteSpace: getComputedStyle(
-        document.querySelector("[data-analytics-summary]"),
+        document.querySelector("[data-privacy-label]"),
       ).whiteSpace,
       privacyRows: Array.from(document.querySelectorAll(".settings-panel__privacy > div"))
         .map((row) => row.textContent.replace(/\s+/g, " ").trim()),
@@ -1039,7 +1039,7 @@ const analyticsConsentAudit = async (page, viewport, label) => {
       authorBottom: document.querySelector(".site-header").getBoundingClientRect().bottom,
       focusSection: panel?.dataset.focusSection,
       scrollTop: body?.scrollTop,
-      themeFocused: document.activeElement?.hasAttribute("data-theme-toggle"),
+      themeFocused: document.activeElement?.hasAttribute("data-theme-choice"),
       title: panel?.querySelector("[data-settings-title]")?.innerText.trim() || "",
       screenControlsVisible: Boolean(
         panel?.querySelector("[data-settings-screen-controls]")?.getClientRects().length,
@@ -1113,9 +1113,15 @@ const analyticsConsentAudit = async (page, viewport, label) => {
     };
   });
 
+  await page.keyboard.press("Escape");
+  await page.waitForFunction(() => document.activeElement?.hasAttribute("data-constellation-nav-toggle"));
+  const settingsFocusReturned = await page.locator("[data-constellation-nav-toggle]")
+    .evaluate(element => element === document.activeElement);
+
   return {
     ...result,
     generalSettings,
+    settingsFocusReturned,
     settingsEnd,
     generalWithinViewport,
     generalVerticallyCentered,
@@ -1123,7 +1129,8 @@ const analyticsConsentAudit = async (page, viewport, label) => {
     backgroundControlsHidden,
     withinViewport,
     verticallyCentered,
-    failure: !result.visible
+    failure: !settingsFocusReturned
+      || !result.visible
       || result.inert
       || result.mode !== "settings"
       || result.focusSection !== "analytics"
@@ -1146,9 +1153,9 @@ const analyticsConsentAudit = async (page, viewport, label) => {
       || !result.theme
       || !result.motion
       || Math.abs(result.theme.width - result.motion.width) > 1
-      || result.themeLabel !== "СИСТЕМА"
-      || result.analyticsLauncherLabel !== "АНАЛИТИКА"
-      || result.analyticsLauncherWhiteSpace !== "nowrap"
+      || result.themeLabel !== "system"
+      || result.analyticsLauncherLabel !== "Данные и приватность"
+      || result.analyticsLauncherWhiteSpace !== "normal"
       || JSON.stringify(result.privacyRows) !== JSON.stringify([
         "СТАТИСТИКА Посещения, переходы и записи взаимодействий с сайтом.",
         "ПОИСК Текст запросов в Метрику не передаётся.",

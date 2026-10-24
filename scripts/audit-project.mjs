@@ -488,6 +488,10 @@ const requiredMaterialSurfaces = [
   "observation-index",
   "map-preview",
   "mobile-first-dock",
+  "mobile-map-open",
+  "mobile-map-composition",
+  "mobile-map-search",
+  "mobile-map-work",
   "inspector-identity",
   "inspector-description",
   "inspector-observation",
@@ -878,8 +882,8 @@ requireContract(
 );
 requireContract(
   indexSource.includes('data-context="ВИД"')
-    && indexSource.includes('data-context="ЭКРАН"')
-    && indexSource.includes("<span data-theme-label>СИСТЕМА</span>")
+    && indexSource.includes('data-context="НАСТРОЙКИ"')
+    && indexSource.includes('data-theme-choice="system"')
     && indexSource.includes('<span class="constellation-nav__heading" aria-hidden="true">РАЗДЕЛЫ</span>')
     && !/data-context="(?:VIEW|DISPLAY)"/.test(indexSource),
   "interface-localization",

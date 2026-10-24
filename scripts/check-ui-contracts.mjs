@@ -1192,63 +1192,45 @@ const auditBrowser = async (client, origin) => {
   }
 
   await navigate(client, `${origin}/?scene=map&qa=ui-contracts-map-controls`);
-  const displayGlyphContract = await evaluate(client, `(() => {
-    const readGlyph = (selector) => {
-      const glyph = document.querySelector(selector);
-      const before = glyph ? getComputedStyle(glyph, "::before") : null;
-      const after = glyph ? getComputedStyle(glyph, "::after") : null;
-      return glyph ? {
-        ariaHidden: glyph.getAttribute("aria-hidden"),
-        className: glyph.className,
-        width: getComputedStyle(glyph).width,
-        height: getComputedStyle(glyph).height,
-        borderRadius: getComputedStyle(glyph).borderRadius,
-        borderTopWidth: getComputedStyle(glyph).borderTopWidth,
-        beforeWidth: before?.width,
-        beforeBackground: before?.backgroundColor,
-        beforeBoxShadow: before?.boxShadow,
-        afterHeight: after?.height,
-        afterBoxShadow: after?.boxShadow,
-      } : null;
+  const preferenceContract = await evaluate(client, `(() => {
+    const readToggle = (surface, selector) => {
+      const control = document.querySelector(surface + " " + selector);
+      return {
+        name: document.getElementById(control?.getAttribute("aria-labelledby"))?.textContent.trim(),
+        pressed: control?.getAttribute("aria-pressed"),
+        state: control?.querySelector(".preference-state")?.textContent.trim(),
+      };
     };
     return {
-      motion: readGlyph(".display-control__glyph--motion"),
-      contrast: readGlyph(".display-control__glyph--contrast"),
-      analytics: readGlyph(".display-control__glyph--analytics"),
-      labels: {
-        motion: document.querySelector(".display-control [data-motion-toggle]")
-          ?.getAttribute("aria-label"),
-        contrast: document.querySelector(".display-control [data-contrast-toggle]")
-          ?.getAttribute("aria-label"),
-        analytics: document.querySelector(".display-control__analytics")
-          ?.getAttribute("aria-label"),
+      themes: [".display-control", "#settings-panel"].map(surface =>
+        Array.from(document.querySelectorAll(surface + " [data-theme-choice]")).map(choice => ({
+          value: choice.value, type: choice.type, checked: choice.checked,
+          name: choice.labels?.[0]?.textContent.trim(),
+        }))),
+      motion: [".display-control", "#settings-panel"].map(surface => readToggle(surface, "[data-motion-toggle]")),
+      contrast: [".display-control", "#settings-panel"].map(surface => readToggle(surface, "[data-contrast-toggle]")),
+      privacy: {
+        name: document.querySelector("[data-privacy-label]")?.textContent.trim(),
+        popup: document.querySelector("[data-privacy-settings]")?.getAttribute("aria-haspopup"),
+        pressed: document.querySelector("[data-privacy-settings]")?.hasAttribute("aria-pressed"),
       },
     };
   })()`);
   if (
-    !displayGlyphContract.motion?.className.includes("--motion")
-    || !displayGlyphContract.contrast?.className.includes("--contrast")
-    || !displayGlyphContract.analytics?.className.includes("--analytics")
-    || [
-      displayGlyphContract.motion,
-      displayGlyphContract.contrast,
-      displayGlyphContract.analytics,
-    ].some((glyph) => glyph?.ariaHidden !== "true" || glyph?.borderRadius === "50%")
-    || displayGlyphContract.motion.beforeWidth !== "11px"
-    || displayGlyphContract.motion.afterBoxShadow === "none"
-    || Number.parseFloat(displayGlyphContract.contrast.borderTopWidth) < 1
-    || displayGlyphContract.contrast.beforeBackground === "rgba(0, 0, 0, 0)"
-    || displayGlyphContract.analytics.beforeBoxShadow === "none"
-    || Number.parseFloat(displayGlyphContract.analytics.afterHeight) < 1
-    || displayGlyphContract.labels.motion !== "ДВИЖЕНИЕ. Меньше движения"
-    || displayGlyphContract.labels.contrast !== "КОНТРАСТ. Высокий контраст"
-    || displayGlyphContract.labels.analytics
-      !== "Аналитика и приватность: сейчас не выбрана"
+    preferenceContract.themes.some(choices => JSON.stringify(choices) !== JSON.stringify([
+      { value: "system", type: "radio", checked: true, name: "Системная" },
+      { value: "light", type: "radio", checked: false, name: "Светлая" },
+      { value: "dark", type: "radio", checked: false, name: "Тёмная" },
+    ]))
+    || preferenceContract.motion.some(control => control.name !== "Меньше движения"
+      || control.state !== (control.pressed === "true" ? "Вкл." : "Выкл."))
+    || preferenceContract.contrast.some(control => control.name !== "Высокий контраст"
+      || control.state !== (control.pressed === "true" ? "Вкл." : "Выкл."))
+    || preferenceContract.privacy.name !== "Данные и приватность"
+    || preferenceContract.privacy.popup !== "dialog"
+    || preferenceContract.privacy.pressed
   ) {
-    fail(
-      "display-controls: different screen states collapse into one circular symbol.",
-      displayGlyphContract,
-    );
+    fail("settings: choice, state and navigation semantics differ between surfaces.", preferenceContract);
   }
   const initialMapControlContract = await evaluate(client, `(() => {
     const all = document.querySelector('[data-map-filter="all"]');
@@ -3133,7 +3115,7 @@ const auditBrowser = async (client, origin) => {
         ?.innerText.replace(/\\s+/g, " ").trim(),
       screenControlsDisplay: screenControls ? getComputedStyle(screenControls).display : "",
       visibleScreenControls: Array.from(
-        screenControls?.querySelectorAll("button") || [],
+        screenControls?.querySelectorAll(".settings-panel__row") || [],
       ).filter((button) => button.getClientRects().length > 0).length,
       preferenceLabel: consent?.querySelector("[data-analytics-preference]")
         ?.innerText.trim(),
@@ -3166,10 +3148,10 @@ const auditBrowser = async (client, origin) => {
         .pointerEvents,
       displayVisibility: getComputedStyle(document.querySelector(".display-control"))
         .pointerEvents,
-      analyticsLauncherLabel: document.querySelector("[data-analytics-summary]")
+      analyticsLauncherLabel: document.querySelector("[data-privacy-label]")
         ?.textContent.trim(),
       analyticsLauncherWhiteSpace: getComputedStyle(
-        document.querySelector("[data-analytics-summary]"),
+        document.querySelector("[data-privacy-label]"),
       ).whiteSpace,
       privacyRows: Array.from(document.querySelectorAll(".settings-panel__privacy > div"))
         .map((row) => [
@@ -3244,8 +3226,8 @@ const auditBrowser = async (client, origin) => {
     || analyticsConsentContract.consoleVisibility !== "none"
     || analyticsConsentContract.dockVisibility !== "none"
     || analyticsConsentContract.displayVisibility !== "none"
-    || analyticsConsentContract.analyticsLauncherLabel !== "АНАЛИТИКА"
-    || analyticsConsentContract.analyticsLauncherWhiteSpace !== "nowrap"
+    || analyticsConsentContract.analyticsLauncherLabel !== "Данные и приватность"
+    || analyticsConsentContract.analyticsLauncherWhiteSpace !== "normal"
     || JSON.stringify(analyticsConsentContract.privacyRows) !== JSON.stringify([
       ["СТАТИСТИКА", "Посещения, переходы и записи взаимодействий с сайтом."],
       ["ПОИСК", "Текст запросов в Метрику не передаётся."],
@@ -3286,7 +3268,7 @@ const auditBrowser = async (client, origin) => {
   const neutralCloseContract = await evaluate(client, `(() => ({
     hidden: document.querySelector("[data-settings-panel]")?.hidden,
     preference: localStorage.getItem("anton-signal-analytics"),
-    launcherPressed: document.querySelector("[data-analytics-settings]")
+    launcherPressed: document.querySelector("[data-privacy-settings]")
       ?.hasAttribute("aria-pressed"),
   }))()`);
   if (
@@ -3297,7 +3279,7 @@ const auditBrowser = async (client, origin) => {
     fail("privacy: neutral close changes consent or keeps toggle semantics.", neutralCloseContract);
   }
 
-  await evaluate(client, "document.querySelector('[popovertarget=\"screen-controls\"]')?.click(); document.querySelector('[data-analytics-settings]')?.click(); true");
+  await evaluate(client, "document.querySelector('[popovertarget=\"screen-controls\"]')?.click(); document.querySelector('[data-privacy-settings]')?.click(); true");
   await delay(40);
   await client.send("Input.dispatchKeyEvent", {
     type: "rawKeyDown",
@@ -3327,7 +3309,7 @@ const auditBrowser = async (client, origin) => {
     fail("privacy: Escape does not cancel and return focus.", escapeCloseContract);
   }
 
-  await evaluate(client, "document.querySelector('[popovertarget=\"screen-controls\"]')?.click(); document.querySelector('[data-analytics-settings]')?.click(); true");
+  await evaluate(client, "document.querySelector('[popovertarget=\"screen-controls\"]')?.click(); document.querySelector('[data-privacy-settings]')?.click(); true");
   await delay(40);
 
   await evaluate(client, "document.querySelector('[data-analytics-deny]')?.click(); true");
@@ -3338,19 +3320,19 @@ const auditBrowser = async (client, origin) => {
     trackerScripts: Array.from(document.scripts).filter((script) => (
       script.src.includes("mc.yandex.ru")
     )).length,
-    summary: document.querySelector("[data-analytics-summary]")?.textContent.trim(),
+    summary: document.querySelector("[data-privacy-label]")?.textContent.trim(),
   }))()`);
   if (
     !deniedContract.hidden
     || deniedContract.preference !== "denied"
     || deniedContract.disabled !== true
     || deniedContract.trackerScripts !== 0
-    || deniedContract.summary !== "АНАЛИТИКА\u00a0—\u00a0ВЫКЛ."
+    || deniedContract.summary !== "Данные и приватность"
   ) {
     fail("privacy: declining analytics does not persist a tracker-free state.", deniedContract);
   }
 
-  await evaluate(client, "document.querySelector('[popovertarget=\"screen-controls\"]')?.click(); document.querySelector('[data-analytics-settings]')?.click(); true");
+  await evaluate(client, "document.querySelector('[popovertarget=\"screen-controls\"]')?.click(); document.querySelector('[data-privacy-settings]')?.click(); true");
   await waitForExpression(client, `(() => (
     document.activeElement?.hasAttribute('data-analytics-allow')
     || document.activeElement?.hasAttribute('data-analytics-deny')
@@ -3382,7 +3364,7 @@ const auditBrowser = async (client, origin) => {
       document.querySelector(".settings-panel__analytics-marker"),
       "::after",
     ).width,
-    launcherPressed: document.querySelector("[data-analytics-settings]")
+    launcherPressed: document.querySelector("[data-privacy-settings]")
       ?.hasAttribute("aria-pressed"),
   }))()`);
   if (
@@ -3440,7 +3422,7 @@ const auditBrowser = async (client, origin) => {
       } : null;
     };
     const dialog = read('#settings-panel');
-    const theme = read('#settings-panel [data-theme-toggle]');
+    const theme = read('#settings-panel .preference-choices');
     const motion = read('#settings-panel [data-motion-toggle]');
     const activeStyle = document.activeElement
       ? getComputedStyle(document.activeElement)
@@ -3461,7 +3443,7 @@ const auditBrowser = async (client, origin) => {
       nav: read('.constellation-nav'),
       theme,
       motion,
-      themeLabel: document.querySelector('[data-theme-panel-state]')?.textContent.trim(),
+      themeLabel: document.querySelector('#settings-panel [data-theme-choice]:checked')?.value,
       themeColor: document.querySelector('meta[name="theme-color"]')?.content,
       activeInside: document.querySelector('#settings-panel')
         ?.contains(document.activeElement),
@@ -3507,7 +3489,7 @@ const auditBrowser = async (client, origin) => {
       mobileShortSettingsContract.theme.width
       - mobileShortSettingsContract.motion.width
     ) > 1
-    || mobileShortSettingsContract.themeLabel !== "СИСТЕМА"
+    || mobileShortSettingsContract.themeLabel !== "system"
     || mobileShortSettingsContract.themeColor !== "#11120f"
     || !mobileShortSettingsContract.activeInside
     || mobileShortSettingsContract.pointerModality !== "pointer"
@@ -3579,6 +3561,7 @@ const auditBrowser = async (client, origin) => {
       commandVisible: visible('.command-dock'),
       dockVisible: visible('.system-dock'),
       navVisible: visible('[data-constellation-nav-toggle]'),
+      navFocused: document.activeElement?.hasAttribute('data-constellation-nav-toggle'),
       mapNodesOpacity: Number(getComputedStyle(document.querySelector('.map-nodes')).opacity),
     };
   })()`);
@@ -3587,6 +3570,7 @@ const auditBrowser = async (client, origin) => {
     || !mobileShortCloseContract.commandVisible
     || !mobileShortCloseContract.dockVisible
     || !mobileShortCloseContract.navVisible
+    || !mobileShortCloseContract.navFocused
     || mobileShortCloseContract.mapNodesOpacity < 0.99
   ) {
     fail(
@@ -3619,8 +3603,8 @@ const auditBrowser = async (client, origin) => {
     queuedInit: Array.isArray(window.ym?.a) && window.ym.a.some((entry) => (
       entry?.[0] === 111107350 && entry?.[1] === "init"
     )),
-    summary: document.querySelector("[data-analytics-summary]")?.textContent.trim(),
-    launcherPressed: document.querySelector("[data-analytics-settings]")
+    summary: document.querySelector("[data-privacy-label]")?.textContent.trim(),
+    launcherPressed: document.querySelector("[data-privacy-settings]")
       ?.hasAttribute("aria-pressed"),
   }))()`);
   const analyticsRequestsAfterAllow = observedNetworkRequests
@@ -3632,7 +3616,7 @@ const auditBrowser = async (client, origin) => {
     || allowedContract.disabled !== false
     || allowedContract.trackerScripts !== 1
     || !allowedContract.queuedInit
-    || allowedContract.summary !== "АНАЛИТИКА\u00a0—\u00a0ВКЛ."
+    || allowedContract.summary !== "Данные и приватность"
     || allowedContract.launcherPressed
     || analyticsRequestsAfterAllow.length === 0
   ) {
@@ -3642,27 +3626,20 @@ const auditBrowser = async (client, origin) => {
     });
   }
 
-  await evaluate(client, "document.querySelector('[popovertarget=\"screen-controls\"]')?.click(); document.querySelector('[data-analytics-settings]')?.click(); true");
+  await evaluate(client, "document.querySelector('[popovertarget=\"screen-controls\"]')?.click(); document.querySelector('[data-privacy-settings]')?.click(); true");
   await waitForExpression(client, `(() => (
     document.activeElement?.hasAttribute('data-analytics-deny')
   ))()`);
   await waitForExpression(client, `(() => {
     const marker = document.querySelector(".settings-panel__analytics-marker");
     const status = document.querySelector("[data-analytics-preference]");
-    const launcher = document.querySelector(".display-control__analytics");
-    const launcherMarker = launcher?.firstElementChild;
     const signal = marker ? getComputedStyle(marker).backgroundColor : "";
-    const muted = getComputedStyle(document.querySelector(".display-control__presence")).color;
     return signal && signal !== "rgba(0, 0, 0, 0)"
-      && getComputedStyle(status).color === signal
-      && getComputedStyle(launcher).color === muted
-      && getComputedStyle(launcher).fontWeight === "400"
-      && getComputedStyle(launcherMarker).color === muted;
+      && getComputedStyle(status).color === signal;
   })()`, { timeout: 1200, interval: 40 });
   const allowedPanelContract = await evaluate(client, `(() => {
     const marker = document.querySelector(".settings-panel__analytics-marker");
-    const launcher = document.querySelector(".display-control__analytics");
-    const launcherMarker = launcher?.firstElementChild;
+    const launcher = document.querySelector("[data-privacy-settings]");
     return {
       preferenceLabel: document.querySelector("[data-analytics-preference]")
         ?.innerText.trim(),
@@ -3676,17 +3653,9 @@ const auditBrowser = async (client, origin) => {
       statusColor: getComputedStyle(
         document.querySelector("[data-analytics-preference]"),
       ).color,
-      launcherColor: launcher ? getComputedStyle(launcher).color : "",
-      launcherWeight: launcher ? getComputedStyle(launcher).fontWeight : "",
-      mutedColor: getComputedStyle(document.querySelector(".display-control__presence")).color,
-      launcherMarkerColor: launcherMarker
-        ? getComputedStyle(launcherMarker).color
-        : "",
-      launcherMarkerSize: launcherMarker
-        ? getComputedStyle(launcherMarker).width
-          + " × "
-          + getComputedStyle(launcherMarker).height
-        : "",
+      launcherName: launcher?.querySelector("[data-privacy-label]")?.textContent.trim(),
+      launcherPopup: launcher?.getAttribute("aria-haspopup"),
+      launcherPressed: launcher?.hasAttribute("aria-pressed"),
     };
   })()`);
   if (
@@ -3697,11 +3666,9 @@ const auditBrowser = async (client, origin) => {
       !== JSON.stringify(["ВЫКЛЮЧИТЬ АНАЛИТИКУ"])
     || allowedPanelContract.markerBackground === "rgba(0, 0, 0, 0)"
     || allowedPanelContract.statusColor !== allowedPanelContract.markerBackground
-    || allowedPanelContract.launcherColor !== allowedPanelContract.mutedColor
-    || allowedPanelContract.launcherWeight !== "400"
-    || allowedPanelContract.launcherMarkerColor
-      !== allowedPanelContract.mutedColor
-    || allowedPanelContract.launcherMarkerSize !== "14px × 12px"
+    || allowedPanelContract.launcherName !== "Данные и приватность"
+    || allowedPanelContract.launcherPopup !== "dialog"
+    || allowedPanelContract.launcherPressed
   ) {
     fail("privacy: consent status must stay explicit and its map launcher quiet.", {
       ...allowedPanelContract,

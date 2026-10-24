@@ -133,7 +133,7 @@ try {
       await page.locator('[data-open-settings]:visible').first().click();
       await auditScroll(page, '.settings-panel__body', `settings-${name}`);
       await page.emulateMedia({ reducedMotion: 'no-preference' });
-      for (const [selector, cycles] of [['[data-theme-toggle]', 3], ['[data-motion-toggle]', 2], ['[data-contrast-toggle]', 2], ['[data-whoop-toggle]', 2]]) {
+      for (const [selector, cycles] of [['[data-theme-choice=light]', 1], ['[data-theme-choice=dark]', 1], ['[data-theme-choice=system]', 1], ['[data-motion-toggle]', 2], ['[data-contrast-toggle]', 2], ['[data-whoop-toggle]', 2]]) {
         const button = page.locator('[data-settings-panel] ' + selector);
         for (let i = 0; i < cycles; i++) {
           await button.click();
@@ -155,8 +155,7 @@ try {
     }));
     assert.equal(contacts.length, 2);
     assert.ok(contacts.every(r => r.height >= 32), JSON.stringify(contacts));
-    const more = page.locator('.content-panel__more');
-    const last = await more.isVisible() ? more : page.locator('.contact-resume a').last();
+    const last = page.locator('.contact-resume a').last();
     await last.focus();
     await page.keyboard.press('Tab');
     assert.equal(await page.evaluate(() => document.hasFocus()

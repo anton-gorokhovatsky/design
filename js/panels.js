@@ -120,32 +120,6 @@ const panelTitle = document.querySelector("[data-panel-title]");
 const panelIndex = document.querySelector("[data-panel-index]");
 const contentPanelBody = document.querySelector(".content-panel__body");
 const contentPanelHeader = document.querySelector(".content-panel__header");
-const panelMore = document.querySelector(".content-panel__more");
-const syncPanelMore = () => {
-  const overflow = contentPanelBody.scrollHeight - contentPanelBody.clientHeight;
-  panelMore.hidden = overflow <= (panelMore.hidden ? 0 : panelMore.offsetHeight + 8) + 1;
-  if (panelMore.hidden) {
-    if (document.activeElement === panelMore) contentPanelBody.focus({ preventScroll: true });
-    return;
-  }
-  const end = contentPanelBody.scrollTop + contentPanelBody.clientHeight >= contentPanelBody.scrollHeight - 2;
-  panelMore.dataset.direction = end ? "up" : "down";
-  panelMore.firstElementChild.textContent = typographUiText(end ? "К началу" : contentPanel.dataset.view === "work" ? "Ещё работы" : "Дальше");
-};
-let moreFrame = 0;
-const schedulePanelMore = () => {
-  if (moreFrame) return;
-  moreFrame = requestAnimationFrame(() => { moreFrame = 0; syncPanelMore(); });
-};
-const moreResize = new ResizeObserver(schedulePanelMore);
-moreResize.observe(contentPanelBody);
-moreResize.observe(document.querySelector(".work-section"));
-contentPanelBody.addEventListener("scroll", schedulePanelMore, { passive: true });
-panelMore.addEventListener("click", () => contentPanelBody.scrollTo({
-  top: panelMore.dataset.direction === "up" ? 0
-    : contentPanelBody.scrollTop + contentPanelBody.clientHeight * .8,
-  behavior: reducedMotion.matches ? "auto" : "smooth",
-}));
 const placeContentFrame = () => {
   const gap = parseFloat(getComputedStyle(contentPanelHeader).gap) || 12;
   const top = Math.ceil(contentPanelHeader.offsetTop + contentPanelHeader.offsetHeight + gap);
@@ -366,7 +340,6 @@ const openContentPanel = (
   clearMapSelection();
   setPanelOpen(true);
   placeContentFrame();
-  syncPanelMore();
   contentPanelBody?.scrollTo({ top: position?.scrollTop || 0, behavior: "auto" });
 
   if (updateHistory) {
@@ -389,7 +362,6 @@ const openContentPanel = (
   const restorePanelEntry = () => window.requestAnimationFrame(() => {
     if (activePanelView !== view) return;
     placeContentFrame();
-    syncPanelMore();
     contentPanelBody?.scrollTo({ top: position?.scrollTop || 0, behavior: "auto" });
     if (document.activeElement?.closest("[data-command-form], [data-command-results]")) return;
     const sourceRow = position?.pointId && contentPanelBody?.querySelector(
@@ -1026,7 +998,14 @@ const renderCommandResults = (query = "") => {
     return;
   }
 
-  currentCommandResults = getCommandResults(query);
+  const results = getCommandResults(query);
+  const grouped = new Map();
+  results.forEach(result => {
+    const group = result.type === "node" ? "Точки карты" : "Разделы";
+    if (!grouped.has(group)) grouped.set(group, []);
+    grouped.get(group).push(result);
+  });
+  currentCommandResults = [...grouped.values()].flat();
   activeCommandIndex = -1;
   commandInput?.removeAttribute("aria-activedescendant");
   commandResults.replaceChildren();
@@ -1039,11 +1018,25 @@ const renderCommandResults = (query = "") => {
     return;
   }
 
+  const resultGroups = new Map();
+  if (grouped.size > 1) {
+    [...grouped.keys()].forEach((name, index) => {
+      const group = document.createElement("div");
+      const heading = document.createElement("div");
+      heading.id = `command-group-${index}`;
+      heading.className = "command-results__heading";
+      heading.textContent = name;
+      group.setAttribute("role", "group");
+      group.setAttribute("aria-labelledby", heading.id);
+      group.append(heading);
+      commandResults.append(group);
+      resultGroups.set(name, group);
+    });
+  }
   currentCommandResults.forEach((result) => {
     const button = document.createElement("button");
     const title = document.createElement("span");
     const meta = document.createElement("span");
-    const mark = document.createElement("span");
 
     button.type = "button";
     button.className = "command-result";
@@ -1056,17 +1049,9 @@ const renderCommandResults = (query = "") => {
 
     title.textContent = typographUiText(result.title);
     meta.textContent = typographUiText(result.meta);
-    mark.className = "command-result__mark";
-    mark.classList.add(
-      result.type === "node"
-        ? "command-result__mark--node"
-        : "command-result__mark--panel",
-    );
-    mark.textContent = "";
-    mark.setAttribute("aria-hidden", "true");
-
-    button.append(title, meta, mark);
-    commandResults.append(button);
+    button.append(title, meta);
+    const group = result.type === "node" ? "Точки карты" : "Разделы";
+    (resultGroups.get(group) || commandResults).append(button);
   });
 
   setActiveCommandResult(0);

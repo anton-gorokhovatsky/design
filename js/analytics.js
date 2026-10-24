@@ -12,8 +12,6 @@ const settingsClose = document.querySelector("[data-close-settings]");
 const settingsOpeners = Array.from(document.querySelectorAll("[data-open-settings]"));
 const analyticsAllow = document.querySelector("[data-analytics-allow]");
 const analyticsDeny = document.querySelector("[data-analytics-deny]");
-const analyticsSettings = Array.from(document.querySelectorAll("[data-analytics-settings]"));
-const analyticsSummaries = Array.from(document.querySelectorAll("[data-analytics-summary]"));
 const analyticsPreferenceLabels = Array.from(
   document.querySelectorAll("[data-analytics-preference]"),
 );
@@ -86,25 +84,7 @@ const syncAnalyticsPreferenceUi = () => {
   const stateLabel = state === "allowed"
     ? "АНАЛИТИКА ВКЛЮЧЕНА"
     : state === "denied" ? "АНАЛИТИКА ВЫКЛЮЧЕНА" : "РЕШЕНИЕ НЕ ПРИНЯТО";
-  const summaryLabel = state === "allowed"
-    ? "АНАЛИТИКА\u00a0—\u00a0ВКЛ."
-    : state === "denied" ? "АНАЛИТИКА\u00a0—\u00a0ВЫКЛ." : "АНАЛИТИКА";
-  const accessibleState = state === "allowed"
-    ? "разрешена"
-    : state === "denied" ? "выключена" : "не выбрана";
-
   root.dataset.analytics = analyticsPreference || "unset";
-  analyticsSettings.forEach((button) => {
-    button.removeAttribute("aria-pressed");
-    button.dataset.analyticsState = state;
-    button.setAttribute(
-      "aria-label",
-      `Аналитика и приватность: сейчас ${accessibleState}`,
-    );
-  });
-  analyticsSummaries.forEach((summary) => {
-    summary.textContent = summaryLabel;
-  });
   analyticsPreferenceLabels.forEach((label) => {
     label.textContent = stateLabel;
   });
@@ -148,6 +128,13 @@ const openSettingsPanel = ({
     : activeElement instanceof HTMLElement && !settingsPanel.contains(activeElement)
       ? activeElement
       : lastSettingsTrigger;
+  const sourceNavigation = lastSettingsTrigger?.closest("[data-constellation-nav]");
+  const navigationToggle = sourceNavigation?.querySelector("[data-constellation-nav-toggle]");
+  if (navigationToggle?.getClientRects().length
+      && getComputedStyle(navigationToggle).visibility === "visible") {
+    // The compact menu closes on selection. Return to its visible opener.
+    lastSettingsTrigger = navigationToggle;
+  }
   const sourcePopover = lastSettingsTrigger?.closest("[popover]");
   if (sourcePopover) {
     // The disclosure closes when the dialog opens; return to its visible trigger.
@@ -174,7 +161,7 @@ const openSettingsPanel = ({
         motion: "[data-motion-toggle]",
         contrast: "[data-contrast-toggle]",
         whoop: "[data-whoop-toggle]",
-      }[section] || "[data-theme-toggle]") || settingsClose;
+      }[section] || "[data-theme-choice]:checked") || settingsClose;
 
     if (body) body.scrollTop = 0;
     if (section !== "settings") {

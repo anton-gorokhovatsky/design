@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { copyFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { chromium, webkit } from "playwright";
 import { mapItems } from "../js/map-data.js";
@@ -29,6 +29,41 @@ const inspect = () => {
     collisions, outside: frames.filter(r => r.left < -.5 || r.top < -.5 || r.right > innerWidth + .5 || r.bottom > innerHeight + .5) };
 };
 try {
+  // Crossing ordinary map points must not flash the unrelated scene.
+  {
+    const page = await browser.newPage({ viewport: { width: 1512, height: 862 }, reducedMotion: "no-preference",
+      recordVideo: { dir: `${directory}/video`, size: { width: 1512, height: 862 } } });
+    page.on("pageerror", error => errors.push(error.message));
+    await page.goto(origin + '/?scene=map');
+    await page.evaluate(() => document.fonts.ready);
+    await page.waitForFunction(() => document.documentElement.dataset.mapControlsReady
+      && !document.querySelector('[data-map-links][data-layout-pending]'));
+    await page.mouse.move(0, 0);
+    const baseline = await page.locator('.map-space-label').evaluateAll(labels => labels.map(label => ({ id: label.dataset.mapLabelId, transform: getComputedStyle(label).transform })));
+    const labelIds = baseline.map(label => label.id);
+    assert.ok(labelIds.length > 0);
+    for (const id of ['snow', 'running', 'principle-data-intuition', 'snow']) {
+      await page.locator(`[data-map-id="${id}"]`).hover();
+      const frames = await page.evaluate(async ids => {
+        const frames = [];
+        for (let index = 0; index < 24; index++) {
+          await new Promise(requestAnimationFrame);
+          frames.push({ labels: ids.map(id => Number(getComputedStyle(document.querySelector(`[data-map-label-id="${id}"]`)).opacity)),
+            transforms: ids.map(id => getComputedStyle(document.querySelector(`[data-map-label-id="${id}"]`)).transform),
+            object: Number(getComputedStyle(document.querySelector('[data-map-id="ilmix"]')).opacity) });
+        }
+        return frames;
+      }, labelIds);
+      assert.ok(frames.every(frame => frame.labels.every(opacity => opacity > .99)), `${id}: hovering a point keeps unrelated labels visible`);
+      assert.ok(frames.every(frame => frame.object > .99), `${id}: hovering a point does not dim unrelated objects`);
+      assert.ok(frames.every(frame => frame.transforms.every((transform, index) => transform === baseline[index].transform)),
+        `${id}: a persistent label keeps its placement on hover`);
+    }
+    await page.screenshot({ path: `${directory}/${engine}-stable-map-hover.png` });
+    await page.close();
+    copyFileSync(await page.video().path(), `${directory}/${engine}-stable-map-hover.webm`);
+    console.log(`PASS ${engine}: ordinary hover keeps the surrounding map stable across 96 frames.`);
+  }
   for (const [width, height] of [[1440, 900], [1024, 768], [720, 450]]) for (const theme of ["light", "dark"]) {
     const page = await browser.newPage({ viewport: { width, height }, colorScheme: theme, reducedMotion: "reduce" });
     page.on("pageerror", error => errors.push(error.message));

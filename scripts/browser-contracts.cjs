@@ -506,7 +506,7 @@ const readMobileSearchFocusedExpression = `(() => {
     focused: document.activeElement === input,
     bodyHasFocus: document.body.classList.contains("has-command-focus"),
     expanded: input?.getAttribute("aria-expanded"),
-    count: results?.children.length || 0,
+    count: results?.querySelectorAll(".command-result").length || 0,
     dock: dockBounds,
     results: resultsBounds,
     geometryFits: withinViewport(dockBounds)
@@ -632,11 +632,18 @@ const readMobileContactResumeExpression = `(() => {
   const links = Array.from(container?.querySelectorAll("a") || []);
   const bounds = container?.getBoundingClientRect();
   const textLines = (element) => {
-    const range = document.createRange();
-    range.selectNodeContents(element);
-    const rects = Array.from(range.getClientRects())
-      .filter((rect) => rect.width > 1 && rect.height > 1);
-    return new Set(rects.map((rect) => Math.round(rect.top))).size;
+    // Count text baselines; the decorative external arrow has its own box.
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+    const tops = new Set();
+    while (walker.nextNode()) {
+      if (!walker.currentNode.textContent.trim()) continue;
+      const range = document.createRange();
+      range.selectNodeContents(walker.currentNode);
+      for (const rect of range.getClientRects()) {
+        if (rect.width > 1 && rect.height > 1) tops.add(Math.round(rect.top));
+      }
+    }
+    return tops.size;
   };
   return {
     visible: Boolean(

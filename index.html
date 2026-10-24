@@ -119,7 +119,7 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=4e817ad3e067">
+    <link rel="stylesheet" href="styles.css?v=3edc02bcbec6">
     <style>
       .map-evidence [data-map-evidence-role-label]{font-family:var(--font-author);font-size:.6rem;font-weight:400;letter-spacing:0}
     </style>
@@ -127,19 +127,19 @@
     <script type="importmap" data-runtime-import-map>
       {
         "imports": {
-          "./js/preferences.js": "./js/preferences.js?v=e1339eed1d3a",
+          "./js/preferences.js": "./js/preferences.js?v=609a84bec415",
           "./js/pane-viewport.js": "./js/pane-viewport.js?v=077a2aba65b6",
           "./js/map-story.js": "./js/map-story.js?v=883f8f253339",
-          "./js/whoop-day.js": "./js/whoop-day.js?v=cca4864e7168",
+          "./js/whoop-day.js": "./js/whoop-day.js?v=cc24b65007e4",
           "./js/whoop-aura.js": "./js/whoop-aura.js?v=d276af4806f2",
           "./js/presence.js": "./js/presence.js?v=f9321316d550",
           "./js/atlas-motion.js": "./js/atlas-motion.js?v=776a659178f0",
-          "./js/analytics.js": "./js/analytics.js?v=49d8fddaf4ae",
+          "./js/analytics.js": "./js/analytics.js?v=554d4ca3e756",
           "./js/cipher-field.js": "./js/cipher-field.js?v=646034d9be18",
           "./js/signal-field.js": "./js/signal-field.js?v=3302da30d65e",
           "./js/map-data.js": "./js/map-data.js?v=e904209d84b5",
           "./js/case-content.js": "./js/case-content.js?v=ac80335d30cb",
-          "./js/observation-route.js": "./js/observation-route.js?v=dde555b56028",
+          "./js/observation-route.js": "./js/observation-route.js?v=9330c420ad85",
           "./js/personal-media.js": "./js/personal-media.js?v=ee51495df325",
           "./js/sphere-surfaces.js": "./js/sphere-surfaces.js?v=019656696ae9",
           "./js/map-media.js": "./js/map-media.js?v=94007ecfc3fc",
@@ -148,7 +148,7 @@
           "./js/celestial-bodies.js": "./js/celestial-bodies.js?v=bf4cd5dacbf3",
           "./js/map-controls.js": "./js/map-controls.js?v=e40ca9bf7279",
           "./js/viewport-ui.js": "./js/viewport-ui.js?v=e8cb2bba3c7d",
-          "./js/panels.js": "./js/panels.js?v=4d530c02be53",
+          "./js/panels.js": "./js/panels.js?v=1a6a0262bb64",
           "./js/case-view.js": "./js/case-view.js?v=8fc63b957f9c",
           "./js/favicon.js": "./js/favicon.js?v=ef61cd158b18",
           "./js/work-tags.js": "./js/work-tags.js?v=fcc7c42f8c58",
@@ -173,16 +173,16 @@
     <!-- runtime-import-map:end -->
     <!-- Native modules keep their dependencies explicit; see js/README.md. -->
     <script type="module" src="js/case-content.js?v=ac80335d30cb"></script>
-    <script type="module" src="js/preferences.js?v=e1339eed1d3a"></script>
-    <script type="module" src="js/whoop-day.js?v=cca4864e7168"></script>
+    <script type="module" src="js/preferences.js?v=609a84bec415"></script>
+    <script type="module" src="js/whoop-day.js?v=cc24b65007e4"></script>
     <script type="module" src="js/whoop-aura.js?v=d276af4806f2"></script>
     <script type="module" src="js/atlas-motion.js?v=776a659178f0"></script>
     <script type="module" src="js/presence.js?v=f9321316d550"></script>
-    <script type="module" src="js/analytics.js?v=49d8fddaf4ae"></script>
+    <script type="module" src="js/analytics.js?v=554d4ca3e756"></script>
     <script type="module" src="js/cipher-field.js?v=646034d9be18"></script>
     <script type="module" src="js/signal-field.js?v=3302da30d65e"></script>
     <script type="module" src="js/map-data.js?v=e904209d84b5"></script>
-    <script type="module" src="js/observation-route.js?v=dde555b56028"></script>
+    <script type="module" src="js/observation-route.js?v=9330c420ad85"></script>
     <script type="module" src="js/personal-media.js?v=ee51495df325"></script>
     <script type="module" src="js/sphere-surfaces.js?v=019656696ae9"></script>
     <script type="module" src="js/map-media.js?v=94007ecfc3fc"></script>
@@ -191,7 +191,7 @@
     <script type="module" src="js/celestial-bodies.js?v=bf4cd5dacbf3"></script>
     <script type="module" src="js/map-controls.js?v=e40ca9bf7279"></script>
     <script type="module" src="js/viewport-ui.js?v=e8cb2bba3c7d"></script>
-    <script type="module" src="js/panels.js?v=4d530c02be53"></script>
+    <script type="module" src="js/panels.js?v=1a6a0262bb64"></script>
     <script type="module" src="js/case-view.js?v=8fc63b957f9c"></script>
     <script type="module" src="js/favicon.js?v=ef61cd158b18"></script>
     <script type="module" src="js/work-tags.js?v=fcc7c42f8c58"></script>
@@ -838,22 +838,22 @@
                   aria-haspopup="dialog"
                   aria-controls="settings-panel"
                 >
-                  <span
-                    class="constellation-nav__utility-mark constellation-nav__utility-mark--settings"
-                    aria-hidden="true"
-                  ></span>
+                  <svg class="constellation-nav__utility-mark constellation-nav__utility-mark--settings" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h6m6 0h6M3 17h10m6 0h2"/><circle cx="12" cy="7" r="3"/><circle cx="16" cy="17" r="3"/></svg>
                   <span>НАСТРОЙКИ САЙТА</span>
                 </button>
-                <a class="constellation-nav__utility map-story-link" data-nav-utility href="?story=1"><span>О КАРТЕ</span></a>
+                <a class="constellation-nav__utility map-story-link" data-nav-utility href="?story=1">
+                  <svg class="constellation-nav__utility-mark constellation-nav__utility-mark--about" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 11v6M12 7v1"/></svg>
+                  <span>О КАРТЕ</span>
+                </a>
               </div>
             </div>
           </nav>
 
           <div class="mobile-first-dock mobile-index-links" data-material-surface="mobile-first-dock" data-material-active="none">
             <div class="mobile-first-tools" role="group" aria-label="Инструменты карты">
-              <button class="focused-map-open" type="button" data-focused-map-open>Вся карта</button>
-              <button class="mobile-first-composition" type="button" aria-expanded="false" aria-controls="mobile-map-composition" data-mobile-composition>Состав карты</button>
-              <button class="spatial-search" type="button" data-spatial-search aria-expanded="false" aria-controls="command-results">Найти</button>
+              <button class="focused-map-open mobile-map-action" type="button" data-focused-map-open data-material-surface="mobile-map-open" data-material-active="mobile">Вся карта</button>
+              <button class="mobile-first-composition mobile-map-action" type="button" aria-expanded="false" aria-controls="mobile-map-composition" data-mobile-composition data-material-surface="mobile-map-composition" data-material-active="mobile">Состав карты</button>
+              <button class="spatial-search mobile-map-action" type="button" data-spatial-search aria-expanded="false" aria-controls="command-results" data-material-surface="mobile-map-search" data-material-active="mobile">Индекс</button>
           <form
             class="command-dock"
             data-command-form
@@ -883,8 +883,8 @@
           </form>
             </div>
             <div class="mobile-first-paths" role="group" aria-label="Работы">
-              <a class="mobile-first-cases mobile-entry" href="#work" data-open-panel="work">
-                <span class="mobile-entry__heading">Работы</span>
+              <a class="mobile-first-cases mobile-entry mobile-map-action" href="#work" data-open-panel="work" data-material-surface="mobile-map-work" data-material-active="mobile">
+                Работы
               </a>
             </div>
 
@@ -1004,7 +1004,7 @@
             </div>
           <a id="map-about-trigger" class="map-disclosure map-about-trigger" href="?story=1" aria-controls="story-pane" aria-expanded="false"><span>О КАРТЕ</span></a>
           </nav>
-          <div class="display-control" data-floating-console="display" data-context="ЭКРАН">
+          <div class="display-control" data-floating-console="display" data-context="НАСТРОЙКИ">
             <div class="map-screen-top">
             <div class="map-meta">
               <h1
@@ -1019,64 +1019,16 @@
                 <span class="display-control__value">МОСКВА <span data-clock>--:--</span></span>
               </p>
             </div>
-<button type="button" id="screen-controls-trigger" class="map-disclosure" popovertarget="screen-controls" aria-controls="screen-controls" aria-expanded="false"><span>ЭКРАН</span><svg class="map-disclosure__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg></button>
+<button type="button" id="screen-controls-trigger" class="map-disclosure" popovertarget="screen-controls" aria-controls="screen-controls" aria-expanded="false"><span>НАСТРОЙКИ</span><svg class="map-disclosure__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg></button>
             </div>
             <p class="display-control__presence" data-presence hidden>Сейчас на&nbsp;сайте <span class="presence-total"><span data-presence-count>—</span><span data-presence-unit></span></span></p>
-<div id="screen-controls" popover="auto" class="map-popover" data-material-surface="screen-controls" data-material-active="desktop" role="region" aria-labelledby="screen-controls-title"><div class="map-popover__header"><h2 id="screen-controls-title">ЭКРАН</h2><button class="ui-close map-popover__close" type="button" aria-label="Закрыть" popovertarget="screen-controls" popovertargetaction="hide"><svg class="ui-close__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 7 17 17M17 7 7 17"/></svg></button></div>
-            <button
-              class="theme-toggle"
-              type="button"
-              data-theme-toggle
-              aria-label="Режим темы: системный"
-            >
-              <span data-theme-label>СИСТЕМА</span>
-            </button>
+<div id="screen-controls" popover="auto" class="map-popover" data-material-surface="screen-controls" data-material-active="desktop" role="region" aria-labelledby="screen-controls-title"><div class="map-popover__header"><h2 id="screen-controls-title">НАСТРОЙКИ</h2><button class="ui-close map-popover__close" type="button" aria-label="Закрыть" popovertarget="screen-controls" popovertargetaction="hide"><svg class="ui-close__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 7 17 17M17 7 7 17"/></svg></button></div>
+            <div class="preference-theme"><span class="preference-heading">Тема</span><div class="preference-choices" role="group" aria-label="Тема"><label class="preference-choice"><input type="radio" name="quick-theme" data-theme-choice="system" value="system" checked><span>Системная</span></label><label class="preference-choice"><input type="radio" name="quick-theme" data-theme-choice="light" value="light"><span>Светлая</span></label><label class="preference-choice"><input type="radio" name="quick-theme" data-theme-choice="dark" value="dark"><span>Тёмная</span></label></div></div>
             <div class="display-control__service">
-              <div
-                class="display-control__accessibility"
-                role="group"
-                aria-label="Настройки цифровой доступности"
-              >
-                <span class="visually-hidden">ДОСТУПНОСТЬ</span>
-                <button
-                  type="button"
-                  data-motion-toggle
-                  aria-pressed="false"
-                >
-                  <span
-                    class="display-control__glyph display-control__glyph--motion"
-                    aria-hidden="true"
-                  ></span>
-                  <span class="display-control__label">ДВИЖЕНИЕ <svg class="display-control__modifier" viewBox="0 0 12 12" aria-hidden="true"><path d="M1 6h10"/></svg></span>
-                </button>
-                <button
-                  type="button"
-                  data-contrast-toggle
-                  aria-pressed="false"
-                >
-                  <span
-                    class="display-control__glyph display-control__glyph--contrast"
-                    aria-hidden="true"
-                  ></span>
-                  <span class="display-control__label">КОНТРАСТ <svg class="display-control__modifier" viewBox="0 0 12 12" aria-hidden="true"><path d="M1 6h10M6 1v10"/></svg></span>
-                </button>
+              <div class="display-control__accessibility" role="group" aria-label="Настройки цифровой доступности">
+<div class="preference-option"><button type="button" class="preference-toggle" data-motion-toggle aria-pressed="false" aria-labelledby="quick-motion-label" aria-describedby="quick-motion-system"><span class="preference-copy"><span id="quick-motion-label">Меньше движения</span></span><span class="preference-state" data-motion-state aria-hidden="true">Выкл.</span></button><p class="preference-system" id="quick-motion-system" data-motion-system hidden>Включено в настройках устройства</p></div><div class="preference-option"><button type="button" class="preference-toggle" data-contrast-toggle aria-pressed="false" aria-labelledby="quick-contrast-label" aria-describedby="quick-contrast-system"><span class="preference-copy"><span id="quick-contrast-label">Высокий контраст</span></span><span class="preference-state" data-contrast-state aria-hidden="true">Выкл.</span></button><p class="preference-system" id="quick-contrast-system" data-contrast-system hidden>Включено в настройках устройства</p></div>
               </div>
-              <button
-                class="display-control__analytics"
-                type="button"
-                data-analytics-settings
-                data-open-settings
-                data-settings-focus="analytics"
-                aria-haspopup="dialog"
-                aria-controls="settings-panel"
-              >
-                <span
-                  class="display-control__glyph display-control__glyph--analytics"
-                  aria-hidden="true"
-                ></span>
-                <span data-analytics-summary>АНАЛИТИКА</span>
-              </button>
-
+              <button class="display-control__data" type="button" data-privacy-settings data-open-settings data-settings-focus="analytics" aria-haspopup="dialog" aria-controls="settings-panel"><span data-privacy-label>Данные и приватность</span><span aria-hidden="true">›</span></button>
             </div>
 </div>
           </div>
@@ -1315,23 +1267,19 @@
               target="_blank"
               rel="noreferrer"
             >
-              Резюме на&nbsp;hh.ru
+              Резюме на&nbsp;hh.ru <span class="nav-external" aria-hidden="true"></span>
             </a>
             <a class="text-link"
               href="https://gorokhovatsky.notion.site/digital-web-digital-f68fc13247614ccb9738d9a85acf29b4?pvs=74"
               target="_blank"
               rel="noreferrer"
             >
-              Подробное резюме в&nbsp;Notion
+              Подробное резюме в&nbsp;Notion <span class="nav-external" aria-hidden="true"></span>
             </a>
           </p>
         </div>
       </section>
         </div>
-        <button class="content-panel__more" type="button" aria-controls="content-panel-body" hidden>
-          <span>Ещё работы</span>
-          <svg class="content-panel__more-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg>
-        </button>
         </div>
       </div>
     </main>
@@ -1363,47 +1311,18 @@
           <svg class="ui-close__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 7 17 17M17 7 7 17"/></svg>
         </button>
       </div>
-      <p class="settings-panel__intro" id="settings-panel-intro" data-settings-intro>
-        Ваш выбор сохраняется в&nbsp;этом браузере.
-      </p>
       <div class="settings-panel__body">
+        <p class="settings-panel__intro" id="settings-panel-intro" data-settings-intro>
+          Ваш выбор сохраняется в&nbsp;этом браузере.
+        </p>
         <div class="settings-panel__screen" data-settings-screen-controls>
-          <div class="settings-panel__row">
-            <div>
-              <h3>ТЕМА</h3>
-              <p>Системная, светлая или&nbsp;тёмная.</p>
-            </div>
-            <button type="button" data-theme-toggle>
-              <span data-theme-panel-state>СИСТЕМНАЯ</span>
-            </button>
-          </div>
-          <div class="settings-panel__row">
-            <div>
-              <h3>ДВИЖЕНИЕ</h3>
-              <p>Меньше анимации и&nbsp;перемещений.</p>
-            </div>
-            <button type="button" data-motion-toggle aria-pressed="false">
-              <span data-motion-state>ОБЫЧНОЕ</span>
-            </button>
-          </div>
-          <div class="settings-panel__row">
-            <div>
-              <h3>КОНТРАСТ</h3>
-              <p>Более заметные текст, линии и&nbsp;выделение.</p>
-            </div>
-            <button type="button" data-contrast-toggle aria-pressed="false">
-              <span data-contrast-state>ОБЫЧНЫЙ</span>
-            </button>
-          </div>
-          <p class="settings-panel__note">Уменьшение движения и&nbsp;повышенный контраст из&nbsp;настроек устройства имеют приоритет.</p>
+          <div class="settings-panel__row settings-panel__row--theme"><h3>ТЕМА</h3><div class="preference-choices" role="group" aria-label="Тема"><label class="preference-choice"><input type="radio" name="panel-theme" data-theme-choice="system" value="system" checked><span>Системная</span></label><label class="preference-choice"><input type="radio" name="panel-theme" data-theme-choice="light" value="light"><span>Светлая</span></label><label class="preference-choice"><input type="radio" name="panel-theme" data-theme-choice="dark" value="dark"><span>Тёмная</span></label></div></div>
+          <div class="settings-panel__row"><div class="preference-option"><button type="button" class="preference-toggle" data-motion-toggle aria-pressed="false" aria-labelledby="panel-motion-label" aria-describedby="panel-motion-system panel-motion-description"><span class="preference-copy"><span id="panel-motion-label">Меньше движения</span><span class="preference-description" id="panel-motion-description">Меньше анимации и перемещений.</span></span><span class="preference-state" data-motion-state aria-hidden="true">Выкл.</span></button><p class="preference-system" id="panel-motion-system" data-motion-system hidden>Включено в настройках устройства</p></div></div>
+          <div class="settings-panel__row"><div class="preference-option"><button type="button" class="preference-toggle" data-contrast-toggle aria-pressed="false" aria-labelledby="panel-contrast-label" aria-describedby="panel-contrast-system panel-contrast-description"><span class="preference-copy"><span id="panel-contrast-label">Высокий контраст</span><span class="preference-description" id="panel-contrast-description">Более заметные текст, линии и выделение.</span></span><span class="preference-state" data-contrast-state aria-hidden="true">Выкл.</span></button><p class="preference-system" id="panel-contrast-system" data-contrast-system hidden>Включено в настройках устройства</p></div></div>
         </div>
         <section class="settings-whoop" data-settings-section="whoop" aria-labelledby="settings-whoop-title">
           <div class="settings-panel__row">
-            <div>
-              <h3 id="settings-whoop-title">ЦВЕТ ДНЯ</h3>
-              <p>Мягкий свет вокруг моей карточки.</p>
-            </div>
-            <button type="button" data-whoop-toggle aria-pressed="true" aria-label="ВКЛЮЧЁН. Цвет дня по данным WHOOP"><span data-whoop-toggle-label>ВКЛЮЧЁН</span></button>
+            <button type="button" class="preference-toggle" data-whoop-toggle aria-pressed="true" aria-labelledby="settings-whoop-title" aria-describedby="settings-whoop-description"><span class="preference-copy"><span id="settings-whoop-title">Цвет дня</span><span class="preference-description" id="settings-whoop-description">Мягкий свет вокруг моей карточки.</span></span><span class="preference-state" data-whoop-toggle-label aria-hidden="true">Вкл.</span></button>
           </div>
           <p class="settings-whoop__copy">WHOOP оценивает моё восстановление после сна. Эта оценка задаёт оттенок света:</p>
           <dl class="settings-whoop__zones">

@@ -33,14 +33,12 @@ const typographUiText = (value = "") => String(value).replace(
   shortRussianUiWordPattern,
   "$1\u00a0",
 );
-const themeToggles = Array.from(document.querySelectorAll("[data-theme-toggle]"));
-const themeLabels = Array.from(document.querySelectorAll("[data-theme-label]"));
-const themePanelStates = Array.from(document.querySelectorAll("[data-theme-panel-state]"));
+const themeChoices = Array.from(document.querySelectorAll("[data-theme-choice]"));
 const themeColor = document.querySelector('meta[name="theme-color"]');
 const motionToggles = Array.from(document.querySelectorAll("[data-motion-toggle]"));
-const motionStates = Array.from(document.querySelectorAll("[data-motion-state]"));
+const motionStates = Array.from(document.querySelectorAll("[data-motion-system]"));
 const contrastToggles = Array.from(document.querySelectorAll("[data-contrast-toggle]"));
-const contrastStates = Array.from(document.querySelectorAll("[data-contrast-state]"));
+const contrastStates = Array.from(document.querySelectorAll("[data-contrast-system]"));
 const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
 const systemReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 const systemContrast = window.matchMedia("(prefers-contrast: more)");
@@ -69,11 +67,6 @@ const createEffectivePreference = ({
   rootAttribute,
   toggles,
   stateElements,
-  label,
-  systemLabel,
-  inactiveState,
-  activeState,
-  systemState,
 }) => {
   const preference = new EventTarget();
   let forced = readPreferenceFlag(storageKey);
@@ -90,17 +83,13 @@ const createEffectivePreference = ({
     }
 
     stateElements.forEach((element) => {
-      element.textContent = mediaQuery.matches
-        ? systemState
-        : forced ? activeState : inactiveState;
+      element.hidden = !mediaQuery.matches;
     });
     toggles.forEach((toggle) => {
       toggle.setAttribute("aria-pressed", String(preference.matches));
+      const state = toggle.querySelector(".preference-state");
+      if (state) state.textContent = preference.matches ? "Вкл." : "Выкл.";
       toggle.toggleAttribute("disabled", mediaQuery.matches);
-      toggle.setAttribute(
-        "aria-label",
-        `${toggle.textContent.trim()}. ${mediaQuery.matches ? systemLabel : label}`,
-      );
     });
 
     if (notify) {
@@ -131,11 +120,6 @@ const reducedMotion = createEffectivePreference({
   rootAttribute: "reduceMotion",
   toggles: motionToggles,
   stateElements: motionStates,
-  label: "Меньше движения",
-  systemLabel: "Меньше движения: включено в настройках системы",
-  inactiveState: "ОБЫЧНОЕ",
-  activeState: "МЕНЬШЕ",
-  systemState: "СИСТЕМНО",
 });
 createEffectivePreference({
   mediaQuery: systemContrast,
@@ -143,11 +127,6 @@ createEffectivePreference({
   rootAttribute: "contrast",
   toggles: contrastToggles,
   stateElements: contrastStates,
-  label: "Высокий контраст",
-  systemLabel: "Высокий контраст: включён в настройках системы",
-  inactiveState: "ОБЫЧНЫЙ",
-  activeState: "ВЫСОКИЙ",
-  systemState: "СИСТЕМНО",
 });
 
 const readThemeMode = () => {
@@ -168,44 +147,14 @@ const getEffectiveTheme = (mode) => (
     ? (systemTheme.matches ? "dark" : "light")
     : mode
 );
-const getNextThemeMode = () => {
-  const systemMode = systemTheme.matches ? "dark" : "light";
-
-  if (themeMode === "system") {
-    return systemMode === "dark" ? "light" : "dark";
-  }
-
-  return themeMode === systemMode ? "system" : systemMode;
-};
 const setThemeMode = (mode, persist = false) => {
   themeMode = mode === "light" || mode === "dark" ? mode : "system";
   const theme = getEffectiveTheme(themeMode);
   root.dataset.theme = theme;
   root.dataset.themeMode = themeMode;
   const isDark = theme === "dark";
-  const nextMode = getNextThemeMode();
-  const modeLabel = themeMode === "system"
-    ? "СИСТЕМА"
-    : isDark ? "ТЁМНАЯ" : "СВЕТЛАЯ";
-  const currentModeLabel = themeMode === "system"
-    ? `системный, сейчас ${isDark ? "тёмная" : "светлая"}`
-    : isDark ? "тёмный" : "светлый";
-  const nextModeLabel = nextMode === "system"
-    ? "системный"
-    : nextMode === "dark" ? "тёмный" : "светлый";
-
-  themeToggles.forEach((toggle) => {
-    toggle.setAttribute(
-      "aria-label",
-      `${modeLabel}. Режим темы: ${currentModeLabel}. Переключить на ${nextModeLabel}`,
-    );
-  });
-
-  themeLabels.forEach((label) => {
-    label.textContent = modeLabel;
-  });
-  themePanelStates.forEach((state) => {
-    state.textContent = modeLabel;
+  themeChoices.forEach((choice) => {
+    choice.checked = choice.dataset.themeChoice === themeMode;
   });
 
   themeColor?.setAttribute("content", isDark ? "#11120f" : "#eeede7");
@@ -225,9 +174,9 @@ const setThemeMode = (mode, persist = false) => {
 
 setThemeMode(themeMode);
 
-themeToggles.forEach((toggle) => {
-  toggle.addEventListener("click", () => {
-    setThemeMode(getNextThemeMode(), true);
+themeChoices.forEach((choice) => {
+  choice.addEventListener("change", () => {
+    if (choice.checked) setThemeMode(choice.dataset.themeChoice, true);
   });
 });
 

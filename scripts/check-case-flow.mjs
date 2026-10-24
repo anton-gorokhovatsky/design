@@ -229,32 +229,19 @@ for(const engine of [process.argv[2]||'chromium']) {
         animation.animationName !== 'window-reveal'
         || (!animation.pending && animation.playState !== 'running')),
       undefined, {polling:50});
-      const continuation = page.getByRole('button', { name: 'Ещё работы', exact: true });
-      await continuation.waitFor({ state: 'visible' });
-      await page.locator('.content-panel').evaluate(element => Promise.all(
-        element.getAnimations({ subtree: true })
-          .filter(animation => animation.effect?.getTiming().iterations !== Infinity)
-          .map(animation => animation.finished.catch(() => {})),
-      ));
-      await continuation.evaluate(button => {
-        window.__continuationInput = [];
-        for (const type of ['keydown', 'click']) button.addEventListener(type, event => {
-          window.__continuationInput.push({ type, key:event.key, trusted:event.isTrusted });
-        }, { once:true });
-      });
-      await continuation.focus();
-      assert.equal(await continuation.evaluate(button => document.activeElement === button), true,
-        'The continuation owns keyboard focus before activation');
-      await page.keyboard.press('Enter');
+      assert.equal(await page.locator('.content-panel__more').count(), 0,
+        'Scroll continuation uses the common edge effect, without a footer command');
+      const body = page.locator('.content-panel__body');
+      await body.focus();
+      await page.keyboard.press('PageDown');
       await page.waitForFunction(() => document.querySelector('.content-panel__body').scrollTop > 20);
-      assert.deepEqual(await page.evaluate(() => window.__continuationInput), [
-        { type:'keydown', key:'Enter', trusted:true },
-        { type:'click', key:undefined, trusted:true },
-      ], 'Enter activates the native button');
-      assert.equal(new URL(page.url()).hash, '#work', 'Continuation scrolls the existing list');
-      await page.locator('.content-panel__body').focus();
+      assert.equal(new URL(page.url()).hash, '#work', 'Keyboard scrolling stays in the existing list');
       await page.keyboard.press('End');
-      await page.getByRole('button', { name: /^К\sначалу$/ }).click();
+      await page.waitForFunction(() => {
+        const e = document.querySelector('.content-panel__body');
+        return e.scrollTop + e.clientHeight >= e.scrollHeight - 2;
+      });
+      await page.keyboard.press('Home');
       await page.waitForFunction(() => document.querySelector('.content-panel__body').scrollTop === 0);
       const row = page.locator('.work-row[data-map-point="ilmix"]');
       await row.scrollIntoViewIfNeeded();
@@ -279,7 +266,7 @@ for(const engine of [process.argv[2]||'chromium']) {
     // Hash navigation can finish before the panel applies its state and focus.
     await page.waitForFunction(() => document.querySelector('[data-content-panel]').dataset.view === 'contact'
       && document.activeElement?.matches('[data-close-panel]'));
-    assert.equal(await page.locator('.content-panel__more').isVisible(), false, 'No work continuation in other sections');
+    assert.equal(await page.locator('.content-panel__more').count(), 0, 'No footer continuation command in other sections');
     assert.equal(await page.locator('[data-command-input]').evaluate(input => Boolean(input.closest('[inert]'))), false,
       'Returning from a mobile case must not leave desktop search inert');
     await page.locator('[data-command-input]').click();

@@ -23,7 +23,7 @@ const observationSteps = [
   { id: "ks-fish", itemId: "ks-fish", duration: 26000,
     description: "Рыбная лавка капитана Селёдкина знакомит с Олегом Гугунавой ещё до первого визита. Каталог помогает выбрать рыбу и перейти к заказу, а «Судовой журнал» сохраняет фотографии и рассказы владельца. Его голос остаётся частью сайта — за ассортиментом виден сам человек." },
   {
-    id: "contact", kind: "СВЯЗАТЬСЯ", title: "СВЯЗАТЬСЯ",
+    id: "contact", kind: "СВЯЗАТЬСЯ", title: "Связаться",
     meta: "МОСКВА / УДАЛЁННО / ПОЧТА",
     get description() { return document.querySelector("[data-contact-message]").textContent.trim(); },
     href: "mailto:anton@gorokhovatsky.tech", x: 50, y: 54,
