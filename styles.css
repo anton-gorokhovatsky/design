@@ -10205,7 +10205,7 @@ cursor: pointer;
 .map-surface[data-mobile-preview-ui] .practice-map:not([data-observation-active],[data-time-view]) .map-node { transition-property: opacity, transform, filter; }
 .map-surface[data-mobile-preview-ui] .practice-map:not([data-observation-active],[data-time-view]) .map-node-label { transition-property: opacity; }
 .map-surface.has-focused-home .focused-home {
---field-foot: calc(var(--mobile-first-dock-height, 124px) + var(--mobile-console-bottom) + 16px);
+--field-foot: calc(var(--mobile-first-dock-height, 124px) + var(--mobile-console-bottom) + 8px);
 position: absolute; z-index: 18; inset: 0;
 display: grid; grid-template-rows: max-content max-content minmax(0, 1fr); padding: 20px 20px var(--field-foot); overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; color: var(--ink);
 transform-origin: 50% 55%;
@@ -10233,7 +10233,7 @@ transform: none; transition: none;
 .focused-home .site-header[data-material-surface] {
 position: relative; inset: auto; margin: -8px -8px var(--space-4);
 }
-.focused-home__map { position: relative; overflow: visible; clip-path: inset(0 0 calc(0px - var(--field-foot))); }
+.focused-home__map { position: relative; overflow: clip; overflow-clip-margin: var(--field-foot); clip-path: inset(0 0 calc(0px - var(--field-foot))); }
 .focused-home .map-camera, .focused-home .map-labels { inset: 0; transform: none; }
 .focused-home .map-camera { perspective: none; transition: none; }
 .focused-home :is(.map-nodes, .map-links) { transform: none; }
@@ -10362,7 +10362,7 @@ font-size: var(--type-utility); line-height: var(--leading-label);
 .spatial-intro span { display: block; }
 .spatial-intro span + span { margin-top: 2px; }
 .focused-home__map {
-min-height: max(30rem, calc(var(--practice-orbit-size, 168px) * 2)); touch-action: pan-y; isolation: isolate; container: focused-map / size;
+min-height: 0; touch-action: pan-y; isolation: isolate; container: focused-map / size;
 }
 @container focused-map (max-height: 420px) {
 .focused-home .map-labels [data-map-label-id="narkomfin"] { transform: translate(-50%, calc(-100% - 20px)); }
@@ -10600,6 +10600,7 @@ width:var(--practice-orbit-size,168px);height:var(--practice-orbit-size,168px);b
 .map-surface.has-practice-orbits [data-map-label-id="shirokostup"],.map-surface.has-practice-orbits [data-map-label-id="tarski"],.map-surface.has-practice-orbits [data-map-label-id="herman"],.map-surface.has-practice-orbits [data-map-label-id="ks-fish"],.map-surface.has-practice-orbits [data-map-label-id="hotline-camp"],.map-surface.has-practice-orbits [data-map-label-id="dusty"],.map-surface.has-practice-orbits [data-map-label-id="dd-camp"],.map-surface.has-practice-orbits [data-map-label-id="eleven"],.map-surface.has-practice-orbits [data-map-label-id="doronin"],.map-surface.has-practice-orbits [data-map-label-id="krainiuk"],.map-surface.has-practice-orbits .map-links path[data-parent-id="private-practice"],.map-surface.has-practice-orbits .map-links path.is-orbit-project-link,.map-surface.has-practice-orbits .spatial-field--relations [data-relation-key^="private-practice:"] {visibility:hidden!important;pointer-events:none!important}
 @container map-viewport (max-width:900px){
 .map-surface.has-practice-orbits{--practice-orbit-size:clamp(184px,calc(var(--pane-vw) * 62),272px)}
+.map-surface.has-practice-orbits .focused-home :is(.map-nodes,.map-labels){--practice-orbit-size:clamp(136px,min(62cqw,54cqh),272px)}
 .map-surface.has-practice-orbits .focused-home .map-labels [data-map-label-id="private-practice"]{transform:translate(-50%,calc(-100% - var(--practice-orbit-size)*.32 - 12px))}
 .map-surface.has-practice-orbits .focused-home .map-labels [data-map-label-id="narkomfin"]{transform:translate(-50%,calc(-100% - 22px))!important}
 }

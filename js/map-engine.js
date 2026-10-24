@@ -235,8 +235,8 @@ const focusHomePoints = new Map([
   ["eleven", { x: 87, y: 65 }],
   ["ks-fish", { x: 58, y: 63 }],
   ["principle-data-intuition", homeAnchor(180, 31, 30)],
-  ["running", homeAnchor(83, 40, 42)],
-  ["youtube", homeAnchor(136, 42, 55)],
+  ["running", homeAnchor(83, 40, 38)],
+  ["youtube", homeAnchor(136, 42, 38)],
 ]);
 const focusHomeNarrowPoints = new Map([...focusHomePoints,
   ["garage", {x:27,y:22}], ["narkomfin", {x:76,y:20}],
@@ -280,12 +280,19 @@ const measureMapClearance = () => {
     const shortField = !largeTextHome && mapFieldBounds.height <= 420;
     const museumTop = (mapLabels.get('garage').offsetHeight + mapTargetDiameters.get('garage')/2 + 6 + (shortField ? 20 : 40)) / mapFieldBounds.height * 100;
     const topShift = Math.max(0, museumTop - points.get('garage').y);
+    const tightField = !largeTextHome && mapFieldBounds.height < 320;
     points.forEach((position, id) => {
       let y = position.y + (shortField ? 0 : topShift * Math.max(0, (86 - position.y) / (86 - points.get('garage').y)));
       if (shortField && id === 'garage') y = Math.max(y, museumTop);
-      if (shortField && id === 'running') y = 90;
-      if (shortField && id === 'youtube') y = 84;
-      mapClearancePositions.set(id, { x: position.x, y });
+      if (shortField && id === 'private-practice') y = 63;
+      if (shortField && id === 'running') y = 88;
+      if (shortField && id === 'youtube') y = 78;
+      if (tightField && id === 'narkomfin') y = 22;
+      if (tightField && id === 'private-practice') y = 65;
+      if (tightField && id === 'youtube') y = 86;
+      const x = tightField && id === 'running' ? 65
+        : tightField && id === 'private-practice' ? 72 : position.x;
+      mapClearancePositions.set(id, { x, y });
     });
     return;
   }
