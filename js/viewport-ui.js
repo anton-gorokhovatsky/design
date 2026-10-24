@@ -377,6 +377,10 @@ const lensPanel = document.querySelector(".content-panel__body");
 observeScrollLens(lensPanel, () => lensPanel.querySelectorAll(
   ".work-intro > *, .approach-intro > *, .work-row > :not(img), .approach-grid li > *, .contact-intro > :not(.contact-resume), .contact-links a > *",
 ), { owner: document.querySelector("[data-content-panel]") });
+const lensSettings = document.querySelector(".settings-panel__body");
+observeScrollLens(lensSettings, () => lensSettings.querySelectorAll(
+  "p, h3, .settings-whoop__zones dt, .settings-whoop__zones dd, .settings-panel__privacy dt, .settings-panel__privacy dd",
+), { owner: document.querySelector("[data-settings-panel]") });
 
 // Keep a short continuation cue inside text lists without reshaping cards.
 const observeScrollEdges = (region, { owner = region } = {}) => {
@@ -678,6 +682,14 @@ const syncConsoleBounds = () => {
   if (!floatingConsoleMedia.matches) {
     floatingConsoleModules.forEach((module) => setConsoleOffset(module, 0, 0));
     return;
+  }
+
+  // Resolve the navigation anchor before clamping the author column against it.
+  // The header precedes the console in the DOM, including during viewport changes.
+  const navigation = document.querySelector(".control-console");
+  if (navigation?.getClientRects().length && pane.width > 900) {
+    const offset = getConsoleOffset(navigation);
+    setConsoleOffset(navigation, offset.x, offset.y);
   }
 
   floatingConsoleModules.forEach((module) => {

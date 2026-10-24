@@ -8063,10 +8063,11 @@ z-index: 90;
 display: flex;
 flex-direction: column;
 box-sizing: border-box;
-width: min(540px, calc(calc(var(--pane-vw) * 100) - 36px));
+/* A top-layer dialog belongs to the browser viewport, including split view. */
+width: min(540px, calc(100vw - 28px));
 max-width: none;
 container: preference-dialog / inline-size;
-max-height: calc(calc(var(--pane-vh) * 100) - 36px);
+max-height: min(48rem, calc(100dvh - 28px));
 gap: var(--space-4);
 margin: 0;
 padding: var(--settings-pad);
@@ -8299,14 +8300,6 @@ border-bottom-color: var(--signal);
 }
 
 @container map-viewport (max-width: 900px) {
-.settings-panel {
-right: max(14px, env(safe-area-inset-right));
-left: max(14px, env(safe-area-inset-left));
-width: auto;
-max-height: calc(calc(var(--pane-vh) * 100) - 28px);
-transform: translateY(-50%);
-}
-
 .settings-panel__privacy {
 grid-template-columns: minmax(0, 1fr);
 gap: var(--space-4);
@@ -8675,8 +8668,7 @@ transition: opacity 180ms var(--motion-enter), transform 240ms var(--motion-ente
 }
 }
 
-/* Text lists fade at their edges; work imagery retains its original contrast. */
-.settings-panel__body,
+/* Text lists fade at their edges; settings controls retain native rendering. */
 .content-panel:not([data-view="work"]) .content-panel__body {
 mask-image: linear-gradient(to bottom, transparent, #000 var(--scroll-fade-top, 0px),
 #000 calc(100% - var(--scroll-fade-bottom, 0px)), transparent);
@@ -9518,10 +9510,13 @@ html[data-focus-modality="keyboard"] .control-console .command-dock:focus-within
 .site-header[data-material-surface="whoop-readout"] {
 --content-ink: var(--ink); --content-muted: var(--ink);
 width: calc(var(--author-card-width) - var(--space-5));
-bottom: var(--space-4);
+top: calc(100% - var(--console-clearance, 140px));
+bottom: auto;
 padding: 0; border: 0; border-radius: 0;
 background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: none;
 }
+.site-header .brand { min-height: 48px; align-content: center; }
+.site-header .whoop-foot { margin-top: var(--space-4); }
 .site-header .brand__role { max-width: 29ch; }
 .map-axis-label--south { top: auto; bottom: calc(var(--console-clearance, 140px) + var(--space-4)); }
 }

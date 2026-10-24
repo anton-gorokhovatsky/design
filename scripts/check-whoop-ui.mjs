@@ -34,7 +34,7 @@ try {
       const header = await page.locator(".site-header").boundingBox();
       const console = await page.locator(".control-console").boundingBox();
       assert.ok(Math.abs(header.x - console.x - console.width - 40) < .1, "The author panel has a 40px gap from desktop navigation.");
-      assert.equal(console.y + console.height - header.y - header.height, 0, "The author panel and navigation share the bottom inset.");
+      assert.ok(Math.abs(header.y - console.y) < 1, "The author column starts with the search row, rather than following its own bottom inset.");
     }
     await page.waitForFunction(() => [...document.querySelectorAll(".map-node:not([inert])")].every(node => {
       const r = node.getBoundingClientRect();
@@ -153,6 +153,36 @@ try {
   });
   await latePage.close();
   console.log(`PASS ${engine} delayed WHOOP: analytics stays visible; mobile map follows the card.`);
+  for (const [width, fontSize] of [[1440, 16], [320, 16], [320, 32]]) {
+    const page = await browser.newPage({ viewport: { width, height: width === 320 ? 568 : 900 }, reducedMotion: "reduce" });
+    await page.goto(`${origin}/?story=1`, { waitUntil: "load" });
+    if (fontSize === 32) await page.evaluate(() => { document.documentElement.style.fontSize = "32px"; });
+    await page.locator("[data-constellation-nav-toggle]").click();
+    await page.getByRole("button", { name: "НАСТРОЙКИ САЙТА", exact: true }).click();
+    await page.waitForFunction(() => document.activeElement?.hasAttribute("data-theme-choice"));
+    const geometry = await page.evaluate(() => {
+      const panel = document.querySelector("[data-settings-panel]");
+      const body = panel.querySelector(".settings-panel__body");
+      return {
+        panel: panel.getBoundingClientRect().toJSON(),
+        body: body.getBoundingClientRect().toJSON(),
+        focus: document.activeElement.getBoundingClientRect().toJSON(),
+        mask: getComputedStyle(body).maskImage,
+        overflow: document.documentElement.scrollWidth - innerWidth,
+        viewport: { width: innerWidth, height: innerHeight },
+      };
+    });
+    assert.ok(geometry.panel.width <= 540 && Math.abs(geometry.panel.left + geometry.panel.width / 2 - width / 2) < 1,
+      "Settings stay compact and centered on the screen, independent of the map pane width.");
+    assert.ok(geometry.panel.top >= 13 && geometry.panel.bottom <= geometry.viewport.height - 13);
+    assert.ok(geometry.focus.top >= geometry.body.top && geometry.focus.bottom <= geometry.body.bottom,
+      "The focused theme stays fully visible, including split view at 200% text.");
+    assert.equal(geometry.mask, "none", "A scroll mask must not fade settings controls or their focus rings.");
+    assert.equal(geometry.overflow, 0);
+    await page.screenshot({ path: `${directory}/${engine}-settings-split-${width}-${fontSize}.png` });
+    await page.close();
+  }
+  console.log(`PASS ${engine} settings split view: centered window, visible theme focus, 320px with 200% text.`);
   assert.deepEqual(errors, []);
   // Separate ephemeral visit records from the preceding reload/error scenarios.
   const surface = await startStaticServer({ projectRoot: process.cwd() });
