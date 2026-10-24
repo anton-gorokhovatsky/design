@@ -153,13 +153,13 @@ try {
   });
   await latePage.close();
   console.log(`PASS ${engine} delayed WHOOP: analytics stays visible; mobile map follows the card.`);
-  for (const [width, fontSize] of [[1440, 16], [320, 16], [320, 32]]) {
+  for (const [width, fontSize] of [[1440, 16], [1024, 16], [320, 16], [320, 32]]) {
     const page = await browser.newPage({ viewport: { width, height: width === 320 ? 568 : 900 }, reducedMotion: "reduce" });
     await page.goto(`${origin}/?story=1`, { waitUntil: "load" });
     if (fontSize === 32) await page.evaluate(() => { document.documentElement.style.fontSize = "32px"; });
     await page.locator("[data-constellation-nav-toggle]").click();
     await page.getByRole("button", { name: "НАСТРОЙКИ САЙТА", exact: true }).click();
-    await page.waitForFunction(() => document.activeElement?.hasAttribute("data-theme-choice"));
+    await page.waitForFunction(() => document.activeElement?.hasAttribute("data-close-settings"));
     const geometry = await page.evaluate(() => {
       const panel = document.querySelector("[data-settings-panel]");
       const body = panel.querySelector(".settings-panel__body");
@@ -167,6 +167,14 @@ try {
         panel: panel.getBoundingClientRect().toJSON(),
         body: body.getBoundingClientRect().toJSON(),
         focus: document.activeElement.getBoundingClientRect().toJSON(),
+        intro: panel.querySelector(".settings-panel__intro").getBoundingClientRect().toJSON(),
+        scrollTop: body.scrollTop,
+        headingFont: getComputedStyle(panel.querySelector("h2")).font,
+        padding: getComputedStyle(panel).padding,
+        privacyColumns: getComputedStyle(panel.querySelector(".settings-panel__privacy")).gridTemplateColumns,
+        zoneColumns: getComputedStyle(panel.querySelector(".settings-whoop__zones")).gridTemplateColumns,
+        storyOpacity: getComputedStyle(document.querySelector("#story-pane")).opacity,
+        storyFilter: getComputedStyle(document.querySelector("#story-pane")).filter,
         mask: getComputedStyle(body).maskImage,
         overflow: document.documentElement.scrollWidth - innerWidth,
         viewport: { width: innerWidth, height: innerHeight },
@@ -175,14 +183,67 @@ try {
     assert.ok(geometry.panel.width <= 540 && Math.abs(geometry.panel.left + geometry.panel.width / 2 - width / 2) < 1,
       "Settings stay compact and centered on the screen, independent of the map pane width.");
     assert.ok(geometry.panel.top >= 13 && geometry.panel.bottom <= geometry.viewport.height - 13);
-    assert.ok(geometry.focus.top >= geometry.body.top && geometry.focus.bottom <= geometry.body.bottom,
-      "The focused theme stays fully visible, including split view at 200% text.");
+    assert.equal(geometry.scrollTop, 0, "The general entry starts at the introduction, including at 200% text.");
+    assert.ok(geometry.intro.top >= geometry.body.top && geometry.intro.bottom <= geometry.body.bottom);
+    assert.ok(geometry.focus.top >= geometry.panel.top && geometry.focus.bottom <= geometry.panel.bottom);
     assert.equal(geometry.mask, "none", "A scroll mask must not fade settings controls or their focus rings.");
     assert.equal(geometry.overflow, 0);
     await page.screenshot({ path: `${directory}/${engine}-settings-split-${width}-${fontSize}.png` });
+    // macOS WebKit's native Option-Tab visits all controls even when the host
+    // keyboard preference limits Tab. Other engines/platforms use plain Tab.
+    await page.keyboard.press(engine === "webkit" && process.platform === "darwin" ? "Alt+Tab" : "Tab");
+    const themeFocus = await page.evaluate(() => {
+      const body = document.querySelector(".settings-panel__body").getBoundingClientRect();
+      const focus = document.activeElement.getBoundingClientRect();
+      return {
+        theme: document.activeElement.hasAttribute("data-theme-choice"),
+        element: document.activeElement.outerHTML.slice(0, 240),
+        focus: focus.toJSON(), body: body.toJSON(),
+      };
+    });
+    assert.ok(themeFocus.theme && themeFocus.focus.top >= themeFocus.body.top && themeFocus.focus.bottom <= themeFocus.body.bottom,
+      `Tab reaches the checked theme without clipping its focus ring at ${width}/${fontSize}: ${JSON.stringify(themeFocus)}`);
+    if (fontSize === 32) {
+      for (const selector of ["[data-motion-toggle]", "[data-contrast-toggle]"]) {
+        const control = page.locator(`.settings-panel ${selector}`);
+        await control.scrollIntoViewIfNeeded();
+        const baseline = await control.evaluate(button => {
+          const firstLine = node => {
+            const range = document.createRange();
+            range.selectNodeContents(node);
+            return range.getClientRects()[0].top;
+          };
+          return firstLine(button.firstElementChild)
+            - firstLine(button.closest(".preference-option").querySelector(".preference-state"));
+        });
+        assert.ok(Math.abs(baseline) < 1, "A multiline preference and its state share their first text line.");
+      }
+      await page.screenshot({ path: `${directory}/${engine}-settings-baselines-320-32.png` });
+    }
+    await page.keyboard.press("Escape");
+    await page.waitForFunction(() => !document.querySelector("[data-settings-panel]").open);
+    if (width > 900) {
+      assert.equal(geometry.storyOpacity, "0.16");
+      assert.equal(geometry.storyFilter, "blur(3px)");
+      assert.equal(await page.locator("#story-pane").evaluate(node => getComputedStyle(node).opacity), "1");
+      assert.equal(await page.locator("#story-pane").evaluate(node => getComputedStyle(node).filter), "none");
+      await page.locator("#story-bridge [data-close-story]").click();
+      await page.locator('.site-header [data-open-settings]').click();
+      const whole = await page.locator("[data-settings-panel]").evaluate(panel => ({
+        headingFont: getComputedStyle(panel.querySelector("h2")).font,
+        padding: getComputedStyle(panel).padding,
+        privacyColumns: getComputedStyle(panel.querySelector(".settings-panel__privacy")).gridTemplateColumns,
+        zoneColumns: getComputedStyle(panel.querySelector(".settings-whoop__zones")).gridTemplateColumns,
+      }));
+      assert.equal(whole.headingFont, geometry.headingFont, "A global dialog keeps its type role over either map layout.");
+      assert.equal(whole.padding, geometry.padding, "A global dialog keeps its inner spacing over either map layout.");
+      assert.equal(whole.privacyColumns, geometry.privacyColumns);
+      assert.equal(whole.zoneColumns, geometry.zoneColumns);
+      await page.screenshot({ path: `${directory}/${engine}-settings-whole-${width}-16.png` });
+    }
     await page.close();
   }
-  console.log(`PASS ${engine} settings split view: centered window, visible theme focus, 320px with 200% text.`);
+  console.log(`PASS ${engine} settings: stable window, entry at top, keyboard theme focus and first-line states at 200%.`);
   assert.deepEqual(errors, []);
   // Separate ephemeral visit records from the preceding reload/error scenarios.
   const surface = await startStaticServer({ projectRoot: process.cwd() });

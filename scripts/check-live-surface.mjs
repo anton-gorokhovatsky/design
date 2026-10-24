@@ -167,7 +167,7 @@ export async function checkLiveSurface(browser, origin, engine) {
   phase = 'mobile return from 404 to map';
   await page.setViewportSize({ width: 320, height: 568 });
   await page.locator('.not-found__action').click();
-  await page.waitForFunction(() => document.querySelector('[data-whoop-recovery]').textContent.includes('77'));
+  await page.waitForFunction(() => document.querySelector('[data-whoop-recovery]')?.textContent.includes('77'));
   await page.screenshot({ path: `${dir}/${engine}-mobile.png` });
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
   assert.deepEqual(errors, [], 'Uncaught browser errors with scenario, URL and stack');

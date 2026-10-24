@@ -1026,7 +1026,7 @@ const analyticsConsentAudit = async (page, viewport, label) => {
       authorBottom: document.querySelector(".site-header").getBoundingClientRect().bottom,
       focusSection: panel?.dataset.focusSection,
       scrollTop: body?.scrollTop,
-      themeFocused: document.activeElement?.hasAttribute("data-theme-choice"),
+      closeFocused: document.activeElement?.hasAttribute("data-close-settings"),
       title: panel?.querySelector("[data-settings-title]")?.innerText.trim() || "",
       screenControlsVisible: Boolean(
         panel?.querySelector("[data-settings-screen-controls]")?.getClientRects().length,
@@ -1164,7 +1164,7 @@ const analyticsConsentAudit = async (page, viewport, label) => {
       || generalSettings.mode !== "settings"
       || generalSettings.focusSection !== "settings"
       || generalSettings.scrollTop !== 0
-      || !generalSettings.themeFocused
+      || !generalSettings.closeFocused
       || generalSettings.title !== "НАСТРОЙКИ САЙТА"
       || !generalSettings.screenControlsVisible
       || generalSettings.overflowX !== 0

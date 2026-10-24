@@ -150,7 +150,9 @@ const openSettingsPanel = ({
 
   window.requestAnimationFrame(() => {
     const body = settingsPanel.querySelector(".settings-panel__body");
-    const target = section === "analytics"
+    const target = section === "settings"
+      ? settingsClose
+      : section === "analytics"
       ? analyticsToggle
       : settingsPanel.querySelector({
         motion: "[data-motion-toggle]",
@@ -169,7 +171,9 @@ const openSettingsPanel = ({
     if (focus) {
       const control = target?.disabled ? settingsClose : target;
       control?.focus({ preventScroll: true });
-      control?.scrollIntoView({ block: "nearest", behavior: "instant" });
+      // The general entry begins with the introduction. Only shortcuts scroll
+      // to a specific preference; keyboard navigation reveals later controls.
+      if (section !== "settings") control?.scrollIntoView({ block: "nearest", behavior: "instant" });
     }
   });
 };

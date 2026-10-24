@@ -80,7 +80,7 @@ color-scheme: light;
 --day-enabled: 0;
 }
 
-:root,.map-surface,#story-pane {
+:root,.map-surface,#story-pane,.settings-panel {
 --type-label: clamp(.62rem, calc(.56rem + calc(var(--pane-vw) * .18)), .72rem);
 --type-detail: clamp(.875rem, calc(.84rem + calc(var(--pane-vw) * .1)), .9375rem);
 --type-body: clamp(1rem, calc(.94rem + calc(var(--pane-vw) * .1)), 1.125rem);
@@ -8053,7 +8053,9 @@ opacity: 1;
 
 /* All preferences share one dialog. Shortcuts scroll to the relevant section. */
 .settings-panel {
---settings-pad: min(var(--window-pad), calc(var(--pane-vw) * 5));
+--settings-width: min(540px, calc(100vw - 28px));
+--pane-vw: calc(var(--settings-width) / 100);
+--settings-pad: min(var(--window-pad), 5vw);
 position: fixed;
 top: 50%;
 right: auto;
@@ -8064,7 +8066,7 @@ display: flex;
 flex-direction: column;
 box-sizing: border-box;
 /* A top-layer dialog belongs to the browser viewport, including split view. */
-width: min(540px, calc(100vw - 28px));
+width: var(--settings-width);
 max-width: none;
 container: preference-dialog / inline-size;
 max-height: min(48rem, calc(100dvh - 28px));
@@ -8077,6 +8079,7 @@ corner-shape:var(--corner-card-shape);
 background: var(--material-01);
 box-shadow: none;
 color: var(--content-ink);
+font-size: var(--type-body);
 transform: translate(-50%, -50%);
 -webkit-backdrop-filter: blur(24px);
 backdrop-filter: blur(24px);
@@ -8299,12 +8302,14 @@ align-items: center;
 border-bottom-color: var(--signal);
 }
 
-@container map-viewport (max-width: 900px) {
+@container preference-dialog (max-width: 32rem) {
 .settings-panel__privacy {
 grid-template-columns: minmax(0, 1fr);
 gap: var(--space-4);
 }
+}
 
+@container map-viewport (max-width: 900px) {
 .no-script-fallback nav {
 grid-template-columns: 1fr;
 }
@@ -8422,7 +8427,7 @@ margin: var(--space-4) 0;
 }
 .settings-whoop__zones dt { font-weight: 600; font-variant-numeric: tabular-nums; }
 .settings-whoop__zones dd { margin: var(--space-1) 0 0; color: var(--content-muted); }
-@container map-viewport (max-width: 480px) {
+@container preference-dialog (max-width: 30rem) {
 .settings-whoop__zones { grid-template-columns: 1fr; gap: var(--space-2); }
 .settings-whoop__zones > div { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); justify-content: space-between; }
 .settings-whoop__zones dd { margin: 0; }
@@ -9232,7 +9237,7 @@ html[data-reduce-motion="true"] :is(.ui-close, .work-row, .map-related__item, .c
 .preference-choice > span { display: flex; align-items: center; justify-content: center; width: 100%; min-height: var(--control-target-compact); padding: var(--space-1) 0; border: 1px solid transparent; border-radius: inherit; }
 .preference-choice:has(input:checked) > span { color: var(--signal); border-color: currentColor; }
 .preference-choice:has(input:focus-visible) > span { outline: var(--focus-width) solid var(--signal); outline-offset: -3px; }
-.preference-option { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: var(--space-3); min-width: 0; }
+.preference-option { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: first baseline; column-gap: var(--space-3); min-width: 0; }
 .preference-toggle,
 .display-control__service .preference-toggle {
 display: grid; grid-template-columns: subgrid; grid-area: 1 / 1 / 2 / -1; align-items: baseline; width: 100%;
@@ -9241,7 +9246,7 @@ border: 0; border-radius: var(--space-1); color: var(--content-ink); background:
 cursor: pointer; text-align: left; font-weight: 500; letter-spacing: 0;
 }
 .preference-description { grid-column: 1 / -1; margin: calc(0px - var(--space-1)) 0 var(--space-2); color: var(--content-muted); font-weight: 400; }
-.preference-state { grid-area: 1 / 2; align-self: center; padding-block: var(--space-2); color: var(--content-muted); pointer-events: none; }
+.preference-state { grid-area: 1 / 2; align-self: first baseline; padding-block: var(--space-2); color: var(--content-muted); pointer-events: none; }
 .preference-option:has(.preference-toggle[aria-pressed="true"]) .preference-state { color: var(--signal); font-weight: 600; }
 @media (hover: hover) and (pointer: fine) {
 .preference-choice:hover,
@@ -9272,9 +9277,11 @@ min-height: var(--control-target); letter-spacing: 0;
 font-size: var(--type-panel-heading);
 line-height: normal;
 }
-.control-console .constellation-nav__heading {
+.control-console .constellation-nav__heading,
+.settings-panel__header h2 {
 font-size: var(--type-body);
 line-height: var(--leading-control);
+font-weight: 500;
 }
 .preference-heading,
 .map-control-group__label {
@@ -9298,6 +9305,7 @@ line-height: var(--leading-label);
 }
 .preference-choice,
 .preference-toggle,
+.preference-state,
 .map-control,
 .system-dock .map-control,
 .system-dock .map-control > span:last-child,
@@ -9391,6 +9399,7 @@ font-size: var(--type-detail);
 line-height: var(--leading-body);
 }
 .settings-panel .preference-toggle,
+.settings-panel .preference-state,
 .map-readout__description,
 .approach-grid p,
 .command-dock input,
@@ -9440,7 +9449,6 @@ line-height: var(--leading-item);
 .content-panel .work-intro h2,
 .content-panel .approach-intro h2,
 .map-inspector .map-readout__identity h2,
-.settings-panel__header h2,
 .no-script-fallback h1,
 .map-inspector.is-case-view .map-readout__identity h2,
 .map-inspector:not(.is-case-view) .map-readout__identity h2 {
@@ -9458,7 +9466,6 @@ font-weight: 400;
 .settings-panel__header { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: var(--space-2); }
 .settings-panel__close { grid-column: 2; grid-row: 1; }
 .settings-panel__header > div { grid-column: 1 / -1; grid-row: 2; }
-.settings-panel__header h2 { font-size: var(--type-item); line-height: var(--leading-item); }
 }
 
 /* Map index/authorship; material on disclosed mobile surfaces. */
@@ -9516,7 +9523,8 @@ padding: 0; border: 0; border-radius: 0;
 background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: none;
 }
 .site-header .brand { min-height: 48px; align-content: center; }
-.site-header .whoop-foot { margin-top: var(--space-4); }
+.site-header .whoop-readout,
+.site-header .whoop-foot { margin-top: 0; }
 .site-header .brand__role { max-width: 29ch; }
 .map-axis-label--south { top: auto; bottom: calc(var(--console-clearance, 140px) + var(--space-4)); }
 }
@@ -9740,7 +9748,6 @@ z-index: 64;
 .system-dock .map-control { display: grid; grid-template-columns: 24px minmax(0, 1fr); justify-content: flex-start; gap: var(--space-3); width: 100%; height: auto; min-height: var(--control-target); padding: var(--space-2) 8px; }
 .system-dock .map-control > span:last-child { grid-area: auto; font-size: var(--type-detail); text-transform: none; }
 .system-dock .map-control > .map-control__symbol { grid-area: auto; }
-.settings-panel__header h2 { font-size: var(--type-body); line-height: var(--leading-control); font-weight: 500; }
 
 .map-surface:is(.has-content-panel,[data-case-open],.has-settings-panel):not(.has-command-focus) .mobile-first-dock,.map-surface:has(.map-inspector.is-open) .mobile-first-dock { visibility: hidden; pointer-events: none; }
 .map-surface.has-constellation-nav .mobile-first-dock { opacity: .4; pointer-events: none; }
@@ -10434,6 +10441,7 @@ body.split-page{font-size:var(--type-body)}
 .map-surface.has-story-pane{background:transparent;--map-ground:linear-gradient(transparent,transparent)}
 #story-pane{--story-gutter:clamp(22px,calc(var(--pane-vw) * 4.5),40px);position:relative;min-width:0;min-height:0;overflow:auto;overflow-x:hidden;overflow-anchor:none;overscroll-behavior:contain;container:story-viewport / inline-size;scrollbar-gutter:stable;scroll-behavior:auto;visibility:hidden;opacity:0;line-height:var(--leading-body);scroll-padding-block:24px}
 .has-story-pane #story-pane{visibility:visible;opacity:1}
+.has-story-pane.has-settings-panel :is(#story-pane,#story-bridge){opacity:.16;filter:blur(3px);pointer-events:none}
 .has-story-pane #map-pane,.has-story-pane #story-pane{border-radius:var(--window-radius);corner-shape:var(--corner-card-shape)}
 #story-bridge{grid-area:1 / 2;position:relative;z-index:350;min-width:0;min-height:0;visibility:hidden}
 .has-story-pane #story-bridge{visibility:visible}
