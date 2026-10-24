@@ -52,15 +52,22 @@ try{
   await page.evaluate(()=>Promise.all(document.getAnimations().filter(a=>a.effect?.getTiming().iterations!==Infinity).map(a=>a.finished.catch(()=>{}))));
   const originalGeometry=await mapGeometry();
   if(width===390)await page.locator('[data-constellation-nav-toggle]').click();
+  await page.locator('[data-nav-view="map"]').focus();await page.keyboard.press('Enter');
+  await page.waitForFunction(()=>document.activeElement?.id==='map');
+  if(width===390)await page.locator('[data-constellation-nav-toggle]').click();
   await entry.waitFor({state:'visible'});
   await entry.focus();await page.keyboard.press('Enter');
   const story=page.locator('#story-pane');await page.waitForSelector('#story-pane[data-ready="true"]');
   await page.waitForFunction(()=>document.activeElement?.id==='story-title');
   assert.equal(await story.evaluate(e=>e.inert),false);
   await page.waitForFunction(()=>!document.body.classList.contains('story-is-moving'));
-  assert.equal(await entry.getAttribute('aria-current'),'page','The open story is the current destination');
   const menuStory=page.locator('.map-story-link');
+  assert.equal(await menuStory.getAttribute('aria-current'),'page','The open story is the current destination');
+  assert.equal(await page.locator('[data-constellation-nav] [aria-current]').count(),1,'The menu has one current destination');
   assert.equal(await menuStory.getAttribute('href'),'?story=1','The current destination keeps a real address');
+  const mapAddress=new URL(await page.locator('[data-nav-view="map"]').getAttribute('href'),origin);
+  assert.equal(mapAddress.searchParams.has('story'),false,'The Map address itself returns the whole map');
+  assert.equal(mapAddress.hash,'#map');
   for(const method of ['pointer','keyboard']){
    await story.evaluate(e=>e.scrollTop=480);
    const readingPosition=await story.evaluate(e=>e.scrollTop),address=page.url(),historyLength=await page.evaluate(()=>history.length);
@@ -98,6 +105,19 @@ try{
   assert.equal(await menuStory.getAttribute('aria-current'),'page','Back restores the current story');
   await page.goForward();await page.waitForFunction(()=>!document.body.classList.contains('has-story-pane'));
   assert.equal(await menuStory.getAttribute('aria-current'),null,'Forward restores the closed story');
+  await openStory();await page.waitForFunction(()=>!document.body.classList.contains('story-is-moving'));
+  await page.locator('[data-constellation-nav-toggle]').click();
+  const mapLink=page.locator('[data-nav-view="map"]');
+  await mapLink.focus();await page.keyboard.press('Enter');
+  await page.waitForFunction(()=>!document.body.classList.contains('has-story-pane')&&!document.body.classList.contains('story-is-moving'));
+  await page.waitForFunction(()=>document.activeElement?.id==='map');
+  assert.equal(new URL(page.url()).searchParams.has('story'),false,'Map navigation returns the map to the whole window');
+  assert.equal(new URL(page.url()).hash,'#map','Map navigation synchronizes the address');
+  assert.equal(await mapLink.getAttribute('aria-current'),'page','Map becomes current after returning');
+  assert.equal(await menuStory.getAttribute('aria-current'),null);
+  await page.goBack();await page.waitForFunction(()=>document.body.classList.contains('has-story-pane'));
+  assert.equal(await menuStory.getAttribute('aria-current'),'page','Back from Map restores the story destination');
+  await page.goForward();await page.waitForFunction(()=>!document.body.classList.contains('has-story-pane'));
   // Three complete roundtrips catch accumulated offsets from hidden panels.
   for(let round=0;round<3;round++){
    await openStory();await page.waitForFunction(()=>!document.querySelector('#story-pane').inert);
@@ -155,6 +175,24 @@ try{
   assert.equal(await story.evaluate(e=>e.scrollWidth>e.clientWidth+1),false);
   assert.deepEqual(errors,[]);
   await checkFamilies(page);
+  if(width===1440){
+   await page.goto(origin+'/?story=1&view=time&filter=project#map');await page.waitForSelector('#story-pane[data-ready="true"]');
+   const mapDestination=await page.locator('[data-nav-view="map"]').getAttribute('href');
+   const mapDestinationUrl=new URL(mapDestination,origin);
+   assert.equal(mapDestinationUrl.searchParams.has('story'),false);
+   assert.equal(mapDestinationUrl.searchParams.get('view'),'time','The real Map address retains the map mode');
+   assert.equal(mapDestinationUrl.searchParams.get('filter'),'project','The real Map address retains the map filter');
+   await page.goto(mapDestinationUrl.href);
+   assert.equal(await page.locator('body').evaluate(e=>e.classList.contains('has-story-pane')),false,'Opening the real Map address does not reopen the story');
+   assert.equal(await page.locator('[data-map-filter="project"]').getAttribute('aria-pressed'),'true','The retained project filter is really selected');
+   assert.equal(await page.locator('[data-map-filter="all"]').getAttribute('aria-pressed'),'false');
+   await page.goto(origin+'/?story=1#work');await page.waitForSelector('#story-pane[data-ready="true"]');
+   assert.equal(await page.locator('[data-nav-view="work"]').getAttribute('aria-current'),'page','A parallel section keeps its current destination');
+   assert.equal(await menuStory.getAttribute('aria-current'),null,'An expanded parallel story does not compete with the current section');
+   assert.equal(await menuStory.getAttribute('aria-expanded'),'true');
+   await page.locator('[data-close-panel]').click();
+   assert.equal(await menuStory.getAttribute('aria-current'),'page','Closing the parallel section restores the story destination');
+  }
   if(process.env.PORTFOLIO_UI_ARTIFACT_DIR){mkdirSync(process.env.PORTFOLIO_UI_ARTIFACT_DIR,{recursive:true});await page.screenshot({path:resolve(process.env.PORTFOLIO_UI_ARTIFACT_DIR,`story-${width}.png`)});}
   await page.close();
  }

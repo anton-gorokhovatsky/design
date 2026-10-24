@@ -80,7 +80,7 @@ color-scheme: light;
 --day-enabled: 0;
 }
 
-:root,.map-surface,#story-pane,.settings-panel {
+:root,.map-surface,#story-pane,.settings-panel,#screen-controls {
 --type-label: clamp(.62rem, calc(.56rem + calc(var(--pane-vw) * .18)), .72rem);
 --type-detail: clamp(.875rem, calc(.84rem + calc(var(--pane-vw) * .1)), .9375rem);
 --type-body: clamp(1rem, calc(.94rem + calc(var(--pane-vw) * .1)), 1.125rem);
@@ -8160,6 +8160,7 @@ padding-block: var(--space-3);
 }
 
 .settings-panel__row h3,
+.preference-theme .preference-heading,
 .settings-presence h3,
 .settings-panel__analytics h3 {
 color: var(--content-ink);
@@ -9231,6 +9232,8 @@ html[data-reduce-motion="true"] :is(.ui-close, .work-row, .map-related__item, .c
 }
 /* Settings use one choice group and stable state labels in both surfaces. */
 .preference-heading { display: block; color: var(--content-muted); }
+.preference-theme { display: grid; gap: var(--space-2); padding-block: var(--space-3); }
+.preference-theme .preference-heading { margin: 0; }
 .preference-choices { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); min-width: 0; padding: 2px; border: 1px solid var(--line); border-radius: 999px; }
 .preference-choice { position: relative; display: flex; min-width: 0; border-radius: inherit; cursor: pointer; color: var(--content-ink); }
 .preference-choice input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: inherit; }
@@ -9278,12 +9281,12 @@ font-size: var(--type-panel-heading);
 line-height: normal;
 }
 .control-console .constellation-nav__heading,
-.settings-panel__header h2 {
+.settings-panel__header h2,
+.map-popover__header h2 {
 font-size: var(--type-body);
 line-height: var(--leading-control);
 font-weight: 500;
 }
-.preference-heading,
 .map-control-group__label {
 font-size: var(--type-group-heading);
 line-height: 1;
@@ -9316,7 +9319,8 @@ font-size: var(--type-label);
 line-height: var(--leading-control);
 }
 .control-console .constellation-nav__item .constellation-nav__label,
-.settings-panel .preference-choice {
+.settings-panel .preference-choice,
+#screen-controls .preference-choice {
 font-size: var(--type-detail);
 line-height: var(--leading-control);
 }
@@ -9357,6 +9361,7 @@ line-height: var(--leading-label);
 .contact-links a,
 .contact-link__index,
 .settings-panel__row h3,
+.preference-theme .preference-heading,
 .settings-presence h3,
 .settings-panel__analytics h3,
 .settings-panel__privacy dt,
@@ -9400,6 +9405,7 @@ line-height: var(--leading-body);
 }
 .settings-panel .preference-toggle,
 .settings-panel .preference-state,
+#screen-controls :is(.preference-toggle, .preference-state, .display-control__data),
 .map-readout__description,
 .approach-grid p,
 .command-dock input,
@@ -9624,18 +9630,22 @@ transition: color var(--duration-feedback) var(--motion-shift);
 .map-popover {
 position: fixed;
 inset: auto;
-width: max(240px, 15rem);
-max-width: calc(calc(var(--pane-vw) * 100) - 32px);
+--popover-width: min(360px, calc(100vw - 32px));
+--pane-vw: calc(var(--popover-width) / 100);
+width: var(--popover-width);
+max-width: calc(100vw - 32px);
 margin: 0;
-padding: var(--space-3);
+padding: var(--window-pad);
+font-size: var(--type-body);
+container: settings-controls / inline-size;
 overflow: auto;
 border-radius: var(--window-radius);
 corner-shape: var(--corner-card-shape);
 color: var(--content-ink);
 }
 .map-popover::backdrop { background: transparent; }
-.map-popover__header { display: flex; align-items: center; justify-content: space-between; min-height: 36px; margin-bottom: var(--space-1); padding-left: 7px; }
-.map-popover__header h2 { margin: 0; font: 500 var(--type-panel-heading)/var(--leading-label) var(--font-sans); letter-spacing: .06em; }
+.map-popover__header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); min-height: var(--control-target); }
+.map-popover__header h2 { margin: 0; letter-spacing: normal; }
 .map-popover .map-popover__close { background: transparent; }
 html[data-map-controls-ready] .map-surface:not(.has-reading-surface):not(.has-command-focus) .practice-map:not([data-time-view]):not(:has(.map-inspector.is-open, .map-hover-preview.is-visible)) .map-anchor-label:not(.map-anchor-hidden) { opacity: 1; }
 html[data-map-controls-ready] .map-anchor-label[data-map-label-id="garage"] { transform: translate(-50%, var(--garage-label-offset)); }

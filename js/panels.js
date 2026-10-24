@@ -57,6 +57,7 @@ const constellationNavHome = document.querySelector('[data-nav-view="map"]');
 const compactConstellationNav = pane.media("(max-width: 900px)");
 const controlConsole = document.querySelector(".control-console");
 let isConstellationNavOpen = false;
+let constellationNavCurrentView = "map";
 const isModifiedLinkClick = event => event.currentTarget.matches("a")
   && (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey);
 
@@ -84,11 +85,21 @@ const setConstellationNavOpen = (isOpen) => {
   }
 
   syncConstellationNavInteractivity();
+  if (isOpen) setConstellationNavCurrent();
 };
 
-const setConstellationNavCurrent = (view) => {
+const setConstellationNavCurrent = (view = constellationNavCurrentView) => {
+  constellationNavCurrentView = view;
+  const mapUrl = new URL(location.href);
+  for (const key of ["story", "point", "route", "step"]) mapUrl.searchParams.delete(key);
+  mapUrl.hash = "map";
+  constellationNavHome?.setAttribute("href", `${mapUrl.pathname}${mapUrl.search}${mapUrl.hash}`);
+  const isStoryCurrent = view === "map" && document.body.classList.contains("has-story-pane");
+  const storyLink = constellationNav?.querySelector(".map-story-link");
+  if (isStoryCurrent) storyLink?.setAttribute("aria-current", "page");
+  else storyLink?.removeAttribute("aria-current");
   constellationNavItems.forEach((item) => {
-    const isCurrent = item.dataset.navView === view;
+    const isCurrent = !isStoryCurrent && item.dataset.navView === view;
     item.classList.toggle("is-current", isCurrent);
 
     if (isCurrent) {
@@ -98,6 +109,9 @@ const setConstellationNavCurrent = (view) => {
     }
   });
 };
+
+window.addEventListener("map-story-change", () => setConstellationNavCurrent());
+window.addEventListener("portfolio-url-change", () => setConstellationNavCurrent());
 
 constellationNavToggle?.addEventListener("click", () => {
   setConstellationNavOpen(!isConstellationNavOpen);
@@ -569,12 +583,26 @@ mapInspector?.querySelector("[data-map-related]")?.addEventListener("click", (ev
 
 constellationNavHome?.addEventListener("click", (event) => {
   if (isModifiedLinkClick(event)) return;
-  if (activePanelView) {
-    closeContentPanel({ restoreFocus: false });
-  }
-
-  setInspectorOpen(false);
+  event.preventDefault();
+  const isStoryOpen = document.body.classList.contains("has-story-pane");
   setConstellationNavCurrent("map");
+  const returnUrl = constellationNavHome.href;
+  if (activePanelView) {
+    closeContentPanel({ restoreFocus: false, updateHistory: false });
+  }
+  if (observationRoute.active) stopObservation({ updateHistory: false, closeInspector: true });
+  setInspectorOpen(false);
+
+  if (isStoryOpen) {
+    window.dispatchEvent(new CustomEvent("map-story-map-return", {
+      detail: { trigger: constellationNavHome, animate: event.detail > 0, returnUrl },
+    }));
+  } else {
+    if (new URL(returnUrl).href !== location.href) {
+      writeUrlState({ story: null, point: null, route: null, step: null, hash: "#map" });
+    }
+    document.getElementById("map")?.focus({ preventScroll: true });
+  }
 });
 
 const commandForm = document.querySelector("[data-command-form]");

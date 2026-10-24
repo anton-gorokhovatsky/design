@@ -1398,6 +1398,32 @@ const auditBrowser = async (client, origin) => {
   );
   await evaluate(client, `document.querySelector('[popovertarget="screen-controls"]').click(); true`);
   await waitForExpression(client, `document.querySelector('#screen-controls').matches(':popover-open')`);
+  const quickSettingsContract = await evaluate(client, `(() => {
+    const panel = document.querySelector('#screen-controls');
+    const heading = panel.querySelector('h2');
+    const option = panel.querySelector('[data-motion-toggle]');
+    const label = panel.querySelector('.preference-heading');
+    return {
+      headingSize: getComputedStyle(heading).fontSize,
+      optionSize: getComputedStyle(option).fontSize,
+      fullHeadingSize: getComputedStyle(document.querySelector('.settings-panel__header h2')).fontSize,
+      headingLeft: heading.getBoundingClientRect().left,
+      optionLeft: option.getBoundingClientRect().left,
+      labelLeft: label.getBoundingClientRect().left,
+      choiceSize: getComputedStyle(panel.querySelector('.preference-choice')).fontSize,
+      fullChoiceSize: getComputedStyle(document.querySelector('.settings-panel .preference-choice')).fontSize,
+      groupSize: getComputedStyle(label).fontSize,
+      fullGroupSize: getComputedStyle(document.querySelector('.settings-panel__row--theme h3')).fontSize,
+    };
+  })()`);
+  if (quickSettingsContract.headingSize !== quickSettingsContract.optionSize
+    || quickSettingsContract.headingSize !== quickSettingsContract.fullHeadingSize
+    || Math.abs(parseFloat(quickSettingsContract.choiceSize) - parseFloat(quickSettingsContract.fullChoiceSize)) > 0.5
+    || Math.abs(parseFloat(quickSettingsContract.groupSize) - parseFloat(quickSettingsContract.fullGroupSize)) > 0.5
+    || Math.abs(quickSettingsContract.headingLeft - quickSettingsContract.optionLeft) > 1
+    || Math.abs(quickSettingsContract.headingLeft - quickSettingsContract.labelLeft) > 1) {
+    fail('quick-settings: heading and controls diverge from shared settings roles/alignment.', quickSettingsContract);
+  }
   const motionTogglePoint = await evaluate(client, `(() => {
     const bounds = document.querySelector('.display-control__service [data-motion-toggle]')
       ?.getBoundingClientRect();

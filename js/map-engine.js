@@ -194,6 +194,7 @@ const writeUrlState = (changes, { replace = false } = {}) => {
     state.inspectorOverviewStep = null;
   }
   window.history[method](state, "", nextUrl);
+  window.dispatchEvent(new Event("portfolio-url-change"));
 };
 
 let mapFieldBounds;
