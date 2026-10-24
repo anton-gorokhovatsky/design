@@ -13,6 +13,7 @@ const directory = process.env.PORTFOLIO_UI_ARTIFACT_DIR || ".qa-artifacts/whoop"
 mkdirSync(directory, { recursive: true });
 const errors = [];
 const assertThemeGeometry = async (page, selector) => {
+  await page.evaluate(() => document.fonts.ready);
   for (const value of ['light', 'dark', 'system']) {
     await page.locator(`${selector} input[value="${value}"]`).check();
     await page.waitForFunction(selector => {
@@ -239,6 +240,13 @@ try {
     assert.ok(themeFocus.theme && themeFocus.focus.top >= themeFocus.body.top && themeFocus.focus.bottom <= themeFocus.body.bottom,
       `Tab reaches the checked theme without clipping its focus ring at ${width}/${fontSize}: ${JSON.stringify(themeFocus)}`);
     await assertThemeGeometry(page, '#settings-panel .preference-choices');
+    if (width === 320 && fontSize === 16) {
+      // CI exposed shrink at a 246px reading width. Exercise it on hosts
+      // with overlay scrollbars too, keeping the strict ink fields.
+      await page.locator('.settings-panel__screen').evaluate(screen => { screen.style.maxWidth = '246px'; });
+      await assertThemeGeometry(page, '#settings-panel .preference-choices');
+      await page.locator('.settings-panel__screen').evaluate(screen => { screen.style.removeProperty('max-width'); });
+    }
     if (fontSize === 32) {
       for (const selector of ["[data-motion-toggle]", "[data-contrast-toggle]"]) {
         const control = page.locator(`.settings-panel ${selector}`);

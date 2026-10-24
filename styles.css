@@ -9272,7 +9272,7 @@ min-height: var(--control-target-compact); font-weight: 400; letter-spacing: 0;
 .settings-panel[data-settings-mode="privacy"] :is(.settings-panel__screen,.settings-whoop) { display: none; }
 .settings-panel__row .preference-toggle { align-items: baseline; }
 .settings-panel__screen { container: settings-controls / inline-size; }
-@container settings-controls (max-width: 15rem) {
+@container settings-controls (max-width: 17rem) {
 .preference-choices { grid-template-columns: minmax(0, 1fr); grid-auto-rows: 1fr; border-radius: var(--space-3); }
 .preference-choice > span { min-height: var(--control-target); justify-content: flex-start; padding-inline: var(--space-3); }
 }
