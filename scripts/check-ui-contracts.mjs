@@ -3443,9 +3443,13 @@ const auditBrowser = async (client, origin) => {
   await pressTab(client);
   const mobileShortKeyboardContract = await evaluate(client, `(() => {
     const active = document.activeElement;
-    const style = active ? getComputedStyle(active) : null;
+    // Native radios keep the focus; their visible segment paints its outline.
+    const outline = active?.matches('[data-theme-choice]')
+      ? active.closest('.preference-choice').querySelector('span') : active;
+    const style = outline ? getComputedStyle(outline) : null;
     return {
       inside: document.querySelector('#settings-panel')?.contains(active),
+      focusVisible: active?.matches(':focus-visible'),
       modality: document.documentElement.dataset.focusModality,
       outlineStyle: style?.outlineStyle || '',
       outlineWidth: Number.parseFloat(style?.outlineWidth || '0'),
@@ -3453,6 +3457,7 @@ const auditBrowser = async (client, origin) => {
   })()`);
   if (
     !mobileShortKeyboardContract.inside
+    || !mobileShortKeyboardContract.focusVisible
     || mobileShortKeyboardContract.modality !== "keyboard"
     || mobileShortKeyboardContract.outlineStyle !== "solid"
     || mobileShortKeyboardContract.outlineWidth < 2
