@@ -108,6 +108,23 @@ try {
       await settle(page);
       const initialPopup = await assertPopup(page);
       assert.equal(initialPopup.count, 7);
+      if (label === 'mobile') {
+        await page.evaluate(() => {
+          Object.defineProperties(visualViewport, {height: {configurable:true,value:350}, offsetTop:{configurable:true,value:140}});
+          document.querySelector('.map-surface').style.transform='translate3d(0,-140px,0)';
+          window.dispatchEvent(new Event('resize'));
+        });
+        await settle(page);
+        const panned=await readPopup(page);
+        assert.ok(panned.form.top>=148&&panned.form.bottom<=482,JSON.stringify(panned));
+        assert.ok(panned.popup.top>=148&&Math.abs(panned.form.top-panned.popup.bottom-8)<.6,JSON.stringify(panned));
+        assert.equal(await input.evaluate(e=>e===document.activeElement),true,'Viewport panning preserves the keyboard input');
+        await capture(page,'panned-keyboard-'+theme);
+        await page.evaluate(()=>{delete visualViewport.height;delete visualViewport.offsetTop;document.querySelector('.map-surface').style.transform='';window.dispatchEvent(new Event('resize'));});
+        await settle(page);await assertPopup(page);
+      }
+
+
       if (label === "short") {
         assert.ok(initialPopup.content > initialPopup.height,
           "The menu remains scrollable when a short viewport actually constrains it.");
@@ -192,6 +209,40 @@ try {
       console.log("PASS " + engine + " command placement " + label + " " + theme);
       await page.close();
     }
+  }
+  for (const theme of ['light', 'dark']) {
+    const page=await browser.newPage({viewport:{width:613,height:713},colorScheme:theme,reducedMotion:'reduce'});
+    page.on('pageerror',error=>errors.push(error.message));
+    await page.goto(origin);await page.evaluate(()=>document.fonts.ready);
+    await page.locator('[data-spatial-search]').click();await settle(page);await assertPopup(page);
+    const chronology=page.locator('#command-result-action-time'),input=page.locator('[data-command-input]');
+    await chronology.hover();
+    assert.ok(await chronology.evaluate(e=>!['transparent','rgba(0, 0, 0, 0)'].includes(getComputedStyle(e).backgroundColor)), 'A mouse hover marks the complete result row in a narrow window');
+    await capture(page,'mouse-hover-'+theme);
+    await input.press('ArrowDown');
+    const active=await page.evaluate(()=>{const input=document.querySelector('[data-command-input]'),row=document.getElementById(input.getAttribute('aria-activedescendant'));return{id:row.id,mode:document.documentElement.dataset.focusModality,background:getComputedStyle(row).backgroundColor}});
+    assert.equal(active.id,'command-result-action-settings');assert.equal(active.mode,'keyboard');assert.ok(!['transparent','rgba(0, 0, 0, 0)'].includes(active.background));
+    assert.equal(await chronology.evaluate(e=>getComputedStyle(e).backgroundColor),'rgba(0, 0, 0, 0)','A parked mouse does not compete with keyboard selection');
+    const bounds=await chronology.boundingBox();await page.mouse.move(bounds.x+bounds.width/2+8,bounds.y+bounds.height/2);
+    assert.equal(await page.evaluate(()=>document.documentElement.dataset.focusModality),'pointer','Real mouse movement resumes pointer feedback');
+    await input.press('ArrowDown');
+    await capture(page,'mouse-to-keyboard-'+theme);await input.press('Enter');
+    await page.waitForFunction(()=>document.querySelector('[data-settings-panel]').open);
+    assert.equal(await page.locator('[data-command-form]').getAttribute('popover'),null);
+    await page.close();console.log('PASS '+engine+' index mouse → arrows → selected settings '+theme);
+  }
+  {
+    const page=await browser.newPage({viewport:{width:390,height:844},hasTouch:true,isMobile:true,colorScheme:'dark',reducedMotion:'reduce'});
+    page.on('pageerror',error=>errors.push(error.message));await page.goto(origin);await page.locator('[data-spatial-search]').tap();await settle(page);
+    const input=page.locator('[data-command-input]');
+    const selectedBackground=()=>page.locator('.command-result.is-active').evaluate(e=>getComputedStyle(e).backgroundColor);
+    assert.equal(await selectedBackground(),'rgba(0, 0, 0, 0)','Touch does not keep a hover afterimage');
+    await input.press('ArrowDown');assert.notEqual(await selectedBackground(),'rgba(0, 0, 0, 0)','Keyboard selection remains visible on a touch device');
+    await input.tap();assert.equal(await selectedBackground(),'rgba(0, 0, 0, 0)');
+    await page.locator('#command-result-action-settings').tap();
+    await page.waitForFunction(()=>document.querySelector('[data-settings-panel]').open);
+    assert.equal(await page.locator('[data-command-form]').getAttribute('popover'),null);
+    await page.close();console.log('PASS '+engine+' index touch activation and keyboard feedback');
   }
   assert.deepEqual(errors, []);
 } finally {

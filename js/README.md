@@ -95,3 +95,11 @@ in the initial download. The adjacent source comments identify each invariant.
 - Copy the undistorted centre in one operation. Only the two narrow edge bands need row sampling, even when a tall reel scrolls past the window.
 
 - Project the live iframe: cross-origin pixels cannot be sampled, and WebKit loses accelerated video under SVG URL filters (222757).
+
+- During a text scroll gesture, render native glyphs instead of carrying a stale displacement map through Safari's asynchronous scrolling. Restore the cached edge maps after 120 ms without scrolling and after the touch has ended. Media keeps its attached raster and existing geometry updates while moving.
+
+## Focused index
+
+On compact map panes, the existing search form and results enter the nonmodal top layer without reparenting or replacing the input. They share the visual viewport's coordinates, including its keyboard offset; the map column still bounds their width in a wide paired layout. Closing search removes the top layer immediately and preserves the query.
+
+Mouse movement highlights a whole result row even in a narrow viewport. Arrow navigation establishes keyboard modality before moving the visible selection; a parked pointer does not create a second highlight. Enter opens that selection. Coarse touch retains its existing protection against sticky hover. The background map keeps its normal visual depth; only the result surface uses MATERIAL / 01.

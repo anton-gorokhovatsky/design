@@ -287,6 +287,26 @@ try {
     } finally {await page.close();}
     report.push(result);console.log(result.status,engine,name,JSON.stringify(result.edges),result.error||'');
   }
+  if(!process.env.LENS_CASES||process.env.LENS_CASES.split(',').includes('story-rapid')) {
+    const page=await browser.newPage({viewport:{width:390,height:844},reducedMotion:'no-preference'}),result={engine,name:'story-rapid',status:'PASS',errors:[]};
+    page.on('pageerror',e=>result.errors.push(e.message));
+    try {
+      await page.goto(origin+'/?story=1#map');await page.waitForSelector('#story-pane[data-ready=true]');await page.evaluate(()=>document.fonts.ready);
+      const region=page.locator('#story-pane'),alignHeading=()=>region.evaluate(s=>{const h=s.querySelector('#time h2'),r=h.getBoundingClientRect(),p=s.getBoundingClientRect();s.scrollTop+=r.top-p.top-18});
+      const hasLens=()=>[...document.querySelectorAll('#story-pane [style]')].some(e=>e.style.filter.includes('scroll-ink'));
+      await alignHeading();await page.waitForFunction(hasLens);
+      await region.dispatchEvent('touchstart');
+      for(const delta of [240,320,-160,-340,120]){await region.evaluate((s,d)=>s.scrollTop+=d,delta);await settle(page);assert.equal(await page.evaluate(hasLens),false,'Native scrolling never carries a stale text lens');}
+      await page.waitForTimeout(180);assert.equal(await page.evaluate(hasLens),false,'Holding a touch does not resume optical work');
+      await region.dispatchEvent('touchcancel');await alignHeading();await page.waitForFunction(hasLens);
+      await region.evaluate(s=>{s.lensScrollSamples=[];for(const type of ['wheel','scroll'])s.addEventListener(type,()=>s.lensScrollSamples.push([...s.querySelectorAll('[style]')].filter(e=>e.style.filter.includes('scroll-ink')).length),{passive:true})});
+      const r=await region.boundingBox();await page.mouse.move(r.x+r.width/2,r.y+r.height/2);await page.mouse.wheel(0,430);await page.mouse.wheel(0,-390);await settle(page);
+      result.scrollSamples=await region.evaluate(s=>s.lensScrollSamples);assert.ok(result.scrollSamples.length>0&&result.scrollSamples.every(n=>n===0),'Wheel/reversal retain native ink during motion');
+      await alignHeading();await page.waitForFunction(hasLens);await page.screenshot({path:dir+engine+'-story-rapid-settled.png'});
+      await page.locator('#story-pane [data-close-story]').click();await page.waitForFunction(()=>!document.body.classList.contains('has-story-pane'));await settle(page);assert.equal(await page.evaluate(hasLens),false);assert.deepEqual(result.errors,[]);
+    }catch(e){result.status='FAIL';result.error=e.stack;await page.screenshot({path:dir+engine+'-story-rapid-FAIL.png'}).catch(()=>{})}finally{await page.close()}
+    report.push(result);console.log(result.status,engine,result.name,result.error||JSON.stringify(result.scrollSamples));
+  }
 } finally {await browser.close();if(local)await new Promise(r=>local.server.close(r));}
 writeFileSync(dir+engine+'-scroll-lens.json',JSON.stringify(report,null,2)+'\n');
 if(report.some(r=>r.status==='FAIL'))process.exitCode=1;

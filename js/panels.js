@@ -905,8 +905,8 @@ const setCommandOpen = (isOpen) => {
     isOpen ? "Закрыть поиск" : "Открыть результат",
   );
   syncCommandFocusViewport();
-  if (isOpen) positionDetachedCommandResults();
-  else syncMobileMapFrame();
+  positionDetachedCommandResults();
+  if (!isOpen) syncMobileMapFrame();
 
   if (commandResults) {
     commandResults.inert = !hasResults;
@@ -1198,6 +1198,7 @@ commandInput?.addEventListener("keydown", async (event) => {
   }
 
   event.preventDefault();
+  document.documentElement.dataset.focusModality = 'keyboard';
 
   if (!commandForm?.classList.contains("is-open")) {
     renderCommandResults(commandInput.value);
@@ -1236,10 +1237,16 @@ commandSubmit?.addEventListener("click", (event) => {
 });
 
 commandResults?.addEventListener("pointerdown", (event) => {
-  event.preventDefault();
+  if (event.pointerType === 'mouse') event.preventDefault();
 });
 
+let commandPointerPosition = '';
+commandResults?.addEventListener('pointerleave', event => { commandPointerPosition = `${event.clientX}:${event.clientY}`; });
 commandResults?.addEventListener("pointermove", (event) => {
+  const position = `${event.clientX}:${event.clientY}`;
+  if (position === commandPointerPosition) return;
+  commandPointerPosition = position;
+  document.documentElement.dataset.focusModality = 'pointer';
   const button = event.target.closest(".command-result");
 
   if (!button) {

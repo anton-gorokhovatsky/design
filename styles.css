@@ -3288,7 +3288,6 @@ border-radius: max(0px, calc(var(--window-radius) - var(--command-results-inset)
 corner-shape: var(--corner-card-shape);
 }
 
-.command-result:hover,
 .command-result:focus-visible,
 .command-result.is-active,
 .command-result[aria-selected="true"] {
@@ -3307,6 +3306,16 @@ corner-shape:var(--corner-card-shape);
 }
 
 /* Touch must not retain hover or combobox afterimages. */
+
+
+html[data-focus-modality="keyboard"] .command-result.is-active,
+html[data-focus-modality="keyboard"]
+.command-result[aria-selected="true"] {
+background: color-mix(in srgb, var(--content-ink) 6%, transparent);
+}
+}
+
+@media (hover: none), (pointer: coarse) {
 html[data-focus-modality="pointer"] .command-result:hover,
 html[data-focus-modality="pointer"] .command-result:focus,
 html[data-focus-modality="pointer"] .command-result:focus-visible,
@@ -3315,12 +3324,6 @@ html[data-focus-modality="pointer"]
 .command-result[aria-selected="true"] {
 background: transparent;
 outline: none;
-}
-
-html[data-focus-modality="keyboard"] .command-result.is-active,
-html[data-focus-modality="keyboard"]
-.command-result[aria-selected="true"] {
-background: color-mix(in srgb, var(--content-ink) 6%, transparent);
 }
 }
 
@@ -3593,18 +3596,6 @@ display: block;
 width: auto;
 height: auto;
 }
-}
-
-.map-surface:has(.command-dock.is-open) .signal-constellation {
-opacity: 0.28;
-}
-
-.map-surface:has(.command-dock.is-open) .map-specks,.map-surface:has(.command-dock.is-open) .map-links {
-opacity: 0.18;
-}
-
-.map-surface:has(.command-dock.is-open) .map-axis-label {
-opacity: 0.16;
 }
 
 .practice-map:has(.map-inspector.is-open) .map-axis,
@@ -10307,7 +10298,7 @@ html[data-celestial-volume][data-theme="light"] {
 --celestial-practice-light: brightness(1.06) contrast(1.07) saturate(.92);
 --celestial-satellite-light: contrast(1.06) saturate(.92);
 }
-html[data-celestial-volume] .map-surface:not(.has-reading-surface,.has-point-preview,.has-settings-panel,.has-command-focus,.has-constellation-nav) .signal-constellation {
+html[data-celestial-volume] .map-surface:not(.has-reading-surface,.has-point-preview,.has-settings-panel,.has-constellation-nav) .signal-constellation {
 opacity: var(--celestial-field-opacity);
 }
 /* Preserve coordinates; quiet idle light pools only. */
@@ -10521,3 +10512,8 @@ html[data-reduce-motion="true"] .has-story-pane #story-pane{transition:none}
 .content-panel .work-row:has(img.work-row__preview) .work-row__domain{grid-column:2;grid-row:5}
 }
 @container map-viewport (max-height:20rem){.practice-map[data-time-view] .orbital-radar i:is(:nth-child(2),:nth-child(3)) span{display:none}}
+
+.command-dock[popover]{display:grid;margin:0;max-width:none;max-height:none;border:0}
+:is(.command-results,.command-status)[popover]{margin:0;max-width:none}
+
+.command-result:focus-visible{outline:var(--focus-width) solid var(--signal);outline-offset:calc(0px - var(--focus-width))}
