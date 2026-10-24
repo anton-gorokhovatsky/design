@@ -40,10 +40,11 @@
       })();
     </script>
     <link rel="preload" href="/assets/fonts/Akt-Variable.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="stylesheet" href="/styles.css?v=ce5545e0af85">
+    <link rel="stylesheet" href="/styles.css?v=ba75f0792c71">
     <style>
       html, body { min-height: 100%; }
-      body { height: auto; overflow-y: auto; }
+      html { height: auto; overflow: auto; }
+      body.map-surface { position: relative; inset: auto; height: auto; overflow: visible; transform: none; }
       .not-found {
         position: relative;
         isolation: isolate;
@@ -104,7 +105,8 @@
       .not-found__title {
         margin: 0;
         font-size: var(--type-title);
-        font-weight: 500;
+        font-weight: 600;
+        overflow-wrap: anywhere;
         line-height: var(--leading-title);
         letter-spacing: -.025em;
         text-wrap: balance;
@@ -151,7 +153,7 @@
         aria-labelledby="not-found-title"
       >
         <p class="not-found__meta">404 / Неизвестный участок</p>
-        <h1 class="not-found__title" id="not-found-title">Точка не&nbsp;найдена</h1>
+        <h1 class="not-found__title" id="not-found-title">Точка не найдена</h1>
         <p class="not-found__copy">
           Такого адреса на&nbsp;карте нет. Возможно, ссылка устарела
           или&nbsp;в&nbsp;ней опечатка.

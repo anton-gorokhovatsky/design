@@ -557,6 +557,33 @@ const getConsoleOffset = (module) => ({
 
 const authorCard = document.querySelector('.site-header');
 const authorField = document.querySelector('.whoop-field');
+const syncCompactControlGeometry = () => {
+  if (pane.width > 900) return;
+  const toggle = document.querySelector('[data-constellation-nav-toggle]');
+  const mark = toggle?.querySelector('.constellation-nav__cluster');
+  const map = document.querySelector('.map-surface');
+  if (!toggle || !mark || !map || toggle.getAttribute('aria-expanded') === 'true') return;
+  const button = toggle.getBoundingClientRect();
+  const icon = mark.getBoundingClientRect();
+  if (!button.width || !icon.width) return;
+  const write = (element, name, value) => {
+    const next = `${value.toFixed(2)}px`;
+    if (element.style.getPropertyValue(name) !== next) element.style.setProperty(name, next);
+  };
+  write(map, '--compact-menu-bottom', button.bottom - map.getBoundingClientRect().top);
+  const name = authorCard?.querySelector('.brand__name');
+  if (name) write(authorCard, '--author-menu-text-width', Math.max(0, button.left - name.getBoundingClientRect().left));
+  const inspector = document.querySelector('.map-inspector.has-reading-frame:not(.is-case-view).is-open');
+  const inspectorClose = inspector?.querySelector('[data-close-inspector]');
+  if (inspectorClose) write(inspector, '--compact-inspector-axis-padding', Math.max(0,
+    inspector.getBoundingClientRect().right - icon.left - icon.width / 2 - inspectorClose.getBoundingClientRect().width / 2));
+  const story = document.querySelector('#story-pane');
+  if (story && document.body.classList.contains('has-story-pane')) {
+    const close = story.querySelector('[data-close-story]');
+    write(story, '--story-close-inset', story.getBoundingClientRect().right - icon.left - icon.width / 2
+      - (close?.getBoundingClientRect().width || button.width) / 2);
+  }
+};
 const syncAuthorField = () => {
   if (!authorCard || !authorField) return;
   const card = authorCard.getBoundingClientRect();
@@ -572,6 +599,7 @@ const syncAuthorPresence = () => {
   authorCard.inert = (reading && !document.body.classList.contains("has-contact-consoles"))
     || document.body.matches(".has-constellation-nav, .has-command-focus");
   syncAuthorField();
+  syncCompactControlGeometry();
   window.dispatchEvent(new CustomEvent("author-presence-change"));
 };
 let authorPresenceFrame = 0;
@@ -679,6 +707,7 @@ floatingConsoleModules.forEach((module) => {
 });
 
 const syncConsoleBounds = () => {
+  syncCompactControlGeometry();
   if (!floatingConsoleMedia.matches) {
     floatingConsoleModules.forEach((module) => setConsoleOffset(module, 0, 0));
     return;

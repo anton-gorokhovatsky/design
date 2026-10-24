@@ -1403,26 +1403,35 @@ const auditBrowser = async (client, origin) => {
     const heading = panel.querySelector('h2');
     const option = panel.querySelector('[data-motion-toggle]');
     const label = panel.querySelector('.preference-heading');
+    const reference = document.querySelector('.map-control-group--filters .map-control');
     return {
       headingSize: getComputedStyle(heading).fontSize,
       optionSize: getComputedStyle(option).fontSize,
-      fullHeadingSize: getComputedStyle(document.querySelector('.settings-panel__header h2')).fontSize,
+      optionWeight: getComputedStyle(option).fontWeight,
+      referenceSize: getComputedStyle(reference).fontSize,
+      referenceWeight: getComputedStyle(reference).fontWeight,
       headingLeft: heading.getBoundingClientRect().left,
       optionLeft: option.getBoundingClientRect().left,
       labelLeft: label.getBoundingClientRect().left,
       choiceSize: getComputedStyle(panel.querySelector('.preference-choice')).fontSize,
-      fullChoiceSize: getComputedStyle(document.querySelector('.settings-panel .preference-choice')).fontSize,
+      stateSize: getComputedStyle(panel.querySelector('.preference-state')).fontSize,
       groupSize: getComputedStyle(label).fontSize,
-      fullGroupSize: getComputedStyle(document.querySelector('.settings-panel__row--theme h3')).fontSize,
+      referenceGroupSize: getComputedStyle(document.querySelector('.map-control-group__label')).fontSize,
+      dataBorder: getComputedStyle(panel.querySelector('.display-control__data')).borderTopWidth,
+      dataText: panel.querySelector('.display-control__data').textContent.trim(),
     };
   })()`);
-  if (quickSettingsContract.headingSize !== quickSettingsContract.optionSize
-    || quickSettingsContract.headingSize !== quickSettingsContract.fullHeadingSize
-    || Math.abs(parseFloat(quickSettingsContract.choiceSize) - parseFloat(quickSettingsContract.fullChoiceSize)) > 0.5
-    || Math.abs(parseFloat(quickSettingsContract.groupSize) - parseFloat(quickSettingsContract.fullGroupSize)) > 0.5
+  if (quickSettingsContract.optionSize !== quickSettingsContract.referenceSize
+    || quickSettingsContract.optionWeight !== quickSettingsContract.referenceWeight
+    || quickSettingsContract.choiceSize !== quickSettingsContract.referenceSize
+    || quickSettingsContract.stateSize !== quickSettingsContract.referenceSize
+    || quickSettingsContract.groupSize !== quickSettingsContract.referenceGroupSize
+    || parseFloat(quickSettingsContract.headingSize) >= parseFloat(quickSettingsContract.optionSize)
+    || parseFloat(quickSettingsContract.dataBorder) !== 0
+    || quickSettingsContract.dataText.includes('›')
     || Math.abs(quickSettingsContract.headingLeft - quickSettingsContract.optionLeft) > 1
     || Math.abs(quickSettingsContract.headingLeft - quickSettingsContract.labelLeft) > 1) {
-    fail('quick-settings: heading and controls diverge from shared settings roles/alignment.', quickSettingsContract);
+    fail('quick-settings: compact controls diverge from the accepted View roles/alignment.', quickSettingsContract);
   }
   const motionTogglePoint = await evaluate(client, `(() => {
     const bounds = document.querySelector('.display-control__service [data-motion-toggle]')
@@ -3469,9 +3478,9 @@ const auditBrowser = async (client, origin) => {
   await pressTab(client);
   const mobileShortKeyboardContract = await evaluate(client, `(() => {
     const active = document.activeElement;
-    // Native radios keep the focus; their visible segment paints its outline.
+    // Native radios keep focus; the group paints a separate ring around the selection.
     const outline = active?.matches('[data-theme-choice]')
-      ? active.closest('.preference-choice').querySelector('span') : active;
+      ? active.closest('.preference-choices') : active;
     const style = outline ? getComputedStyle(outline) : null;
     return {
       inside: document.querySelector('#settings-panel')?.contains(active),

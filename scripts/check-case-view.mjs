@@ -22,6 +22,7 @@ for (const engine of [process.argv[2] || 'chromium']) {
     ['short',1440,650,'light'], ['tablet-light',1024,768,'light'], ['tablet-dark',1024,768,'dark'],
     ['mobile-light',390,844,'light'], ['mobile-dark',390,844,'dark'],
     ['compact',320,568,'light'], ['compact-dark',320,568,'dark'], ['text200',1440,900,'dark',200],
+    ['compact-text200',320,844,'dark',200],
   ]) {
     if (process.env.CASE_NAME && !process.env.CASE_NAME.split(',').includes(name)) continue;
     const page = await browser.newPage({ viewport: {width,height}, colorScheme: theme,
@@ -231,6 +232,31 @@ for (const engine of [process.argv[2] || 'chromium']) {
       await page.screenshot({path:dir+engine+'-'+name+'-project-copy.jpg',type:'jpeg',quality:86});
       await page.keyboard.press('Escape');
       await page.waitForFunction(() => !document.body.hasAttribute('data-case-open'));
+      if (name==='compact-text200') {
+        result.reflow=[];
+        // Exercise both heading families, long metadata, a principle and the
+        // nested details grid. Scroll extent alone misses clipped text glyphs.
+        for (const point of ['optimal','principle-data-intuition','hotline-camp','garage-webzine']) {
+          await page.goto(origin+'/?qa&font=200&point='+point,{waitUntil:'domcontentloaded'});
+          await page.waitForFunction(()=>document.querySelector('.map-inspector.is-open'));
+          await page.evaluate(()=>document.fonts.ready);
+          await page.waitForFunction(()=>parseFloat(getComputedStyle(document.documentElement).fontSize)===32);
+          const reflow=await page.evaluate(()=>{
+            const scroll=document.querySelector('.case-scroll'),port=scroll.getBoundingClientRect();
+            const texts=[];
+            for (const block of document.querySelectorAll('.case-header .map-readout__kind,.case-scroll h2,.case-scroll p,.case-scroll h3,.case-scroll summary')) {
+              if (!block.checkVisibility()) continue;
+              const range=document.createRange();range.selectNodeContents(block);
+              for (const r of range.getClientRects()) if (r.width && (r.left<port.left-1 || r.right>port.right+1)) texts.push({text:block.textContent.trim(),left:r.left,right:r.right});
+            }
+            return {overflow:scroll.scrollWidth-scroll.clientWidth,texts};
+          });
+          result.reflow.push({point,...reflow});
+          assert.ok(reflow.overflow<=1,point+': no horizontal overflow at 320px/200%');
+          assert.deepEqual(reflow.texts,[],point+': rendered text stays inside the reading frame');
+          await page.screenshot({path:dir+engine+'-'+name+'-'+point+'.jpg',type:'jpeg',quality:86});
+        }
+      }
       assert.deepEqual(result.errors,[]);
     } catch (error) {
       result.status='FAIL'; result.error=error.stack || error.message;

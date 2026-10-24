@@ -175,7 +175,7 @@ function sync() {
 }
 const schedule = () => { if (!pending) pending = requestAnimationFrame(sync); };
 const observer = new MutationObserver(schedule);
-observer.observe(root, { attributes: true });
+observer.observe(root, { attributes: true, attributeFilter: ['data-theme', 'data-contrast', 'data-reduce-motion', 'data-celestial-paused', 'style'] });
 observer.observe(document.body, { attributes: true, attributeFilter: ['class', 'data-case-open'] });
 for (const node of [field, document.querySelector('.map-inspector'), document.querySelector('.practice-map')]) {
   if (node) observer.observe(node, { attributes: true, attributeFilter: ['class', 'style', 'data-observation-active'] });

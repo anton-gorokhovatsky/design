@@ -147,17 +147,27 @@ const getEffectiveTheme = (mode) => (
     ? (systemTheme.matches ? "dark" : "light")
     : mode
 );
+let themePaintFrame = 0;
+const paintTheme = () => {
+  themePaintFrame = 0;
+  const theme = getEffectiveTheme(themeMode);
+  if (root.dataset.theme !== theme) root.dataset.theme = theme;
+  themeColor?.setAttribute("content", theme === 'dark' ? "#11120f" : "#eeede7");
+};
 const setThemeMode = (mode, persist = false) => {
   themeMode = mode === "light" || mode === "dark" ? mode : "system";
-  const theme = getEffectiveTheme(themeMode);
-  root.dataset.theme = theme;
   root.dataset.themeMode = themeMode;
-  const isDark = theme === "dark";
   themeChoices.forEach((choice) => {
     choice.checked = choice.dataset.themeChoice === themeMode;
   });
 
-  themeColor?.setAttribute("content", isDark ? "#11120f" : "#eeede7");
+  cancelAnimationFrame(themePaintFrame);
+  // Paint the control's first frame before theme-dependent map canvases redraw.
+  if (persist && root.dataset.focusModality !== 'keyboard' && !reducedMotion.matches) {
+    themePaintFrame = requestAnimationFrame(() => {
+      themePaintFrame = requestAnimationFrame(paintTheme);
+    });
+  } else paintTheme();
 
   if (persist) {
     try {

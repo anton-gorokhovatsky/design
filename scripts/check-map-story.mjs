@@ -56,7 +56,7 @@ try{
   await page.waitForFunction(()=>document.activeElement?.id==='map');
   if(width===390){
    await page.locator('[data-constellation-nav-toggle]').click();
-   assert.equal(await page.locator('[data-nav-view="map"] .constellation-nav__label').evaluate(e=>getComputedStyle(e).textDecorationLine),'underline','The compact menu visibly marks the current Map without hover');
+   assert.equal(await page.locator('[data-nav-view="map"] .constellation-nav__label').evaluate(e=>getComputedStyle(e).textDecorationLine),'none','The current Map uses color without an underline in compact navigation');
   }
   await entry.waitFor({state:'visible'});
   await entry.focus();await page.keyboard.press('Enter');
@@ -75,7 +75,7 @@ try{
    await story.evaluate(e=>e.scrollTop=480);
    const readingPosition=await story.evaluate(e=>e.scrollTop),address=page.url(),historyLength=await page.evaluate(()=>history.length);
    await page.locator('[data-constellation-nav-toggle]').click();
-   assert.equal(await menuStory.locator('span').evaluate(e=>getComputedStyle(e).textDecorationLine),'underline','Current story has a persistent visible mark');
+   assert.equal(await menuStory.locator('span').evaluate(e=>getComputedStyle(e).textDecorationLine),'none','The current story keeps the compact menu free of underlines');
    if(method==='pointer')await menuStory.click();else{await menuStory.focus();await page.keyboard.press('Enter');}
    await page.waitForFunction(()=>document.activeElement?.id==='story-pane');
    assert.equal(await page.locator('[data-constellation-nav-toggle]').getAttribute('aria-expanded'),'false','Returning to the current story closes its menu');
@@ -157,6 +157,13 @@ try{
   const label=page.locator('#scene-practice .scene-readout.is-visible');await label.locator('a').focus();await label.locator('a').press('Escape');
   assert.equal(await story.evaluate(e=>e.inert),false);assert.equal(await label.count(),0);
   await target.press('Enter');const scroll=await story.evaluate(e=>e.scrollTop);
+  const neighbor=await page.locator('#scene-practice button[data-point]:not([data-point="tarski"])').evaluateAll(nodes=>nodes.map(e=>{
+   const r=e.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2;
+   return e.contains(document.elementFromPoint(x,y))?{x,y}:null;
+  }).find(Boolean));
+  assert.ok(neighbor,'Another visible satellite is available for the pointer path');
+  await page.mouse.move(neighbor.x,neighbor.y);
+  assert.equal(new URL(await page.locator('#scene-practice .scene-readout a').getAttribute('href')).searchParams.get('point'),'tarski','Incidental hover cannot replace an explicitly selected project link');
   await page.locator('#scene-practice .scene-readout a').click();
   assert.equal(new URL(page.url()).searchParams.get('point'),'tarski');
   assert.equal(await page.locator('#map-pane').evaluate(e=>e.inert),false);
@@ -196,6 +203,43 @@ try{
    await page.locator('[data-close-panel]').click();
    assert.equal(await menuStory.getAttribute('aria-current'),'page','Closing the parallel section restores the story destination');
   }
+  // A section and the reader form one navigation history, including direct entries.
+  for(const view of ['work','approach','contact']){
+   await page.goto(origin+'/?story=1#map');await page.waitForSelector('#story-pane[data-ready="true"]');
+   await story.evaluate(e=>e.scrollTop=450);
+   await page.locator('[data-constellation-nav-toggle]').click();
+   await page.locator(`[data-nav-view="${view}"]`).click();
+   await page.waitForSelector(`[data-content-panel].is-open[data-view="${view}"]`);
+   if(width===390){
+    await page.waitForFunction(()=>!document.body.classList.contains('has-story-pane'));
+    assert.equal(new URL(page.url()).searchParams.has('story'),false);
+    await page.goBack();await page.waitForFunction(()=>document.body.classList.contains('has-story-pane'));
+    await page.waitForFunction(()=>Math.abs(document.querySelector('#story-pane').scrollTop-450)<2);
+    await page.goForward();await page.waitForSelector(`[data-content-panel].is-open[data-view="${view}"]`);
+    await page.waitForFunction(()=>!document.body.classList.contains('has-story-pane'));
+   }else{
+    await page.locator('#story-pane [data-close-story]').click();
+    await page.waitForFunction(()=>document.activeElement?.matches('[data-close-panel]'));
+    assert.equal(await page.locator('[data-content-panel]').getAttribute('data-view'),view);
+   }
+   await page.locator('[data-close-panel]').click();
+   await page.waitForFunction(()=>document.activeElement!==document.body&&!document.activeElement?.closest('[inert]'));
+   await page.goto(origin+'/?story=1#'+view);
+   await page.waitForSelector(`[data-content-panel].is-open[data-view="${view}"]`);
+   if(width===390){
+    assert.equal(new URL(page.url()).searchParams.has('story'),false,'A narrow composite address resolves to its section');
+    assert.equal(await page.locator('body').evaluate(e=>e.classList.contains('has-story-pane')),false);
+   }else await page.waitForSelector('#story-pane[data-ready="true"]');
+   await page.locator('[data-close-panel]').click();
+   await page.waitForFunction(()=>document.activeElement!==document.body&&!document.activeElement?.closest('[inert]'));
+  }
+  if(width===390)for(const point of ['principle-wings','garage-site']){
+   await page.goto(origin+'/?story=1&point='+point);
+   await page.waitForSelector('.map-inspector.is-open');
+   assert.equal(new URL(page.url()).searchParams.has('story'),false,'A narrow point address exposes the selected card');
+   assert.equal(await page.locator('body').evaluate(e=>e.classList.contains('has-story-pane')),false);
+   await page.locator('[data-close-inspector]').click();
+  }
   if(process.env.PORTFOLIO_UI_ARTIFACT_DIR){mkdirSync(process.env.PORTFOLIO_UI_ARTIFACT_DIR,{recursive:true});await page.screenshot({path:resolve(process.env.PORTFOLIO_UI_ARTIFACT_DIR,`story-${width}.png`)});}
   await page.close();
  }
@@ -209,6 +253,27 @@ try{
  await enlarged.locator('.point-preview:not([hidden])').waitFor();
  assert.equal(await enlarged.locator('.point-preview h2').evaluate(e=>e.scrollWidth>e.clientWidth+1),false,'A large-text point title stays readable beside or below its logo');
  await enlarged.close();
+ // Visible glyph centres share the menu axis at every supported compact/text size.
+ const axisPage=await browser.newPage({viewport:{width:390,height:844},reducedMotion:'reduce'});
+ for(const width of [320,390,430])for(const font of [100,200]){
+  await axisPage.setViewportSize({width,height:844});
+  await axisPage.goto(origin+'/?qa&font='+font+'&story=1#map');
+  await axisPage.waitForSelector('#story-pane[data-ready="true"]');
+  await axisPage.waitForFunction(()=>{
+   const menu=document.querySelector('.constellation-nav__cluster').getBoundingClientRect();
+   const close=document.querySelector('#story-pane .story-actions path').getBoundingClientRect();
+   return Math.abs(menu.x+menu.width/2-close.x-close.width/2)<1;
+  });
+  const axis=await axisPage.evaluate(()=>{
+   const menu=document.querySelector('.constellation-nav__cluster').getBoundingClientRect();
+   const close=document.querySelector('#story-pane .story-actions path').getBoundingClientRect();
+   const button=document.querySelector('#story-pane .story-actions button').getBoundingClientRect();
+   return {delta:Math.abs(menu.x+menu.width/2-close.x-close.width/2),left:button.left,right:button.right,width:button.width,height:button.height};
+  });
+  assert.ok(axis.delta<1,'Story close follows the unchanged menu glyph axis');
+  assert.ok(axis.left>=0&&axis.right<=width&&axis.width>=44&&axis.height>=44,'The aligned close keeps its complete touch target inside the viewport');
+ }
+ await axisPage.close();
  const failedOpening=await browser.newPage({viewport:{width:390,height:844}});
  const retryErrors=[];failedOpening.on('pageerror',error=>retryErrors.push(error.message));
  let failedOpeningOnce=false;await failedOpening.route('**/assets/map-story/content.html*',route=>{if(!failedOpeningOnce){failedOpeningOnce=true;return route.fulfill({status:503,body:'Unavailable'});}return route.continue();});

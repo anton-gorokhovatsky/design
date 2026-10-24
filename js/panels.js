@@ -363,6 +363,7 @@ const openContentPanel = (
     });
     writeUrlState(
       {
+        ...(window.matchMedia('(max-width: 999px)').matches ? { story: null } : {}),
         point: null,
         route: null,
         step: null,
@@ -409,9 +410,18 @@ const closeContentPanel = (
     writeUrlState({ hash: null }, { replace: true });
   }
 
-  if (restoreFocus && lastPanelTrigger instanceof HTMLElement) {
-    if (lastPanelTrigger.closest("#work")) lastPanelTrigger = compactConstellationNav.matches
-      ? document.querySelector(".mobile-first-cases") : constellationNavHome;
+  if (restoreFocus) {
+    if (lastPanelTrigger instanceof HTMLElement && lastPanelTrigger.closest("#work")) {
+      lastPanelTrigger = compactConstellationNav.matches
+        ? document.querySelector(".mobile-first-cases") : constellationNavHome;
+    }
+    const navigationTrigger = lastPanelTrigger instanceof HTMLElement
+      && lastPanelTrigger.closest("[data-constellation-nav-orbit]");
+    if (!(lastPanelTrigger instanceof HTMLElement) || lastPanelTrigger === document.body
+      || !lastPanelTrigger.isConnected || (!navigationTrigger && (lastPanelTrigger.closest('[inert]')
+        || !lastPanelTrigger.getClientRects().length || getComputedStyle(lastPanelTrigger).visibility === 'hidden'))) {
+      lastPanelTrigger = compactConstellationNav.matches ? constellationNavToggle : constellationNavHome;
+    }
     const triggerIsInCompactNavigation = compactConstellationNav.matches
       && Boolean(lastPanelTrigger.closest("[data-constellation-nav-orbit]"));
 

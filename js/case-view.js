@@ -314,7 +314,7 @@ new ResizeObserver(() => {
   if (headerMeasureFrame) return;
   headerMeasureFrame = requestAnimationFrame(() => {
     headerMeasureFrame = 0;
-    header.style.paddingRight = (viewport.offsetWidth - viewport.clientWidth) + "px";
+    header.style.setProperty('--case-scrollbar-clearance', (viewport.offsetWidth - viewport.clientWidth) + "px");
   });
 }).observe(viewport);
 reflect();
