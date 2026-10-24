@@ -22,11 +22,11 @@ const settle = page => page.evaluate(() => new Promise(done => requestAnimationF
 const readHeader = page => page.locator('.site-header').evaluate(header => {
   const rect = header.getBoundingClientRect();
   const style = getComputedStyle(header);
-  const role = header.querySelector('.brand__role');
+  const name = header.querySelector('.brand__name');
   return {
     box: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
     material: [style.backgroundColor, style.backdropFilter, style.borderRadius, style.padding],
-    role: [getComputedStyle(role).color, getComputedStyle(role).fontSize],
+    name: [getComputedStyle(name).color, getComputedStyle(name).fontSize],
     overflow: header.scrollWidth - header.clientWidth,
     pageOverflow: [document.documentElement.scrollWidth - innerWidth, document.documentElement.scrollHeight - innerHeight],
   };

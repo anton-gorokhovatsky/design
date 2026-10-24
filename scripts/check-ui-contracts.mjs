@@ -1198,7 +1198,7 @@ const auditBrowser = async (client, origin) => {
       return {
         name: document.getElementById(control?.getAttribute("aria-labelledby"))?.textContent.trim(),
         pressed: control?.getAttribute("aria-pressed"),
-        state: control?.querySelector(".preference-state")?.textContent.trim(),
+        state: control?.closest(".preference-option")?.querySelector(".preference-state")?.textContent.trim(),
       };
     };
     return {

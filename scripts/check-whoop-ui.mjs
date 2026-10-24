@@ -64,7 +64,7 @@ try {
         "Aura follows its owner while dragging.");
       assert.ok(Math.abs(after.x - before.x + 200) < 1 && Math.abs(after.y - before.y + 150) < 1,
         "The author card moves with its free surface.");
-      const copy = await page.locator(".brand__role").boundingBox();
+      const copy = await page.locator(".brand__name").boundingBox();
       await page.mouse.move(copy.x + 2, copy.y + 6);
       await page.mouse.down();
       await page.mouse.move(copy.x + 100, copy.y + 6, { steps: 8 });

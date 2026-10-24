@@ -35,7 +35,7 @@ const readPopup = (page, selector = "[data-command-results]") => page.evaluate((
   return {
     popup: box(popup), form: box(form), surface: box(surface),
     height: popup.clientHeight, content: popup.scrollHeight, scrollTop: popup.scrollTop,
-    placement: popup.dataset.placement, count: popup.children.length,
+    placement: popup.dataset.placement, count: popup.querySelectorAll('.command-result').length,
     viewport: { width: innerWidth, height: innerHeight },
     overflow: document.documentElement.scrollWidth - innerWidth,
   };

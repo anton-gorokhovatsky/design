@@ -37,7 +37,9 @@ export async function measureTextContrast(page) {
           const point = [x1 + (x2 - x1) * x, y1 + (y2 - y1) * y];
           const hit = document.elementFromPoint(...point);
           // Labels over the map intentionally have pointer-events:none.
-          if (style.pointerEvents === 'none' || element.contains(hit) || hit?.contains(element)) points.push(point);
+          const labelControl = element.closest('label')?.control;
+          const transparentControl = labelControl && hit === labelControl && Number(getComputedStyle(hit).opacity) === 0;
+          if (style.pointerEvents === 'none' || element.contains(hit) || hit?.contains(element) || transparentControl) points.push(point);
         }
       }
       if (!points.length) continue;

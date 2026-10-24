@@ -119,7 +119,7 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=3edc02bcbec6">
+    <link rel="stylesheet" href="styles.css?v=a6d05eeb376b">
     <style>
       .map-evidence [data-map-evidence-role-label]{font-family:var(--font-author);font-size:.6rem;font-weight:400;letter-spacing:0}
     </style>
@@ -127,7 +127,7 @@
     <script type="importmap" data-runtime-import-map>
       {
         "imports": {
-          "./js/preferences.js": "./js/preferences.js?v=609a84bec415",
+          "./js/preferences.js": "./js/preferences.js?v=e42106886b2c",
           "./js/pane-viewport.js": "./js/pane-viewport.js?v=077a2aba65b6",
           "./js/map-story.js": "./js/map-story.js?v=883f8f253339",
           "./js/whoop-day.js": "./js/whoop-day.js?v=cc24b65007e4",
@@ -173,7 +173,7 @@
     <!-- runtime-import-map:end -->
     <!-- Native modules keep their dependencies explicit; see js/README.md. -->
     <script type="module" src="js/case-content.js?v=ac80335d30cb"></script>
-    <script type="module" src="js/preferences.js?v=609a84bec415"></script>
+    <script type="module" src="js/preferences.js?v=e42106886b2c"></script>
     <script type="module" src="js/whoop-day.js?v=cc24b65007e4"></script>
     <script type="module" src="js/whoop-aura.js?v=d276af4806f2"></script>
     <script type="module" src="js/atlas-motion.js?v=776a659178f0"></script>
@@ -314,7 +314,6 @@
     <header class="site-header" data-floating-console="author" data-material-surface="whoop-readout" data-material-active="mobile">
       <p class="brand" data-console-text>
         <span class="brand__name">Антон Гороховатский <small>© 2026</small></span>
-        <span class="brand__role">Придумываю, разрабатываю и веду веб‑проекты.</span>
       </p>
       <section class="whoop-readout" aria-label="Мой день: показатели WHOOP" data-whoop-readout hidden>
         <dl class="whoop-metrics" data-console-text>
@@ -1026,7 +1025,7 @@
             <div class="preference-theme"><span class="preference-heading">Тема</span><div class="preference-choices" role="group" aria-label="Тема"><label class="preference-choice"><input type="radio" name="quick-theme" data-theme-choice="system" value="system" checked><span>Системная</span></label><label class="preference-choice"><input type="radio" name="quick-theme" data-theme-choice="light" value="light"><span>Светлая</span></label><label class="preference-choice"><input type="radio" name="quick-theme" data-theme-choice="dark" value="dark"><span>Тёмная</span></label></div></div>
             <div class="display-control__service">
               <div class="display-control__accessibility" role="group" aria-label="Настройки цифровой доступности">
-<div class="preference-option"><button type="button" class="preference-toggle" data-motion-toggle aria-pressed="false" aria-labelledby="quick-motion-label" aria-describedby="quick-motion-system"><span class="preference-copy"><span id="quick-motion-label">Меньше движения</span></span><span class="preference-state" data-motion-state aria-hidden="true">Выкл.</span></button><p class="preference-system" id="quick-motion-system" data-motion-system hidden>Включено в настройках устройства</p></div><div class="preference-option"><button type="button" class="preference-toggle" data-contrast-toggle aria-pressed="false" aria-labelledby="quick-contrast-label" aria-describedby="quick-contrast-system"><span class="preference-copy"><span id="quick-contrast-label">Высокий контраст</span></span><span class="preference-state" data-contrast-state aria-hidden="true">Выкл.</span></button><p class="preference-system" id="quick-contrast-system" data-contrast-system hidden>Включено в настройках устройства</p></div>
+<div class="preference-option"><button type="button" class="preference-toggle" data-motion-toggle aria-pressed="false" aria-labelledby="quick-motion-label" aria-describedby="quick-motion-system"><span id="quick-motion-label">Меньше движения</span></button><span class="preference-state" data-motion-state aria-hidden="true">Выкл.</span><p class="preference-system" id="quick-motion-system" data-motion-system hidden>Включено в настройках устройства</p></div><div class="preference-option"><button type="button" class="preference-toggle" data-contrast-toggle aria-pressed="false" aria-labelledby="quick-contrast-label" aria-describedby="quick-contrast-system"><span id="quick-contrast-label">Высокий контраст</span></button><span class="preference-state" data-contrast-state aria-hidden="true">Выкл.</span><p class="preference-system" id="quick-contrast-system" data-contrast-system hidden>Включено в настройках устройства</p></div>
               </div>
               <button class="display-control__data" type="button" data-privacy-settings data-open-settings data-settings-focus="analytics" aria-haspopup="dialog" aria-controls="settings-panel"><span data-privacy-label>Данные и приватность</span><span aria-hidden="true">›</span></button>
             </div>
@@ -1317,12 +1316,12 @@
         </p>
         <div class="settings-panel__screen" data-settings-screen-controls>
           <div class="settings-panel__row settings-panel__row--theme"><h3>ТЕМА</h3><div class="preference-choices" role="group" aria-label="Тема"><label class="preference-choice"><input type="radio" name="panel-theme" data-theme-choice="system" value="system" checked><span>Системная</span></label><label class="preference-choice"><input type="radio" name="panel-theme" data-theme-choice="light" value="light"><span>Светлая</span></label><label class="preference-choice"><input type="radio" name="panel-theme" data-theme-choice="dark" value="dark"><span>Тёмная</span></label></div></div>
-          <div class="settings-panel__row"><div class="preference-option"><button type="button" class="preference-toggle" data-motion-toggle aria-pressed="false" aria-labelledby="panel-motion-label" aria-describedby="panel-motion-system panel-motion-description"><span class="preference-copy"><span id="panel-motion-label">Меньше движения</span><span class="preference-description" id="panel-motion-description">Меньше анимации и перемещений.</span></span><span class="preference-state" data-motion-state aria-hidden="true">Выкл.</span></button><p class="preference-system" id="panel-motion-system" data-motion-system hidden>Включено в настройках устройства</p></div></div>
-          <div class="settings-panel__row"><div class="preference-option"><button type="button" class="preference-toggle" data-contrast-toggle aria-pressed="false" aria-labelledby="panel-contrast-label" aria-describedby="panel-contrast-system panel-contrast-description"><span class="preference-copy"><span id="panel-contrast-label">Высокий контраст</span><span class="preference-description" id="panel-contrast-description">Более заметные текст, линии и выделение.</span></span><span class="preference-state" data-contrast-state aria-hidden="true">Выкл.</span></button><p class="preference-system" id="panel-contrast-system" data-contrast-system hidden>Включено в настройках устройства</p></div></div>
+          <div class="settings-panel__row"><div class="preference-option"><button type="button" class="preference-toggle" data-motion-toggle aria-pressed="false" aria-labelledby="panel-motion-label" aria-describedby="panel-motion-system panel-motion-description"><span id="panel-motion-label">Меньше движения</span></button><span class="preference-state" data-motion-state aria-hidden="true">Выкл.</span><span class="preference-description" id="panel-motion-description">Меньше анимации и перемещений.</span><p class="preference-system" id="panel-motion-system" data-motion-system hidden>Включено в настройках устройства</p></div></div>
+          <div class="settings-panel__row"><div class="preference-option"><button type="button" class="preference-toggle" data-contrast-toggle aria-pressed="false" aria-labelledby="panel-contrast-label" aria-describedby="panel-contrast-system panel-contrast-description"><span id="panel-contrast-label">Высокий контраст</span></button><span class="preference-state" data-contrast-state aria-hidden="true">Выкл.</span><span class="preference-description" id="panel-contrast-description">Более заметные текст, линии и выделение.</span><p class="preference-system" id="panel-contrast-system" data-contrast-system hidden>Включено в настройках устройства</p></div></div>
         </div>
         <section class="settings-whoop" data-settings-section="whoop" aria-labelledby="settings-whoop-title">
           <div class="settings-panel__row">
-            <button type="button" class="preference-toggle" data-whoop-toggle aria-pressed="true" aria-labelledby="settings-whoop-title" aria-describedby="settings-whoop-description"><span class="preference-copy"><span id="settings-whoop-title">Цвет дня</span><span class="preference-description" id="settings-whoop-description">Мягкий свет вокруг моей карточки.</span></span><span class="preference-state" data-whoop-toggle-label aria-hidden="true">Вкл.</span></button>
+            <div class="preference-option"><button type="button" class="preference-toggle" data-whoop-toggle aria-pressed="true" aria-labelledby="settings-whoop-title" aria-describedby="settings-whoop-description"><span id="settings-whoop-title">Цвет дня</span></button><span class="preference-state" data-whoop-toggle-label aria-hidden="true">Вкл.</span><span class="preference-description" id="settings-whoop-description">Мягкий свет вокруг моей карточки.</span></div>
           </div>
           <p class="settings-whoop__copy">WHOOP оценивает моё восстановление после сна. Эта оценка задаёт оттенок света:</p>
           <dl class="settings-whoop__zones">

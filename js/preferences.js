@@ -87,7 +87,7 @@ const createEffectivePreference = ({
     });
     toggles.forEach((toggle) => {
       toggle.setAttribute("aria-pressed", String(preference.matches));
-      const state = toggle.querySelector(".preference-state");
+      const state = toggle.closest(".preference-option")?.querySelector(".preference-state");
       if (state) state.textContent = preference.matches ? "Вкл." : "Выкл.";
       toggle.toggleAttribute("disabled", mediaQuery.matches);
     });
