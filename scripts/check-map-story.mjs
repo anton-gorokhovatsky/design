@@ -54,7 +54,10 @@ try{
   if(width===390)await page.locator('[data-constellation-nav-toggle]').click();
   await page.locator('[data-nav-view="map"]').focus();await page.keyboard.press('Enter');
   await page.waitForFunction(()=>document.activeElement?.id==='map');
-  if(width===390)await page.locator('[data-constellation-nav-toggle]').click();
+  if(width===390){
+   await page.locator('[data-constellation-nav-toggle]').click();
+   assert.equal(await page.locator('[data-nav-view="map"] .constellation-nav__label').evaluate(e=>getComputedStyle(e).textDecorationLine),'underline','The compact menu visibly marks the current Map without hover');
+  }
   await entry.waitFor({state:'visible'});
   await entry.focus();await page.keyboard.press('Enter');
   const story=page.locator('#story-pane');await page.waitForSelector('#story-pane[data-ready="true"]');

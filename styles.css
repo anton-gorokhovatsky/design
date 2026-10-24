@@ -7913,9 +7913,10 @@ padding-block: 0;
 }
 .control-console .constellation-nav__item .constellation-nav__label { white-space: normal; }
 .control-console .constellation-nav__item.is-current .constellation-nav__label {
-text-decoration: none;
+text-decoration: underline;
+text-underline-offset: .25em;
 }
-.control-console .constellation-nav__item.is-current { color: var(--content-ink); }
+.control-console .constellation-nav__item.is-current { color: var(--signal); }
 .constellation-nav__utility[data-time-toggle][aria-pressed="true"] > span:last-child { text-decoration: underline; text-underline-offset: .25em; color: var(--signal); }
 .constellation-nav__utility[data-time-toggle][aria-pressed="true"] .constellation-nav__utility-mark { color: var(--signal); }
 
