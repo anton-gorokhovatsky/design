@@ -2105,11 +2105,11 @@ const auditBrowser = async (client, origin) => {
   await waitForExpression(client, `(() => (
     !document.querySelector("[data-settings-panel]")?.hidden
     && document.querySelector("[data-settings-panel]")?.dataset.settingsMode
-      === "settings"
+      === "privacy"
     && document.querySelector("[data-settings-panel]")?.dataset.focusSection
       === "analytics"
     && document.activeElement?.matches(
-      "[data-analytics-toggle]",
+      "[data-close-settings]",
     )
   ))()`);
   const analyticsSearchRouteContract = await evaluate(client, `(() => ({
@@ -2120,20 +2120,20 @@ const auditBrowser = async (client, origin) => {
       document.querySelector("[data-settings-screen-controls]"),
     ).display,
     focusSection: document.querySelector("[data-settings-panel]")?.dataset.focusSection,
-    focusedAnalyticsAction: document.activeElement?.matches(
-      "[data-analytics-toggle]",
+    focusedClose: document.activeElement?.matches(
+      "[data-close-settings]",
     ),
   }))()`);
   if (
     !analyticsSearchRouteContract.visible
-    || analyticsSearchRouteContract.mode !== "settings"
-    || analyticsSearchRouteContract.title !== "НАСТРОЙКИ САЙТА"
-    || analyticsSearchRouteContract.screenControlsDisplay === "none"
+    || analyticsSearchRouteContract.mode !== "privacy"
+    || analyticsSearchRouteContract.title !== "ДАННЫЕ И ПРИВАТНОСТЬ"
+    || analyticsSearchRouteContract.screenControlsDisplay !== "none"
     || analyticsSearchRouteContract.focusSection !== "analytics"
-    || !analyticsSearchRouteContract.focusedAnalyticsAction
+    || !analyticsSearchRouteContract.focusedClose
   ) {
     fail(
-      "search-intent: analytics query does not focus its section in shared settings.",
+      "search-intent: analytics query does not open the privacy view in shared settings.",
       analyticsSearchRouteContract,
     );
   }
@@ -3236,16 +3236,16 @@ const auditBrowser = async (client, origin) => {
     !analyticsConsentContract.visible
     || analyticsConsentContract.inert
     || !analyticsConsentContract.focusInside
-    || analyticsConsentContract.mode !== "settings"
+    || analyticsConsentContract.mode !== "privacy"
     || analyticsConsentContract.role !== "dialog"
     || analyticsConsentContract.modal !== "true"
     || !analyticsConsentContract.closeExists
     || analyticsConsentContract.closeLabel !== "Закрыть"
-    || analyticsConsentContract.title !== "НАСТРОЙКИ САЙТА"
+    || analyticsConsentContract.title !== "ДАННЫЕ И ПРИВАТНОСТЬ"
     || analyticsConsentContract.intro
       !== "Ваш выбор сохраняется в этом браузере."
-    || analyticsConsentContract.screenControlsDisplay === "none"
-    || analyticsConsentContract.visibleScreenControls !== 3
+    || analyticsConsentContract.screenControlsDisplay !== "none"
+    || analyticsConsentContract.visibleScreenControls !== 0
     || analyticsConsentContract.preferenceLabel !== "Выкл."
     || analyticsConsentContract.stateCopy !== "Включится только с вашего разрешения."
     || !analyticsConsentContract.open
@@ -3447,10 +3447,8 @@ const auditBrowser = async (client, origin) => {
     || !backgroundControlsHidden
     || !mobileShortSettingsContract.theme
     || !mobileShortSettingsContract.motion
-    || Math.abs(
-      mobileShortSettingsContract.theme.width
-      - mobileShortSettingsContract.motion.width
-    ) > 1
+    || mobileShortSettingsContract.theme.width <= 0
+    || mobileShortSettingsContract.theme.width >= mobileShortSettingsContract.motion.width
     || mobileShortSettingsContract.themeLabel !== "system"
     || mobileShortSettingsContract.themeColor !== "#11120f"
     || !mobileShortSettingsContract.activeInside
@@ -3594,7 +3592,7 @@ const auditBrowser = async (client, origin) => {
 
   await evaluate(client, "document.querySelector('[popovertarget=\"screen-controls\"]')?.click(); document.querySelector('[data-privacy-settings]')?.click(); true");
   await waitForExpression(client, `(() => (
-    document.activeElement?.hasAttribute('data-analytics-toggle')
+    document.activeElement?.hasAttribute('data-close-settings')
   ))()`);
   const allowedPanelContract = await evaluate(client, `(() => {
     const launcher = document.querySelector("[data-privacy-settings]");

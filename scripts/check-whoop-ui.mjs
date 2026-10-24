@@ -162,6 +162,16 @@ try {
     const action = document.querySelector("[data-analytics-toggle]").getBoundingClientRect();
     return action.top >= body.top && action.bottom <= body.bottom;
   });
+  await latePage.evaluate(() => { document.documentElement.style.fontSize = "32px"; });
+  await latePage.waitForFunction(() => {
+    const body = document.querySelector(".settings-panel__body").getBoundingClientRect();
+    const action = document.querySelector("[data-analytics-toggle]").getBoundingClientRect();
+    return document.activeElement?.matches("[data-analytics-toggle]")
+      && action.top >= body.top && action.bottom <= body.bottom;
+  });
+  assert.equal(await latePage.locator('#settings-panel').getAttribute('data-settings-mode'), 'privacy');
+  assert.equal(await latePage.locator('.settings-panel__screen').isVisible(), false);
+  await latePage.evaluate(() => { document.documentElement.style.fontSize = "16px"; });
   await latePage.locator('.settings-panel__details').scrollIntoViewIfNeeded();
   assert.equal(await latePage.locator('.settings-panel__details').evaluate(tail => {
     const body = tail.closest('.settings-panel__body').getBoundingClientRect();
@@ -294,6 +304,38 @@ try {
       await page.waitForFunction(() => window.themeFirstPaint.length === 6);
       assert.ok(await page.evaluate(() => window.themeFirstPaint.every(frame => Math.abs(frame.left) < 1 && Math.abs(frame.width) < 1)),
         'A saved theme is correct from its first visible indicator frame: ' + JSON.stringify(await page.evaluate(() => window.themeFirstPaint)));
+      await page.emulateMedia({ reducedMotion: 'no-preference' });
+      await page.evaluate(() => {
+        window.privacyEntryFrames = [];
+        const sample = () => {
+          const panel = document.querySelector('#settings-panel');
+          if (panel.open) window.privacyEntryFrames.push({
+            mode: panel.dataset.settingsMode,
+            title: panel.querySelector('h2').textContent,
+            top: panel.querySelector('.settings-panel__body').scrollTop,
+            controls: panel.querySelector('.settings-panel__screen').getClientRects().length,
+            whoop: panel.querySelector('.settings-whoop').getClientRects().length,
+            focus: document.activeElement.hasAttribute('data-close-settings'),
+          });
+          if (window.privacyEntryFrames.length < 8) requestAnimationFrame(sample);
+        };
+        requestAnimationFrame(sample);
+      });
+      await page.getByRole('button', { name: 'Данные и приватность', exact: true }).click();
+      await page.waitForFunction(() => window.privacyEntryFrames.length === 8);
+      assert.ok(await page.evaluate(() => window.privacyEntryFrames.every(frame => frame.mode === 'privacy'
+        && frame.title === 'ДАННЫЕ И ПРИВАТНОСТЬ' && frame.top === 0 && !frame.controls && !frame.whoop && frame.focus)),
+        'The privacy entry shows its own content from the first frame, without theme/WHOOP or a scrolling jump.');
+      await page.keyboard.press('Escape');
+      await page.waitForFunction(() => document.activeElement?.id === 'screen-controls-trigger');
+      await page.locator('[data-command-input]').fill('настройки');
+      await page.locator('.command-result').first().waitFor();
+      await page.locator('[data-command-input]').press('Enter');
+      assert.equal(await page.locator('#settings-panel').getAttribute('data-settings-mode'), 'settings');
+      assert.equal(await page.locator('#settings-panel h2').innerText(), 'НАСТРОЙКИ САЙТА');
+      assert.ok(await page.locator('.settings-panel__screen').isVisible());
+      assert.ok(await page.locator('.settings-whoop').isVisible());
+
     }
     await page.close();
   }

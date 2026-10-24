@@ -1119,10 +1119,10 @@ const analyticsConsentAudit = async (page, viewport, label) => {
     failure: !settingsFocusReturned
       || !result.visible
       || result.inert
-      || result.mode !== "settings"
+      || result.mode !== "privacy"
       || result.focusSection !== "analytics"
-      || result.title !== "НАСТРОЙКИ САЙТА"
-      || !result.screenControlsVisible
+      || result.title !== "ДАННЫЕ И ПРИВАТНОСТЬ"
+      || result.screenControlsVisible
       || !result.actionFocused
       || !result.focusedActionVisible
       || !result.focusInside
@@ -1139,7 +1139,7 @@ const analyticsConsentAudit = async (page, viewport, label) => {
       || !backgroundControlsHidden
       || !result.theme
       || !result.motion
-      || Math.abs(result.theme.width - result.motion.width) > 1
+      || result.theme.width !== 0 || result.motion.width !== 0
       || result.themeLabel !== "system"
       || result.analyticsLauncherLabel !== "Данные и приватность"
       || result.analyticsLauncherWhiteSpace !== "normal"

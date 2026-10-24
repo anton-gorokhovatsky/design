@@ -9,6 +9,7 @@ const analyticsPreferenceKey = "anton-signal-analytics";
 const analyticsDisableKey = `disableYaCounter${analyticsCounterId}`;
 const settingsPanel = document.querySelector("[data-settings-panel]");
 const settingsClose = document.querySelector("[data-close-settings]");
+const settingsTitle = document.querySelector("[data-settings-title]");
 const settingsOpeners = Array.from(document.querySelectorAll("[data-open-settings]"));
 const analyticsToggle = document.querySelector("[data-analytics-toggle]");
 const analyticsPreferenceLabels = Array.from(
@@ -137,7 +138,9 @@ const openSettingsPanel = ({
       `[popovertarget="${sourcePopover.id}"]:not([popovertargetaction])`,
     ) || lastSettingsTrigger;
   }
-  settingsPanel.dataset.settingsMode = "settings";
+  const privacy = section === "analytics";
+  settingsPanel.dataset.settingsMode = privacy ? "privacy" : "settings";
+  settingsTitle.textContent = privacy ? "ДАННЫЕ И ПРИВАТНОСТЬ" : "НАСТРОЙКИ САЙТА";
   if (!settingsPanel.open) {
     document.body.classList.add("has-settings-panel");
     settingsPanel.hidden = false;
@@ -148,34 +151,28 @@ const openSettingsPanel = ({
   settingsPanel.dataset.focusSection = section;
   settingsScrollAnchor = null;
 
-  window.requestAnimationFrame(() => {
-    const body = settingsPanel.querySelector(".settings-panel__body");
-    const target = section === "settings"
-      ? settingsClose
-      : section === "analytics"
-      ? analyticsToggle
-      : settingsPanel.querySelector({
-        motion: "[data-motion-toggle]",
-        contrast: "[data-contrast-toggle]",
-        whoop: "[data-whoop-toggle]",
-      }[section] || "[data-theme-choice]:checked") || settingsClose;
+  const body = settingsPanel.querySelector(".settings-panel__body");
+  const target = privacy && !trigger ? analyticsToggle : section === "settings" || privacy
+    ? settingsClose
+    : settingsPanel.querySelector({
+      motion: "[data-motion-toggle]",
+      contrast: "[data-contrast-toggle]",
+      whoop: "[data-whoop-toggle]",
+    }[section] || "[data-theme-choice]:checked") || settingsClose;
 
-    if (body) body.scrollTop = 0;
-    if (section !== "settings") {
-      const destination = ["analytics", "whoop"].includes(section)
-        ? settingsPanel.querySelector(`[data-settings-section="${section}"]`)
-        : target?.closest(".settings-panel__row");
-      settingsScrollAnchor = { destination, control: target };
-      alignSettingsSection();
-    }
-    if (focus) {
-      const control = target?.disabled ? settingsClose : target;
-      control?.focus({ preventScroll: true });
-      // The general entry begins with the introduction. Only shortcuts scroll
-      // to a specific preference; keyboard navigation reveals later controls.
-      if (section !== "settings") control?.scrollIntoView({ block: "nearest", behavior: "instant" });
-    }
-  });
+  if (body) body.scrollTop = 0;
+  if (target !== settingsClose) {
+    const destination = privacy || section === "whoop"
+      ? settingsPanel.querySelector(`[data-settings-section="${section}"]`)
+      : target?.closest(".settings-panel__row");
+    settingsScrollAnchor = { destination, control: target };
+    alignSettingsSection();
+  }
+  if (focus) {
+    const control = target?.disabled ? settingsClose : target;
+    control?.focus({ preventScroll: true });
+    if (control !== settingsClose) control?.scrollIntoView({ block: "nearest", behavior: "instant" });
+  }
 };
 
 const openAnalyticsConsent = (options = {}) => openSettingsPanel({

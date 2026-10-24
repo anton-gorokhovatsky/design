@@ -9267,6 +9267,9 @@ min-height: var(--control-target-compact); font-weight: 400; letter-spacing: 0;
 }
 .display-control__service .preference-toggle { min-height: var(--control-target-compact); }
 .settings-panel__row--theme { gap: var(--space-2); }
+.settings-panel__row--theme .preference-choices { justify-self: start; }
+.settings-panel__row--theme .preference-choice > span { padding-inline: var(--space-3); }
+.settings-panel[data-settings-mode="privacy"] :is(.settings-panel__screen,.settings-whoop) { display: none; }
 .settings-panel__row .preference-toggle { align-items: baseline; }
 .settings-panel__screen { container: settings-controls / inline-size; }
 @container settings-controls (max-width: 15rem) {
