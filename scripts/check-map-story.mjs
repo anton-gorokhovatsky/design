@@ -263,6 +263,13 @@ try{
    const menu=document.querySelector('.constellation-nav__cluster').getBoundingClientRect();
    const close=document.querySelector('#story-pane .story-actions path').getBoundingClientRect();
    return Math.abs(menu.x+menu.width/2-close.x-close.width/2)<1;
+  }).catch(async error=>{
+   console.error('Story axis',width,font,await axisPage.evaluate(()=>{
+    const story=document.querySelector('#story-pane');
+    return {pane:story.getBoundingClientRect().toJSON(),clientWidth:story.clientWidth,inset:story.style.getPropertyValue('--story-close-inset'),
+     menu:document.querySelector('.constellation-nav__cluster').getBoundingClientRect().toJSON(),close:story.querySelector('.story-actions path').getBoundingClientRect().toJSON()};
+   }));
+   throw error;
   });
   const axis=await axisPage.evaluate(()=>{
    const menu=document.querySelector('.constellation-nav__cluster').getBoundingClientRect();
@@ -273,6 +280,17 @@ try{
   assert.ok(axis.delta<1,'Story close follows the unchanged menu glyph axis');
   assert.ok(axis.left>=0&&axis.right<=width&&axis.width>=44&&axis.height>=44,'The aligned close keeps its complete touch target inside the viewport');
  }
+ // A reserved scrollbar consumes reading width on Linux even when macOS uses an overlay.
+ await axisPage.setViewportSize({width:320,height:844});
+ await axisPage.goto(origin+'/?qa&font=200&story=1#map');
+ await axisPage.waitForSelector('#story-pane[data-ready="true"]');
+ await axisPage.addStyleTag({content:'#story-pane::-webkit-scrollbar{width:16px}'});
+ await axisPage.evaluate(()=>window.dispatchEvent(new Event('resize')));
+ await axisPage.waitForFunction(()=>{
+  const menu=document.querySelector('.constellation-nav__cluster').getBoundingClientRect();
+  const close=document.querySelector('#story-pane .story-actions path').getBoundingClientRect();
+  return Math.abs(menu.x+menu.width/2-close.x-close.width/2)<1;
+ });
  await axisPage.close();
  const failedOpening=await browser.newPage({viewport:{width:390,height:844}});
  const retryErrors=[];failedOpening.on('pageerror',error=>retryErrors.push(error.message));

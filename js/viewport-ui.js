@@ -580,7 +580,7 @@ const syncCompactControlGeometry = () => {
   const story = document.querySelector('#story-pane');
   if (story && document.body.classList.contains('has-story-pane')) {
     const close = story.querySelector('[data-close-story]');
-    write(story, '--story-close-inset', story.getBoundingClientRect().right - icon.left - icon.width / 2
+    write(story, '--story-close-inset', story.getBoundingClientRect().left + story.clientLeft + story.clientWidth - icon.left - icon.width / 2
       - (close?.getBoundingClientRect().width || button.width) / 2);
   }
 };

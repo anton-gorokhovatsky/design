@@ -9663,7 +9663,7 @@ color: var(--content-ink);
 .map-popover__header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); min-height: var(--control-target); }
 .map-popover__header h2 { margin: 0; letter-spacing: .06em; }
 .map-popover .map-popover__close { background: transparent; }
-html[data-map-controls-ready] .map-surface:not(.has-reading-surface):not(.has-command-focus) .practice-map:not([data-time-view]):not(:has(.map-inspector.is-open, .map-hover-preview.is-visible)) .map-anchor-label:not(.map-anchor-hidden) { opacity: 1; }
+html[data-map-controls-ready] .map-surface:not(.has-reading-surface):not(.has-command-focus) .practice-map:not([data-time-view]):not(:has(.map-inspector.is-open, .map-hover-preview.is-visible)) .map-anchor-label:not(.map-anchor-hidden, [data-mobile-no-space]) { opacity: 1; }
 html[data-map-controls-ready] .map-anchor-label[data-map-label-id="garage"] { transform: translate(-50%, var(--garage-label-offset)); }
 html[data-map-controls-ready] .map-anchor-label[data-map-label-id="private-practice"] { transform: translate(-50%, -100%); }
 html[data-map-controls-ready] .map-anchor-label[data-map-label-id="running"] { transform: translate(calc(-100% - var(--label-offset)), -50%); }
@@ -9817,7 +9817,8 @@ cursor: pointer;
 .mobile-landmark[data-map-label-id="eleven"] { transform: translate(var(--label-offset), -50%); }
 .mobile-landmark[data-map-label-id="running"] { transform: translate(var(--label-offset), -50%); }
 .mobile-landmark[data-map-label-id="principle-data-intuition"] { max-width: calc(100cqw - 24px); }
-.map-node-label.mobile-landmark { transform: translate(var(--mobile-label-dx, -50%), var(--mobile-label-dy, -100%)); }
+.map-node-label.mobile-landmark,
+.map-surface.has-full-mobile-map .map-node-label.mobile-landmark { transform: translate(var(--mobile-label-dx, -50%), var(--mobile-label-dy, -100%)); }
 @container map-viewport (max-width: 360px) {
 .mobile-landmark[data-map-label-id="principle-data-intuition"] { max-width: 6.5rem; }
 }
@@ -10227,8 +10228,8 @@ width:var(--practice-orbit-size,168px);height:var(--practice-orbit-size,168px);b
 @container map-viewport (max-width:900px) and (max-height:700px){
 .map-surface.has-practice-orbits{--practice-orbit-size:clamp(160px,calc(var(--pane-vw) * 56),224px)}
 }
-.map-surface.has-practice-orbits:not(.has-focused-home) .map-node-label[data-map-label-id="private-practice"]{left:var(--project-caption-x)!important;top:var(--project-caption-y)!important;transform:translate(-50%,-100%)!important;translate:none!important}
 @container map-viewport (min-width:901px){
+.map-surface.has-practice-orbits:not(.has-focused-home) .map-node-label[data-map-label-id="private-practice"]{left:var(--project-caption-x)!important;top:var(--project-caption-y)!important;transform:translate(-50%,-100%)!important;translate:none!important}
 .map-surface.has-practice-orbits .map-node[data-map-id="private-practice"]{--x:70%!important;--y:clamp(42%,calc(calc(var(--pane-vh) * 85) - 265px),56%)!important}
 .map-surface.has-practice-orbits .practice-map .map-node[data-map-id="private-practice"] .map-node__glyph,.map-surface.has-practice-orbits .practice-map .map-node[data-map-id="private-practice"].is-selected .map-node__glyph{--practice-orbit-size:clamp(200px,min(calc(var(--pane-vw) * 24),calc(calc(var(--pane-vh) * 100) - 400px)),340px);width:var(--practice-orbit-size);height:calc(var(--practice-orbit-size)*.72)}
 .map-surface.has-practice-orbits .map-axis-label--south{translate:0 8px}

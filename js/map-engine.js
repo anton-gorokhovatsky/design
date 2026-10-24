@@ -297,6 +297,7 @@ const measureMapClearance = () => {
     return;
   }
   const mobileTitles = pane.width <= 900 && !timeModeActive;
+  if (!mobileTitles) mapLabels.forEach(label => label.removeAttribute('data-mobile-no-space'));
   const priorities = ["garage", "private-practice", "running", "narkomfin", "eleven", "ks-fish", "principle-data-intuition"];
   const sorted = [...mapItems].sort((a, b) => {
     const rank = item => mobileTitles && priorities.includes(item.id) ? priorities.indexOf(item.id) : 100;
