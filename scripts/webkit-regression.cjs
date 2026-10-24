@@ -889,7 +889,7 @@ const analyticsConsentAudit = async (page, viewport, label) => {
     const bodyRect = body?.getBoundingClientRect();
     const activeRect = document.activeElement?.getBoundingClientRect();
     const analyticsActions = consent
-      ?.querySelector(".settings-panel__analytics-actions")
+      ?.querySelector(".settings-panel__analytics-control")
       ?.getBoundingClientRect();
     const privacyDetails = consent
       ?.querySelector(".settings-panel__privacy")
@@ -924,7 +924,7 @@ const analyticsConsentAudit = async (page, viewport, label) => {
       screenControlsVisible: Boolean(
         consent?.querySelector("[data-settings-screen-controls]")?.getClientRects().length,
       ),
-      actionFocused: document.activeElement?.matches("[data-analytics-allow], [data-analytics-deny]"),
+      actionFocused: document.activeElement?.matches("[data-analytics-toggle]"),
       focusedActionVisible: Boolean(activeRect && bodyRect
         && activeRect.top >= bodyRect.top - 1
         && activeRect.bottom <= bodyRect.bottom + 1),
@@ -934,7 +934,7 @@ const analyticsConsentAudit = async (page, viewport, label) => {
       closeExists: Boolean(consent?.querySelector("[data-close-settings]")),
       preferenceLabel: consent?.querySelector("[data-analytics-preference]")
         ?.innerText.trim() || "",
-      stateCopy: consent?.querySelector(".settings-panel__analytics-state p")
+      stateCopy: consent?.querySelector("#settings-analytics-description")
         ?.innerText.replace(/\s+/g, " ").trim() || "",
       open: consent?.open ?? false,
       searchPrivate: input?.classList.contains("ym-disable-keys") ?? false,
@@ -963,23 +963,10 @@ const analyticsConsentAudit = async (page, viewport, label) => {
       detailsDisplay: getComputedStyle(
         document.querySelector(".settings-panel__details"),
       ).display,
-      allowLabel: document.querySelector("[data-analytics-allow]")
-        ?.innerText.trim() || "",
-      denyLabel: document.querySelector("[data-analytics-deny]")
-        ?.innerText.trim() || "",
-      visibleActions: Array.from(
-        document.querySelectorAll(".settings-panel__analytics-actions button"),
-      ).filter((button) => button.getClientRects().length > 0)
-        .map((button) => button.innerText.trim()),
-      stateMarker: (() => {
-        const marker = document.querySelector(".settings-panel__analytics-marker");
-        const bounds = marker?.getBoundingClientRect();
-        return bounds && marker ? {
-          width: bounds.width,
-          height: bounds.height,
-          backgroundColor: getComputedStyle(marker).backgroundColor,
-        } : null;
-      })(),
+      togglePressed: document.querySelector("[data-analytics-toggle]")?.getAttribute("aria-pressed"),
+      visibleActions: Array.from(document.querySelectorAll("[data-analytics-toggle]"))
+        .filter(button => button.getClientRects().length > 0).map(button => button.innerText.trim()),
+      cameraOpacity: Number(getComputedStyle(document.querySelector(".map-camera")).opacity),
       themeColorMatches: document.querySelector('meta[name="theme-color"]')?.content
         === (document.documentElement.dataset.theme === "dark" ? "#11120f" : "#eeede7"),
       pointerOutlineStyle: activeStyle?.outlineStyle || "",
@@ -1029,7 +1016,7 @@ const analyticsConsentAudit = async (page, viewport, label) => {
       ?.querySelector(".settings-panel__details")
       ?.getBoundingClientRect();
     const action = panel
-      ?.querySelector(".settings-panel__analytics-actions")
+      ?.querySelector(".settings-panel__analytics-control")
       ?.getBoundingClientRect();
     const bodyRect = body?.getBoundingClientRect();
     const rect = panel?.getBoundingClientRect();
@@ -1142,7 +1129,7 @@ const analyticsConsentAudit = async (page, viewport, label) => {
       || result.role !== "dialog"
       || result.modal !== "true"
       || !result.closeExists
-      || result.preferenceLabel !== "РЕШЕНИЕ НЕ ПРИНЯТО"
+      || result.preferenceLabel !== "Выкл."
       || result.stateCopy !== "Включится только с вашего разрешения."
       || !result.open
       || !result.searchPrivate
@@ -1163,19 +1150,12 @@ const analyticsConsentAudit = async (page, viewport, label) => {
       || result.detailsLabel !== "Как Метрика использует файлы cookie"
       || result.detailsHref !== "https://yandex.ru/support/metrica/ru/general/cookie-usage"
       || result.detailsDisplay !== "inline-flex"
-      || result.allowLabel !== "РАЗРЕШИТЬ"
-      || result.denyLabel !== "НЕ ВКЛЮЧАТЬ"
-      || JSON.stringify(result.visibleActions)
-        !== JSON.stringify(["РАЗРЕШИТЬ", "НЕ ВКЛЮЧАТЬ"])
-      || !result.stateMarker
-      || result.stateMarker.width < 11.5
-      || result.stateMarker.width > 13.5
-      || Math.abs(result.stateMarker.width - result.stateMarker.height) > 0.5
-      || result.stateMarker.backgroundColor !== "rgba(0, 0, 0, 0)"
+      || result.togglePressed !== "false"
+      || JSON.stringify(result.visibleActions) !== JSON.stringify(["Яндекс Метрика"])
       || !result.themeColorMatches
       || result.pointerOutlineStyle !== "none"
-      || result.mapNodesOpacity > 0.1
-      || result.signalOpacity > 0.1
+      || result.mapNodesOpacity !== 1
+      || result.cameraOpacity !== 0.4
       || result.axisLabelOpacity !== 0
       || !result.actionBeforePrivacy
       || !result.privacyBeforeDetails

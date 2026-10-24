@@ -34,7 +34,7 @@ try {
       const header = await page.locator(".site-header").boundingBox();
       const console = await page.locator(".control-console").boundingBox();
       assert.ok(Math.abs(header.x - console.x - console.width - 40) < .1, "The author panel has a 40px gap from desktop navigation.");
-      assert.equal(console.y + console.height - header.y - header.height, 20, "The author panel starts 20px above the navigation baseline.");
+      assert.equal(console.y + console.height - header.y - header.height, 0, "The author panel and navigation share the bottom inset.");
     }
     await page.waitForFunction(() => [...document.querySelectorAll(".map-node:not([inert])")].every(node => {
       const r = node.getBoundingClientRect();
@@ -53,9 +53,12 @@ try {
       const terrainBefore = await page.locator(".whoop-field").boundingBox();
       assert.ok(terrainBefore.width < before.width + 220 && terrainBefore.height < before.height + 200,
         "Recovery terrain stays local to its card.");
-      await page.mouse.move(before.x + before.width / 2, before.y + 8);
+      const grip = { x: before.x + before.width - 4, y: before.y + before.height - 4 };
+      assert.equal(await page.evaluate(({x,y}) => Boolean(document.elementFromPoint(x,y)
+        ?.closest('a,button,[data-console-text]')), grip), false, 'Drag starts on free card space.');
+      await page.mouse.move(grip.x, grip.y);
       await page.mouse.down();
-      await page.mouse.move(before.x + before.width / 2 - 200, before.y - 142, { steps: 8 });
+      await page.mouse.move(grip.x - 200, grip.y - 150, { steps: 8 });
       await page.mouse.up();
       const after = await card.boundingBox();
       const terrainAfter = await page.locator(".whoop-field").boundingBox();
@@ -126,12 +129,12 @@ try {
     await route.fulfill({ json: whoopDayFixture() });
   });
   await latePage.goto(`${origin}/?analytics-consent=show`, { waitUntil: "domcontentloaded" });
-  await latePage.waitForFunction(() => document.activeElement?.matches("[data-analytics-allow]"));
+  await latePage.waitForFunction(() => document.activeElement?.matches("[data-analytics-toggle]"));
   deliver();
   await latePage.waitForFunction(() => document.querySelector("[data-whoop-recovery]").textContent.includes("77"));
   await latePage.waitForFunction(() => {
     const body = document.querySelector(".settings-panel__body").getBoundingClientRect();
-    const action = document.querySelector("[data-analytics-allow]").getBoundingClientRect();
+    const action = document.querySelector("[data-analytics-toggle]").getBoundingClientRect();
     return action.top >= body.top && action.bottom <= body.bottom;
   });
   await latePage.locator('.settings-panel__details').scrollIntoViewIfNeeded();

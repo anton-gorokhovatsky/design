@@ -884,7 +884,7 @@ requireContract(
   indexSource.includes('data-context="ВИД"')
     && indexSource.includes('data-context="НАСТРОЙКИ"')
     && indexSource.includes('data-theme-choice="system"')
-    && indexSource.includes('<span class="constellation-nav__heading" aria-hidden="true">РАЗДЕЛЫ</span>')
+    && indexSource.includes('<span class="constellation-nav__heading" aria-hidden="true">МЕНЮ</span>')
     && !/data-context="(?:VIEW|DISPLAY)"/.test(indexSource),
   "interface-localization",
   "Core controls must use the accepted Russian interface labels.",
@@ -924,8 +924,7 @@ requireContract(
 requireContract(
   runtimeFiles.includes("js/analytics.js")
     && indexSource.includes("data-analytics-consent")
-    && indexSource.includes("data-analytics-allow")
-    && indexSource.includes("data-analytics-deny")
+    && indexSource.includes("data-analytics-toggle")
     && indexSource.includes('class="ym-disable-keys"')
     && !indexSource.includes("mc.yandex.ru/watch/")
     && !indexSource.includes("metrika/tag.js?id=")

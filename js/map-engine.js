@@ -236,7 +236,7 @@ const focusHomePoints = new Map([
   ["ks-fish", { x: 58, y: 63 }],
   ["principle-data-intuition", homeAnchor(180, 31, 30)],
   ["running", homeAnchor(83, 40, 38)],
-  ["youtube", homeAnchor(136, 42, 38)],
+  ["youtube", { x: 32, y: 84 }],
 ]);
 const focusHomeNarrowPoints = new Map([...focusHomePoints,
   ["garage", {x:27,y:22}], ["narkomfin", {x:76,y:20}],
@@ -286,10 +286,9 @@ const measureMapClearance = () => {
       if (shortField && id === 'garage') y = Math.max(y, museumTop);
       if (shortField && id === 'private-practice') y = 63;
       if (shortField && id === 'running') y = 88;
-      if (shortField && id === 'youtube') y = 78;
+      if (shortField && id === 'youtube') y = 88;
       if (tightField && id === 'narkomfin') y = 22;
       if (tightField && id === 'private-practice') y = 65;
-      if (tightField && id === 'youtube') y = 86;
       const x = tightField && id === 'running' ? 65
         : tightField && id === 'private-practice' ? 72 : position.x;
       mapClearancePositions.set(id, { x, y });
@@ -326,7 +325,7 @@ const measureMapClearance = () => {
       east: [gapX, -labelHeight / 2],
     };
     const preferred = item.id === "garage" || item.id === "private-practice" ? "north"
-      : item.id === "ks-fish" ? "west" : item.id === "principle-data-intuition" ? "south" : "east";
+      : item.id === "ks-fish" ? "west" : item.id === "principle-data-intuition" ? "north" : "east";
     const occupied = [...mapConsoleBounds];
     mapClearancePositions.forEach((other, id) => {
       if (id === item.id) return;
@@ -338,11 +337,20 @@ const measureMapClearance = () => {
     const collides = a => occupied.some(b => a.left < b.right+6 && a.right > b.left-6 && a.top < b.bottom+6 && a.bottom > b.top-6);
     let chosen = null;
     for (const side of [preferred, ...Object.keys(sides).filter(side => side !== preferred)]) {
-      const [dx,dy] = sides[side];
-      const box = {left:x+dx, right:x+dx+labelWidth, top:y+dy, bottom:y+dy+labelHeight};
-      if (box.left < 12 || box.right > pane.width-12 || box.top < top || box.bottom > top+height || collides(box)) continue;
-      chosen = {box,dx,dy};
-      break;
+      const [baseDx,dy] = sides[side];
+      // Keep the point under the caption while allowing it to slide past
+      // neighbouring labels and complete orbit bounds on a narrow screen.
+      const offsets = side === "north" || side === "south"
+        ? [baseDx, -labelWidth + radius + 6, -radius - 6].map(dx =>
+          Math.max(12, Math.min(x + dx, pane.width - 12 - labelWidth)) - x)
+        : [baseDx];
+      for (const dx of offsets) {
+        const box = {left:x+dx, right:x+dx+labelWidth, top:y+dy, bottom:y+dy+labelHeight};
+        if (box.left < 12 || box.right > pane.width-12 || box.top < top || box.bottom > top+height || collides(box)) continue;
+        chosen = {box,dx,dy};
+        break;
+      }
+      if (chosen) break;
     }
     label.toggleAttribute("data-mobile-no-space", !chosen);
     if (chosen) {
@@ -425,6 +433,7 @@ const getMapLayout = (item) => {
       x = viewportWidth <= 360 ? 63 : 60;
     }
     if (item.id === "doronin") x = 86;
+    if (item.id === "principle-data-intuition") { x = 24; y = 43; }
   }
 
   if (viewportWidth <= 360) {

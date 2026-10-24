@@ -119,7 +119,7 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=ebff2d27ccd4">
+    <link rel="stylesheet" href="styles.css?v=cb870291ca6c">
     <style>
       .map-evidence [data-map-evidence-role-label]{font-family:var(--font-author);font-size:.6rem;font-weight:400;letter-spacing:0}
     </style>
@@ -134,7 +134,7 @@
           "./js/whoop-aura.js": "./js/whoop-aura.js?v=d276af4806f2",
           "./js/presence.js": "./js/presence.js?v=f9321316d550",
           "./js/atlas-motion.js": "./js/atlas-motion.js?v=776a659178f0",
-          "./js/analytics.js": "./js/analytics.js?v=554d4ca3e756",
+          "./js/analytics.js": "./js/analytics.js?v=e86aa1dce5d5",
           "./js/cipher-field.js": "./js/cipher-field.js?v=646034d9be18",
           "./js/signal-field.js": "./js/signal-field.js?v=3302da30d65e",
           "./js/map-data.js": "./js/map-data.js?v=e904209d84b5",
@@ -143,7 +143,7 @@
           "./js/personal-media.js": "./js/personal-media.js?v=ee51495df325",
           "./js/sphere-surfaces.js": "./js/sphere-surfaces.js?v=019656696ae9",
           "./js/map-media.js": "./js/map-media.js?v=94007ecfc3fc",
-          "./js/map-engine.js": "./js/map-engine.js?v=d95a555719d3",
+          "./js/map-engine.js": "./js/map-engine.js?v=f141ea79ccd5",
           "./js/map-chronology.js": "./js/map-chronology.js?v=2d842e071b71",
           "./js/celestial-bodies.js": "./js/celestial-bodies.js?v=bf4cd5dacbf3",
           "./js/map-controls.js": "./js/map-controls.js?v=e40ca9bf7279",
@@ -178,7 +178,7 @@
     <script type="module" src="js/whoop-aura.js?v=d276af4806f2"></script>
     <script type="module" src="js/atlas-motion.js?v=776a659178f0"></script>
     <script type="module" src="js/presence.js?v=f9321316d550"></script>
-    <script type="module" src="js/analytics.js?v=554d4ca3e756"></script>
+    <script type="module" src="js/analytics.js?v=e86aa1dce5d5"></script>
     <script type="module" src="js/cipher-field.js?v=646034d9be18"></script>
     <script type="module" src="js/signal-field.js?v=3302da30d65e"></script>
     <script type="module" src="js/map-data.js?v=e904209d84b5"></script>
@@ -187,7 +187,7 @@
     <script type="module" src="js/sphere-surfaces.js?v=019656696ae9"></script>
     <script type="module" src="js/map-media.js?v=94007ecfc3fc"></script>
     <script type="module" src="js/map-chronology.js?v=2d842e071b71"></script>
-    <script type="module" src="js/map-engine.js?v=d95a555719d3"></script>
+    <script type="module" src="js/map-engine.js?v=f141ea79ccd5"></script>
     <script type="module" src="js/celestial-bodies.js?v=bf4cd5dacbf3"></script>
     <script type="module" src="js/map-controls.js?v=e40ca9bf7279"></script>
     <script type="module" src="js/viewport-ui.js?v=e8cb2bba3c7d"></script>
@@ -730,7 +730,7 @@
               </span>
               <span class="visually-hidden" data-constellation-nav-toggle-label>Открыть меню</span>
             </button>
-            <span class="constellation-nav__heading" aria-hidden="true">РАЗДЕЛЫ</span>
+            <span class="constellation-nav__heading" aria-hidden="true">МЕНЮ</span>
 
             <div
               class="constellation-nav__orbit"
@@ -808,7 +808,8 @@
                   class="constellation-nav__shape constellation-nav__shape--external"
                   aria-hidden="true"
                 ></span>
-                <span class="constellation-nav__label">РЕЗЮМЕ<span class="nav-external" aria-hidden="true"></span> <span class="constellation-nav__destination" aria-hidden="true">hh.ru</span></span>
+                <span class="constellation-nav__label">РЕЗЮМЕ<span class="nav-external" aria-hidden="true"></span></span>
+                <span class="constellation-nav__destination" aria-hidden="true">hh.ru</span>
               </a>
               <div
                 class="constellation-nav__utilities"
@@ -841,7 +842,7 @@
                   <span>НАСТРОЙКИ САЙТА</span>
                 </button>
                 <a class="constellation-nav__utility map-story-link" data-nav-utility href="?story=1">
-                  <svg class="constellation-nav__utility-mark constellation-nav__utility-mark--about" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 11v6M12 7v1"/></svg>
+                  <svg class="constellation-nav__utility-mark constellation-nav__utility-mark--about" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 6.5C9.5 4.8 6.5 4.3 3 5v14c3.5-.7 6.5-.2 9 1.5 2.5-1.7 5.5-2.2 9-1.5V5c-3.5-.7-6.5-.2-9 1.5Zm0 0v14"/></svg>
                   <span>О КАРТЕ</span>
                 </a>
               </div>
@@ -1342,35 +1343,16 @@
           data-settings-section="analytics"
           aria-labelledby="settings-analytics-title"
         >
-          <div class="settings-panel__analytics-header">
-            <h3 id="settings-analytics-title">ЯНДЕКС МЕТРИКА</h3>
-          </div>
-          <div class="settings-panel__analytics-state">
-            <span class="settings-panel__analytics-marker" aria-hidden="true"></span>
-            <div>
-              <strong data-analytics-preference>РЕШЕНИЕ НЕ ПРИНЯТО</strong>
-              <p>
-                <span data-analytics-state-copy="unset">
-                  Включится только с&nbsp;вашего разрешения.
-                </span>
-                <span data-analytics-state-copy="allowed">
-                  Статистика помогает мне улучшать навигацию и&nbsp;содержание.
-                </span>
-                <span data-analytics-state-copy="denied">
-                  Данные о&nbsp;посещении не&nbsp;отправляются в&nbsp;Метрику.
-                </span>
-              </p>
-            </div>
-          </div>
-          <div class="settings-panel__analytics-actions">
-            <button type="button" data-analytics-allow>
-              <span data-analytics-action="unset">РАЗРЕШИТЬ</span>
-              <span data-analytics-action="denied">ВКЛЮЧИТЬ АНАЛИТИКУ</span>
+          <div class="preference-option settings-panel__analytics-control">
+            <button type="button" class="preference-toggle" data-analytics-toggle aria-pressed="false" aria-labelledby="settings-analytics-title" aria-describedby="settings-analytics-description">
+              <span id="settings-analytics-title">Яндекс Метрика</span>
             </button>
-            <button type="button" data-analytics-deny>
-              <span data-analytics-action="unset">НЕ ВКЛЮЧАТЬ</span>
-              <span data-analytics-action="allowed">ВЫКЛЮЧИТЬ АНАЛИТИКУ</span>
-            </button>
+            <span class="preference-state" data-analytics-preference aria-hidden="true">Выкл.</span>
+            <p class="preference-description" id="settings-analytics-description">
+              <span data-analytics-state-copy="unset">Включится только с&nbsp;вашего разрешения.</span>
+              <span data-analytics-state-copy="allowed">Статистика помогает мне улучшать навигацию и&nbsp;содержание.</span>
+              <span data-analytics-state-copy="denied">Данные о&nbsp;посещении не&nbsp;отправляются в&nbsp;Метрику.</span>
+            </p>
           </div>
           <dl class="settings-panel__privacy">
             <div>

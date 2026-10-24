@@ -10,8 +10,7 @@ const analyticsDisableKey = `disableYaCounter${analyticsCounterId}`;
 const settingsPanel = document.querySelector("[data-settings-panel]");
 const settingsClose = document.querySelector("[data-close-settings]");
 const settingsOpeners = Array.from(document.querySelectorAll("[data-open-settings]"));
-const analyticsAllow = document.querySelector("[data-analytics-allow]");
-const analyticsDeny = document.querySelector("[data-analytics-deny]");
+const analyticsToggle = document.querySelector("[data-analytics-toggle]");
 const analyticsPreferenceLabels = Array.from(
   document.querySelectorAll("[data-analytics-preference]"),
 );
@@ -81,15 +80,11 @@ const writeAnalyticsPreference = (preference) => {
 
 const syncAnalyticsPreferenceUi = () => {
   const state = analyticsPreference || "unset";
-  const stateLabel = state === "allowed"
-    ? "АНАЛИТИКА ВКЛЮЧЕНА"
-    : state === "denied" ? "АНАЛИТИКА ВЫКЛЮЧЕНА" : "РЕШЕНИЕ НЕ ПРИНЯТО";
-  root.dataset.analytics = analyticsPreference || "unset";
+  root.dataset.analytics = state;
   analyticsPreferenceLabels.forEach((label) => {
-    label.textContent = stateLabel;
+    label.textContent = state === "allowed" ? "Вкл." : "Выкл.";
   });
-  analyticsAllow?.toggleAttribute("disabled", state === "allowed");
-  analyticsDeny?.toggleAttribute("disabled", state === "denied");
+  analyticsToggle?.setAttribute("aria-pressed", String(state === "allowed"));
 };
 
 const closeSettingsPanel = ({ restoreFocus = true } = {}) => {
@@ -156,7 +151,7 @@ const openSettingsPanel = ({
   window.requestAnimationFrame(() => {
     const body = settingsPanel.querySelector(".settings-panel__body");
     const target = section === "analytics"
-      ? (analyticsPreference === "allowed" ? analyticsDeny : analyticsAllow)
+      ? analyticsToggle
       : settingsPanel.querySelector({
         motion: "[data-motion-toggle]",
         contrast: "[data-contrast-toggle]",
@@ -252,29 +247,19 @@ const trackPortfolioEvent = (goal, parameters = {}) => {
   return true;
 };
 
-analyticsAllow?.addEventListener("click", () => {
-  writeAnalyticsPreference("allowed");
-  syncAnalyticsPreferenceUi();
-  loadYandexAnalytics();
-  closeSettingsPanel();
-
-  if (analyticsStatus) {
-    analyticsStatus.textContent = "Аналитика разрешена.";
-  }
-});
-
-analyticsDeny?.addEventListener("click", () => {
+analyticsToggle?.addEventListener("click", () => {
+  const allow = analyticsPreference !== "allowed";
   const wasLoaded = analyticsLoaded;
-  writeAnalyticsPreference("denied");
-  window[analyticsDisableKey] = true;
+  writeAnalyticsPreference(allow ? "allowed" : "denied");
+  window[analyticsDisableKey] = !allow;
   syncAnalyticsPreferenceUi();
-  closeSettingsPanel();
-
-  if (analyticsStatus) {
-    analyticsStatus.textContent = "Аналитика выключена.";
-  }
-
-  if (wasLoaded) {
+  if (allow) loadYandexAnalytics();
+  if (analyticsStatus) analyticsStatus.textContent = allow
+    ? "Аналитика разрешена." : "Аналитика выключена.";
+  // Reload after revoking consent to stop the already loaded third-party code.
+  // Return to the same setting, with the saved off state and visible focus.
+  if (!allow && wasLoaded) {
+    try { sessionStorage.setItem("anton-settings-return", "analytics"); } catch {}
     window.location.reload();
   }
 });
@@ -310,6 +295,13 @@ document.addEventListener("click", (event) => {
 
 window[analyticsDisableKey] = analyticsPreference !== "allowed";
 syncAnalyticsPreferenceUi();
+
+let returnToAnalytics = false;
+try {
+  returnToAnalytics = sessionStorage.getItem("anton-settings-return") === "analytics";
+  sessionStorage.removeItem("anton-settings-return");
+} catch {}
+if (returnToAnalytics) window.requestAnimationFrame(() => openAnalyticsConsent());
 
 if (analyticsPreference === "allowed") {
   loadYandexAnalytics();
