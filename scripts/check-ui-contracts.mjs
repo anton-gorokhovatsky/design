@@ -2393,12 +2393,25 @@ const auditBrowser = async (client, origin) => {
     const toggle = document.querySelector("[data-constellation-nav-toggle]");
     const items = [...document.querySelectorAll("[data-nav-view]")];
     const heights = items.map((item) => item.getBoundingClientRect().height);
+    // The resume's domain adds a second line; compare the visible first-line
+    // rhythm rather than requiring its whole link box to match one-line items.
+    const labels = items.map(item => item.querySelector(".constellation-nav__label").getBoundingClientRect());
+    const utilityLabels = [...document.querySelectorAll(".constellation-nav__utility > span:last-child")]
+      .map(label => label.getBoundingClientRect());
+    const steps = list => list.slice(1).map((label, index) => label.top - list[index].top);
+    const labelSteps = [...steps(labels), ...steps(utilityLabels)];
+    const iconOffsets = items.map((item, index) => {
+      const icon = item.querySelector(".constellation-nav__shape").getBoundingClientRect();
+      return Math.abs(icon.top + icon.height / 2 - labels[index].top - labels[index].height / 2);
+    });
     const consoleStyle = getComputedStyle(document.querySelector(".control-console"));
     return {
       expanded: toggle?.getAttribute("aria-expanded"),
       count: items.length,
       minimumHeight: Math.min(...heights),
       maximumHeight: Math.max(...heights),
+      labelSteps,
+      maximumIconOffset: Math.max(...iconOffsets),
       parentBackdrop: consoleStyle.backdropFilter || consoleStyle.webkitBackdropFilter,
       minimumLabelSize: Math.min(...items.map((item) => parseFloat(
         getComputedStyle(item.querySelector(".constellation-nav__label")).fontSize,
@@ -2416,7 +2429,10 @@ const auditBrowser = async (client, origin) => {
     || mobileNavigationContract.count !== 5
     || !mobileNavigationContract.allVisible
     || mobileNavigationContract.minimumHeight < 40
-    || mobileNavigationContract.maximumHeight - mobileNavigationContract.minimumHeight > 1
+    || mobileNavigationContract.labelSteps.length !== 6
+    || Math.min(...mobileNavigationContract.labelSteps) < 40
+    || Math.max(...mobileNavigationContract.labelSteps) - Math.min(...mobileNavigationContract.labelSteps) > 1
+    || mobileNavigationContract.maximumIconOffset > 1
     || mobileNavigationContract.parentBackdrop !== "none"
     || mobileNavigationContract.minimumLabelSize < 14
   ) {
