@@ -45,6 +45,9 @@ try{
   const openStory=async()=>{if(width===390)await page.locator('[data-constellation-nav-toggle]').click();await entry.click();};
   assert.equal(requests.some(url=>url.includes('/assets/map-story/')),false,'Scenes wait for the reader');
   await page.evaluate(()=>document.fonts.ready);
+  // Compare the same loaded day state before and after opening the story.
+  // The pending readout is one metrics line shorter on a compact screen.
+  await page.waitForFunction(()=>document.querySelector('[data-whoop-recovery]')?.textContent.includes('77'));
   const mapGeometry=()=>page.locator('[data-floating-console]').evaluateAll(nodes=>nodes.map(e=>{const r=e.getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height};}));
   await page.evaluate(()=>Promise.all(document.getAnimations().filter(a=>a.effect?.getTiming().iterations!==Infinity).map(a=>a.finished.catch(()=>{}))));
   const originalGeometry=await mapGeometry();
