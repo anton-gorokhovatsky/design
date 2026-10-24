@@ -34,6 +34,25 @@ const typographUiText = (value = "") => String(value).replace(
   "$1\u00a0",
 );
 const themeChoices = Array.from(document.querySelectorAll("[data-theme-choice]"));
+const themeGroups = [...document.querySelectorAll('.preference-choices')];
+const syncThemeIndicators = (animate = false) => themeGroups.forEach(group => {
+  const choice = group.querySelector('input:checked')?.parentElement;
+  if (!choice?.offsetWidth) { delete group.dataset.themeReady; return; }
+  if (!animate) delete group.dataset.themeReady;
+  const frame = group.getBoundingClientRect(), rect = choice.getBoundingClientRect();
+  const x = group.offsetWidth / frame.width, y = group.offsetHeight / frame.height;
+  for (const [name, value] of Object.entries({
+    x: (rect.left - frame.left) * x - group.clientLeft - 2,
+    y: (rect.top - frame.top) * y - group.clientTop - 2,
+    width: rect.width * x, height: rect.height * y,
+  })) group.style.setProperty(`--theme-choice-${name}`, `${value.toFixed(3)}px`);
+  if (!group.hasAttribute('data-theme-ready')) {
+    getComputedStyle(group, '::before').transform;
+    group.dataset.themeReady = '';
+  }
+});
+const themeResize = new ResizeObserver(() => syncThemeIndicators());
+themeGroups.forEach(group => [group, ...group.children].forEach(element => themeResize.observe(element)));
 const themeColor = document.querySelector('meta[name="theme-color"]');
 const motionToggles = Array.from(document.querySelectorAll("[data-motion-toggle]"));
 const motionStates = Array.from(document.querySelectorAll("[data-motion-system]"));
@@ -160,6 +179,7 @@ const setThemeMode = (mode, persist = false) => {
   themeChoices.forEach((choice) => {
     choice.checked = choice.dataset.themeChoice === themeMode;
   });
+  syncThemeIndicators(persist);
 
   cancelAnimationFrame(themePaintFrame);
   // Paint the control's first frame before theme-dependent map canvases redraw.

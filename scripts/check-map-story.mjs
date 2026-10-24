@@ -291,6 +291,8 @@ try{
   const close=document.querySelector('#story-pane .story-actions path').getBoundingClientRect();
   return Math.abs(menu.x+menu.width/2-close.x-close.width/2)<1;
  });
+ assert.equal(await axisPage.locator('#story-pane').evaluate(e=>e.scrollWidth>e.clientWidth+1),false,'The aligned target fits the reading area beside a reserved scrollbar');
+ assert.ok(await axisPage.locator('#story-pane [data-close-story]').evaluate(e=>e.clientWidth>=44&&e.clientHeight>=44));
  await axisPage.close();
  const failedOpening=await browser.newPage({viewport:{width:390,height:844}});
  const retryErrors=[];failedOpening.on('pageerror',error=>retryErrors.push(error.message));
@@ -304,6 +306,7 @@ try{
  await retry.goto(origin+'/?story=1');await retry.locator('[data-story-retry]').click();await retry.waitForSelector('#story-pane[data-ready="true"]');
  await retry.evaluate(()=>document.documentElement.style.fontSize='200%');
  await retry.waitForFunction(()=>document.documentElement.dataset.reduceMotion==='true');
+ await retry.evaluate(()=>new Promise(done=>requestAnimationFrame(()=>requestAnimationFrame(done))));
  assert.equal(await retry.locator('#story-motion').count(),0);
  assert.equal(await retry.locator('#story-pane').evaluate(e=>e.scrollWidth>e.clientWidth+1),false);
  await checkFamilies(retry);

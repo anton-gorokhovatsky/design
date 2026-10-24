@@ -558,7 +558,8 @@ const getConsoleOffset = (module) => ({
 const authorCard = document.querySelector('.site-header');
 const authorField = document.querySelector('.whoop-field');
 const syncCompactControlGeometry = () => {
-  if (pane.width > 900) return;
+  const close = document.querySelector('#story-pane [data-close-story]');
+  if (pane.width > 900) { close?.style.removeProperty('--control-target'); return; }
   const toggle = document.querySelector('[data-constellation-nav-toggle]');
   const mark = toggle?.querySelector('.constellation-nav__cluster');
   const map = document.querySelector('.map-surface');
@@ -579,11 +580,19 @@ const syncCompactControlGeometry = () => {
     inspector.getBoundingClientRect().right - icon.left - icon.width / 2 - inspectorClose.getBoundingClientRect().width / 2));
   const story = document.querySelector('#story-pane');
   if (story && document.body.classList.contains('has-story-pane')) {
-    const close = story.querySelector('[data-close-story]');
-    write(story, '--story-close-inset', story.getBoundingClientRect().left + story.clientLeft + story.clientWidth - icon.left - icon.width / 2
-      - (close?.getBoundingClientRect().width || button.width) / 2);
+    const right = story.getBoundingClientRect().left + story.clientLeft + story.clientWidth;
+    const centre = icon.left + icon.width / 2;
+    close?.style.removeProperty('--control-target');
+    const target = Math.max(44, Math.min(close?.getBoundingClientRect().width || button.width, (right - centre) * 2));
+    if (close && innerWidth < 1000) write(close, '--control-target', target);
+    write(story, '--story-close-inset', right - centre - target / 2);
   }
 };
+let compactGeometryFrame = 0;
+const compactGeometryResize = new ResizeObserver(() => {
+  if (!compactGeometryFrame) compactGeometryFrame = requestAnimationFrame(() => { compactGeometryFrame = 0; syncCompactControlGeometry(); });
+});
+document.querySelectorAll('[data-constellation-nav-toggle], #story-pane').forEach(element => compactGeometryResize.observe(element));
 const syncAuthorField = () => {
   if (!authorCard || !authorField) return;
   const card = authorCard.getBoundingClientRect();

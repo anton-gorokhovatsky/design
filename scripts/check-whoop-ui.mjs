@@ -12,6 +12,31 @@ const browser = await ({ chromium, webkit })[engine].launch();
 const directory = process.env.PORTFOLIO_UI_ARTIFACT_DIR || ".qa-artifacts/whoop";
 mkdirSync(directory, { recursive: true });
 const errors = [];
+const assertThemeGeometry = async (page, selector) => {
+  for (const value of ['light', 'dark', 'system']) {
+    await page.locator(`${selector} input[value="${value}"]`).check();
+    await page.waitForFunction(selector => {
+      const group = document.querySelector(selector), choice = group.querySelector('input:checked').parentElement;
+      return Math.abs(parseFloat(getComputedStyle(group, '::before').width) - choice.getBoundingClientRect().width) < 1;
+    }, selector);
+    const state = await page.locator(selector).evaluate(group => {
+      const frame = group.getBoundingClientRect(), style = getComputedStyle(group, '::before'), matrix = new DOMMatrixReadOnly(style.transform);
+      const chosen = group.querySelector('input:checked').parentElement.getBoundingClientRect();
+      return { chosen: chosen.toJSON(), indicator: { left: frame.left + group.clientLeft + parseFloat(style.left) + matrix.e,
+        top: frame.top + group.clientTop + parseFloat(style.top) + matrix.f, width: parseFloat(style.width), height: parseFloat(style.height) },
+        rows: getComputedStyle(group).gridTemplateColumns.split(' ').length === 1,
+        fields: [...group.querySelectorAll('label')].map(label => {
+          const rect = label.getBoundingClientRect(), text = document.createRange(); text.selectNodeContents(label.querySelector('span'));
+          const ink = text.getBoundingClientRect(); return { width: rect.width, left: ink.left - rect.left, right: rect.right - ink.right };
+        }) };
+    });
+    assert.ok(Math.abs(state.indicator.left - state.chosen.left) < 1 && Math.abs(state.indicator.top - state.chosen.top) < 1
+      && Math.abs(state.indicator.height - state.chosen.height) < 1, JSON.stringify(state));
+    const fields = state.fields.flatMap(field => state.rows ? [field.left] : [field.left, field.right]);
+    assert.ok(Math.max(...fields) - Math.min(...fields) < 1, 'Theme names share equal side fields: ' + JSON.stringify(state));
+    if (!state.rows) assert.ok(state.fields[0].width > state.fields[2].width, 'Content sets segment width, rather than three equal fractions.');
+  }
+};
 try {
   for (const width of [1440, 320]) for (const theme of ["light", "dark"]) {
     const page = await browser.newPage({ viewport: { width, height: width === 320 ? 568 : 900 },
@@ -203,6 +228,7 @@ try {
     });
     assert.ok(themeFocus.theme && themeFocus.focus.top >= themeFocus.body.top && themeFocus.focus.bottom <= themeFocus.body.bottom,
       `Tab reaches the checked theme without clipping its focus ring at ${width}/${fontSize}: ${JSON.stringify(themeFocus)}`);
+    await assertThemeGeometry(page, '#settings-panel .preference-choices');
     if (fontSize === 32) {
       for (const selector of ["[data-motion-toggle]", "[data-contrast-toggle]"]) {
         const control = page.locator(`.settings-panel ${selector}`);
@@ -240,6 +266,34 @@ try {
       assert.equal(whole.privacyColumns, geometry.privacyColumns);
       assert.equal(whole.zoneColumns, geometry.zoneColumns);
       await page.screenshot({ path: `${directory}/${engine}-settings-whole-${width}-16.png` });
+    }
+    if (width === 1440) {
+      await page.keyboard.press('Escape');
+      await page.waitForFunction(() => !document.querySelector('[data-settings-panel]').open);
+      await page.locator('#screen-controls-trigger').click();
+      await assertThemeGeometry(page, '#screen-controls .preference-choices');
+      await page.locator('#screen-controls input[value="dark"]').check();
+      await page.reload({ waitUntil: 'load' });
+      await page.evaluate(() => document.fonts.ready);
+      await page.evaluate(() => {
+        window.themeFirstPaint = [];
+        const sample = () => {
+          const panel = document.querySelector('#screen-controls'), group = panel.querySelector('.preference-choices');
+          const style = getComputedStyle(group, '::before');
+          if (panel.matches(':popover-open') && style.visibility === 'visible' && +getComputedStyle(panel).opacity > .001) {
+            const frame = group.getBoundingClientRect(), chosen = group.querySelector('input:checked').parentElement.getBoundingClientRect();
+            const matrix = new DOMMatrixReadOnly(style.transform), scale = frame.width / group.offsetWidth;
+            window.themeFirstPaint.push({ left: frame.left + (group.clientLeft + parseFloat(style.left) + matrix.e) * scale - chosen.left,
+              width: parseFloat(style.width) * scale - chosen.width });
+          }
+          if (window.themeFirstPaint.length < 6) requestAnimationFrame(sample);
+        };
+        requestAnimationFrame(sample);
+      });
+      await page.locator('#screen-controls-trigger').click();
+      await page.waitForFunction(() => window.themeFirstPaint.length === 6);
+      assert.ok(await page.evaluate(() => window.themeFirstPaint.every(frame => Math.abs(frame.left) < 1 && Math.abs(frame.width) < 1)),
+        'A saved theme is correct from its first visible indicator frame: ' + JSON.stringify(await page.evaluate(() => window.themeFirstPaint)));
     }
     await page.close();
   }
