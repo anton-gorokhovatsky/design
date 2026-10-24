@@ -9985,7 +9985,7 @@ white-space: normal; text-wrap: balance; opacity: 1; pointer-events: auto; curso
 .focused-home .map-labels .direction-landmark:has(small) { padding: 0; background: none; backdrop-filter: none; font-weight: 600; font-size: var(--type-detail); }
 .focused-home .map-labels [data-map-label-id="garage"] { transform: translate(-50%, calc(-100% - 44px)); white-space: nowrap; max-width: none; }
 .focused-home .map-labels [data-map-label-id="private-practice"] { transform: translate(-50%, calc(-100% - 24px)); max-width: 168px; }
-.focused-home .map-labels [data-map-label-id="principle-data-intuition"] { transform: translate(-50%, 22px); max-width: 120px; }
+.focused-home .map-labels [data-map-label-id="principle-data-intuition"] { transform: translate(-50%, 22px); max-width: min(120px, 36cqw); }
 .focused-home .map-labels [data-map-label-id="running"] { transform: translate(34px, -50%); text-align: left; }
 .focused-home .map-labels [data-map-label-id="youtube"] { transform: translate(-50%, 22px); background: none; backdrop-filter: none; min-height: 0; padding: 0; font-size: var(--type-utility); }
 

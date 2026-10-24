@@ -117,8 +117,17 @@ const assertPageRestoration = async (page) => {
   }
   // A cached return must retain the observers, including offscreen pause/resume.
   const volume = page.locator('.celestial-volume--garage');
-  await volume.evaluate(canvas => { canvas.style.transform = 'translateX(300vw)'; });
-  await page.waitForTimeout(160);
+  // IntersectionObserver delivery follows rendering, not a wall-clock deadline.
+  // Start the pause measurement after the browser has reported the exit.
+  await volume.evaluate(canvas => new Promise(resolve => {
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) return;
+      observer.disconnect();
+      requestAnimationFrame(() => requestAnimationFrame(resolve));
+    });
+    observer.observe(canvas);
+    canvas.style.transform = 'translateX(300vw)';
+  }));
   const hiddenTime = await volume.getAttribute('data-render-time');
   await page.waitForTimeout(160);
   assert.equal(await volume.getAttribute('data-render-time'), hiddenTime, 'Restored body pauses offscreen');
