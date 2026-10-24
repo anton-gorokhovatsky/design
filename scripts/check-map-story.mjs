@@ -57,6 +57,24 @@ try{
   const story=page.locator('#story-pane');await page.waitForSelector('#story-pane[data-ready="true"]');
   await page.waitForFunction(()=>document.activeElement?.id==='story-title');
   assert.equal(await story.evaluate(e=>e.inert),false);
+  await page.waitForFunction(()=>!document.body.classList.contains('story-is-moving'));
+  assert.equal(await entry.getAttribute('aria-current'),'page','The open story is the current destination');
+  const menuStory=page.locator('.map-story-link');
+  assert.equal(await menuStory.getAttribute('href'),'?story=1','The current destination keeps a real address');
+  for(const method of ['pointer','keyboard']){
+   await story.evaluate(e=>e.scrollTop=480);
+   const readingPosition=await story.evaluate(e=>e.scrollTop),address=page.url(),historyLength=await page.evaluate(()=>history.length);
+   await page.locator('[data-constellation-nav-toggle]').click();
+   assert.equal(await menuStory.locator('span').evaluate(e=>getComputedStyle(e).textDecorationLine),'underline','Current story has a persistent visible mark');
+   if(method==='pointer')await menuStory.click();else{await menuStory.focus();await page.keyboard.press('Enter');}
+   await page.waitForFunction(()=>document.activeElement?.id==='story-pane');
+   assert.equal(await page.locator('[data-constellation-nav-toggle]').getAttribute('aria-expanded'),'false','Returning to the current story closes its menu');
+   assert.ok(Math.abs(await story.evaluate(e=>e.scrollTop)-readingPosition)<1,'Returning to the current story preserves reading position');
+   assert.equal(page.url(),address,'Returning to the current story keeps its address');
+   assert.equal(await page.evaluate(()=>history.length),historyLength,'Returning to the current story adds no history entry');
+   assert.equal(await page.locator('body').evaluate(e=>e.classList.contains('story-is-moving')),false,'Returning to the current story starts no opening animation');
+  }
+  await story.evaluate(e=>e.scrollTop=0);
   const materials=await page.evaluate(readMaterialAuditExpression);
   assert.equal(materials.active.filter(s=>s.surface.startsWith('paired-')).length,2,'Both panes register the shared material');
   assert.deepEqual(materials.failures,[],'The paired composition shares one glass recipe without nested material ancestors');
@@ -75,6 +93,11 @@ try{
   }
   await page.keyboard.press('Escape');
   await page.waitForFunction(selector=>document.activeElement?.matches(selector),width===1440?'.map-about-trigger':'[data-constellation-nav-toggle]');
+  assert.equal(await menuStory.getAttribute('aria-current'),null,'Closing the story removes its current state');
+  await page.goBack();await page.waitForFunction(()=>document.body.classList.contains('has-story-pane'));
+  assert.equal(await menuStory.getAttribute('aria-current'),'page','Back restores the current story');
+  await page.goForward();await page.waitForFunction(()=>!document.body.classList.contains('has-story-pane'));
+  assert.equal(await menuStory.getAttribute('aria-current'),null,'Forward restores the closed story');
   // Three complete roundtrips catch accumulated offsets from hidden panels.
   for(let round=0;round<3;round++){
    await openStory();await page.waitForFunction(()=>!document.querySelector('#story-pane').inert);

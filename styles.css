@@ -10418,6 +10418,8 @@ max-width: min(13rem, calc(100% - var(--space-4)));
 @container map-viewport (max-width: 900px) {
 
 .control-console .constellation-nav__utility.map-story-link { text-decoration: none; }
+.map-story-link[aria-current="page"] > span { text-decoration: underline; text-underline-offset: .25em; color: var(--signal); }
+.map-story-link[aria-current="page"] .constellation-nav__utility-mark { color: var(--signal); }
 .map-story-link > span { grid-column: 2; }
 .control-console .map-story-link:focus-visible { outline: 2px solid var(--signal); outline-offset: -2px; }
 }
