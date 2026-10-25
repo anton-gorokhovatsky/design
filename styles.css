@@ -4113,6 +4113,7 @@ corner-shape: superellipse(1.7);
 }
 
 .map-related {
+container-type: inline-size;
 display: grid;
 grid-column: 1 / -1;
 min-width: 0;
@@ -4215,9 +4216,11 @@ justify-self: end;
 clip-path: circle(49%);
 }
 @media (hover: hover) and (pointer: fine) {
+@container (min-width: 12rem) {
 .map-related__item:has(.map-related__preview) { grid-template-columns: minmax(0, 1fr) 4.5rem; }
 .map-related__preview { display: block; }
 .map-related__item:is(:hover, :focus-visible) .map-related__preview.is-ready { opacity: 1; }
+}
 }
 
 .map-inspector:not(.has-reading-frame):has(.map-related[data-related-kind="personal"]:not([hidden])) .map-readout__description {
@@ -6825,6 +6828,7 @@ opacity: 0.46;
 }
 
 .orbital-radar {
+container: time-rings / size;
 position: absolute;
 z-index: 0;
 inset: 0;
@@ -7159,7 +7163,7 @@ color: var(--content-ink);
 font-family: var(--content-font);
 pointer-events: auto;
 }
-.contact-intro { display: grid; gap: var(--space-3); min-width: 0; padding: var(--window-pad); }
+.contact-intro { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); min-width: 0; padding: var(--window-pad); }
 .contact-copy p { margin: 0; }
 .contact-copy h2 {
 margin: 0;
@@ -7177,7 +7181,7 @@ letter-spacing: .06em;
 text-transform: uppercase;
 }
 .contact-status__dot { width: 6px; height: 6px; flex: none; border-radius: 50%; background: var(--pulse); }
-.contact-lede { max-width: 34ch; text-wrap: pretty; }
+.contact-lede { max-width: 34ch; text-wrap: pretty; overflow-wrap: anywhere; }
 .contact-resume { display: flex; flex-wrap: wrap; align-items: start; gap: 4px var(--space-4); padding: var(--space-4) var(--window-pad) var(--window-pad); }
 .contact-resume a {
 display: inline-flex;
@@ -8328,7 +8332,7 @@ border-right: 0;
 bottom: auto;
 max-height: calc(100% - var(--panel-frame-top, 96px) - var(--panel-bottom));
 }
-.content-panel .content-panel__frame .approach-section { display: block; }
+.content-panel .content-panel__frame .approach-section { display: block; container-type: inline-size; }
 .content-panel .approach-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: 0 var(--space-6); margin: 0; padding: 0; border: 0; }
 .content-panel .content-panel__frame .approach-grid li {
 display: grid;
@@ -9951,7 +9955,7 @@ padding: 0;
 list-style: none;
 font: inherit;
 }
-.work-tags__list > li { max-width: 100%; overflow-wrap: anywhere; }
+.work-tags__list > li { max-width: 100%; overflow-wrap: anywhere; hyphens: auto; }
 .content-panel .work-row > .work-tags {
 grid-column: 3;
 grid-row: 3;
@@ -10167,62 +10171,32 @@ inset-block: calc((min(var(--control-target-compact), 38px) - 44px) / 2);
 .mobile-first-dock .mobile-first-cases { margin-inline-start: auto; }
 }
 
-/* MATERIAL / 01 CASCADE CONTRACT: registry owns fill, border, shadow and blur. */
 
+/* MATERIAL / 01 CASCADE CONTRACT: registry owns fill, border, shadow and blur. */
 [data-material-surface][data-material-active="always"]:not(
 .is-content-stack-hidden
 ),
-.map-node-label[data-material-surface][data-material-active="always"] {
-border: 0;
-background: var(--material-01);
-box-shadow: none;
-backdrop-filter: blur(24px);
--webkit-backdrop-filter: blur(24px);
-}
-
-@container map-viewport (min-width: 901px) {
-[data-material-surface][data-material-active="desktop"] {
-border: 0;
-background: var(--material-01);
-box-shadow: none;
-backdrop-filter: blur(24px);
--webkit-backdrop-filter: blur(24px);
-}
-}
-
-@container map-viewport (max-width: 900px) {
-[data-material-surface][data-material-active="mobile"] {
-border: 0;
-background: var(--material-01);
-box-shadow: none;
-backdrop-filter: blur(24px);
--webkit-backdrop-filter: blur(24px);
-}
-}
-
-/* Project orbits, touch picker and preview hierarchy. */
-
-.map-surface.has-practice-orbits :is(.focused-home,.practice-map) .map-node[data-map-id="private-practice"] .map-node__glyph,.map-surface.has-practice-orbits :is(.focused-home,.practice-map) .map-node[data-map-id="private-practice"].is-selected .map-node__glyph {
-width:var(--practice-orbit-size,168px);height:var(--practice-orbit-size,168px);background:none;box-shadow:none;border:0;pointer-events:none;
-}
+.map-node-label[data-material-surface][data-material-active="always"]{border:0;background: var(--material-01);box-shadow:none;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);}
+@container map-viewport (min-width: 901px){
+[data-material-surface][data-material-active="desktop"]{border:0;background: var(--material-01);box-shadow:none;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);}}
+@container map-viewport (max-width: 900px){
+[data-material-surface][data-material-active="mobile"]{border:0;background: var(--material-01);box-shadow:none;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);}}
+.map-surface.has-practice-orbits :is(.focused-home,.practice-map) .map-node[data-map-id="private-practice"] .map-node__glyph,.map-surface.has-practice-orbits :is(.focused-home,.practice-map) .map-node[data-map-id="private-practice"].is-selected .map-node__glyph{width:var(--practice-orbit-size,168px);height:var(--practice-orbit-size,168px);background:none;box-shadow:none;border:0;pointer-events:none;}
 .practice-orbits-canvas{position:absolute;inset:50% 0 auto;width:100%;height:auto;aspect-ratio:1;transform:translateY(-50%);pointer-events:none}
-.map-surface.has-practice-orbits [data-map-label-id="shirokostup"],.map-surface.has-practice-orbits [data-map-label-id="tarski"],.map-surface.has-practice-orbits [data-map-label-id="herman"],.map-surface.has-practice-orbits [data-map-label-id="ks-fish"],.map-surface.has-practice-orbits [data-map-label-id="hotline-camp"],.map-surface.has-practice-orbits [data-map-label-id="dusty"],.map-surface.has-practice-orbits [data-map-label-id="dd-camp"],.map-surface.has-practice-orbits [data-map-label-id="eleven"],.map-surface.has-practice-orbits [data-map-label-id="doronin"],.map-surface.has-practice-orbits [data-map-label-id="krainiuk"],.map-surface.has-practice-orbits .map-links path[data-parent-id="private-practice"],.map-surface.has-practice-orbits .map-links path.is-orbit-project-link,.map-surface.has-practice-orbits .spatial-field--relations [data-relation-key^="private-practice:"] {visibility:hidden!important;pointer-events:none!important}
+.map-surface.has-practice-orbits [data-map-label-id="shirokostup"],.map-surface.has-practice-orbits [data-map-label-id="tarski"],.map-surface.has-practice-orbits [data-map-label-id="herman"],.map-surface.has-practice-orbits [data-map-label-id="ks-fish"],.map-surface.has-practice-orbits [data-map-label-id="hotline-camp"],.map-surface.has-practice-orbits [data-map-label-id="dusty"],.map-surface.has-practice-orbits [data-map-label-id="dd-camp"],.map-surface.has-practice-orbits [data-map-label-id="eleven"],.map-surface.has-practice-orbits [data-map-label-id="doronin"],.map-surface.has-practice-orbits [data-map-label-id="krainiuk"],.map-surface.has-practice-orbits .map-links path[data-parent-id="private-practice"],.map-surface.has-practice-orbits .map-links path.is-orbit-project-link,.map-surface.has-practice-orbits .spatial-field--relations [data-relation-key^="private-practice:"]{visibility:hidden!important;pointer-events:none!important}
 @container map-viewport (max-width:900px){
 .map-surface.has-practice-orbits{--practice-orbit-size:clamp(184px,calc(var(--pane-vw) * 62),272px)}
 .map-surface.has-practice-orbits .focused-home :is(.map-nodes,.map-labels){--practice-orbit-size:clamp(136px,min(62cqw,54cqh),272px)}
 .map-surface.has-practice-orbits .focused-home .map-labels [data-map-label-id="private-practice"]{transform:translate(-50%,calc(-100% - var(--practice-orbit-size)*.32 - 12px))}
-.map-surface.has-practice-orbits .focused-home .map-labels [data-map-label-id="narkomfin"]{transform:translate(-50%,calc(-100% - 22px))!important}
-}
+.map-surface.has-practice-orbits .focused-home .map-labels [data-map-label-id="narkomfin"]{transform:translate(-50%,calc(-100% - 22px))!important}}
 @container map-viewport (max-width:900px) and (max-height:700px){
-.map-surface.has-practice-orbits{--practice-orbit-size:clamp(160px,calc(var(--pane-vw) * 56),224px)}
-}
+.map-surface.has-practice-orbits{--practice-orbit-size:clamp(160px,calc(var(--pane-vw) * 56),224px)}}
 @container map-viewport (min-width:901px){
 .map-surface.has-practice-orbits:not(.has-focused-home) .map-node-label[data-map-label-id="private-practice"]{left:var(--project-caption-x)!important;top:var(--project-caption-y)!important;transform:translate(-50%,-100%)!important;translate:none!important}
 .map-surface.has-practice-orbits .map-node[data-map-id="private-practice"]{--x:70%!important;--y:clamp(42%,calc(calc(var(--pane-vh) * 85) - 265px),56%)!important}
 .map-surface.has-practice-orbits .practice-map .map-node[data-map-id="private-practice"] .map-node__glyph,.map-surface.has-practice-orbits .practice-map .map-node[data-map-id="private-practice"].is-selected .map-node__glyph{--practice-orbit-size:clamp(200px,min(calc(var(--pane-vw) * 24),calc(calc(var(--pane-vh) * 100) - 400px)),340px);width:var(--practice-orbit-size);height:calc(var(--practice-orbit-size)*.72)}
 .map-surface.has-practice-orbits .map-axis-label--south{translate:0 8px}
-.map-surface .project-satellite>.map-node__glyph{--satellite-diameter:10px}
-}
+.map-surface .project-satellite>.map-node__glyph{--satellite-diameter:10px}}
 .project-satellites{position:fixed;left:0;top:0;z-index:11;pointer-events:none}
 .project-satellites .project-satellite{position:absolute;left:0;top:0;display:grid;place-items:center;width:24px;height:24px;min-width:0;min-height:0;padding:0;border:0;background:none;pointer-events:auto;border-radius:50%;color:var(--ink);cursor:pointer;transition:none;touch-action:manipulation}
 .project-satellite>.map-node__glyph{width:calc(var(--satellite-diameter,7px) * var(--audience-size,1));height:calc(var(--satellite-diameter,7px) * var(--audience-size,1));border-radius:50%;background:radial-gradient(circle at 32% 27%,var(--moon-0) 0%,var(--moon-1) 33%,var(--moon-2) 70%,var(--moon-3) 100%);box-shadow:0 0 0 .6px color-mix(in srgb,var(--ink) 22%,transparent)}
@@ -10249,7 +10223,8 @@ html[data-theme="dark"] .project-atlas-track{stroke:var(--group-light)}
 .project-atlas-name{min-width:0;padding-block:5px;overflow-wrap:anywhere}
 .map-surface[data-mobile-large-text] .project-orbit-picker button{padding-inline:0;gap:var(--space-2)}
 .map-surface[data-mobile-large-text] .project-atlas-track{display:none}
-.project-orbit-picker button:is(:hover,:focus-visible){color:var(--signal)}.point-preview.is-project-picker .point-preview__kind{display:none}
+.project-orbit-picker button:is(:hover,:focus-visible){color:var(--signal)}
+.point-preview.is-project-picker .point-preview__kind{display:none}
 .point-preview.is-project-picker{display:flex;flex-direction:column;overflow:hidden;top:min(calc(var(--focused-author-bottom,120px) + 12px),max(12px,calc(calc(var(--pane-vh) * 100) - var(--mobile-first-dock-height,48px) - var(--mobile-console-bottom) - 24px - 18rem)));bottom:calc(var(--mobile-first-dock-height,48px) + var(--mobile-console-bottom) + 12px);max-height:none}
 .point-preview.is-project-picker{clip-path:none}
 .point-preview.is-project-picker>.point-preview__head{position:absolute;inset:0 0 auto;z-index:2;padding:var(--window-pad) calc(var(--window-pad) + 32px) var(--space-3) var(--window-pad);border-radius:var(--window-radius) var(--window-radius) 0 0;corner-shape:var(--corner-card-shape);clip-path:border-box}
@@ -10265,20 +10240,21 @@ html[data-theme="dark"] .project-atlas-track{stroke:var(--group-light)}
 .point-preview>.project-orbit-back{display:block;margin:0 32px 12px 0;min-height:44px;font-size:var(--type-utility);line-height:1.4;font-weight:400}
 .point-preview>.project-orbit-back[hidden]{display:none}
 .point-preview .point-preview__link{margin-top:0;font-size:var(--type-detail);font-weight:600}
-@container map-viewport (max-width:900px){.map-surface.has-practice-orbits .map-node[data-map-id="private-practice"]{width:var(--practice-orbit-size);height:calc(var(--practice-orbit-size)*.72);border-radius:50%}.project-satellites .project-satellite{pointer-events:none}}
-@media(forced-colors:active){.practice-orbits-canvas{opacity:0}.project-satellite>.map-node__glyph{background:ButtonText}.map-node[data-map-id="private-practice"] .map-node__glyph{width:28px;height:28px;border:1px solid ButtonText}}
-
+@container map-viewport (max-width:900px){
+.map-surface.has-practice-orbits .map-node[data-map-id="private-practice"]{width:var(--practice-orbit-size);height:calc(var(--practice-orbit-size)*.72);border-radius:50%}
+.project-satellites .project-satellite{pointer-events:none}}
+@media(forced-colors:active){
+.practice-orbits-canvas{opacity:0}
+.project-satellite>.map-node__glyph{background:ButtonText}
+.map-node[data-map-id="private-practice"] .map-node__glyph{width:28px;height:28px;border:1px solid ButtonText}}
 .project-satellites .project-satellite{translate:none!important;inset:0 auto auto 0!important;transform-origin:center;--node-scale:1;--map-target-scale:1;opacity:1}
 .project-satellites .project-satellite>.map-node__glyph{transform:none;position:static;border:0;display:block;flex:none}
 .project-satellites .project-satellite>.map-node__glyph::before,.project-satellites .project-satellite>.map-node__glyph::after{content:none}
 .project-satellites .project-satellite:is(.is-filter-miss,.is-search-miss){opacity:.15;pointer-events:none}
-/* Native modal dialogs make the background inert without setting the attribute. */
 .map-camera[inert],.project-satellites[inert],.map-surface.has-settings-panel .map-camera{pointer-events:none;opacity:.4}
 .map-labels[inert]{visibility:hidden;pointer-events:none}
 .project-satellites[inert] .project-satellite{pointer-events:none}
 .map-surface:not(.has-practice-orbits) .practice-orbits-canvas{display:none}
-
-/* Accepted celestial bodies keep the existing navigation and focus targets. */
 .celestial-form,.celestial-volume{display:block;position:absolute;overflow:visible;pointer-events:none}
 html[data-celestial-volume] .map-node:is([data-map-id="garage"][data-gravity-ready],[data-map-id="running"],[data-map-id="early-career"]) .map-node__glyph{overflow:visible;background:none!important;box-shadow:none!important;border:0!important}
 html[data-celestial-volume] .map-node:is([data-map-id="garage"][data-gravity-ready],[data-map-id="running"],[data-map-id="early-career"]) .map-node__glyph::before,
@@ -10288,32 +10264,16 @@ html[data-celestial-volume] [data-map-id="running"] .map-node__glyph{transform:s
 .celestial-volume--running{inset:-190%;width:480%;height:480%;filter:brightness(.84) saturate(.8)}
 @media(forced-colors:active){
 html[data-celestial-volume] :is(.celestial-form,.celestial-volume){display:none}
-html[data-celestial-volume] .map-node:is([data-map-id="garage"],[data-map-id="running"],[data-map-id="early-career"]) .map-node__glyph{border:1px solid ButtonText!important}
-}
-/* Hierarchy: project system, named anchors, background field. */
-html[data-celestial-volume] {
---celestial-field-opacity: .58;
---celestial-practice-light: brightness(1.24) saturate(.9);
---celestial-satellite-light: brightness(1.12) saturate(.9);
-}
-html[data-celestial-volume][data-theme="light"] {
---celestial-field-opacity: .48;
---celestial-practice-light: brightness(1.06) contrast(1.07) saturate(.92);
---celestial-satellite-light: contrast(1.06) saturate(.92);
-}
-html[data-celestial-volume] .map-surface:not(.has-reading-surface,.has-point-preview,.has-settings-panel,.has-constellation-nav) .signal-constellation {
-opacity: var(--celestial-field-opacity);
-}
-/* Preserve coordinates; quiet idle light pools only. */
-html[data-celestial-volume][data-theme="dark"] .practice-map:not([data-focus-id])::before {
-background:
+html[data-celestial-volume] .map-node:is([data-map-id="garage"],[data-map-id="running"],[data-map-id="early-career"]) .map-node__glyph{border:1px solid ButtonText!important}}
+html[data-celestial-volume]{--celestial-field-opacity:.58;--celestial-practice-light:brightness(1.24) saturate(.9);--celestial-satellite-light:brightness(1.12) saturate(.9);}
+html[data-celestial-volume][data-theme="light"]{--celestial-field-opacity:.48;--celestial-practice-light:brightness(1.06) contrast(1.07) saturate(.92);--celestial-satellite-light:contrast(1.06) saturate(.92);}
+html[data-celestial-volume] .map-surface:not(.has-reading-surface,.has-point-preview,.has-settings-panel,.has-constellation-nav) .signal-constellation{opacity:var(--celestial-field-opacity);}
+html[data-celestial-volume][data-theme="dark"] .practice-map:not([data-focus-id])::before{background:
 radial-gradient(circle at var(--focus-x) var(--focus-y), color-mix(in srgb, var(--map-focus-accent) 6%, transparent) 0, transparent 24%),
 radial-gradient(ellipse at 50% 54%, color-mix(in srgb, var(--signal) 5%, transparent) 0, transparent 46%),
 linear-gradient(90deg, transparent 49.95%, var(--line-soft) 50%, transparent 50.05%),
-linear-gradient(transparent 49.95%, var(--line-soft) 50%, transparent 50.05%);
-}
-html[data-celestial-volume][data-theme="light"] .practice-map:not([data-focus-id])::before {
-background:
+linear-gradient(transparent 49.95%, var(--line-soft) 50%, transparent 50.05%);}
+html[data-celestial-volume][data-theme="light"] .practice-map:not([data-focus-id])::before{background:
 radial-gradient(circle at var(--focus-x) var(--focus-y), color-mix(in srgb, var(--map-focus-accent) 4%, transparent) 0, transparent 24%),
 radial-gradient(ellipse at 50% 51%, transparent 42%, color-mix(in srgb, var(--ink) 3%, transparent) 100%),
 radial-gradient(ellipse at 50% 53%, color-mix(in srgb, var(--signal) 3%, transparent) 0, transparent 43%),
@@ -10321,127 +10281,53 @@ radial-gradient(ellipse at 49% 82%, color-mix(in srgb, var(--tone-personal) 6%, 
 radial-gradient(ellipse at 50% 106%, color-mix(in srgb, var(--ink) 3%, transparent) 0, transparent 58%),
 linear-gradient(90deg, transparent 49.95%, var(--line-soft) 50%, transparent 50.05%),
 linear-gradient(transparent 49.95%, var(--line-soft) 50%, transparent 50.05%),
-var(--map-ground);
-}
-html[data-celestial-volume][data-theme="light"] .celestial-volume--running {
-filter: brightness(.96) saturate(.85);
-}
-/* Weight comes from lit bodies; preserve orbit hit geometry. */
-html[data-celestial-volume] .practice-orbits-canvas {
-filter: var(--celestial-practice-light);
-}
-html[data-celestial-volume] .project-satellite > .map-node__glyph {
---satellite-diameter: 12px;
-filter: var(--celestial-satellite-light);
-background: radial-gradient(circle at 32% 27%,
+var(--map-ground);}
+html[data-celestial-volume][data-theme="light"] .celestial-volume--running{filter:brightness(.96) saturate(.85);}
+html[data-celestial-volume] .practice-orbits-canvas{filter:var(--celestial-practice-light);}
+html[data-celestial-volume] .project-satellite > .map-node__glyph{--satellite-diameter:12px;filter:var(--celestial-satellite-light);background: radial-gradient(circle at 32% 27%,
 color-mix(in srgb, var(--moon-0) 88%, #f3efdf) 0%,
-var(--moon-1) 30%, var(--moon-2) 68%, var(--moon-3) 100%);
-}
-@container map-viewport (max-width: 900px) {
-html[data-celestial-volume] .project-satellite > .map-node__glyph {
---satellite-diameter: 8.5px;
-}
-}
-html[data-celestial-volume] [data-map-id="early-career"] .celestial-form {
-inset: -45%; width: 190%; height: 190%; filter: brightness(.9);
-}
-html[data-celestial-volume] .map-node--youtube .map-node__glyph {
-filter: saturate(.8);
-}
-html[data-celestial-volume] .map-labels .map-node-label {
-font-size: var(--type-detail);
-font-weight: 400;
-line-height: var(--leading-label);
-}
-html[data-celestial-volume] .map-labels .direction-landmark[data-map-label-id="private-practice"] {
-max-width: min(13rem, calc(calc(var(--pane-vw) * 100) - var(--space-6)));
-}
-html[data-celestial-volume] .direction-landmark__kind {
-font-size: var(--type-caption);
-line-height: var(--leading-label);
-font-weight: 400;
-}
-@container map-viewport (max-width: 900px) {
-html[data-celestial-volume] .site-header .brand {
-padding-right: 0;
-}
-html[data-celestial-volume] .site-header .brand__name {
-padding-right: 38px;
-}
-html[data-celestial-volume] .site-header .brand__role {
-max-width: none;
-text-wrap: pretty;
-}
-html[data-celestial-volume] .site-header .whoop-readout {
-margin-top: var(--space-1);
-}
-html[data-celestial-volume] .site-header .whoop-readout[data-unavailable="true"]:not([hidden]) {
-display: flex;
-flex-wrap: wrap;
-align-items: baseline;
-gap: 0 var(--space-3);
-}
-html[data-celestial-volume] .site-header .whoop-readout[data-unavailable="true"] :is(.whoop-metrics,.whoop-foot time) {
-display: none;
-}
-html[data-celestial-volume] .site-header .whoop-readout[data-unavailable="true"] .whoop-status {
-order: 0;
-flex: 1 1 auto;
-margin: 0;
-}
-html[data-celestial-volume] .site-header .whoop-readout[data-unavailable="true"] .whoop-foot {
-order: 1;
-}
-html[data-celestial-volume] .site-header .whoop-compact-trigger {
-min-height: 32px;
-}
-html[data-celestial-volume] .map-surface[data-mobile-large-text] .focused-home .site-header {
-max-height: none;
-overflow: visible;
-}
-html[data-celestial-volume] .map-surface[data-mobile-large-text] .site-header .brand__name {
-padding-right: 0;
-}
-html[data-celestial-volume] .focused-home .map-labels .direction-landmark {
-font-size: var(--type-detail);
-}
-html[data-celestial-volume] .focused-home .map-labels .direction-landmark:has(.direction-landmark__kind) {
-gap: var(--space-1);
-font-size: var(--type-detail);
-font-weight: 400;
-}
-html[data-celestial-volume] .focused-home .map-labels .direction-landmark[data-map-label-id="private-practice"] {
-max-width: min(13rem, calc(100% - var(--space-4)));
-}
-}
-
-/* Native choices share the existing reading window and keyboard behavior. */
-.study { margin: var(--space-5) 0; padding: 0; border: 0; min-width: 0; }
-.study legend { margin-bottom: var(--space-2); font: 600 var(--type-item)/var(--leading-item) var(--font-sans); }
-.study label { max-width: calc(100% - var(--space-3)); overflow-wrap: anywhere; display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--control-target); margin-right: var(--space-3); cursor: pointer; }
-.study input { accent-color: var(--signal); }
-.study label:has(:checked) { color: var(--signal); }
-.study figure { display: none; margin: var(--space-3) 0; }
-.study:has([value="a"]:checked) [data-state="a"], .study:has([value="b"]:checked) [data-state="b"], .study:has([value="c"]:checked) [data-state="c"] { display: block; }
-.study :is(img, svg) { display: block; width: 100%; height: auto; border-radius: var(--window-radius); }
-.study figcaption { margin-top: var(--space-2); color: var(--content-muted); }
-.study { font: 400 var(--type-body)/var(--leading-body) var(--font-sans); }
-.eleven-study { display: none; }
-.map-inspector.is-case-view[data-selected-map-id="eleven"] .eleven-study { display: block; }
-
-/* Full map story keeps a normal page address and the existing navigation. */
-@container map-viewport (max-width: 900px) {
-
-.control-console .constellation-nav__utility.map-story-link { text-decoration: none; }
-.map-story-link[aria-current="page"] > span { text-decoration: underline; text-underline-offset: .25em; color: var(--signal); }
-.map-story-link[aria-current="page"] .constellation-nav__utility-mark { color: var(--signal); }
-.map-story-link > span { grid-column: 2; }
-.control-console .map-story-link:focus-visible { outline: 2px solid var(--signal); outline-offset: -2px; }
-}
-
+var(--moon-1) 30%, var(--moon-2) 68%, var(--moon-3) 100%);}
+@container map-viewport (max-width: 900px){
+html[data-celestial-volume] .project-satellite > .map-node__glyph{--satellite-diameter:8.5px;}}
+html[data-celestial-volume] [data-map-id="early-career"] .celestial-form{inset:-45%;width:190%;height:190%;filter:brightness(.9);}
+html[data-celestial-volume] .map-node--youtube .map-node__glyph{filter:saturate(.8);}
+html[data-celestial-volume] .map-labels .map-node-label{font-size:var(--type-detail);font-weight:400;line-height:var(--leading-label);}
+html[data-celestial-volume] .map-labels .direction-landmark[data-map-label-id="private-practice"]{max-width:min(13rem, calc(calc(var(--pane-vw) * 100) - var(--space-6)));}
+html[data-celestial-volume] .direction-landmark__kind{font-size:var(--type-caption);line-height:var(--leading-label);font-weight:400;}
+@container map-viewport (max-width: 900px){
+html[data-celestial-volume] .site-header .brand{padding-right:0;}
+html[data-celestial-volume] .site-header .brand__name{padding-right:38px;}
+html[data-celestial-volume] .site-header .brand__role{max-width:none;text-wrap:pretty;}
+html[data-celestial-volume] .site-header .whoop-readout{margin-top:var(--space-1);}
+html[data-celestial-volume] .site-header .whoop-readout[data-unavailable="true"]:not([hidden]){display:flex;flex-wrap:wrap;align-items:baseline;gap:0 var(--space-3);}
+html[data-celestial-volume] .site-header .whoop-readout[data-unavailable="true"] :is(.whoop-metrics,.whoop-foot time){display:none;}
+html[data-celestial-volume] .site-header .whoop-readout[data-unavailable="true"] .whoop-status{order:0;flex:1 1 auto;margin:0;}
+html[data-celestial-volume] .site-header .whoop-readout[data-unavailable="true"] .whoop-foot{order:1;}
+html[data-celestial-volume] .site-header .whoop-compact-trigger{min-height:32px;}
+html[data-celestial-volume] .map-surface[data-mobile-large-text] .focused-home .site-header{max-height:none;overflow:visible;}
+html[data-celestial-volume] .map-surface[data-mobile-large-text] .site-header .brand__name{padding-right:0;}
+html[data-celestial-volume] .focused-home .map-labels .direction-landmark{font-size:var(--type-detail);}
+html[data-celestial-volume] .focused-home .map-labels .direction-landmark:has(.direction-landmark__kind){gap:var(--space-1);font-size:var(--type-detail);font-weight:400;}
+html[data-celestial-volume] .focused-home .map-labels .direction-landmark[data-map-label-id="private-practice"]{max-width:min(13rem, calc(100% - var(--space-4)));}}
+.study{margin:var(--space-5) 0;padding:0;border:0;min-width:0;}
+.study legend{margin-bottom:var(--space-2);font:600 var(--type-item)/var(--leading-item) var(--font-sans);}
+.study label{max-width:calc(100% - var(--space-3));overflow-wrap:anywhere;display:inline-flex;align-items:center;gap:var(--space-2);min-height:var(--control-target);margin-right:var(--space-3);cursor:pointer;}
+.study input{accent-color:var(--signal);}
+.study label:has(:checked){color:var(--signal);}
+.study figure{display:none;margin:var(--space-3) 0;}
+.study:has([value="a"]:checked) [data-state="a"], .study:has([value="b"]:checked) [data-state="b"], .study:has([value="c"]:checked) [data-state="c"]{display:block;}
+.study :is(img, svg){display:block;width:100%;height:auto;border-radius:var(--window-radius);}
+.study figcaption{margin-top:var(--space-2);color:var(--content-muted);}
+.study{font:400 var(--type-body)/var(--leading-body) var(--font-sans);}
+.eleven-study{display:none;}
+.map-inspector.is-case-view[data-selected-map-id="eleven"] .eleven-study{display:block;}
+@container map-viewport (max-width: 900px){
+.control-console .constellation-nav__utility.map-story-link{text-decoration:none;}
+.map-story-link[aria-current="page"] > span{text-decoration:underline;text-underline-offset:.25em;color:var(--signal);}
+.map-story-link[aria-current="page"] .constellation-nav__utility-mark{color:var(--signal);}
+.map-story-link > span{grid-column:2;}
+.control-console .map-story-link:focus-visible{outline:2px solid var(--signal);outline-offset:-2px;}}
 html[data-celestial-volume] .map-node--garage:not([data-gravity-ready]) .map-node__glyph{background:radial-gradient(circle closest-side,#030504 50%,transparent 52%)!important;box-shadow:none!important}
-
-/* The map and its story are one joined pair; both retain their live state. */
 html,body.split-page{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:var(--font-sans);-webkit-font-smoothing:antialiased}
 body.split-page{font-size:var(--type-body)}
 #split-shell{position:fixed;inset:0;display:grid;grid-template-columns:minmax(0,1fr) 0 minmax(0,0fr);overflow:clip;padding:0;isolation:isolate}
@@ -10449,7 +10335,6 @@ body.split-page{font-size:var(--type-body)}
 .pair-glass--story{grid-area:1 / 3}
 .has-story-pane #split-shell{grid-template-columns:minmax(0,2fr) 12px minmax(0,3fr);padding:6px}
 .has-story-pane .pair-glass{visibility:visible}
-/* Paint only the outside of each pane; a full grey backing would tint the glass. */
 .pair-glass::before{content:"";position:absolute;inset:0;border-radius:inherit;corner-shape:inherit;box-shadow:0 0 0 var(--window-radius) var(--line);clip-path:inset(-6px);pointer-events:none}
 #map-pane{grid-area:1 / 1}
 #story-pane{grid-area:1 / 3}
@@ -10480,31 +10365,29 @@ body.split-page{font-size:var(--type-body)}
 #story-pane h1{font-size:var(--type-story-title);margin-top:0}
 #story-pane #story-title:focus-visible{outline:var(--focus-width) solid var(--signal);outline-offset:var(--focus-offset)}
 @media(max-width:999px){
- #split-shell{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) 0 minmax(0,0fr)}
- #story-pane,.pair-glass--story{grid-area:3 / 1}
- #story-bridge{grid-area:2 / 1}
- .has-story-pane #split-shell{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,min(28dvh,calc(var(--focused-author-bottom,140px) + 10px))) 12px minmax(0,1fr)}
- .has-story-pane .map-surface{height:calc(100dvh - 12px);bottom:auto}
- .has-story-pane #map-pane .site-header{max-height:calc(100cqh - 24px);overflow:auto;overscroll-behavior:contain;scrollbar-width:thin}
- .has-story-pane .constellation-nav[popover]{margin:0}
- .has-story-pane .point-preview{visibility:hidden;pointer-events:none}
- .has-story-pane #story-pane{transition:filter var(--duration-feedback) var(--ease-out),opacity var(--duration-feedback) var(--ease-out)}
- .story-menu-open #story-pane{filter:blur(3px);opacity:.45}
- #story-pane .page{max-width:760px}
- /* The icon's touch target must not cover the scrollable author card at 200% text. */
- #story-bridge button{width:calc(var(--control-target) + var(--space-4));height:44px}
- #story-bridge button::before{width:var(--space-6);height:3px}
-}
-@media(prefers-reduced-motion:reduce){.story-is-moving #split-shell,.story-is-moving #story-pane{transition:none}.story-is-moving #map-pane{animation:none}}
+#split-shell{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) 0 minmax(0,0fr)}
+#story-pane,.pair-glass--story{grid-area:3 / 1}
+#story-bridge{grid-area:2 / 1}
+.has-story-pane #split-shell{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,min(28dvh,calc(var(--focused-author-bottom,140px) + 10px))) 12px minmax(0,1fr)}
+.has-story-pane .map-surface{height:calc(100dvh - 12px);bottom:auto}
+.has-story-pane #map-pane .site-header{max-height:calc(100cqh - 24px);overflow:auto;overscroll-behavior:contain;scrollbar-width:thin}
+.has-story-pane .constellation-nav[popover]{margin:0}
+.has-story-pane .point-preview{visibility:hidden;pointer-events:none}
+.has-story-pane #story-pane{transition:filter var(--duration-feedback) var(--ease-out),opacity var(--duration-feedback) var(--ease-out)}
+.story-menu-open #story-pane{filter:blur(3px);opacity:.45}
+#story-pane .page{max-width:760px}
+#story-bridge button{width:calc(var(--control-target) + var(--space-4));height:44px}
+#story-bridge button::before{width:var(--space-6);height:3px}}
+@media(prefers-reduced-motion:reduce){
+.story-is-moving #split-shell,.story-is-moving #story-pane{transition:none}
+.story-is-moving #map-pane{animation:none}}
 html[data-reduce-motion="true"] .story-is-moving #split-shell,html[data-reduce-motion="true"] .story-is-moving #story-pane{transition:none}
 html[data-reduce-motion="true"] .story-is-moving #map-pane{animation:none}
-@media(prefers-reduced-motion:reduce){.has-story-pane #story-pane{transition:none}}
+@media(prefers-reduced-motion:reduce){
+.has-story-pane #story-pane{transition:none}}
 html[data-reduce-motion="true"] .has-story-pane #story-pane{transition:none}
-
-/* The direct entry remains beside the desktop map. */
 .map-about-trigger .map-disclosure__chevron{display:none}
 .map-about-trigger::after{content:"→";display:inline-block;margin-inline-start:.45em;text-decoration:none}
-
 @container map-viewport (min-width:901px){
 .content-panel .work-row:has(img.work-row__preview){grid-template-columns:1.25rem minmax(0,1fr);grid-template-rows:auto auto auto auto auto;padding-block:var(--space-4)}
 .content-panel img.work-row__preview{grid-column:2;grid-row:1;width:min(100%,20rem,30cqh);margin-bottom:var(--space-3)}
@@ -10512,11 +10395,19 @@ html[data-reduce-motion="true"] .has-story-pane #story-pane{transition:none}
 .content-panel .work-row:has(img.work-row__preview) .work-row__title{grid-column:2;grid-row:2}
 .content-panel .work-row:has(img.work-row__preview) .work-row__scope{grid-column:2;grid-row:3}
 .content-panel .work-row:has(img.work-row__preview)>.work-tags{grid-column:2;grid-row:4}
-.content-panel .work-row:has(img.work-row__preview) .work-row__domain{grid-column:2;grid-row:5}
-}
-@container map-viewport (max-height:20rem){.practice-map[data-time-view] .orbital-radar i:is(:nth-child(2),:nth-child(3)) span{display:none}}
-
+.content-panel .work-row:has(img.work-row__preview) .work-row__domain{grid-column:2;grid-row:5}}
+@container time-rings (max-height:20rem){
+.practice-map[data-time-view] .orbital-radar i:is(:nth-child(2),:nth-child(3)) span{display:none}}
 .command-dock[popover]{display:grid;margin:0;max-width:none;max-height:none;border:0}
 :is(.command-results,.command-status)[popover]{margin:0;max-width:none}
-
 .command-result:focus-visible{outline:var(--focus-width) solid var(--signal);outline-offset:calc(0px - var(--focus-width))}
+@container (max-width: 12rem){
+html[data-celestial-volume] .site-header .brand__name{display:block;max-width:none;padding-right:0;}
+html[data-celestial-volume] .site-header .brand__name::before{content:'';float:right;width:max(0px, calc(100% - var(--author-menu-text-width, 100%) + var(--space-2)));height:44px;}
+.content-panel .work-list .work-row,.content-panel .content-panel__frame .approach-grid li{grid-template-columns:minmax(0, 1fr);}
+.content-panel .content-panel__frame .work-list .work-row > :not(.work-row__preview),.content-panel .content-panel__frame .approach-grid li > *{grid-area:auto;}}
+@container map-viewport (max-width: 12rem){
+.map-surface{--window-pad:20px;}
+.practice-map[data-time-view]{overflow-y:auto;touch-action:pan-y;overscroll-behavior:contain;}
+.practice-map[data-time-view] .map-camera{min-height:20rem;bottom:auto;}
+.practice-map[data-time-view] .signal-constellation{touch-action:pan-y;}}

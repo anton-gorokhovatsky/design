@@ -280,6 +280,36 @@ try {
     await page.close();
     console.log(`PASS ${engine} ${viewport.width}: six introductory captions, ten picker projects, rotation and momentum without overlap.`);
   }
+  for (const width of [320, 390]) {
+    const page = await browser.newPage({ viewport: { width, height: 844 }, hasTouch: true, isMobile: true, reducedMotion: 'reduce' });
+    page.on('pageerror', error => errors.push(error.message));
+    await page.goto(`${origin}/?scene=map&view=time`);
+    await page.evaluate(() => { document.documentElement.style.fontSize = '32px'; return document.fonts.ready; });
+    await page.waitForFunction(() => !document.querySelector('[data-map-links][data-layout-pending]'));
+    const yearCollisions = await page.evaluate(() => [...document.querySelectorAll('.orbital-radar i span')]
+      .filter(year => year.offsetWidth).flatMap(year => {
+        const a = year.getBoundingClientRect();
+        return [...document.querySelectorAll('.map-node[data-time-year] .map-node__glyph')].filter(node => {
+          const b = node.getBoundingClientRect();
+          return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+        }).map(node => [year.textContent, node.closest('[data-map-id]').dataset.mapId]);
+      }));
+    assert.deepEqual(yearCollisions, [], `${engine} ${width}/200%: years clear the dated points`);
+    const ids = await page.locator('.map-node[data-time-year]').evaluateAll(nodes => nodes.map(node => node.dataset.mapId));
+    for (const id of ids) {
+      const node = page.locator(`[data-map-nodes] [data-map-id="${id}"]`);
+      await node.evaluate(element => element.scrollIntoView({ block: 'center', inline: 'nearest' }));
+      assert.equal(await node.evaluate(element => {
+        const rect = element.querySelector('.map-node__glyph').getBoundingClientRect();
+        return document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2)?.closest('[data-map-id]')?.dataset.mapId;
+      }), id, `${engine} ${width}/200%: ${id} receives its own centre click`);
+    }
+    await page.locator('[data-time-toggle]').first().evaluate(button => button.click());
+    await page.waitForFunction(() => !document.querySelector('[data-practice-map]').hasAttribute('data-time-view'));
+    assert.equal(await page.locator('[data-practice-map]').evaluate(field => field.scrollTop), 0,
+      'Leaving chronology resets its scroll offset');
+    await page.close();
+  }
   assert.deepEqual(errors, []);
 } finally {
   await browser.close(); server.closeAllConnections(); await new Promise(done => server.close(done));
