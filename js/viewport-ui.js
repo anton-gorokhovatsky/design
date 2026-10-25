@@ -111,7 +111,6 @@ const positionDetachedCommandResults = () => {
   const gap = 8;
   let anchorTop = surfaceBounds.top;
   let anchorBottom = surfaceBounds.bottom;
-  // Results share the console's right edge.
   const resultWidth = compact ? surfaceBounds.right - bounds.left
     : Math.max(surfaceBounds.right - bounds.left, Math.min(surfaceBounds.width, 640));
   let width = Math.min(resultWidth, Math.max(0, viewport.width - gap * 2));
@@ -139,7 +138,6 @@ const positionDetachedCommandResults = () => {
     const contentHeight = element.scrollHeight;
     const opensBelow = !focusedMobile && (contentHeight > spaceAbove && spaceBelow > spaceAbove);
     let maxHeight = opensBelow ? spaceBelow : spaceAbove;
-    // A partial row signals that the list continues.
     const peek = [...element.children].map(row => row.offsetTop + row.offsetHeight / 2)
       .filter(height => height <= maxHeight).at(-1);
     if (contentHeight > maxHeight && peek) maxHeight = peek;
@@ -369,8 +367,6 @@ const syncConsoleBounds = () => {
     return;
   }
 
-  // Resolve the navigation anchor before clamping the author column against it.
-  // The header precedes the console in the DOM, including during viewport changes.
   const navigation = document.querySelector(".control-console");
   if (navigation?.getClientRects().length && pane.width > 900) {
     const offset = getConsoleOffset(navigation);
@@ -378,8 +374,6 @@ const syncConsoleBounds = () => {
   }
 
   floatingConsoleModules.forEach((module) => {
-    // A hidden compact-panel has no box. Clamping that zero rect writes a
-    // fictitious drag offset which used to survive when the reader closed.
     const rect = module.getBoundingClientRect();
     if (!rect.width || !rect.height || pane.width <= 900) return;
     const currentOffset = getConsoleOffset(module);
