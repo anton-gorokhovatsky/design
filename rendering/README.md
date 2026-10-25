@@ -48,6 +48,13 @@ npm exec --yes --package=terser@5.44.0 -- terser rendering/practice-orbits.js --
 области консоли. Строковые комментарии оставлять в читаемом исходнике,
 не включая их в поставляемый runtime.
 
+`analytics.js` сохраняет читаемый исходник в `rendering/js/analytics.js`.
+Его runtime сжимается только форматированием, без изменения выражений и имён:
+`terser rendering/js/analytics.js --ecma 2022 --module --output js/analytics.js`
+(Terser 5.44.0, без `--compress` и `--mangle`). После форматирования сохранить
+пробелы в условии `analyticsPreference === "allowed"`: его точную запись
+проверяет существующий статический контракт явного согласия.
+
 `js/pane-viewport.js` измеряет область карты, уведомляет её о смене ширины
 и синхронизирует классы состояния. В CSS размерные условия карты используют
 контейнер `map-viewport`; настройки устройства и темы остаются media queries.

@@ -507,6 +507,7 @@ const requiredMaterialSurfaces = [
   "reel-readout",
   "content-window",
   "settings-panel",
+  "analytics-notice",
   "story-return",
   "paired-map",
   "paired-story",

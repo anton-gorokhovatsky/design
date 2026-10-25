@@ -186,3 +186,42 @@ document.addEventListener('keydown',event=>{
   if(next&&bridge.contains(next)){event.preventDefault();next.focus({preventScroll:true});}
 },true);
 void show(new URL(location.href).searchParams.has('story'),{write:false,focus:false});
+
+
+// Keep the shared glass outside the scroll lens backdrop root without moving
+// the button out of the reader's DOM, focus order or close event delegation.
+let storyCloseFrame=0,observedStoryClose;
+const storyCloseResize=new ResizeObserver(scheduleStoryClose);
+function scheduleStoryClose(){
+ if(!storyCloseFrame)storyCloseFrame=requestAnimationFrame(syncStoryClose);
+}
+function syncStoryClose(){
+ cancelAnimationFrame(storyCloseFrame);storyCloseFrame=0;
+ const close=story.querySelector('.story-actions>[data-close-story]');
+ if(!close||typeof close.showPopover!=='function')return;
+ if(close!==observedStoryClose){
+  storyCloseResize.disconnect();
+  storyCloseResize.observe(close);storyCloseResize.observe(close.parentElement);
+  observedStoryClose=close;
+ }
+ const floating=document.body.classList.contains('has-story-pane')&&!story.inert
+  &&!document.body.matches('.story-is-moving,.story-menu-open,.has-settings-panel');
+ if(!floating){
+  if(close.matches(':popover-open'))close.hidePopover();
+  if(close.hasAttribute('popover'))close.removeAttribute('popover');
+  for(const key of ['left','top'])if(close.style[key])close.style.removeProperty(key);
+  return;
+ }
+ const anchor=close.parentElement.getBoundingClientRect(),width=close.getBoundingClientRect().width;
+ for(const [key,value] of [['top',anchor.top+'px'],['left',anchor.right-width+'px']]){
+  if(close.style[key]!==value)close.style[key]=value;
+ }
+ if(!close.matches(':popover-open')){close.setAttribute('popover','manual');close.showPopover();}
+}
+new MutationObserver(syncStoryClose).observe(document.body,{attributes:true,attributeFilter:['class']});
+new MutationObserver(scheduleStoryClose).observe(story,{attributes:true,attributeFilter:['inert','style'],childList:true});
+window.addEventListener('resize',scheduleStoryClose);
+window.visualViewport?.addEventListener('resize',scheduleStoryClose);
+window.visualViewport?.addEventListener('scroll',scheduleStoryClose);
+story.addEventListener('scroll',scheduleStoryClose,{passive:true});
+scheduleStoryClose();

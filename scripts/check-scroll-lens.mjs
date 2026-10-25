@@ -104,8 +104,8 @@ try {
         assert.ok(edge==='top'?bounds.y<port.y+50:bounds.y+bounds.height>port.y+port.height-50,'The actual content reaches this edge');
         const clip={x:Math.max(port.x,bounds.x)+8,y:edge==='top'?port.y+4:port.y+port.height-64,
           width:Math.min(bounds.width,port.width)-16,height:60};
-        const affected=type==='player'?'iframe':['video','image'].includes(type)?'.scroll-lens-video':'[data-scroll-lens-frame]:has(> .case-scroll)';
-        await page.waitForFunction(sel=>{const e=document.querySelector(sel);return e&&(e.style.filter.includes('scroll-ink')||e.style.transform.includes('matrix3d'));},affected);
+        const affected=type==='player'?'iframe':['video','image'].includes(type)?'.scroll-lens-video':'.case-scroll';
+        await page.waitForFunction(sel=>{const e=document.querySelector(sel);return e&&(getComputedStyle(e).filter.includes('scroll-ink')||e.style.transform.includes('matrix3d'));},affected);
         if (type==='image' || type==='video') {
           const attachment=await page.locator(target).evaluate(picture=>{
             const region=picture.closest('.case-scroll'),canvas=picture.parentElement.querySelector('.scroll-lens-video');
@@ -233,13 +233,13 @@ try {
       if(type==='links') {
         await page.locator(target).evaluate(e=>{const s=document.getSelection();s.removeAllRanges();const r=document.createRange();r.selectNodeContents(e);s.addRange(r);});
         await settle(page);
-        assert.equal(await page.locator(target).evaluate(e=>e.closest('[data-scroll-lens-frame]')?.style.filter||''),'','Selected text is native');
+        assert.equal(await page.locator(target).evaluate(e=>getComputedStyle(e.closest('.case-scroll')).filter),'none','Selected text is native');
         await page.evaluate(()=>getSelection().removeAllRanges());
         await page.locator(target).evaluate(e=>e.closest('a').focus({preventScroll:true}));
         await page.keyboard.press('Shift+Tab');
         await page.locator(target).evaluate(e=>e.closest('a').focus({preventScroll:true}));
         await settle(page);
-        assert.equal(await page.locator(target).evaluate(e=>e.closest('[data-scroll-lens-frame]')?.style.filter||''),'','Focused link stays sharp');
+        assert.equal(await page.locator(target).evaluate(e=>getComputedStyle(e.closest('.case-scroll')).filter),'none','Focused link stays sharp');
         assert.equal(await page.locator(target).evaluate(e=>getComputedStyle(e.closest('a')).outlineStyle),'solid');
       }
       if(type==='player') {
@@ -293,7 +293,7 @@ try {
     try {
       await page.goto(origin+'/?story=1#map');await page.waitForSelector('#story-pane[data-ready=true]');await page.evaluate(()=>document.fonts.ready);
       const region=page.locator('#story-pane'),alignHeading=()=>region.evaluate(s=>{const h=s.querySelector('#time h2'),r=h.getBoundingClientRect(),p=s.getBoundingClientRect();s.scrollTop+=r.top-p.top-18});
-      const hasLens=()=>Boolean(document.querySelector('#story-pane')?.closest('[data-scroll-lens-frame]')?.style.filter.includes('scroll-ink'));
+      const hasLens=()=>{const p=document.querySelector('#story-pane');return Boolean(p&&getComputedStyle(p).filter.includes('scroll-ink'));};
       await alignHeading();await page.waitForFunction(hasLens);
       await region.dispatchEvent('touchstart');
       for(const delta of [240,320,-160,-340,120]){
@@ -311,7 +311,7 @@ try {
       }
       await page.waitForTimeout(180);assert.equal(await page.evaluate(hasLens),true,'Holding a touch does not remove the optical edge');
       await region.dispatchEvent('touchcancel');await alignHeading();await page.waitForFunction(hasLens);
-      await region.evaluate(s=>{s.lensScrollSamples=[];for(const type of ['wheel','scroll'])s.addEventListener(type,()=>s.lensScrollSamples.push(Number(s.closest('[data-scroll-lens-frame]')?.style.filter.includes('scroll-ink'))),{passive:true})});
+      await region.evaluate(s=>{s.lensScrollSamples=[];for(const type of ['wheel','scroll'])s.addEventListener(type,()=>s.lensScrollSamples.push(Number(getComputedStyle(s).filter.includes('scroll-ink'))),{passive:true})});
       const r=await region.boundingBox();await page.mouse.move(r.x+4,r.y+r.height/2);await page.mouse.wheel(0,430);await page.mouse.wheel(0,-390);await settle(page);
       result.scrollSamples=await region.evaluate(s=>s.lensScrollSamples);assert.ok(result.scrollSamples.length>0&&result.scrollSamples.every(n=>n===1),'Wheel and reversal retain the optical edge during motion');
       await alignHeading();await page.waitForFunction(hasLens);await page.screenshot({path:dir+engine+'-story-rapid-settled.png'});

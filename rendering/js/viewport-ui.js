@@ -255,7 +255,7 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
   };
   const releaseFrame = () => {
     if (!textFrame) return;
-    textFrame.style.removeProperty("filter");
+    region.style.removeProperty("--scroll-ink-filter");
     if (region.parentElement !== textFrame) {
       textFrame.remove();textFrame=null;
       for(const[key,value]of textStyles)region.style[key]=value;
@@ -391,9 +391,9 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
           drawScrollLensMap(textRecord,width,height,textEdges[0]?0:null,textEdges[1]?height:null);
           textRecord.window=key;
         }
-        textFrame.style.filter=`url(#${textRecord.id})`;
+        region.style.setProperty("--scroll-ink-filter",`url(#${textRecord.id})`);
       }
-    } else textFrame?.style.removeProperty("filter");
+    } else region.style.removeProperty("--scroll-ink-filter");
     for (const { element, rect, height, width } of geometry) {
       if (!element.matches("img, video, iframe")) continue;
       const selected = selection && !selection.isCollapsed
