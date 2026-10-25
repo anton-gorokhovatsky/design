@@ -74,6 +74,7 @@ try {
     await page.waitForFunction(() => document.querySelector(".whoop-level"));
     await page.waitForFunction(() => !document.querySelector("[data-map-links][data-layout-pending]"));
     const initial = (await page.evaluate(inspect)).author;
+    await page.keyboard.press('Tab');
     for (const [index, item] of mapItems.filter(item => item.previewVideo).entries()) {
       const target = page.locator(`[data-map-id="${item.id}"]`);
       if (width <= 900 && item.parent === 'private-practice') {
@@ -83,7 +84,6 @@ try {
         continue;
       }
       if (index % 2) {
-        await page.keyboard.press('Tab');
         await target.focus();
         assert.equal(await target.evaluate(element => element.matches(':focus-visible')), true, 'The keyboard branch uses visible keyboard focus.');
       } else await target.hover();

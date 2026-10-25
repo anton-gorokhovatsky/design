@@ -126,7 +126,7 @@ function dismissSceneNote(figure,buttons,clear){
     if(out?.contains(document.activeElement))buttons.find(b=>b.dataset.point===point)?.focus({preventScroll:true});
     clear();
   });
-  document.addEventListener('pointerdown',e=>{if(!figure.contains(e.target))clear();});
+  document.addEventListener('click',e=>{if(!figure.contains(e.target))clear();});
 }
 
 function makePractice(figure) {
