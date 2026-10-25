@@ -1327,7 +1327,7 @@ const auditBrowser = async (client, origin) => {
   const hoveredInactiveFilterContract = await evaluate(client, `(() => {
     const personal = document.querySelector('[data-map-filter="personal"]');
     const project = document.querySelector('[data-map-filter="project"]');
-    const motion = document.querySelector('#settings-panel [data-motion-toggle]');
+    const motion = document.querySelector('#settings-panel [data-whoop-toggle]');
     const colorPixel = (value) => {
       const canvas = document.createElement('canvas');
       canvas.width = 1;
@@ -1387,7 +1387,7 @@ const auditBrowser = async (client, origin) => {
     const options = [...panel.querySelectorAll('[role="switch"]')];
     const style = element => getComputedStyle(element);
     return {
-      ranks: [heading, panel.querySelector('.settings-group > h3'), options[0], options[0].querySelector('.preference-description')].map(element => parseFloat(style(element).fontSize)),
+      ranks: [heading, panel.querySelector('.settings-group > h3'), options[0], options[0].closest('.preference-option').querySelector('.preference-description')].map(element => parseFloat(style(element).fontSize)),
       lefts: [heading, ...panel.querySelectorAll('.settings-group > h3'), ...options].map(element => element.getBoundingClientRect().left),
       switches: options.map(option => ({height: option.getBoundingClientRect().height, glyph: option.querySelector('.preference-switch').getBoundingClientRect().toJSON()})),
       weight: style(options[0]).fontWeight,
@@ -1401,7 +1401,7 @@ const auditBrowser = async (client, origin) => {
     fail('settings: title/item/body/detail roles, text axes and equal switches diverge.', settingsFamilyContract);
   }
   const motionTogglePoint = await evaluate(client, `(() => {
-    const bounds = document.querySelector('#settings-panel [data-motion-toggle]')
+    const bounds = document.querySelector('#settings-panel [data-whoop-toggle]')
       ?.getBoundingClientRect();
     return bounds ? {
       x: bounds.left + bounds.width / 2,
@@ -1409,7 +1409,7 @@ const auditBrowser = async (client, origin) => {
     } : null;
   })()`);
   if (!motionTogglePoint) {
-    fail("side-panel-hover: motion control is missing from the display panel.");
+    fail("side-panel-hover: enabled switch is missing from the display panel.");
   }
   await client.send("Input.dispatchMouseEvent", {
     type: "mouseMoved",
@@ -1418,13 +1418,13 @@ const auditBrowser = async (client, origin) => {
   });
   const motionToggleHoverSettled = await waitForHoverTransition(
     client,
-    "#settings-panel [data-motion-toggle]",
+    "#settings-panel [data-whoop-toggle]",
   );
   if (!motionToggleHoverSettled) {
-    fail("side-panel-hover: the motion-control hover transition did not settle.");
+    fail("side-panel-hover: the switch hover transition did not settle.");
   }
   const sidePanelHoverContract = await evaluate(client, `(() => {
-    const motion = document.querySelector('#settings-panel [data-motion-toggle]');
+    const motion = document.querySelector('#settings-panel [data-whoop-toggle]');
     const colorPixel = (value) => {
       const canvas = document.createElement('canvas');
       canvas.width = 1;

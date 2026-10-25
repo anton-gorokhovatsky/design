@@ -258,8 +258,15 @@ try {
       await capture(page, scenario.label + "-motion-off");
       await toggle.click();
       await page.waitForFunction(() => document.documentElement.dataset.reduceMotion !== "true");
-      await page.waitForFunction(() => document.querySelector(".map-node__surface")?.dataset.sphereMotion === "running");
+      const pausedInModal = (await read(page)).map(({id, motion, skin}) => ({id, motion, skin}));
+      const bodiesInModal = await readCelestial(page);
+      assert.ok(pausedInModal.length > 0 && pausedInModal.every(surface => surface.motion === 'paused'));
+      await page.waitForTimeout(160);
+      assert.deepEqual((await read(page)).map(({id, motion, skin}) => ({id, motion, skin})), pausedInModal,
+        'A modal preserves stationary materials after reduced motion is removed.');
+      assert.deepEqual(await readCelestial(page), bodiesInModal, 'A modal pauses celestial bodies.');
       await page.keyboard.press("Escape");
+      await page.waitForFunction(() => document.querySelector(".map-node__surface")?.dataset.sphereMotion === "running");
       const surface = page.locator('[data-map-id="optimal"] .map-node__surface');
       await surface.evaluate((canvas) => { canvas.style.transform = "translateX(300vw)"; });
       await page.waitForFunction(() => document.querySelector(".map-node__surface")?.dataset.sphereMotion === "paused");

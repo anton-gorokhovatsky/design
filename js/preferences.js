@@ -120,6 +120,11 @@ const createEffectivePreference = ({
     });
     toggles.forEach((toggle) => {
       toggle.setAttribute("aria-checked", String(preference.matches));
+      const systemIds = stateElements.map(element => element.id);
+      const description = (toggle.getAttribute("aria-describedby") || "").split(/\s+/).filter(id => id && !systemIds.includes(id));
+      const note = stateElements.find(element => toggle.closest(".preference-option")?.contains(element));
+      if (mediaQuery.matches && note?.id) description.push(note.id);
+      toggle.setAttribute("aria-describedby", description.join(" "));
       toggle.toggleAttribute("disabled", mediaQuery.matches);
     });
 

@@ -359,10 +359,27 @@ try {
   const controlsPage = await browser.newPage({viewport: {width: 390, height: 844}, reducedMotion: 'no-preference'});
   await controlsPage.route('https://mc.yandex.ru/**', route => route.fulfill({contentType: 'text/javascript',
     body: 'window.__settingsMetricCalls=[...(window.ym?.a||[])].map(a=>Array.from(a));window.ym=(...a)=>window.__settingsMetricCalls.push(a);'}));
+  await controlsPage.emulateMedia({reducedMotion: 'no-preference', contrast: 'no-preference'});
   await controlsPage.goto(origin);
   await controlsPage.evaluate(() => document.fonts.ready);
   await controlsPage.locator('[data-constellation-nav-toggle]').click();
   await controlsPage.locator('.constellation-nav [data-open-settings]').click();
+  for (const [selector, feature, systemValue, systemId] of [
+    ['[data-motion-toggle]', 'reducedMotion', 'reduce', 'panel-motion-system'],
+    ['[data-contrast-toggle]', 'contrast', 'more', 'panel-contrast-system'],
+  ]) {
+    const control = controlsPage.locator(selector);
+    assert.ok(!(await control.getAttribute('aria-describedby')).split(' ').includes(systemId));
+    await control.click();
+    assert.ok(!(await control.getAttribute('aria-describedby')).split(' ').includes(systemId), 'A local preference must not announce a device setting.');
+    await control.click();
+    await controlsPage.emulateMedia({[feature]: systemValue});
+    await controlsPage.waitForFunction(selector => document.querySelector(selector).disabled, selector);
+    assert.ok((await control.getAttribute('aria-describedby')).split(' ').includes(systemId));
+    await controlsPage.emulateMedia({[feature]: 'no-preference'});
+    await controlsPage.waitForFunction(selector => !document.querySelector(selector).disabled, selector);
+    assert.ok(!(await control.getAttribute('aria-describedby')).split(' ').includes(systemId));
+  }
   const motion = controlsPage.locator('[data-motion-toggle]');
   await motion.click();
   await controlsPage.waitForTimeout(180);

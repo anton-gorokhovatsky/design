@@ -132,6 +132,9 @@ try {
     if (width === 1440 || width === 320) {
       await page.locator('[data-open-settings]:visible').first().click();
       await auditScroll(page, '.settings-panel__body', `settings-${name}`);
+      await page.locator('#settings-panel .preference-choice:has([data-theme-choice=system])').hover();
+      await settle(page);
+      await axe(page, `settings-theme-hover-${name}`);
       await page.emulateMedia({ reducedMotion: 'no-preference' });
       for (const [selector, cycles] of [['[data-theme-choice=light]', 1], ['[data-theme-choice=dark]', 1], ['[data-theme-choice=system]', 1], ['[data-motion-toggle]', 2], ['[data-contrast-toggle]', 2], ['[data-whoop-toggle]', 2]]) {
         const button = page.locator('[data-settings-panel] ' + selector);

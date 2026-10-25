@@ -9205,14 +9205,15 @@ html[data-reduce-motion="true"] :is(.ui-close, .work-row, .map-related__item, .c
 .preference-choice { position: relative; display: flex; min-width: 0; border-radius: inherit; cursor: pointer; color: var(--content-ink); }
 .preference-choice input { scroll-margin-block: calc(var(--focus-width) + var(--focus-offset)); position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: inherit; }
 .settings-panel .preference-choice { font-size: var(--type-body); line-height: var(--leading-control); }
-.preference-choice > span { box-sizing: border-box; display: flex; align-items: center; justify-content: center; width: 100%; min-height: var(--control-target); padding: var(--space-1) var(--space-3); border: 1px solid transparent; border-radius: inherit; }
-.preference-choice:has(input:checked) > span { color: var(--signal); }
+.preference-choice > span { transition: background-color var(--duration-feedback) var(--ease-move); box-sizing: border-box; display: flex; align-items: center; justify-content: center; width: 100%; min-height: var(--control-target); padding: var(--space-1) var(--space-3); border: 1px solid transparent; border-radius: inherit; }
+.preference-choice:has(input:checked) > span { color: var(--content-ink); }
 .preference-choices:has(input:focus-visible) { outline: var(--focus-width) solid var(--signal); outline-offset: var(--focus-offset); }
 .preference-choices:has(input:focus-visible)::before,
+html:is([data-reduce-motion="true"], [data-focus-modality="keyboard"]) .preference-choice > span,
 html[data-reduce-motion="true"] .preference-choices::before { transition: none; }
-.preference-option { display: grid; gap: var(--space-1); min-width: 0; }
+.preference-option { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-1) var(--space-3); min-width: 0; }
 .preference-toggle {
-display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; column-gap: var(--space-3); row-gap: var(--space-1);
+display: grid; grid-area: 1 / 1 / 3 / -1; grid-template-columns: subgrid; grid-template-rows: subgrid; align-items: start; z-index: 1;
 width: 100%; min-height: var(--control-target); padding: 0;
 border: 0; border-radius: var(--space-1); color: var(--content-ink); background: transparent;
 font-size: var(--type-body); line-height: var(--leading-body); font-weight: 400; letter-spacing: 0;
@@ -9220,7 +9221,8 @@ cursor: pointer; text-align: left;
 }
 .preference-copy { display: contents; }
 .preference-copy > :first-child { grid-area: 1 / 1; min-width: 0; }
-.preference-copy > .preference-description { grid-area: 2 / 1 / 3 / -1; }
+.preference-option > .preference-description { grid-area: 2 / 1 / 3 / -1; pointer-events: none; }
+.preference-option > .preference-system { grid-area: 3 / 1 / 4 / -1; }
 .preference-switch {
 position: relative; box-sizing: border-box; width: 40px; height: 24px;
 grid-area: 1 / 2; align-self: start; margin-top: calc((1em * var(--leading-body) - 24px) / 2);
@@ -9238,12 +9240,13 @@ transform: translateX(0); transition: transform var(--duration-feedback) var(--e
 .preference-toggle:disabled { cursor: default; }
 .preference-system[hidden] { display: none; }
 @media (hover: hover) and (pointer: fine) {
-.preference-choice:hover, .preference-toggle:not(:disabled):hover, .settings-details > summary:hover { color: var(--signal); }
+.preference-choice:hover > span { background: var(--line-soft); }
+.preference-toggle:not(:disabled):hover, .settings-details > summary:hover { color: var(--signal); }
 }
 html[data-reduce-motion="true"] .preference-switch::before,
 html[data-focus-modality="keyboard"] .preference-switch::before { transition: none; }
 @media (prefers-reduced-motion: reduce) {
-.preference-choices::before, .preference-switch::before { transition: none; }
+.preference-choices::before, .preference-switch::before, .preference-choice > span { transition: none; }
 }
 @media (forced-colors: active) {
 .preference-switch { border-color: ButtonText; }

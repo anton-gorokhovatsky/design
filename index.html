@@ -119,7 +119,7 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=6e29bd6189e8">
+    <link rel="stylesheet" href="styles.css?v=ce5999e2e161">
     <style>
       .map-evidence [data-map-evidence-role-label]{font-family:var(--font-author);font-size:.6rem;font-weight:400;letter-spacing:0}
     </style>
@@ -127,7 +127,7 @@
     <script type="importmap" data-runtime-import-map>
       {
         "imports": {
-          "./js/preferences.js": "./js/preferences.js?v=7c123b7a217c",
+          "./js/preferences.js": "./js/preferences.js?v=8a0391945f69",
           "./js/pane-viewport.js": "./js/pane-viewport.js?v=077a2aba65b6",
           "./js/map-story.js": "./js/map-story.js?v=4c3007add023",
           "./js/whoop-day.js": "./js/whoop-day.js?v=5fe697626a9b",
@@ -173,7 +173,7 @@
     <!-- runtime-import-map:end -->
     <!-- Native modules keep their dependencies explicit; see js/README.md. -->
     <script type="module" src="js/case-content.js?v=ac80335d30cb"></script>
-    <script type="module" src="js/preferences.js?v=7c123b7a217c"></script>
+    <script type="module" src="js/preferences.js?v=8a0391945f69"></script>
     <script type="module" src="js/whoop-day.js?v=5fe697626a9b"></script>
     <script type="module" src="js/whoop-aura.js?v=3d0d765e223f"></script>
     <script type="module" src="js/atlas-motion.js?v=776a659178f0"></script>
@@ -1313,8 +1313,9 @@
           <div class="settings-panel__row settings-whoop" data-settings-section="whoop">
             <div class="preference-option">
               <button type="button" class="preference-toggle" role="switch" data-whoop-toggle aria-checked="true" aria-labelledby="settings-whoop-title" aria-describedby="settings-whoop-description settings-whoop-status">
-                <span class="preference-copy"><span id="settings-whoop-title">Цвет дня</span><span class="preference-description" id="settings-whoop-description">Мягкий свет вокруг моей карточки.</span></span><span class="preference-switch" aria-hidden="true"></span>
+                <span class="preference-copy"><span id="settings-whoop-title">Цвет дня</span></span><span class="preference-switch" aria-hidden="true"></span>
               </button>
+              <span class="preference-description" id="settings-whoop-description">Мягкий свет вокруг моей карточки.</span>
 
               <p class="preference-system" id="settings-whoop-status" data-whoop-settings-status hidden></p>
             </div>
@@ -1337,18 +1338,20 @@
           <h3 id="settings-accessibility-title">Доступность</h3>
           <div class="settings-panel__row" data-settings-section="motion">
             <div class="preference-option">
-              <button type="button" class="preference-toggle" role="switch" data-motion-toggle aria-checked="false" aria-labelledby="panel-motion-label" aria-describedby="panel-motion-description panel-motion-system">
-                <span class="preference-copy"><span id="panel-motion-label">Меньше движения</span><span class="preference-description" id="panel-motion-description">Меньше анимации и перемещений.</span></span><span class="preference-switch" aria-hidden="true"></span>
+              <button type="button" class="preference-toggle" role="switch" data-motion-toggle aria-checked="false" aria-labelledby="panel-motion-label" aria-describedby="panel-motion-description">
+                <span class="preference-copy"><span id="panel-motion-label">Меньше движения</span></span><span class="preference-switch" aria-hidden="true"></span>
               </button>
+              <span class="preference-description" id="panel-motion-description">Меньше анимации и перемещений.</span>
 
               <p class="preference-system" id="panel-motion-system" data-motion-system hidden>Включено в настройках устройства</p>
             </div>
           </div>
           <div class="settings-panel__row" data-settings-section="contrast">
             <div class="preference-option">
-              <button type="button" class="preference-toggle" role="switch" data-contrast-toggle aria-checked="false" aria-labelledby="panel-contrast-label" aria-describedby="panel-contrast-description panel-contrast-system">
-                <span class="preference-copy"><span id="panel-contrast-label">Высокий контраст</span><span class="preference-description" id="panel-contrast-description">Более заметные текст, линии и выделение.</span></span><span class="preference-switch" aria-hidden="true"></span>
+              <button type="button" class="preference-toggle" role="switch" data-contrast-toggle aria-checked="false" aria-labelledby="panel-contrast-label" aria-describedby="panel-contrast-description">
+                <span class="preference-copy"><span id="panel-contrast-label">Высокий контраст</span></span><span class="preference-switch" aria-hidden="true"></span>
               </button>
+              <span class="preference-description" id="panel-contrast-description">Более заметные текст, линии и выделение.</span>
 
               <p class="preference-system" id="panel-contrast-system" data-contrast-system hidden>Включено в настройках устройства</p>
             </div>
@@ -1358,12 +1361,13 @@
           <h3 id="settings-privacy-title">Приватность</h3>
           <div class="preference-option settings-panel__analytics-control">
             <button type="button" class="preference-toggle" role="switch" data-analytics-toggle aria-checked="false" aria-labelledby="settings-analytics-title" aria-describedby="settings-analytics-description settings-analytics-statistics settings-analytics-search">
-              <span class="preference-copy"><span id="settings-analytics-title">Яндекс Метрика</span><span class="preference-description" id="settings-analytics-description">
+              <span class="preference-copy"><span id="settings-analytics-title">Яндекс Метрика</span></span><span class="preference-switch" aria-hidden="true"></span>
+            </button>
+              <span class="preference-description" id="settings-analytics-description">
               <span data-analytics-state-copy="unset">Включится только с&nbsp;вашего разрешения.</span>
               <span data-analytics-state-copy="allowed" aria-hidden="true">Статистика помогает мне улучшать навигацию и&nbsp;содержание.</span>
               <span data-analytics-state-copy="denied" aria-hidden="true">Данные о&nbsp;посещении не&nbsp;отправляются в&nbsp;Метрику.</span>
-            </span></span><span class="preference-switch" aria-hidden="true"></span>
-            </button>
+            </span>
 
           </div>
           <div class="settings-panel__privacy">
