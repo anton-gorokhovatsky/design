@@ -9831,8 +9831,8 @@ cursor: pointer;
 .map-surface[data-mobile-preview-ui] .practice-map:not([data-observation-active],[data-time-view]) .map-node-label { transition-property: opacity; }
 .map-surface.has-focused-home .focused-home {
 --field-foot: calc(var(--mobile-first-dock-height, 124px) + var(--mobile-console-bottom) + 8px);
-position: absolute; z-index: 18; inset: 0;
-display: grid; grid-template-rows: max-content max-content minmax(0, 1fr); padding: 20px 20px var(--field-foot); overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; color: var(--ink);
+position: absolute; z-index: 18; inset: 0 0 calc(var(--field-foot) - 8px);
+display: grid; grid-template-rows: max-content max-content minmax(min(24rem, calc(100cqw - 40px)), 1fr); padding: 20px 20px 8px; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; color: var(--ink);
 transform-origin: 50% 55%;
 transition: opacity 200ms var(--motion-enter), transform 240ms var(--motion-enter);
 }
@@ -10399,6 +10399,8 @@ html[data-reduce-motion="true"] .has-story-pane #story-pane{transition:none}
 @container time-rings (max-height:20rem){
 .practice-map[data-time-view] .orbital-radar i:is(:nth-child(2),:nth-child(3)) span{display:none}}
 .command-dock[popover]{display:grid;margin:0;max-width:none;max-height:none;border:0}
+@container map-viewport (max-width:900px){
+.control-console:has(.command-dock:popover-open),.mobile-first-tools:has(.command-dock:popover-open){display:block;}}
 :is(.command-results,.command-status)[popover]{margin:0;max-width:none}
 .command-result:focus-visible{outline:var(--focus-width) solid var(--signal);outline-offset:calc(0px - var(--focus-width))}
 @container (max-width: 12rem){
