@@ -371,7 +371,7 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
     const focused=document.activeElement;
     const protectedText=selection&&!selection.isCollapsed&&(region.contains(selection.anchorNode)||region.contains(selection.focusNode))
       ||focused!==region&&region.contains(focused)&&focused.matches(":focus-visible")&&intersects(focused.getBoundingClientRect());
-    if (textEdges.some(Boolean)&&!protectedText&&!liveMedia) {
+    if ((textEdges.some(Boolean)||fullWidth&&textFrame)&&!protectedText&&!liveMedia) {
       if (!textFrame && !region.querySelector("iframe")) {
         const style=getComputedStyle(region);
         textFrame=document.createElement("div");

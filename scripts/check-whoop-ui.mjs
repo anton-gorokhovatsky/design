@@ -4,7 +4,7 @@ import { createRequire } from "node:module";
 import { chromium, webkit } from "playwright";
 import { checkLiveSurface } from "./check-live-surface.mjs";
 
-const { startStaticServer, whoopDayFixture } = createRequire(import.meta.url)("./browser-contracts.cjs");
+const { startStaticServer, whoopDayFixture, declineAnalyticsNotice } = createRequire(import.meta.url)("./browser-contracts.cjs");
 const engine = process.argv[2] || "chromium";
 assert.ok(["chromium", "webkit"].includes(engine));
 const { server, origin } = await startStaticServer({ projectRoot: process.cwd() });
@@ -45,6 +45,7 @@ try {
     page.on("pageerror", error => errors.push(error.message));
     const open = async () => {
       await page.goto(`${origin}/?scene=map`, { waitUntil: "load" });
+      await declineAnalyticsNotice(page);
       await page.evaluate(() => document.fonts.ready);
     };
     await open();

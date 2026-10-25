@@ -201,9 +201,9 @@ const closeSettingsPanel = ({ restoreFocus = true } = {}) => {
     // The reading surfaces release their inert state after the dialog closes.
     requestAnimationFrame(() => {
       if (!settingsPanel.open) {
-        const target = analyticsNotice?.hidden && analyticsNotice.contains(lastSettingsTrigger)
-          ? document.getElementById("map") : lastSettingsTrigger;
-        target?.focus({ preventScroll: true });
+        if (analyticsNotice?.hidden && analyticsNotice.contains(lastSettingsTrigger)) {
+          document.getElementById("map")?.focus({ preventScroll: true });
+        } else lastSettingsTrigger.focus();
       }
     });
   }

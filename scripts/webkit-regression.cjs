@@ -4,6 +4,7 @@ const os = require("node:os");
 const path = require("node:path");
 const {
   clickMobileSearchDismissExpression,
+  declineAnalyticsNotice,
   exposeMobileSearchDismissFallbackExpression,
   mobileMetricViewport,
   mobileSearchViewport,
@@ -74,6 +75,7 @@ const annotationHierarchyAudit = async (browser) => {
   await page.goto(`${baseUrl}&scene=map&qa-scenario=annotation-hierarchy`, {
     waitUntil: "networkidle",
   });
+  await declineAnalyticsNotice(page);
   await page.evaluate(() => document.fonts?.ready);
   await waitForLayout(page, 500);
   const state = await page.evaluate(readAnnotationHierarchyExpression);
@@ -333,6 +335,7 @@ const reducedMotionRelationsAudit = async (browser) => {
   await page.goto(`${baseUrl}&scene=map&qa-scenario=reduced-motion-relations`, {
     waitUntil: "networkidle",
   });
+  await declineAnalyticsNotice(page);
   await page.evaluate(() => document.fonts?.ready);
   await waitForLayout(page, 500);
   await page.waitForFunction(() => !document.querySelector(
@@ -382,6 +385,7 @@ const childRelationsAudit = async (browser) => {
   await page.goto(`${baseUrl}&scene=map&qa-scenario=child-relations`, {
     waitUntil: "networkidle",
   });
+  await declineAnalyticsNotice(page);
   await page.evaluate(() => document.fonts?.ready);
   await waitForLayout(page, 500);
   await page.waitForFunction(() => !document.querySelector(
@@ -778,6 +782,7 @@ const mobileSearchViewportAudit = async (browser) => {
   await page.goto(`${baseUrl}&scene=map&qa-scenario=mobile-search#map`, {
     waitUntil: "networkidle",
   });
+  await declineAnalyticsNotice(page);
   await page.evaluate(() => document.fonts?.ready);
   // The mobile camera follows the resized author panel on the next frame.
   await waitForLayout(page, 160);
@@ -877,6 +882,11 @@ const projectGlyphAudit = async (page) => page.evaluate(() => {
 });
 
 const analyticsConsentAudit = async (page, viewport, label) => {
+  // Restore an undecided visit for this consent audit after the ordinary map path.
+  // The standalone short-settings page is still about:blank and already fresh.
+  if (new URL(page.url()).origin === new URL(baseUrl).origin) {
+    await page.evaluate(() => localStorage.removeItem('anton-signal-analytics'));
+  }
   await page.goto(
     `${baseUrl}&scene=map&qa-scenario=analytics-${label}&analytics-consent=show`,
     { waitUntil: "networkidle" },
@@ -1195,6 +1205,7 @@ const accessibilityAcceptanceAudit = async (browser) => {
   await page.goto(`${baseUrl}&scene=map&qa-scenario=accessibility-acceptance`, {
     waitUntil: "networkidle",
   });
+  await declineAnalyticsNotice(page);
   await page.evaluate(() => document.fonts?.ready);
   await waitForLayout(page, 420);
 
@@ -1434,6 +1445,7 @@ const accessibilityAcceptanceAudit = async (browser) => {
       await isolateThirdPartyTelemetry(page);
       attachRuntimeLog(page, label);
       await page.goto(`${baseUrl}&scene=map&qa-scenario=${label}`, { waitUntil: "networkidle" });
+      await declineAnalyticsNotice(page);
       await page.evaluate(() => document.fonts?.ready);
       await waitForLayout(page, 500);
 
@@ -1493,6 +1505,7 @@ const accessibilityAcceptanceAudit = async (browser) => {
         await nativePage.goto(`${baseUrl}&scene=map&qa-scenario=${nativeLabel}`, {
           waitUntil: "networkidle",
         });
+        await declineAnalyticsNotice(nativePage);
         await nativePage.evaluate(() => document.fonts?.ready);
         await waitForLayout(nativePage, 500);
         const nativeWorkStack = await stackAudit(

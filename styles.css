@@ -8058,7 +8058,7 @@ overscroll-behavior: contain;
 padding: var(--space-4);
 border-radius: var(--window-radius);
 corner-shape: var(--corner-card-shape);
-color: var(--content-ink);
+color: var(--ink);
 font-size: var(--type-detail);
 line-height: var(--leading-body);
 }
@@ -8066,9 +8066,8 @@ line-height: var(--leading-body);
 .analytics-notice p { margin: 0; }
 .analytics-notice__actions { display: flex; flex-wrap: wrap; gap: 0 var(--space-5); margin-top: var(--space-2); }
 .analytics-notice__actions button { min-height: var(--control-target); font-weight: 500; text-align: start; }
-.analytics-notice__note { color: var(--content-muted); }
 .analytics-notice__note button { min-height: var(--control-target); }
-.map-surface:is(.has-reading-surface, .has-command-focus, .has-constellation-nav, .has-settings-panel) .analytics-notice,
+body:is(.has-reading-surface, .has-point-preview, .has-command-focus, .has-constellation-nav, .has-settings-panel) .analytics-notice,
 .has-story-pane .analytics-notice { visibility: hidden; }
 @container map-viewport (max-width: 900px) {
 .analytics-notice { bottom: calc(var(--mobile-first-dock-height, 48px) + var(--mobile-console-bottom) + var(--space-3)); }
@@ -8170,7 +8169,7 @@ line-height: var(--leading-item);
 font-weight: 500;
 }
 .settings-panel__row { display: grid; min-width: 0; gap: var(--space-2); }
-.settings-panel__row--theme { grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: var(--space-3); }
+.settings-panel__row--theme { grid-template-columns: minmax(0, 1fr); }
 .settings-panel .preference-choices { width: 100%; justify-self: stretch; }
 .settings-panel__row--theme h4 {
 font-size: var(--type-body);
@@ -9286,9 +9285,6 @@ html[data-focus-modality="keyboard"] .preference-switch::before { transition: no
 .preference-toggle[aria-checked="true"] .preference-switch { border-color: Highlight; background: Highlight; }
 .preference-switch::before { background: ButtonText; }
 .preference-toggle[aria-checked="true"] .preference-switch::before { background: HighlightText; }
-}
-@container settings-controls (max-width: 23rem) {
-.settings-panel__row--theme { grid-template-columns: minmax(0, 1fr); gap: var(--space-2); }
 }
 @container settings-controls (max-width: 19rem) {
 .settings-whoop__zones > div { grid-template-columns: minmax(0, 1fr); }

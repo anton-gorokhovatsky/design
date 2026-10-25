@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 
 const require = createRequire(import.meta.url);
 const { chromium, webkit } = require("playwright");
-const { startStaticServer, readMaterialAuditExpression } = require("./browser-contracts.cjs");
+const { startStaticServer, readMaterialAuditExpression, declineAnalyticsNotice } = require("./browser-contracts.cjs");
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const engine = process.argv[2] || "chromium";
 assert.ok(["chromium", "webkit"].includes(engine), "Supported browser required.");
@@ -58,6 +58,7 @@ try {
         body: '<!doctype html><html lang="ru"><title>Player lifecycle fixture</title><body><button>Fixture play</button></body></html>',
       }));
       await page.goto(`${origin}/?scene=map`, { waitUntil: "load" });
+      await declineAnalyticsNotice(page);
       await page.locator('[data-map-id="youtube"]').waitFor({ state: "attached" });
       const player = page.locator("[data-personal-media]");
       assert.equal(await player.isVisible(), false, "No player on the untouched map.");

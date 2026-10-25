@@ -3,8 +3,8 @@ import assert from "node:assert/strict";
 // Inspect the text that is actually painted, including inherited opacity and
 // clipping by scrolling windows. The screenshot supplies the composited glass,
 // gradients, canvas and day colour; a CSS background token cannot substitute it.
-export async function measureTextContrast(page) {
-  const samples = await page.evaluate(() => {
+export async function measureTextContrast(page, rootSelector = null) {
+  const samples = await page.evaluate(rootSelector => {
     const samples = [], parents = new Map();
     const selector = element => element.id ? '#' + CSS.escape(element.id)
       : element === document.body ? 'body'
@@ -13,7 +13,9 @@ export async function measureTextContrast(page) {
     // The dimmed, inactive page behind a modal is not the current reading task.
     const modal = [...document.querySelectorAll('[aria-modal="true"]')]
       .find(element => element.checkVisibility({ visibilityProperty: true, opacityProperty: true }));
-    const walker = document.createTreeWalker(modal || document.body, NodeFilter.SHOW_TEXT);
+    const root = rootSelector ? document.querySelector(rootSelector) : modal || document.body;
+    if (!root) throw new Error(`Missing contrast scope: ${rootSelector}`);
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
     while (walker.nextNode()) {
       const node = walker.currentNode, element = node.parentElement;
       if (!node.textContent.trim() || !element?.checkVisibility({ visibilityProperty: true, opacityProperty: true })
@@ -48,7 +50,7 @@ export async function measureTextContrast(page) {
       samples.push({ target: selector(element), text: node.textContent.trim(), color: style.color, opacity, points,
         required: size >= 24 || (weight >= 700 && size >= 18.667) ? 3 : 4.5 });
     }
-    for (const element of (modal || document.body).querySelectorAll('input,textarea')) {
+    for (const element of root.querySelectorAll('input,textarea')) {
       const text = element.value || element.placeholder;
       if (!text || element.disabled || element.closest('[inert]')
         || !element.checkVisibility({ visibilityProperty: true, opacityProperty: true })) continue;
@@ -70,7 +72,7 @@ export async function measureTextContrast(page) {
         required: parseFloat(box.fontSize) >= 24 ? 3 : 4.5 });
     }
     return samples;
-  });
+  }, rootSelector);
   const conceal = await page.addStyleTag({ content: '[data-audit-hide-ink] { transition: none !important; } html[data-audit-no-ink] [data-audit-hide-ink], html[data-audit-no-ink] [data-audit-hide-ink]::placeholder { color: transparent !important; -webkit-text-fill-color: transparent !important; text-shadow: none !important; }' });
   await page.evaluate(() => { document.documentElement.dataset.auditNoInk = ''; });
   let pixels;

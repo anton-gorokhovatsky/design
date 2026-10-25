@@ -4,7 +4,7 @@ import { createRequire } from "node:module";
 import { chromium, webkit } from "playwright";
 import { mapItems } from "../js/map-data.js";
 
-const { startStaticServer, readMaterialAuditExpression, readRenderedFrameCorners } = createRequire(import.meta.url)("./browser-contracts.cjs");
+const { startStaticServer, readMaterialAuditExpression, readRenderedFrameCorners, declineAnalyticsNotice } = createRequire(import.meta.url)("./browser-contracts.cjs");
 const engine = process.argv[2] || "chromium";
 assert.ok(["chromium", "webkit"].includes(engine));
 const { server, origin } = await startStaticServer({ projectRoot: process.cwd() });
@@ -35,6 +35,7 @@ try {
       recordVideo: { dir: `${directory}/video`, size: { width: 1512, height: 862 } } });
     page.on("pageerror", error => errors.push(error.message));
     await page.goto(origin + '/?scene=map');
+    await declineAnalyticsNotice(page);
     await page.evaluate(() => document.fonts.ready);
     await page.waitForFunction(() => document.documentElement.dataset.mapControlsReady
       && !document.querySelector('[data-map-links][data-layout-pending]'));
@@ -68,6 +69,7 @@ try {
     const page = await browser.newPage({ viewport: { width, height }, colorScheme: theme, reducedMotion: "reduce" });
     page.on("pageerror", error => errors.push(error.message));
     await page.goto(origin + '/?scene=map');
+    await declineAnalyticsNotice(page);
     await page.evaluate(() => document.fonts.ready);
     await page.waitForFunction(() => document.querySelector(".whoop-level"));
     await page.waitForFunction(() => !document.querySelector("[data-map-links][data-layout-pending]"));
@@ -132,6 +134,8 @@ try {
   {
     const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, reducedMotion: "reduce" });
     page.on("pageerror", error => errors.push(error.message));
+    await page.goto(origin);
+    await declineAnalyticsNotice(page);
     await page.goto(origin + '/?story=1');
     await page.locator('#story-pane[data-ready="true"]').waitFor();
     const feedback = async selector => {
@@ -194,6 +198,7 @@ try {
     const page = await browser.newPage({ viewport: { width, height }, reducedMotion: "no-preference" });
     page.on("pageerror", error => errors.push(error.message));
     await page.goto(origin + '/?scene=map');
+    await declineAnalyticsNotice(page);
     await page.evaluate(() => document.fonts.ready);
     await page.waitForFunction(() => !document.querySelector("[data-map-links][data-layout-pending]"));
     await page.locator('[data-map-id="narkomfin"]').hover();

@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 const require = createRequire(import.meta.url);
 const { chromium, webkit } = require('playwright');
-const { startStaticServer, readMaterialAuditExpression, waitForCaseLayout, readRenderedFrameCorners } = require('./browser-contracts.cjs');
+const { startStaticServer, readMaterialAuditExpression, waitForCaseLayout, readRenderedFrameCorners, declineAnalyticsNotice } = require('./browser-contracts.cjs');
 const projectRoot = resolve(fileURLToPath(new URL('../', import.meta.url)));
 const local = process.env.PORTFOLIO_CASE_ORIGIN ? null : await startStaticServer({ projectRoot });
 const origin = process.env.PORTFOLIO_CASE_ORIGIN || local.origin;
@@ -164,6 +164,7 @@ for (const engine of [process.argv[2] || 'chromium']) {
       if (width>900) await page.waitForFunction(()=>getComputedStyle(document.querySelector('.map-axis-label--north')).visibility==='visible');
       assert.equal(await page.evaluate(() => document.activeElement?.dataset.mapId),'garage-site','Close returns focus to the selected point');
       assert.equal(await page.locator('.ad-map-home,.ad-landmarks,.ad-utilities,.ad-intro').count(),0,'Rejected home/navigation experiment is absent');
+      await declineAnalyticsNotice(page);
       await page.locator('[data-map-id="garage-site"]').click();
       if (width <= 900) await page.locator('.point-preview__link').click();
       await page.waitForFunction(() => document.body.hasAttribute('data-case-open'));

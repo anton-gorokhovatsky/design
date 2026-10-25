@@ -4,6 +4,31 @@ const fs = require("node:fs");
 const http = require("node:http");
 const path = require("node:path");
 
+// A normal visitor choice, not a storage/CSS shortcut around the notice.
+const declineAnalyticsNotice = async (page) => {
+  const preference = await page.evaluate(() => localStorage.getItem("anton-signal-analytics"));
+  if (preference !== "denied") {
+    if (preference !== null) throw new Error(`Unexpected analytics preference before refusal: ${preference}`);
+    await page.getByRole("button", { name: "Без статистики", exact: true }).click();
+  }
+  await page.waitForFunction(() => localStorage.getItem("anton-signal-analytics") === "denied"
+    && document.querySelector("[data-analytics-notice]")?.hidden);
+  const state = await page.evaluate(() => ({
+    disabled: window.disableYaCounter111107350,
+    scripts: document.querySelectorAll('script[src^="https://mc.yandex.ru/"]').length,
+  }));
+  if (state.disabled !== true || state.scripts !== 0) {
+    throw new Error(`Refusing statistics must keep the tracker unloaded: ${JSON.stringify(state)}`);
+  }
+};
+
+const watchAnalyticsRequests = async (page, requests) => {
+  await page.route("https://mc.yandex.ru/**", (route) => {
+    requests.push(route.request().url());
+    return route.abort();
+  });
+};
+
 const staticAssetMimeTypes = {
   ".css": "text/css; charset=utf-8",
   ".html": "text/html; charset=utf-8",
@@ -982,6 +1007,8 @@ const installMapGeometryAudit = () => {
 };
 
 module.exports = {
+  declineAnalyticsNotice,
+  watchAnalyticsRequests,
   installMapGeometryAudit,
   readRenderedFrameCorners,
   waitForCaseLayout,

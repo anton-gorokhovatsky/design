@@ -472,6 +472,40 @@ const navigate = async (client, url) => {
   if (!settled) fail("geometry: window entrance did not settle.");
 };
 
+const declineAnalyticsNotice = async (client) => {
+  const preference = await evaluate(client, "localStorage.getItem('anton-signal-analytics')");
+  if (preference !== "denied") {
+    if (preference !== null) throw new Error(`Unexpected analytics preference before refusal: ${preference}`);
+    const reachable = await waitForExpression(client, `(() => {
+      const notice = document.querySelector('[data-analytics-notice]');
+      const button = notice?.querySelector('[data-analytics-choice="denied"]');
+      if (!button || notice.hidden || button.textContent.trim() !== 'Без статистики') return false;
+      button.scrollIntoView({ block: 'nearest' });
+      const rect = button.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0
+        && button.contains(document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2));
+    })()`);
+    if (!reachable) throw new Error('The first-visit refusal must be reachable through its visible button.');
+    const point = await evaluate(client, `(() => {
+      const rect = document.querySelector('[data-analytics-choice="denied"]').getBoundingClientRect();
+      return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+    })()`);
+    await client.send("Input.dispatchMouseEvent", { type: "mouseMoved", ...point });
+    await client.send("Input.dispatchMouseEvent", { type: "mousePressed", ...point, button: "left", clickCount: 1 });
+    await client.send("Input.dispatchMouseEvent", { type: "mouseReleased", ...point, button: "left", clickCount: 1 });
+  }
+  const saved = await waitForExpression(client, `localStorage.getItem('anton-signal-analytics') === 'denied'
+    && document.querySelector('[data-analytics-notice]')?.hidden`);
+  const state = await evaluate(client, `({
+    disabled: window.disableYaCounter111107350,
+    scripts: document.querySelectorAll('script[src^="https://mc.yandex.ru/"]').length,
+  })`);
+  const requests = observedNetworkRequests.filter(url => url.startsWith("https://mc.yandex.ru/"));
+  if (!saved || state.disabled !== true || state.scripts !== 0 || requests.length !== 0) {
+    throw new Error(`Refusal must persist without tracker loading: ${JSON.stringify({ saved, ...state, requests })}`);
+  }
+};
+
 const readReactiveRelationsContract = async (client, mapId) => {
   if (!await waitForExpression(client, `!document.querySelector('[data-map-links][data-layout-pending]')`)) {
     throw new Error(`Map layout did not settle before checking ${mapId} relations`);
@@ -807,6 +841,7 @@ const initializeBrowserClient = async (client) => {
 
 const auditMapControlHover = async (client, origin) => {
   await navigate(client, `${origin}/?scene=map&qa=ui-contracts-map-controls`);
+  await declineAnalyticsNotice(client);
   const preferenceContract = await evaluate(client, `(() => ({
     themes: Array.from(document.querySelectorAll('[data-theme-choice]')).map(choice => ({
       value: choice.value, type: choice.type, checked: choice.checked, name: choice.labels?.[0]?.textContent.trim(),
@@ -1122,6 +1157,7 @@ const auditBrowser = async (client, origin) => {
   for (const scenario of scenarios) {
     await setViewport(client, scenario);
     await navigate(client, `${origin}/?scene=map&qa=ui-contracts-${scenario.label}`);
+    await declineAnalyticsNotice(client);
     // A loaded page can still be resolving a camera transition or the mobile
     // frame. Measure the settled composition, not an intermediate animation.
     const settled = await waitForExpression(client, `(() => {

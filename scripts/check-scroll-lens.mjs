@@ -293,7 +293,7 @@ try {
     try {
       await page.goto(origin+'/?story=1#map');await page.waitForSelector('#story-pane[data-ready=true]');await page.evaluate(()=>document.fonts.ready);
       const region=page.locator('#story-pane'),alignHeading=()=>region.evaluate(s=>{const h=s.querySelector('#time h2'),r=h.getBoundingClientRect(),p=s.getBoundingClientRect();s.scrollTop+=r.top-p.top-18});
-      const hasLens=()=>{const p=document.querySelector('#story-pane');return Boolean(p&&getComputedStyle(p).filter.includes('scroll-ink'));};
+      const hasLens=()=>{const p=document.querySelector('#story-pane'),id=p&&getComputedStyle(p).filter.match(/scroll-ink-\d+/)?.[0];return Boolean(id&&document.querySelector(`#${id} feMergeNode:is([in=upper],[in=lower])`));};
       await alignHeading();await page.waitForFunction(hasLens);
       await region.dispatchEvent('touchstart');
       for(const delta of [240,320,-160,-340,120]){
@@ -311,7 +311,7 @@ try {
       }
       await page.waitForTimeout(180);assert.equal(await page.evaluate(hasLens),true,'Holding a touch does not remove the optical edge');
       await region.dispatchEvent('touchcancel');await alignHeading();await page.waitForFunction(hasLens);
-      await region.evaluate(s=>{s.lensScrollSamples=[];for(const type of ['wheel','scroll'])s.addEventListener(type,()=>s.lensScrollSamples.push(Number(getComputedStyle(s).filter.includes('scroll-ink'))),{passive:true})});
+      await region.evaluate(s=>{s.lensScrollSamples=[];for(const type of ['wheel','scroll'])s.addEventListener(type,()=>{const id=getComputedStyle(s).filter.match(/scroll-ink-\d+/)?.[0];s.lensScrollSamples.push(Number(Boolean(id&&document.querySelector(`#${id} feMergeNode:is([in=upper],[in=lower])`))))},{passive:true})});
       const r=await region.boundingBox();await page.mouse.move(r.x+4,r.y+r.height/2);await page.mouse.wheel(0,430);await page.mouse.wheel(0,-390);await settle(page);
       result.scrollSamples=await region.evaluate(s=>s.lensScrollSamples);assert.ok(result.scrollSamples.length>0&&result.scrollSamples.every(n=>n===1),'Wheel and reversal retain the optical edge during motion');
       await alignHeading();await page.waitForFunction(hasLens);await page.screenshot({path:dir+engine+'-story-rapid-settled.png'});

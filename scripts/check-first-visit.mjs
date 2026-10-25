@@ -7,18 +7,19 @@ import { mapItems } from "../js/map-data.js";
 import { readMapTargets } from "./accessibility-audit.mjs";
 
 const require = createRequire(import.meta.url);
-const { startStaticServer } = require("./browser-contracts.cjs");
+const { startStaticServer, declineAnalyticsNotice, watchAnalyticsRequests } = require("./browser-contracts.cjs");
 const engine = process.argv[2] || "chromium";
 assert.ok(["chromium", "webkit"].includes(engine));
 const directory = process.env.PORTFOLIO_UI_ARTIFACT_DIR || ".qa-artifacts/first-visit";
 mkdirSync(directory, { recursive: true });
 const { server, origin } = await startStaticServer({ projectRoot: process.cwd() });
 const browser = await ({ chromium, webkit })[engine].launch({ headless: true });
-const errors = [];
+const errors = [], analyticsRequests = [];
 const capture = (page, name) => page.screenshot({ path: join(directory, `${engine}-first-${name}.jpg`), quality: 82 });
 try {
   // The shipped controls must already be compact before their module can run.
   const boot = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  await watchAnalyticsRequests(boot, analyticsRequests);
   let releaseControls;
   const controlsHeld = new Promise(resolve => { releaseControls = resolve; });
   await boot.route('**/js/map-controls.js*', async route => { await controlsHeld; await route.continue(); });
@@ -45,11 +46,31 @@ try {
       const page = await browser.newPage({ viewport: { width, height }, colorScheme: theme,
         reducedMotion: "reduce", hasTouch: width <= 900, isMobile: width <= 900 });
       page.on("pageerror", (error) => errors.push(error.message));
+      await watchAnalyticsRequests(page, analyticsRequests);
       await page.goto(origin, { waitUntil: "load" });
       await page.evaluate((scale) => { document.documentElement.style.fontSize = `${16 * scale}px`; }, scale);
       await page.evaluate(() => document.fonts.ready);
       assert.equal(await page.locator("[data-observation-showcase] img[src]").count(), 0, "Hidden route posters wait for the route to become visible.");
       await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
+      const notice = page.locator('[data-analytics-notice]');
+      await notice.waitFor({ state: 'visible' });
+      assert.equal(await page.evaluate(() => localStorage.getItem('anton-signal-analytics')), null);
+      assert.equal(await notice.getAttribute('aria-label'), 'Статистика сайта');
+      assert.deepEqual(await notice.locator('[data-analytics-choice]').evaluateAll(buttons => buttons.map(button => button.dataset.analyticsChoice)), ['allowed', 'denied']);
+      assert.ok(await notice.locator('[data-analytics-choice]').evaluateAll(buttons => buttons.every(button => button.getBoundingClientRect().height >= 44)), 'Both first-visit choices retain their touch targets.');
+      assert.equal(await notice.getByRole('button', { name: 'Разрешить статистику', exact: true }).count(), 1);
+      assert.equal(await notice.getByRole('button', { name: 'Без статистики', exact: true }).count(), 1);
+      assert.equal(await page.locator('script[src^="https://mc.yandex.ru/"]').count(), 0);
+      assert.deepEqual(analyticsRequests, [], 'No tracker request precedes the visitor choice.');
+      await capture(page, `notice-${name}-${theme}`);
+      await declineAnalyticsNotice(page);
+      if (name === 'desktop' && theme === 'light') {
+        await page.reload({ waitUntil: 'load' });
+        await page.evaluate(() => document.fonts.ready);
+        assert.equal(await page.evaluate(() => localStorage.getItem('anton-signal-analytics')), 'denied');
+        await declineAnalyticsNotice(page);
+      }
+      assert.deepEqual(analyticsRequests, [], 'Refusal remains private, including after reload.');
       // Font and camera reflow are asynchronous; measure the settled input surface.
       await page.waitForFunction(() => !document.querySelector('[data-map-links][data-layout-pending]')
         && [...document.querySelectorAll(".map-node:not([inert])")].every(node => {
@@ -160,7 +181,9 @@ try {
   }
   const switching = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
   switching.on('pageerror', error => errors.push(error.message));
+  await watchAnalyticsRequests(switching, analyticsRequests);
   await switching.goto(origin);
+  await declineAnalyticsNotice(switching);
   await switching.waitForFunction(() => document.querySelector('.whoop-level'));
   const author = await switching.locator('.site-header').boundingBox();
   for (const focused of [false, true, false]) {
@@ -177,6 +200,7 @@ try {
   await switching.locator('[data-focused-map-open]').tap();
   assert.equal(await switching.locator('body').evaluate(e => e.classList.contains('has-full-mobile-map') && !e.classList.contains('is-map-switching')), true, 'Reduced motion retains both scenes without defocus');
   await switching.close();
+  assert.deepEqual(analyticsRequests, [], 'No tracker request is made during the declined visit.');
   assert.deepEqual(errors, []);
 } finally {
   await browser.close();

@@ -3,7 +3,7 @@ import { mkdirSync } from "node:fs";
 import { createRequire } from "node:module";
 import { chromium, webkit } from "playwright";
 
-const { startStaticServer } = createRequire(import.meta.url)("./browser-contracts.cjs");
+const { startStaticServer, declineAnalyticsNotice } = createRequire(import.meta.url)("./browser-contracts.cjs");
 const engine = process.argv[2] || "chromium";
 assert.ok(["chromium", "webkit"].includes(engine));
 // Geometry and navigation do not depend on presence. Keep departing-document
@@ -53,6 +53,7 @@ try {
     page.on("pageerror", error => errors.push(error.message));
     for (const view of ["map", "time"]) {
       await page.goto(`${origin}/?scene=map&view=${view}`);
+      await declineAnalyticsNotice(page);
       await page.evaluate(() => document.fonts.ready);
       await page.waitForFunction(() => document.querySelector('[data-whoop-recovery]').textContent.includes('77')
         && !document.querySelector('[data-map-links][data-layout-pending]'));
@@ -110,6 +111,7 @@ try {
     const page = await browser.newPage({ viewport, isMobile: true, hasTouch: true });
     page.on('pageerror', error => errors.push(error.message));
     await page.goto(origin);
+    await declineAnalyticsNotice(page);
     await page.evaluate(()=>document.fonts.ready);
     await page.waitForFunction(() => document.querySelector('[data-whoop-recovery]').textContent.includes('77')
       && !document.querySelector('[data-map-links][data-layout-pending]')
@@ -285,6 +287,7 @@ try {
     page.on('pageerror', error => errors.push(error.message));
     await page.goto(`${origin}/?scene=map&view=time`);
     await page.evaluate(font => { document.documentElement.style.fontSize = `${font}px`; return document.fonts.ready; }, font);
+    await declineAnalyticsNotice(page);
     await page.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done))));
     await page.waitForFunction(() => !document.querySelector('[data-map-links][data-layout-pending]'));
     const returnTop = await page.locator('[data-focused-return]').evaluate(link => link.getBoundingClientRect().top);

@@ -6,7 +6,7 @@ import { mapItems } from "../js/map-data.js";
 import { measureTextContrast as contrast, assertTextContrast, reviewIncomplete, readMapTargets } from "./accessibility-audit.mjs";
 
 const require = createRequire(import.meta.url);
-const { startStaticServer } = require("./browser-contracts.cjs");
+const { startStaticServer, declineAnalyticsNotice, watchAnalyticsRequests } = require("./browser-contracts.cjs");
 const engine = process.argv[2] || "chromium";
 assert.ok(["chromium", "webkit"].includes(engine));
 const local = process.env.PORTFOLIO_A11Y_ORIGIN ? null : await startStaticServer({ projectRoot: process.cwd() });
@@ -14,7 +14,7 @@ const origin = process.env.PORTFOLIO_A11Y_ORIGIN || local.origin;
 const directory = process.env.PORTFOLIO_UI_ARTIFACT_DIR || ".qa-artifacts/accessibility";
 mkdirSync(directory, { recursive: true });
 const browser = await ({ chromium, webkit })[engine].launch();
-const report = [], errors = [];
+const report = [], errors = [], analyticsRequests = [];
 const settle = async page => {
   await page.waitForFunction(() => !document.querySelector('[data-map-links][data-layout-pending]'));
   await page.waitForFunction(() => document.getAnimations().every(animation =>
@@ -24,29 +24,29 @@ const settle = async page => {
 };
 // The spatial caption solver can run after the map's layout callback. Never
 // compare ink coordinates from one layout with background pixels from another.
-const paintedContrast = async page => {
+const paintedContrast = async (page, selector = null) => {
   const geometry = () => page.locator('[data-map-label-id]').evaluateAll(labels => JSON.stringify(labels.map(label => {
     const r = label.getBoundingClientRect();
     return [r.x, r.y, r.width, r.height, getComputedStyle(label).opacity];
   })));
   for (let attempt = 0; attempt < 3; attempt++) {
-    const before = await geometry(), measured = await contrast(page), after = await geometry();
+    const before = await geometry(), measured = await contrast(page, selector), after = await geometry();
     if (before === after) return measured;
     await settle(page);
   }
   throw new Error('Painted contrast requires stable caption geometry.');
 };
 const capture = (page, name) => page.screenshot({ path: `${directory}/${engine}-${name}.png` });
-const axe = async (page, name) => {
+const axe = async (page, name, selector = null) => {
   await page.addScriptTag({ path: require.resolve("axe-core/axe.min.js") });
-  const result = await page.evaluate(async () => {
-    const { violations, incomplete } = await axe.run(document, {
+  const result = await page.evaluate(async selector => {
+    const { violations, incomplete } = await axe.run(selector ? document.querySelector(selector) : document, {
       runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22a", "wcag22aa"] },
       rules: { "label-content-name-mismatch": { enabled: true } },
     });
     return { violations, incomplete };
-  });
-  const measured = await paintedContrast(page);
+  }, selector);
+  const measured = await paintedContrast(page, selector);
   const review = await reviewIncomplete(page, result.incomplete, measured);
   report.push({ name, axe: result, contrast: measured, review });
   assertTextContrast(measured, name);
@@ -72,9 +72,29 @@ try {
     page.on("pageerror", error => errors.push(error.message));
     const name = `${width}-${theme}`;
     try {
+    await watchAnalyticsRequests(page, analyticsRequests);
     await page.goto(origin, { waitUntil: "load" });
     await page.evaluate(() => document.fonts.ready);
     await page.waitForFunction(() => document.querySelector('[data-whoop-recovery]').textContent.includes('%'));
+    await settle(page);
+    await page.locator('[data-analytics-notice]').waitFor({ state: 'visible' });
+    assert.equal(await page.evaluate(() => localStorage.getItem('anton-signal-analytics')), null);
+    assert.deepEqual(analyticsRequests, [], 'The visible first-visit notice sends no tracker requests.');
+    // Check the fresh notice first; the existing complete map audits follow the visitor's choice.
+    if (width === 1440 || width === 320) {
+      for (const [palette, rgb] of [["high", "83,142,103"], ["medium", "175,143,60"], ["low", "185,101,83"]]) {
+        await page.evaluate(rgb => document.documentElement.style.setProperty('--day-rgb', rgb), rgb);
+        await settle(page);
+        await axe(page, `notice-${name}-${palette}`, '[data-analytics-notice]');
+        await capture(page, `notice-${palette}-${name}`);
+      }
+      await page.evaluate(() => document.documentElement.style.setProperty('--day-rgb', '83,142,103'));
+    } else {
+      await axe(page, `notice-${name}`, '[data-analytics-notice]');
+      await capture(page, `notice-${name}`);
+    }
+    await declineAnalyticsNotice(page);
+    assert.deepEqual(analyticsRequests, [], 'Refusing statistics does not load a tracker.');
     await settle(page);
     if (width === 1440 || width === 320) {
       for (const [palette, rgb] of [["high", "83,142,103"], ["medium", "175,143,60"], ["low", "185,101,83"]]) {
@@ -218,6 +238,7 @@ try {
     await capture(page, `work-text200-${theme}`);
     await page.close();
   }
+  assert.deepEqual(analyticsRequests, [], 'No tracker request is made during the declined visit.');
   assert.deepEqual(errors, []);
 } finally {
   writeFileSync(`${directory}/${engine}-report.json`, JSON.stringify(report, null, 2));
