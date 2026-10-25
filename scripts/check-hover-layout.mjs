@@ -82,8 +82,11 @@ try {
           'Every decorative satellite has its project in the touch picker.');
         continue;
       }
-      if (index % 2) await target.focus();
-      else await target.hover();
+      if (index % 2) {
+        await page.keyboard.press('Tab');
+        await target.focus();
+        assert.equal(await target.evaluate(element => element.matches(':focus-visible')), true, 'The keyboard branch uses visible keyboard focus.');
+      } else await target.hover();
       if (width <= 900) {
         await page.evaluate(() => new Promise(requestAnimationFrame));
         const result = await page.evaluate(inspect);

@@ -153,6 +153,8 @@ try{
     assert.ok(Math.abs(await chapterOffset()-offset)<2,'Resizing retains the chapter being read');
    }
   }
+  await page.mouse.move(0,0);
+  await page.keyboard.press('Tab');
   const target=page.locator('#scene-practice button[data-point="tarski"]');await target.focus();await target.press('Enter');
   assert.deepEqual((await page.evaluate(readMaterialAuditExpression)).failures,[],'Scene readouts keep the same material without a filtered ancestor');
   const label=page.locator('#scene-practice .scene-readout.is-visible');await label.locator('a').focus();await label.locator('a').press('Escape');
