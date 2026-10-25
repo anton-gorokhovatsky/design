@@ -1436,6 +1436,9 @@ const auditBrowser = async (client, origin) => {
     };
     return {
       hovered: motion?.matches(':hover'),
+      hoverMedia: matchMedia('(hover: hover)').matches,
+      finePointer: matchMedia('(pointer: fine)').matches,
+      disabled: motion?.matches(':disabled'),
       backgroundColor: getComputedStyle(motion).backgroundColor,
       color: getComputedStyle(motion).color,
       backgroundPixel: colorPixel(getComputedStyle(motion).backgroundColor),
@@ -3238,7 +3241,7 @@ const auditBrowser = async (client, origin) => {
     || analyticsConsentContract.focusModality !== "pointer"
     || analyticsConsentContract.pointerOutlineStyle !== "none"
     || analyticsConsentContract.mapNodesOpacity !== 1
-    || analyticsConsentContract.cameraOpacity !== 0.4
+    || analyticsConsentContract.cameraOpacity !== 0.6
     || analyticsConsentContract.axisLabelOpacity !== 0
     || analyticsRequestsBeforeChoice.length !== 0
   ) {

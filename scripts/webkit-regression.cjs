@@ -1155,7 +1155,7 @@ const analyticsConsentAudit = async (page, viewport, label) => {
       || !result.themeColorMatches
       || result.pointerOutlineStyle !== "none"
       || result.mapNodesOpacity !== 1
-      || result.cameraOpacity !== 0.4
+      || result.cameraOpacity !== 0.6
       || result.axisLabelOpacity !== 0
       || !result.actionBeforePrivacy
       || !result.privacyBeforeDetails
