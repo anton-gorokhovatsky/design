@@ -42,6 +42,7 @@ settingsPanel?.querySelectorAll(".settings-details").forEach((details) => {
   let frame = 0;
   const finish = () => {
     cancelAnimationFrame(frame);
+    const opening = wanted === true;
     if (wanted !== null) details.open = wanted;
     wanted = null;
     content.style.height = "";
@@ -49,6 +50,17 @@ settingsPanel?.querySelectorAll(".settings-details").forEach((details) => {
     content.style.transition = "";
     content.inert = false;
     summary.removeAttribute("aria-expanded");
+    if (opening) {
+      // A disclosure at the bottom of the scrollport must reveal its answer,
+      // while keeping the summary available to close it again.
+      const body = details.closest(".settings-panel__body");
+      const viewport = body.getBoundingClientRect();
+      const bounds = details.getBoundingClientRect();
+      body.scrollTop += Math.max(0, Math.min(
+        bounds.bottom - viewport.bottom,
+        bounds.top - viewport.top,
+      ));
+    }
   };
   finishDetails.push(finish);
   content.addEventListener("transitionend", event => {

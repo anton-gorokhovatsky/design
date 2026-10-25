@@ -8140,7 +8140,8 @@ line-height: var(--leading-item);
 font-weight: 500;
 }
 .settings-panel__row { display: grid; min-width: 0; gap: var(--space-2); }
-.settings-panel__row--theme { grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--space-3); }
+.settings-panel__row--theme { grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: var(--space-3); }
+.settings-panel .preference-choices { width: 100%; justify-self: stretch; }
 .settings-panel__row--theme h4 {
 font-size: var(--type-body);
 line-height: var(--leading-body);
@@ -10202,6 +10203,7 @@ html[data-theme="dark"] .project-atlas-track{stroke:var(--group-light)}
 .project-satellites .project-satellite>.map-node__glyph::before,.project-satellites .project-satellite>.map-node__glyph::after{content:none}
 .project-satellites .project-satellite:is(.is-filter-miss,.is-search-miss){opacity:.15;pointer-events:none}
 .map-camera[inert],.project-satellites[inert],.map-surface.has-settings-panel .map-camera{pointer-events:none;opacity:.4}
+.map-surface.has-settings-panel :is(.map-camera,.project-satellites){opacity:1}
 .map-labels[inert]{visibility:hidden;pointer-events:none}
 .project-satellites[inert] .project-satellite{pointer-events:none}
 .map-surface:not(.has-practice-orbits) .practice-orbits-canvas{display:none}
