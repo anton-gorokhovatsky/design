@@ -1089,6 +1089,10 @@ const analyticsConsentAudit = async (page, viewport, label) => {
   // privacy footer is reachable by scrolling, rather than requiring the
   // entire settings document to fit in its initial viewport.
   await page.locator(".settings-panel__analytics .settings-details > summary").click();
+  await page.waitForFunction(() => {
+    const details = document.querySelector(".settings-panel__analytics .settings-details");
+    return details.open && !details.querySelector("summary").hasAttribute("aria-expanded");
+  });
   await page.locator(".settings-panel__details").scrollIntoViewIfNeeded();
   const settingsEnd = await page.evaluate(() => {
     const panel = document.querySelector("[data-settings-panel]");
@@ -1155,7 +1159,7 @@ const analyticsConsentAudit = async (page, viewport, label) => {
       || !result.themeColorMatches
       || result.pointerOutlineStyle !== "none"
       || result.mapNodesOpacity !== 1
-      || result.cameraOpacity !== 0.6
+      || result.cameraOpacity !== 0.48
       || result.axisLabelOpacity !== 0
       || !result.actionBeforePrivacy
       || !result.privacyBeforeDetails

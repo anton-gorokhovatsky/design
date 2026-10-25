@@ -48,7 +48,7 @@ function motionState(f){
    noise fields, painted small and scaled up soft
 ============================================================ */
 function fbm2(x,y,k){return vn(x,y,k)*0.62+vn(x*2.13,y*2.13,k+11)*0.38;}
-let fieldC=null,fieldX=null;
+let fieldC=null,fieldX=null,fieldGrid=null;
 function drawAura(c,W,H,A,mo,budget){
   const R=A.r;
   const bw=Math.max(90,Math.min(budget,Math.round(W)));
@@ -74,15 +74,27 @@ function drawAura(c,W,H,A,mo,budget){
   const zoom=mo.pulse?1+0.12*mo.amp*Math.cos(TAU*mo.t):1;
   const mind=Math.min(bw,bh);
   const sc=1.7*S.scale/zoom;
-  const img=fieldX.createImageData(bw,bh);
-  const d=img.data;
-  let p=0;
+  // The spatial warp is independent of phase and palette. Preserve its exact
+  // Float64 coordinates and the pixel buffer until geometry or noise changes.
+  const gridKey=[bw,bh,sc,warp,NS].join(":");
+  if(fieldGrid?.key!==gridKey){
+    const coordinates=new Float64Array(bw*bh*2);
+    let index=0;
+    for(let y=0;y<bh;y++){
+      const ny=(y-bh/2)/mind*sc;
+      for(let x=0;x<bw;x++){
+        const nx=(x-bw/2)/mind*sc;
+        coordinates[index++]=nx+warp*(fbm(nx+11.3,ny+7.9,81)-0.5);
+        coordinates[index++]=ny+warp*(fbm(nx+3.7,ny+19.1,82)-0.5);
+      }
+    }
+    fieldGrid={key:gridKey,coordinates,image:fieldX.createImageData(bw,bh)};
+  }
+  const img=fieldGrid.image, d=img.data, coordinates=fieldGrid.coordinates;
+  let p=0,index=0;
   for(let y=0;y<bh;y++){
-    const ny=(y-bh/2)/mind*sc;
     for(let x=0;x<bw;x++){
-      const nx=(x-bw/2)/mind*sc;
-      const q1=fbm(nx+11.3,ny+7.9,81), q2=fbm(nx+3.7,ny+19.1,82);
-      const wx=nx+warp*(q1-0.5)+zx, wy=ny+warp*(q2-0.5)+zy;
+      const wx=coordinates[index++]+zx, wy=coordinates[index++]+zy;
       let sw=0,ar=0,ag=0,ab=0;
       for(let i=0;i<nI;i++){
         const nz=fbm2(wx*1.15+ox[i],wy*1.15+oy[i],60+i);

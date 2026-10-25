@@ -15,6 +15,7 @@ const faviconCanvas = document.createElement("canvas");
 const faviconContext = faviconCanvas.getContext("2d");
 let faviconFrameIndex = 0;
 let faviconFrameTimer = 0;
+const faviconFrames = new Map();
 
 faviconCanvas.width = 64;
 faviconCanvas.height = 64;
@@ -42,7 +43,12 @@ const drawFaviconFrame = (frameIndex = 0) => {
     return;
   }
 
-  const phase = (frameIndex % 48) / 48;
+  frameIndex %= 48;
+  if (faviconFrames.has(frameIndex)) {
+    siteFavicon.href = faviconFrames.get(frameIndex);
+    return;
+  }
+  const phase = frameIndex / 48;
   const pulse = Math.sin(phase * Math.PI * 2);
   faviconContext.clearRect(0, 0, 64, 64);
 
@@ -108,7 +114,9 @@ const drawFaviconFrame = (frameIndex = 0) => {
   faviconContext.fillRect(52, 27, 4, 4);
   faviconContext.globalAlpha = 1;
 
-  siteFavicon.href = faviconCanvas.toDataURL("image/png");
+  const image = faviconCanvas.toDataURL("image/png");
+  faviconFrames.set(frameIndex, image);
+  siteFavicon.href = image;
 };
 
 const stopFaviconMotion = () => {
@@ -124,6 +132,7 @@ const syncFaviconMotion = () => {
     || !faviconContext
     || reducedMotion.matches
     || captureMode
+    || document.hidden
   ) {
     root.dataset.faviconMotion = "static";
     return;
@@ -131,10 +140,9 @@ const syncFaviconMotion = () => {
 
   root.dataset.faviconMotion = "animated";
   drawFaviconFrame(faviconFrameIndex);
-  const frameStep = document.hidden ? 3 : 1;
-  const frameInterval = document.hidden ? 240 : 80;
+  const frameInterval = 80;
   faviconFrameTimer = window.setInterval(() => {
-    faviconFrameIndex = (faviconFrameIndex + frameStep) % 48;
+    faviconFrameIndex = (faviconFrameIndex + 1) % 48;
     drawFaviconFrame(faviconFrameIndex);
   }, frameInterval);
 };
@@ -154,3 +162,6 @@ document.addEventListener("visibilitychange", () => {
     resumeSignalConstellation();
   }
 });
+
+window.addEventListener("pagehide", stopFaviconMotion);
+window.addEventListener("pageshow", syncFaviconMotion);

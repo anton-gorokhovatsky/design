@@ -960,11 +960,13 @@ requireContract(
   "The work index keeps its eight editorial opening rows, includes the remaining works and preserves task, role and result evidence.",
 );
 requireContract(
-  scriptSource.includes("if (document.hidden)")
+  scriptSource.includes("|| document.hidden")
     && scriptSource.includes('root.dataset.faviconMotion = "animated"')
-    && scriptSource.includes("frameInterval = document.hidden ? 240 : 80"),
+    && scriptSource.includes("frameInterval = 80")
+    && scriptSource.includes('window.addEventListener("pagehide", stopFaviconMotion)')
+    && scriptSource.includes('window.addEventListener("pageshow", syncFaviconMotion)'),
   "favicon-hidden-lifecycle",
-  "Variant 01 must remain visibly animated in foreground and background tabs.",
+  "Variant 01 must animate in the foreground, pause while hidden, and resume on return.",
 );
 requireContract(
   indexSource.includes("document.documentElement.dataset.themeMode = themeMode")

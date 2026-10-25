@@ -168,7 +168,7 @@ class CdpClient {
   }
 }
 
-const launchChrome = async () => {
+const launchChrome = async ({ desktopMouse = false } = {}) => {
   const { chromium } = require("playwright");
   const browser = await chromium.launch({
     headless: true,
@@ -183,9 +183,19 @@ const launchChrome = async () => {
       "--no-sandbox",
       "--no-default-browser-check",
       "--no-first-run",
+      ...(desktopMouse ? [
+        "--blink-settings=primaryPointerType=4,availablePointerTypes=4,primaryHoverType=2,availableHoverTypes=2",
+      ] : []),
     ],
   });
-  const context = await browser.newContext();
+  // A mouse-only page must never receive setTouchEmulationEnabled, even false:
+  // that command restores host capabilities, which can be hover:none in CI.
+  const context = await browser.newContext(desktopMouse ? {
+    viewport: { width: 1440, height: 900 },
+    screen: { width: 1440, height: 900 },
+    colorScheme: "light",
+    reducedMotion: "no-preference",
+  } : {});
   const page = await context.newPage();
   const session = await context.newCDPSession(page);
   return {
@@ -771,7 +781,7 @@ const readObservationShowcaseContract = (client) => evaluate(client, `(() => {
   };
 })()`);
 
-const auditBrowser = async (client, origin) => {
+const initializeBrowserClient = async (client) => {
   await Promise.all([
     client.send("Page.enable"),
     client.send("Runtime.enable"),
@@ -792,6 +802,313 @@ const auditBrowser = async (client, origin) => {
   client.on("Network.requestWillBeSent", ({ request }) => {
     observedNetworkRequests.push(request.url);
   });
+
+};
+
+const auditMapControlHover = async (client, origin) => {
+  await navigate(client, `${origin}/?scene=map&qa=ui-contracts-map-controls`);
+  const preferenceContract = await evaluate(client, `(() => ({
+    themes: Array.from(document.querySelectorAll('[data-theme-choice]')).map(choice => ({
+      value: choice.value, type: choice.type, checked: choice.checked, name: choice.labels?.[0]?.textContent.trim(),
+    })),
+    switches: Array.from(document.querySelectorAll('#settings-panel [role="switch"]')).map(control => ({
+      name: document.getElementById(control.getAttribute('aria-labelledby'))?.textContent.trim(),
+      checked: control.getAttribute('aria-checked'), pressed: control.hasAttribute('aria-pressed'),
+      glyph: !!control.querySelector('.preference-switch'),
+    })),
+    groups: Array.from(document.querySelectorAll('#settings-panel .settings-group > h3')).map(heading => heading.textContent.trim()),
+    launcher: document.querySelector('#screen-controls-trigger')?.getAttribute('aria-haspopup'),
+    duplicate: !!document.querySelector('#screen-controls'),
+  }))()`);
+  if (JSON.stringify(preferenceContract.themes) !== JSON.stringify([
+      { value: 'system', type: 'radio', checked: true, name: 'Системная' },
+      { value: 'light', type: 'radio', checked: false, name: 'Светлая' },
+      { value: 'dark', type: 'radio', checked: false, name: 'Тёмная' },
+    ]) || JSON.stringify(preferenceContract.groups) !== JSON.stringify(['Отображение', 'Доступность', 'Приватность'])
+    || JSON.stringify(preferenceContract.switches.map(control => control.name)) !== JSON.stringify(['Цвет дня', 'Меньше движения', 'Высокий контраст', 'Яндекс Метрика'])
+    || preferenceContract.switches.some(control => !['true', 'false'].includes(control.checked) || control.pressed || !control.glyph)
+    || preferenceContract.launcher !== 'dialog' || preferenceContract.duplicate) {
+    fail('settings: a single radio choice and four consistent switches belong to one three-group dialog.', preferenceContract);
+  }
+  const initialMapControlContract = await evaluate(client, `(() => {
+    const all = document.querySelector('[data-map-filter="all"]');
+    const categories = Array.from(document.querySelectorAll(
+      '[data-map-filter]:not([data-map-filter="all"])',
+    ));
+    return {
+      allPressed: all?.getAttribute("aria-pressed"),
+      allActive: all?.classList.contains("is-active"),
+      categoryStates: categories.map((button) => button.getAttribute("aria-pressed")),
+      filterGroup: document.querySelector(".map-control-group--filters")
+        ?.getAttribute("role"),
+      coordinateGroup: document.querySelector(".map-control-group--coordinates")
+        ?.getAttribute("role"),
+      chronologyControls: document.querySelectorAll("[data-time-toggle]").length,
+    };
+  })()`);
+  if (
+    initialMapControlContract.allPressed !== "true"
+    || !initialMapControlContract.allActive
+    || initialMapControlContract.categoryStates.length !== 4
+    || initialMapControlContract.categoryStates.some((state) => state !== "true")
+    || initialMapControlContract.filterGroup !== "group"
+    || initialMapControlContract.coordinateGroup !== "group"
+    || initialMapControlContract.chronologyControls !== 2
+  ) {
+    fail("map-controls: initial visibility and control groups disagree.", initialMapControlContract);
+  }
+
+  const personalFilterPoint = await evaluate(client, `(() => {
+    const bounds = document.querySelector('[data-map-filter="personal"]')
+      ?.getBoundingClientRect();
+    return bounds ? {
+      x: bounds.left + bounds.width / 2,
+      y: bounds.top + bounds.height / 2,
+    } : null;
+  })()`);
+  if (personalFilterPoint) {
+    await client.send("Input.dispatchMouseEvent", {
+      type: "mouseMoved",
+      x: personalFilterPoint.x,
+      y: personalFilterPoint.y,
+    });
+  }
+  await evaluate(
+    client,
+    "document.querySelector('[data-map-filter=\"personal\"]')?.click(); true",
+  );
+  await delay(260);
+  const personalOnlyFilterContract = await evaluate(client, `(() => ({
+    allPressed: document.querySelector('[data-map-filter="all"]')
+      ?.getAttribute("aria-pressed"),
+    companyPressed: document.querySelector('[data-map-filter="company"]')
+      ?.getAttribute("aria-pressed"),
+    projectPressed: document.querySelector('[data-map-filter="project"]')
+      ?.getAttribute("aria-pressed"),
+    personalPressed: document.querySelector('[data-map-filter="personal"]')
+      ?.getAttribute("aria-pressed"),
+    practicePressed: document.querySelector('[data-map-filter="practice"]')
+      ?.getAttribute("aria-pressed"),
+    filter: new URL(location.href).searchParams.get("filter"),
+    activeKinds: document.querySelector("[data-practice-map]")?.dataset.activeKinds,
+    personalHidden: document.querySelector('[data-map-id="running"]')
+      ?.classList.contains("is-filter-miss"),
+    companyHidden: document.querySelector('[data-map-id="garage"]')
+      ?.classList.contains("is-filter-miss"),
+  }))()`);
+  if (
+    personalOnlyFilterContract.allPressed !== "false"
+    || personalOnlyFilterContract.companyPressed !== "false"
+    || personalOnlyFilterContract.projectPressed !== "false"
+    || personalOnlyFilterContract.personalPressed !== "true"
+    || personalOnlyFilterContract.practicePressed !== "false"
+    || personalOnlyFilterContract.filter !== "personal"
+    || personalOnlyFilterContract.activeKinds !== "personal"
+    || personalOnlyFilterContract.personalHidden
+    || !personalOnlyFilterContract.companyHidden
+  ) {
+    fail(
+      "map-controls: selecting Personal from All does not isolate Personal.",
+      personalOnlyFilterContract,
+    );
+  }
+  await saveElementScreenshot(
+    client,
+    "crop-desktop-map-filters-personal-only",
+    ".map-control-group--filters",
+  );
+  const projectFilterPoint = await evaluate(client, `(() => {
+    const bounds = document.querySelector('[data-map-filter="project"]')
+      ?.getBoundingClientRect();
+    return bounds ? {
+      x: bounds.left + bounds.width / 2,
+      y: bounds.top + bounds.height / 2,
+    } : null;
+  })()`);
+  if (projectFilterPoint) {
+    await client.send("Input.dispatchMouseEvent", {
+      type: "mouseMoved",
+      x: projectFilterPoint.x,
+      y: projectFilterPoint.y,
+    });
+  }
+  const projectFilterHoverSettled = await waitForHoverTransition(
+    client,
+    '[data-map-filter="project"]',
+  );
+  if (!projectFilterHoverSettled) {
+    fail("side-panel-hover: the map-filter hover transition did not settle.");
+  }
+  const hoveredInactiveFilterContract = await evaluate(client, `(() => {
+    const personal = document.querySelector('[data-map-filter="personal"]');
+    const project = document.querySelector('[data-map-filter="project"]');
+    const motion = document.querySelector('#settings-panel [data-whoop-toggle]');
+    const colorPixel = (value) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1;
+      canvas.height = 1;
+      const context = canvas.getContext('2d');
+      context.fillStyle = value;
+      context.fillRect(0, 0, 1, 1);
+      return Array.from(context.getImageData(0, 0, 1, 1).data).join(',');
+    };
+    return {
+      hovered: project?.matches(':hover'),
+      pressed: project?.getAttribute('aria-pressed'),
+      active: project?.classList.contains('is-active'),
+      label: project?.getAttribute('aria-label'),
+      allPressed: document.querySelector('[data-map-filter="all"]')
+        ?.getAttribute('aria-pressed'),
+      projectHidden: document.querySelector('[data-map-id="private-practice"]')
+        ?.classList.contains('is-filter-miss'),
+      indicatorHeight: getComputedStyle(project, '::after').height,
+      symbolColor: getComputedStyle(project.querySelector('.map-control__symbol')).color,
+      activeSymbolColor: getComputedStyle(personal.querySelector('.map-control__symbol')).color,
+      backgroundColor: getComputedStyle(project).backgroundColor,
+      color: getComputedStyle(project).color,
+      backgroundPixel: colorPixel(getComputedStyle(project).backgroundColor),
+      colorPixel: colorPixel(getComputedStyle(project).color),
+      referenceIdleColorPixel: colorPixel(getComputedStyle(motion).color),
+      referenceIdleBackgroundColor: getComputedStyle(motion).backgroundColor,
+      referenceIdleBackgroundPixel: colorPixel(getComputedStyle(motion).backgroundColor),
+    };
+  })()`);
+  if (
+    !hoveredInactiveFilterContract.hovered
+    || hoveredInactiveFilterContract.pressed !== "false"
+    || hoveredInactiveFilterContract.active
+    || hoveredInactiveFilterContract.label !== "Проекты"
+    || hoveredInactiveFilterContract.allPressed !== "false"
+    || !hoveredInactiveFilterContract.projectHidden
+    || Number.parseFloat(hoveredInactiveFilterContract.indicatorHeight) > 0.5
+    || hoveredInactiveFilterContract.symbolColor
+      === hoveredInactiveFilterContract.activeSymbolColor
+  ) {
+    fail(
+      "map-controls: hover visually impersonates an active filter after click.",
+      hoveredInactiveFilterContract,
+    );
+  }
+  await saveElementScreenshot(
+    client,
+    "crop-desktop-map-filters-project-hover-off",
+    ".map-control-group--filters",
+  );
+  await evaluate(client, `document.querySelector('#screen-controls-trigger').click(); true`);
+  await waitForExpression(client, `document.querySelector('#settings-panel').open`);
+  await waitForGeometryTransition(client, '#settings-panel');
+  const settingsFamilyContract = await evaluate(client, `(() => {
+    const panel = document.querySelector('#settings-panel'), heading = panel.querySelector('h2');
+    const options = [...panel.querySelectorAll('[role="switch"]')];
+    const style = element => getComputedStyle(element);
+    return {
+      ranks: [heading, panel.querySelector('.settings-group > h3'), options[0], options[0].closest('.preference-option').querySelector('.preference-description')].map(element => parseFloat(style(element).fontSize)),
+      lefts: [heading, ...panel.querySelectorAll('.settings-group > h3'), ...options].map(element => element.getBoundingClientRect().left),
+      switches: options.map(option => ({height: option.getBoundingClientRect().height, glyph: option.querySelector('.preference-switch').getBoundingClientRect().toJSON()})),
+      weight: style(options[0]).fontWeight,
+    };
+  })()`);
+  if (!settingsFamilyContract.ranks.every((size, index, ranks) => index === 0 || size < ranks[index - 1])
+      || Math.max(...settingsFamilyContract.lefts) - Math.min(...settingsFamilyContract.lefts) > 1
+      || settingsFamilyContract.switches.some(option => option.height < 44 || option.glyph.width !== 40 || option.glyph.height !== 24)
+      || new Set(settingsFamilyContract.switches.map(option => option.glyph.right)).size !== 1
+      || settingsFamilyContract.weight !== '400') {
+    fail('settings: title/item/body/detail roles, text axes and equal switches diverge.', settingsFamilyContract);
+  }
+  const motionTogglePoint = await evaluate(client, `(() => {
+    const bounds = document.querySelector('#settings-panel [data-whoop-toggle]')
+      ?.getBoundingClientRect();
+    return bounds ? {
+      x: bounds.left + bounds.width / 2,
+      y: bounds.top + bounds.height / 2,
+    } : null;
+  })()`);
+  if (!motionTogglePoint) {
+    fail("side-panel-hover: enabled switch is missing from the display panel.");
+  }
+  await client.send("Input.dispatchMouseEvent", {
+    type: "mouseMoved",
+    x: motionTogglePoint.x,
+    y: motionTogglePoint.y,
+  });
+  const motionToggleHoverSettled = await waitForHoverTransition(
+    client,
+    "#settings-panel [data-whoop-toggle]",
+  );
+  if (!motionToggleHoverSettled) {
+    fail("side-panel-hover: the switch hover transition did not settle.");
+  }
+  const sidePanelHoverContract = await evaluate(client, `(() => {
+    const motion = document.querySelector('#settings-panel [data-whoop-toggle]');
+    const colorPixel = (value) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1;
+      canvas.height = 1;
+      const context = canvas.getContext('2d');
+      context.fillStyle = value;
+      context.fillRect(0, 0, 1, 1);
+      return Array.from(context.getImageData(0, 0, 1, 1).data).join(',');
+    };
+    return {
+      hovered: motion?.matches(':hover'),
+      hoverMedia: matchMedia('(hover: hover)').matches,
+      finePointer: matchMedia('(pointer: fine)').matches,
+      disabled: motion?.matches(':disabled'),
+      backgroundColor: getComputedStyle(motion).backgroundColor,
+      color: getComputedStyle(motion).color,
+      backgroundPixel: colorPixel(getComputedStyle(motion).backgroundColor),
+      colorPixel: colorPixel(getComputedStyle(motion).color),
+    };
+  })()`);
+  if (
+    !sidePanelHoverContract.hovered
+    || sidePanelHoverContract.colorPixel
+      === hoveredInactiveFilterContract.referenceIdleColorPixel
+    || sidePanelHoverContract.backgroundPixel
+      !== hoveredInactiveFilterContract.backgroundPixel
+    || sidePanelHoverContract.colorPixel !== hoveredInactiveFilterContract.colorPixel
+  ) {
+    fail("side-panel-hover: left and right neutral controls use different hover feedback.", {
+      left: hoveredInactiveFilterContract,
+      right: sidePanelHoverContract,
+    });
+  }
+  await evaluate(client, `document.querySelector('[data-close-settings]').click(); true`);
+  await evaluate(
+    client,
+    "document.querySelector('[data-map-filter=\"all\"]')?.click(); true",
+  );
+  await client.send("Input.dispatchMouseEvent", {
+    type: "mouseMoved",
+    x: 0,
+    y: 0,
+  });
+
+};
+
+const auditDesktopMapControls = async (origin) => {
+  let mouseChrome;
+  try {
+    mouseChrome = await launchChrome({ desktopMouse: true });
+    const { client } = mouseChrome;
+    await initializeBrowserClient(client);
+    const pointerEnvironment = await evaluate(client, `({
+      hover: matchMedia("(hover: hover)").matches,
+      fine: matchMedia("(pointer: fine)").matches,
+      touchPoints: navigator.maxTouchPoints,
+    })`);
+    if (!pointerEnvironment.hover || !pointerEnvironment.fine
+      || pointerEnvironment.touchPoints !== 0) {
+      throw new Error(`Desktop mouse contract requires native hover/fine media: ${JSON.stringify(pointerEnvironment)}`);
+    }
+    await auditMapControlHover(client, origin);
+  } finally {
+    await mouseChrome?.browser.close();
+  }
+};
+
+const auditBrowser = async (client, origin) => {
+  await initializeBrowserClient(client);
 
   const scenarios = focusedScenarioLabel
     ? chromiumScenarioCatalog.filter((scenario) => scenario.label === focusedScenarioLabel)
@@ -1191,283 +1508,8 @@ const auditBrowser = async (client, origin) => {
     }
   }
 
+  await auditDesktopMapControls(origin);
   await navigate(client, `${origin}/?scene=map&qa=ui-contracts-map-controls`);
-  const preferenceContract = await evaluate(client, `(() => ({
-    themes: Array.from(document.querySelectorAll('[data-theme-choice]')).map(choice => ({
-      value: choice.value, type: choice.type, checked: choice.checked, name: choice.labels?.[0]?.textContent.trim(),
-    })),
-    switches: Array.from(document.querySelectorAll('#settings-panel [role="switch"]')).map(control => ({
-      name: document.getElementById(control.getAttribute('aria-labelledby'))?.textContent.trim(),
-      checked: control.getAttribute('aria-checked'), pressed: control.hasAttribute('aria-pressed'),
-      glyph: !!control.querySelector('.preference-switch'),
-    })),
-    groups: Array.from(document.querySelectorAll('#settings-panel .settings-group > h3')).map(heading => heading.textContent.trim()),
-    launcher: document.querySelector('#screen-controls-trigger')?.getAttribute('aria-haspopup'),
-    duplicate: !!document.querySelector('#screen-controls'),
-  }))()`);
-  if (JSON.stringify(preferenceContract.themes) !== JSON.stringify([
-      { value: 'system', type: 'radio', checked: true, name: 'Системная' },
-      { value: 'light', type: 'radio', checked: false, name: 'Светлая' },
-      { value: 'dark', type: 'radio', checked: false, name: 'Тёмная' },
-    ]) || JSON.stringify(preferenceContract.groups) !== JSON.stringify(['Отображение', 'Доступность', 'Приватность'])
-    || JSON.stringify(preferenceContract.switches.map(control => control.name)) !== JSON.stringify(['Цвет дня', 'Меньше движения', 'Высокий контраст', 'Яндекс Метрика'])
-    || preferenceContract.switches.some(control => !['true', 'false'].includes(control.checked) || control.pressed || !control.glyph)
-    || preferenceContract.launcher !== 'dialog' || preferenceContract.duplicate) {
-    fail('settings: a single radio choice and four consistent switches belong to one three-group dialog.', preferenceContract);
-  }
-  const initialMapControlContract = await evaluate(client, `(() => {
-    const all = document.querySelector('[data-map-filter="all"]');
-    const categories = Array.from(document.querySelectorAll(
-      '[data-map-filter]:not([data-map-filter="all"])',
-    ));
-    return {
-      allPressed: all?.getAttribute("aria-pressed"),
-      allActive: all?.classList.contains("is-active"),
-      categoryStates: categories.map((button) => button.getAttribute("aria-pressed")),
-      filterGroup: document.querySelector(".map-control-group--filters")
-        ?.getAttribute("role"),
-      coordinateGroup: document.querySelector(".map-control-group--coordinates")
-        ?.getAttribute("role"),
-      chronologyControls: document.querySelectorAll("[data-time-toggle]").length,
-    };
-  })()`);
-  if (
-    initialMapControlContract.allPressed !== "true"
-    || !initialMapControlContract.allActive
-    || initialMapControlContract.categoryStates.length !== 4
-    || initialMapControlContract.categoryStates.some((state) => state !== "true")
-    || initialMapControlContract.filterGroup !== "group"
-    || initialMapControlContract.coordinateGroup !== "group"
-    || initialMapControlContract.chronologyControls !== 2
-  ) {
-    fail("map-controls: initial visibility and control groups disagree.", initialMapControlContract);
-  }
-
-  const personalFilterPoint = await evaluate(client, `(() => {
-    const bounds = document.querySelector('[data-map-filter="personal"]')
-      ?.getBoundingClientRect();
-    return bounds ? {
-      x: bounds.left + bounds.width / 2,
-      y: bounds.top + bounds.height / 2,
-    } : null;
-  })()`);
-  if (personalFilterPoint) {
-    await client.send("Input.dispatchMouseEvent", {
-      type: "mouseMoved",
-      x: personalFilterPoint.x,
-      y: personalFilterPoint.y,
-    });
-  }
-  await evaluate(
-    client,
-    "document.querySelector('[data-map-filter=\"personal\"]')?.click(); true",
-  );
-  await delay(260);
-  const personalOnlyFilterContract = await evaluate(client, `(() => ({
-    allPressed: document.querySelector('[data-map-filter="all"]')
-      ?.getAttribute("aria-pressed"),
-    companyPressed: document.querySelector('[data-map-filter="company"]')
-      ?.getAttribute("aria-pressed"),
-    projectPressed: document.querySelector('[data-map-filter="project"]')
-      ?.getAttribute("aria-pressed"),
-    personalPressed: document.querySelector('[data-map-filter="personal"]')
-      ?.getAttribute("aria-pressed"),
-    practicePressed: document.querySelector('[data-map-filter="practice"]')
-      ?.getAttribute("aria-pressed"),
-    filter: new URL(location.href).searchParams.get("filter"),
-    activeKinds: document.querySelector("[data-practice-map]")?.dataset.activeKinds,
-    personalHidden: document.querySelector('[data-map-id="running"]')
-      ?.classList.contains("is-filter-miss"),
-    companyHidden: document.querySelector('[data-map-id="garage"]')
-      ?.classList.contains("is-filter-miss"),
-  }))()`);
-  if (
-    personalOnlyFilterContract.allPressed !== "false"
-    || personalOnlyFilterContract.companyPressed !== "false"
-    || personalOnlyFilterContract.projectPressed !== "false"
-    || personalOnlyFilterContract.personalPressed !== "true"
-    || personalOnlyFilterContract.practicePressed !== "false"
-    || personalOnlyFilterContract.filter !== "personal"
-    || personalOnlyFilterContract.activeKinds !== "personal"
-    || personalOnlyFilterContract.personalHidden
-    || !personalOnlyFilterContract.companyHidden
-  ) {
-    fail(
-      "map-controls: selecting Personal from All does not isolate Personal.",
-      personalOnlyFilterContract,
-    );
-  }
-  await saveElementScreenshot(
-    client,
-    "crop-desktop-map-filters-personal-only",
-    ".map-control-group--filters",
-  );
-  const projectFilterPoint = await evaluate(client, `(() => {
-    const bounds = document.querySelector('[data-map-filter="project"]')
-      ?.getBoundingClientRect();
-    return bounds ? {
-      x: bounds.left + bounds.width / 2,
-      y: bounds.top + bounds.height / 2,
-    } : null;
-  })()`);
-  if (projectFilterPoint) {
-    await client.send("Input.dispatchMouseEvent", {
-      type: "mouseMoved",
-      x: projectFilterPoint.x,
-      y: projectFilterPoint.y,
-    });
-  }
-  const projectFilterHoverSettled = await waitForHoverTransition(
-    client,
-    '[data-map-filter="project"]',
-  );
-  if (!projectFilterHoverSettled) {
-    fail("side-panel-hover: the map-filter hover transition did not settle.");
-  }
-  const hoveredInactiveFilterContract = await evaluate(client, `(() => {
-    const personal = document.querySelector('[data-map-filter="personal"]');
-    const project = document.querySelector('[data-map-filter="project"]');
-    const motion = document.querySelector('#settings-panel [data-whoop-toggle]');
-    const colorPixel = (value) => {
-      const canvas = document.createElement('canvas');
-      canvas.width = 1;
-      canvas.height = 1;
-      const context = canvas.getContext('2d');
-      context.fillStyle = value;
-      context.fillRect(0, 0, 1, 1);
-      return Array.from(context.getImageData(0, 0, 1, 1).data).join(',');
-    };
-    return {
-      hovered: project?.matches(':hover'),
-      pressed: project?.getAttribute('aria-pressed'),
-      active: project?.classList.contains('is-active'),
-      label: project?.getAttribute('aria-label'),
-      allPressed: document.querySelector('[data-map-filter="all"]')
-        ?.getAttribute('aria-pressed'),
-      projectHidden: document.querySelector('[data-map-id="private-practice"]')
-        ?.classList.contains('is-filter-miss'),
-      indicatorHeight: getComputedStyle(project, '::after').height,
-      symbolColor: getComputedStyle(project.querySelector('.map-control__symbol')).color,
-      activeSymbolColor: getComputedStyle(personal.querySelector('.map-control__symbol')).color,
-      backgroundColor: getComputedStyle(project).backgroundColor,
-      color: getComputedStyle(project).color,
-      backgroundPixel: colorPixel(getComputedStyle(project).backgroundColor),
-      colorPixel: colorPixel(getComputedStyle(project).color),
-      referenceIdleColorPixel: colorPixel(getComputedStyle(motion).color),
-      referenceIdleBackgroundColor: getComputedStyle(motion).backgroundColor,
-      referenceIdleBackgroundPixel: colorPixel(getComputedStyle(motion).backgroundColor),
-    };
-  })()`);
-  if (
-    !hoveredInactiveFilterContract.hovered
-    || hoveredInactiveFilterContract.pressed !== "false"
-    || hoveredInactiveFilterContract.active
-    || hoveredInactiveFilterContract.label !== "Проекты"
-    || hoveredInactiveFilterContract.allPressed !== "false"
-    || !hoveredInactiveFilterContract.projectHidden
-    || Number.parseFloat(hoveredInactiveFilterContract.indicatorHeight) > 0.5
-    || hoveredInactiveFilterContract.symbolColor
-      === hoveredInactiveFilterContract.activeSymbolColor
-  ) {
-    fail(
-      "map-controls: hover visually impersonates an active filter after click.",
-      hoveredInactiveFilterContract,
-    );
-  }
-  await saveElementScreenshot(
-    client,
-    "crop-desktop-map-filters-project-hover-off",
-    ".map-control-group--filters",
-  );
-  await evaluate(client, `document.querySelector('#screen-controls-trigger').click(); true`);
-  await waitForExpression(client, `document.querySelector('#settings-panel').open`);
-  await waitForGeometryTransition(client, '#settings-panel');
-  const settingsFamilyContract = await evaluate(client, `(() => {
-    const panel = document.querySelector('#settings-panel'), heading = panel.querySelector('h2');
-    const options = [...panel.querySelectorAll('[role="switch"]')];
-    const style = element => getComputedStyle(element);
-    return {
-      ranks: [heading, panel.querySelector('.settings-group > h3'), options[0], options[0].closest('.preference-option').querySelector('.preference-description')].map(element => parseFloat(style(element).fontSize)),
-      lefts: [heading, ...panel.querySelectorAll('.settings-group > h3'), ...options].map(element => element.getBoundingClientRect().left),
-      switches: options.map(option => ({height: option.getBoundingClientRect().height, glyph: option.querySelector('.preference-switch').getBoundingClientRect().toJSON()})),
-      weight: style(options[0]).fontWeight,
-    };
-  })()`);
-  if (!settingsFamilyContract.ranks.every((size, index, ranks) => index === 0 || size < ranks[index - 1])
-      || Math.max(...settingsFamilyContract.lefts) - Math.min(...settingsFamilyContract.lefts) > 1
-      || settingsFamilyContract.switches.some(option => option.height < 44 || option.glyph.width !== 40 || option.glyph.height !== 24)
-      || new Set(settingsFamilyContract.switches.map(option => option.glyph.right)).size !== 1
-      || settingsFamilyContract.weight !== '400') {
-    fail('settings: title/item/body/detail roles, text axes and equal switches diverge.', settingsFamilyContract);
-  }
-  const motionTogglePoint = await evaluate(client, `(() => {
-    const bounds = document.querySelector('#settings-panel [data-whoop-toggle]')
-      ?.getBoundingClientRect();
-    return bounds ? {
-      x: bounds.left + bounds.width / 2,
-      y: bounds.top + bounds.height / 2,
-    } : null;
-  })()`);
-  if (!motionTogglePoint) {
-    fail("side-panel-hover: enabled switch is missing from the display panel.");
-  }
-  await client.send("Input.dispatchMouseEvent", {
-    type: "mouseMoved",
-    x: motionTogglePoint.x,
-    y: motionTogglePoint.y,
-  });
-  const motionToggleHoverSettled = await waitForHoverTransition(
-    client,
-    "#settings-panel [data-whoop-toggle]",
-  );
-  if (!motionToggleHoverSettled) {
-    fail("side-panel-hover: the switch hover transition did not settle.");
-  }
-  const sidePanelHoverContract = await evaluate(client, `(() => {
-    const motion = document.querySelector('#settings-panel [data-whoop-toggle]');
-    const colorPixel = (value) => {
-      const canvas = document.createElement('canvas');
-      canvas.width = 1;
-      canvas.height = 1;
-      const context = canvas.getContext('2d');
-      context.fillStyle = value;
-      context.fillRect(0, 0, 1, 1);
-      return Array.from(context.getImageData(0, 0, 1, 1).data).join(',');
-    };
-    return {
-      hovered: motion?.matches(':hover'),
-      hoverMedia: matchMedia('(hover: hover)').matches,
-      finePointer: matchMedia('(pointer: fine)').matches,
-      disabled: motion?.matches(':disabled'),
-      backgroundColor: getComputedStyle(motion).backgroundColor,
-      color: getComputedStyle(motion).color,
-      backgroundPixel: colorPixel(getComputedStyle(motion).backgroundColor),
-      colorPixel: colorPixel(getComputedStyle(motion).color),
-    };
-  })()`);
-  if (
-    !sidePanelHoverContract.hovered
-    || sidePanelHoverContract.colorPixel
-      === hoveredInactiveFilterContract.referenceIdleColorPixel
-    || sidePanelHoverContract.backgroundPixel
-      !== hoveredInactiveFilterContract.backgroundPixel
-    || sidePanelHoverContract.colorPixel !== hoveredInactiveFilterContract.colorPixel
-  ) {
-    fail("side-panel-hover: left and right neutral controls use different hover feedback.", {
-      left: hoveredInactiveFilterContract,
-      right: sidePanelHoverContract,
-    });
-  }
-  await evaluate(client, `document.querySelector('[data-close-settings]').click(); true`);
-  await evaluate(
-    client,
-    "document.querySelector('[data-map-filter=\"all\"]')?.click(); true",
-  );
-  await client.send("Input.dispatchMouseEvent", {
-    type: "mouseMoved",
-    x: 0,
-    y: 0,
-  });
 
   await evaluate(
     client,
@@ -3241,7 +3283,7 @@ const auditBrowser = async (client, origin) => {
     || analyticsConsentContract.focusModality !== "pointer"
     || analyticsConsentContract.pointerOutlineStyle !== "none"
     || analyticsConsentContract.mapNodesOpacity !== 1
-    || analyticsConsentContract.cameraOpacity !== 0.6
+    || analyticsConsentContract.cameraOpacity !== 0.48
     || analyticsConsentContract.axisLabelOpacity !== 0
     || analyticsRequestsBeforeChoice.length !== 0
   ) {

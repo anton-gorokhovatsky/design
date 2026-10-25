@@ -44,6 +44,8 @@ native ES modules keep top-level names out of the browser global scope.
     panels, map data, preferences and viewport UI.
 18. `favicon.js` — variant 01 and visibility lifecycle; imports lifecycle APIs
     from map media, preferences and signal field.
+    Reuses its 48 PNG frames; pauses while the document is hidden or on pagehide,
+    then resumes the same phase on visibility/pageshow without changing its cadence.
 
 The remaining modules own celestial volumes, map controls, contribution tags,
 mobile composition, focused/spatial layouts, orbital physics and the project
