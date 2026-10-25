@@ -280,12 +280,25 @@ try {
     await page.close();
     console.log(`PASS ${engine} ${viewport.width}: six introductory captions, ten picker projects, rotation and momentum without overlap.`);
   }
-  for (const width of [320, 390]) {
-    const page = await browser.newPage({ viewport: { width, height: 844 }, hasTouch: true, isMobile: true, reducedMotion: 'reduce' });
+  for (const [width, height, font] of [[320, 844, 32], [390, 844, 32], [320, 568, 16], [320, 568, 32]]) {
+    const page = await browser.newPage({ viewport: { width, height }, hasTouch: true, isMobile: true, reducedMotion: 'reduce' });
     page.on('pageerror', error => errors.push(error.message));
     await page.goto(`${origin}/?scene=map&view=time`);
-    await page.evaluate(() => { document.documentElement.style.fontSize = '32px'; return document.fonts.ready; });
+    await page.evaluate(font => { document.documentElement.style.fontSize = `${font}px`; return document.fonts.ready; }, font);
+    await page.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done))));
     await page.waitForFunction(() => !document.querySelector('[data-map-links][data-layout-pending]'));
+    const returnTop = await page.locator('[data-focused-return]').evaluate(link => link.getBoundingClientRect().top);
+    await page.locator('[data-time-scroller]').evaluate(scroller => { scroller.scrollTop = 100; });
+    assert.equal(await page.locator('[data-focused-return]').evaluate(link => link.getBoundingClientRect().top), returnTop,
+      'Scrolling the diagram does not move the return link under the author card');
+    assert.ok(await page.locator('[data-time-scroller]').evaluate(scroller => {
+      const clip = scroller.getBoundingClientRect();
+      const controls = [...document.querySelectorAll('.mobile-first-dock button,.mobile-first-dock a')]
+        .filter(control => control.checkVisibility({ visibilityProperty: true }) && control.offsetWidth);
+      return getComputedStyle(scroller).overflowY === 'auto'
+        && clip.top >= document.querySelector('[data-focused-return]').getBoundingClientRect().bottom
+        && controls.every(control => clip.bottom <= control.getBoundingClientRect().top + .1);
+    }), 'The scroll viewport clips the diagram between the return link and the actual lower buttons');
     const yearCollisions = await page.evaluate(() => [...document.querySelectorAll('.orbital-radar i span')]
       .filter(year => year.offsetWidth).flatMap(year => {
         const a = year.getBoundingClientRect();
@@ -306,7 +319,7 @@ try {
     }
     await page.locator('[data-time-toggle]').first().evaluate(button => button.click());
     await page.waitForFunction(() => !document.querySelector('[data-practice-map]').hasAttribute('data-time-view'));
-    assert.equal(await page.locator('[data-practice-map]').evaluate(field => field.scrollTop), 0,
+    assert.equal(await page.locator('[data-time-scroller]').evaluate(field => field.scrollTop), 0,
       'Leaving chronology resets its scroll offset');
     await page.close();
   }

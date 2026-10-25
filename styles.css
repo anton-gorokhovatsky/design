@@ -10408,6 +10408,9 @@ html[data-celestial-volume] .site-header .brand__name::before{content:'';float:r
 .content-panel .content-panel__frame .work-list .work-row > :not(.work-row__preview),.content-panel .content-panel__frame .approach-grid li > *{grid-area:auto;}}
 @container map-viewport (max-width: 12rem){
 .map-surface{--window-pad:20px;}
-.practice-map[data-time-view]{overflow-y:auto;touch-action:pan-y;overscroll-behavior:contain;}
-.practice-map[data-time-view] .map-camera{min-height:20rem;bottom:auto;}
-.practice-map[data-time-view] .signal-constellation{touch-action:pan-y;}}
+}
+
+.time-map-viewport{display:contents;}
+.practice-map[data-time-scroll] .time-map-viewport{display:block;position:absolute;z-index:var(--map-layer-field);inset:var(--mobile-map-top) 0 var(--time-scroll-bottom,var(--mobile-map-reserve));overflow:hidden auto;touch-action:pan-y;overscroll-behavior:contain;}
+.practice-map[data-time-scroll] .map-camera{min-height:max(640px,20rem);inset:0 0 auto;}
+.practice-map[data-time-scroll] .signal-constellation{touch-action:pan-y;}
