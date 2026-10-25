@@ -39,6 +39,13 @@ npm exec --yes --package=terser@5.44.0 -- terser rendering/practice-orbits.js --
 в одноимённый путь без префикса `rendering/`. Для `signal-field.js` сохранить
 имена `signalContext,fontSize,signalFont` через `--mangle reserved=[signalContext,fontSize,signalFont]`: статический контракт проверяет назначение общего шрифта canvas.
 
+Для `viewport-ui.js` читаемый файл содержит весь актуальный модуль, но Terser
+сжимает только блок от `const scrollLensControllers` до `const observeScrollEdges`.
+При сборке блока сохранить имена `observeScrollLens`, `clearScrollLenses`,
+`lensPanel` и их внешнее использование (временно экспортировать эти три имени
+для Terser, затем убрать только добавленный export). Префикс и суффикс модуля
+переносить без изменений: они сохраняют именованные контракты области консоли.
+
 `js/pane-viewport.js` измеряет область карты, уведомляет её о смене ширины
 и синхронизирует классы состояния. В CSS размерные условия карты используют
 контейнер `map-viewport`; настройки устройства и темы остаются media queries.

@@ -104,7 +104,7 @@ try {
         assert.ok(edge==='top'?bounds.y<port.y+50:bounds.y+bounds.height>port.y+port.height-50,'The actual content reaches this edge');
         const clip={x:Math.max(port.x,bounds.x)+8,y:edge==='top'?port.y+4:port.y+port.height-64,
           width:Math.min(bounds.width,port.width)-16,height:60};
-        const affected=type==='player'?'iframe':['video','image'].includes(type)?'.scroll-lens-video':target;
+        const affected=type==='player'?'iframe':['video','image'].includes(type)?'.scroll-lens-video':'[data-scroll-lens-frame]:has(> .case-scroll)';
         await page.waitForFunction(sel=>{const e=document.querySelector(sel);return e&&(e.style.filter.includes('scroll-ink')||e.style.transform.includes('matrix3d'));},affected);
         if (type==='image' || type==='video') {
           const attachment=await page.locator(target).evaluate(picture=>{
@@ -233,13 +233,13 @@ try {
       if(type==='links') {
         await page.locator(target).evaluate(e=>{const s=document.getSelection();s.removeAllRanges();const r=document.createRange();r.selectNodeContents(e);s.addRange(r);});
         await settle(page);
-        assert.equal(await page.locator(target).evaluate(e=>e.style.filter),'','Selected text is native');
+        assert.equal(await page.locator(target).evaluate(e=>e.closest('[data-scroll-lens-frame]')?.style.filter||''),'','Selected text is native');
         await page.evaluate(()=>getSelection().removeAllRanges());
         await page.locator(target).evaluate(e=>e.closest('a').focus({preventScroll:true}));
         await page.keyboard.press('Shift+Tab');
         await page.locator(target).evaluate(e=>e.closest('a').focus({preventScroll:true}));
         await settle(page);
-        assert.equal(await page.locator(target).evaluate(e=>e.style.filter),'','Focused link stays sharp');
+        assert.equal(await page.locator(target).evaluate(e=>e.closest('[data-scroll-lens-frame]')?.style.filter||''),'','Focused link stays sharp');
         assert.equal(await page.locator(target).evaluate(e=>getComputedStyle(e.closest('a')).outlineStyle),'solid');
       }
       if(type==='player') {
@@ -288,20 +288,21 @@ try {
     report.push(result);console.log(result.status,engine,name,JSON.stringify(result.edges),result.error||'');
   }
   if(!process.env.LENS_CASES||process.env.LENS_CASES.split(',').includes('story-rapid')) {
-    const page=await browser.newPage({viewport:{width:390,height:844},reducedMotion:'no-preference'}),result={engine,name:'story-rapid',status:'PASS',errors:[]};
+    const page=await browser.newPage({viewport:{width:390,height:844},hasTouch:true,reducedMotion:'no-preference'}),result={engine,name:'story-rapid',status:'PASS',errors:[]};
     page.on('pageerror',e=>result.errors.push(e.message));
     try {
       await page.goto(origin+'/?story=1#map');await page.waitForSelector('#story-pane[data-ready=true]');await page.evaluate(()=>document.fonts.ready);
       const region=page.locator('#story-pane'),alignHeading=()=>region.evaluate(s=>{const h=s.querySelector('#time h2'),r=h.getBoundingClientRect(),p=s.getBoundingClientRect();s.scrollTop+=r.top-p.top-18});
-      const hasLens=()=>[...document.querySelectorAll('#story-pane [style]')].some(e=>e.style.filter.includes('scroll-ink'));
+      const hasLens=()=>Boolean(document.querySelector('#story-pane')?.closest('[data-scroll-lens-frame]')?.style.filter.includes('scroll-ink'));
       await alignHeading();await page.waitForFunction(hasLens);
       await region.dispatchEvent('touchstart');
-      for(const delta of [240,320,-160,-340,120]){await region.evaluate((s,d)=>s.scrollTop+=d,delta);await settle(page);assert.equal(await page.evaluate(hasLens),false,'Native scrolling never carries a stale text lens');}
-      await page.waitForTimeout(180);assert.equal(await page.evaluate(hasLens),false,'Holding a touch does not resume optical work');
+      // Keep text at the optical boundary: a scene-only edge is deliberately native.
+      for(const delta of [240,320,-160,-340,120]){await region.evaluate((s,d)=>s.scrollTop+=d,delta);await settle(page);assert.equal(await page.evaluate(hasLens),true,'Text keeps the fixed edge effect throughout native scrolling');}
+      await page.waitForTimeout(180);assert.equal(await page.evaluate(hasLens),true,'Holding a touch does not remove the optical edge');
       await region.dispatchEvent('touchcancel');await alignHeading();await page.waitForFunction(hasLens);
-      await region.evaluate(s=>{s.lensScrollSamples=[];for(const type of ['wheel','scroll'])s.addEventListener(type,()=>s.lensScrollSamples.push([...s.querySelectorAll('[style]')].filter(e=>e.style.filter.includes('scroll-ink')).length),{passive:true})});
-      const r=await region.boundingBox();await page.mouse.move(r.x+r.width/2,r.y+r.height/2);await page.mouse.wheel(0,430);await page.mouse.wheel(0,-390);await settle(page);
-      result.scrollSamples=await region.evaluate(s=>s.lensScrollSamples);assert.ok(result.scrollSamples.length>0&&result.scrollSamples.every(n=>n===0),'Wheel/reversal retain native ink during motion');
+      await region.evaluate(s=>{s.lensScrollSamples=[];for(const type of ['wheel','scroll'])s.addEventListener(type,()=>s.lensScrollSamples.push(Number(s.closest('[data-scroll-lens-frame]')?.style.filter.includes('scroll-ink'))),{passive:true})});
+      const r=await region.boundingBox();await page.mouse.move(r.x+4,r.y+r.height/2);await page.mouse.wheel(0,430);await page.mouse.wheel(0,-390);await settle(page);
+      result.scrollSamples=await region.evaluate(s=>s.lensScrollSamples);assert.ok(result.scrollSamples.length>0&&result.scrollSamples.every(n=>n===1),'Wheel and reversal retain the optical edge during motion');
       await alignHeading();await page.waitForFunction(hasLens);await page.screenshot({path:dir+engine+'-story-rapid-settled.png'});
       await page.locator('#story-pane [data-close-story]').click();await page.waitForFunction(()=>!document.body.classList.contains('has-story-pane'));await settle(page);assert.equal(await page.evaluate(hasLens),false);assert.deepEqual(result.errors,[]);
     }catch(e){result.status='FAIL';result.error=e.stack;await page.screenshot({path:dir+engine+'-story-rapid-FAIL.png'}).catch(()=>{})}finally{await page.close()}

@@ -102,7 +102,8 @@ in the initial download. The adjacent source comments identify each invariant.
 
 - Project the live iframe: cross-origin pixels cannot be sampled, and WebKit loses accelerated video under SVG URL filters (222757).
 
-- During a text scroll gesture, render native glyphs instead of carrying a stale displacement map through Safari's asynchronous scrolling. Restore the cached edge maps after 120 ms without scrolling and after the touch has ended. Media keeps its attached raster and existing geometry updates while moving.
+- Text refraction belongs to a stationary transparent frame around the native scrollport. Filtering the moving text or the overflow element itself leaves stale bands during WebKit reversals. Keep the edge maps fixed to the frame and retain the existing native scroll, reading position, focus and outer glass shell.
+- A sticky close target has a neutral rectangle in the upper map. Visible controls and media suppress the intersecting edge; transparent text links keep refraction until focused. Selection and visible keyboard focus suspend the text filter. A visible video or iframe stays outside the parent SVG filter; its existing attached media/player projection remains responsible for the edge. Never reparent a live iframe, and preserve video playback when moving its scrollport.
 
 ## Focused index
 

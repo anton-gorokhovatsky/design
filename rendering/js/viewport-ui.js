@@ -1,7 +1,6 @@
 import {pane} from './pane-viewport.js';
 import { reducedMotion } from "./preferences.js";
 
-// Shared keyboard scrolling; wheel and touch stay native.
 const scrollRegionFromKey = (event, region, reduceMotion) => {
   if (event.target.matches("input, select, textarea") || !["ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End"].includes(event.key)) return;
   const maximum = region.scrollHeight - region.clientHeight;
@@ -12,7 +11,6 @@ const scrollRegionFromKey = (event, region, reduceMotion) => {
   region.scrollTo({ top: Math.max(0, Math.min(maximum, top)), behavior: reduceMotion ? "auto" : "smooth" });
 };
 
-// Refract content inside its fixed frame.
 const scrollLensControllers = new Map();
 let scrollLensId = 0;
 const lensNamespace = "http://www.w3.org/2000/svg";
@@ -23,9 +21,8 @@ const lensBleed = 32;
 const drawScrollLensMap = (record, width, height, top, bottom) => {
   const extent = height + lensBleed * 2;
   const textureHeight = lensDepth + lensBleed;
-  const span=record.span||width, left=record.left||0, displacement=record.span?Math.max(64,2*left+4):64;
-  // Reuse decoded edge textures.
-  if (record.textureWidth !== `${width}:${span}:${left}`) {
+  const texture = `${width}:${record.fullWidth}:${record.gutter||0}:${JSON.stringify(record.cutouts||[])}`;
+  if (record.textureWidth !== texture) {
     const canvas = record.canvas;
     canvas.height = textureHeight;
     const context = canvas.getContext("2d");
@@ -34,43 +31,54 @@ const drawScrollLensMap = (record, width, height, top, bottom) => {
       const depth = Math.max(0, Math.min(1, 1 - (y - lensBleed) / lensDepth));
       for (let x = 0; x < canvas.width; x++) {
         const u = x / (canvas.width - 1);
-        const spread=1+Math.min(.5,2*left/Math.max(1,span-2*left))*depth**2;
-        const shift = record.media ? 0 : record.span ? (u-.5)*span*(1/spread-1)
+        const gutter=record.gutter||0;
+        const spread=1+Math.min(.5,2*gutter/Math.max(1,width-2*gutter))*depth**2;
+        const shift = record.media ? 0 : record.fullWidth ? (u-.5)*width*(1/spread-1)
           : -(u - .5) * Math.min(width * .42, 168)*depth ** 2 * Math.sin(Math.PI * u) ** 2;
         const offset = (y * canvas.width + x) * 4;
-        pixels.data[offset] = 128 + shift / displacement * 255;
+        pixels.data[offset] = 128 + shift / 64 * 255;
         pixels.data[offset + 1] = 128;
         pixels.data[offset + 2] = 255 * depth;
         pixels.data[offset + 3] = 255;
       }
     }
-    context.putImageData(pixels, 0, 0);
-    record.images[0].setAttribute("href", canvas.toDataURL());
     const flipped = context.createImageData(canvas.width, textureHeight);
     const stride = canvas.width * 4;
     for (let y = 0; y < textureHeight; y++) flipped.data.set(
       pixels.data.subarray(y * stride, (y + 1) * stride), (textureHeight - y - 1) * stride);
     context.putImageData(flipped, 0, 0);
     record.images[1].setAttribute("href", canvas.toDataURL());
-    record.textureWidth = `${width}:${span}:${left}`;
+    for (const [left, top, right, bottom] of record.cutouts || []) {
+      for (let y = Math.max(0, Math.floor(top+lensBleed)); y < Math.min(textureHeight, bottom+lensBleed); y++) {
+        for (let x = Math.max(0, Math.floor(left/width*canvas.width)); x < Math.min(canvas.width, Math.ceil(right/width*canvas.width)); x++) {
+          const offset = (y*canvas.width+x)*4;
+          pixels.data[offset]=128; pixels.data[offset+2]=0;
+        }
+      }
+    }
+    context.putImageData(pixels, 0, 0);
+    record.images[0].setAttribute("href", canvas.toDataURL());
+    record.textureWidth = texture;
   }
-  // Keep displaced glyphs inside the Safari filter bounds.
-  for (const primitive of [record.filter, ...record.filter.children]) {
-    primitive.setAttribute("x", -left/width);
-    primitive.setAttribute("y", -lensBleed / height);
-    primitive.setAttribute("width", span/width);
-    primitive.setAttribute("height", extent / height);
+  const geometry = `${width}:${height}`;
+  if (record.geometry !== geometry) {
+    for (const primitive of [record.filter, ...record.filter.children]) {
+      primitive.setAttribute("x", 0);
+      primitive.setAttribute("y", -lensBleed / height);
+      primitive.setAttribute("width", 1);
+      primitive.setAttribute("height", extent / height);
+    }
+    record.displaceX.setAttribute("scale", 64 / width);
+    const blur = record.media ? 2.2 : 2.6;
+    record.blur.setAttribute("stdDeviation", `${blur / width} ${blur / height}`);
+    record.fade.setAttribute("amplitude", record.media ? ".28" : ".72");
+    record.fade.setAttribute("exponent", record.media ? "2.4" : "3.4");
+    record.geometry = geometry;
   }
-  record.displaceX.setAttribute("scale", displacement / width);
-  const blur = record.media ? 2.2 : 2.6;
-  record.blur.setAttribute("stdDeviation", `${blur / width} ${blur / height}`);
-  record.fade.setAttribute("amplitude", record.media ? ".28" : ".72");
-  record.fade.setAttribute("exponent", record.media ? "2.4" : "3.4");
   record.images.forEach((image, index) => {
     const edge = index ? bottom : top;
     const start = edge - (index ? lensDepth : lensBleed);
     const visible = edge !== null && start < height + lensBleed && start + textureHeight > -lensBleed;
-    // Keep inactive textures in bounds.
     image.setAttribute("y", visible ? start / height : 0);
     image.setAttribute("height", textureHeight / height);
     record.mapLayers[index].setAttribute("in", visible ? (index ? "lower" : "upper") : "empty");
@@ -82,7 +90,6 @@ const lensDepthAt = (position, edge, upper) => edge === null ? 0
 const lensRow = (g, y) => {
   const upper = lensDepthAt(y, g.top, true), lower = lensDepthAt(y, g.bottom, false);
   const bend = Math.max(upper, lower) ** 2;
-  // Meet the frame vertically before its corner begins: no angled join or ear.
   const t = Math.min(1, Math.max(upper, lower) * lensDepth / (lensDepth - g.frameRadius));
   const flare = g.insetMedia ? 0 : t * t * (3 - 2 * t);
   const r = Math.min(g.radius, g.width / 2, g.height / 2);
@@ -93,7 +100,6 @@ const lensRow = (g, y) => {
     left: g.left * (1 - flare) + corner,
     right: g.left + g.width + (g.portWidth - g.left - g.width) * flare - corner };
 };
-// Raster lifetime follows its media.
 const createLensMedia = video => {
   const moving = video.matches("video");
   const background = getComputedStyle(video.closest(".personal-media__screen") || video.parentElement).backgroundColor;
@@ -124,7 +130,6 @@ const createLensMedia = video => {
       sourceContext.drawImage(video,(width-w)/2,moving?0:(height-h)/2,w,h);
     }
     context.clearRect(0,0,pw,ph);
-    // Sample only the edge bands.
     context.save();
     context.beginPath();
     const r = Math.min(g.radius*density,width/2,height/2), x = g.left*density;
@@ -154,7 +159,6 @@ const createLensMedia = video => {
         if (dw<=0) continue;
         const sw=Math.min(width,dw/(1+.16*edge.bend));
         const sy=Math.max(0,Math.min(height-1,edge.sample*density-.5));
-        // Complete source rows avoid subpixel raster gaps in WebKit.
         context.drawImage(source,(width-sw)/2,sy,sw,1,edge.left*density,row,dw,1);
       }
     }
@@ -182,7 +186,6 @@ const createLensMedia = video => {
     canvas.remove();
   } };
 };
-// Cross-origin media uses projection.
 const createLensPlayer = element => {
   const transform = element.style.transform, origin = element.style.transformOrigin;
   const screen = element.parentElement, overflow = screen.style.overflow, clip = screen.style.clipPath;
@@ -200,7 +203,6 @@ const createLensPlayer = element => {
     const span = y1 - y0, z0 = 1 + .16 * upper ** 2, z1 = 1 + .16 * lower ** 2;
     const s0 = y0 + Math.min(8 * upper ** 2, span * .3);
     const s1 = y1 - Math.min(8 * lower ** 2, span * .3);
-    // Bounded offsets keep the two-edge projection invertible.
     const c = (z1 - z0) / span, d = z0 - c * y0;
     const a = (s1 * z1 - s0 * z0) / span, b = s0 * z0 - a * y0;
     element.style.transform = `matrix3d(${a*d-b*c},0,0,0,0,${d},0,${-c},0,0,1,0,0,${-b},0,${a})`;
@@ -232,24 +234,55 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
   if (!region) return;
   const records = new Map();
   let frame = 0;
-  let svg;
+  let svg, textFrame, textRecord, textStyles;
+  const transfer = (parent, before = null) => {
+    if (parent.moveBefore) { parent.moveBefore(region,before); return; }
+    const videos=[...region.querySelectorAll("video")].map(video=>[video,video.currentTime,video.paused,video.src]);
+    parent.insertBefore(region,before);
+    for(const[video,time,paused,source]of videos){
+      const restore=()=>{if(video.src!==source)return;video.currentTime=time;if(paused)video.pause();else video.play().catch(()=>{});};
+      if(video.readyState)restore();else video.addEventListener("loadedmetadata",restore,{once:true});
+    }
+  };
+  const moveRegion = move => {
+    const top=region.scrollTop, left=region.scrollLeft, focus=document.activeElement;
+    const selection=document.getSelection(), selected=selection&&!selection.isCollapsed
+      && (region.contains(selection.anchorNode)||region.contains(selection.focusNode));
+    const range=selected&&[selection.anchorNode,selection.anchorOffset,selection.focusNode,selection.focusOffset];
+    move(); region.scrollTop=top; region.scrollLeft=left;
+    if (region.contains(focus)) focus.focus({preventScroll:true});
+    if (range) selection.setBaseAndExtent(...range);
+  };
+  const releaseFrame = () => {
+    if (!textFrame) return;
+    textFrame.style.removeProperty("filter");
+    if (region.parentElement !== textFrame) {
+      textFrame.remove();textFrame=null;
+      for(const[key,value]of textStyles)region.style[key]=value;
+      return;
+    }
+    // Reparenting a live player reloads it. Keep its unfiltered layout box until removal.
+    if (region.querySelector("iframe")) return;
+    moveRegion(() => {
+      transfer(textFrame.parentElement,textFrame); textFrame.remove(); textFrame=null;
+      for (const [key,value] of textStyles) region.style[key]=value;
+    });
+  };
   const remove = (element, record) => {
     if (record.player) record.player.dispose();
     else if (record.media) record.media.dispose();
-    else if (element.style.filter.includes(record.id)) {
-      if (record.original) element.style.filter = record.original;
-      else element.style.removeProperty("filter");
-    }
     record.filter?.remove();
     resize.unobserve(element);
     records.delete(element);
   };
   const reset = () => {
     for (const [element, record] of records) remove(element, record);
+    textRecord=null;
+    releaseFrame();
     svg?.remove();
     svg = null;
   };
-  const makeRecord = element => {
+  const makeRecord = (element, tracked = true) => {
     if (element.matches("iframe")) {
       const record = { player: createLensPlayer(element) };
       records.set(element, record);
@@ -287,20 +320,21 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
     svg.append(filter);
     const canvas = document.createElement("canvas");
     canvas.width = 64;
-    const record = { id, filter, canvas, original: element.style.filter,
+    const record = { id, filter, canvas,
       images: [...filter.querySelectorAll("feImage")],
       mapLayers: [...filter.querySelectorAll('feMergeNode')].slice(1),
       displaceX: filter.querySelector("feDisplacementMap"), blur: filter.querySelector("feGaussianBlur"),
       fade: filter.querySelector('[result="fade"] feFuncA'),
       media: element.matches("img, video") ? createLensMedia(element) : null };
-    records.set(element, record);
-    resize.observe(element);
+    if (tracked) { records.set(element, record); resize.observe(element); }
     return record;
   };
   const update = () => {
     frame = 0;
+    if (textFrame && region.parentElement !== textFrame) releaseFrame();
     if (!region.isConnected || owner.hidden || owner.getAttribute("aria-hidden") === "true"
       || !enabled() || reducedMotion.matches || lensForcedColors.matches) { reset(); return; }
+    if (textFrame) textFrame.style.gridArea=getComputedStyle(region).gridArea;
     const port = region.getBoundingClientRect();
     if (!port.height || region.scrollHeight <= region.clientHeight + 1) { reset(); return; }
     const active = new Set(targets());
@@ -309,29 +343,75 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
     const top = region.scrollTop > 1;
     const bottom = region.scrollTop + region.clientHeight < region.scrollHeight - 1;
     const selection = document.getSelection();
-    for (const element of active) {
-      const rect = (element.matches("iframe") ? element.parentElement : element).getBoundingClientRect();
-      const height = element.offsetHeight, width = element.offsetWidth;
+    const geometry = [...active].map(element => ({ element,
+      rect: (element.matches("iframe") ? element.parentElement : element).getBoundingClientRect(),
+      height: element.offsetHeight, width: element.offsetWidth }));
+    const intersects = rect => rect.width&&rect.height&&rect.bottom>port.top&&rect.top<port.bottom;
+    const edges = rect => [top&&rect.top<port.top+lensDepth*scale&&rect.bottom>port.top,
+      bottom&&rect.bottom>port.bottom-lensDepth*scale&&rect.top<port.bottom];
+    const textEdges=[false,false];
+    for (const {element,rect,width,height} of geometry) {
+      if (!width||!height||element.matches("img,video,iframe,[data-material-surface],a,button,input,select,textarea")
+        ||element.querySelector("[data-material-surface],a,button,input,select,textarea")) continue;
+      edges(rect).forEach((hit,i)=>textEdges[i] ||= hit);
+    }
+    const cutouts=[];
+    let liveMedia=false;
+    for (const element of region.querySelectorAll("a,button,input,select,textarea,[data-material-surface],img,video,iframe")) {
+      const rect=element.getBoundingClientRect();
+      if (!intersects(rect)) continue;
+      if (element.matches("video,iframe")) liveMedia=true;
+      const preview=element.closest(".map-related__preview"),style=getComputedStyle(element);
+      if(style.visibility!=="visible"||+style.opacity===0&&!records.get(element)?.media||preview&&+getComputedStyle(preview).opacity===0)continue;
+      if(element.matches("a:not([data-material-surface])")&&geometry.some(({element:target})=>element.contains(target)))continue;
+      if (element.matches(".story-actions .ui-close,[data-close-inspector]")) {
+        cutouts.push([(rect.left-port.left)/scale-4,(rect.top-port.top)/scale-4,(rect.right-port.left)/scale+4,(rect.bottom-port.top)/scale+4].map(n=>Math.round(n*10)/10));
+      } else edges(rect).forEach((hit,i)=>{if(hit)textEdges[i]=false;});
+    }
+    const focused=document.activeElement;
+    const protectedText=selection&&!selection.isCollapsed&&(region.contains(selection.anchorNode)||region.contains(selection.focusNode))
+      ||focused!==region&&region.contains(focused)&&focused.matches(":focus-visible")&&intersects(focused.getBoundingClientRect());
+    if (textEdges.some(Boolean)&&!protectedText&&!liveMedia) {
+      if (!textFrame && !region.querySelector("iframe")) {
+        const style=getComputedStyle(region);
+        textFrame=document.createElement("div");
+        textFrame.dataset.scrollLensFrame="";
+        textFrame.style.cssText=`min-width:0;min-height:0;display:flex;flex-direction:column;position:relative;flex:${style.flex};grid-area:${style.gridArea};margin:${style.margin};border-radius:${style.borderRadius};corner-shape:${style.cornerShape||"round"}`;
+        textStyles=["margin","flex"].map(key=>[key,region.style[key]]);
+        moveRegion(()=>{region.before(textFrame);transfer(textFrame);region.style.margin="0";region.style.flex="1 1 auto";});
+      }
+      if (textFrame) {
+        textRecord ||= makeRecord(region,false);
+        const width=region.clientWidth, height=region.clientHeight;
+        const gutter=fullWidth?parseFloat(getComputedStyle(region.querySelector(".page")).paddingLeft)||0:0;
+        const key=`${width}:${height}:${gutter}:${textEdges}:${JSON.stringify(cutouts)}`;
+        if(textRecord.window!==key){
+          textRecord.fullWidth=fullWidth;textRecord.gutter=gutter;textRecord.cutouts=cutouts;
+          drawScrollLensMap(textRecord,width,height,textEdges[0]?0:null,textEdges[1]?height:null);
+          textRecord.window=key;
+        }
+        textFrame.style.filter=`url(#${textRecord.id})`;
+      }
+    } else textFrame?.style.removeProperty("filter");
+    for (const { element, rect, height, width } of geometry) {
+      if (!element.matches("img, video, iframe")) continue;
       const selected = selection && !selection.isCollapsed
         && (element.contains(selection.anchorNode) || element.contains(selection.focusNode));
-      const depths = [top && rect.top < port.top + lensDepth * scale && rect.bottom > port.top,
-        bottom && rect.bottom > port.bottom - lensDepth * scale && rect.top < port.bottom];
+      const depths = edges(rect);
       let record = records.get(element);
-      // Materials, controls and live keyboard selection retain their native rendering.
       const control = element.closest("a, button, iframe");
       const focused = control ? control.matches(":focus-visible")
         || (element.matches("iframe") && element === document.activeElement
           && document.documentElement.dataset.focusModality === "keyboard")
         : element.contains(document.activeElement);
       if (!width || !height || !depths.some(Boolean) || selected || focused
-        || element.matches("[data-material-surface], a, button, input, select, textarea")
+        || element.matches("[data-material-surface]")
         || element.querySelector("[data-material-surface], a, button, input, select, textarea")) {
         if (record) remove(element, record);
         continue;
       }
       record ||= makeRecord(element);
-      if(fullWidth&&!record.media&&!record.player){record.span=region.clientWidth;record.left=(rect.left-port.left)/scale;}
-      if (record.player || record.media) {
+      if (!record.player && !record.media) { remove(element,record); continue; }
         const frameStyle = getComputedStyle(element.closest(".personal-media__screen, .map-hover-preview__mosaic-main"));
         const shape = frameStyle.cornerShape || "round";
         const geometry = { width, height, insetMedia: Boolean(element.closest(".personal-media__screen")), left: (rect.left-port.left)/scale,
@@ -344,15 +424,13 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
         record.media.setGeometry(geometry);
         record.media.draw(true);
         drawScrollLensMap(record,region.clientWidth,height,geometry.top,geometry.bottom);
-      } else drawScrollLensMap(record,width,height,
-        depths[0] ? (port.top-rect.top)/scale : null, depths[1] ? (port.bottom-rect.top)/scale : null);
-      (record.media?.canvas || element).style.filter = `url(#${record.id})`;
+      record.media.canvas.style.filter = `url(#${record.id})`;
     }
   };
   const schedule = () => { if (!frame) frame = requestAnimationFrame(update); };
   const resize = new ResizeObserver(schedule);
   resize.observe(region);
-  region.addEventListener("scroll", schedule, { passive: true });
+  region.addEventListener("scroll", () => { cancelAnimationFrame(frame); update(); }, { passive: true });
   region.addEventListener("focusin", schedule);
   region.addEventListener("focusout", schedule);
   owner.addEventListener("animationend", schedule);
@@ -377,8 +455,11 @@ const lensPanel = document.querySelector(".content-panel__body");
 observeScrollLens(lensPanel, () => lensPanel.querySelectorAll(
   ".work-intro > *, .approach-intro > *, .work-row > :not(img), .approach-grid li > *, .contact-intro > :not(.contact-resume), .contact-links a > *",
 ), { owner: document.querySelector("[data-content-panel]") });
+const lensSettings = document.querySelector(".settings-panel__body");
+observeScrollLens(lensSettings, () => lensSettings.querySelectorAll(
+  "p, h3, .settings-whoop__zones dt, .settings-whoop__zones dd, .settings-panel__privacy dt, .settings-panel__privacy dd",
+), { owner: document.querySelector("[data-settings-panel]") });
 
-// Keep a short continuation cue inside text lists without reshaping cards.
 const observeScrollEdges = (region, { owner = region } = {}) => {
   if (!region) return;
   let frame = 0;
@@ -452,12 +533,29 @@ const positionDetachedCommandResults = () => {
   if (!dock || !results) return;
 
   const compact = compactCommandViewport.matches;
+  const focusedMobile = compact && dock.classList.contains("is-open");
+  for (const element of [dock, results, status].filter(Boolean)) {
+    const visible = focusedMobile && !element.hidden && (element === dock || element.classList.contains("is-open"));
+    if (visible && element.showPopover) {
+      element.setAttribute("popover", "manual");
+      if (!element.matches(":popover-open")) element.showPopover();
+    } else if (element.hasAttribute("popover")) {
+      if (element.matches(":popover-open")) element.hidePopover();
+      element.removeAttribute("popover");
+    }
+  }
   const bounds = dock.getBoundingClientRect();
   const surface = compact ? dock : dock.closest("[data-floating-console]") || dock;
   const surfaceBounds = surface.getBoundingClientRect();
   const viewport = getCommandVisualViewport();
+  if (focusedMobile) {
+    const visual = window.visualViewport;
+    const map = document.getElementById("map-pane").getBoundingClientRect();
+    viewport.left = Math.max(visual?.offsetLeft || 0, map.left);
+    viewport.width = Math.max(0, Math.min((visual?.offsetLeft || 0) + (visual?.width || innerWidth), map.right) - viewport.left);
+    viewport.height = visual?.height || innerHeight;
+  }
   const gap = 8;
-  const focusedMobile = compact && dock.classList.contains("is-open");
   let anchorTop = surfaceBounds.top;
   let anchorBottom = surfaceBounds.bottom;
   // Results share the console's right edge.
@@ -553,6 +651,42 @@ const getConsoleOffset = (module) => ({
 
 const authorCard = document.querySelector('.site-header');
 const authorField = document.querySelector('.whoop-field');
+const syncCompactControlGeometry = () => {
+  const close = document.querySelector('#story-pane [data-close-story]');
+  if (pane.width > 900) { close?.style.removeProperty('--control-target'); return; }
+  const toggle = document.querySelector('[data-constellation-nav-toggle]');
+  const mark = toggle?.querySelector('.constellation-nav__cluster');
+  const map = document.querySelector('.map-surface');
+  if (!toggle || !mark || !map || toggle.getAttribute('aria-expanded') === 'true') return;
+  const button = toggle.getBoundingClientRect();
+  const icon = mark.getBoundingClientRect();
+  if (!button.width || !icon.width) return;
+  const write = (element, name, value) => {
+    const next = `${value.toFixed(2)}px`;
+    if (element.style.getPropertyValue(name) !== next) element.style.setProperty(name, next);
+  };
+  write(map, '--compact-menu-bottom', button.bottom - map.getBoundingClientRect().top);
+  const name = authorCard?.querySelector('.brand__name');
+  if (name) write(authorCard, '--author-menu-text-width', Math.max(0, button.left - name.getBoundingClientRect().left));
+  const inspector = document.querySelector('.map-inspector.has-reading-frame:not(.is-case-view).is-open');
+  const inspectorClose = inspector?.querySelector('[data-close-inspector]');
+  if (inspectorClose) write(inspector, '--compact-inspector-axis-padding', Math.max(0,
+    inspector.getBoundingClientRect().right - icon.left - icon.width / 2 - inspectorClose.getBoundingClientRect().width / 2));
+  const story = document.querySelector('#story-pane');
+  if (story && document.body.classList.contains('has-story-pane')) {
+    const right = story.getBoundingClientRect().left + story.clientLeft + story.clientWidth;
+    const centre = icon.left + icon.width / 2;
+    close?.style.removeProperty('--control-target');
+    const target = Math.max(44, Math.min(close?.getBoundingClientRect().width || button.width, (right - centre) * 2));
+    if (close && innerWidth < 1000) write(close, '--control-target', target);
+    write(story, '--story-close-inset', right - centre - target / 2);
+  }
+};
+let compactGeometryFrame = 0;
+const compactGeometryResize = new ResizeObserver(() => {
+  if (!compactGeometryFrame) compactGeometryFrame = requestAnimationFrame(() => { compactGeometryFrame = 0; syncCompactControlGeometry(); });
+});
+document.querySelectorAll('[data-constellation-nav-toggle], #story-pane').forEach(element => compactGeometryResize.observe(element));
 const syncAuthorField = () => {
   if (!authorCard || !authorField) return;
   const card = authorCard.getBoundingClientRect();
@@ -568,6 +702,7 @@ const syncAuthorPresence = () => {
   authorCard.inert = (reading && !document.body.classList.contains("has-contact-consoles"))
     || document.body.matches(".has-constellation-nav, .has-command-focus");
   syncAuthorField();
+  syncCompactControlGeometry();
   window.dispatchEvent(new CustomEvent("author-presence-change"));
 };
 let authorPresenceFrame = 0;
@@ -675,9 +810,18 @@ floatingConsoleModules.forEach((module) => {
 });
 
 const syncConsoleBounds = () => {
+  syncCompactControlGeometry();
   if (!floatingConsoleMedia.matches) {
     floatingConsoleModules.forEach((module) => setConsoleOffset(module, 0, 0));
     return;
+  }
+
+  // Resolve the navigation anchor before clamping the author column against it.
+  // The header precedes the console in the DOM, including during viewport changes.
+  const navigation = document.querySelector(".control-console");
+  if (navigation?.getClientRects().length && pane.width > 900) {
+    const offset = getConsoleOffset(navigation);
+    setConsoleOffset(navigation, offset.x, offset.y);
   }
 
   floatingConsoleModules.forEach((module) => {

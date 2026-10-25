@@ -8098,7 +8098,9 @@ font-weight: 600;
 overflow-wrap: normal;
 hyphens: manual;
 }
-.settings-panel__close { grid-column: 2; margin-inline-end: calc(var(--space-1) - var(--control-target) / 2); background: transparent; }
+.settings-panel__close { position: relative; grid-column: 2; inset-inline-end: var(--space-1); margin-inline-end: calc(var(--space-1) - var(--control-target) / 2); background: transparent; }
+/* Centre the drawn X on the first title line without moving the header flow. */
+.settings-panel:not([data-scrolling-title]) .settings-panel__close { inset-block-start: calc((var(--type-title) * var(--leading-title) - var(--control-target)) / 2); }
 .settings-panel__close:focus-visible { outline-offset: calc(0px - var(--focus-width)); }
 .settings-panel__intro-group { display: grid; gap: var(--space-2); grid-column: 1 / -1; }
 .settings-panel[data-scrolling-title] { gap: var(--space-2); }
@@ -9763,7 +9765,8 @@ cursor: pointer;
 .map-node-label.mobile-landmark,
 .map-surface.has-full-mobile-map .map-node-label.mobile-landmark { transform: translate(var(--mobile-label-dx, -50%), var(--mobile-label-dy, -100%)); }
 @container map-viewport (max-width: 360px) {
-.mobile-landmark[data-map-label-id="principle-data-intuition"] { max-width: 6.5rem; }
+.mobile-landmark[data-map-label-id="principle-data-intuition"],
+.mobile-landmark[data-map-label-id="narkomfin"] { max-width: 6.5rem; }
 }
 .map-surface:is(.has-reading-surface,.has-command-focus,.has-mobile-composition) .mobile-landmark,
 .practice-map[data-time-view] .mobile-landmark,
