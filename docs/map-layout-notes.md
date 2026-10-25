@@ -12,7 +12,7 @@ performance limits. This move changes no layout logic.
 - Mobile titles reserve space alongside the consoles. First place the author's named landmarks, then fit other nodes around them.
 - Orbit projects are positioned by their own layer. Reserving their old map positions leaves phantom obstacles and exhausts the compact field.
 - Reserve the whole pointer target, including on compact maps.
-- Mobile captions approach the painted glyph inside that reserved space; the orbital system uses its projected vertical extent. Reserve the union of the old and new caption bounds so subsequent points and labels clear both.
+- Mobile captions approach the painted glyph while clearing its 24px pointer core; the orbital system uses its projected vertical extent. Reserve the final caption bounds for subsequent points and labels, without retaining an empty obstacle at its former position.
 - On the narrowest map, the Narkomfin caption wraps like the principles caption so its name remains beside its point.
 - Find the nearest free ring when the edges are occupied.
 - Keep the institutional anchor; open the lower sectors toward the dock.

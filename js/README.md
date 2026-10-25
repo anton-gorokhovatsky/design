@@ -102,8 +102,8 @@ in the initial download. The adjacent source comments identify each invariant.
 
 - Project the live iframe: cross-origin pixels cannot be sampled, and WebKit loses accelerated video under SVG URL filters (222757).
 
-- Text refraction belongs to a stationary transparent frame around the native scrollport. Filtering the moving text or the overflow element itself leaves stale bands during WebKit reversals. Keep the edge maps fixed to the frame and retain the existing native scroll, reading position, focus and outer glass shell.
-- A sticky close target has a neutral rectangle in the upper map. Visible controls and media suppress the intersecting edge; transparent text links keep refraction until focused. Selection and visible keyboard focus suspend the text filter. A visible video or iframe stays outside the parent SVG filter; its existing attached media/player projection remains responsible for the edge. Never reparent a live iframe, and preserve video playback when moving its scrollport.
+- Text refraction belongs to a stationary transparent frame around the native scrollport. Filtering the moving text or the overflow element itself leaves stale bands during WebKit reversals. Clip the frame to its viewport so Chromium also constrains the optical painting to this fixed box. Keep the edge maps fixed to the frame and retain the existing native scroll, reading position, focus and outer glass shell.
+- A sticky close target has a neutral rectangle in the upper map. Visible controls suppress the intersecting edge; transparent text links keep refraction until focused. Selection and visible keyboard focus suspend the text filter. Visible images, videos and iframes suspend the parent text filter; their existing attached media/player projection remains responsible for the edge. Hidden previews do not suspend text. Never reparent a live iframe, and preserve video playback when moving its scrollport.
 
 ## Focused index
 

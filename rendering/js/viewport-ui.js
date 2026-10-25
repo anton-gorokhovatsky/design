@@ -360,9 +360,9 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
     for (const element of region.querySelectorAll("a,button,input,select,textarea,[data-material-surface],img,video,iframe")) {
       const rect=element.getBoundingClientRect();
       if (!intersects(rect)) continue;
-      if (element.matches("video,iframe")) liveMedia=true;
       const preview=element.closest(".map-related__preview"),style=getComputedStyle(element);
       if(style.visibility!=="visible"||+style.opacity===0&&!records.get(element)?.media||preview&&+getComputedStyle(preview).opacity===0)continue;
+      if (element.matches("img,video,iframe")) liveMedia=true;
       if(element.matches("a:not([data-material-surface])")&&geometry.some(({element:target})=>element.contains(target)))continue;
       if (element.matches(".story-actions .ui-close,[data-close-inspector]")) {
         cutouts.push([(rect.left-port.left)/scale-4,(rect.top-port.top)/scale-4,(rect.right-port.left)/scale+4,(rect.bottom-port.top)/scale+4].map(n=>Math.round(n*10)/10));
@@ -376,9 +376,10 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
         const style=getComputedStyle(region);
         textFrame=document.createElement("div");
         textFrame.dataset.scrollLensFrame="";
-        textFrame.style.cssText=`min-width:0;min-height:0;display:flex;flex-direction:column;position:relative;flex:${style.flex};grid-area:${style.gridArea};margin:${style.margin};border-radius:${style.borderRadius};corner-shape:${style.cornerShape||"round"}`;
+        textFrame.style.cssText=`min-width:0;min-height:0;display:flex;flex-direction:column;position:relative;overflow:hidden;flex:${style.flex};grid-area:${style.gridArea};margin:${style.margin};border-radius:${style.borderRadius};corner-shape:${style.cornerShape||"round"}`;
         textStyles=["margin","flex"].map(key=>[key,region.style[key]]);
         moveRegion(()=>{region.before(textFrame);transfer(textFrame);region.style.margin="0";region.style.flex="1 1 auto";});
+        return update();
       }
       if (textFrame) {
         textRecord ||= makeRecord(region,false);

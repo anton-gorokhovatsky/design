@@ -296,8 +296,19 @@ try {
       const hasLens=()=>Boolean(document.querySelector('#story-pane')?.closest('[data-scroll-lens-frame]')?.style.filter.includes('scroll-ink'));
       await alignHeading();await page.waitForFunction(hasLens);
       await region.dispatchEvent('touchstart');
-      // Keep text at the optical boundary: a scene-only edge is deliberately native.
-      for(const delta of [240,320,-160,-340,120]){await region.evaluate((s,d)=>s.scrollTop+=d,delta);await settle(page);assert.equal(await page.evaluate(hasLens),true,'Text keeps the fixed edge effect throughout native scrolling');}
+      for(const delta of [240,320,-160,-340,120]){
+        await region.evaluate((s,d)=>s.scrollTop+=d,delta);await settle(page);
+        // The same large step can reach the scene controls in WebKit. Preserve
+        // their native edge while requiring continuous refraction for the prose.
+        const nativeControls=await region.evaluate(s=>{
+          const p=s.getBoundingClientRect(),control=s.querySelector('#time .scene-modes').getBoundingClientRect();
+          const reading=[...s.querySelectorAll('#time h2,#time .reading p')].some(e=>{
+            const r=e.getBoundingClientRect();return r.top<p.top+56&&r.bottom>p.top||r.bottom>p.bottom-56&&r.top<p.bottom;
+          });
+          return !reading&&control.top<p.bottom&&control.bottom>p.bottom-56;
+        });
+        assert.equal(await page.evaluate(hasLens),!nativeControls,nativeControls?'Scene controls retain a native edge':'Text keeps the fixed edge effect throughout native scrolling');
+      }
       await page.waitForTimeout(180);assert.equal(await page.evaluate(hasLens),true,'Holding a touch does not remove the optical edge');
       await region.dispatchEvent('touchcancel');await alignHeading();await page.waitForFunction(hasLens);
       await region.evaluate(s=>{s.lensScrollSamples=[];for(const type of ['wheel','scroll'])s.addEventListener(type,()=>s.lensScrollSamples.push(Number(s.closest('[data-scroll-lens-frame]')?.style.filter.includes('scroll-ink'))),{passive:true})});
