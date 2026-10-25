@@ -78,28 +78,22 @@ export async function checkLiveSurface(browser, origin, engine) {
   assert.ok(await page.locator('.site-header').evaluate(e => Number(getComputedStyle(e).opacity) <= .16), 'Reading subordinates the background card.');
   await page.keyboard.press('Escape');
   await page.locator('[data-close-panel]').click();
-  for (const id of ['screen-controls']) {
-    phase = `popover ${id}`;
-    const trigger = page.locator(`[popovertarget="${id}"]:not([popovertargetaction])`);
-    const panel = page.locator(`#${id}`);
-    assert.equal(await panel.isVisible(), false, `${id}: closed at rest`);
-    await trigger.click();
-    assert.equal(await panel.isVisible(), true, `${id}: opens from its trigger`);
-    await page.waitForFunction(id => document.querySelector(
-      `[popovertarget="${id}"]:not([popovertargetaction])`,
-    ).getAttribute('aria-expanded') === 'true', id);
-    assert.equal(await trigger.getAttribute('aria-expanded'), 'true');
-    const surface = await panel.evaluate(el => {
-      const css = getComputedStyle(el);
-      return { blur: css.backdropFilter || css.webkitBackdropFilter, shadow: css.boxShadow, border: css.borderTopWidth };
-    });
-    assert.ok(surface.blur.includes('blur(24px)'), `${id}: shared material`);
-    assert.equal(surface.shadow, 'none');
-    assert.equal(surface.border, '0px');
-    await page.keyboard.press('Escape');
-    assert.equal(await panel.isVisible(), false);
-    assert.equal(await trigger.evaluate(el => document.activeElement === el), true, `${id}: Escape returns focus`);
-  }
+  phase = 'unified settings from desktop';
+  const settingsTrigger = page.locator('#screen-controls-trigger');
+  const settings = page.locator('#settings-panel');
+  assert.equal(await settings.isVisible(), false);
+  await settingsTrigger.click();
+  assert.equal(await settings.isVisible(), true);
+  const settingsSurface = await settings.evaluate(el => {
+    const css = getComputedStyle(el);
+    return { blur: css.backdropFilter || css.webkitBackdropFilter, shadow: css.boxShadow, border: css.borderTopWidth };
+  });
+  assert.ok(settingsSurface.blur.includes('blur(24px)'));
+  assert.equal(settingsSurface.shadow, 'none');
+  assert.equal(settingsSurface.border, '0px');
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => document.activeElement?.id === 'screen-controls-trigger');
+  assert.equal(await settings.isVisible(), false);
   phase = 'map story shared joint';
   await page.locator('.map-about-trigger').click();
   await page.waitForSelector('#story-pane[data-ready="true"]');
@@ -119,10 +113,11 @@ export async function checkLiveSurface(browser, origin, engine) {
   await page.waitForFunction(() => document.activeElement === document.querySelector('.map-about-trigger'));
   assert.equal(await page.locator('.map-about-trigger').evaluate(el => document.activeElement === el), true);
   phase = 'motion pause and resume';
-  await page.locator('[popovertarget="screen-controls"]:not([popovertargetaction])').click();
-  await page.locator('.display-control [data-motion-toggle]').click();
+  await page.locator('#screen-controls-trigger').click();
+  await page.locator('#settings-panel [data-motion-toggle]').click();
   await frozen();
-  await page.locator('.display-control [data-motion-toggle]').click();
+  await page.locator('#settings-panel [data-motion-toggle]').click();
+  await page.keyboard.press('Escape');
   // Two tabs share the origin lock; another browser context is another visit.
   phase = 'presence across tabs';
   const tab = await context.newPage();

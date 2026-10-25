@@ -26,13 +26,13 @@ try {
   await boot.locator('.display-control').waitFor();
   assert.equal(await boot.locator('html').getAttribute('data-map-controls-ready'), null);
   assert.deepEqual(await boot.locator('.map-controls, .display-control').evaluateAll(nodes => nodes.map(e => getComputedStyle(e).backgroundColor)), ['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0)'], 'No legacy card surfaces appear before initialization');
-  assert.equal(await boot.locator('#screen-controls').isVisible(), false, 'Advanced settings start inside the closed native popover');
+  assert.equal(await boot.locator('#settings-panel').isVisible(), false, 'Settings start inside the closed unified dialog');
   assert.equal(await boot.locator('.map-screen-top .map-disclosure').isVisible(), true);
   releaseControls();
   await bootLoaded;
   await boot.waitForFunction(() => document.documentElement.dataset.mapControlsReady === 'true');
   await boot.locator('.map-screen-top .map-disclosure').click();
-  await boot.waitForFunction(() => document.querySelector('#screen-controls').matches(':popover-open'));
+  await boot.waitForFunction(() => document.querySelector('#settings-panel').open);
   await boot.keyboard.press('Escape');
   await boot.close();
   for (const theme of ["light", "dark"]) {

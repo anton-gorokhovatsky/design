@@ -932,8 +932,7 @@ const analyticsConsentAudit = async (page, viewport, label) => {
       role: consent?.getAttribute("role") || "",
       modal: consent?.getAttribute("aria-modal") || "",
       closeExists: Boolean(consent?.querySelector("[data-close-settings]")),
-      preferenceLabel: consent?.querySelector("[data-analytics-preference]")
-        ?.innerText.trim() || "",
+      preferenceLabel: consent?.querySelector("[data-analytics-toggle]")?.getAttribute("aria-checked") || "",
       stateCopy: consent?.querySelector("#settings-analytics-description")
         ?.innerText.replace(/\s+/g, " ").trim() || "",
       open: consent?.open ?? false,
@@ -950,12 +949,12 @@ const analyticsConsentAudit = async (page, viewport, label) => {
       motion,
       themeLabel: document.querySelector("#settings-panel [data-theme-choice]:checked")
         ?.value || "",
-      analyticsLauncherLabel: document.querySelector("[data-privacy-label]")
+      analyticsLauncherLabel: document.querySelector("#screen-controls-trigger > span")
         ?.textContent.trim() || "",
       analyticsLauncherWhiteSpace: getComputedStyle(
-        document.querySelector("[data-privacy-label]"),
+        document.querySelector("#screen-controls-trigger > span"),
       ).whiteSpace,
-      privacyRows: Array.from(document.querySelectorAll(".settings-panel__privacy > div"))
+      privacyRows: Array.from(document.querySelectorAll(".settings-panel__privacy > p"))
         .map((row) => row.textContent.replace(/\s+/g, " ").trim()),
       detailsLabel: document.querySelector(".settings-panel__details")
         ?.textContent.trim() || "",
@@ -963,9 +962,9 @@ const analyticsConsentAudit = async (page, viewport, label) => {
       detailsDisplay: getComputedStyle(
         document.querySelector(".settings-panel__details"),
       ).display,
-      togglePressed: document.querySelector("[data-analytics-toggle]")?.getAttribute("aria-pressed"),
+      togglePressed: document.querySelector("[data-analytics-toggle]")?.getAttribute("aria-checked"),
       visibleActions: Array.from(document.querySelectorAll("[data-analytics-toggle]"))
-        .filter(button => button.getClientRects().length > 0).map(button => button.innerText.trim()),
+        .filter(button => button.getClientRects().length > 0).map(button => document.getElementById(button.getAttribute("aria-labelledby"))?.innerText.trim()),
       cameraOpacity: Number(getComputedStyle(document.querySelector(".map-camera")).opacity),
       themeColorMatches: document.querySelector('meta[name="theme-color"]')?.content
         === (document.documentElement.dataset.theme === "dark" ? "#11120f" : "#eeede7"),
@@ -1022,7 +1021,7 @@ const analyticsConsentAudit = async (page, viewport, label) => {
     const rect = panel?.getBoundingClientRect();
 
     return {
-      mode: panel?.dataset.settingsMode || "",
+      mode: panel?.dataset.settingsMode,
       authorBottom: document.querySelector(".site-header").getBoundingClientRect().bottom,
       focusSection: panel?.dataset.focusSection,
       scrollTop: body?.scrollTop,
@@ -1089,6 +1088,7 @@ const analyticsConsentAudit = async (page, viewport, label) => {
   // General settings now include the WHOOP explanation. Validate that the
   // privacy footer is reachable by scrolling, rather than requiring the
   // entire settings document to fit in its initial viewport.
+  await page.locator(".settings-panel__analytics .settings-details > summary").click();
   await page.locator(".settings-panel__details").scrollIntoViewIfNeeded();
   const settingsEnd = await page.evaluate(() => {
     const panel = document.querySelector("[data-settings-panel]");
@@ -1119,17 +1119,17 @@ const analyticsConsentAudit = async (page, viewport, label) => {
     failure: !settingsFocusReturned
       || !result.visible
       || result.inert
-      || result.mode !== "privacy"
+      || result.mode !== undefined
       || result.focusSection !== "analytics"
-      || result.title !== "ДАННЫЕ И ПРИВАТНОСТЬ"
-      || result.screenControlsVisible
+      || result.title !== "Настройки сайта"
+      || !result.screenControlsVisible
       || !result.actionFocused
       || !result.focusedActionVisible
       || !result.focusInside
       || result.role !== "dialog"
       || result.modal !== "true"
       || !result.closeExists
-      || result.preferenceLabel !== "Выкл."
+      || result.preferenceLabel !== "false"
       || result.stateCopy !== "Включится только с вашего разрешения."
       || !result.open
       || !result.searchPrivate
@@ -1139,17 +1139,17 @@ const analyticsConsentAudit = async (page, viewport, label) => {
       || !backgroundControlsHidden
       || !result.theme
       || !result.motion
-      || result.theme.width !== 0 || result.motion.width !== 0
+      || result.theme.width <= 0 || result.motion.width <= 0
       || result.themeLabel !== "system"
-      || result.analyticsLauncherLabel !== "Данные и приватность"
+      || result.analyticsLauncherLabel !== "НАСТРОЙКИ"
       || result.analyticsLauncherWhiteSpace !== "normal"
       || JSON.stringify(result.privacyRows) !== JSON.stringify([
-        "СТАТИСТИКА Посещения, переходы и записи взаимодействий с сайтом.",
-        "ПОИСК Текст запросов в Метрику не передаётся.",
+        "Посещения, переходы и записи взаимодействий с сайтом.",
+        "Текст запросов в Метрику не передаётся.",
       ])
       || result.detailsLabel !== "Как Метрика использует файлы cookie"
       || result.detailsHref !== "https://yandex.ru/support/metrica/ru/general/cookie-usage"
-      || result.detailsDisplay !== "inline-flex"
+      || result.detailsDisplay !== "flex"
       || result.togglePressed !== "false"
       || JSON.stringify(result.visibleActions) !== JSON.stringify(["Яндекс Метрика"])
       || !result.themeColorMatches
@@ -1161,11 +1161,11 @@ const analyticsConsentAudit = async (page, viewport, label) => {
       || !result.privacyBeforeDetails
       || !withinViewport
       || !verticallyCentered
-      || generalSettings.mode !== "settings"
+      || generalSettings.mode !== undefined
       || generalSettings.focusSection !== "settings"
       || generalSettings.scrollTop !== 0
       || !generalSettings.closeFocused
-      || generalSettings.title !== "НАСТРОЙКИ САЙТА"
+      || generalSettings.title !== "Настройки сайта"
       || !generalSettings.screenControlsVisible
       || generalSettings.overflowX !== 0
       || !generalWithinViewport

@@ -51,6 +51,20 @@ const syncThemeIndicators = (animate = false) => themeGroups.forEach(group => {
     group.dataset.themeReady = '';
   }
 });
+themeGroups.forEach(group => group.addEventListener("focusin", () => {
+  // Run after the browser's native focus scroll, and include the drawn ring.
+  requestAnimationFrame(() => {
+    const body = group.closest(".settings-panel__body");
+    if (!body || !group.contains(document.activeElement)) return;
+    const style = getComputedStyle(group);
+    const ring = Math.max(0, parseFloat(style.outlineOffset)) + parseFloat(style.outlineWidth);
+    const frame = group.getBoundingClientRect(), viewport = body.getBoundingClientRect();
+    if (frame.height + ring * 2 > body.clientHeight) return;
+    const shift = frame.top - ring < viewport.top ? frame.top - ring - viewport.top
+      : Math.max(0, frame.bottom + ring - viewport.bottom);
+    if (shift) body.scrollTo({ top: body.scrollTop + (shift > 0 ? Math.ceil(shift) : Math.floor(shift)), behavior: "instant" });
+  });
+}));
 const themeResize = new ResizeObserver(() => syncThemeIndicators());
 themeGroups.forEach(group => [group, ...group.children].forEach(element => themeResize.observe(element)));
 const themeColor = document.querySelector('meta[name="theme-color"]');
@@ -105,9 +119,7 @@ const createEffectivePreference = ({
       element.hidden = !mediaQuery.matches;
     });
     toggles.forEach((toggle) => {
-      toggle.setAttribute("aria-pressed", String(preference.matches));
-      const state = toggle.closest(".preference-option")?.querySelector(".preference-state");
-      if (state) state.textContent = preference.matches ? "Вкл." : "Выкл.";
+      toggle.setAttribute("aria-checked", String(preference.matches));
       toggle.toggleAttribute("disabled", mediaQuery.matches);
     });
 

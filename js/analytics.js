@@ -1,6 +1,7 @@
 // explicit analytics consent and delayed counter loading.
 import {
   captureMode,
+  reducedMotion,
   root,
 } from "./preferences.js";
 
@@ -9,12 +10,8 @@ const analyticsPreferenceKey = "anton-signal-analytics";
 const analyticsDisableKey = `disableYaCounter${analyticsCounterId}`;
 const settingsPanel = document.querySelector("[data-settings-panel]");
 const settingsClose = document.querySelector("[data-close-settings]");
-const settingsTitle = document.querySelector("[data-settings-title]");
 const settingsOpeners = Array.from(document.querySelectorAll("[data-open-settings]"));
 const analyticsToggle = document.querySelector("[data-analytics-toggle]");
-const analyticsPreferenceLabels = Array.from(
-  document.querySelectorAll("[data-analytics-preference]"),
-);
 const analyticsStatus = document.querySelector("[data-analytics-status]");
 const analyticsQuery = new URLSearchParams(window.location.search);
 const analyticsConsentRequested = analyticsQuery.get("analytics-consent") === "show";
@@ -30,8 +27,87 @@ const analyticsGoalParameters = new Map([
 ]);
 let analyticsPreference = null;
 let analyticsLoaded = false;
+let analyticsReady = false;
+let analyticsReload = 0;
 let lastSettingsTrigger = null;
 let settingsScrollAnchor = null;
+
+// Native details remain the fallback. Height transitions retarget from the
+// current frame, and closing content becomes inert before the visual exit.
+const finishDetails = [];
+settingsPanel?.querySelectorAll(".settings-details").forEach((details) => {
+  const summary = details.querySelector("summary");
+  const content = details.querySelector(".settings-details__body");
+  let wanted = null;
+  let frame = 0;
+  const finish = () => {
+    cancelAnimationFrame(frame);
+    if (wanted !== null) details.open = wanted;
+    wanted = null;
+    content.style.height = "";
+    content.style.overflow = "";
+    content.style.transition = "";
+    content.inert = false;
+    summary.removeAttribute("aria-expanded");
+  };
+  finishDetails.push(finish);
+  content.addEventListener("transitionend", event => {
+    if (event.target === content && event.propertyName === "height") finish();
+  });
+  summary.addEventListener("click", event => {
+    event.preventDefault();
+    const height = details.open ? content.getBoundingClientRect().height : 0;
+    wanted = !(wanted ?? details.open);
+    summary.setAttribute("aria-expanded", String(wanted));
+    if (reducedMotion.matches || event.detail === 0) { finish(); return; }
+    cancelAnimationFrame(frame);
+    details.open = true;
+    content.inert = !wanted;
+    content.style.transition = "none";
+    content.style.height = `${height}px`;
+    content.style.overflow = "hidden";
+    const end = wanted ? content.scrollHeight : 0;
+    getComputedStyle(content).height;
+    content.style.transition = "";
+    if (Math.abs(end - height) < 1) { finish(); return; }
+    frame = requestAnimationFrame(() => { content.style.height = `${end}px`; });
+  });
+});
+reducedMotion.addEventListener("change", () => {
+  if (reducedMotion.matches) {
+    settingsPanel?.removeAttribute("data-entering");
+    finishDetails.forEach(finish => finish());
+  }
+});
+for (const type of ["animationend", "animationcancel"]) {
+  settingsPanel?.addEventListener(type, event => {
+    if (event.target === settingsPanel && event.animationName === "window-reveal") settingsPanel.removeAttribute("data-entering");
+  });
+}
+settingsPanel?.addEventListener("keydown", (event) => {
+  if (["Tab", "Enter", " ", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) {
+    root.dataset.focusModality = "keyboard";
+    settingsPanel.removeAttribute("data-entering");
+  }
+  finishDetails.forEach(finish => finish());
+});
+
+const syncSettingsHeading = () => {
+  if (!settingsPanel?.open) return;
+  const header = settingsPanel.querySelector(".settings-panel__header");
+  const title = settingsPanel.querySelector("[data-settings-title]");
+  const scrollTitle = getComputedStyle(header).getPropertyValue("--settings-scroll-title").trim() === "1";
+  settingsPanel.toggleAttribute("data-scrolling-title", scrollTitle);
+  const intro = settingsPanel.querySelector(".settings-panel__intro-group");
+  const body = settingsPanel.querySelector(".settings-panel__body");
+  if (scrollTitle) {
+    if (intro.parentElement !== body) body.prepend(intro);
+    if (title.parentElement !== intro) intro.prepend(title);
+  } else {
+    if (title.parentElement !== header) header.prepend(title);
+    if (intro.parentElement !== header) header.append(intro);
+  }
+};
 
 const alignSettingsSection = () => {
   if (!settingsPanel?.open || !settingsScrollAnchor) return;
@@ -52,7 +128,11 @@ const alignSettingsSection = () => {
 };
 // Late WHOOP data and fonts can resize the preceding section in WebKit.
 // Keep an explicitly requested section in view until the visitor takes over.
-const settingsResize = new ResizeObserver(alignSettingsSection);
+const settingsResize = new ResizeObserver(() => {
+  syncSettingsHeading();
+  alignSettingsSection();
+});
+if (settingsPanel) settingsResize.observe(settingsPanel);
 settingsPanel?.querySelectorAll(".settings-panel__body > *").forEach(
   (section) => settingsResize.observe(section),
 );
@@ -82,10 +162,10 @@ const writeAnalyticsPreference = (preference) => {
 const syncAnalyticsPreferenceUi = () => {
   const state = analyticsPreference || "unset";
   root.dataset.analytics = state;
-  analyticsPreferenceLabels.forEach((label) => {
-    label.textContent = state === "allowed" ? "Вкл." : "Выкл.";
+  settingsPanel?.querySelectorAll("[data-analytics-state-copy]").forEach(copy => {
+    copy.setAttribute("aria-hidden", String(copy.dataset.analyticsStateCopy !== state));
   });
-  analyticsToggle?.setAttribute("aria-pressed", String(state === "allowed"));
+  analyticsToggle?.setAttribute("aria-checked", String(state === "allowed"));
 };
 
 const closeSettingsPanel = ({ restoreFocus = true } = {}) => {
@@ -93,6 +173,8 @@ const closeSettingsPanel = ({ restoreFocus = true } = {}) => {
     return;
   }
 
+  finishDetails.forEach(finish => finish());
+  settingsPanel.removeAttribute("data-entering");
   settingsPanel.close();
   settingsScrollAnchor = null;
   settingsPanel.hidden = true;
@@ -113,6 +195,7 @@ const openSettingsPanel = ({
   focus = true,
   section = "settings",
   trigger = null,
+  restore = false,
 } = {}) => {
   if (!settingsPanel) {
     return;
@@ -138,33 +221,34 @@ const openSettingsPanel = ({
       `[popovertarget="${sourcePopover.id}"]:not([popovertargetaction])`,
     ) || lastSettingsTrigger;
   }
-  const privacy = section === "analytics";
-  settingsPanel.dataset.settingsMode = privacy ? "privacy" : "settings";
-  settingsTitle.textContent = privacy ? "ДАННЫЕ И ПРИВАТНОСТЬ" : "НАСТРОЙКИ САЙТА";
+  if (section === "whoop") {
+    settingsPanel.querySelector("[data-whoop-details]").open = true;
+  }
+  settingsPanel.toggleAttribute("data-restoring", restore);
   if (!settingsPanel.open) {
+    settingsPanel.toggleAttribute("data-entering", !restore && !reducedMotion.matches && root.dataset.focusModality !== "keyboard");
     document.body.classList.add("has-settings-panel");
     settingsPanel.hidden = false;
     settingsPanel.inert = false;
     settingsPanel.showModal();
     settingsPanel.classList.add("is-open");
   }
+  syncSettingsHeading();
   settingsPanel.dataset.focusSection = section;
   settingsScrollAnchor = null;
 
   const body = settingsPanel.querySelector(".settings-panel__body");
-  const target = privacy && !trigger ? analyticsToggle : section === "settings" || privacy
-    ? settingsClose
-    : settingsPanel.querySelector({
-      motion: "[data-motion-toggle]",
-      contrast: "[data-contrast-toggle]",
-      whoop: "[data-whoop-toggle]",
-    }[section] || "[data-theme-choice]:checked") || settingsClose;
+  const target = section === "settings" ? settingsClose : settingsPanel.querySelector({
+    analytics: "[data-analytics-toggle]",
+    motion: "[data-motion-toggle]",
+    contrast: "[data-contrast-toggle]",
+    whoop: "[data-whoop-toggle]",
+  }[section] || "[data-theme-choice]:checked") || settingsClose;
 
   if (body) body.scrollTop = 0;
   if (target !== settingsClose) {
-    const destination = privacy || section === "whoop"
-      ? settingsPanel.querySelector(`[data-settings-section="${section}"]`)
-      : target?.closest(".settings-panel__row");
+    const destination = settingsPanel.querySelector(`[data-settings-section="${section}"]`)
+      || target.closest(".settings-panel__row");
     settingsScrollAnchor = { destination, control: target };
     alignSettingsSection();
   }
@@ -201,6 +285,7 @@ const loadYandexAnalytics = () => {
     const script = document.createElement("script");
     script.async = true;
     script.src = source;
+    script.addEventListener("load", () => { analyticsReady = true; }, { once: true });
     document.head.append(script);
   }
 
@@ -254,14 +339,26 @@ analyticsToggle?.addEventListener("click", () => {
   writeAnalyticsPreference(allow ? "allowed" : "denied");
   window[analyticsDisableKey] = !allow;
   syncAnalyticsPreferenceUi();
-  if (allow) loadYandexAnalytics();
+  if (allow) {
+    clearTimeout(analyticsReload);
+    try { sessionStorage.removeItem("anton-settings-return"); } catch {}
+    loadYandexAnalytics();
+  }
   if (analyticsStatus) analyticsStatus.textContent = allow
     ? "Аналитика разрешена." : "Аналитика выключена.";
   // Reload after revoking consent to stop the already loaded third-party code.
   // Return to the same setting, with the saved off state and visible focus.
   if (!allow && wasLoaded) {
+    // Destruct immediately; the short visual exit never extends consent.
+    // https://yandex.ru/support/metrica/ru/code/counter-spa-setup
+    window.ym?.(analyticsCounterId, "destruct");
+    analyticsLoaded = false;
     try { sessionStorage.setItem("anton-settings-return", "analytics"); } catch {}
-    window.location.reload();
+    const duration = !analyticsReady || reducedMotion.matches || root.dataset.focusModality === "keyboard" ? 0
+      : parseFloat(getComputedStyle(analyticsToggle.querySelector(".preference-switch"), "::before").transitionDuration) * 1000;
+    clearTimeout(analyticsReload);
+    if (duration > 0) analyticsReload = setTimeout(() => window.location.reload(), duration);
+    else window.location.reload();
   }
 });
 
@@ -302,7 +399,7 @@ try {
   returnToAnalytics = sessionStorage.getItem("anton-settings-return") === "analytics";
   sessionStorage.removeItem("anton-settings-return");
 } catch {}
-if (returnToAnalytics) window.requestAnimationFrame(() => openAnalyticsConsent());
+if (returnToAnalytics) window.requestAnimationFrame(() => openAnalyticsConsent({ restore: true }));
 
 if (analyticsPreference === "allowed") {
   loadYandexAnalytics();

@@ -119,7 +119,7 @@
       type="font/woff2"
       crossorigin
     >
-    <link rel="stylesheet" href="styles.css?v=74680039b5e9">
+    <link rel="stylesheet" href="styles.css?v=6e29bd6189e8">
     <style>
       .map-evidence [data-map-evidence-role-label]{font-family:var(--font-author);font-size:.6rem;font-weight:400;letter-spacing:0}
     </style>
@@ -127,14 +127,14 @@
     <script type="importmap" data-runtime-import-map>
       {
         "imports": {
-          "./js/preferences.js": "./js/preferences.js?v=1a5c2b7b78bd",
+          "./js/preferences.js": "./js/preferences.js?v=7c123b7a217c",
           "./js/pane-viewport.js": "./js/pane-viewport.js?v=077a2aba65b6",
           "./js/map-story.js": "./js/map-story.js?v=4c3007add023",
-          "./js/whoop-day.js": "./js/whoop-day.js?v=cc24b65007e4",
+          "./js/whoop-day.js": "./js/whoop-day.js?v=5fe697626a9b",
           "./js/whoop-aura.js": "./js/whoop-aura.js?v=3d0d765e223f",
           "./js/presence.js": "./js/presence.js?v=f9321316d550",
           "./js/atlas-motion.js": "./js/atlas-motion.js?v=776a659178f0",
-          "./js/analytics.js": "./js/analytics.js?v=ca70f47aaf67",
+          "./js/analytics.js": "./js/analytics.js?v=b1e5e40cc147",
           "./js/cipher-field.js": "./js/cipher-field.js?v=646034d9be18",
           "./js/signal-field.js": "./js/signal-field.js?v=3302da30d65e",
           "./js/map-data.js": "./js/map-data.js?v=e904209d84b5",
@@ -146,7 +146,7 @@
           "./js/map-engine.js": "./js/map-engine.js?v=47871ff6799d",
           "./js/map-chronology.js": "./js/map-chronology.js?v=93c4d59e147f",
           "./js/celestial-bodies.js": "./js/celestial-bodies.js?v=bf4cd5dacbf3",
-          "./js/map-controls.js": "./js/map-controls.js?v=e40ca9bf7279",
+          "./js/map-controls.js": "./js/map-controls.js?v=3acd869d4d4e",
           "./js/viewport-ui.js": "./js/viewport-ui.js?v=b0e990b5275b",
           "./js/panels.js": "./js/panels.js?v=3c20af7349b6",
           "./js/case-view.js": "./js/case-view.js?v=182c37f670dc",
@@ -173,12 +173,12 @@
     <!-- runtime-import-map:end -->
     <!-- Native modules keep their dependencies explicit; see js/README.md. -->
     <script type="module" src="js/case-content.js?v=ac80335d30cb"></script>
-    <script type="module" src="js/preferences.js?v=1a5c2b7b78bd"></script>
-    <script type="module" src="js/whoop-day.js?v=cc24b65007e4"></script>
+    <script type="module" src="js/preferences.js?v=7c123b7a217c"></script>
+    <script type="module" src="js/whoop-day.js?v=5fe697626a9b"></script>
     <script type="module" src="js/whoop-aura.js?v=3d0d765e223f"></script>
     <script type="module" src="js/atlas-motion.js?v=776a659178f0"></script>
     <script type="module" src="js/presence.js?v=f9321316d550"></script>
-    <script type="module" src="js/analytics.js?v=ca70f47aaf67"></script>
+    <script type="module" src="js/analytics.js?v=b1e5e40cc147"></script>
     <script type="module" src="js/cipher-field.js?v=646034d9be18"></script>
     <script type="module" src="js/signal-field.js?v=3302da30d65e"></script>
     <script type="module" src="js/map-data.js?v=e904209d84b5"></script>
@@ -189,7 +189,7 @@
     <script type="module" src="js/map-chronology.js?v=93c4d59e147f"></script>
     <script type="module" src="js/map-engine.js?v=47871ff6799d"></script>
     <script type="module" src="js/celestial-bodies.js?v=bf4cd5dacbf3"></script>
-    <script type="module" src="js/map-controls.js?v=e40ca9bf7279"></script>
+    <script type="module" src="js/map-controls.js?v=3acd869d4d4e"></script>
     <script type="module" src="js/viewport-ui.js?v=b0e990b5275b"></script>
     <script type="module" src="js/panels.js?v=3c20af7349b6"></script>
     <script type="module" src="js/case-view.js?v=182c37f670dc"></script>
@@ -1021,18 +1021,10 @@
                 <span class="display-control__value">МОСКВА <span data-clock>--:--</span></span>
               </p>
             </div>
-<button type="button" id="screen-controls-trigger" class="map-disclosure" popovertarget="screen-controls" aria-controls="screen-controls" aria-expanded="false"><span>НАСТРОЙКИ</span><svg class="map-disclosure__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg></button>
+<button type="button" id="screen-controls-trigger" class="map-disclosure" data-open-settings aria-haspopup="dialog" aria-controls="settings-panel"><span>НАСТРОЙКИ</span></button>
             </div>
             <p class="display-control__presence" data-presence hidden>Сейчас на&nbsp;сайте <span class="presence-total"><span data-presence-count>—</span><span data-presence-unit></span></span></p>
-<div id="screen-controls" popover="auto" class="map-popover" data-material-surface="screen-controls" data-material-active="desktop" role="region" aria-labelledby="screen-controls-title"><div class="map-popover__header"><h2 id="screen-controls-title">НАСТРОЙКИ</h2><button class="ui-close map-popover__close" type="button" aria-label="Закрыть" popovertarget="screen-controls" popovertargetaction="hide"><svg class="ui-close__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 7 17 17M17 7 7 17"/></svg></button></div>
-            <div class="preference-theme"><h3 class="preference-heading">ТЕМА</h3><div class="preference-choices" role="group" aria-label="Тема"><label class="preference-choice"><input type="radio" name="quick-theme" data-theme-choice="system" value="system" checked><span>Системная</span></label><label class="preference-choice"><input type="radio" name="quick-theme" data-theme-choice="light" value="light"><span>Светлая</span></label><label class="preference-choice"><input type="radio" name="quick-theme" data-theme-choice="dark" value="dark"><span>Тёмная</span></label></div></div>
-            <div class="display-control__service">
-              <div class="display-control__accessibility" role="group" aria-label="Настройки цифровой доступности">
-<div class="preference-option"><button type="button" class="preference-toggle" data-motion-toggle aria-pressed="false" aria-labelledby="quick-motion-label" aria-describedby="quick-motion-system"><span id="quick-motion-label">Меньше движения</span></button><span class="preference-state" data-motion-state aria-hidden="true">Выкл.</span><p class="preference-system" id="quick-motion-system" data-motion-system hidden>Включено в настройках устройства</p></div><div class="preference-option"><button type="button" class="preference-toggle" data-contrast-toggle aria-pressed="false" aria-labelledby="quick-contrast-label" aria-describedby="quick-contrast-system"><span id="quick-contrast-label">Высокий контраст</span></button><span class="preference-state" data-contrast-state aria-hidden="true">Выкл.</span><p class="preference-system" id="quick-contrast-system" data-contrast-system hidden>Включено в настройках устройства</p></div>
-              </div>
-              <button class="display-control__data" type="button" data-privacy-settings data-open-settings data-settings-focus="analytics" aria-haspopup="dialog" aria-controls="settings-panel"><span data-privacy-label>Данные и приватность</span></button>
-            </div>
-</div>
+
           </div>
         </div>
       </section>
@@ -1301,79 +1293,93 @@
       inert
     >
       <div class="settings-panel__header">
-        <div>
-          <h2 id="settings-panel-title" data-settings-title>НАСТРОЙКИ САЙТА</h2>
-        </div>
-        <button
-          class="ui-close settings-panel__close"
-          type="button"
-          data-close-settings
-          aria-label="Закрыть"
-        >
+        <h2 id="settings-panel-title" data-settings-title>Настройки сайта</h2>
+        <button class="ui-close settings-panel__close" type="button" data-close-settings aria-label="Закрыть">
           <svg class="ui-close__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 7 17 17M17 7 7 17"/></svg>
         </button>
+        <div class="settings-panel__intro-group"><p class="settings-panel__intro" id="settings-panel-intro" data-settings-intro>Ваш выбор сохраняется в&nbsp;этом браузере.</p></div>
       </div>
-      <div class="settings-panel__body">
-        <p class="settings-panel__intro" id="settings-panel-intro" data-settings-intro>
-          Ваш выбор сохраняется в&nbsp;этом браузере.
-        </p>
-        <div class="settings-panel__screen" data-settings-screen-controls>
-          <div class="settings-panel__row settings-panel__row--theme"><h3>ТЕМА</h3><div class="preference-choices" role="group" aria-label="Тема"><label class="preference-choice"><input type="radio" name="panel-theme" data-theme-choice="system" value="system" checked><span>Системная</span></label><label class="preference-choice"><input type="radio" name="panel-theme" data-theme-choice="light" value="light"><span>Светлая</span></label><label class="preference-choice"><input type="radio" name="panel-theme" data-theme-choice="dark" value="dark"><span>Тёмная</span></label></div></div>
-          <div class="settings-panel__row"><div class="preference-option"><button type="button" class="preference-toggle" data-motion-toggle aria-pressed="false" aria-labelledby="panel-motion-label" aria-describedby="panel-motion-system panel-motion-description"><span id="panel-motion-label">Меньше движения</span></button><span class="preference-state" data-motion-state aria-hidden="true">Выкл.</span><span class="preference-description" id="panel-motion-description">Меньше анимации и перемещений.</span><p class="preference-system" id="panel-motion-system" data-motion-system hidden>Включено в настройках устройства</p></div></div>
-          <div class="settings-panel__row"><div class="preference-option"><button type="button" class="preference-toggle" data-contrast-toggle aria-pressed="false" aria-labelledby="panel-contrast-label" aria-describedby="panel-contrast-system panel-contrast-description"><span id="panel-contrast-label">Высокий контраст</span></button><span class="preference-state" data-contrast-state aria-hidden="true">Выкл.</span><span class="preference-description" id="panel-contrast-description">Более заметные текст, линии и выделение.</span><p class="preference-system" id="panel-contrast-system" data-contrast-system hidden>Включено в настройках устройства</p></div></div>
-        </div>
-        <section class="settings-whoop" data-settings-section="whoop" aria-labelledby="settings-whoop-title">
-          <div class="settings-panel__row">
-            <div class="preference-option"><button type="button" class="preference-toggle" data-whoop-toggle aria-pressed="true" aria-labelledby="settings-whoop-title" aria-describedby="settings-whoop-description"><span id="settings-whoop-title">Цвет дня</span></button><span class="preference-state" data-whoop-toggle-label aria-hidden="true">Вкл.</span><span class="preference-description" id="settings-whoop-description">Мягкий свет вокруг моей карточки.</span></div>
+      <div class="settings-panel__body" tabindex="-1" role="region" aria-label="Настройки — прокрутка">
+        <section class="settings-group settings-panel__screen" data-settings-section="display" data-settings-screen-controls aria-labelledby="settings-display-title">
+          <h3 id="settings-display-title">Отображение</h3>
+          <div class="settings-panel__row settings-panel__row--theme" data-settings-section="theme">
+            <h4 id="settings-theme-title">Тема</h4>
+            <div class="preference-choices" role="group" aria-labelledby="settings-theme-title">
+              <label class="preference-choice"><input type="radio" name="panel-theme" data-theme-choice="system" value="system" checked><span>Системная</span></label>
+              <label class="preference-choice"><input type="radio" name="panel-theme" data-theme-choice="light" value="light"><span>Светлая</span></label>
+              <label class="preference-choice"><input type="radio" name="panel-theme" data-theme-choice="dark" value="dark"><span>Тёмная</span></label>
+            </div>
           </div>
-          <p class="settings-whoop__copy">WHOOP оценивает моё восстановление после сна. Эта оценка задаёт оттенок света:</p>
-          <dl class="settings-whoop__zones">
-            <div><dt>0–33&nbsp;%</dt><dd>Терракотовый</dd></div>
-            <div><dt>34–66&nbsp;%</dt><dd>Охристый</dd></div>
-            <div><dt>67–100&nbsp;%</dt><dd>Зелёный</dd></div>
-          </dl>
-          <p class="settings-whoop__copy">В&nbsp;карточке также показаны сон и&nbsp;дневная нагрузка. На&nbsp;цвет они не&nbsp;влияют. Диапазоны взяты из&nbsp;WHOOP, оттенки подобраны для&nbsp;сайта.</p>
-          <p class="settings-panel__note" data-whoop-provenance>Получаем данные WHOOP.</p>
+          <div class="settings-panel__row settings-whoop" data-settings-section="whoop">
+            <div class="preference-option">
+              <button type="button" class="preference-toggle" role="switch" data-whoop-toggle aria-checked="true" aria-labelledby="settings-whoop-title" aria-describedby="settings-whoop-description settings-whoop-status">
+                <span class="preference-copy"><span id="settings-whoop-title">Цвет дня</span><span class="preference-description" id="settings-whoop-description">Мягкий свет вокруг моей карточки.</span></span><span class="preference-switch" aria-hidden="true"></span>
+              </button>
+
+              <p class="preference-system" id="settings-whoop-status" data-whoop-settings-status hidden></p>
+            </div>
+            <details class="settings-details" data-whoop-details>
+              <summary>О данных и цвете</summary>
+              <div class="settings-details__body">
+                <p class="settings-whoop__copy">WHOOP оценивает моё восстановление после сна. Эта оценка задаёт оттенок света:</p>
+                <dl class="settings-whoop__zones">
+                  <div><dt>0–33&nbsp;%</dt><dd>Терракотовый</dd></div>
+                  <div><dt>34–66&nbsp;%</dt><dd>Охристый</dd></div>
+                  <div><dt>67–100&nbsp;%</dt><dd>Зелёный</dd></div>
+                </dl>
+                <p class="settings-whoop__copy">В&nbsp;карточке также показаны сон и&nbsp;дневная нагрузка. На&nbsp;цвет они не&nbsp;влияют. Диапазоны взяты из&nbsp;WHOOP, оттенки подобраны для&nbsp;сайта.</p>
+                <p class="settings-panel__note" data-whoop-provenance>Получаем данные WHOOP.</p>
+              </div>
+            </details>
+          </div>
         </section>
-        <section class="settings-presence" aria-labelledby="settings-presence-title">
-          <h3 id="settings-presence-title">ПОСЕТИТЕЛИ</h3>
-          <p data-presence hidden>Сейчас на&nbsp;сайте <span class="presence-total"><span data-presence-count>—</span><span data-presence-unit></span></span></p>
-          <p>Примерное число тех, кто сейчас смотрит сайт. Один браузер считается один раз, даже с&nbsp;несколькими вкладками. Этот счётчик работает отдельно от&nbsp;Метрики, без&nbsp;cookie и&nbsp;истории посещений.</p>
+        <section class="settings-group" data-settings-section="accessibility" aria-labelledby="settings-accessibility-title">
+          <h3 id="settings-accessibility-title">Доступность</h3>
+          <div class="settings-panel__row" data-settings-section="motion">
+            <div class="preference-option">
+              <button type="button" class="preference-toggle" role="switch" data-motion-toggle aria-checked="false" aria-labelledby="panel-motion-label" aria-describedby="panel-motion-description panel-motion-system">
+                <span class="preference-copy"><span id="panel-motion-label">Меньше движения</span><span class="preference-description" id="panel-motion-description">Меньше анимации и перемещений.</span></span><span class="preference-switch" aria-hidden="true"></span>
+              </button>
+
+              <p class="preference-system" id="panel-motion-system" data-motion-system hidden>Включено в настройках устройства</p>
+            </div>
+          </div>
+          <div class="settings-panel__row" data-settings-section="contrast">
+            <div class="preference-option">
+              <button type="button" class="preference-toggle" role="switch" data-contrast-toggle aria-checked="false" aria-labelledby="panel-contrast-label" aria-describedby="panel-contrast-description panel-contrast-system">
+                <span class="preference-copy"><span id="panel-contrast-label">Высокий контраст</span><span class="preference-description" id="panel-contrast-description">Более заметные текст, линии и выделение.</span></span><span class="preference-switch" aria-hidden="true"></span>
+              </button>
+
+              <p class="preference-system" id="panel-contrast-system" data-contrast-system hidden>Включено в настройках устройства</p>
+            </div>
+          </div>
         </section>
-        <section
-          class="settings-panel__analytics"
-          data-settings-section="analytics"
-          aria-labelledby="settings-analytics-title"
-        >
+        <section class="settings-group settings-panel__analytics" data-settings-section="analytics" aria-labelledby="settings-privacy-title">
+          <h3 id="settings-privacy-title">Приватность</h3>
           <div class="preference-option settings-panel__analytics-control">
-            <button type="button" class="preference-toggle" data-analytics-toggle aria-pressed="false" aria-labelledby="settings-analytics-title" aria-describedby="settings-analytics-description">
-              <span id="settings-analytics-title">Яндекс Метрика</span>
-            </button>
-            <span class="preference-state" data-analytics-preference aria-hidden="true">Выкл.</span>
-            <p class="preference-description" id="settings-analytics-description">
+            <button type="button" class="preference-toggle" role="switch" data-analytics-toggle aria-checked="false" aria-labelledby="settings-analytics-title" aria-describedby="settings-analytics-description settings-analytics-statistics settings-analytics-search">
+              <span class="preference-copy"><span id="settings-analytics-title">Яндекс Метрика</span><span class="preference-description" id="settings-analytics-description">
               <span data-analytics-state-copy="unset">Включится только с&nbsp;вашего разрешения.</span>
-              <span data-analytics-state-copy="allowed">Статистика помогает мне улучшать навигацию и&nbsp;содержание.</span>
-              <span data-analytics-state-copy="denied">Данные о&nbsp;посещении не&nbsp;отправляются в&nbsp;Метрику.</span>
-            </p>
+              <span data-analytics-state-copy="allowed" aria-hidden="true">Статистика помогает мне улучшать навигацию и&nbsp;содержание.</span>
+              <span data-analytics-state-copy="denied" aria-hidden="true">Данные о&nbsp;посещении не&nbsp;отправляются в&nbsp;Метрику.</span>
+            </span></span><span class="preference-switch" aria-hidden="true"></span>
+            </button>
+
           </div>
-          <dl class="settings-panel__privacy">
-            <div>
-              <dt>СТАТИСТИКА</dt>
-              <dd>Посещения, переходы и&nbsp;записи взаимодействий с&nbsp;сайтом.</dd>
+          <div class="settings-panel__privacy">
+            <p id="settings-analytics-statistics">Посещения, переходы и&nbsp;записи взаимодействий с&nbsp;сайтом.</p>
+            <p id="settings-analytics-search">Текст запросов в&nbsp;Метрику не&nbsp;передаётся.</p>
+          </div>
+          <details class="settings-details">
+            <summary>Подробнее о приватности</summary>
+            <div class="settings-details__body">
+              <div class="settings-presence">
+                <p data-presence hidden>Сейчас на&nbsp;сайте <span class="presence-total"><span data-presence-count>—</span><span data-presence-unit></span></span></p>
+                <p>Примерное число тех, кто сейчас смотрит сайт. Один браузер считается один раз, даже с&nbsp;несколькими вкладками. Этот счётчик работает отдельно от&nbsp;Метрики, без&nbsp;cookie и&nbsp;истории посещений.</p>
+              </div>
+              <a class="settings-panel__details text-link" href="https://yandex.ru/support/metrica/ru/general/cookie-usage" target="_blank" rel="noreferrer">Как Метрика использует файлы cookie</a>
             </div>
-            <div>
-              <dt>ПОИСК</dt>
-              <dd>Текст запросов в&nbsp;Метрику не&nbsp;передаётся.</dd>
-            </div>
-          </dl>
-          <a
-            class="settings-panel__details text-link"
-            href="https://yandex.ru/support/metrica/ru/general/cookie-usage"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Как Метрика использует файлы cookie
-          </a>
+          </details>
         </section>
       </div>
     </dialog>

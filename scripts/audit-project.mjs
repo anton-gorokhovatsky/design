@@ -502,7 +502,6 @@ const requiredMaterialSurfaces = [
   "search-results",
   "search-status",
   "mobile-system-dock",
-  "screen-controls",
   "panel-heading",
   "panel-close",
   "reel-readout",

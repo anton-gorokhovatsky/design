@@ -251,14 +251,15 @@ try {
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0);
     await capture(page, scenario.label);
     if (scenario.label.startsWith("desktop")) {
-      await page.locator('[popovertarget="screen-controls"]:not([popovertargetaction])').click();
-      const toggle = page.locator(".display-control [data-motion-toggle]");
+      await page.locator('#screen-controls-trigger').click();
+      const toggle = page.locator("#settings-panel [data-motion-toggle]");
       await toggle.click();
       await assertStopped(page);
       await capture(page, scenario.label + "-motion-off");
       await toggle.click();
       await page.waitForFunction(() => document.documentElement.dataset.reduceMotion !== "true");
       await page.waitForFunction(() => document.querySelector(".map-node__surface")?.dataset.sphereMotion === "running");
+      await page.keyboard.press("Escape");
       const surface = page.locator('[data-map-id="optimal"] .map-node__surface');
       await surface.evaluate((canvas) => { canvas.style.transform = "translateX(300vw)"; });
       await page.waitForFunction(() => document.querySelector(".map-node__surface")?.dataset.sphereMotion === "paused");

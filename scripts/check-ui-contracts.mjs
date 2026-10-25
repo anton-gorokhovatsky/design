@@ -1192,45 +1192,28 @@ const auditBrowser = async (client, origin) => {
   }
 
   await navigate(client, `${origin}/?scene=map&qa=ui-contracts-map-controls`);
-  const preferenceContract = await evaluate(client, `(() => {
-    const readToggle = (surface, selector) => {
-      const control = document.querySelector(surface + " " + selector);
-      return {
-        name: document.getElementById(control?.getAttribute("aria-labelledby"))?.textContent.trim(),
-        pressed: control?.getAttribute("aria-pressed"),
-        state: control?.closest(".preference-option")?.querySelector(".preference-state")?.textContent.trim(),
-      };
-    };
-    return {
-      themes: [".display-control", "#settings-panel"].map(surface =>
-        Array.from(document.querySelectorAll(surface + " [data-theme-choice]")).map(choice => ({
-          value: choice.value, type: choice.type, checked: choice.checked,
-          name: choice.labels?.[0]?.textContent.trim(),
-        }))),
-      motion: [".display-control", "#settings-panel"].map(surface => readToggle(surface, "[data-motion-toggle]")),
-      contrast: [".display-control", "#settings-panel"].map(surface => readToggle(surface, "[data-contrast-toggle]")),
-      privacy: {
-        name: document.querySelector("[data-privacy-label]")?.textContent.trim(),
-        popup: document.querySelector("[data-privacy-settings]")?.getAttribute("aria-haspopup"),
-        pressed: document.querySelector("[data-privacy-settings]")?.hasAttribute("aria-pressed"),
-      },
-    };
-  })()`);
-  if (
-    preferenceContract.themes.some(choices => JSON.stringify(choices) !== JSON.stringify([
-      { value: "system", type: "radio", checked: true, name: "Системная" },
-      { value: "light", type: "radio", checked: false, name: "Светлая" },
-      { value: "dark", type: "radio", checked: false, name: "Тёмная" },
-    ]))
-    || preferenceContract.motion.some(control => control.name !== "Меньше движения"
-      || control.state !== (control.pressed === "true" ? "Вкл." : "Выкл."))
-    || preferenceContract.contrast.some(control => control.name !== "Высокий контраст"
-      || control.state !== (control.pressed === "true" ? "Вкл." : "Выкл."))
-    || preferenceContract.privacy.name !== "Данные и приватность"
-    || preferenceContract.privacy.popup !== "dialog"
-    || preferenceContract.privacy.pressed
-  ) {
-    fail("settings: choice, state and navigation semantics differ between surfaces.", preferenceContract);
+  const preferenceContract = await evaluate(client, `(() => ({
+    themes: Array.from(document.querySelectorAll('[data-theme-choice]')).map(choice => ({
+      value: choice.value, type: choice.type, checked: choice.checked, name: choice.labels?.[0]?.textContent.trim(),
+    })),
+    switches: Array.from(document.querySelectorAll('#settings-panel [role="switch"]')).map(control => ({
+      name: document.getElementById(control.getAttribute('aria-labelledby'))?.textContent.trim(),
+      checked: control.getAttribute('aria-checked'), pressed: control.hasAttribute('aria-pressed'),
+      glyph: !!control.querySelector('.preference-switch'),
+    })),
+    groups: Array.from(document.querySelectorAll('#settings-panel .settings-group > h3')).map(heading => heading.textContent.trim()),
+    launcher: document.querySelector('#screen-controls-trigger')?.getAttribute('aria-haspopup'),
+    duplicate: !!document.querySelector('#screen-controls'),
+  }))()`);
+  if (JSON.stringify(preferenceContract.themes) !== JSON.stringify([
+      { value: 'system', type: 'radio', checked: true, name: 'Системная' },
+      { value: 'light', type: 'radio', checked: false, name: 'Светлая' },
+      { value: 'dark', type: 'radio', checked: false, name: 'Тёмная' },
+    ]) || JSON.stringify(preferenceContract.groups) !== JSON.stringify(['Отображение', 'Доступность', 'Приватность'])
+    || JSON.stringify(preferenceContract.switches.map(control => control.name)) !== JSON.stringify(['Цвет дня', 'Меньше движения', 'Высокий контраст', 'Яндекс Метрика'])
+    || preferenceContract.switches.some(control => !['true', 'false'].includes(control.checked) || control.pressed || !control.glyph)
+    || preferenceContract.launcher !== 'dialog' || preferenceContract.duplicate) {
+    fail('settings: a single radio choice and four consistent switches belong to one three-group dialog.', preferenceContract);
   }
   const initialMapControlContract = await evaluate(client, `(() => {
     const all = document.querySelector('[data-map-filter="all"]');
@@ -1344,7 +1327,7 @@ const auditBrowser = async (client, origin) => {
   const hoveredInactiveFilterContract = await evaluate(client, `(() => {
     const personal = document.querySelector('[data-map-filter="personal"]');
     const project = document.querySelector('[data-map-filter="project"]');
-    const motion = document.querySelector('.display-control__service [data-motion-toggle]');
+    const motion = document.querySelector('#settings-panel [data-motion-toggle]');
     const colorPixel = (value) => {
       const canvas = document.createElement('canvas');
       canvas.width = 1;
@@ -1396,45 +1379,29 @@ const auditBrowser = async (client, origin) => {
     "crop-desktop-map-filters-project-hover-off",
     ".map-control-group--filters",
   );
-  await evaluate(client, `document.querySelector('[popovertarget="screen-controls"]').click(); true`);
-  await waitForExpression(client, `document.querySelector('#screen-controls').matches(':popover-open')`);
-  const quickSettingsContract = await evaluate(client, `(() => {
-    const panel = document.querySelector('#screen-controls');
-    const heading = panel.querySelector('h2');
-    const option = panel.querySelector('[data-motion-toggle]');
-    const label = panel.querySelector('.preference-heading');
-    const reference = document.querySelector('.map-control-group--filters .map-control');
+  await evaluate(client, `document.querySelector('#screen-controls-trigger').click(); true`);
+  await waitForExpression(client, `document.querySelector('#settings-panel').open`);
+  await waitForGeometryTransition(client, '#settings-panel');
+  const settingsFamilyContract = await evaluate(client, `(() => {
+    const panel = document.querySelector('#settings-panel'), heading = panel.querySelector('h2');
+    const options = [...panel.querySelectorAll('[role="switch"]')];
+    const style = element => getComputedStyle(element);
     return {
-      headingSize: getComputedStyle(heading).fontSize,
-      optionSize: getComputedStyle(option).fontSize,
-      optionWeight: getComputedStyle(option).fontWeight,
-      referenceSize: getComputedStyle(reference).fontSize,
-      referenceWeight: getComputedStyle(reference).fontWeight,
-      headingLeft: heading.getBoundingClientRect().left,
-      optionLeft: option.getBoundingClientRect().left,
-      labelLeft: label.getBoundingClientRect().left,
-      choiceSize: getComputedStyle(panel.querySelector('.preference-choice')).fontSize,
-      stateSize: getComputedStyle(panel.querySelector('.preference-state')).fontSize,
-      groupSize: getComputedStyle(label).fontSize,
-      referenceGroupSize: getComputedStyle(document.querySelector('.map-control-group__label')).fontSize,
-      dataBorder: getComputedStyle(panel.querySelector('.display-control__data')).borderTopWidth,
-      dataText: panel.querySelector('.display-control__data').textContent.trim(),
+      ranks: [heading, panel.querySelector('.settings-group > h3'), options[0], options[0].querySelector('.preference-description')].map(element => parseFloat(style(element).fontSize)),
+      lefts: [heading, ...panel.querySelectorAll('.settings-group > h3'), ...options].map(element => element.getBoundingClientRect().left),
+      switches: options.map(option => ({height: option.getBoundingClientRect().height, glyph: option.querySelector('.preference-switch').getBoundingClientRect().toJSON()})),
+      weight: style(options[0]).fontWeight,
     };
   })()`);
-  if (quickSettingsContract.optionSize !== quickSettingsContract.referenceSize
-    || quickSettingsContract.optionWeight !== quickSettingsContract.referenceWeight
-    || quickSettingsContract.choiceSize !== quickSettingsContract.referenceSize
-    || quickSettingsContract.stateSize !== quickSettingsContract.referenceSize
-    || quickSettingsContract.groupSize !== quickSettingsContract.referenceGroupSize
-    || parseFloat(quickSettingsContract.headingSize) >= parseFloat(quickSettingsContract.optionSize)
-    || parseFloat(quickSettingsContract.dataBorder) !== 0
-    || quickSettingsContract.dataText.includes('›')
-    || Math.abs(quickSettingsContract.headingLeft - quickSettingsContract.optionLeft) > 1
-    || Math.abs(quickSettingsContract.headingLeft - quickSettingsContract.labelLeft) > 1) {
-    fail('quick-settings: compact controls diverge from the accepted View roles/alignment.', quickSettingsContract);
+  if (!settingsFamilyContract.ranks.every((size, index, ranks) => index === 0 || size < ranks[index - 1])
+      || Math.max(...settingsFamilyContract.lefts) - Math.min(...settingsFamilyContract.lefts) > 1
+      || settingsFamilyContract.switches.some(option => option.height < 44 || option.glyph.width !== 40 || option.glyph.height !== 24)
+      || new Set(settingsFamilyContract.switches.map(option => option.glyph.right)).size !== 1
+      || settingsFamilyContract.weight !== '400') {
+    fail('settings: title/item/body/detail roles, text axes and equal switches diverge.', settingsFamilyContract);
   }
   const motionTogglePoint = await evaluate(client, `(() => {
-    const bounds = document.querySelector('.display-control__service [data-motion-toggle]')
+    const bounds = document.querySelector('#settings-panel [data-motion-toggle]')
       ?.getBoundingClientRect();
     return bounds ? {
       x: bounds.left + bounds.width / 2,
@@ -1451,13 +1418,13 @@ const auditBrowser = async (client, origin) => {
   });
   const motionToggleHoverSettled = await waitForHoverTransition(
     client,
-    ".display-control__service [data-motion-toggle]",
+    "#settings-panel [data-motion-toggle]",
   );
   if (!motionToggleHoverSettled) {
     fail("side-panel-hover: the motion-control hover transition did not settle.");
   }
   const sidePanelHoverContract = await evaluate(client, `(() => {
-    const motion = document.querySelector('.display-control__service [data-motion-toggle]');
+    const motion = document.querySelector('#settings-panel [data-motion-toggle]');
     const colorPixel = (value) => {
       const canvas = document.createElement('canvas');
       canvas.width = 1;
@@ -1488,7 +1455,7 @@ const auditBrowser = async (client, origin) => {
       right: sidePanelHoverContract,
     });
   }
-  await evaluate(client, `document.querySelector('#screen-controls').hidePopover(); true`);
+  await evaluate(client, `document.querySelector('[data-close-settings]').click(); true`);
   await evaluate(
     client,
     "document.querySelector('[data-map-filter=\"all\"]')?.click(); true",
@@ -2068,8 +2035,6 @@ const auditBrowser = async (client, origin) => {
   })()`);
   const settingsSearchFocus = await waitForExpression(client, `(() => (
     !document.querySelector("[data-settings-panel]")?.hidden
-    && document.querySelector("[data-settings-panel]")?.dataset.settingsMode
-      === "settings"
     && document.activeElement?.hasAttribute("data-motion-toggle")
   ))()`);
   const settingsSearchRouteContract = await evaluate(client, `(() => ({
@@ -2083,8 +2048,8 @@ const auditBrowser = async (client, origin) => {
   }))()`);
   if (
     !settingsSearchRouteContract.visible
-    || settingsSearchRouteContract.mode !== "settings"
-    || settingsSearchRouteContract.title !== "НАСТРОЙКИ САЙТА"
+    || settingsSearchRouteContract.mode !== undefined
+    || settingsSearchRouteContract.title !== "Настройки сайта"
     || settingsSearchRouteContract.screenControlsDisplay === "none"
     || !settingsSearchFocus
   ) {
@@ -2104,12 +2069,10 @@ const auditBrowser = async (client, origin) => {
   })()`);
   await waitForExpression(client, `(() => (
     !document.querySelector("[data-settings-panel]")?.hidden
-    && document.querySelector("[data-settings-panel]")?.dataset.settingsMode
-      === "privacy"
     && document.querySelector("[data-settings-panel]")?.dataset.focusSection
       === "analytics"
     && document.activeElement?.matches(
-      "[data-close-settings]",
+      "[data-analytics-toggle]",
     )
   ))()`);
   const analyticsSearchRouteContract = await evaluate(client, `(() => ({
@@ -2120,17 +2083,17 @@ const auditBrowser = async (client, origin) => {
       document.querySelector("[data-settings-screen-controls]"),
     ).display,
     focusSection: document.querySelector("[data-settings-panel]")?.dataset.focusSection,
-    focusedClose: document.activeElement?.matches(
-      "[data-close-settings]",
+    focusedAction: document.activeElement?.matches(
+      "[data-analytics-toggle]",
     ),
   }))()`);
   if (
     !analyticsSearchRouteContract.visible
-    || analyticsSearchRouteContract.mode !== "privacy"
-    || analyticsSearchRouteContract.title !== "ДАННЫЕ И ПРИВАТНОСТЬ"
-    || analyticsSearchRouteContract.screenControlsDisplay !== "none"
+    || analyticsSearchRouteContract.mode !== undefined
+    || analyticsSearchRouteContract.title !== "Настройки сайта"
+    || analyticsSearchRouteContract.screenControlsDisplay !== "grid"
     || analyticsSearchRouteContract.focusSection !== "analytics"
-    || !analyticsSearchRouteContract.focusedClose
+    || !analyticsSearchRouteContract.focusedAction
   ) {
     fail(
       "search-intent: analytics query does not open the privacy view in shared settings.",
@@ -3143,7 +3106,7 @@ const auditBrowser = async (client, origin) => {
     const dialog = read("#settings-panel");
     const dialogStyle = consent ? getComputedStyle(consent) : null;
     const spacingProbe = document.createElement("span");
-    spacingProbe.style.cssText = "position:fixed;visibility:hidden;padding:var(--window-pad);gap:var(--space-4)";
+    spacingProbe.style.cssText = "position:fixed;visibility:hidden;padding:var(--window-pad);gap:var(--space-6)";
     consent.append(spacingProbe);
     const spacingStyle = getComputedStyle(spacingProbe);
     const sharedSpacing = { padding: spacingStyle.padding, gap: spacingStyle.gap };
@@ -3168,8 +3131,7 @@ const auditBrowser = async (client, origin) => {
       visibleScreenControls: Array.from(
         screenControls?.querySelectorAll(".settings-panel__row") || [],
       ).filter((button) => button.getClientRects().length > 0).length,
-      preferenceLabel: consent?.querySelector("[data-analytics-preference]")
-        ?.innerText.trim(),
+      preferenceLabel: consent?.querySelector("[data-analytics-toggle]")?.getAttribute("aria-checked"),
       stateCopy: consent?.querySelector("#settings-analytics-description")
         ?.innerText.replace(/\\s+/g, " ").trim(),
       open: consent?.open,
@@ -3199,16 +3161,12 @@ const auditBrowser = async (client, origin) => {
         .pointerEvents,
       displayVisibility: getComputedStyle(document.querySelector(".display-control"))
         .pointerEvents,
-      analyticsLauncherLabel: document.querySelector("[data-privacy-label]")
+      analyticsLauncherLabel: document.querySelector("#screen-controls-trigger > span")
         ?.textContent.trim(),
       analyticsLauncherWhiteSpace: getComputedStyle(
-        document.querySelector("[data-privacy-label]"),
+        document.querySelector("#screen-controls-trigger > span"),
       ).whiteSpace,
-      privacyRows: Array.from(document.querySelectorAll(".settings-panel__privacy > div"))
-        .map((row) => [
-          row.querySelector("dt")?.textContent.trim(),
-          row.querySelector("dd")?.textContent.replace(/\\s+/g, " ").trim(),
-        ]),
+      privacyRows: Array.from(document.querySelectorAll('.settings-panel__privacy > p')).map(row => row.textContent.replace(/\\s+/g, ' ').trim()),
       detailsLabel: document.querySelector(".settings-panel__details")
         ?.textContent.trim(),
       detailsHref: document.querySelector(".settings-panel__details")?.href,
@@ -3217,9 +3175,9 @@ const auditBrowser = async (client, origin) => {
       ).display,
       analyticsSectionTitle: document.querySelector("#settings-analytics-title")
         ?.textContent.trim(),
-      togglePressed: document.querySelector("[data-analytics-toggle]")?.getAttribute("aria-pressed"),
+      togglePressed: document.querySelector("[data-analytics-toggle]")?.getAttribute("aria-checked"),
       visibleActions: Array.from(document.querySelectorAll("[data-analytics-toggle]"))
-        .filter(button => button.getClientRects().length > 0).map(button => button.innerText.trim()),
+        .filter(button => button.getClientRects().length > 0).map(button => document.getElementById(button.getAttribute("aria-labelledby"))?.innerText.trim()),
       cameraOpacity: Number(getComputedStyle(document.querySelector(".map-camera")).opacity),
       focusModality: document.documentElement.dataset.focusModality,
       pointerOutlineStyle: activeStyle?.outlineStyle || "",
@@ -3236,17 +3194,17 @@ const auditBrowser = async (client, origin) => {
     !analyticsConsentContract.visible
     || analyticsConsentContract.inert
     || !analyticsConsentContract.focusInside
-    || analyticsConsentContract.mode !== "privacy"
+    || analyticsConsentContract.mode !== undefined
     || analyticsConsentContract.role !== "dialog"
     || analyticsConsentContract.modal !== "true"
     || !analyticsConsentContract.closeExists
     || analyticsConsentContract.closeLabel !== "Закрыть"
-    || analyticsConsentContract.title !== "ДАННЫЕ И ПРИВАТНОСТЬ"
+    || analyticsConsentContract.title !== "Настройки сайта"
     || analyticsConsentContract.intro
       !== "Ваш выбор сохраняется в этом браузере."
-    || analyticsConsentContract.screenControlsDisplay !== "none"
-    || analyticsConsentContract.visibleScreenControls !== 0
-    || analyticsConsentContract.preferenceLabel !== "Выкл."
+    || analyticsConsentContract.screenControlsDisplay !== "grid"
+    || analyticsConsentContract.visibleScreenControls !== 2
+    || analyticsConsentContract.preferenceLabel !== "false"
     || analyticsConsentContract.stateCopy !== "Включится только с вашего разрешения."
     || !analyticsConsentContract.open
     || !analyticsConsentContract.searchPrivate
@@ -3264,16 +3222,16 @@ const auditBrowser = async (client, origin) => {
     || analyticsConsentContract.consoleVisibility !== "none"
     || analyticsConsentContract.dockVisibility !== "none"
     || analyticsConsentContract.displayVisibility !== "none"
-    || analyticsConsentContract.analyticsLauncherLabel !== "Данные и приватность"
+    || analyticsConsentContract.analyticsLauncherLabel !== "НАСТРОЙКИ"
     || analyticsConsentContract.analyticsLauncherWhiteSpace !== "normal"
     || JSON.stringify(analyticsConsentContract.privacyRows) !== JSON.stringify([
-      ["СТАТИСТИКА", "Посещения, переходы и записи взаимодействий с сайтом."],
-      ["ПОИСК", "Текст запросов в Метрику не передаётся."],
+      "Посещения, переходы и записи взаимодействий с сайтом.",
+      "Текст запросов в Метрику не передаётся.",
     ])
     || analyticsConsentContract.detailsLabel !== "Как Метрика использует файлы cookie"
     || analyticsConsentContract.detailsHref
       !== "https://yandex.ru/support/metrica/ru/general/cookie-usage"
-    || analyticsConsentContract.detailsDisplay !== "inline-flex"
+    || analyticsConsentContract.detailsDisplay !== "flex"
     || analyticsConsentContract.analyticsSectionTitle !== "Яндекс Метрика"
     || analyticsConsentContract.togglePressed !== "false"
     || JSON.stringify(analyticsConsentContract.visibleActions) !== JSON.stringify(["Яндекс Метрика"])
@@ -3300,7 +3258,7 @@ const auditBrowser = async (client, origin) => {
   const neutralCloseContract = await evaluate(client, `(() => ({
     hidden: document.querySelector("[data-settings-panel]")?.hidden,
     preference: localStorage.getItem("anton-signal-analytics"),
-    launcherPressed: document.querySelector("[data-privacy-settings]")
+    launcherPressed: document.querySelector("#screen-controls-trigger")
       ?.hasAttribute("aria-pressed"),
   }))()`);
   if (
@@ -3311,7 +3269,7 @@ const auditBrowser = async (client, origin) => {
     fail("privacy: neutral close changes consent or keeps toggle semantics.", neutralCloseContract);
   }
 
-  await evaluate(client, "document.querySelector('[popovertarget=\"screen-controls\"]')?.click(); document.querySelector('[data-privacy-settings]')?.click(); true");
+  await evaluate(client, "document.querySelector('#screen-controls-trigger')?.click(); true");
   await delay(40);
   await client.send("Input.dispatchKeyEvent", {
     type: "rawKeyDown",
@@ -3330,7 +3288,7 @@ const auditBrowser = async (client, origin) => {
   await delay(120);
   const escapeCloseContract = await evaluate(client, `(() => ({
     hidden: document.querySelector("[data-settings-panel]")?.hidden,
-    focusReturned: document.activeElement?.getAttribute("popovertarget") === "screen-controls",
+    focusReturned: document.activeElement?.id === "screen-controls-trigger",
     preference: localStorage.getItem("anton-signal-analytics"),
   }))()`);
   if (
@@ -3341,7 +3299,7 @@ const auditBrowser = async (client, origin) => {
     fail("privacy: Escape does not cancel and return focus.", escapeCloseContract);
   }
 
-  await evaluate(client, "document.querySelector('[popovertarget=\"screen-controls\"]')?.click(); document.querySelector('[data-privacy-settings]')?.click(); true");
+  await evaluate(client, "document.querySelector('#screen-controls-trigger')?.click(); true");
   await delay(40);
 
   // An untouched off setting is not implicit consent or a stored refusal.
@@ -3436,8 +3394,8 @@ const auditBrowser = async (client, origin) => {
   ));
   if (
     !mobileShortSettingsContract.bodyHasSettings
-    || mobileShortSettingsContract.mode !== "settings"
-    || mobileShortSettingsContract.title !== "НАСТРОЙКИ САЙТА"
+    || mobileShortSettingsContract.mode !== undefined
+    || mobileShortSettingsContract.title !== "Настройки сайта"
     || mobileShortSettingsContract.screenControlsDisplay === "none"
     || !mobileShortSettingsContract.analyticsVisible
     || !mobileShortSettingsContract.dialog
@@ -3448,7 +3406,7 @@ const auditBrowser = async (client, origin) => {
     || !mobileShortSettingsContract.theme
     || !mobileShortSettingsContract.motion
     || mobileShortSettingsContract.theme.width <= 0
-    || mobileShortSettingsContract.theme.width >= mobileShortSettingsContract.motion.width
+    || mobileShortSettingsContract.theme.width > mobileShortSettingsContract.motion.width
     || mobileShortSettingsContract.themeLabel !== "system"
     || mobileShortSettingsContract.themeColor !== "#11120f"
     || !mobileShortSettingsContract.activeInside
@@ -3567,8 +3525,8 @@ const auditBrowser = async (client, origin) => {
     queuedInit: Array.isArray(window.ym?.a) && window.ym.a.some((entry) => (
       entry?.[0] === 111107350 && entry?.[1] === "init"
     )),
-    summary: document.querySelector("[data-privacy-label]")?.textContent.trim(),
-    launcherPressed: document.querySelector("[data-privacy-settings]")
+    summary: document.querySelector("#screen-controls-trigger > span")?.textContent.trim(),
+    launcherPressed: document.querySelector("#screen-controls-trigger")
       ?.hasAttribute("aria-pressed"),
   }))()`);
   const analyticsRequestsAfterAllow = observedNetworkRequests
@@ -3580,7 +3538,7 @@ const auditBrowser = async (client, origin) => {
     || allowedContract.disabled !== false
     || allowedContract.trackerScripts !== 1
     || !allowedContract.queuedInit
-    || allowedContract.summary !== "Данные и приватность"
+    || allowedContract.summary !== "НАСТРОЙКИ"
     || allowedContract.launcherPressed
     || analyticsRequestsAfterAllow.length === 0
   ) {
@@ -3590,35 +3548,34 @@ const auditBrowser = async (client, origin) => {
     });
   }
 
-  await evaluate(client, "document.querySelector('[popovertarget=\"screen-controls\"]')?.click(); document.querySelector('[data-privacy-settings]')?.click(); true");
+  await evaluate(client, "document.querySelector('#screen-controls-trigger')?.click(); true");
   await waitForExpression(client, `(() => (
     document.activeElement?.hasAttribute('data-close-settings')
   ))()`);
   const allowedPanelContract = await evaluate(client, `(() => {
-    const launcher = document.querySelector("[data-privacy-settings]");
+    const launcher = document.querySelector("#screen-controls-trigger");
     return {
-      preferenceLabel: document.querySelector("[data-analytics-preference]")
-        ?.innerText.trim(),
+      preferenceLabel: document.querySelector("[data-analytics-toggle]")?.getAttribute("aria-checked"),
       stateCopy: document.querySelector("#settings-analytics-description")
         ?.innerText.replace(/\\s+/g, " ").trim(),
       visibleActions: Array.from(
         document.querySelectorAll("[data-analytics-toggle]"),
       ).filter((button) => button.getClientRects().length > 0)
-        .map((button) => button.innerText.trim()),
-      togglePressed: document.querySelector("[data-analytics-toggle]")?.getAttribute("aria-pressed"),
-      launcherName: launcher?.querySelector("[data-privacy-label]")?.textContent.trim(),
+        .map((button) => document.getElementById(button.getAttribute("aria-labelledby"))?.innerText.trim()),
+      togglePressed: document.querySelector("[data-analytics-toggle]")?.getAttribute("aria-checked"),
+      launcherName: launcher?.querySelector("span")?.textContent.trim(),
       launcherPopup: launcher?.getAttribute("aria-haspopup"),
       launcherPressed: launcher?.hasAttribute("aria-pressed"),
     };
   })()`);
   if (
-    allowedPanelContract.preferenceLabel !== "Вкл."
+    allowedPanelContract.preferenceLabel !== "true"
     || allowedPanelContract.stateCopy
       !== "Статистика помогает мне улучшать навигацию и содержание."
     || JSON.stringify(allowedPanelContract.visibleActions)
       !== JSON.stringify(["Яндекс Метрика"])
     || allowedPanelContract.togglePressed !== "true"
-    || allowedPanelContract.launcherName !== "Данные и приватность"
+    || allowedPanelContract.launcherName !== "НАСТРОЙКИ"
     || allowedPanelContract.launcherPopup !== "dialog"
     || allowedPanelContract.launcherPressed
   ) {
@@ -3714,21 +3671,21 @@ const auditBrowser = async (client, origin) => {
       unexpectedParameterKeys,
     });
   }
-  await evaluate(client, "document.querySelector('[data-close-panel]')?.click(); document.querySelector('[data-privacy-settings]')?.click(); true");
+  await evaluate(client, "document.querySelector('[data-close-panel]')?.click(); document.querySelector('#screen-controls-trigger')?.click(); true");
   await waitForExpression(client, "document.querySelector('[data-settings-panel]')?.open === true");
   await evaluate(client, "document.querySelector('[data-analytics-toggle]')?.click(); true");
   const revokeReturned = await waitForExpression(client, `(() => document.querySelector('[data-settings-panel]')?.open
-    && document.querySelector('[data-analytics-toggle]')?.getAttribute('aria-pressed') === 'false'
+    && document.querySelector('[data-analytics-toggle]')?.getAttribute('aria-checked') === 'false'
     && document.activeElement?.hasAttribute('data-analytics-toggle'))()`);
   const revoked = await evaluate(client, `(() => ({
     preference: localStorage.getItem('anton-signal-analytics'),
     disabled: window.disableYaCounter111107350,
     trackers: Array.from(document.scripts).filter(script => script.src.includes('mc.yandex.ru/metrika/tag.js')).length,
     copy: document.querySelector('#settings-analytics-description').innerText.replace(/\\s+/g, ' ').trim(),
-    label: document.querySelector('[data-analytics-preference]').innerText.trim(),
+    label: document.querySelector('[data-analytics-toggle]').getAttribute('aria-checked'),
   }))()`);
   if (!revokeReturned || revoked.preference !== 'denied' || revoked.disabled !== true || revoked.trackers !== 0
-    || revoked.label !== 'Выкл.' || revoked.copy !== 'Данные о посещении не отправляются в Метрику.') {
+    || revoked.label !== 'false' || revoked.copy !== 'Данные о посещении не отправляются в Метрику.') {
     fail('privacy: revoking consent must stop the tracker and return to the saved off setting.', revoked);
   }
 };

@@ -75,7 +75,7 @@ try {
           return outside || overlaps ? [label.dataset.mapLabelId] : [];
         }));
         assert.deepEqual(intersections, [], 'Resting labels clear points, controls and each other.');
-        await page.locator('[popovertarget="screen-controls"]:not([popovertargetaction])').click();
+        await page.locator('#screen-controls-trigger').click();
         await page.keyboard.press('Escape');
         await page.locator('.map-controls [data-map-filter="company"]').click();
         await page.waitForFunction(() => [...document.querySelectorAll('.map-space-label--project,.map-space-label.map-node-label--project')]

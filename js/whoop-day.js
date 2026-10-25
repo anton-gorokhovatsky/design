@@ -49,8 +49,12 @@ function startDay() {
     const palette = dayPalette(day?.recovery ?? 50);
     root.style.setProperty("--day-rgb", palette.rgb);
     root.style.setProperty("--day-enabled", enabled && day?.colour ? "1" : "0");
-    select("toggle").setAttribute("aria-pressed", String(enabled));
-    select("toggle-label").textContent = enabled ? "Вкл." : "Выкл.";
+    select("toggle").setAttribute("aria-checked", String(enabled));
+    const settingsStatus = select("settings-status");
+    settingsStatus.hidden = Boolean(day && !day.stale);
+    settingsStatus.textContent = !day
+      ? "Данные пока недоступны. Карта сохраняет исходное оформление."
+      : day.stale ? "Новых данных пока нет. Карта сохраняет исходную палитру." : "";
     readout.dataset.stale = String(Boolean(day?.stale));
     select("recovery").innerHTML = day?.recovery != null ? `${Math.round(day.recovery)}<small> %</small><span class="whoop-level">${palette.label}</span>` : "—";
     select("sleep").innerHTML = day?.sleep != null ? `${Math.floor(day.sleep / 60)}<small> ч </small>${String(day.sleep % 60).padStart(2, "0")}<small> м</small>` : "—";
