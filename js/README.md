@@ -47,6 +47,10 @@ native ES modules keep top-level names out of the browser global scope.
     Reuses its 48 PNG frames; pauses while the document is hidden or on pagehide,
     then resumes the same phase on visibility/pageshow without changing its cadence.
 
+The Aura field reuses its phase-independent spatial warp and pixel buffer until
+geometry or noise changes. Coordinates retain Float64 precision; phase and palette
+still apply on each frame.
+
 The remaining modules own celestial volumes, map controls, contribution tags,
 mobile composition, focused/spatial layouts, orbital physics and the project
 picker. Their ordering and complete paths live only in the manifest.

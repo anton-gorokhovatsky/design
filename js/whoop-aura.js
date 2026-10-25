@@ -74,8 +74,6 @@ function drawAura(c,W,H,A,mo,budget){
   const zoom=mo.pulse?1+0.12*mo.amp*Math.cos(TAU*mo.t):1;
   const mind=Math.min(bw,bh);
   const sc=1.7*S.scale/zoom;
-  // The spatial warp is independent of phase and palette. Preserve its exact
-  // Float64 coordinates and the pixel buffer until geometry or noise changes.
   const gridKey=[bw,bh,sc,warp,NS].join(":");
   if(fieldGrid?.key!==gridKey){
     const coordinates=new Float64Array(bw*bh*2);
