@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
+import { gzipSync } from "node:zlib";
 
 const entropy = length => Buffer.concat(Array.from({ length: Math.ceil(length / 40) },
   (_, index) => createHash("sha256").update(String(index)).digest()))
@@ -46,8 +47,11 @@ test("combined source includes HTML even when each prior limit passes", () => {
   assert.doesNotMatch(result.stderr, /\n- (css|runtime|fonts|initialSource|html): /);
 });
 test("combined compressed page includes HTML", () => {
-  const result = check({ html: entropy(22_000), css: entropy(65_536),
-    runtime: entropy(170_000), font: 112 * 1024 });
+  const css = entropy(65_536), runtime = entropy(170_000);
+  // Keep pre-HTML bytes just below their ceiling across zlib versions.
+  const font = 288 * 1024 - 64 - gzipSync(css, { level: 9 }).length
+    - gzipSync(runtime, { level: 9 }).length;
+  const result = check({ html: entropy(22_000), css, runtime, font });
   assert.equal(result.status, 1); assert.match(result.stderr, /initialPageCompressed: .* exceeds/);
   assert.doesNotMatch(result.stderr, /\n- (cssGzip|runtimeGzip|initialCompressed|htmlGzip): /);
 });

@@ -57,7 +57,9 @@ const budgets = {
   html: 76 * 1024,
   htmlGzip: 17 * 1024,
   initialPage: 880 * 1024,
-  initialPageCompressed: 300 * 1024,
+  // 26 October: the author requested more headroom; CI measured 300.15 KiB.
+  // Keep the complete-page ceiling bounded with a 4 KiB margin.
+  initialPageCompressed: 304 * 1024,
 };
 const htmlGzip = gzipSync(indexSource, { level: 9 }).length;
 const cssGzip = gzipSync(readProjectFile("styles.css"), { level: 9 }).length;
