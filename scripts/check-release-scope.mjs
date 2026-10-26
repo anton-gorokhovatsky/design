@@ -151,6 +151,20 @@ for (const selector of ['#story-bridge + #story-pane', ':is(#story-bridge,#map-p
 }
 scoped('styles.css', '', '#story-bridge button{opacity:.8}:root{--line:red}', 'full');
 assert.deepEqual(componentCoverage['story-bridge'], ['map-story', 'accessibility']);
+
+// A paint-only removal keeps all geometry and the common material untouched.
+const materialCopy = '.command-results{padding:16px;background:var(--material-01);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}';
+const materialShared = '.command-results{padding:16px}';
+scoped('styles.css', materialCopy, materialShared, 'components', ['materials']);
+scoped('styles.css', materialCopy, '.command-results{padding:8px}', 'full');
+scoped('styles.css', materialCopy, materialShared + ':root{--material-01:#fff}', 'full');
+scoped('styles.css', materialCopy, materialShared + '.command-results:hover{background:var(--material-01)!important}', 'full');
+scoped('styles.css', '.unknown{background:var(--material-01)}', '', 'full');
+const auditFixture = 'const readMaterialAuditExpression = `old`;\nconst unchanged = 1;';
+scoped('scripts/browser-contracts.cjs', auditFixture, auditFixture.replace('`old`','`new`'), 'components', ['materials']);
+scoped('scripts/browser-contracts.cjs', auditFixture, auditFixture.replace('= 1','= 2'), 'full');
+assert.equal(browserMatrix('components',['materials']).include.length,11);
+
 scoped('styles.css', '', '#story-pane .opening{padding-top:24px}', 'components', ['map-story']);
 scoped('styles.css', '', '#story-pane + #map-pane{opacity:0}', 'full');
 scoped('styles.css', '', '#story-pane .opening{padding-top:24px}#map-pane{opacity:0}', 'full');

@@ -1,4 +1,5 @@
 import postcss from "postcss";
+import { isMaterialCleanup } from "./material-contract.mjs";
 import { overviewOutside, overviewHtmlOutside, notFoundBindings } from "./overview-scope.mjs";
 import selectorParser from "postcss-selector-parser";
 import { parse as parseHtml } from "parse5";
@@ -54,6 +55,7 @@ const cssOutsideOwned = (source, owns) => {
 };
 
 const cssComponents = (before, after) => {
+  if (isMaterialCleanup(before, after)) return ["materials"];
   const owners = Object.entries(cssOwners);
   // Mixed local edits select the union; a single shared rule keeps full CI.
   const owned = selector => owners.some(([, owns]) => owns(selector));
@@ -234,6 +236,11 @@ export const affectedComponents = (path, before, after, maskHtmlCopy) => {
     if (path === "404.html" && notFoundBindings(maskHtmlCopy(before).replaceAll("\0", "")) === notFoundBindings(maskHtmlCopy(after).replaceAll("\0", ""))) return ["not-found"];
     if (path === "js/viewport-ui.js" && consoleBoundsOutside(before) === consoleBoundsOutside(after)) return ["console-bounds"];
     if (path === "js/map-engine.js" && mapLabelsOutside(before) === mapLabelsOutside(after)) return ["map-labels"];
+    if (path === "scripts/browser-contracts.cjs") {
+      const outside = source => source.replace(/const readMaterialAuditExpression = `[\s\S]*?`;/, "MATERIAL_AUDIT");
+      if (before.includes("const readMaterialAuditExpression = `") && after.includes("const readMaterialAuditExpression = `")
+          && outside(before) === outside(after)) return ["materials"];
+    }
     if (path === "styles.css") return cssComponents(before, after);
     if (path === "index.html") {
       try {

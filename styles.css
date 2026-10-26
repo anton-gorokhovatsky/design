@@ -654,7 +654,6 @@ justify-content: center;
 padding: 6px 9px;
 border: 0;
 border-radius: 12px;
-background: var(--material-01);
 box-shadow: none;
 
 font-family: var(--font-sans);
@@ -670,8 +669,6 @@ top 820ms var(--motion-shift),
 left 820ms var(--motion-shift),
 opacity 180ms var(--ease-out),
 transform 180ms var(--ease-out);
-backdrop-filter: blur(24px);
--webkit-backdrop-filter: blur(24px);
 }
 
 /* Keep label ink separate from Chrome's animated backdrop surface. */
@@ -1506,8 +1503,6 @@ display: grid;
 flex: 0 0 auto;
 padding: 0;
 border: 0;
-
-background: var(--material-01);
 place-items: center;
 }
 
@@ -2853,9 +2848,6 @@ position: relative;
 min-width: 0;
 padding: 10px 14px;
 border-radius: 18px;
-background: var(--material-01);
-backdrop-filter: blur(24px);
--webkit-backdrop-filter: blur(24px);
 }
 
 .content-panel__header p {
@@ -2875,18 +2867,7 @@ letter-spacing: -0.035em;
 align-self: stretch;
 border: 0;
 border-radius: 50%;
-background: var(--material-01);
 box-shadow: none;
-backdrop-filter: blur(24px);
--webkit-backdrop-filter: blur(24px);
-}
-
-.content-panel .overlay-close:hover {
-background: var(--material-01);
-}
-
-.content-panel .overlay-close:focus-visible {
-background: var(--material-01);
 }
 
 .content-panel__body {
@@ -2927,12 +2908,9 @@ display: none;
 .content-panel .work-row,
 .content-panel .approach-grid li {
 border: 0;
-background: var(--material-01);
 box-shadow: none;
 color: var(--content-ink);
 pointer-events: auto;
-backdrop-filter: blur(24px);
--webkit-backdrop-filter: blur(24px);
 }
 
 .content-panel .work-section,
@@ -3229,10 +3207,7 @@ transition: none;
 .map-hover-preview,
 .command-results {
 border: 0;
-background: var(--material-01);
 box-shadow: none;
-backdrop-filter: blur(24px);
--webkit-backdrop-filter: blur(24px);
 }
 
 .map-hover-preview {
@@ -3257,21 +3232,7 @@ letter-spacing: -0.015em;
 .personal-media .overlay-close {
 border: 0;
 border-radius: 50%;
-background: var(--material-01);
 box-shadow: none;
-backdrop-filter: blur(24px);
--webkit-backdrop-filter: blur(24px);
-}
-
-.map-inspector .overlay-close:hover,
-.personal-media .overlay-close:hover {
-background: var(--material-01);
-}
-
-.map-inspector .overlay-close:focus-visible,
-.personal-media .overlay-close:focus-visible {
-background: var(--material-01);
-
 }
 
 .command-results {
@@ -3279,7 +3240,6 @@ padding: var(--command-results-inset);
 border: 0;
 border-radius: var(--window-radius);
 corner-shape:var(--corner-card-shape);
-background: var(--material-01);
 box-shadow: none;
 }
 
@@ -3332,12 +3292,9 @@ outline: none;
 .system-dock .map-controls,
 .display-control {
 border: 0;
-background: var(--material-01);
 box-shadow: none;
 color: var(--content-ink);
 font-family: var(--font-sans);
-backdrop-filter: blur(24px);
--webkit-backdrop-filter: blur(24px);
 }
 
 .control-console {
@@ -3560,12 +3517,9 @@ margin: 0;
 padding: 18px 20px;
 border: 0;
 border-radius: 22px;
-background: var(--material-01);
 color: var(--content-ink);
 text-wrap: balance;
 box-shadow: none;
-backdrop-filter: blur(24px);
--webkit-backdrop-filter: blur(24px);
 }
 
 .command-results.is-open {
@@ -3847,11 +3801,8 @@ grid-template-columns: 34px minmax(0, 1fr) var(--control-target);
 padding: 5px 6px;
 border: 0;
 border-radius: 22px;
-background: var(--material-01);
 box-shadow: none;
 corner-shape: superellipse(1.7);
-backdrop-filter: blur(24px);
--webkit-backdrop-filter: blur(24px);
 }
 
 .system-dock {
@@ -3863,13 +3814,9 @@ left: 8px;
 
 
 border: 0;
-
-background: var(--material-01);
 box-shadow: none;
 corner-shape: var(--corner-card-shape);
 transform: none;
-backdrop-filter: blur(24px);
--webkit-backdrop-filter: blur(24px);
 }
 
 .system-dock .map-controls {
@@ -4013,20 +3960,14 @@ margin: 0;
 justify-self: start;
 padding: 7px 10px;
 border-radius: 14px;
-background: var(--material-01);
 color: var(--content-ink);
 letter-spacing: 0.035em;
-backdrop-filter: blur(24px);
--webkit-backdrop-filter: blur(24px);
 }
 
 .map-inspector .map-readout__identity,
 .map-inspector .map-readout__description {
 border: 0;
-background: var(--material-01);
 box-shadow: none;
-backdrop-filter: blur(24px);
--webkit-backdrop-filter: blur(24px);
 }
 
 .map-inspector .map-readout__identity {
@@ -4120,10 +4061,7 @@ min-width: 0;
 gap: 12px;
 padding: var(--case-pad, 20px);
 border-radius: 22px;
-background: var(--material-01);
 corner-shape: var(--corner-card-shape);
-backdrop-filter: blur(24px);
--webkit-backdrop-filter: blur(24px);
 }
 
 .map-related[hidden] {
@@ -4357,7 +4295,6 @@ outline-offset: 4px;
 
 .control-console .command-dock:focus-within {
 border-radius: 22px;
-background: var(--material-01);
 box-shadow: none;
 }
 
@@ -4366,7 +4303,6 @@ display: none;
 }
 
 .control-console .command-dock.is-open {
-background: var(--material-01);
 box-shadow: none;
 }
 
@@ -5800,12 +5736,9 @@ gap: 4px 12px;
 padding: 11px 13px 12px;
 border: 0;
 border-radius: 18px;
-background: var(--material-01);
 box-shadow: none;
 color: var(--content-ink);
 corner-shape: var(--corner-card-shape);
-backdrop-filter: blur(24px);
--webkit-backdrop-filter: blur(24px);
 }
 
 .map-hover-preview__readout strong {
@@ -6296,13 +6229,10 @@ min-height: 30px;
 padding: 6px 9px;
 border: 0;
 border-radius: 14px;
-background: var(--material-01);
 color: var(--content-ink);
 cursor: pointer;
 font: inherit;
 letter-spacing: inherit;
-backdrop-filter: blur(24px);
--webkit-backdrop-filter: blur(24px);
 }
 
 .map-note button:is(:hover, :focus-visible, [aria-pressed="true"]) {
@@ -8097,13 +8027,10 @@ padding: var(--settings-pad);
 border: 0;
 border-radius: var(--window-radius);
 corner-shape: var(--corner-card-shape);
-background: var(--material-01);
 box-shadow: none;
 color: var(--content-ink);
 font-size: var(--type-body);
 transform: translate(-50%, -50%);
--webkit-backdrop-filter: blur(24px);
-backdrop-filter: blur(24px);
 }
 .settings-panel::backdrop { background: transparent; }
 .settings-panel[hidden] { display: none; }
@@ -8802,10 +8729,7 @@ padding: 0;
 border: 0;
 border-radius: var(--window-radius);
 corner-shape: var(--corner-card-shape);
-background: var(--material-01);
 box-shadow: none;
-backdrop-filter: blur(24px);
--webkit-backdrop-filter: blur(24px);
 }
 .map-inspector.is-case-view :is(.map-readout__identity, .map-readout__description),
 .map-inspector.is-case-view:has(.map-evidence:not([hidden])) .map-readout__description {
@@ -9037,9 +8961,6 @@ min-height: 0;
 overflow: hidden;
 border-radius: var(--window-radius);
 corner-shape: var(--corner-card-shape);
-background: var(--material-01);
-backdrop-filter: blur(24px);
--webkit-backdrop-filter: blur(24px);
 pointer-events: auto;
 }
 .content-panel__frame .content-panel__body {
@@ -9762,9 +9683,6 @@ grid-template-columns: 24px minmax(0,1fr) 48px;
 padding-inline: 12px 0;
 min-height: 48px;
 border-radius: var(--window-radius);
-background: var(--material-01);
-backdrop-filter: blur(24px);
--webkit-backdrop-filter: blur(24px);
 }
 .map-surface.has-command-focus .mobile-first-dock .command-dock__submit { position: static; visibility: visible; width: 48px; }
 
@@ -10183,7 +10101,7 @@ inset-block: calc((min(var(--control-target-compact), 38px) - 44px) / 2);
 .project-satellite>.map-node__glyph{width:calc(var(--satellite-diameter,7px) * var(--audience-size,1));height:calc(var(--satellite-diameter,7px) * var(--audience-size,1));border-radius:50%;background:radial-gradient(circle at 32% 27%,var(--moon-0) 0%,var(--moon-1) 33%,var(--moon-2) 70%,var(--moon-3) 100%);box-shadow:0 0 0 .6px color-mix(in srgb,var(--ink) 22%,transparent)}
 .project-satellite:is(:hover,:focus-visible)>.map-node__glyph{box-shadow:0 0 0 3px color-mix(in srgb,var(--signal) 18%,transparent),0 0 0 1px var(--signal)}
 .project-satellite:focus-visible{outline:1px solid var(--signal);outline-offset:1px}
-.project-orbit-tooltip{position:fixed;z-index:40;left:0;top:0;max-width:230px;padding:7px 10px;border-radius:8px;background:var(--material-01);color:var(--ink);font:500 var(--type-caption)/1.4 var(--font-sans);pointer-events:none}
+.project-orbit-tooltip{position:fixed;z-index:40;left:0;top:0;max-width:230px;padding:7px 10px;border-radius:8px;color:var(--ink);font:500 var(--type-caption)/1.4 var(--font-sans);pointer-events:none}
 .project-satellites[hidden],.project-orbit-picker[hidden],.project-orbit-back[hidden]{display:none}
 .map-surface:has(.point-preview.is-project-picker:not([hidden])) :is(.map-labels,.spatial-intro){pointer-events:none}
 .project-orbit-picker{margin:0;overflow:auto;overscroll-behavior:contain;min-height:0;scrollbar-width:thin;scrollbar-color:var(--line) transparent;padding:calc(var(--picker-head-height) + var(--space-4)) var(--window-pad) var(--window-pad);scroll-padding-block:calc(var(--picker-head-height) + var(--space-2)) var(--space-2);position:absolute;inset:0;z-index:1}

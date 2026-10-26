@@ -9,7 +9,9 @@ import {
 import { dirname, join, relative, resolve } from "node:path";
 import { runInNewContext } from "node:vm";
 import { fileURLToPath } from "node:url";
-import { readRuntimeSource, runtimeFiles } from "./runtime-files.mjs";
+import { readRuntimeSource, runtimeFiles, storyFiles } from "./runtime-files.mjs";
+
+import { independentMaterialPaint } from "./material-contract.mjs";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(scriptDirectory, "..");
@@ -480,6 +482,7 @@ const materialThemeDefinitions = materialDefinitions.filter((value) => (
   /rgba\([^)]*,\s*0\.5\)/.test(value)
 ));
 const materialAccessibilityDefinitions = materialDefinitions.filter((value) => value === "Canvas");
+
 const materialUsages = (styleSource.match(/var\(--material-01\)/g) || []).length;
 const requiredMaterialSurfaces = [
   "whoop-readout",
@@ -533,26 +536,28 @@ const unexpectedMaterialSurfaces = materialSurfaceNames.filter(
 const invalidMaterialModes = materialSurfaceTags.filter(
   ({ mode }) => !["always", "desktop", "mobile", "none"].includes(mode),
 );
-const dynamicMaterialSurfaces = [
-  {
-    name: "story-close",
-    assignment: 'data-material-surface="story-close"',
-    mode: 'data-material-active="always"',
-  },
-  {
-    name: "case-story",
-    assignment: 'sheet.dataset.materialSurface = "case-story";',
-    mode: 'sheet.dataset.materialActive = "always";',
-  },
-  {
-    name: "map-node-label",
-    assignment: 'label.dataset.materialSurface = "map-node-label";',
-    mode: 'label.dataset.materialActive = "always";',
-  },
-];
-const missingDynamicMaterialSurfaces = dynamicMaterialSurfaces.filter(
-  ({ assignment, mode }) => !scriptSource.includes(assignment) || !scriptSource.includes(mode),
-);
+const dynamicMaterialSurfaces = ["story-close", "case-story", "map-node-label",
+  "project-picker-header", "project-picker-body", "layout-selection", "story-readout", "story-map-label"];
+const materialSourceFiles = ["index.html", ...runtimeFiles, ...storyFiles].filter(path => /\.(?:js|html)$/.test(path));
+const materialRegistry = materialSourceFiles.flatMap(path => [...readProjectFile(path).matchAll(
+  /(?:data-material-surface=["']|\.materialSurface\s*=\s*["'])([^"']+)/g,
+)].map(match => ({path, name:match[1]})));
+const allMaterialNames = new Set(materialRegistry.map(item => item.name));
+const expectedMaterialNames = new Set([...requiredMaterialSurfaces, ...dynamicMaterialSurfaces]);
+const missingDynamicMaterialSurfaces = dynamicMaterialSurfaces.filter(name => !allMaterialNames.has(name));
+const unexpectedDynamicMaterialSurfaces = materialRegistry.filter(item => !expectedMaterialNames.has(item.name));
+const missingDynamicModes = dynamicMaterialSurfaces.filter(name => !materialRegistry
+  .filter(item => item.name === name).every(({path}) => {
+    const source = readProjectFile(path);
+    const tags = [...source.matchAll(/<[^>]*data-material-surface=["'][^"']+["'][^>]*>/g)]
+      .map(match => match[0]).filter(tag => tag.includes('data-material-surface="' + name + '"'));
+    if (tags.length) return tags.every(tag => /data-material-active=["'](?:always|mobile|desktop|none)["']/.test(tag));
+    const assignment = [...source.matchAll(/([\w$]+\.dataset)\.materialSurface\s*=\s*["']([^"']+)["']/g)]
+      .find(match => match[2] === name);
+    if (!assignment) return false;
+    const owner = assignment[1].replaceAll('.', '\\.');
+    return new RegExp(owner + '\\.materialActive\\s*=\\s*["\'](?:always|mobile|desktop|none)["\']').test(source);
+  }));
 const materialCascadeMarker = "/* MATERIAL / 01 CASCADE CONTRACT";
 const materialCascadeIndex = styleSource.lastIndexOf(materialCascadeMarker);
 const materialCascadeSource = materialCascadeIndex >= 0
@@ -578,14 +583,14 @@ requireContract(
   materialDefinitions,
 );
 requireContract(
-  materialUsages >= 10,
-  "material-usage",
-  "Interface surfaces must consume the shared material token.",
-  { actual: materialUsages },
+  independentMaterialPaint(styleSource).length === 0,
+  "material-single-owner",
+  "All UI surface fill and blur must come from the shared material registry, never local copies.",
+  independentMaterialPaint(styleSource),
 );
 requireContract(
-  styleSource.includes("backdrop-filter: blur(24px)")
-    && styleSource.includes("-webkit-backdrop-filter: blur(24px)"),
+  /backdrop-filter:\s*blur\(24px\)/.test(styleSource)
+    && /-webkit-backdrop-filter:\s*blur\(24px\)/.test(styleSource),
   "material-blur",
   "MATERIAL / 01 needs the 24px standard and WebKit fallback.",
 );
@@ -609,13 +614,13 @@ requireContract(
   invalidMaterialModes,
 );
 requireContract(
-  missingDynamicMaterialSurfaces.length === 0,
+  missingDynamicMaterialSurfaces.length === 0 && unexpectedDynamicMaterialSurfaces.length === 0 && missingDynamicModes.length === 0,
   "material-dynamic-surface-registry",
   "Runtime-generated interface surfaces must register their shared material family and activation mode.",
-  missingDynamicMaterialSurfaces.map(({ name }) => name),
+  { missing:missingDynamicMaterialSurfaces, unexpected:unexpectedDynamicMaterialSurfaces, invalidModes:missingDynamicModes },
 );
 requireContract(
-  materialCascadeIndex >= styleSource.length * 0.9
+  materialCascadeIndex >= 0 && independentMaterialPaint(styleSource).length === 0
     && /\[data-material-surface\]\[data-material-active="always"\][\s\S]*?background:\s*var\(--material-01\)/.test(materialCascadeSource)
     && /\[data-material-surface\]\[data-material-active="desktop"\][\s\S]*?background:\s*var\(--material-01\)/.test(materialCascadeSource)
     && /\[data-material-surface\]\[data-material-active="mobile"\][\s\S]*?background:\s*var\(--material-01\)/.test(materialCascadeSource)
@@ -631,14 +636,13 @@ const mapNodeLabelRules = [
 ].map((match) => match[1]);
 const finalMapNodeLabelRule = [...mapNodeLabelRules]
   .reverse()
-  .find((rule) => rule.includes("background: var(--material-01)")) ?? "";
+  .find((rule) => /padding:\s*6px 9px/.test(rule)) ?? "";
 requireContract(
   /display:\s*inline-flex/.test(finalMapNodeLabelRule)
     && /align-items:\s*center/.test(finalMapNodeLabelRule)
     && /padding:\s*6px 9px/.test(finalMapNodeLabelRule)
-    && /background:\s*var\(--material-01\)/.test(finalMapNodeLabelRule)
-    && /backdrop-filter:\s*blur\(24px\)/.test(finalMapNodeLabelRule)
-    && /-webkit-backdrop-filter:\s*blur\(24px\)/.test(finalMapNodeLabelRule),
+    && allMaterialNames.has("map-node-label")
+    && materialCascadeSource.includes('.map-node-label[data-material-surface][data-material-active="always"]'),
   "material-map-label-family",
   "Map labels need one symmetric, optically centred MATERIAL / 01 construction.",
 );
@@ -1182,7 +1186,7 @@ const report = {
     materialUsages,
     materialSurfaces: [
       ...materialSurfaceTags.map(({ name, mode }) => ({ name, mode })),
-      ...dynamicMaterialSurfaces.map(({ name }) => ({ name, mode: "always", source: "runtime" })),
+      ...dynamicMaterialSurfaces.map(name => ({ name, mode: "always", source: "runtime" })),
     ],
     backdropInventory,
     rawBezierValues,

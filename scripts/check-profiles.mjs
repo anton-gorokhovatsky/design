@@ -27,7 +27,7 @@ export const staticCheckPaths = new Set([
   'scripts/release.mjs', 'scripts/release-quality.mjs', 'scripts/release-version.mjs',
   'scripts/check-release-quality.mjs', 'scripts/publication-assets.mjs', 'scripts/check-runner.mjs',
   'scripts/audit-project.mjs', 'scripts/check-assets.mjs',
-  'scripts/check-css-cascade.mjs', 'scripts/check-performance-budget.mjs',
+  'scripts/material-contract.mjs', 'scripts/check-css-cascade.mjs', 'scripts/check-performance-budget.mjs',
   'scripts/check-performance-budget.test.mjs', 'scripts/check-publication-assets.mjs']);
 export const ownedCheckComponent = path => signaturePath.test(path)
   ? 'signature' : processPaths.has(path) ? 'checks'
