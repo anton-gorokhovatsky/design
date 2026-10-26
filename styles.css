@@ -9544,7 +9544,8 @@ transition: color var(--duration-feedback) var(--motion-shift);
 .map-disclosure:focus-visible { outline: var(--focus-width) solid var(--signal); outline-offset: var(--focus-offset); }
 .map-disclosure__chevron { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; }
 .map-disclosure[aria-expanded="true"] .map-disclosure__chevron { transform: rotate(180deg); }
-.map-about-trigger { justify-content: flex-start; padding-left: 31px; font-size: var(--type-caption); color: var(--content-muted); }
+.map-about-trigger { display: grid; grid-template-columns: 16px minmax(0, 1fr); padding: 0 7px; }
+.map-about-trigger__icon { display: block; width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; }
 .map-popover {
 position: fixed;
 inset: auto;
@@ -10296,8 +10297,6 @@ html[data-reduce-motion="true"] .story-is-moving #map-pane{animation:none}
 @media(prefers-reduced-motion:reduce){
 .has-story-pane #story-pane{transition:none}}
 html[data-reduce-motion="true"] .has-story-pane #story-pane{transition:none}
-.map-about-trigger .map-disclosure__chevron{display:none}
-.map-about-trigger::after{content:"→";display:inline-block;margin-inline-start:.45em;text-decoration:none}
 @container map-viewport (min-width:901px){
 .content-panel .work-row:has(img.work-row__preview){grid-template-columns:1.25rem minmax(0,1fr);grid-template-rows:auto auto auto auto auto;padding-block:var(--space-4)}
 .content-panel img.work-row__preview{grid-column:2;grid-row:1;width:min(100%,20rem,30cqh);margin-bottom:var(--space-3)}

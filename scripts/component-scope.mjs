@@ -28,7 +28,7 @@ const cssOwners = {
     && branch.nodes.every(node => node.type !== "nesting"
       && (node.type !== "combinator" || ["", ">"].includes(node.value.trim())))),
   settings: selector => !ownsClass(/^settings-panel__version$/)(selector) && ownsClass(settingsClass)(selector),
-  "check:accessibility": ownsClass(/^(?:site-version(?:--[\w-]+)?|settings-panel__version|display-control__(?:presence|status))$/),
+  "check:accessibility": ownsClass(/^(?:site-version(?:--[\w-]+)?|settings-panel__version|display-control__(?:presence|status)|map-about-trigger(?:__[\w-]+)?)$/),
   consent: ownsClass(/^analytics-notice(?:$|__)/),
   overview: ownsClass(/^(?:overview-entry|work-overview(?:__[\w-]+)?|observation-[\w-]+)$/),
   "map-presentation": selector => selectorParser().astSync(selector).nodes.every(branch =>
@@ -249,6 +249,18 @@ const siteVersionHtml = source => {
   return ranges.sort((a,b) => b[0]-a[0]).reduce((text,[start,end]) => text.slice(0,start)+text.slice(end), source);
 };
 
+// The story entry may reuse the existing menu book glyph. Its link attributes,
+// visible label and all surrounding markup stay outside this decorative mask.
+const aboutEntryIconOutside = source => {
+  const links = [...source.matchAll(/(<a\b[^>]*\bid="map-about-trigger"[^>]*>)([\s\S]*?)(<\/a>)/g)];
+  if (links.length !== 1) throw new Error('Expected one map story entry');
+  const [full, open, content, close] = links[0];
+  const label = '<span>О КАРТЕ</span>';
+  const icon = '<svg class="map-about-trigger__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 6.5C9.5 4.8 6.5 4.3 3 5v14c3.5-.7 6.5-.2 9 1.5 2.5-1.7 5.5-2.2 9-1.5V5c-3.5-.7-6.5-.2-9 1.5Zm0 0v14"/></svg>';
+  if (content !== label && content !== icon + label) throw new Error('Unknown story entry decoration');
+  return source.replace(full, open + label + close);
+};
+
 // Only the console resize callback and its observer belong to this lane.
 // Imports, subscriptions, exported APIs, drag behavior and scroll lenses stay
 // outside the mask. Normalize the earlier private callback name for its rename.
@@ -341,6 +353,9 @@ export const affectedComponents = (path, before, after, maskHtmlCopy) => {
     }
     if (path === "styles.css") return cssComponents(before, after);
     if (path === "index.html") {
+      try {
+        if (maskHtmlCopy(aboutEntryIconOutside(before)) === maskHtmlCopy(aboutEntryIconOutside(after))) return ["check:accessibility"];
+      } catch { /* Other link changes keep their existing coverage. */ }
       try {
         if (maskHtmlCopy(siteVersionHtml(before)) === maskHtmlCopy(siteVersionHtml(after))) return ["check:accessibility"];
       } catch { /* Other markup keeps its existing component coverage. */ }

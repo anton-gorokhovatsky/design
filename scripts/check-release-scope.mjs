@@ -182,6 +182,11 @@ const rowAfter = versionAfter.replace('<div class="display-control">\n', '<div c
   .replace('<p class="site-version site-version--display" data-site-version>Версия 2.97</p>\n', '<p class="site-version site-version--display" data-site-version>Версия 2.97</p>\n</div>\n');
 scoped('index.html', rowBefore, rowAfter, 'components', ['check:accessibility']);
 assert.equal(browserMatrix('components', ['check:accessibility']).include.length, 2);
+const aboutBefore = '<!doctype html>\n<a id="map-about-trigger" class="map-disclosure map-about-trigger" href="?story=1" aria-controls="story-pane" aria-expanded="false"><span>О КАРТЕ</span></a>';
+const aboutAfter = aboutBefore.replace('<span>', '<svg class="map-about-trigger__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 6.5C9.5 4.8 6.5 4.3 3 5v14c3.5-.7 6.5-.2 9 1.5 2.5-1.7 5.5-2.2 9-1.5V5c-3.5-.7-6.5-.2-9 1.5Zm0 0v14"/></svg>' + '<span>');
+scoped('index.html', aboutBefore, aboutAfter, 'components', ['check:accessibility']);
+for (const unsafe of [aboutAfter.replace('href="?story=1"', 'href="?story=2"'), aboutAfter.replace('class="map-about-trigger__icon"', 'class="map-about-trigger__icon" onclick="run()"'), aboutAfter+'<script>run()</script>']) scoped('index.html', aboutBefore, unsafe, 'full');
+
 scoped('index.html', rowBefore, rowAfter.replace('class="display-control__status"', 'class="display-control__status" onclick="run()"'), 'full');
 scoped('index.html', rowBefore, rowAfter.replace('data-presence hidden', 'data-presence hidden onclick="run()"'), 'full');
 
