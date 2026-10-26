@@ -15,6 +15,7 @@ const processPaths = new Set([
 ]);
 const signaturePath = /^signature\/(?:src\/[^/]+\.(?:js|css|svg)|(?:v1|\d+\.\d+\.\d+)\/signature\.js|build\.mjs|demo\.html|README\.md|codex\/(?:SKILL|AGENTS\.fragment)\.md)$/;
 const browserCheckPaths = new Map(Object.keys(componentChecks).filter(id => !["header", "search-icon"].includes(id)).map(id => [`scripts/check-${id}.mjs`, `check:${id}`]));
+browserCheckPaths.set('scripts/native-webkit-capture.mjs', 'check:accessibility');
 browserCheckPaths.set('scripts/check-live-surface.mjs', 'check:whoop-ui');
 browserCheckPaths.set('scripts/check-ui-contracts.mjs', 'check:core');
 browserCheckPaths.set('scripts/webkit-regression.cjs', 'check:core');

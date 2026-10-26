@@ -49,6 +49,7 @@ const contractScripts = [
   "scripts/publication-assets.mjs",
   "scripts/audit-project.mjs",
   "scripts/browser-contracts.cjs",
+  "scripts/native-webkit-capture.mjs",
   "scripts/cache-versions.mjs",
   "scripts/check-assets.mjs",
   "scripts/check-performance-budget.mjs",

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { chromium, webkit } from "playwright";
+import { useNativeWebKitCapture, verifyNativeBackdropCapture } from "./native-webkit-capture.mjs";
 import { mapItems } from "../js/map-data.js";
 import { measureTextContrast as contrast, assertTextContrast, reviewIncomplete, readMapTargets } from "./accessibility-audit.mjs";
 
@@ -13,7 +14,8 @@ const local = process.env.PORTFOLIO_A11Y_ORIGIN ? null : await startStaticServer
 const origin = process.env.PORTFOLIO_A11Y_ORIGIN || local.origin;
 const directory = process.env.PORTFOLIO_UI_ARTIFACT_DIR || ".qa-artifacts/accessibility";
 mkdirSync(directory, { recursive: true });
-const browser = await ({ chromium, webkit })[engine].launch();
+const nativeWebKit = engine === "webkit" && process.platform === "darwin";
+const browser = await ({ chromium, webkit })[engine].launch({ headless: !nativeWebKit });
 const report = [], errors = [], analyticsRequests = [];
 const settle = async page => {
   await page.waitForFunction(() => !document.querySelector('[data-map-links][data-layout-pending]'));
@@ -25,6 +27,7 @@ const settle = async page => {
 // The spatial caption solver can run after the map's layout callback. Never
 // compare ink coordinates from one layout with background pixels from another.
 const paintedContrast = async (page, selector = null) => {
+  if (nativeWebKit) await page.bringToFront();
   const geometry = () => page.locator('[data-map-label-id]').evaluateAll(labels => JSON.stringify(labels.map(label => {
     const r = label.getBoundingClientRect();
     return [r.x, r.y, r.width, r.height, getComputedStyle(label).opacity];
@@ -67,8 +70,10 @@ const auditScroll = async (page, selector, name) => {
 };
 
 try {
+  if (nativeWebKit) await verifyNativeBackdropCapture(browser);
   for (const theme of ["light", "dark"]) for (const [width, height] of [[1440, 900], [1024, 768], [390, 844], [320, 568]]) {
     const page = await browser.newPage({ viewport: { width, height }, colorScheme: theme, reducedMotion: "reduce" });
+    if (nativeWebKit) await useNativeWebKitCapture(page);
     page.on("pageerror", error => errors.push(error.message));
     const name = `${width}-${theme}`;
     try {
