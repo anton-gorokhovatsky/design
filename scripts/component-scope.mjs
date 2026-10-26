@@ -27,7 +27,8 @@ const cssOwners = {
     branch.nodes.some(node => node.type === "id" && node.value === "story-bridge")
     && branch.nodes.every(node => node.type !== "nesting"
       && (node.type !== "combinator" || ["", ">"].includes(node.value.trim())))),
-  settings: ownsClass(settingsClass),
+  settings: selector => !ownsClass(/^settings-panel__version$/)(selector) && ownsClass(settingsClass)(selector),
+  "check:accessibility": ownsClass(/^(?:site-version(?:--[\w-]+)?|settings-panel__version|display-control__(?:presence|status))$/),
   consent: ownsClass(/^analytics-notice(?:$|__)/),
   overview: ownsClass(/^(?:overview-entry|work-overview(?:__[\w-]+)?|observation-[\w-]+)$/),
   "map-presentation": selector => selectorParser().astSync(selector).nodes.every(branch =>
@@ -205,6 +206,49 @@ const settingsHtml = (source) => {
   return source.slice(0, location.startTag.endOffset) + "\0SETTINGS\0" + source.slice(location.endTag.startOffset);
 };
 
+// A passive version label can move from settings to the two responsive service
+// locations. Preserve every surrounding control, attribute and executable byte.
+const siteVersionHtml = source => {
+  const tree = parseHtml(source, { sourceCodeLocationInfo: true, onParseError(error) {
+    if (error.code !== "missing-doctype") throw new Error(error.code);
+  } });
+  const ranges = [], places = [];
+  const visit = node => {
+    const attrs = Object.fromEntries((node.attrs || []).map(({name, value}) => [name, value]));
+    if (attrs.class === 'display-control__status') {
+      const children = node.childNodes.filter(child => child.nodeName !== '#text');
+      const parent = (node.parentNode?.attrs || []).find(attr => attr.name === 'class')?.value;
+      if (node.tagName !== 'div' || Object.keys(attrs).length !== 1 || parent !== 'display-control'
+          || children.length !== 2 || children.some(child => child.tagName !== 'p')
+          || children[0].attrs.find(attr => attr.name === 'class')?.value !== 'display-control__presence'
+          || children[1].attrs.find(attr => attr.name === 'class')?.value !== 'site-version site-version--display') throw new Error('Unknown version status row');
+      for (const loc of [node.sourceCodeLocation.startTag, node.sourceCodeLocation.endTag]) {
+        const start = source.lastIndexOf('\n', loc.startOffset) + 1, end = source.indexOf('\n', loc.endOffset);
+        if (end < 0 || source.slice(start, loc.startOffset).trim() || source.slice(loc.endOffset, end).trim()) throw new Error('Mixed version status line');
+        ranges.push([start, end + 1]);
+      }
+    }
+    if (Object.hasOwn(attrs, 'data-site-version')) {
+      const parentClasses = (node.parentNode?.attrs || []).find(attr => attr.name === 'class')?.value.split(/\s+/) || [];
+      const place = attrs.class === 'settings-panel__version' && parentClasses.includes('settings-panel__body') ? 'settings'
+        : attrs.class === 'site-version site-version--menu' && parentClasses.includes('constellation-nav__utilities') ? 'menu'
+        : attrs.class === 'site-version site-version--display' && (parentClasses.includes('display-control') || parentClasses.includes('display-control__status')) ? 'display' : null;
+      if (!place || node.tagName !== 'p' || Object.keys(attrs).length !== 2 || attrs['data-site-version'] !== ''
+          || node.childNodes?.length !== 1 || node.childNodes[0].nodeName !== '#text'
+          || !/^Версия \d+\.\d+$/.test(node.childNodes[0].value)) throw new Error('Unknown site version markup');
+      const loc = node.sourceCodeLocation;
+      const start = source.lastIndexOf('\n', loc.startOffset) + 1;
+      const end = source.indexOf('\n', loc.endOffset);
+      if (end < 0 || source.slice(start, loc.startOffset).trim() || source.slice(loc.endOffset, end).trim()) throw new Error('Mixed site version line');
+      ranges.push([start, end + 1]); places.push(place);
+    }
+    for (const child of node.childNodes || []) visit(child);
+  };
+  visit(tree);
+  if (!['settings', 'display,menu'].includes(places.sort().join(','))) throw new Error('Ambiguous site version locations');
+  return ranges.sort((a,b) => b[0]-a[0]).reduce((text,[start,end]) => text.slice(0,start)+text.slice(end), source);
+};
+
 // Only the console resize callback and its observer belong to this lane.
 // Imports, subscriptions, exported APIs, drag behavior and scroll lenses stay
 // outside the mask. Normalize the earlier private callback name for its rename.
@@ -297,6 +341,9 @@ export const affectedComponents = (path, before, after, maskHtmlCopy) => {
     }
     if (path === "styles.css") return cssComponents(before, after);
     if (path === "index.html") {
+      try {
+        if (maskHtmlCopy(siteVersionHtml(before)) === maskHtmlCopy(siteVersionHtml(after))) return ["check:accessibility"];
+      } catch { /* Other markup keeps its existing component coverage. */ }
       try {
         if (overviewHtmlOutside(maskHtmlCopy(before).replaceAll("\0", "")) === overviewHtmlOutside(maskHtmlCopy(after).replaceAll("\0", ""))) return ["overview"];
       } catch { /* Other local owners may still prove the edit. */ }

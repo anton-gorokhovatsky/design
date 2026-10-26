@@ -168,6 +168,24 @@ scoped('styles.css', forcedMaterial, forcedMaterialPriority + ':root{--material-
 scoped('styles.css', forcedMaterial, forcedMaterialPriority.replace('CanvasText','red'), 'full');
 scoped('styles.css', forcedMaterial.replace('forced-colors: active','prefers-color-scheme: dark'), forcedMaterialPriority.replace('forced-colors: active','prefers-color-scheme: dark'), 'full');
 assert.equal(browserMatrix('components',['check:core','check:accessibility']).include.length,7);
+// Moving only passive version text does not broaden to unrelated map/media checks.
+const versionBefore = '<!doctype html>\n<div class="constellation-nav__utilities">\n</div>\n<div class="display-control">\n</div>\n<div class="settings-panel__body">\n<p class="settings-panel__version" data-site-version>Версия 1.366</p>\n</div>\n';
+const versionAfter = versionBefore.replace('<div class="constellation-nav__utilities">\n', '<div class="constellation-nav__utilities">\n<p class="site-version site-version--menu" data-site-version>Версия 2.97</p>\n')
+  .replace('<div class="display-control">\n', '<div class="display-control">\n<p class="site-version site-version--display" data-site-version>Версия 2.97</p>\n')
+  .replace('<p class="settings-panel__version" data-site-version>Версия 1.366</p>\n', '');
+scoped('index.html', versionBefore, versionAfter, 'components', ['check:accessibility']);
+for (const unsafe of [versionAfter.replace('data-site-version>', 'data-site-version onclick="alert(1)">'), versionAfter.replace('class="display-control"', 'class="another-panel"'), versionAfter.replace('Версия 2.97</p>', 'Версия <a href="/">2.97</a></p>'), versionAfter + '<script>run()</script>']) scoped('index.html', versionBefore, unsafe, 'full');
+scoped('styles.css', '.settings-panel__version { color: gray; }', '.site-version { color: gray; }', 'components', ['check:accessibility']);
+const presenceLine = '<p class="display-control__presence" data-presence hidden>Сейчас на сайте <span data-presence-count>1</span></p>\n';
+const rowBefore = versionBefore.replace('<div class="display-control">\n', '<div class="display-control">\n' + presenceLine);
+const rowAfter = versionAfter.replace('<div class="display-control">\n', '<div class="display-control">\n<div class="display-control__status">\n' + presenceLine)
+  .replace('<p class="site-version site-version--display" data-site-version>Версия 2.97</p>\n', '<p class="site-version site-version--display" data-site-version>Версия 2.97</p>\n</div>\n');
+scoped('index.html', rowBefore, rowAfter, 'components', ['check:accessibility']);
+assert.equal(browserMatrix('components', ['check:accessibility']).include.length, 2);
+scoped('index.html', rowBefore, rowAfter.replace('class="display-control__status"', 'class="display-control__status" onclick="run()"'), 'full');
+scoped('index.html', rowBefore, rowAfter.replace('data-presence hidden', 'data-presence hidden onclick="run()"'), 'full');
+
+
 
 // A paint-only removal keeps all geometry and the common material untouched.
 const materialCopy = '.command-results{padding:16px;background:var(--material-01);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}';

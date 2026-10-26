@@ -34,11 +34,11 @@ console.log("PASS release barrier: exact SHA, main push, latest run, success onl
 
 // Number only confirmed Pages publications; failed candidates and retries do
 // not consume a number. Keep these with the existing publication barrier tests.
-const { readPublishedVersion, readSiteVersion, prepareSiteVersion, verifyCandidateVersion, versionBaseline } = await import('./release-version.mjs');
+const { readPublishedVersion, readSiteVersion, prepareSiteVersion, verifyCandidateVersion, versionBaseline, rebaseSiteVersion, nextSiteVersion } = await import('./release-version.mjs');
 const { mkdtempSync, writeFileSync, readFileSync, rmSync } = await import('node:fs');
 const { tmpdir } = await import('node:os');
 const { join } = await import('node:path');
-const versionHtml = version => `<p class="settings-panel__version" data-site-version>Версия ${version}</p>`;
+const versionHtml = version => `<p class="site-version" data-site-version>Версия ${version}</p>`;
 const failed = 'f'.repeat(40), successful = 'b'.repeat(40);
 const published = await readPublishedVersion({
   readApi: async endpoint => endpoint.startsWith('deployments?')
@@ -46,25 +46,35 @@ const published = await readPublishedVersion({
     : endpoint.includes('/3/') ? [{state: 'failure'}] : [{state: 'inactive'}, {state: 'success'}],
   readHtml: async sha => { assert.equal(sha, successful); return versionHtml('1.364'); },
 });
-assert.deepEqual(published, {sha: successful, version: '1.364'});
+assert.deepEqual(published, {sha: successful, version: '2.94'});
+assert.equal(rebaseSiteVersion('1.270'), '2.0');
+assert.equal(rebaseSiteVersion('1.366'), '2.96');
+assert.equal(rebaseSiteVersion('2.97'), '2.97');
+assert.throws(() => rebaseSiteVersion('1.269'), /predates/);
+assert.throws(() => rebaseSiteVersion('garbage'), /predates/);
+assert.equal(nextSiteVersion('2.96'), '2.97');
+assert.throws(() => nextSiteVersion('1.366'), /Unknown/);
 assert.deepEqual(await readPublishedVersion({
   readApi: async endpoint => endpoint.startsWith('deployments?') ? [{id: 1, sha: versionBaseline.sha}] : [{state:'success'}],
   readHtml: async () => { throw new Error('Bootstrap has no version marker'); },
 }), versionBaseline);
 await assert.rejects(readPublishedVersion({readApi: async () => [], readHtml: async () => ''}), /No successful/);
-assert.throws(() => readSiteVersion(''), /one static/);
-assert.throws(() => readSiteVersion(versionHtml('1.1') + versionHtml('1.2')), /one static/);
+assert.throws(() => readSiteVersion(''), /one consistent static/);
+assert.throws(() => readSiteVersion(versionHtml('1.1') + versionHtml('1.2')), /one consistent static/);
+assert.throws(() => readSiteVersion(versionHtml('2.97') + versionHtml('invalid')), /one consistent static/);
 const directory = mkdtempSync(join(tmpdir(), 'portfolio-version-'));
 try {
-  writeFileSync(join(directory, 'index.html'), versionHtml('1.364'));
-  assert.equal(prepareSiteVersion(directory, published).version, '1.365');
+  writeFileSync(join(directory, 'index.html'), versionHtml('1.364') + versionHtml('1.364'));
+  assert.equal(prepareSiteVersion(directory, published).version, '2.95');
   assert.deepEqual(prepareSiteVersion(directory, published).changedPaths, []);
   const candidate = readFileSync(join(directory, 'index.html'), 'utf8');
+  assert.equal(candidate, versionHtml('2.95') + versionHtml('2.95'));
+  assert.equal(readSiteVersion(candidate), '2.95');
   verifyCandidateVersion(candidate, failed, published);
-  verifyCandidateVersion(candidate, failed, {sha: failed, version:'1.365'});
-  assert.throws(() => verifyCandidateVersion(candidate, failed, {sha: 'c'.repeat(40), version: '1.365'}), /stale/);
+  verifyCandidateVersion(candidate, failed, {sha: failed, version:'2.95'});
+  assert.throws(() => verifyCandidateVersion(candidate, failed, {sha: 'c'.repeat(40), version: '2.95'}), /stale/);
 } finally { rmSync(directory, {recursive:true, force:true}); }
-console.log('PASS site version: confirmed success, historical baseline, failed/repeated candidates, resume and concurrent publication.');
+console.log('PASS site version: confirmed success, version 2 baseline, synchronized labels, failed/repeated candidates, resume and concurrent publication.');
 const pendingApi = async endpoint => endpoint.startsWith('deployments?')
   ? [{id: 2, sha: failed}, {id: 1, sha: versionBaseline.sha}]
   : endpoint.includes('/2/') ? [{state:'in_progress'}] : [{state:'success'}];

@@ -1,18 +1,30 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-// Reconstructed from distinct Pages publications since the first custom-domain
-// deployment (53229007, 24 July 2026). Older GitHub status history is incomplete.
-export const versionBaseline = { sha: '80f51f617c9259f91e833a7e8d701f618e8f9d71', version: '1.363' };
+// Version 2 starts with the first successful publication of the open Index panel.
+// Pages deployment 6885721275 succeeded on 6 October 2026 at 16:48:57 Moscow.
+// It was 1.270 in the original custom-domain publication ledger.
+export const versionEpoch = { sha: 'dee7bf12ef7de62fef4636e0691c558392bfedca', previousMinor: 270 };
+// Last publication before the HTML version marker was introduced: 1.363 -> 2.93.
+export const versionBaseline = { sha: '80f51f617c9259f91e833a7e8d701f618e8f9d71', version: '2.93' };
 const versionPattern = /(<p\b[^>]*\bdata-site-version(?:="")?[^>]*>Версия )(\d+\.\d+)(<\/p>)/g;
 export const readSiteVersion = html => {
   const matches = [...html.matchAll(versionPattern)];
-  if (matches.length !== 1) throw new Error('Expected one static site version in settings.');
+  const labels = [...html.matchAll(/<p\b[^>]*\bdata-site-version(?=\s|=|>)[^>]*>/g)];
+  if (!matches.length || matches.length !== labels.length || new Set(matches.map(match => match[2])).size !== 1) throw new Error('Expected one consistent static site version.');
   return matches[0][2];
 };
 export const nextSiteVersion = version => {
-  if (!/^1\.\d+$/.test(version)) throw new Error(`Unknown site version: ${version}`);
-  return `1.${Number(version.split('.')[1]) + 1}`;
+  if (!/^2\.\d+$/.test(version)) throw new Error(`Unknown site version: ${version}`);
+  return `2.${Number(version.split('.')[1]) + 1}`;
+};
+
+export const rebaseSiteVersion = version => {
+  if (/^2\.\d+$/.test(version)) return version;
+  if (!/^1\.\d+$/.test(version) || Number(version.split('.')[1]) < versionEpoch.previousMinor) {
+    throw new Error(`Publication predates the version 2 baseline: ${version}`);
+  }
+  return `2.${Number(version.split('.')[1]) - versionEpoch.previousMinor}`;
 };
 
 // A gh-pages ref alone is insufficient: Pages may have failed after the push.
@@ -28,7 +40,7 @@ export const readPublishedVersion = async ({ readApi, readHtml, pendingCommit })
       if (!statuses.some(status => status.state === 'success')) continue;
       const version = deployment.sha === versionBaseline.sha
         ? versionBaseline.version : readSiteVersion(await readHtml(deployment.sha));
-      return { sha: deployment.sha, version };
+      return { sha: deployment.sha, version: rebaseSiteVersion(version) };
     }
     if (deployments.length < 100) throw new Error('No successful Pages publication found; site version was not changed.');
   }

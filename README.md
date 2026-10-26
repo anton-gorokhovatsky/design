@@ -465,3 +465,15 @@ Boundary fixtures reject HTML-only growth and combined-page overflows.
 
 Long CSS explanations live in [CSS rationale](docs/css-rationale.md); short
 comments remain beside the unchanged selectors and declarations.
+
+## Site version
+
+The quiet version label appears in the desktop service block and the compact
+main menu. Both copies are static HTML and are updated together at release.
+Version **2.0** starts with the first successful publication of the open Index
+panel on **6 October 2026, 16:48:57 Moscow**: commit `dee7bf12`,
+[Pages run 37473662478](https://github.com/anton-gorokhovatsky/design/actions/runs/37473662478).
+That publication was **1.270** in the original custom-domain ledger, so
+`1.N` becomes `2.(N − 270)` from that point; **1.366 becomes 2.96**. Each new
+successfully published commit increments the second number. Failed candidates
+and retrying an already published commit do not consume another number.
