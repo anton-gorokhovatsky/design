@@ -720,7 +720,7 @@ const validateMobileSearchContract = ({
     !focused.focused
     || !focused.bodyHasFocus
     || focused.expanded !== "true"
-    || focused.count !== 7
+    || focused.count !== 6
     || !focused.geometryFits
     || focused.pageScrollY !== 0
     || focused.overflowX !== 0
@@ -811,7 +811,7 @@ const validateMobileSafariSplitSearchContract = ({ emulation, focused }) => {
     && focused.focused
     && focused.bodyHasFocus
     && focused.expanded === "true"
-    && focused.count === 7
+    && focused.count === 6
     && focused.geometryFits
     && focused.pageScrollY === 0
     && focused.overflowX === 0

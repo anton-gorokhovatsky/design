@@ -182,9 +182,28 @@ const rowAfter = versionAfter.replace('<div class="display-control">\n', '<div c
   .replace('<p class="site-version site-version--display" data-site-version>Версия 2.97</p>\n', '<p class="site-version site-version--display" data-site-version>Версия 2.97</p>\n</div>\n');
 scoped('index.html', rowBefore, rowAfter, 'components', ['check:accessibility']);
 assert.equal(browserMatrix('components', ['check:accessibility']).include.length, 2);
+// Small map controls keep their semantic attributes and surrounding code.
+const returnBefore = "<button type=\"button\" class=\"focused-return\" data-focused-return><span aria-hidden=\"true\">←</span> Опорные точки</button>";
+const returnAfter = "<button type=\"button\" class=\"focused-return\" data-focused-return><svg class=\"focused-return__icon\" viewBox=\"0 0 24 24\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M4 12h15M13 5l7 7-7 7\"/></svg> Опорные точки</button>";
+scoped('index.html', returnBefore, returnAfter, 'components', ['header']);
+scoped('index.html', returnBefore, returnAfter.replace('focusable="false"', 'onclick="run()"'), 'full');
+scoped("js/panels.js", "  if (!normalizedQuery) {\n    const garage = mapItems.find((item) => item.id === \"garage\");\n    return [\n      ...(garage ? [makeNodeCommandResult(garage)] : []),\n      ...commandViews,\n    ];\n  }", "  if (!normalizedQuery) {\n    return commandViews;\n  }", 'components', ['check:command-placement']);
+scoped("js/panels.js", "  if (!normalizedQuery) {\n    const garage = mapItems.find((item) => item.id === \"garage\");\n    return [\n      ...(garage ? [makeNodeCommandResult(garage)] : []),\n      ...commandViews,\n    ];\n  }", "  if (!normalizedQuery) {\n    return commandViews;\n  }\nextra();", 'full');
+scoped("scripts/browser-contracts.cjs", "|| focused.count !== 7\n&& focused.count === 7", "|| focused.count !== 6\n&& focused.count === 6", 'components', ['check:command-placement']);
+scoped("scripts/browser-contracts.cjs", "|| focused.count !== 7\n&& focused.count === 7", "|| focused.count !== 6\n&& focused.count === 6\nextra();", 'full');
+scoped("scripts/check-ui-contracts.mjs", "if (completeSearchContract.count !== 7 || completeSearchContract.settingsCount !== 1", "if (completeSearchContract.count !== 6 || completeSearchContract.settingsCount !== 1", 'components', ['check:command-placement']);
 const aboutBefore = '<!doctype html>\n<a id="map-about-trigger" class="map-disclosure map-about-trigger" href="?story=1" aria-controls="story-pane" aria-expanded="false"><span>О КАРТЕ</span></a>';
 const aboutAfter = aboutBefore.replace('<span>', '<svg class="map-about-trigger__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 6.5C9.5 4.8 6.5 4.3 3 5v14c3.5-.7 6.5-.2 9 1.5 2.5-1.7 5.5-2.2 9-1.5V5c-3.5-.7-6.5-.2-9 1.5Zm0 0v14"/></svg>' + '<span>');
 scoped('index.html', aboutBefore, aboutAfter, 'components', ['check:accessibility']);
+const rowsBefore = '            <div\n              class="map-control-group map-control-group--coordinates"><button data-time-toggle>ХРОНОЛОГИЯ</button></div>\n' + aboutAfter + '\n';
+const rowsAfter = '            <div class="map-control-group map-control-group--secondary">\n' + rowsBefore + '            </div>\n';
+scoped('index.html', rowsBefore, rowsAfter, 'components', ['check:accessibility']);
+scoped('index.html', rowsBefore, rowsAfter.replace('--secondary"', '--secondary" onclick="run()"'), 'full');
+scoped('index.html', rowsBefore, rowsAfter.replace('data-time-toggle', 'data-other-toggle'), 'full');
+const filtersBeforeRows = '<div class="map-control-group map-control-group--filters"><button>ВСЁ</button></div>\n';
+scoped('index.html', filtersBeforeRows + rowsBefore, rowsAfter.replace(rowsBefore, filtersBeforeRows + rowsBefore), 'full');
+
+
 for (const unsafe of [aboutAfter.replace('href="?story=1"', 'href="?story=2"'), aboutAfter.replace('class="map-about-trigger__icon"', 'class="map-about-trigger__icon" onclick="run()"'), aboutAfter+'<script>run()</script>']) scoped('index.html', aboutBefore, unsafe, 'full');
 
 scoped('index.html', rowBefore, rowAfter.replace('class="display-control__status"', 'class="display-control__status" onclick="run()"'), 'full');

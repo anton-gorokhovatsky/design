@@ -107,7 +107,7 @@ try {
       assert.equal(await submit.getAttribute("aria-label"), "Закрыть поиск");
       await settle(page);
       const initialPopup = await assertPopup(page);
-      assert.equal(initialPopup.count, 7);
+      assert.equal(initialPopup.count, 6);
       if (label === 'mobile') {
         await page.evaluate(() => {
           Object.defineProperties(visualViewport, {height: {configurable:true,value:350}, offsetTop:{configurable:true,value:140}});

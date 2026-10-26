@@ -9472,7 +9472,7 @@ color: var(--content-muted);
 }
 
 /* Desktop map controls: open typography and native disclosures. */
-.map-about-trigger { display: none; }
+.map-about-trigger, .system-dock .map-control-group--secondary { display: none; }
 
 @container map-viewport (min-width: 901px) {
 .system-dock .map-controls,
@@ -9544,6 +9544,7 @@ transition: color var(--duration-feedback) var(--motion-shift);
 .map-disclosure:focus-visible { outline: var(--focus-width) solid var(--signal); outline-offset: var(--focus-offset); }
 .map-disclosure__chevron { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; }
 .map-disclosure[aria-expanded="true"] .map-disclosure__chevron { transform: rotate(180deg); }
+.system-dock .map-control-group--secondary { display: grid; }
 .map-about-trigger { display: grid; grid-template-columns: 16px minmax(0, 1fr); padding: 0 7px; }
 .map-about-trigger__icon { display: block; width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; }
 .map-popover {
@@ -9730,6 +9731,7 @@ cursor: pointer;
 /* Accepted map-first layout, lighter framing. */
 .focused-home, .focused-map-open, .focused-return, .point-preview { display: none; }
 .focused-return { color: var(--ink); }
+.focused-return__icon { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.5; transform: rotate(180deg); }
 .direction-landmark__kind { display: none; }
 @container map-viewport (max-width: 900px) {
 /* Changing scope keeps touch targets stationary. */

@@ -28,13 +28,13 @@ const cssOwners = {
     && branch.nodes.every(node => node.type !== "nesting"
       && (node.type !== "combinator" || ["", ">"].includes(node.value.trim())))),
   settings: selector => !ownsClass(/^settings-panel__version$/)(selector) && ownsClass(settingsClass)(selector),
-  "check:accessibility": ownsClass(/^(?:site-version(?:--[\w-]+)?|settings-panel__version|display-control__(?:presence|status)|map-about-trigger(?:__[\w-]+)?)$/),
+  "check:accessibility": ownsClass(/^(?:site-version(?:--[\w-]+)?|settings-panel__version|display-control__(?:presence|status)|map-about-trigger(?:__[\w-]+)?|map-control-group--secondary)$/),
   consent: ownsClass(/^analytics-notice(?:$|__)/),
   overview: ownsClass(/^(?:overview-entry|work-overview(?:__[\w-]+)?|observation-[\w-]+)$/),
   "map-presentation": selector => selectorParser().astSync(selector).nodes.every(branch =>
     branch.nodes[0]?.type === "class" && /^map-node(?:$|__|--)/.test(branch.nodes[0].value))
     && ownsClass(/^map-node(?:$|__|--)/)(selector),
-  header: ownsClass(/^(?:site-header|brand(?:__[\w-]+)?|whoop-(?:readout|metrics|status|foot|stamp|level|compact-trigger))$/),
+  header: ownsClass(/^(?:focused-return(?:__[\w-]+)?|site-header|brand(?:__[\w-]+)?|whoop-(?:readout|metrics|status|foot|stamp|level|compact-trigger))$/),
   "search-icon": ownsClass(/^command-dock__mark$/),
   "map-labels": ownsClass(/^map-(?:node-label|anchor-label|space-label)(?:$|--)/),
 };
@@ -252,6 +252,10 @@ const siteVersionHtml = source => {
 // The story entry may reuse the existing menu book glyph. Its link attributes,
 // visible label and all surrounding markup stay outside this decorative mask.
 const aboutEntryIconOutside = source => {
+  const rowGroup = '            <div class="map-control-group map-control-group--secondary">\n';
+  const coordinates = '            <div\n              class="map-control-group map-control-group--coordinates"';
+  if (source.includes(rowGroup + coordinates)) source = source.replace(rowGroup + coordinates, coordinates)
+    .replace(/(<a id="map-about-trigger"[^>]*>(?:(?!<\/a>)[\s\S])*<\/a>\n)            <\/div>\n/, '$1');
   const links = [...source.matchAll(/(<a\b[^>]*\bid="map-about-trigger"[^>]*>)([\s\S]*?)(<\/a>)/g)];
   if (links.length !== 1) throw new Error('Expected one map story entry');
   const [full, open, content, close] = links[0];
@@ -259,6 +263,46 @@ const aboutEntryIconOutside = source => {
   const icon = '<svg class="map-about-trigger__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 6.5C9.5 4.8 6.5 4.3 3 5v14c3.5-.7 6.5-.2 9 1.5 2.5-1.7 5.5-2.2 9-1.5V5c-3.5-.7-6.5-.2-9 1.5Zm0 0v14"/></svg>';
   if (content !== label && content !== icon + label) throw new Error('Unknown story entry decoration');
   return source.replace(full, open + label + close);
+};
+
+const focusedReturnIconOutside = source => source.replace("<button type=\"button\" class=\"focused-return\" data-focused-return><svg class=\"focused-return__icon\" viewBox=\"0 0 24 24\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M4 12h15M13 5l7 7-7 7\"/></svg> Опорные точки</button>", "<button type=\"button\" class=\"focused-return\" data-focused-return><span aria-hidden=\"true\">←</span> Опорные точки</button>");
+
+// These literal cardinality changes preserve every geometry/focus assertion.
+// The existing command-placement contract checks the same initial list in both engines.
+const initialCommandPatches = {
+  "js/panels.js": [
+    [
+      "  if (!normalizedQuery) {\n    const garage = mapItems.find((item) => item.id === \"garage\");\n    return [\n      ...(garage ? [makeNodeCommandResult(garage)] : []),\n      ...commandViews,\n    ];\n  }",
+      "  if (!normalizedQuery) {\n    return commandViews;\n  }"
+    ]
+  ],
+  "scripts/browser-contracts.cjs": [
+    [
+      "|| focused.count !== 7",
+      "|| focused.count !== 6"
+    ],
+    [
+      "&& focused.count === 7",
+      "&& focused.count === 6"
+    ]
+  ],
+  "scripts/check-ui-contracts.mjs": [
+    [
+      "if (completeSearchContract.count !== 7 || completeSearchContract.settingsCount !== 1",
+      "if (completeSearchContract.count !== 6 || completeSearchContract.settingsCount !== 1"
+    ]
+  ]
+};
+export const initialCommandComponents = (path, before, after) => {
+  if (before.includes("\0") || after.includes("\0")) return null;
+  const patches = initialCommandPatches[path];
+  if (!patches) return null;
+  let restored = after;
+  for (const [old, current] of patches) {
+    if (before.split(old).length !== 2 || restored.split(current).length !== 2) return null;
+    restored = restored.replace(current, old);
+  }
+  return restored === before ? ['check:command-placement'] : null;
 };
 
 // Only the console resize callback and its observer belong to this lane.
@@ -353,9 +397,12 @@ export const affectedComponents = (path, before, after, maskHtmlCopy) => {
     }
     if (path === "styles.css") return cssComponents(before, after);
     if (path === "index.html") {
-      try {
-        if (maskHtmlCopy(aboutEntryIconOutside(before)) === maskHtmlCopy(aboutEntryIconOutside(after))) return ["check:accessibility"];
-      } catch { /* Other link changes keep their existing coverage. */ }
+      for (const components of [["check:accessibility"], ["header"], ["check:accessibility", "header"]]) {
+        try {
+          const normalize = source => maskHtmlCopy(components.reduce((text, id) => id === "header" ? focusedReturnIconOutside(text) : aboutEntryIconOutside(text), source));
+          if (normalize(before) === normalize(after)) return components;
+        } catch { /* Other changes keep their existing coverage. */ }
+      }
       try {
         if (maskHtmlCopy(siteVersionHtml(before)) === maskHtmlCopy(siteVersionHtml(after))) return ["check:accessibility"];
       } catch { /* Other markup keeps its existing component coverage. */ }
