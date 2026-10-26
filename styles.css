@@ -9682,7 +9682,7 @@ z-index: 64;
 .map-surface.has-command-focus :is(.mobile-first-paths,.mobile-first-composition) { visibility: hidden; }
 .map-surface.has-command-focus .control-console .mobile-first-dock .command-dock {
 position: fixed;
-top: calc(var(--command-focus-top, calc(calc(var(--pane-vh) * 100) - 56px)) - env(safe-area-inset-bottom));
+top: max(var(--command-focus-top, 8px), calc(env(safe-area-inset-top) + 8px));
 right: auto;
 bottom: auto;
 left: var(--command-focus-left, 8px);

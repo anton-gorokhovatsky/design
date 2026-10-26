@@ -107,7 +107,7 @@ try {
       assert.equal(await submit.getAttribute("aria-label"), "Закрыть поиск");
       await settle(page);
       const initialPopup = await assertPopup(page);
-      assert.equal(initialPopup.count, 6);
+      assert.equal(initialPopup.count, 7);
       if (label === 'mobile') {
         await page.evaluate(() => {
           Object.defineProperties(visualViewport, {height: {configurable:true,value:350}, offsetTop:{configurable:true,value:140}});
@@ -117,7 +117,7 @@ try {
         await settle(page);
         const panned=await readPopup(page);
         assert.ok(panned.form.top>=148&&panned.form.bottom<=482,JSON.stringify(panned));
-        assert.ok(panned.popup.top>=148&&Math.abs(panned.form.top-panned.popup.bottom-8)<.6,JSON.stringify(panned));
+        assert.ok(panned.popup.top>=148&&Math.abs(panned.popup.top-panned.form.bottom-8)<.6,JSON.stringify(panned));
         assert.equal(await input.evaluate(e=>e===document.activeElement),true,'Viewport panning preserves the keyboard input');
         await capture(page,'panned-keyboard-'+theme);
         await page.evaluate(()=>{delete visualViewport.height;delete visualViewport.offsetTop;document.querySelector('.map-surface').style.transform='';window.dispatchEvent(new Event('resize'));});

@@ -1941,7 +1941,7 @@ const auditBrowser = async (client, origin) => {
       rightAligned: Math.abs(bounds.right - surface.right) < 0.6,
     };
   })()`);
-  if (completeSearchContract.count !== 6 || completeSearchContract.settingsCount !== 1
+  if (completeSearchContract.count !== 7 || completeSearchContract.settingsCount !== 1
     || completeSearchContract.duplicateAnalytics || completeSearchContract.overflow > 1
     || !completeSearchContract.lastInside || !completeSearchContract.coversSearch
     || !completeSearchContract.rightAligned) {

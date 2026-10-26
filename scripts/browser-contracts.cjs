@@ -550,7 +550,7 @@ const readMobileSearchFocusedExpression = `(() => {
     results: resultsBounds,
     geometryFits: withinViewport(dockBounds)
       && withinViewport(resultsBounds)
-      && resultsBounds.bottom <= dockBounds.top - 6,
+      && resultsBounds.top >= dockBounds.bottom + 6,
     resultsClientHeight: results?.clientHeight || 0,
     resultsScrollHeight: results?.scrollHeight || 0,
     pageScrollY: window.scrollY,
@@ -720,7 +720,7 @@ const validateMobileSearchContract = ({
     !focused.focused
     || !focused.bodyHasFocus
     || focused.expanded !== "true"
-    || focused.count !== 6
+    || focused.count !== 7
     || !focused.geometryFits
     || focused.pageScrollY !== 0
     || focused.overflowX !== 0
@@ -811,7 +811,7 @@ const validateMobileSafariSplitSearchContract = ({ emulation, focused }) => {
     && focused.focused
     && focused.bodyHasFocus
     && focused.expanded === "true"
-    && focused.count === 6
+    && focused.count === 7
     && focused.geometryFits
     && focused.pageScrollY === 0
     && focused.overflowX === 0

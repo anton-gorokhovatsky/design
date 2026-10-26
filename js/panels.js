@@ -997,7 +997,11 @@ const getCommandResults = (query) => {
   const normalizedQuery = normalizeSearch(query);
 
   if (!normalizedQuery) {
-    return commandViews;
+    const garage = mapItems.find((item) => item.id === "garage");
+    return [
+      ...(garage ? [makeNodeCommandResult(garage)] : []),
+      ...commandViews,
+    ];
   }
 
   const candidates = [

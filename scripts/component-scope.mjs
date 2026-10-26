@@ -36,6 +36,7 @@ const cssOwners = {
     && ownsClass(/^map-node(?:$|__|--)/)(selector),
   header: ownsClass(/^(?:focused-return(?:__[\w-]+)?|site-header|brand(?:__[\w-]+)?|whoop-(?:readout|metrics|status|foot|stamp|level|compact-trigger))$/),
   "search-icon": ownsClass(/^command-dock__mark$/),
+  "check:command-placement": ownsClass(/^command-dock$/),
   "map-labels": ownsClass(/^map-(?:node-label|anchor-label|space-label)(?:$|--)/),
 };
 
@@ -267,42 +268,32 @@ const aboutEntryIconOutside = source => {
 
 const focusedReturnIconOutside = source => source.replace("<button type=\"button\" class=\"focused-return\" data-focused-return><svg class=\"focused-return__icon\" viewBox=\"0 0 24 24\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M4 12h15M13 5l7 7-7 7\"/></svg> Опорные точки</button>", "<button type=\"button\" class=\"focused-return\" data-focused-return><span aria-hidden=\"true\">←</span> Опорные точки</button>");
 
-// These literal cardinality changes preserve every geometry/focus assertion.
-// The existing command-placement contract checks the same initial list in both engines.
-const initialCommandPatches = {
-  "js/panels.js": [
-    [
-      "  if (!normalizedQuery) {\n    const garage = mapItems.find((item) => item.id === \"garage\");\n    return [\n      ...(garage ? [makeNodeCommandResult(garage)] : []),\n      ...commandViews,\n    ];\n  }",
-      "  if (!normalizedQuery) {\n    return commandViews;\n  }"
-    ]
+// Compact search keeps its own pane and visual viewport bounds, now opening
+// from the top. Exact replacement preserves all other geometry and handlers.
+const compactCommandTopPatches = [
+  [
+    "    viewport.height = visual?.height || innerHeight;",
+    "    viewport.top = Math.max(visual?.offsetTop || 0, map.top);\n    viewport.height = Math.max(0, Math.min((visual?.offsetTop || 0) + (visual?.height || innerHeight), map.bottom) - viewport.top);"
   ],
-  "scripts/browser-contracts.cjs": [
-    [
-      "|| focused.count !== 7",
-      "|| focused.count !== 6"
-    ],
-    [
-      "&& focused.count === 7",
-      "&& focused.count === 6"
-    ]
+  [
+    "    anchorTop = Math.max(viewport.top + gap, viewport.top + viewport.height - bounds.height - gap);",
+    "    anchorTop = viewport.top + gap;"
   ],
-  "scripts/check-ui-contracts.mjs": [
-    [
-      "if (completeSearchContract.count !== 7 || completeSearchContract.settingsCount !== 1",
-      "if (completeSearchContract.count !== 6 || completeSearchContract.settingsCount !== 1"
-    ]
+  [
+    "    const opensBelow = !focusedMobile && (contentHeight > spaceAbove && spaceBelow > spaceAbove);",
+    "    const opensBelow = focusedMobile || (contentHeight > spaceAbove && spaceBelow > spaceAbove);"
   ]
-};
-export const initialCommandComponents = (path, before, after) => {
-  if (before.includes("\0") || after.includes("\0")) return null;
-  const patches = initialCommandPatches[path];
-  if (!patches) return null;
+];
+const isCompactCommandTopPatch = (path, before, after) => {
+  const patches = ['js/viewport-ui.js', 'rendering/js/viewport-ui.js'].includes(path) ? compactCommandTopPatches
+    : path === 'scripts/browser-contracts.cjs' ? [['resultsBounds.bottom <= dockBounds.top - 6', 'resultsBounds.top >= dockBounds.bottom + 6']] : null;
+  if (!patches) return false;
   let restored = after;
   for (const [old, current] of patches) {
-    if (before.split(old).length !== 2 || restored.split(current).length !== 2) return null;
+    if (before.split(old).length !== 2 || restored.split(current).length !== 2) return false;
     restored = restored.replace(current, old);
   }
-  return restored === before ? ['check:command-placement'] : null;
+  return restored === before;
 };
 
 // Only the console resize callback and its observer belong to this lane.
@@ -384,6 +375,7 @@ const mapLabelsOutside = source => {
 export const affectedComponents = (path, before, after, maskHtmlCopy) => {
   if (before.includes("\0") || after.includes("\0")) return null;
   try {
+    if (isCompactCommandTopPatch(path, before, after)) return ["check:command-placement"];
     if (["js/observation-route.js", "js/map-media.js", "js/panels.js"].includes(path)
       && overviewOutside(path, before) === overviewOutside(path, after)) return ["overview"];
     if (path === "404.html" && notFoundBindings(maskHtmlCopy(before).replaceAll("\0", "")) === notFoundBindings(maskHtmlCopy(after).replaceAll("\0", ""))) return ["not-found"];
