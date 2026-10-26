@@ -354,6 +354,11 @@ export const affectedComponents = (path, before, after, maskHtmlCopy) => {
     if (path === "js/viewport-ui.js" && consoleBoundsOutside(before) === consoleBoundsOutside(after)) return ["console-bounds"];
     if (path === "js/map-engine.js" && mapLabelsOutside(before) === mapLabelsOutside(after)) return ["map-labels"];
     if (path === "scripts/browser-contracts.cjs") {
+      // Only the compact index changes its background treatment; glass stays shared.
+      const commandDepthOutside = source => source
+        .replace('const backgroundDepth = !(mobile && element.matches(".map-surface.has-command-focus .site-header")) && (element.matches(', 'const backgroundDepth = element.matches(')
+        .replace('"body.has-content-panel .control-console :is(.constellation-nav, .command-dock)",\n      )));', '"body.has-content-panel .control-console :is(.constellation-nav, .command-dock)",\n      ));');
+      if (commandDepthOutside(before) === commandDepthOutside(after)) return ["check:command-placement"];
       const outside = source => source.replace(/const readMaterialAuditExpression = `[\s\S]*?`;/, "MATERIAL_AUDIT");
       if (before.includes("const readMaterialAuditExpression = `") && after.includes("const readMaterialAuditExpression = `")
           && outside(before) === outside(after)) return ["materials"];

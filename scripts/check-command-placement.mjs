@@ -131,6 +131,23 @@ try {
       }
       const material = await page.evaluate(readMaterialAuditExpression);
       assert.deepEqual(material.failures, []);
+      const context = await page.evaluate(() => {
+        const surface = document.querySelector('.map-surface.has-command-focus');
+        if (!surface || (document.getElementById('map-pane')?.clientWidth ?? innerWidth) > 900) return null;
+        const header = surface.querySelector('.site-header');
+        const scene = surface.classList.contains('has-focused-home') ? surface.querySelector('.focused-home') : header;
+        const expectedOpacity = surface.classList.contains('has-full-mobile-map') ? .45 : .48;
+        return { expectedOpacity, opacity: Number(getComputedStyle(scene).opacity),
+          visibility: getComputedStyle(header).visibility, filter: getComputedStyle(header).filter,
+          pointerEvents: getComputedStyle(header).pointerEvents, inert: !!header.closest('[inert]') };
+      });
+      if (context) {
+        assert.equal(context.opacity, context.expectedOpacity);
+        assert.equal(context.visibility, 'visible');
+        assert.equal(context.filter, 'none');
+        assert.equal(context.pointerEvents, 'none');
+        assert.equal(context.inert, true);
+      }
       await capture(page, label + "-" + theme);
 
       if (label === "desktop") {

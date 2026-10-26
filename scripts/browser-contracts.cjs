@@ -249,14 +249,14 @@ const readMaterialAuditExpression = `(() => {
     })
     .map((element) => {
       const style = getComputedStyle(element);
-      const backgroundDepth = element.matches(
+      const backgroundDepth = !(mobile && element.matches(".map-surface.has-command-focus .site-header")) && (element.matches(
         "body.has-reading-surface :is(.site-header, .system-dock), "
         + "body.has-constellation-nav:not(.has-focused-home) .site-header, "
         + "body.has-command-focus .site-header, "
         + "body:is([data-case-open], .has-settings-panel) .control-console",
       ) || (mobile && element.matches(
         "body.has-content-panel .control-console :is(.constellation-nav, .command-dock)",
-      ));
+      )));
       // The play glass samples the opaque poster inside the reading window,
       // not the window's already-filtered backdrop. Verify the actual coverage.
       const poster = element.parentElement.querySelector(":scope > [data-personal-media-poster]");

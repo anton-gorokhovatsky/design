@@ -239,6 +239,14 @@ for (const path of ['js/viewport-ui.js','rendering/js/viewport-ui.js']) {
 }
 assert.equal(browserMatrix('components',['materials','scroll-lens-pointer']).include.length,11);
 const auditFixture = 'const readMaterialAuditExpression = `old`;\nconst unchanged = 1;';
+const depthAuditFixture = 'const readMaterialAuditExpression = `const backgroundDepth = element.matches("body.has-command-focus .site-header") || (mobile && element.matches(\n        "body.has-content-panel .control-console :is(.constellation-nav, .command-dock)",\n      ));`;';
+const compactDepthAudit = depthAuditFixture
+  .replace('const backgroundDepth = element.matches(', 'const backgroundDepth = !(mobile && element.matches(".map-surface.has-command-focus .site-header")) && (element.matches(')
+  .replace('      ));', '      )));');
+scoped('scripts/browser-contracts.cjs', depthAuditFixture, compactDepthAudit, 'components', ['check:command-placement']);
+scoped('scripts/browser-contracts.cjs', depthAuditFixture, compactDepthAudit.replace('.map-surface.has-command-focus', '.map-surface'), 'components', ['materials']);
+scoped('scripts/browser-contracts.cjs', depthAuditFixture, compactDepthAudit + '\nrunOtherBehavior();', 'full');
+
 scoped('scripts/browser-contracts.cjs', auditFixture, auditFixture.replace('`old`','`new`'), 'components', ['materials']);
 scoped('scripts/browser-contracts.cjs', auditFixture, auditFixture.replace('= 1','= 2'), 'full');
 assert.equal(browserMatrix('components',['materials']).include.length,11);
