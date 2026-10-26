@@ -73,6 +73,7 @@ const contractScripts = [
   "scripts/check-sphere-motion.mjs",
   "scripts/release.mjs",
   "scripts/release-quality.mjs",
+  "scripts/release-version.mjs",
   "scripts/check-release-quality.mjs",
   "scripts/release-scope.mjs",
   "scripts/component-scope.mjs",

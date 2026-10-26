@@ -6,6 +6,7 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { waitForQuality } from "./release-quality.mjs";
+import { readPublishedVersion, prepareSiteVersion, verifyCandidateVersion } from "./release-version.mjs";
 import { onlyIndependentChecks, localScopeFor } from "./check-profiles.mjs";
 import { getPublicationAssets } from "./publication-assets.mjs";
 import { planRelease, requireReleaseBase } from "./release-scope.mjs";
@@ -235,6 +236,13 @@ const verifyRemoteBranches = async (commit) => {
   console.log(`✓ main and gh-pages point to ${commit.slice(0, 12)}.`);
 };
 
+const publishedVersion = pendingCommit => readPublishedVersion({
+  pendingCommit,
+  readApi: async endpoint => JSON.parse((await run("gh", ["api", `repos/{owner}/{repo}/${endpoint}`], {
+    capture: true, label: "Read successful Pages publication for the site version",
+  })).stdout),
+  readHtml: async commit => (await run("git", ["show", `${commit}:index.html`], { capture: true })).stdout,
+});
 const publishVerifiedCommit = async (commit, publicUrl, localRuntime) => {
   await waitForQuality({ commit, readRuns: async () => {
     const { stdout } = await run("gh", [
@@ -248,6 +256,8 @@ const publishVerifiedCommit = async (commit, publicUrl, localRuntime) => {
   if (remoteMain?.split(/\s+/)[0] !== commit) {
     throw new Error("main changed during verification; refusing to publish an older commit.");
   }
+  const candidateHtml = (await run("git", ["show", `${commit}:index.html`], { capture: true })).stdout;
+  verifyCandidateVersion(candidateHtml, commit, await publishedVersion(commit));
   await run("git", ["push", "origin", `${commit}:refs/heads/gh-pages`], {
     label: "Publish the exact Quality-approved commit",
   });
@@ -326,6 +336,9 @@ try {
     label: "Read the published baseline before assembling the release",
   });
   requireReleaseBase(planRelease({ projectRoot, target: "HEAD" }), options.includeUnpublished);
+  const versionUpdate = prepareSiteVersion(projectRoot, await publishedVersion());
+  console.log(`\nSite version: ${versionUpdate.version}`);
+  for (const path of versionUpdate.changedPaths) if (!options.files.includes(path)) options.files.push(path);
   cacheUpdate = onlyIndependentChecks(planRelease({ projectRoot })) ? { changedPaths: [] } : syncRuntimeAssetVersions(projectRoot);
 } catch (error) {
   fail(

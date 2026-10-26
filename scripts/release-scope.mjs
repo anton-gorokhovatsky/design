@@ -159,13 +159,18 @@ export const planRelease = ({ projectRoot, base = "origin/gh-pages", target } = 
     }
     if (!targetSha) {
       changes.push(...git("ls-files", "--others", "--exclude-standard", "-z").split("\0").filter(Boolean)
-        .map((path) => { const owner = ownedCheckComponent(path); return { path, mode: owner ? "components" : "full", components: owner ? [owner] : [] }; }));
+        .map((path) => { const owner = ownedCheckComponent(path); return staticCheckPaths.has(path) ? { path, mode: "copy", components: [] } : { path, mode: owner ? "components" : "full", components: owner ? [owner] : [] }; }));
     }
     const fullPaths = changes.filter(({ mode }) => mode === "full").map(({ path }) => path);
     const components = [...new Set(changes.flatMap(({ components }) => components))].sort();
     const mode = fullPaths.length ? "full" : components.length ? "components" : "copy";
+    const selectedStaticScope = staticScopeFor(mode, components);
+    const processContracts = changes.some(({ path }) => staticCheckPaths.has(path) && ownedCheckComponent(path) === "checks");
+    // A signature-only browser matrix still needs process contracts when its
+    // release tooling changed. The existing checks profile contains both.
+    const staticScope = selectedStaticScope === "signature" && processContracts ? "checks" : selectedStaticScope;
     return {
-      mode, staticScope: staticScopeFor(mode, components), base: baseSha, components, matrix: browserMatrix(mode, components),
+      mode, staticScope, base: baseSha, components, matrix: browserMatrix(mode, components),
       pointAddresses: pointRename ? [{ from: pointRename.from, to: pointRename.to }] : [],
       reason: fullPaths.length ? `Shared or unclassified changes: ${fullPaths.join(", ")}`
         : components.length ? `Affected components and their integration checks: ${components.join(", ")}`

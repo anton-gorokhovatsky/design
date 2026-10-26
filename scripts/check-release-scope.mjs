@@ -561,10 +561,26 @@ try {
   put('README.md', 'A later copy-only commit'); git('add', '.'); git('commit', '-m', 'copy');
   assert.equal(plan().staticScope, 'signature', 'Selection uses the complete unpublished signature range');
   put('scripts/check-project.mjs', 'check runner');
-  assert.equal(plan().staticScope, 'checks', 'Tooling changes run chooser and execution contracts');
+  assert.equal(plan().staticScope, 'checks', 'Mixed signature and tooling preserves both static contract sets');
+  assert.deepEqual(plan().matrix, browserMatrix('components', ['signature']), 'Tooling adds no unrelated browser jobs');
   put('styles.css', '.map-grid {color: red}');
   assert.equal(plan().mode, 'full', 'A signature cannot hide a shared portfolio style change');
   assert.equal(plan().staticScope, 'static');
   assert.deepEqual(plan().matrix, browserMatrix('full'));
 } finally { rmSync(isolatedDirectory, { recursive: true, force: true }); }
 console.log(`PASS: ${checks} copy/component/global changes; unsafe syntax, combined git history, complete browser coverage and all Quality lanes.`);
+
+// Local consent presentation keeps the actual consent, first-visit and reflow
+// checks; a shared selector or executable UI change still requires full scope.
+for (const selector of ['.analytics-notice', '.analytics-notice__actions button', '.analytics-notice__note']) {
+  scoped('styles.css', '', `${selector} {margin:0}`, 'components', ['consent']);
+}
+for (const selector of ['.analytics-notice + .map-node', '.analytics-notice,.map-grid', ':is(.analytics-notice,.map-grid)']) {
+  scoped('styles.css', '', `${selector} {opacity:0}`, 'full');
+}
+for (const engine of ['chromium', 'webkit']) assert.deepEqual(
+  new Set(browserMatrix('components', ['consent']).include.filter(row => row.browser === engine).flatMap(row => row.checks.split(','))),
+  new Set(['core', 'accessibility', 'first-visit']));
+for (const path of ['scripts/release.mjs', 'scripts/release-version.mjs', 'scripts/component-scope.mjs', 'scripts/check-runner.mjs']) {
+  assert.equal(classifyChange(path, 'before', 'after').mode, 'copy');
+}

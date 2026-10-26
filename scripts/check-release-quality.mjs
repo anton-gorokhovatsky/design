@@ -31,3 +31,48 @@ await assert.rejects(check([[{ ...green, status: "in_progress", conclusion: "" }
 await assert.rejects(check([[green]], { commit: "short" }), /full commit SHA/);
 await assert.rejects(check([[green]], { readRuns: async () => { throw new Error("GitHub unavailable"); } }), /GitHub unavailable/);
 console.log("PASS release barrier: exact SHA, main push, latest run, success only; fail closed on timeout/error.");
+
+// Number only confirmed Pages publications; failed candidates and retries do
+// not consume a number. Keep these with the existing publication barrier tests.
+const { readPublishedVersion, readSiteVersion, prepareSiteVersion, verifyCandidateVersion, versionBaseline } = await import('./release-version.mjs');
+const { mkdtempSync, writeFileSync, readFileSync, rmSync } = await import('node:fs');
+const { tmpdir } = await import('node:os');
+const { join } = await import('node:path');
+const versionHtml = version => `<p class="settings-panel__version" data-site-version>Версия ${version}</p>`;
+const failed = 'f'.repeat(40), successful = 'b'.repeat(40);
+const published = await readPublishedVersion({
+  readApi: async endpoint => endpoint.startsWith('deployments?')
+    ? [{id: 3, sha: failed}, {id: 2, sha: successful}]
+    : endpoint.includes('/3/') ? [{state: 'failure'}] : [{state: 'inactive'}, {state: 'success'}],
+  readHtml: async sha => { assert.equal(sha, successful); return versionHtml('1.364'); },
+});
+assert.deepEqual(published, {sha: successful, version: '1.364'});
+assert.deepEqual(await readPublishedVersion({
+  readApi: async endpoint => endpoint.startsWith('deployments?') ? [{id: 1, sha: versionBaseline.sha}] : [{state:'success'}],
+  readHtml: async () => { throw new Error('Bootstrap has no version marker'); },
+}), versionBaseline);
+await assert.rejects(readPublishedVersion({readApi: async () => [], readHtml: async () => ''}), /No successful/);
+assert.throws(() => readSiteVersion(''), /one static/);
+assert.throws(() => readSiteVersion(versionHtml('1.1') + versionHtml('1.2')), /one static/);
+const directory = mkdtempSync(join(tmpdir(), 'portfolio-version-'));
+try {
+  writeFileSync(join(directory, 'index.html'), versionHtml('1.364'));
+  assert.equal(prepareSiteVersion(directory, published).version, '1.365');
+  assert.deepEqual(prepareSiteVersion(directory, published).changedPaths, []);
+  const candidate = readFileSync(join(directory, 'index.html'), 'utf8');
+  verifyCandidateVersion(candidate, failed, published);
+  verifyCandidateVersion(candidate, failed, {sha: failed, version:'1.365'});
+  assert.throws(() => verifyCandidateVersion(candidate, failed, {sha: 'c'.repeat(40), version: '1.365'}), /stale/);
+} finally { rmSync(directory, {recursive:true, force:true}); }
+console.log('PASS site version: confirmed success, historical baseline, failed/repeated candidates, resume and concurrent publication.');
+const pendingApi = async endpoint => endpoint.startsWith('deployments?')
+  ? [{id: 2, sha: failed}, {id: 1, sha: versionBaseline.sha}]
+  : endpoint.includes('/2/') ? [{state:'in_progress'}] : [{state:'success'}];
+await assert.rejects(readPublishedVersion({readApi:pendingApi,readHtml:async()=>''}), /still pending/);
+assert.deepEqual(await readPublishedVersion({readApi:pendingApi,readHtml:async()=>'',pendingCommit:failed}), versionBaseline);
+const { getPublicationAssets } = await import('./publication-assets.mjs');
+const { fileURLToPath } = await import('node:url');
+const independent = getPublicationAssets(fileURLToPath(new URL('../', import.meta.url)), {staticScope:'checks',components:['checks'],files:[]});
+assert.ok(independent.htmlHash && independent.html.includes('data-site-version'));
+assert.ok(!independent.assets.some(asset => asset.path.startsWith('js/')));
+console.log('PASS version serialization and independent HTML publication proof.');

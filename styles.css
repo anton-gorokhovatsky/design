@@ -8064,9 +8064,9 @@ line-height: var(--leading-body);
 }
 .analytics-notice[hidden] { display: none; }
 .analytics-notice p { margin: 0; }
-.analytics-notice__actions { display: flex; flex-wrap: wrap; gap: 0 var(--space-5); margin-top: var(--space-2); }
+.analytics-notice__actions { display: flex; flex-wrap: wrap; gap: 0 var(--space-5); margin-top: var(--space-1); }
 .analytics-notice__actions button { min-height: var(--control-target); font-weight: 500; text-align: start; }
-.analytics-notice__note button { min-height: var(--control-target); }
+.analytics-notice__note { font-size: var(--type-utility); }
 body:is(.has-reading-surface, .has-point-preview, .has-command-focus, .has-constellation-nav, .has-settings-panel) .analytics-notice,
 .has-story-pane .analytics-notice { visibility: hidden; }
 @container map-viewport (max-width: 900px) {
@@ -8419,6 +8419,7 @@ font-weight: 400;
 .whoop-foot span { color: var(--content-muted); }
 .whoop-foot button { min-height: 30px; padding: .1875rem 0; }
 .whoop-compact-trigger, .whoop-stamp { display: none; }
+.settings-panel__version { color: var(--content-muted); font-size: var(--type-utility); line-height: var(--leading-body); }
 .settings-panel__note {
 color: var(--content-muted);
 text-wrap: pretty;

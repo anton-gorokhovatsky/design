@@ -38,6 +38,7 @@ export const componentCoverage = {
   "map-story": ["map-story", "scroll-lens", "accessibility"],
   media: ["reels", "case-view", "case-flow", "hover-layout", "observation-route"],
   settings: ["core", "accessibility", "whoop-ui"],
+  consent: ["core", "accessibility", "first-visit"],
   // Console bounds also move the author aura and detached search results.
   // WHOOP includes live-surface: 404 return, ResizeObserver and page errors.
   "console-bounds": ["header", "hover-layout", "command-placement", "whoop-ui", "map-routes", "accessibility", "case-flow"],

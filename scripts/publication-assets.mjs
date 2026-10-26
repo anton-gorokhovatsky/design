@@ -6,10 +6,10 @@ import { onlyIndependentChecks } from './check-profiles.mjs';
 const hash = value => createHash('sha256').update(value).digest('hex');
 export const getPublicationAssets = (root, plan) => {
   const independent = onlyIndependentChecks(plan);
-  const html = independent ? null : readFileSync(resolve(root, 'index.html'), 'utf8');
-  const references = html ? [...html.matchAll(/(?:src|href)=["']((?:styles\.css|(?:js|assets)\/[^"'?#]+)(?:\?[^"']*)?)["']/g)].map(m => m[1]) : [];
+  const html = readFileSync(resolve(root, 'index.html'), 'utf8');
+  const references = !independent ? [...html.matchAll(/(?:src|href)=["']((?:styles\.css|(?:js|assets)\/[^"'?#]+)(?:\?[^"']*)?)["']/g)].map(m => m[1]) : [];
   const linkedReferences = new Set(references);
-  if (html) references.push(...runtimeDataFiles, ...storyFiles);
+  if (!independent) references.push(...runtimeDataFiles, ...storyFiles);
   if (independent || plan.components.includes('signature')) {
     const version = readFileSync(resolve(root, 'signature/src/component.js'), 'utf8').match(/VERSION = "([\d.]+)"/)[1];
     references.push('signature/v1/signature.js', `signature/${version}/signature.js`, 'signature/demo.html', 'signature/README.md');

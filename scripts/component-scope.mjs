@@ -27,6 +27,7 @@ const cssOwners = {
     && branch.nodes.every(node => node.type !== "nesting"
       && (node.type !== "combinator" || ["", ">"].includes(node.value.trim())))),
   settings: ownsClass(settingsClass),
+  consent: ownsClass(/^analytics-notice(?:$|__)/),
   overview: ownsClass(/^(?:overview-entry|work-overview(?:__[\w-]+)?|observation-[\w-]+)$/),
   "map-presentation": selector => selectorParser().astSync(selector).nodes.every(branch =>
     branch.nodes[0]?.type === "class" && /^map-node(?:$|__|--)/.test(branch.nodes[0].value))
