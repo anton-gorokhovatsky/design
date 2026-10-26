@@ -13,6 +13,9 @@ const browser=await({chromium,webkit}[engine]).launch();
 async function checkFamilies(page){
  await page.emulateMedia({reducedMotion:'reduce'});
  await page.waitForFunction(()=>document.documentElement.dataset.reduceMotion==='true');
+ // Check idle captions: a selected readout deliberately replaces its static label.
+ await page.locator('#story-title').click();
+ await page.mouse.move(0,0);
  await page.locator('#scene-time').evaluate(e=>e.scrollIntoView());
  await page.locator('[data-layout="map"]').check();
  const failures=await page.locator('#scene-time').evaluate(async scene=>{

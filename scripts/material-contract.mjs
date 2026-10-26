@@ -1,7 +1,9 @@
 import postcss from 'postcss';
 
 // Only legacy copies of the unchanged material can use the material cleanup lane.
-// Geometry, tokens, the registry, and unknown selectors remain outside this scope.
+// Geometry, tokens, and unknown selectors remain outside this scope.
+// The exact mobile registry guard below only restores its precedence over legacy
+// transparent search states; its container and complete material recipe are fixed.
 const legacyOwners = new Set([
   ".map-node-label",
   ".overlay-close",
@@ -36,7 +38,11 @@ const selectorKey = value => value.replace(/\s+/g, ' ').trim();
 const materialPaint = node => node.type === 'decl' && (
   node.prop === 'background' && node.value === 'var(--material-01)'
   || /^(?:-webkit-)?backdrop-filter$/.test(node.prop) && node.value === 'blur(24px)');
+const mobileRegistry = '@container map-viewport (max-width: 900px){\n[data-material-surface][data-material-active="mobile"]{border:0;background: var(--material-01);box-shadow:none;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);}}';
+const guardedMobileRegistry = mobileRegistry.replace('mobile"]', 'mobile"]:not(.is-content-stack-hidden)');
 export function isMaterialCleanup(before, after) {
+  const addsMobileGuard = before.includes(mobileRegistry) && !before.includes(guardedMobileRegistry)
+    && after.includes(guardedMobileRegistry) && !after.includes(mobileRegistry);
   const outside = source => {
     let copies = 0;
     const visit = node => {
@@ -50,8 +56,8 @@ export function isMaterialCleanup(before, after) {
     const tree = JSON.stringify(visit(postcss.parse(source)));
     return {tree,copies};
   };
-  const a=outside(before),b=outside(after);
-  return a.copies>0 && b.copies===0 && a.tree===b.tree;
+  const a=outside(before),b=outside(addsMobileGuard ? after.replace(guardedMobileRegistry,mobileRegistry) : after);
+  return (a.copies>0 || addsMobileGuard) && b.copies===0 && a.tree===b.tree;
 }
 
 export function independentMaterialPaint(source) {
