@@ -95,6 +95,12 @@ try {
 // The incident that prompted this lane: changing letter case inside runtime JS.
 change("js/panels.js", panels, "КОРОТКИЙ ОБЗОР", "Короткий обзор", true);
 change("js/map-data.js", map, "Самый важный профессиональный период:", "Профессиональный опыт:", true);
+change("js/map-data.js", map, 'linkLabel: "НЕ СФОТКАЛ — НЕ БЕГАЛ"', 'linkLabel: "Открыть Instagram"', true);
+change("js/map-data.js", map, 'linkLabel: "НЕ СФОТКАЛ — НЕ БЕГАЛ"', 'linkLabel: getLabel()', false);
+change("index.html", html, 'data-context="СОСТАВ КАРТЫ"', 'data-context="Состав"', true);
+change("index.html", html, 'data-floating-console="view"', 'data-floating-console="other"', false);
+change("index.html", '<div data-context="before"></div>', 'data-context="before"', 'data-context="after"', false);
+
 change("js/observation-route.js", route, "Почти четыре года развивал", "Развивал", true);
 change("index.html", html, ">МОЯ РОЛЬ<", ">МОЙ ВКЛАД<", true);
 change("index.html", html, 'aria-label="Управление обзором"', 'aria-label="Новая подпись"', true);

@@ -18,7 +18,7 @@ import { pointAddressPaths, pointAddressRename } from "./point-address-scope.mjs
 const copyArrays = {
   "js/panels.js": { name: "commandViews", fields: ["title", "meta"] },
   "js/map-data.js": {
-    name: "mapItems", fields: ["label", "title", "meta", "description", "timeLabel", "kindLabel"],
+    name: "mapItems", fields: ["label", "title", "meta", "description", "timeLabel", "kindLabel", "linkLabel"],
   },
   "js/observation-route.js": {
     name: "observationSteps", fields: ["title", "meta", "description"],
@@ -72,7 +72,9 @@ const maskHtmlCopy = (source) => {
     if (node.nodeName === "#text" && location && node.value.trim()) {
       ranges.push([location.startOffset, location.endOffset]);
     }
-    for (const name of ["aria-label", "title", "alt", "placeholder"]) {
+    const displayAttributes = ["aria-label", "title", "alt", "placeholder"];
+    if (node.attrs?.some(attribute => attribute.name === "data-floating-console")) displayAttributes.push("data-context");
+    for (const name of displayAttributes) {
       const attribute = location?.attrs?.[name];
       if (!attribute) continue;
       const raw = source.slice(attribute.startOffset, attribute.endOffset);

@@ -885,7 +885,7 @@ requireContract(
   "The authorship mark must remain a non-interactive signature with the current year.",
 );
 requireContract(
-  indexSource.includes('data-context="ВИД"')
+  indexSource.includes('data-context="СОСТАВ КАРТЫ"')
     && indexSource.includes('data-context="НАСТРОЙКИ"')
     && indexSource.includes('data-theme-choice="system"')
     && indexSource.includes('<span class="constellation-nav__heading" aria-hidden="true">МЕНЮ</span>')
