@@ -28,6 +28,8 @@ for (const engine of [process.argv[2] || 'chromium']) {
     const page = await browser.newPage({ viewport: {width,height}, colorScheme: theme,
       reducedMotion:'reduce', isMobile:width<=680, hasTouch:width<=680 });
     page.setDefaultTimeout(5000);
+    // Match case-flow: cold document startup has its own budget; UI stays at 5s.
+    page.setDefaultNavigationTimeout(15000);
     const mobileWebKit = engine==='webkit' && width<=680;
     const result = {engine,name,status:'PASS',errors:[],input:mobileWebKit?'programmatic scroll; mobile WebKit has no wheel support':'mouse wheel'};
     page.on('pageerror', e => result.errors.push(e.message));
