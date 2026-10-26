@@ -106,8 +106,7 @@ const positionDetachedCommandResults = () => {
     const map = document.getElementById("map-pane").getBoundingClientRect();
     viewport.left = Math.max(visual?.offsetLeft || 0, map.left);
     viewport.width = Math.max(0, Math.min((visual?.offsetLeft || 0) + (visual?.width || innerWidth), map.right) - viewport.left);
-    viewport.top = Math.max(visual?.offsetTop || 0, map.top);
-    viewport.height = Math.max(0, Math.min((visual?.offsetTop || 0) + (visual?.height || innerHeight), map.bottom) - viewport.top);
+    viewport.height = visual?.height || innerHeight;
   }
   const gap = 8;
   let anchorTop = surfaceBounds.top;
@@ -119,7 +118,7 @@ const positionDetachedCommandResults = () => {
     Math.min(surfaceBounds.right - width, viewport.left + viewport.width - gap - width));
 
   if (focusedMobile) {
-    anchorTop = viewport.top + gap;
+    anchorTop = Math.max(viewport.top + gap, viewport.top + viewport.height - bounds.height - gap);
     anchorBottom = anchorTop + bounds.height;
     left = viewport.left + gap;
     width = Math.max(0, viewport.width - gap * 2);
@@ -137,7 +136,7 @@ const positionDetachedCommandResults = () => {
     setCommandGeometry(element, "results", { left, width });
 
     const contentHeight = element.scrollHeight;
-    const opensBelow = focusedMobile || (contentHeight > spaceAbove && spaceBelow > spaceAbove);
+    const opensBelow = !focusedMobile && (contentHeight > spaceAbove && spaceBelow > spaceAbove);
     let maxHeight = opensBelow ? spaceBelow : spaceAbove;
     const peek = [...element.children].map(row => row.offsetTop + row.offsetHeight / 2)
       .filter(height => height <= maxHeight).at(-1);

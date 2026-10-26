@@ -550,7 +550,7 @@ const readMobileSearchFocusedExpression = `(() => {
     results: resultsBounds,
     geometryFits: withinViewport(dockBounds)
       && withinViewport(resultsBounds)
-      && resultsBounds.top >= dockBounds.bottom + 6,
+      && resultsBounds.bottom <= dockBounds.top - 6,
     resultsClientHeight: results?.clientHeight || 0,
     resultsScrollHeight: results?.scrollHeight || 0,
     pageScrollY: window.scrollY,

@@ -9682,7 +9682,7 @@ z-index: 64;
 .map-surface.has-command-focus :is(.mobile-first-paths,.mobile-first-composition) { visibility: hidden; }
 .map-surface.has-command-focus .control-console .mobile-first-dock .command-dock {
 position: fixed;
-top: max(var(--command-focus-top, 8px), calc(env(safe-area-inset-top) + 8px));
+top: calc(var(--command-focus-top, calc(calc(var(--pane-vh) * 100) - 56px)) - env(safe-area-inset-bottom));
 right: auto;
 bottom: auto;
 left: var(--command-focus-left, 8px);
@@ -9731,7 +9731,7 @@ cursor: pointer;
 /* Accepted map-first layout, lighter framing. */
 .focused-home, .focused-map-open, .focused-return, .point-preview { display: none; }
 .focused-return { color: var(--ink); }
-.focused-return__icon { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.5; transform: rotate(180deg); }
+.focused-return__icon { width: 20px; height: 20px; margin-inline: calc((.8em - 20px) / 2); flex: none; fill: none; stroke: currentColor; stroke-width: 1.5; transform: rotate(180deg); }
 .direction-landmark__kind { display: none; }
 @container map-viewport (max-width: 900px) {
 /* Changing scope keeps touch targets stationary. */
@@ -9838,6 +9838,15 @@ max-height: min(calc(var(--pane-vh) * 52), 460px, calc(calc(var(--pane-vh) * 100
 .point-preview :is(a,button):focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
 .map-surface.has-constellation-nav .point-preview,.map-surface:is(.has-content-panel,[data-case-open],.has-settings-panel,.has-command-focus) :is(.focused-home .site-header,.spatial-intro,.focused-return,.point-preview),.map-surface:has(.map-inspector.is-open) :is(.focused-home .site-header,.spatial-intro,.focused-return,.point-preview) { visibility: hidden; pointer-events: none; }
 .map-surface.has-command-focus .focused-map-open { visibility: hidden; }
+/* The compact index keeps the current map as visible, inert context. */
+.map-surface.has-command-focus { --command-background-opacity: .48; }
+.map-surface.has-full-mobile-map.has-command-focus { --command-background-opacity: .45; }
+.map-surface.has-focused-home.has-command-focus .focused-home { opacity: var(--command-background-opacity); pointer-events: none; }
+.map-surface.has-command-focus :is(.focused-home .site-header,.spatial-intro,.map-labels) { visibility: visible; pointer-events: none; }
+.map-surface.has-focused-home.has-command-focus .focused-home :is(.site-header,.map-camera,.map-labels) { opacity: 1; filter: none; }
+.map-surface.has-full-mobile-map.has-command-focus :is(.site-header,.map-camera,.map-labels) { opacity: var(--command-background-opacity); filter: none; pointer-events: none; }
+.map-surface.has-command-focus .mobile-landmark:not([data-mobile-hidden],[data-mobile-no-space],.map-anchor-hidden,.map-label-unavailable) { opacity: 1; }
+.map-surface.has-command-focus .whoop-field { opacity: calc(var(--day-enabled) * var(--command-background-opacity)); filter: none; }
 }
 
 /* Contribution labels shared by the work list, case and point preview. */
