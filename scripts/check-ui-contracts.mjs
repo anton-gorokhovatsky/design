@@ -2428,8 +2428,23 @@ const auditBrowser = async (client, origin) => {
     const target = document.activeElement;
     const bounds = target?.getBoundingClientRect();
     const style = getComputedStyle(target);
+    const probe = document.createElement("i");
+    probe.style.background = "Canvas";
+    document.body.append(probe);
+    const canvasColor = getComputedStyle(probe).backgroundColor;
+    probe.remove();
+    const materialSurfaces = Array.from(document.querySelectorAll("[data-material-surface]")).filter(element =>
+      ["always", "desktop"].includes(element.dataset.materialActive)
+      && element.checkVisibility({visibilityProperty:true, opacityProperty:true})
+    ).map(element => {
+      const material = getComputedStyle(element);
+      return {name:element.dataset.materialSurface, background:material.backgroundColor,
+        borderWidth:material.borderTopWidth, borderStyle:material.borderTopStyle,
+        backdrop:material.backdropFilter || material.webkitBackdropFilter || "none"};
+    });
     return {
       active: matchMedia("(forced-colors: active)").matches,
+      canvasColor, materialSurfaces,
       overflowX: document.documentElement.scrollWidth - document.documentElement.clientWidth,
       focused: target?.matches(":focus-visible"),
       className: target?.className,
@@ -2454,6 +2469,12 @@ const auditBrowser = async (client, origin) => {
     || forcedColorsContract.color === forcedColorsContract.background
   ) {
     fail("forced-colors: reflow or keyboard focus contract failed.", forcedColorsContract);
+  }
+  if (!forcedColorsContract.materialSurfaces.length
+    || forcedColorsContract.materialSurfaces.some(surface =>
+      surface.background !== forcedColorsContract.canvasColor || surface.backdrop !== "none"
+      || surface.borderWidth !== "1px" || surface.borderStyle !== "solid")) {
+    fail("forced-colors: shared surfaces must retain the system-color fallback.", forcedColorsContract);
   }
   await saveScreenshot(client, "desktop-forced-colors");
   await saveElementScreenshot(client, "crop-desktop-forced-colors-focus", ".skip-link:focus");

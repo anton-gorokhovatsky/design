@@ -152,6 +152,23 @@ for (const selector of ['#story-bridge + #story-pane', ':is(#story-bridge,#map-p
 scoped('styles.css', '', '#story-bridge button{opacity:.8}:root{--line:red}', 'full');
 assert.deepEqual(componentCoverage['story-bridge'], ['map-story', 'accessibility']);
 
+// The system-color priority repair cannot change the normal material or escape its media condition.
+const forcedMaterial = `@media (forced-colors: active){
+[data-material-surface] {
+border: 1px solid CanvasText;
+background: Canvas;
+box-shadow: none;
+backdrop-filter: none;
+-webkit-backdrop-filter: none;
+}}`;
+const forcedMaterialPriority = forcedMaterial.replaceAll(';', ' !important;');
+scoped('styles.css', forcedMaterial, forcedMaterialPriority, 'components', ['check:core','check:accessibility']);
+scoped('styles.css', forcedMaterialPriority, forcedMaterial, 'full');
+scoped('styles.css', forcedMaterial, forcedMaterialPriority + ':root{--material-01:#fff}', 'full');
+scoped('styles.css', forcedMaterial, forcedMaterialPriority.replace('CanvasText','red'), 'full');
+scoped('styles.css', forcedMaterial.replace('forced-colors: active','prefers-color-scheme: dark'), forcedMaterialPriority.replace('forced-colors: active','prefers-color-scheme: dark'), 'full');
+assert.equal(browserMatrix('components',['check:core','check:accessibility']).include.length,7);
+
 // A paint-only removal keeps all geometry and the common material untouched.
 const materialCopy = '.command-results{padding:16px;background:var(--material-01);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}';
 const materialShared = '.command-results{padding:16px}';

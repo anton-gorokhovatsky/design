@@ -60,6 +60,26 @@ export function isMaterialCleanup(before, after) {
   return (a.copies>0 || addsMobileGuard) && b.copies===0 && a.tree===b.tree;
 }
 
+// Only give the existing system-color fallback priority over the normal registry.
+// The media condition, selector, recipe and every other byte must stay unchanged.
+export function isMaterialForcedColorsPriority(before, after) {
+  const fallback = `[data-material-surface] {
+border: 1px solid CanvasText;
+background: Canvas;
+box-shadow: none;
+backdrop-filter: none;
+-webkit-backdrop-filter: none;
+}`;
+  if (before.split(fallback).length !== 2
+    || after !== before.replace(fallback, fallback.replaceAll(';', ' !important;'))) return false;
+  let scoped = false;
+  postcss.parse(before).walkRules('[data-material-surface]', rule => {
+    if (rule.toString() === fallback && rule.parent.type === 'atrule'
+      && rule.parent.name === 'media' && rule.parent.params === '(forced-colors: active)') scoped = true;
+  });
+  return scoped;
+}
+
 export function independentMaterialPaint(source) {
   const failures=[];
   postcss.parse(source).walkDecls(node=>{

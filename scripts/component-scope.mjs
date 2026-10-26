@@ -1,5 +1,5 @@
 import postcss from "postcss";
-import { isMaterialCleanup } from "./material-contract.mjs";
+import { isMaterialCleanup, isMaterialForcedColorsPriority } from "./material-contract.mjs";
 import { overviewOutside, overviewHtmlOutside, notFoundBindings } from "./overview-scope.mjs";
 import selectorParser from "postcss-selector-parser";
 import { parse as parseHtml } from "parse5";
@@ -107,6 +107,7 @@ const isLensPointerGuard = (before, after) => lensPointerGuardPatch.some(patches
 });
 
 const cssComponents = (before, after) => {
+  if (isMaterialForcedColorsPriority(before, after)) return ["check:core", "check:accessibility"];
   if (isMaterialCleanup(before, after)) return ["materials"];
   const owners = Object.entries(cssOwners);
   // Mixed local edits select the union; a single shared rule keeps full CI.
