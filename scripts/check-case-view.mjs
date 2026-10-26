@@ -31,8 +31,33 @@ for (const engine of [process.argv[2] || 'chromium']) {
     const mobileWebKit = engine==='webkit' && width<=680;
     const result = {engine,name,status:'PASS',errors:[],input:mobileWebKit?'programmatic scroll; mobile WebKit has no wheel support':'mouse wheel'};
     page.on('pageerror', e => result.errors.push(e.message));
+    // Keep cold navigation failures observable without changing their deadline.
+    const navigationStarted = performance.now(), pendingNavigation = new Map();
+    let initialNavigation = true;
+    result.initialNavigation = {events:[]};
+    const navigationEvent = (event, details={}) => {
+      if (initialNavigation) result.initialNavigation.events.push({event, ms:Math.round(performance.now()-navigationStarted), ...details});
+    };
+    page.on('request', request => {
+      if (!initialNavigation) return;
+      const path = new URL(request.url()).pathname;
+      pendingNavigation.set(request, path);
+      if (request.isNavigationRequest()) navigationEvent('document-request', {path});
+    });
+    page.on('response', response => {
+      if (response.request().isNavigationRequest()) navigationEvent('document-response', {status:response.status()});
+    });
+    page.on('requestfinished', request => pendingNavigation.delete(request));
+    page.on('requestfailed', request => {
+      if (initialNavigation) navigationEvent('request-failed', {path:pendingNavigation.get(request), error:request.failure()?.errorText});
+      pendingNavigation.delete(request);
+    });
+    page.once('domcontentloaded', () => navigationEvent('domcontentloaded'));
     try {
       const response = await page.goto(origin+'/?point=garage-site',{waitUntil:'domcontentloaded'});
+      navigationEvent('goto-complete');
+      initialNavigation = false;
+      pendingNavigation.clear();
       assert.equal(response.status(), 200, 'The real production page is served');
       await page.waitForFunction(() => document.querySelector('.map-inspector.is-case-view'));
       await page.evaluate(() => document.fonts.ready);
@@ -260,6 +285,11 @@ for (const engine of [process.argv[2] || 'chromium']) {
       }
       assert.deepEqual(result.errors,[]);
     } catch (error) {
+      if (initialNavigation) {
+        navigationEvent('goto-failed', {url:page.url(), closed:page.isClosed(), connected:browser.isConnected(), pending:[...pendingNavigation.values()]});
+        console.error('Initial navigation diagnostic', engine, name, JSON.stringify(result.initialNavigation));
+        initialNavigation = false;
+      }
       result.status='FAIL'; result.error=error.stack || error.message;
       await page.screenshot({path:dir+engine+'-'+name+'-FAIL.jpg',type:'jpeg',quality:82}).catch(()=>{});
     }
