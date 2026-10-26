@@ -245,6 +245,20 @@ for (const path of ['js/viewport-ui.js','rendering/js/viewport-ui.js']) {
 }
 assert.equal(browserMatrix('components',['materials','scroll-lens-pointer']).include.length,11);
 const auditFixture = 'const readMaterialAuditExpression = `old`;\nconst unchanged = 1;';
+const separatorBefore = ':root{} .map-related__track > li + li{border-top:1px solid var(--line-soft)}';
+const separatorAfter = ':root{--separator-rule:1px solid var(--line-soft);--separator-edge:1px solid var(--line);--separator-control-before:var(--space-2);--separator-control-after:0px;--separator-row-compact:var(--space-3);--separator-row-regular:var(--space-4);--separator-row-roomy:var(--space-5);--separator-section-before:var(--space-5);--separator-section-after:var(--space-4);} .map-related__track > li + li{border-top:var(--separator-rule)}';
+scoped('styles.css', separatorBefore, separatorAfter, 'components', ['check:accessibility', 'check:case-view']);
+scoped('styles.css', separatorBefore, separatorAfter.replace('--separator-section-after:var(--space-4)', '--separator-section-after:100px'), 'full');
+scoped('styles.css', separatorBefore, separatorAfter.replace('border-top:var(--separator-rule)', 'border-top:var(--separator-rule)!important'), 'full');
+scoped('styles.css', separatorBefore, separatorAfter.replace('.map-related__track > li + li', '.map-related__track + .unrelated'), 'full');
+scoped('styles.css', separatorBefore, separatorAfter + ' .unrelated{padding:10px}', 'full');
+const separatorContrastBefore = ' @media (prefers-contrast: more){.map-surface{--line:rgba(16,17,15,.36);--line-soft:rgba(16,17,15,.2)}} @media (prefers-color-scheme: dark){.no-script-fallback{--line:rgba(242,241,236,.18)}}';
+const separatorContrastAfter = separatorContrastBefore.replace('--line-soft:rgba(16,17,15,.2)', '--line-soft:rgba(16,17,15,.2);--separator-rule:1px solid var(--line-soft);--separator-edge:1px solid var(--line)').replace('--line:rgba(242,241,236,.18)', '--line:rgba(242,241,236,.18);--separator-edge:1px solid var(--line)');
+scoped('styles.css', separatorBefore + separatorContrastBefore, separatorAfter + separatorContrastAfter, 'components', ['check:accessibility', 'check:case-view']);
+scoped('styles.css', separatorBefore + separatorContrastBefore, separatorAfter + separatorContrastAfter.replace('prefers-contrast: more', 'prefers-contrast: less'), 'full');
+scoped('styles.css', separatorBefore + separatorContrastBefore, separatorAfter + separatorContrastAfter.replace('--separator-edge:1px solid var(--line)', '--separator-edge:1px solid red'), 'full');
+
+
 const depthAuditFixture = 'const readMaterialAuditExpression = `const backgroundDepth = element.matches("body.has-command-focus .site-header") || (mobile && element.matches(\n        "body.has-content-panel .control-console :is(.constellation-nav, .command-dock)",\n      ));`;';
 const compactDepthAudit = depthAuditFixture
   .replace('const backgroundDepth = element.matches(', 'const backgroundDepth = !(mobile && element.matches(".map-surface.has-command-focus .site-header")) && (element.matches(')

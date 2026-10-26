@@ -108,7 +108,94 @@ const isLensPointerGuard = (before, after) => lensPointerGuardPatch.some(patches
   return restored === before;
 });
 
+// Exact migration of separator roles; other geometry and shared tokens stay protected.
+const separatorTokens = {
+  "--separator-rule": "1px solid var(--line-soft)",
+  "--separator-edge": "1px solid var(--line)",
+  "--separator-control-before": "var(--space-2)",
+  "--separator-control-after": "0px",
+  "--separator-row-compact": "var(--space-3)",
+  "--separator-row-regular": "var(--space-4)",
+  "--separator-row-roomy": "var(--space-5)",
+  "--separator-section-before": "var(--space-5)",
+  "--separator-section-after": "var(--space-4)"
+};
+const separatorDeclarations = [
+  [".map-related__track > li + li", "", "border-top", "1px solid var(--line-soft)", "var(--separator-rule)"],
+  [".map-related__item", "", "padding", "12px 0", "var(--separator-row-compact) 0"],
+  [".map-evidence", "", "border-top", "1px solid var(--line-soft)", "var(--separator-rule)"],
+  [".map-evidence", "", "margin", "13px 0 0", "var(--separator-section-before) 0 0"],
+  [".map-evidence", "", "padding", "12px 0 14px", "var(--separator-section-after) 0 0"],
+  [".map-evidence", "@container map-viewport (max-width: 900px)", "padding", "10px 0 10px", "var(--separator-section-after) 0 0"],
+  [".map-evidence", "@container map-viewport (max-width: 900px)", "margin-top", "11px", "var(--separator-section-before)"],
+  [".contact-links", "", "border-top", "1px solid var(--line-soft)", "var(--separator-rule)"],
+  [".contact-links a", "", "border-bottom", "1px solid var(--line-soft)", "var(--separator-rule)"],
+  [".contact-links a", "", "padding-block", "var(--space-4)", "var(--separator-row-regular)"],
+  [".constellation-nav__utilities", "@container map-viewport (max-width: 900px)", "border-top", "1px solid var(--line-soft)", "var(--separator-rule)"],
+  [".constellation-nav__utilities", "@container map-viewport (max-width: 900px)", "padding-top", "var(--space-2)", "var(--separator-control-after)"],
+  [".constellation-nav__utilities", "@container map-viewport (max-width: 900px)", "margin", "var(--space-2) 8px 0", "var(--separator-control-before) 8px 0"],
+  [".no-script-fallback nav", "", "border-top", "1px solid var(--line)", "var(--separator-edge)"],
+  [".no-script-fallback nav a,\n.no-script-fallback__contacts a", "", "border-bottom", "1px solid var(--line)", "var(--separator-edge)"],
+  [".content-panel .content-panel__frame .approach-grid li", "", "border-top", "1px solid var(--line-soft)", "var(--separator-rule)"],
+  [".content-panel .content-panel__frame .approach-grid li", "", "padding", "var(--space-5) 0", "var(--separator-row-roomy) 0"],
+  [".is-case-view .map-related", "", "border-top", "1px solid var(--line-soft)", "var(--separator-rule)"],
+  [".is-case-view .map-related", "", "padding", "var(--case-space-section) 0 0", "var(--separator-section-after) 0 0"],
+  [".is-case-view .map-evidence", "", "margin-top", "var(--case-space-section)", "var(--separator-section-before)"],
+  [".is-case-view .map-evidence", "", "padding", "var(--case-space-section) 0 0", "var(--separator-section-after) 0 0"],
+  [".case-details", "", "border-top", "1px solid var(--line-soft)", "var(--separator-rule)"],
+  [".case-details", "", "margin-top", "var(--case-space-section)", "var(--separator-section-before)"],
+  [".case-details", "", "padding-top", "var(--case-space-section)", "var(--separator-section-after)"],
+  [".case-details__technical", "", "border-top", "1px solid var(--line-soft)", "var(--separator-rule)"],
+  [".case-details__technical", "", "padding-top", "var(--case-space-section)", "var(--separator-section-after)"],
+  [".has-reading-frame .case-story > .map-related", "", "border-top", "1px solid var(--line-soft)", "var(--separator-rule)"],
+  [".has-reading-frame .case-story > .map-related", "", "padding", "16px 0 0", "var(--separator-section-after) 0 0"],
+  [".control-console .command-dock", "@container map-viewport (min-width: 901px)", "border-bottom", "1px solid var(--line)", "var(--separator-edge)"],
+  [".system-dock .map-controls,\n.display-control", "@container map-viewport (min-width: 901px)", "border-top", "1px solid var(--line)", "var(--separator-edge)"],
+  [".map-control-group--coordinates", "@container map-viewport (min-width: 901px)", "border-top", "1px solid var(--line-soft)", "var(--separator-rule)"],
+  [".map-control-group--coordinates", "@container map-viewport (min-width: 901px)", "padding-top", "var(--space-2)", "var(--separator-control-after)"],
+  [".map-control-group--coordinates", "@container map-viewport (min-width: 901px)", "margin-top", "var(--space-2)", "0px"],
+  [".system-dock .map-controls", "@container map-viewport (min-width: 901px)", "gap", "var(--space-2)", "var(--separator-control-before)"],
+];
+const separatorLocalBindings = [
+  ['.map-surface', '@media (prefers-contrast: more)', '--separator-rule'],
+  ['.map-surface', '@media (prefers-contrast: more)', '--separator-edge'],
+  ['.no-script-fallback', '@media (prefers-color-scheme: dark)', '--separator-edge'],
+];
+const separatorCss = source => {
+  const tree = postcss.parse(source); const tokens = new Set(); const localBindings = new Set();
+  tree.walkDecls(declaration => {
+    const rule = declaration.parent;
+    const contexts = []; for (let p = rule.parent; p.type === 'atrule'; p = p.parent) contexts.unshift('@' + p.name + ' ' + p.params);
+    if (Object.hasOwn(separatorTokens, declaration.prop)) {
+      if (rule.type !== 'rule' || declaration.value !== separatorTokens[declaration.prop]
+          || declaration.important) throw new Error('Unknown separator token');
+      const rootToken = rule.selector === ':root' && rule.parent.type === 'root';
+      const localBinding = separatorLocalBindings.some(([selector, context, prop]) =>
+        rule.selector === selector && contexts.join(' / ') === context && declaration.prop === prop);
+      if (!rootToken && !localBinding) throw new Error('Unknown separator binding');
+      const seen = rootToken ? tokens : localBindings;
+      const key = rootToken ? declaration.prop : [rule.selector, ...contexts, declaration.prop].join(' / ');
+      if (seen.has(key)) throw new Error('Duplicate separator token');
+      seen.add(key); declaration.remove(); return;
+    }
+    if (rule.type !== 'rule') return;
+    const patch = separatorDeclarations.find(([selector, context, prop, , value]) =>
+      rule.selector === selector && contexts.join(' / ') === context && declaration.prop === prop && declaration.value === value);
+    if (patch) declaration.value = patch[3];
+  });
+  if (tokens.size !== 0 && tokens.size !== Object.keys(separatorTokens).length) throw new Error('Incomplete separator roles');
+  if (source.includes('var(--separator-') && tokens.size !== Object.keys(separatorTokens).length) throw new Error('Missing separator roles');
+  const serialize = node => node.type === 'comment' ? null
+    : node.type === 'decl' ? [node.type, node.prop, node.value, !!node.important]
+      : [node.type, node.selector || '', node.name || '', node.params || '', (node.nodes || []).map(serialize).filter(Boolean)];
+  return JSON.stringify(serialize(tree));
+};
+const isSeparatorUpdate = (before, after) => {
+  try { return separatorCss(before) === separatorCss(after); } catch { return false; }
+};
+
 const cssComponents = (before, after) => {
+  if (isSeparatorUpdate(before, after)) return ["check:accessibility", "check:case-view"];
   if (isMaterialForcedColorsPriority(before, after)) return ["check:core", "check:accessibility"];
   if (isMaterialCleanup(before, after)) return ["materials"];
   const owners = Object.entries(cssOwners);
