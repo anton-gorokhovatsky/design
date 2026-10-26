@@ -40,6 +40,7 @@ export const componentCoverage = {
   settings: ["core", "accessibility", "whoop-ui"],
   consent: ["core", "accessibility", "first-visit"],
   // Shared surface painting: every surface context, without unrelated media/physics suites.
+  "scroll-lens-pointer": ["whoop-ui", "case-view", "map-story"],
   materials: ["core", "accessibility", "map-story", "map-routes", "hover-layout", "case-view", "whoop-ui", "first-visit", "command-placement"],
   // Console bounds also move the author aura and detached search results.
   // WHOOP includes live-surface: 404 return, ResizeObserver and page errors.

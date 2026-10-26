@@ -233,6 +233,7 @@ const clearScrollLenses = region => scrollLensControllers.get(region)?.reset();
 const observeScrollLens = (region, targets, { owner = region, enabled = () => true, fullWidth = false } = {}) => {
   if (!region) return;
   const records = new Map();
+  const pressedPointers = new Set();
   let frame = 0;
   let svg, textFrame, textRecord, textStyles;
   const transfer = (parent, before = null) => {
@@ -256,6 +257,7 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
   const releaseFrame = () => {
     if (!textFrame) return;
     region.style.removeProperty("--scroll-ink-filter");
+    if (pressedPointers.size) return;
     if (region.parentElement !== textFrame) {
       textFrame.remove();textFrame=null;
       for(const[key,value]of textStyles)region.style[key]=value;
@@ -373,6 +375,7 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
       ||focused!==region&&region.contains(focused)&&focused.matches(":focus-visible")&&intersects(focused.getBoundingClientRect());
     if ((textEdges.some(Boolean)||fullWidth&&textFrame)&&!protectedText&&!liveMedia) {
       if (!textFrame && !region.querySelector("iframe")) {
+        if (pressedPointers.size) return;
         const style=getComputedStyle(region);
         textFrame=document.createElement("div");
         textFrame.dataset.scrollLensFrame="";
@@ -432,6 +435,14 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
   const resize = new ResizeObserver(schedule);
   resize.observe(region);
   region.addEventListener("scroll", () => { cancelAnimationFrame(frame); update(); }, { passive: true });
+  // WebKit cancels click if the pressed control is reparented before pointerup.
+  region.addEventListener("pointerdown", event => pressedPointers.add(event.pointerId), { capture: true, passive: true });
+  const releasePointer = event => { if (pressedPointers.delete(event.pointerId)) schedule(); };
+  window.addEventListener("pointerup", releasePointer, { capture: true, passive: true });
+  window.addEventListener("pointercancel", releasePointer, { capture: true, passive: true });
+  const releasePointers = () => { if (pressedPointers.size) { pressedPointers.clear(); schedule(); } };
+  window.addEventListener("blur", releasePointers);
+  window.addEventListener("pagehide", releasePointers);
   region.addEventListener("focusin", schedule);
   region.addEventListener("focusout", schedule);
   owner.addEventListener("animationend", schedule);

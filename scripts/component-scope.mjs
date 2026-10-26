@@ -54,6 +54,58 @@ const cssOutsideOwned = (source, owns) => {
   return JSON.stringify(visit(postcss.parse(source)));
 };
 
+// Only the exact pointer-lifetime guard may use this existing reading-surface coverage.
+const lensPointerGuardPatch = [
+  [
+    [
+      "  const records = new Map();\n  let frame = 0;",
+      "  const records = new Map();\n  const pressedPointers = new Set();\n  let frame = 0;"
+    ],
+    [
+      "    region.style.removeProperty(\"--scroll-ink-filter\");\n    if (region.parentElement !== textFrame)",
+      "    region.style.removeProperty(\"--scroll-ink-filter\");\n    if (pressedPointers.size) return;\n    if (region.parentElement !== textFrame)"
+    ],
+    [
+      "      if (!textFrame && !region.querySelector(\"iframe\")) {\n        const style=getComputedStyle(region);",
+      "      if (!textFrame && !region.querySelector(\"iframe\")) {\n        if (pressedPointers.size) return;\n        const style=getComputedStyle(region);"
+    ],
+    [
+      "  region.addEventListener(\"focusin\", schedule);\n  region.addEventListener(\"focusout\", schedule);",
+      "  // WebKit cancels click if the pressed control is reparented before pointerup.\n  region.addEventListener(\"pointerdown\", event => pressedPointers.add(event.pointerId), { capture: true, passive: true });\n  const releasePointer = event => { if (pressedPointers.delete(event.pointerId)) schedule(); };\n  window.addEventListener(\"pointerup\", releasePointer, { capture: true, passive: true });\n  window.addEventListener(\"pointercancel\", releasePointer, { capture: true, passive: true });\n  const releasePointers = () => { if (pressedPointers.size) { pressedPointers.clear(); schedule(); } };\n  window.addEventListener(\"blur\", releasePointers);\n  window.addEventListener(\"pagehide\", releasePointers);\n  region.addEventListener(\"focusin\", schedule);\n  region.addEventListener(\"focusout\", schedule);"
+    ]
+  ],
+  [
+    [
+      "const h=new Map;let p,f,g,y,b=0;",
+      "const h=new Map,pressedPointers=new Set;let p,f,g,y,b=0;"
+    ],
+    [
+      "M=()=>{if(f)if(r.style.removeProperty(\"--scroll-ink-filter\"),r.parentElement===f)r.querySelector(\"iframe\")||w(()=>{v(f.parentElement,f),f.remove(),f=null;for(const[e,t]of y)r.style[e]=t});else{f.remove(),f=null;for(const[e,t]of y)r.style[e]=t}}",
+      "M=()=>{if(!f)return;r.style.removeProperty(\"--scroll-ink-filter\");if(pressedPointers.size)return;if(r.parentElement===f){r.querySelector(\"iframe\")||w(()=>{v(f.parentElement,f),f.remove(),f=null;for(const[e,t]of y)r.style[e]=t})}else{f.remove(),f=null;for(const[e,t]of y)r.style[e]=t}}"
+    ],
+    [
+      "if(!f&&!r.querySelector(\"iframe\")){const e=getComputedStyle(r);",
+      "if(!f&&!r.querySelector(\"iframe\")){if(pressedPointers.size)return;const e=getComputedStyle(r);"
+    ],
+    [
+      "},$=new ResizeObserver(E);",
+      "},$=new ResizeObserver(E),releasePointer=e=>{pressedPointers.delete(e.pointerId)&&E()},releasePointers=()=>{if(pressedPointers.size){pressedPointers.clear();E()}};"
+    ],
+    [
+      "r.addEventListener(\"focusin\",E),r.addEventListener(\"focusout\",E)",
+      "r.addEventListener(\"pointerdown\",e=>pressedPointers.add(e.pointerId),{capture:true,passive:true}),window.addEventListener(\"pointerup\",releasePointer,{capture:true,passive:true}),window.addEventListener(\"pointercancel\",releasePointer,{capture:true,passive:true}),window.addEventListener(\"blur\",releasePointers),window.addEventListener(\"pagehide\",releasePointers),r.addEventListener(\"focusin\",E),r.addEventListener(\"focusout\",E)"
+    ]
+  ]
+];
+const isLensPointerGuard = (before, after) => lensPointerGuardPatch.some(patches => {
+  let restored = after;
+  for (const [old, guarded] of patches) {
+    if (!before.includes(old) || before.includes(guarded) || restored.split(guarded).length !== 2) return false;
+    restored = restored.replace(guarded, old);
+  }
+  return restored === before;
+});
+
 const cssComponents = (before, after) => {
   if (isMaterialCleanup(before, after)) return ["materials"];
   const owners = Object.entries(cssOwners);
@@ -234,6 +286,7 @@ export const affectedComponents = (path, before, after, maskHtmlCopy) => {
     if (["js/observation-route.js", "js/map-media.js", "js/panels.js"].includes(path)
       && overviewOutside(path, before) === overviewOutside(path, after)) return ["overview"];
     if (path === "404.html" && notFoundBindings(maskHtmlCopy(before).replaceAll("\0", "")) === notFoundBindings(maskHtmlCopy(after).replaceAll("\0", ""))) return ["not-found"];
+    if (["js/viewport-ui.js", "rendering/js/viewport-ui.js"].includes(path) && isLensPointerGuard(before, after)) return ["scroll-lens-pointer"];
     if (path === "js/viewport-ui.js" && consoleBoundsOutside(before) === consoleBoundsOutside(after)) return ["console-bounds"];
     if (path === "js/map-engine.js" && mapLabelsOutside(before) === mapLabelsOutside(after)) return ["map-labels"];
     if (path === "scripts/browser-contracts.cjs") {

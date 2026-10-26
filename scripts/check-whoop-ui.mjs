@@ -389,7 +389,8 @@ try {
   assert.equal(await controlsPage.locator('html').getAttribute('data-focus-modality'), 'keyboard');
   assert.equal(await motion.locator('.preference-switch').evaluate(node => getComputedStyle(node, '::before').transitionDuration), '0s');
   const summary = controlsPage.locator('[data-whoop-details] > summary');
-  await summary.click();
+  await summary.click({delay: 80});
+  assert.equal(await controlsPage.locator('[data-whoop-details]').evaluate(node => node.open), true, 'Pointer activation survives scroll-lens preparation.');
   await controlsPage.waitForTimeout(180);
   await summary.focus();
   await controlsPage.keyboard.press('Enter');

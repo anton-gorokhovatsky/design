@@ -169,6 +169,16 @@ scoped('styles.css', mobileRegistry, guardedMobileRegistry.replace('900px','899p
 scoped('styles.css', mobileRegistry, guardedMobileRegistry.replace('24px','12px'), 'full');
 scoped('styles.css', mobileRegistry, guardedMobileRegistry.replace('mobile','desktop'), 'full');
 scoped('styles.css', mobileRegistry, guardedMobileRegistry.replace('is-content-stack-hidden','other-state'), 'full');
+const pointerBefore = "  const records = new Map();\n  let frame = 0;\n    region.style.removeProperty(\"--scroll-ink-filter\");\n    if (region.parentElement !== textFrame)\n      if (!textFrame && !region.querySelector(\"iframe\")) {\n        const style=getComputedStyle(region);\n  region.addEventListener(\"focusin\", schedule);\n  region.addEventListener(\"focusout\", schedule);";
+const pointerAfter = "  const records = new Map();\n  const pressedPointers = new Set();\n  let frame = 0;\n    region.style.removeProperty(\"--scroll-ink-filter\");\n    if (pressedPointers.size) return;\n    if (region.parentElement !== textFrame)\n      if (!textFrame && !region.querySelector(\"iframe\")) {\n        if (pressedPointers.size) return;\n        const style=getComputedStyle(region);\n  // WebKit cancels click if the pressed control is reparented before pointerup.\n  region.addEventListener(\"pointerdown\", event => pressedPointers.add(event.pointerId), { capture: true, passive: true });\n  const releasePointer = event => { if (pressedPointers.delete(event.pointerId)) schedule(); };\n  window.addEventListener(\"pointerup\", releasePointer, { capture: true, passive: true });\n  window.addEventListener(\"pointercancel\", releasePointer, { capture: true, passive: true });\n  const releasePointers = () => { if (pressedPointers.size) { pressedPointers.clear(); schedule(); } };\n  window.addEventListener(\"blur\", releasePointers);\n  window.addEventListener(\"pagehide\", releasePointers);\n  region.addEventListener(\"focusin\", schedule);\n  region.addEventListener(\"focusout\", schedule);";
+for (const path of ['js/viewport-ui.js','rendering/js/viewport-ui.js']) {
+  scoped(path,pointerBefore,pointerAfter,'components',['scroll-lens-pointer']);
+  scoped(path,pointerAfter,pointerBefore,'full');
+  scoped(path,pointerBefore,pointerAfter.replace('pressedPointers.size','false'),'full');
+  scoped(path,pointerBefore,pointerAfter.replace('pointerup','pointermove'),'full');
+  scoped(path,pointerBefore,pointerAfter+'\nrunOtherBehavior();','full');
+}
+assert.equal(browserMatrix('components',['materials','scroll-lens-pointer']).include.length,11);
 const auditFixture = 'const readMaterialAuditExpression = `old`;\nconst unchanged = 1;';
 scoped('scripts/browser-contracts.cjs', auditFixture, auditFixture.replace('`old`','`new`'), 'components', ['materials']);
 scoped('scripts/browser-contracts.cjs', auditFixture, auditFixture.replace('= 1','= 2'), 'full');
