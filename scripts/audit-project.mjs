@@ -11,7 +11,7 @@ import { runInNewContext } from "node:vm";
 import { fileURLToPath } from "node:url";
 import { readRuntimeSource, runtimeFiles, storyFiles } from "./runtime-files.mjs";
 
-import { independentMaterialPaint } from "./material-contract.mjs";
+import { independentMaterialPaint, materialRecipeFailures } from "./material-contract.mjs";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(scriptDirectory, "..");
@@ -479,9 +479,10 @@ requireContract(
 const materialDefinitions = [...styleSource.matchAll(/--material-01:\s*([^;]+);/g)]
   .map((match) => match[1].replace(/\s+/g, " ").trim());
 const materialThemeDefinitions = materialDefinitions.filter((value) => (
-  /rgba\([^)]*,\s*0\.5\)/.test(value)
+  ["rgba(246, 248, 242, 0.4)", "rgba(38, 41, 35, 0.58)"].includes(value)
 ));
-const materialAccessibilityDefinitions = materialDefinitions.filter((value) => value === "Canvas");
+const materialAccessibilityDefinitions = materialDefinitions.filter((value) =>
+  ["Canvas", "rgba(255, 255, 255, 0.5)", "rgba(35, 36, 32, 0.5)"].includes(value));
 
 const materialUsages = (styleSource.match(/var\(--material-01\)/g) || []).length;
 const requiredMaterialSurfaces = [
@@ -575,12 +576,13 @@ const backdropInventory = Object.fromEntries(
 
 requireContract(
   materialThemeDefinitions.length === 2
-    && materialAccessibilityDefinitions.length <= 1
+    && materialAccessibilityDefinitions.length === 3
+    && materialRecipeFailures(styleSource).length === 0
     && materialDefinitions.length
       === materialThemeDefinitions.length + materialAccessibilityDefinitions.length,
   "material-token",
-  "MATERIAL / 01 needs exactly two 50% theme values; only a Canvas forced-colors override is allowed.",
-  materialDefinitions,
+  "MATERIAL / 01 must use the accepted tinted recipes, the two 50% contrast fallbacks and Canvas forced colors.",
+  { materialDefinitions, recipes: materialRecipeFailures(styleSource) },
 );
 requireContract(
   independentMaterialPaint(styleSource).length === 0,
@@ -589,8 +591,8 @@ requireContract(
   independentMaterialPaint(styleSource),
 );
 requireContract(
-  /backdrop-filter:\s*blur\(24px\)/.test(styleSource)
-    && /-webkit-backdrop-filter:\s*blur\(24px\)/.test(styleSource),
+  /backdrop-filter:\s*var\(--material-01-backdrop\)/.test(styleSource)
+    && /-webkit-backdrop-filter:\s*var\(--material-01-backdrop\)/.test(styleSource),
   "material-blur",
   "MATERIAL / 01 needs the 24px standard and WebKit fallback.",
 );
@@ -624,9 +626,9 @@ requireContract(
     && /\[data-material-surface\]\[data-material-active="always"\][\s\S]*?background:\s*var\(--material-01\)/.test(materialCascadeSource)
     && /\[data-material-surface\]\[data-material-active="desktop"\][\s\S]*?background:\s*var\(--material-01\)/.test(materialCascadeSource)
     && /\[data-material-surface\]\[data-material-active="mobile"\][\s\S]*?background:\s*var\(--material-01\)/.test(materialCascadeSource)
-    && /box-shadow:\s*none/.test(materialCascadeSource)
-    && /backdrop-filter:\s*blur\(24px\)/.test(materialCascadeSource)
-    && /-webkit-backdrop-filter:\s*blur\(24px\)/.test(materialCascadeSource),
+    && /box-shadow:\s*var\(--material-01-shadow\)/.test(materialCascadeSource)
+    && /backdrop-filter:\s*var\(--material-01-backdrop\)/.test(materialCascadeSource)
+    && /-webkit-backdrop-filter:\s*var\(--material-01-backdrop\)/.test(materialCascadeSource),
   "material-cascade-contract",
   "The final cascade must enforce MATERIAL / 01 for every active registered surface.",
 );

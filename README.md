@@ -263,12 +263,14 @@ the first stop without opening it; the axes remain visible below the entry.
   modules are checked in both themes. Mathematical centring alone is not a
   finished composition. Alignment fixes must preserve the shared compositing
   path rather than flattening surfaces into opaque white cards.
-- `MATERIAL / 01` is the only interface-surface material. It translates the
-  text-panel rule from [Natalie Liu's info page](https://www.natalieliu.com/info):
-  a theme-aware 50% translucent fill, `blur(24px)`, no border, and no shadow.
-  Every content panel, map readout, search result, and instrument console uses
-  that exact recipe. Components own only geometry, spacing, and interaction
-  state; they cannot introduce a stronger, tinted, edged, or shadowed material.
+- `MATERIAL / 01` is the only interface-surface material. On 27 October 2026,
+  the author approved the local Tinted study: one theme-aware fill, 24px blur,
+  saturation, a fine light edge and a soft shadow, with no layout border.
+  `--material-01`, `--material-01-backdrop`, and `--material-01-shadow` own
+  the complete recipe for every registered surface. High contrast keeps the
+  former 50% fill / 24px blur without a shadow; forced colors uses Canvas.
+  Components own geometry, spacing, and interaction state, never their own
+  tint, blur, edge, or shadow. This is a CSS approximation, not Apple's shader.
   Equality includes the field behind the surface and its stacking context:
   a local scrim, dimmed map, or persistent transform must not make one family
   look more opaque or prevent the shared backdrop blur from sampling the map.

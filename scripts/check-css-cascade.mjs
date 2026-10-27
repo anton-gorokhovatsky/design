@@ -335,7 +335,7 @@ const unexpectedBackdropValues = rules.flatMap((rule) => {
     && !rule.declarations.some(({ property }) => /^(background|border|box-shadow)/.test(property));
   return rule.declarations.filter(({ property, value }) =>
     /^(?:-webkit-)?backdrop-filter$/.test(property)
-      && !["blur(24px)", "none"].includes(value)
+      && !["var(--material-01-backdrop)", "none"].includes(value)
       && !(optical && value === "blur(2.2px)"))
     .map(({ value }) => `${rule.selector}: ${value}`);
 });

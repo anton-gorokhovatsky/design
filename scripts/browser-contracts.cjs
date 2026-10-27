@@ -221,13 +221,18 @@ const mobileMetricViewport = {
 };
 
 const readMaterialAuditExpression = `(() => {
-  const expected = getComputedStyle(document.documentElement)
-    .getPropertyValue("--material-01")
-    .trim();
+  const rootStyle = getComputedStyle(document.documentElement);
+  const expected = rootStyle.getPropertyValue("--material-01").trim();
   const probe = document.createElement("i");
   probe.style.background = expected;
+  probe.style.backdropFilter = rootStyle.getPropertyValue("--material-01-backdrop").trim();
+  probe.style.webkitBackdropFilter = rootStyle.getPropertyValue("--material-01-backdrop").trim();
+  probe.style.boxShadow = rootStyle.getPropertyValue("--material-01-shadow").trim();
   document.body.append(probe);
-  const expectedBackground = getComputedStyle(probe).backgroundColor;
+  const probeStyle = getComputedStyle(probe);
+  const expectedBackground = probeStyle.backgroundColor;
+  const expectedBackdrop = probeStyle.backdropFilter || probeStyle.webkitBackdropFilter;
+  const expectedShadow = probeStyle.boxShadow;
   probe.remove();
 
   const mobile = (document.getElementById("map-pane")?.clientWidth ?? innerWidth) <= 900;
@@ -305,13 +310,15 @@ const readMaterialAuditExpression = `(() => {
     reason:"Visible glass is outside the shared material registry"}));
   return {
     expectedBackground,
+    expectedBackdrop,
+    expectedShadow,
     unregistered,
     active,
     failures: [...active.filter((surface) => (
       surface.background !== expectedBackground
       || (surface.materialAncestor !== null && !surface.localMediaBackdrop)
-      || !surface.backdrop.includes("blur(24px)")
-      || surface.shadow !== "none"
+      || surface.backdrop !== expectedBackdrop
+      || surface.shadow !== expectedShadow
       || surface.filter !== (surface.backgroundDepth ? "blur(3px)" : "none")
       || (surface.backgroundDepth && (surface.opacity > .16 || surface.pointerEvents !== "none"))
       || !surface.border.startsWith("0px")

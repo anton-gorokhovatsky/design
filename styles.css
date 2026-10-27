@@ -82,7 +82,10 @@ color-scheme: light;
 --corner-panel: 5px;
 --content-font: var(--font-sans);
 
---material-01: rgba(255, 255, 255, 0.5);
+--material-01: rgba(246, 248, 242, 0.4);
+--material-01-backdrop: blur(24px) saturate(1.35);
+--material-01-shadow: inset 0 1px 0 rgba(255,255,255,.55), inset 0 0 0 1px rgba(255,255,255,.24), 0 4px 16px rgba(24,30,20,.06);
+--origin-cross-fill: rgba(255, 255, 255, 0.5);
 --content-ink: #41413c;
 --content-muted: #45453f;
 --day-rgb: 83, 142, 103;
@@ -1919,7 +1922,7 @@ width: 5px;
 height: 5px;
 border: 1px solid color-mix(in srgb, var(--signal) 68%, transparent);
 border-radius: 50%;
-background: var(--material-01);
+background: var(--origin-cross-fill);
 transform: translate(-50%, -50%);
 }
 
@@ -2809,7 +2812,10 @@ transition: none;
 
 html[data-theme="dark"] {
 
---material-01: rgba(35, 36, 32, 0.5);
+--material-01: rgba(38, 41, 35, 0.58);
+--material-01-backdrop: blur(24px) saturate(1.3);
+--material-01-shadow: inset 0 1px 0 rgba(255,255,255,.16), inset 0 0 0 1px rgba(255,255,255,.055), 0 4px 16px rgba(0,0,0,.14);
+--origin-cross-fill: rgba(35, 36, 32, 0.5);
 }
 
 .panel-scrim {
@@ -6916,6 +6922,7 @@ html[data-theme="dark"] {
 --muted: CanvasText;
 
 --material-01: Canvas;
+--origin-cross-fill: Canvas;
 --line: CanvasText;
 --line-soft: CanvasText;
 --signal: Highlight;
@@ -7701,6 +7708,9 @@ transform: none;
 }
 
 html[data-contrast="true"] {
+--material-01: rgba(255, 255, 255, 0.5);
+--material-01-backdrop: blur(24px);
+--material-01-shadow: none;
 --muted: #454641;
 --content-ink: #20211e;
 --content-muted: #343530;
@@ -7709,6 +7719,7 @@ html[data-contrast="true"] {
 }
 
 html[data-theme="dark"][data-contrast="true"] {
+--material-01: rgba(35, 36, 32, 0.5);
 --muted: #d8d8d2;
 --content-ink: #f2f1ec;
 --content-muted: #dfded8;
@@ -10105,11 +10116,11 @@ inset-block: calc((min(var(--control-target-compact), 38px) - 44px) / 2);
 [data-material-surface][data-material-active="always"]:not(
 .is-content-stack-hidden
 ),
-.map-node-label[data-material-surface][data-material-active="always"]{border:0;background: var(--material-01);box-shadow:none;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);}
+.map-node-label[data-material-surface][data-material-active="always"]{border:0;background: var(--material-01);box-shadow:var(--material-01-shadow);backdrop-filter:var(--material-01-backdrop);-webkit-backdrop-filter:var(--material-01-backdrop);}
 @container map-viewport (min-width: 901px){
-[data-material-surface][data-material-active="desktop"]{border:0;background: var(--material-01);box-shadow:none;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);}}
+[data-material-surface][data-material-active="desktop"]{border:0;background: var(--material-01);box-shadow:var(--material-01-shadow);backdrop-filter:var(--material-01-backdrop);-webkit-backdrop-filter:var(--material-01-backdrop);}}
 @container map-viewport (max-width: 900px){
-[data-material-surface][data-material-active="mobile"]:not(.is-content-stack-hidden){border:0;background: var(--material-01);box-shadow:none;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);}}
+[data-material-surface][data-material-active="mobile"]:not(.is-content-stack-hidden){border:0;background: var(--material-01);box-shadow:var(--material-01-shadow);backdrop-filter:var(--material-01-backdrop);-webkit-backdrop-filter:var(--material-01-backdrop);}}
 .map-surface.has-practice-orbits :is(.focused-home,.practice-map) .map-node[data-map-id="private-practice"] .map-node__glyph,.map-surface.has-practice-orbits :is(.focused-home,.practice-map) .map-node[data-map-id="private-practice"].is-selected .map-node__glyph{width:var(--practice-orbit-size,168px);height:var(--practice-orbit-size,168px);background:none;box-shadow:none;border:0;pointer-events:none;}
 .practice-orbits-canvas{position:absolute;inset:50% 0 auto;width:100%;height:auto;aspect-ratio:1;transform:translateY(-50%);pointer-events:none}
 .map-surface.has-practice-orbits [data-map-label-id="shirokostup"],.map-surface.has-practice-orbits [data-map-label-id="tarski"],.map-surface.has-practice-orbits [data-map-label-id="herman"],.map-surface.has-practice-orbits [data-map-label-id="ks-fish"],.map-surface.has-practice-orbits [data-map-label-id="hotline-camp"],.map-surface.has-practice-orbits [data-map-label-id="dusty"],.map-surface.has-practice-orbits [data-map-label-id="dd-camp"],.map-surface.has-practice-orbits [data-map-label-id="eleven"],.map-surface.has-practice-orbits [data-map-label-id="doronin"],.map-surface.has-practice-orbits [data-map-label-id="krainiuk"],.map-surface.has-practice-orbits .map-links path[data-parent-id="private-practice"],.map-surface.has-practice-orbits .map-links path.is-orbit-project-link,.map-surface.has-practice-orbits .spatial-field--relations [data-relation-key^="private-practice:"]{visibility:hidden!important;pointer-events:none!important}

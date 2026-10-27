@@ -95,3 +95,80 @@ export function independentMaterialPaint(source) {
   });
   return failures;
 }
+
+// Author-approved Tinted study, 27 October 2026. These values are our CSS
+// approximation, not a claimed Apple recipe. Roots own the whole material.
+const materialRecipes = {
+  ':root': {
+    '--material-01': 'rgba(246, 248, 242, 0.4)',
+    '--material-01-backdrop': 'blur(24px) saturate(1.35)',
+    '--material-01-shadow': 'inset 0 1px 0 rgba(255,255,255,.55), inset 0 0 0 1px rgba(255,255,255,.24), 0 4px 16px rgba(24,30,20,.06)',
+    '--origin-cross-fill': 'rgba(255, 255, 255, 0.5)',
+  },
+  'html[data-theme="dark"]': {
+    '--material-01': 'rgba(38, 41, 35, 0.58)',
+    '--material-01-backdrop': 'blur(24px) saturate(1.3)',
+    '--material-01-shadow': 'inset 0 1px 0 rgba(255,255,255,.16), inset 0 0 0 1px rgba(255,255,255,.055), 0 4px 16px rgba(0,0,0,.14)',
+    '--origin-cross-fill': 'rgba(35, 36, 32, 0.5)',
+  },
+  'html[data-contrast="true"]': {
+    '--material-01': 'rgba(255, 255, 255, 0.5)',
+    '--material-01-backdrop': 'blur(24px)',
+    '--material-01-shadow': 'none',
+  },
+  'html[data-theme="dark"][data-contrast="true"]': {
+    '--material-01': 'rgba(35, 36, 32, 0.5)',
+  },
+};
+const compact = value => value.replace(/\s+/g, '');
+const materialToken = property => /^--material-01(?:-backdrop|-shadow)?$/.test(property) || property === '--origin-cross-fill';
+const forcedColorsToken = node => ['--material-01', '--origin-cross-fill'].includes(node.prop)
+  && node.value === 'Canvas' && !node.important
+  && node.parent.selector === '.map-surface,\nhtml[data-theme="dark"]'
+  && node.parent.parent.name === 'media' && node.parent.parent.params === '(forced-colors: active)';
+
+export function materialRecipeFailures(source) {
+  const failures=[], seen=new Set();
+  postcss.parse(source).walkDecls(node => {
+    if (!materialToken(node.prop)) return;
+    const rule=node.parent, key=rule.selector+' / '+node.prop;
+    if (forcedColorsToken(node)) { if (seen.has(key)) failures.push('Duplicate '+key); seen.add(key); return; }
+    const expected=rule.parent.type === 'root' && materialRecipes[rule.selector]?.[node.prop];
+    if (!expected || compact(node.value)!==compact(expected) || node.important || seen.has(key)) failures.push(key);
+    seen.add(key);
+  });
+  for (const [selector, recipe] of Object.entries(materialRecipes)) {
+    for (const property of Object.keys(recipe)) if (!seen.has(selector+' / '+property)) failures.push('Missing '+selector+' / '+property);
+  }
+  return failures;
+}
+
+// Paint-only updates use the existing materials coverage. Keep every selector,
+// condition and non-paint declaration in the comparison, including geometry.
+export function isMaterialRecipeChange(before, after) {
+  const outside = source => {
+    const tree=postcss.parse(source), seen=new Set();
+    tree.walkDecls(node => {
+      const rule=node.parent;
+      if (materialToken(node.prop)) {
+        if (forcedColorsToken(node)) { node.remove(); return; }
+        const expected=rule.parent.type === 'root' && materialRecipes[rule.selector]?.[node.prop];
+        const legacy=node.prop === '--material-01' && rule.parent.type === 'root'
+          && ((rule.selector === ':root' && compact(node.value)==='rgba(255,255,255,0.5)')
+          || (rule.selector === 'html[data-theme="dark"]' && compact(node.value)==='rgba(35,36,32,0.5)'));
+        const key=rule.selector+' / '+node.prop;
+        if ((!legacy && (!expected || compact(node.value)!==compact(expected))) || node.important || seen.has(key)) throw new Error('Unknown material recipe');
+        seen.add(key); node.remove(); return;
+      }
+      if (rule.selector === '.origin-marker__cross::after' && node.prop === 'background' && node.value === 'var(--origin-cross-fill)' && !node.important) node.value='var(--material-01)';
+      if (!rule.selector?.includes('[data-material-surface][data-material-active=')) return;
+      const paint={background:['var(--material-01)'], 'box-shadow':['none','var(--material-01-shadow)'], 'backdrop-filter':['blur(24px)','var(--material-01-backdrop)'], '-webkit-backdrop-filter':['blur(24px)','var(--material-01-backdrop)']};
+      if (paint[node.prop]?.includes(node.value) && !node.important) node.value='MATERIAL_PAINT';
+    });
+    const visit=node => node.type === 'comment' ? null : node.type === 'decl'
+      ? ['decl',node.prop,node.value,!!node.important]
+      : [node.type,node.selector||'',node.name||'',node.params||'',...(node.nodes||[]).map(visit).filter(Boolean)];
+    return JSON.stringify(visit(tree));
+  };
+  try { return before !== after && outside(before) === outside(after); } catch { return false; }
+}

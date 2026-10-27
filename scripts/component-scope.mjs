@@ -1,5 +1,5 @@
 import postcss from "postcss";
-import { isMaterialCleanup, isMaterialForcedColorsPriority } from "./material-contract.mjs";
+import { isMaterialCleanup, isMaterialForcedColorsPriority, isMaterialRecipeChange } from "./material-contract.mjs";
 import { overviewOutside, overviewHtmlOutside, notFoundBindings } from "./overview-scope.mjs";
 import selectorParser from "postcss-selector-parser";
 import { parse as parseHtml } from "parse5";
@@ -215,7 +215,7 @@ const cssComponents = (before, after) => {
   if (isMenuFooterSpacing(before, after)) return ['check:accessibility'];
   if (isSeparatorUpdate(before, after)) return ["check:accessibility", "check:case-view"];
   if (isMaterialForcedColorsPriority(before, after)) return ["check:core", "check:accessibility"];
-  if (isMaterialCleanup(before, after)) return ["materials"];
+  if (isMaterialCleanup(before, after) || isMaterialRecipeChange(before, after)) return ["materials"];
   const owners = Object.entries(cssOwners);
   // Mixed local edits select the union; a single shared rule keeps full CI.
   const owned = selector => owners.some(([, owns]) => owns(selector));
