@@ -531,6 +531,24 @@ for (const after of [
   movedCaption + '\nwindow.addEventListener("resize", () => {});',
   movedCaption + '\nconst broken = ;',
 ]) scoped('js/map-engine.js', mapEngine, after, 'full');
+const dismissalChecks = ['check:hover-layout', 'check:case-flow', 'check:case-view', 'check:point-address'];
+const adjustedDismissal = mapEngine.replace('event.clientY - mapDismissPointer.y) > 8', 'event.clientY - mapDismissPointer.y) > 10');
+assert.notEqual(adjustedDismissal, mapEngine);
+scoped('js/map-engine.js', mapEngine, adjustedDismissal, 'components', dismissalChecks);
+for (const after of [
+  adjustedDismissal.replace('const duration = shouldMorph ? 440 : 320', 'const duration = shouldMorph ? 600 : 400'),
+  adjustedDismissal.replace('const glyphDiameter = Math.max(10, item.size * glyphScale)', 'const glyphDiameter = Math.max(20, item.size * glyphScale)'),
+  adjustedDismissal.replace('selectedMapId=id;', 'selectedMapId=null;'),
+  adjustedDismissal.replace('document.addEventListener("click", dismissMapPointerClick);', 'document.addEventListener("pointerup", dismissMapPointerClick);'),
+  adjustedDismissal.replace('let restoringMapFocus = false;', 'let restoringMapFocus = startGlobalObserver();'),
+  adjustedDismissal + '\nwindow.addEventListener("resize", () => {});',
+]) {
+  assert.notEqual(after, adjustedDismissal, 'Negative dismissal fixture changes an unowned operation');
+  scoped('js/map-engine.js', mapEngine, after, 'full');
+}
+for (const engine of ['chromium', 'webkit']) assert.deepEqual(
+  new Set(browserMatrix('components', dismissalChecks).include.filter(job => job.browser === engine).flatMap(job => job.checks.split(','))),
+  new Set(['hover-layout', 'case-flow', 'case-view', 'point-address']), 'Dismissal retains preview, card lifecycle and URL coverage');
 for (const selector of ['.map-node-label', 'html[data-map-controls-ready] .map-anchor-label[data-map-label-id="garage"]', '.focused-home .map-space-label--south']) {
   scoped('styles.css', '', `@container map-viewport (min-width:901px){${selector} {transform:translate(-50%, 30px)}}`, 'components', ['map-labels']);
 }

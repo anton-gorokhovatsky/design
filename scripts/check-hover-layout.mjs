@@ -29,6 +29,88 @@ const inspect = () => {
     collisions, outside: frames.filter(r => r.left < -.5 || r.top < -.5 || r.right > innerWidth + .5 || r.bottom > innerHeight + .5) };
 };
 try {
+  // Closing a card or clicking the map background must not pin a focus preview.
+  {
+    const page = await browser.newPage({ viewport: { width: 1512, height: 862 }, colorScheme: "light", reducedMotion: "no-preference" });
+    page.setDefaultTimeout(10000);
+    page.on("pageerror", error => errors.push(error.message));
+    await page.goto(origin + '/?scene=map');
+    await declineAnalyticsNotice(page);
+    const open = async (id, story = false) => {
+      await page.goto(origin + `/?scene=map&point=${id}${story ? '&story=1' : ''}`);
+      await page.waitForFunction(() => document.querySelector('[data-map-inspector]').classList.contains('has-reading-frame'));
+      if (story) await page.locator('#story-pane[data-ready="true"]').waitFor();
+    };
+    const blank = () => page.evaluate(() => {
+      const pane = document.querySelector('.map-surface').getBoundingClientRect();
+      for (const [fx, fy] of [[.3, .74], [.04, .74], [.2, .6], [.45, .15], [.04, .95], [.98, .5], [.5, .04]]) {
+        const x = pane.left + pane.width * fx, y = pane.top + pane.height * fy;
+        const target = document.elementFromPoint(x, y);
+        if (target?.closest('#map-pane') && !target.closest('button,a,input,[data-floating-console],.case-sheet,.case-header,.case-media')) return { x, y };
+      }
+      throw new Error('No unobstructed map background in this scene');
+    });
+    const quiet = async () => {
+      await page.waitForFunction(() => !document.querySelector('[data-map-inspector]').classList.contains('is-open'));
+      // Include focus restoration, preview entrance and the 440 ms map fade.
+      await page.waitForTimeout(500);
+      await page.waitForFunction(() => !document.querySelector("[data-relation-morphing]"));
+      const state = await page.evaluate(() => ({
+        preview: document.querySelector('[data-map-preview]').classList.contains('is-visible'),
+        selected: document.querySelector('[data-signal-field]').dataset.selectedId || null,
+        focus: document.querySelector('[data-signal-field]').dataset.focusId || null,
+        relations: document.querySelectorAll('[data-map-links] .is-active-relation').length,
+        point: new URL(location.href).searchParams.get('point'),
+      }));
+      assert.deepEqual(state, { preview: false, selected: null, focus: null, relations: 0, point: null });
+    };
+    await open('garage-archives');
+    await page.locator('[data-close-inspector]').click();
+    await quiet();
+    assert.equal(await page.evaluate(() => document.activeElement?.dataset.mapId), 'garage-archives', 'Closing retains the keyboard position without another preview');
+    await page.screenshot({ path: `${directory}/${engine}-dismissed-map.png` });
+
+    // Real keyboard navigation may still preview and reopen the same point.
+    await page.keyboard.press('Tab');
+    await page.locator('[data-map-id="garage-archives"]').focus();
+    await page.waitForFunction(() => document.querySelector('[data-map-preview]').classList.contains('is-visible'));
+    let background = await blank();
+    await page.mouse.click(background.x, background.y);
+    await quiet();
+    await page.locator('[data-map-id="garage-archives"]').hover();
+    await page.waitForFunction(() => document.querySelector('[data-map-preview]').classList.contains('is-visible'));
+    await page.locator('[data-map-id="garage-archives"]').click();
+    await page.waitForFunction(() => document.querySelector('[data-map-inspector]').classList.contains('is-open'));
+    await page.keyboard.press('Escape');
+    await quiet();
+    assert.equal(await page.evaluate(() => document.activeElement?.dataset.mapId), 'garage-archives');
+    assert.equal(await page.evaluate(() => document.activeElement.matches(':focus-visible')), true, 'Escape preserves visible keyboard focus');
+
+    for (const id of ['youtube', 'garage-archives']) {
+      await open(id);
+      await page.locator('[data-map-description]').click();
+      assert.equal(await page.locator('[data-map-inspector]').getAttribute('aria-hidden'), 'false', 'A click inside the content is not dismissal');
+      background = await blank();
+      await page.mouse.move(background.x, background.y);
+      await page.mouse.down();
+      await page.mouse.move(background.x + 60, background.y + 12, { steps: 4 });
+      await page.mouse.move(background.x, background.y, { steps: 4 });
+      await page.mouse.up();
+      assert.equal(await page.locator('[data-map-inspector]').getAttribute('aria-hidden'), 'false', 'A drag returning to its start is not a click');
+      await page.mouse.click(background.x, background.y);
+      await quiet();
+    }
+    await open('youtube', true);
+    await page.locator('#story-pane h1').click();
+    assert.equal(await page.locator('[data-map-inspector]').getAttribute('aria-hidden'), 'false', 'The adjacent reader does not dismiss the map card');
+    background = await blank();
+    await page.mouse.click(background.x, background.y);
+    await quiet();
+    assert.equal(await page.evaluate(() => document.body.classList.contains('has-story-pane')), true);
+    await page.screenshot({ path: `${directory}/${engine}-dismissed-split.png` });
+    await page.close();
+    console.log(`PASS ${engine}: quiet mouse/Escape return, keyboard and hover preview, blank click, inside click, drag and split reader.`);
+  }
   // Crossing ordinary map points must not flash the unrelated scene.
   {
     const page = await browser.newPage({ viewport: { width: 1512, height: 862 }, reducedMotion: "no-preference",

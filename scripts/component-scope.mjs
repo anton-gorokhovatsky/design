@@ -449,6 +449,82 @@ const mapLabelsOutside = source => {
   return ranges.sort((a, b) => b[0] - a[0]).reduce((text, [start, end]) => text.slice(0, start) + "\0LABEL\0" + text.slice(end), source);
 };
 
+// Only card dismissal and node hover/focus callbacks use this lane. Selection,
+// URL writing, geometry, node creation, keyboard navigation and media code stay
+// outside it. Reuse their existing hover, case lifecycle and address checks.
+const mapDismissalOutside = source => {
+  const tree = parseJs(source, { ecmaVersion: "latest", sourceType: "module" });
+  const removed = Symbol("dismissal owner");
+  const helpers = new Set([
+    "restoringMapFocus", "dismissedMapHover", "mapPointerPosition", "restoreMapFocus", "mapDismissPointer",
+    "isMapDismissTarget", "startMapDismissPointer", "trackMapDismissPointer",
+    "cancelMapDismissPointer", "dismissMapPointerClick",
+  ]);
+  const bindings = new Map([
+    ["startMapDismissPointer", "pointerdown"], ["trackMapDismissPointer", "pointermove"],
+    ["cancelMapDismissPointer", "pointercancel"], ["dismissMapPointerClick", "click"],
+  ]);
+  const found = new Set(), subscriptions = new Set();
+  let close = 0, focus = 0, enter = 0, move = 0;
+  tree.body = tree.body.filter(statement => {
+    if (statement.type !== "VariableDeclaration" || statement.declarations.length !== 1) return true;
+    const { id, init } = statement.declarations[0];
+    if (!helpers.has(id.name)) return true;
+    if (found.has(id.name)) throw new Error("Duplicate dismissal helper");
+    const state = ["restoringMapFocus", "dismissedMapHover", "mapPointerPosition", "mapDismissPointer"].includes(id.name);
+    if (state ? statement.kind !== "let" || init?.type !== "Literal"
+      || init.value !== (id.name === "restoringMapFocus" ? false : null)
+      : statement.kind !== "const" || init?.type !== "ArrowFunctionExpression" || init.async) {
+      throw new Error("Unknown dismissal helper");
+    }
+    found.add(id.name);
+    return false;
+  });
+  const visit = node => {
+    if (!node || typeof node !== "object") return node;
+    if (node.type === "ExpressionStatement") {
+      const call = node.expression.type === "ChainExpression" ? node.expression.expression : node.expression;
+      if (call.type === "CallExpression" && call.callee.type === "MemberExpression"
+        && !call.callee.computed && call.callee.property.name === "addEventListener") {
+        const owner = call.callee.object.name;
+        const [event, callback, options] = call.arguments;
+        if (owner === "document" && bindings.has(callback?.name)) {
+          if (event?.value !== bindings.get(callback.name) || subscriptions.has(callback.name)) throw new Error("Unknown dismissal binding");
+          const flags = options?.type === "ObjectExpression" ? Object.fromEntries(options.properties.map(property => [property.key.name, property.value.value])) : null;
+          if (event.value === "click" ? call.arguments.length !== 2
+            : event.value === "pointermove" ? call.arguments.length !== 3 || !flags?.capture || !flags?.passive || Object.keys(flags).length !== 2
+              : call.arguments.length !== 3 || options?.value !== true) throw new Error("Unknown dismissal event options");
+          subscriptions.add(callback.name);
+          return removed;
+        }
+        if (owner === "button" && event?.value === "pointermove") {
+          if (call.arguments.length !== 2 || callback?.type !== "ArrowFunctionExpression" || callback.async) throw new Error("Unknown hover resumption");
+          move++;
+          return removed;
+        }
+        if ((owner === "inspectorClose" && event?.value === "click")
+          || (owner === "button" && ["focus", "pointerenter"].includes(event?.value))) {
+          if (call.arguments.length !== 2 || callback?.type !== "ArrowFunctionExpression" || callback.async) throw new Error("Unknown card or preview callback");
+          if (owner === "inspectorClose") close++;
+          else if (event.value === "focus") focus++;
+          else enter++;
+          callback.body = { type: "MapDismissalCallback" };
+        }
+      }
+    }
+    for (const [key, value] of Object.entries(node)) {
+      if (Array.isArray(value)) node[key] = value.map(visit).filter(value => value !== removed);
+      else if (value && typeof value === "object") node[key] = visit(value);
+    }
+    return node;
+  };
+  visit(tree);
+  if (close !== 1 || focus !== 2 || enter !== 2 || (found.size
+    ? found.size !== helpers.size || subscriptions.size !== bindings.size || move !== 1
+    : subscriptions.size || move)) throw new Error("Incomplete dismissal boundary");
+  return JSON.stringify(tree, (key, value) => ["start", "end", "raw"].includes(key) ? undefined : value);
+};
+
 export const affectedComponents = (path, before, after, maskHtmlCopy) => {
   if (before.includes("\0") || after.includes("\0")) return null;
   try {
@@ -458,6 +534,9 @@ export const affectedComponents = (path, before, after, maskHtmlCopy) => {
     if (["js/viewport-ui.js", "rendering/js/viewport-ui.js"].includes(path) && isLensPointerGuard(before, after)) return ["scroll-lens-pointer"];
     if (path === "js/viewport-ui.js" && consoleBoundsOutside(before) === consoleBoundsOutside(after)) return ["console-bounds"];
     if (path === "js/map-engine.js" && mapLabelsOutside(before) === mapLabelsOutside(after)) return ["map-labels"];
+    if (path === "js/map-engine.js" && mapDismissalOutside(before) === mapDismissalOutside(after)) {
+      return ["check:hover-layout", "check:case-flow", "check:case-view", "check:point-address"];
+    }
     if (path === "scripts/browser-contracts.cjs") {
       // Only the compact index changes its background treatment; glass stays shared.
       const commandDepthOutside = source => source
