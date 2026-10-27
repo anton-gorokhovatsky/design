@@ -135,9 +135,9 @@ function readout(figure,item,detail=''){
   if(out.dataset.point===item.id&&out.dataset.detail===detail)return;
   const wasVisible=out.classList.contains('is-visible');
   out.dataset.point=item.id;out.dataset.detail=detail;
-  const link=document.createElement('a');link.href=nodeLink(item);link.className='text-link';link.textContent=typographUiText(item.label);
+  const link=document.createElement('a');link.href=nodeLink(item);link.className='text-link';const title=document.createElement('span');title.textContent=typographUiText(item.label);link.append(title);
   out.replaceChildren(link);
-  if(detail){const text=document.createElement('span');text.className='readout-caption';text.textContent=typographUiText(detail);out.append(text);}
+  if(detail){const text=document.createElement('span');text.className='readout-caption';text.textContent=typographUiText(detail);link.append(text);}
   out.inert=false;out.classList.add('is-visible');note.dirty=true;
   if(wasVisible&&motion){out.getAnimations().forEach(a=>a.cancel());out.animate([{opacity:0},{opacity:1}],{duration:180,easing:'cubic-bezier(0.16,1,0.3,1)'});}
 }
