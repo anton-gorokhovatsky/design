@@ -271,7 +271,7 @@ for(const engine of [process.argv[2]||'chromium']) {
       'Returning from a mobile case must not leave desktop search inert');
     await page.locator('[data-command-input]').click();
     await page.locator('[data-command-input]').fill('Хотлайн');
-    const searchResult = page.getByRole('option', { name: /Hotline Camp/ });
+    const searchResult = page.getByRole('option', { name: /Кэмп Hotline/ });
     await searchResult.waitFor({ state: 'visible' });
     await page.locator('[data-command-results]').evaluate(element => Promise.all(
       element.getAnimations().map(animation => animation.finished.catch(() => {})),

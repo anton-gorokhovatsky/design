@@ -4968,32 +4968,19 @@ background: currentColor;
 .command-dock__submit-mark {
 position: relative;
 display: block;
-width: 16px;
-height: 12px;
+width: 20px;
+height: 20px;
 }
-
-.command-dock__submit-mark::before {
-position: absolute;
-top: 50%;
-right: 1px;
-left: 1px;
-height: 1px;
-background: currentColor;
-content: "";
-transform: translateY(-50%);
+.command-dock__submit-mark svg {
+width: 100%;
+height: 100%;
+fill: none;
+stroke: currentColor;
+stroke-width: 1.5;
 }
-
-.command-dock__submit-mark::after {
-position: absolute;
-top: 50%;
-right: 1px;
-width: 6px;
-height: 6px;
-border-top: 1px solid currentColor;
-border-right: 1px solid currentColor;
-content: "";
-transform: translateY(-50%) rotate(45deg);
-}
+.command-dock__submit-mark::before,
+.command-dock__submit-mark::after { content: none; }
+.command-dock.is-open .command-dock__submit-mark svg { display: none; }
 
 .command-dock.is-open .command-dock__submit-mark {
 width: 16px;
@@ -5002,6 +4989,8 @@ height: 16px;
 
 .command-dock.is-open .command-dock__submit-mark::before,
 .command-dock.is-open .command-dock__submit-mark::after {
+content: "";
+position: absolute;
 top: 50%;
 right: auto;
 left: 50%;
@@ -7160,7 +7149,8 @@ align-self: center;
 content: "";
 }
 .contact-links a::after,
-.nav-external {
+.nav-external,
+.map-readout__destination[target="_blank"]::after {
 width: 12px;
 height: 12px;
 border-top: 1.5px solid currentColor;
@@ -7168,6 +7158,14 @@ border-right: 1.5px solid currentColor;
 background: linear-gradient(135deg, transparent 43%, currentColor 44% 52%, transparent 53%);
 }
 .nav-external { box-sizing: border-box; width: 1cap; height: 1cap; vertical-align: baseline; }
+.map-readout__destination[target="_blank"]::after {
+content: "";
+box-sizing: border-box;
+width: 1cap;
+height: 1cap;
+flex: none;
+margin-inline-start: .4em;
+}
 .contact-copy a:hover { color: var(--signal); }
 .contact-copy a:focus-visible { outline: 2px solid var(--signal); outline-offset: 4px; }
 @container map-viewport (max-width: 680px) {

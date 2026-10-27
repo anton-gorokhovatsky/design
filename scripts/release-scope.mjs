@@ -18,12 +18,18 @@ import { pointAddressPaths, pointAddressRename } from "./point-address-scope.mjs
 const copyArrays = {
   "js/panels.js": { name: "commandViews", fields: ["title", "meta"] },
   "js/map-data.js": {
-    name: "mapItems", fields: ["label", "title", "meta", "description", "timeLabel", "kindLabel", "linkLabel"],
+    name: "mapItems", fields: ["label", "mapLabel", "title", "meta", "description", "timeLabel", "kindLabel", "linkLabel"],
   },
   "js/observation-route.js": {
     name: "observationSteps", fields: ["title", "meta", "description"],
   },
 };
+const shareIds = ["garage", "narkomfin", "tarski", "doronin", "eleven", "shirokostup"];
+const sharePages = new Set(shareIds.map(id => `work/${id}/index.html`));
+// These existing JPEGs are static publication artwork, checked for format and size
+// by check-publication-assets. Runtime media never enters this boundary.
+const shareImages = new Set(shareIds.map(id => `assets/share/${id}.jpg`));
+const focusedHomePaths = new Set(["js/focused-home.js", "rendering/js/focused-home.js"]);
 const evidenceFields = new Set(["task", "role", "idea", "result", "feature", "details", "weather", "timePreview", "technical"]);
 const keyOf = (property) => !property.computed && (property.key?.name ?? property.key?.value);
 const isString = (node) => node?.type === "Literal" && typeof node.value === "string";
@@ -60,7 +66,23 @@ const maskCaseDescriptionCopy = (source) => {
     ? displayRanges(property.value, new Set(Object.keys(data.descriptions || {})), -1) : []));
 };
 
-const maskHtmlCopy = (source) => {
+// Only the display names in the known landmark tuples; identifiers, direction
+// labels and executable code stay byte-for-byte protected in both source builds.
+const maskLandmarkCopy = (source) => {
+  const keys = ["garage", "narkomfin", "private-practice", "eleven", "ks-fish", "principle-data-intuition", "running", "youtube"];
+  const tree = parseJs(source, { ecmaVersion: "latest", sourceType: "module" });
+  const ranges = tree.body.flatMap(statement => statement.type === "VariableDeclaration"
+    ? statement.declarations.flatMap(({ init }) => {
+      if (init?.type !== "ObjectExpression" || init.properties.map(keyOf).join() !== keys.join()) return [];
+      if (!init.properties.every(property => property.type === "Property" && property.kind === "init"
+        && !property.method && property.value.type === "ArrayExpression"
+        && property.value.elements.length === 2 && property.value.elements.every(isString))) return [];
+      return init.properties.map(property => [property.value.elements[1].start, property.value.elements[1].end]);
+    }) : []);
+  return maskRanges(source, ranges);
+};
+
+const maskHtmlCopy = (source, publication = false) => {
   const ranges = [];
   const visit = (node) => {
     const location = node.sourceCodeLocation;
@@ -75,6 +97,13 @@ const maskHtmlCopy = (source) => {
           ranges.push(...displayRanges(property.value, evidenceFields, start - 1));
         }
       }
+      if (publication && attributes.type === "application/ld+json") {
+        const start = location.startTag.endOffset;
+        const json = source.slice(start, location.endTag.startOffset);
+        JSON.parse(json);
+        const object = parseJs(`(${json})`, { ecmaVersion: "latest" }).body[0].expression;
+        ranges.push(...displayRanges(object, new Set(["name"]), start - 1));
+      }
       return;
     }
     if (["style", "template", "noscript"].includes(node.tagName)) return;
@@ -82,6 +111,7 @@ const maskHtmlCopy = (source) => {
       ranges.push([location.startOffset, location.endOffset]);
     }
     const displayAttributes = ["aria-label", "title", "alt", "placeholder"];
+    if (publication && node.tagName === "meta" && ["description", "og:title", "og:description", "og:image:alt", "twitter:title", "twitter:description", "twitter:image:alt"].includes(attributes.name || attributes.property)) displayAttributes.push("content");
     if (node.attrs?.some(attribute => attribute.name === "data-floating-console")) displayAttributes.push("data-context");
     for (const name of displayAttributes) {
       const attribute = location?.attrs?.[name];
@@ -112,6 +142,8 @@ export const isCopyOnly = (path, before, after) => {
   if (before.includes("\0") || after.includes("\0")) return false;
   try {
     if (copyArrays[path]) return maskJavaScriptCopy(path, before) === maskJavaScriptCopy(path, after);
+    if (focusedHomePaths.has(path)) return maskLandmarkCopy(before) === maskLandmarkCopy(after);
+    if (sharePages.has(path)) return maskHtmlCopy(before, true) === maskHtmlCopy(after, true);
     if (path === "js/case-content.json") return maskCaseDescriptionCopy(before) === maskCaseDescriptionCopy(after);
     if (["index.html", "404.html"].includes(path)) return maskHtmlCopy(before) === maskHtmlCopy(after);
   } catch {
@@ -160,11 +192,12 @@ export const planRelease = ({ projectRoot, base = "origin/gh-pages", target } = 
       const [status, path] = entries.slice(index, index + 2);
       const owner = ownedCheckComponent(path);
       let classification = staticCheckPaths.has(path) ? { mode: "copy", components: [] } : owner ? { mode: "components", components: [owner] } : { mode: "full", components: [] };
-      if (status === "M" && (copyArrays[path] || ["js/case-content.json", "index.html", "404.html", "styles.css", "js/focused-home.js", "js/map-media.js", "js/map-engine.js", "js/whoop-day.js", "js/practice-orbits.js", "rendering/practice-orbits.js", "js/viewport-ui.js", "rendering/js/viewport-ui.js", "scripts/browser-contracts.cjs", "scripts/reel-specs.json", "README.md", "AGENTS.md"].includes(path) || /^docs\/.*\.md$/.test(path))) {
+      if (status === "M" && (copyArrays[path] || sharePages.has(path) || focusedHomePaths.has(path) || ["js/case-content.json", "index.html", "404.html", "styles.css", "js/focused-home.js", "js/map-media.js", "js/map-engine.js", "js/whoop-day.js", "js/practice-orbits.js", "rendering/practice-orbits.js", "js/viewport-ui.js", "rendering/js/viewport-ui.js", "scripts/browser-contracts.cjs", "scripts/reel-specs.json", "README.md", "AGENTS.md"].includes(path) || /^docs\/.*\.md$/.test(path))) {
         const before = git("show", `${baseSha}:${path}`);
         const after = targetSha ? git("show", `${targetSha}:${path}`) : readFileSync(resolve(projectRoot, path), "utf8");
         classification = classifyChange(path, before, after);
       }
+      if (status === "M" && shareImages.has(path)) classification = { mode: "copy", components: [] };
       if (status === "M" && mediaAssetPaths.has(path)) classification = { mode: "components", components: ["media"] };
       if (status === "M" && pointRename?.paths.includes(path)) classification = { mode: "components", components: ["point-address"] };
       changes.push({ path, ...classification });

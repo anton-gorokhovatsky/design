@@ -29,7 +29,7 @@ const cssOwners = {
     && branch.nodes.every(node => node.type !== "nesting"
       && (node.type !== "combinator" || ["", ">"].includes(node.value.trim())))),
   settings: selector => !ownsClass(/^settings-panel__version$/)(selector) && ownsClass(settingsClass)(selector),
-  "check:accessibility": ownsClass(/^(?:site-version(?:--[\w-]+)?|settings-panel__version|display-control__(?:presence|status)|map-about-trigger(?:__[\w-]+)?|map-control-group--secondary)$/),
+  "check:accessibility": ownsClass(/^(?:site-version(?:--[\w-]+)?|settings-panel__version|display-control__(?:presence|status)|map-about-trigger(?:__[\w-]+)?|map-control-group--secondary|nav-external|contact-links|map-readout__destination)$/),
   consent: ownsClass(/^analytics-notice(?:$|__)/),
   overview: ownsClass(/^(?:overview-entry|work-overview(?:__[\w-]+)?|observation-[\w-]+)$/),
   "map-presentation": selector => selectorParser().astSync(selector).nodes.every(branch =>
@@ -37,7 +37,8 @@ const cssOwners = {
     && ownsClass(/^map-node(?:$|__|--)/)(selector),
   header: ownsClass(/^(?:focused-return(?:__[\w-]+)?|site-header|brand(?:__[\w-]+)?|whoop-(?:readout|metrics|status|foot|stamp|level|compact-trigger))$/),
   "search-icon": ownsClass(/^command-dock__mark$/),
-  "check:command-placement": ownsClass(/^has-command-focus$/),
+  "check:command-placement": ownsClass(/^(?:has-command-focus|command-dock__submit-mark)$/),
+  "check:inspector-links": ownsClass(/^(?:nav-external|contact-links|map-readout__destination)$/),
   "map-labels": ownsClass(/^map-(?:node-label|anchor-label|space-label)(?:$|--)/),
 };
 
@@ -286,6 +287,15 @@ const cssComponents = (before, after) => {
   const presentation = [...new Set([...left.parts.keys(), ...right.parts.keys()])]
     .filter(owner => JSON.stringify(left.parts.get(owner) || []) !== JSON.stringify(right.parts.get(owner) || []));
   return [...new Set([...presentation, ...local])];
+};
+
+// The submit decoration uses the existing opening arrow; bindings and every
+// surrounding byte remain protected, including the open-index close state.
+const commandArrowOutside = source => {
+  const empty = '<span class="command-dock__submit-mark" aria-hidden="true"></span>';
+  const arrow = '<span class="command-dock__submit-mark" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M4 12h15M13 5l7 7-7 7"/></svg></span>';
+  if (source.split(empty).length + source.split(arrow).length !== 3) throw new Error("Unknown submit decoration");
+  return source.replace(arrow, empty);
 };
 
 // Only passive header markup and the decorative search SVG can be replaced.
@@ -646,6 +656,9 @@ export const affectedComponents = (path, before, after, maskHtmlCopy) => {
     }
     if (path === "styles.css") return cssComponents(before, after);
     if (path === "index.html") {
+      try {
+        if (maskHtmlCopy(commandArrowOutside(before)) === maskHtmlCopy(commandArrowOutside(after))) return ["check:command-placement"];
+      } catch { /* Non-decorative changes retain their owners. */ }
       for (const components of [["check:accessibility"], ["header"], ["check:accessibility", "header"]]) {
         try {
           const normalize = source => maskHtmlCopy(components.reduce((text, id) => id === "header" ? focusedReturnIconOutside(text) : aboutEntryIconOutside(text), source));

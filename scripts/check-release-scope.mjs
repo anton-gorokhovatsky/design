@@ -39,6 +39,32 @@ change("js/case-content.json", descriptionFixture, "hotline-camp", "dd-camp", fa
 change("js/case-content.json", descriptionFixture, "https://example.com", "https://example.org", false);
 change("js/case-content.json", descriptionFixture, '"Бегаю."', '(() => "Бегаю.")()', false);
 
+// Project names and share metadata are copy; routes, schema and scripts are not.
+const nameFixture = 'const mapItems = [{id:"dusty",mapLabel:"Мерч клуба",href:"https://example.com"}];';
+change("js/map-data.js", nameFixture, "Мерч клуба", "Мерч Dusty Dumbbells", true);
+change("js/map-data.js", nameFixture, 'mapLabel:"Мерч клуба"', 'mapLabel:getLabel()', false);
+const shareFixture = '<title>Проект</title><meta name="description" content="Описание"><meta property="og:title" content="Проект"><meta name="robots" content="index"><link rel="canonical" href="https://example.com"><script type="application/ld+json">{"name":"Проект","url":"https://example.com","creator":{"name":"Автор"}}</script><script>go("route")</script>';
+for (const [from, to, expected] of [
+  ['<title>Проект</title>', '<title>Челлендж</title>', true],
+  ['content="Описание"', 'content="Новое описание"', true],
+  ['property="og:title" content="Проект"', 'property="og:title" content="Челлендж"', true],
+  ['"name":"Проект"', '"name":"Челлендж"', true],
+  ['"name":"Автор"', '"name":"Другой автор"', false],
+  ['content="index"', 'content="noindex"', false],
+  ['href="https://example.com"', 'href="https://other.com"', false],
+  ['"url":"https://example.com"', '"url":"https://other.com"', false],
+  ['go("route")', 'go("elsewhere")', false],
+  ['"name":"Проект"', '"name":run()', false],
+]) change("work/eleven/index.html", shareFixture, from, to, expected);
+change("work/unknown/index.html", shareFixture, "Описание", "Другое описание", false);
+for (const path of ["js/focused-home.js", "rendering/js/focused-home.js"]) {
+  const source = read(path);
+  change(path, source, "Челлендж «11 111»", "Велочеллендж «11 111»", true);
+  change(path, source, "ИНСТИТУЦИИ", "КОМПАНИИ", false);
+  assert.equal(isCopyOnly(path, source, source + "\nrun();"), false);
+  checks += 1;
+}
+
 // Reproduce the one-address release that previously selected the whole site.
 const addressFixture = {
   'js/map-data.js': 'const mapItems = [{id: "parfyonov", x: 29, y: 73}];',
@@ -315,6 +341,16 @@ scoped('styles.css', menuFooterBefore, menuFooterAfter, 'components', ['check:ac
 scoped('styles.css', menuFooterBefore, menuFooterAfter.replace('padding:0 8px var(--space-4)', 'padding:0 8px 48px'), 'full');
 scoped('styles.css', menuFooterBefore, menuFooterAfter.replace('max-width: 900px', 'max-width: 899px'), 'full');
 scoped('styles.css', menuFooterBefore, menuFooterAfter + ' .unrelated{padding:16px}', 'full');
+
+const submitEmpty = '<span class="command-dock__submit-mark" aria-hidden="true"></span>';
+const submitArrow = '<span class="command-dock__submit-mark" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M4 12h15M13 5l7 7-7 7"/></svg></span>';
+scoped('index.html', submitEmpty, submitArrow, 'components', ['check:command-placement']);
+scoped('index.html', submitEmpty, submitArrow.replace('focusable="false"', 'onload="run()"'), 'full');
+scoped('index.html', submitEmpty, submitArrow + '<script>run()</script>', 'full');
+scoped('styles.css', '', '.command-dock__submit-mark svg{stroke-width:1.5}', 'components', ['check:command-placement']);
+scoped('styles.css', '', '.command-dock__submit-mark + .unrelated{color:red}', 'full');
+scoped('styles.css', '', '.nav-external,.contact-links a::after,.map-readout__destination[target="_blank"]::after{width:1cap}', 'components', ['check:accessibility','check:inspector-links']);
+scoped('styles.css', '', '.map-readout__destination,.unrelated{color:red}', 'full');
 
 const separatorBefore = ':root{} .map-related__track > li + li{border-top:1px solid var(--line-soft)}';
 const separatorAfter = ':root{--separator-rule:1px solid var(--line-soft);--separator-edge:1px solid var(--line);--separator-control-before:var(--space-2);--separator-control-after:0px;--separator-row-compact:var(--space-3);--separator-row-regular:var(--space-4);--separator-row-roomy:var(--space-5);--separator-section-before:var(--space-5);--separator-section-after:var(--space-4);} .map-related__track > li + li{border-top:var(--separator-rule)}';
@@ -635,11 +671,20 @@ try {
   writeFileSync(join(directory, "js/viewport-ui.js"), viewport);
   mkdirSync(join(directory, "assets/reels"), { recursive: true });
   writeFileSync(join(directory, "assets/reels/garage-site.mp4"), "original master");
+  mkdirSync(join(directory, "assets/share"), { recursive: true });
+  writeFileSync(join(directory, "assets/share/eleven.jpg"), "published share artwork");
   writeFileSync(join(directory, "README.md"), "Published");
   git("add", "."); git("commit", "-m", "published");
   const published = git("rev-parse", "HEAD");
   const plan = (options = {}) => planRelease({ projectRoot: directory, base: published, ...options });
   requireReleaseBase(plan({ target: 'HEAD' }));
+  writeFileSync(join(directory, "assets/share/eleven.jpg"), "updated share artwork");
+  assert.equal(plan().mode, "copy", "Existing share artwork uses publication asset checks");
+  writeFileSync(join(directory, "assets/share/unknown.jpg"), "unregistered image");
+  assert.equal(plan().mode, "full", "Unregistered or added artwork is not copy");
+  rmSync(join(directory, "assets/share/unknown.jpg"));
+  git('reset', '--hard', published);
+  checks += 2;
   writeFileSync(join(directory, 'js/map-engine.js'), mapEngine);
   git('add', '.'); git('commit', '-m', 'caption fixture');
   const labelBase = git('rev-parse', 'HEAD');
