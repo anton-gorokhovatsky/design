@@ -109,8 +109,9 @@ function syncSceneSurfaces(host){
   }
   for(const [scene,frame] of surfaceFrames){
     if(host&&scene!==host)continue;
-    frame.style.left=port.left+'px';frame.style.top=port.top+'px';frame.style.width=port.width+'px';frame.style.height=port.height+'px';
-    if(visibleFrames.has(scene)){
+    const visible=visibleFrames.has(scene);
+    frame.style.left=(visible?port.left:0)+'px';frame.style.top=(visible?port.top:0)+'px';frame.style.width=port.width+'px';frame.style.height=port.height+'px';
+    if(visible){
       if(!frame.matches(':popover-open')){
         frame.setAttribute('popover','manual');frame.showPopover();frame.style.visibility='visible';
         const close=storyRoot.querySelector('.story-actions>[data-close-story]');
