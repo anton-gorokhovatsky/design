@@ -268,7 +268,20 @@ const surfacePresentationCss = source => {
   return { css: tree.toString(), parts };
 };
 
+// Promote exactly the existing switching rule from the compact-map container.
+// Unchanged neighbouring rules also pin its insertion and removal positions.
+const isSceneGuardPromotion = (before, after) => {
+  const guard = '.map-surface.is-map-switching :is(.map-node, .map-node-label, .map-camera) { transition: none; }';
+  const start = '.spatial-intro, .spatial-search, .spatial-field { display: none; }\n@container map-viewport (max-width: 900px) {';
+  const nodeRule = '.focused-home .map-node { transition: opacity 180ms var(--motion-enter); }';
+  try { postcss.parse(before); postcss.parse(after); } catch { return false; }
+  if ([guard, start, `${nodeRule}\n${guard}`].some(text => before.split(text).length !== 2)) return false;
+  return before.replace(start, start.replace('\n@container', `\n${guard}\n@container`))
+    .replace(`${nodeRule}\n${guard}`, nodeRule) === after;
+};
+
 const cssComponents = (before, after) => {
+  if (isSceneGuardPromotion(before, after)) return ["check:map-routes", "check:first-visit"];
   if (isMenuFooterSpacing(before, after)) return ['check:accessibility'];
   if (isSeparatorUpdate(before, after)) return ["check:accessibility", "check:case-view"];
   if (isMaterialForcedColorsPriority(before, after)) return ["check:core", "check:accessibility"];
@@ -484,9 +497,51 @@ const consoleBoundsOutside = source => {
   });
 };
 
+const astShape = tree => JSON.stringify(tree, (key, value) => ["start", "end", "raw"].includes(key) ? undefined : value);
+// A responsive scene restore may use the same brief switching guard as a click.
+// Only the exact media-change guard is removed; URL/focus/scene logic stays equal.
+const sceneRestorePrelude = parseJs(`
+  const responsive = event?.type === 'change';
+  const revision = sceneRevision;
+  if (responsive) {
+    document.body.classList.add('is-map-switching');
+    pane.syncState();
+  }
+`, { ecmaVersion: "latest", sourceType: "module" }).body;
+const sceneRestoreFinish = parseJs(`
+  if (responsive) requestAnimationFrame(() => requestAnimationFrame(() => {
+    if (revision !== sceneRevision) return;
+    document.body.classList.remove('is-map-switching');
+    pane.syncState();
+  }));
+`, { ecmaVersion: "latest", sourceType: "module" }).body[0];
+const sceneRestoreResize = [
+  "window.addEventListener('resize', syncMeasurements);",
+  "window.addEventListener('resize', () => { pane.refresh(); syncMeasurements(); });"
+].map(source => parseJs(source, { ecmaVersion: "latest", sourceType: "module" }).body[0]);
+const sceneRestoreOutside = source => {
+  const tree = parseJs(source, { ecmaVersion: "latest", sourceType: "module" });
+  const restores = tree.body.filter(node => node.type === "FunctionDeclaration" && node.id.name === "restoreScene");
+  if (restores.length !== 1) throw new Error("Missing unique scene restore");
+  const restore = restores[0];
+  const listener = sceneRestoreResize[restore.params.length ? 1 : 0];
+  const resize = tree.body.map((node, index) => astShape(node) === astShape(listener) ? index : -1).filter(index => index !== -1);
+  if (resize.length !== 1) throw new Error("Unknown resize synchronization");
+  if (restore.params.length) {
+    if (restore.params.length !== 1 || restore.params[0].type !== "Identifier" || restore.params[0].name !== "event"
+      || astShape(restore.body.body.slice(2, 5)) !== astShape(sceneRestorePrelude)
+      || astShape(restore.body.body.at(-1)) !== astShape(sceneRestoreFinish)) throw new Error("Unknown responsive scene guard");
+    restore.params = [];
+    restore.body.body.splice(2, 3);
+    restore.body.body.pop();
+    tree.body[resize[0]] = sceneRestoreResize[0];
+  }
+  return astShape(tree);
+};
+const sceneRestoreBuild = ["e6bb2bdd827258c2bd11c3d8ac8b713d0f78aade7cc3a729768cbbb74c310167", "7454340bc3b8b7806e14fc6c63b4fe9475438d2606d6807eb72c37544bd1ec88"];
+
 // Core geometry owns solid silhouettes and only their readiness subscriptions.
 // Surrounding layout, routing, node creation, imports and other exports stay protected.
-const astShape = tree => JSON.stringify(tree, (key, value) => ["start", "end", "raw"].includes(key) ? undefined : value);
 const coreGeometryBindings = [
   'new MutationObserver(scheduleMapLinksRender).observe(mapButtons.get("garage"),{attributes:true,attributeFilter:["data-gravity-ready"]});',
   'matchMedia("(forced-colors:active)").addEventListener("change",scheduleMapLinksRender);'
@@ -609,6 +664,28 @@ const practiceCaptionOutside = source => {
   return astShape(tree);
 };
 const practiceCaptionBuild = ["00c9771fcb854428009aed1b5d72d06458bc5242f89a1a4ca48fa6aa0cd94b33", "eadacc6d1651ba4a76c55635e9e565a39a261c03dc7b87f90efe53cbbfef9ec0"];
+
+// Only an opened label's side choice belongs to the hover contract. Keep rest
+// labels, core geometry, routes, listeners, imports and every other helper equal.
+const mapHoverLabelOutside = source => {
+  const tree = parseJs(source, { ecmaVersion: "latest", sourceType: "module" });
+  const owners = tree.body.filter(node => node.type === "VariableDeclaration" && node.kind === "const"
+    && node.declarations.length === 1 && node.declarations[0].id.name === "placeMapLabel");
+  if (owners.length !== 1) throw new Error("Missing unique hover label owner");
+  const init = owners[0].declarations[0].init;
+  if (init?.type !== "ArrowFunctionExpression" || init.async || init.body.type !== "BlockStatement") throw new Error("Unknown hover label owner");
+  const inspect = node => {
+    if (!node || typeof node !== "object") return;
+    if (node.type === "ImportExpression") throw new Error("Unknown hover label dependency");
+    for (const value of Object.values(node)) {
+      if (Array.isArray(value)) value.forEach(inspect);
+      else if (value && typeof value === "object") inspect(value);
+    }
+  };
+  inspect(init.body);
+  init.body = { type: "MapHoverLabelPlacement" };
+  return astShape(tree);
+};
 
 // Label placement may change without rechecking media playback, WHOOP or the
 // signature. All node geometry, links, events and exports remain outside this
@@ -759,6 +836,8 @@ export const affectedComponents = (path, before, after, maskHtmlCopy) => {
   if (before.includes("\0") || after.includes("\0")) return null;
   try {
     if (["js/viewport-ui.js", "rendering/js/viewport-ui.js"].includes(path) && exactReplacements(before, after, commandFramePatch)) return ["check:command-placement"];
+    if (path === "rendering/js/focused-home.js" && sceneRestoreOutside(before) === sceneRestoreOutside(after)) return ["check:map-routes", "check:first-visit"];
+    if (path === "js/focused-home.js" && [before, after].every((source, index) => createHash("sha256").update(source).digest("hex") === sceneRestoreBuild[index])) return ["check:map-routes", "check:first-visit"];
     if (path === "rendering/practice-orbits.js" && exactReplacements(before, after, pickerGlassSourcePatch)) return ["check:hover-layout"];
     if (path === "js/practice-orbits.js" && [before, after].every((source, index) => createHash("sha256").update(source).digest("hex") === pickerGlassBuild[index])) return ["check:hover-layout"];
     if (path === "rendering/practice-orbits.js" && practiceCaptionOutside(before) === practiceCaptionOutside(after)) return ["map-presentation"];
@@ -774,6 +853,7 @@ export const affectedComponents = (path, before, after, maskHtmlCopy) => {
     }
     if (["js/spatial-home.js", "rendering/js/spatial-home.js"].includes(path)
       && spatialMapBindings(before) === spatialMapBindings(after)) return ["map-presentation"];
+    if (path === "js/map-engine.js" && mapHoverLabelOutside(before) === mapHoverLabelOutside(after)) return ["check:hover-layout"];
     if (path === "js/map-engine.js" && mapLabelsOutside(before) === mapLabelsOutside(after)) return ["map-labels"];
     if (path === "js/map-engine.js" && mapDismissalOutside(before) === mapDismissalOutside(after)) {
       return ["check:hover-layout", "check:case-flow", "check:case-view", "check:point-address"];

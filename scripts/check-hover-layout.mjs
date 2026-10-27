@@ -147,6 +147,29 @@ try {
     copyFileSync(await page.video().path(), `${directory}/${engine}-stable-map-hover.webm`);
     console.log(`PASS ${engine}: ordinary hover keeps the surrounding map stable across 96 frames.`);
   }
+  // A short hover label must not cover the painted core of a neighbouring point.
+  {
+    const page = await browser.newPage({ viewport: { width: 903, height: 900 }, colorScheme: 'dark', reducedMotion: 'reduce' });
+    page.on('pageerror', error => errors.push(error.message));
+    await page.goto(origin + '/?scene=map');
+    await declineAnalyticsNotice(page);
+    await page.evaluate(() => document.fonts.ready);
+    await page.waitForFunction(() => !document.querySelector('[data-map-links][data-layout-pending]'));
+    for (const action of ['hover', 'focus']) {
+      await page.locator('[data-map-id="music"]')[action]();
+      const clear = await page.evaluate(() => {
+        const label = document.querySelector('[data-map-label-id="music"]').getBoundingClientRect();
+        const core = document.querySelector('[data-map-id="youtube"] .map-node__glyph').getBoundingClientRect();
+        const x = core.x + core.width / 2, y = core.y + core.height / 2;
+        return Math.hypot(x - Math.max(label.left, Math.min(label.right, x)),
+          y - Math.max(label.top, Math.min(label.bottom, y))) >= core.width / 2
+          && label.left >= 0 && label.right <= innerWidth;
+      });
+      assert.ok(clear, `${action}: the music label clears the visible YouTube sphere and the viewport`);
+    }
+    await page.screenshot({ path: `${directory}/${engine}-music-label-clearance.png` });
+    await page.close();
+  }
   for (const [width, height] of [[1440, 900], [1024, 768], [720, 450]]) for (const theme of ["light", "dark"]) {
     const page = await browser.newPage({ viewport: { width, height }, colorScheme: theme, reducedMotion: "reduce" });
     page.on("pageerror", error => errors.push(error.message));

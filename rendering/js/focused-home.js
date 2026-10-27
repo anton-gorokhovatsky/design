@@ -228,9 +228,15 @@ function syncMeasurements() {
   document.documentElement.style.setProperty('--focused-author-bottom', `${Math.ceil(header.getBoundingClientRect().bottom)}px`);
   positionPreview();
 }
-function restoreScene() {
+function restoreScene(event) {
   if (restoring) return;
   stopSceneMotion();
+  const responsive = event?.type === 'change';
+  const revision = sceneRevision;
+  if (responsive) {
+    document.body.classList.add('is-map-switching');
+    pane.syncState();
+  }
   restoring = true;
   const url = new URL(location.href);
   // A direct case link needs the complete map as its return destination.
@@ -247,6 +253,11 @@ function restoreScene() {
   }
   else if (!id && previewId) closePreview({ write: false, focus: false });
   restoring = false;
+  if (responsive) requestAnimationFrame(() => requestAnimationFrame(() => {
+    if (revision !== sceneRevision) return;
+    document.body.classList.remove('is-map-switching');
+    pane.syncState();
+  }));
 }
 window.addEventListener('mobile-point-request', event => showPreview(event.detail.id));
 previewClose.addEventListener('click', () => closePreview());
@@ -284,7 +295,7 @@ new MutationObserver(() => {
 window.addEventListener('popstate', restoreScene);
 compact.addEventListener('change', restoreScene);
 stackedStory.addEventListener('change', syncReading);
-window.addEventListener('resize', syncMeasurements);
+window.addEventListener('resize', () => { pane.refresh(); syncMeasurements(); });
 window.addEventListener('reading-surface-change', syncReading);
 new MutationObserver(syncReading).observe(document.body, { attributes: true, attributeFilter: ['class', 'data-case-open'] });
 let measurementFrame = 0;

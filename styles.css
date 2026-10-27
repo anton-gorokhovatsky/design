@@ -9914,6 +9914,7 @@ margin-top: var(--space-2);
 
 /* Direct manipulation of the mobile map volume. */
 .spatial-intro, .spatial-search, .spatial-field { display: none; }
+.map-surface.is-map-switching :is(.map-node, .map-node-label, .map-camera) { transition: none; }
 @container map-viewport (max-width: 900px) {
 .map-surface.has-focused-home .spatial-intro {
 display: block; margin: 0 0 var(--space-2); color: var(--content-muted);
@@ -9953,7 +9954,6 @@ translate: calc(var(--spatial-dx, 0px) + var(--spatial-label-dx, 0px))
 calc(var(--spatial-dy, 0px) + var(--spatial-label-dy, 0px));
 }
 .focused-home .map-node { transition: opacity 180ms var(--motion-enter); }
-.map-surface.is-map-switching :is(.map-node, .map-node-label, .map-camera) { transition: none; }
 .focused-home .map-node__glyph { scale: var(--spatial-scale, 1); }
 .focused-home .map-node[data-spatial-muted],
 .focused-home .map-labels .direction-landmark[data-spatial-muted] { opacity: .42; }

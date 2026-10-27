@@ -610,7 +610,7 @@ scoped('scripts/unregistered-check.mjs', 'before', 'after', 'full');
 // to node placement, relationships or an executable offset remains full scope.
 const mapEngine = read('js/map-engine.js');
 // Solid-radius work is owned by the map; neighbouring code is not exempted.
-const geometryChanged = mapEngine.replace('radius:getMapCoreRadius(glyph)', 'radius:getMapCoreRadius(glyph)*.99');
+const geometryChanged = mapEngine.replace('centerY:rect.top+rect.height/2-bounds.top,radius:getMapCoreRadius(glyph)', 'centerY:rect.top+rect.height/2-bounds.top,radius:getMapCoreRadius(glyph)*.99');
 assert.notEqual(geometryChanged, mapEngine);
 scoped('js/map-engine.js', mapEngine, geometryChanged, 'components', ['map-presentation']);
 const coreBefore = 'const mapButtons = new Map(); if (mapLinksRoot) { const getNodeGeometry = item => ({radius:item.size/2}); } export {mapButtons};';
@@ -635,6 +635,74 @@ for (const path of ['rendering/js/spatial-home.js', 'js/spatial-home.js']) {
   scoped(path, source, source + '\nconst localGeometryAdjustment = 1;', 'components', ['map-presentation']);
   for (const after of [source + '\nimport "./new-global.js";', source + '\nimport("./new-global.js");', source + '\nexport const newAPI = 1;']) scoped(path, source, after, 'full');
 }
+// A resize-only scene guard cannot change original navigation or global input.
+const sceneRestoreChecks = ['check:map-routes', 'check:first-visit'];
+const sceneRestoreBefore = `function restoreScene() {
+  if (restoring) return;
+  stopSceneMotion();
+  restoring = true;
+  setScene(location.hash === '#map');
+  restoring = false;
+}
+window.addEventListener('popstate', restoreScene);
+compact.addEventListener('change', restoreScene);
+window.addEventListener('resize', syncMeasurements);`;
+const sceneRestoreAfter = sceneRestoreBefore.replace('restoreScene()', 'restoreScene(event)')
+  .replace('  stopSceneMotion();', `  stopSceneMotion();
+  const responsive = event?.type === 'change';
+  const revision = sceneRevision;
+  if (responsive) {
+    document.body.classList.add('is-map-switching');
+    pane.syncState();
+  }`)
+  .replace('  restoring = false;', `  restoring = false;
+  if (responsive) requestAnimationFrame(() => requestAnimationFrame(() => {
+    if (revision !== sceneRevision) return;
+    document.body.classList.remove('is-map-switching');
+    pane.syncState();
+  }));`)
+  .replace("window.addEventListener('resize', syncMeasurements);", "window.addEventListener('resize', () => { pane.refresh(); syncMeasurements(); });");
+scoped('rendering/js/focused-home.js', sceneRestoreBefore, sceneRestoreAfter, 'components', sceneRestoreChecks);
+for (const after of [
+  sceneRestoreAfter.replace("event?.type === 'change'", "event?.type === 'popstate'"),
+  sceneRestoreAfter.replace('if (revision !== sceneRevision) return;', ''),
+  sceneRestoreAfter.replace('pane.syncState();', 'changeGlobalLayout();'),
+  sceneRestoreAfter.replace('() => { pane.refresh(); syncMeasurements(); }', 'syncMeasurements'),
+  sceneRestoreAfter.replace('pane.refresh(); syncMeasurements();', 'syncMeasurements(); pane.refresh();'),
+  sceneRestoreAfter + "\nwindow.addEventListener('resize', syncMeasurements);",
+  sceneRestoreAfter.replace("setScene(location.hash === '#map')", 'setScene(true)'),
+  sceneRestoreAfter.replace("addEventListener('popstate'", "addEventListener('click'"),
+  sceneRestoreAfter.replace("compact.addEventListener('change'", "compact.addEventListener('resize'"),
+  sceneRestoreAfter + '\nimport "./new-global.js";',
+  sceneRestoreAfter + '\nwindow.addEventListener("click", globalAction);',
+]) scoped('rendering/js/focused-home.js', sceneRestoreBefore, after, 'full');
+const sceneRestoreRuntimeBefore = execFileSync('git', ['show','74a41af18bd8bc0bef07e7365cbc84d738b966e6:js/focused-home.js'], {cwd:root,encoding:'utf8'});
+const sceneRestoreRuntimeAfter = read('js/focused-home.js');
+const knownSceneRestoreRuntime = createHash('sha256').update(sceneRestoreRuntimeAfter).digest('hex') === '7454340bc3b8b7806e14fc6c63b4fe9475438d2606d6807eb72c37544bd1ec88';
+scoped('js/focused-home.js', sceneRestoreRuntimeBefore, sceneRestoreRuntimeAfter, knownSceneRestoreRuntime ? 'components' : 'full', knownSceneRestoreRuntime ? sceneRestoreChecks : []);
+scoped('js/focused-home.js', sceneRestoreRuntimeBefore, sceneRestoreRuntimeAfter + '\nglobalThis.unrelated=1;', 'full');
+for (const engine of ['chromium', 'webkit']) assert.deepEqual(
+  new Set(browserMatrix('components', sceneRestoreChecks).include.filter(job => job.browser === engine).flatMap(job => job.checks.split(','))),
+  new Set(['map-routes', 'first-visit']), 'Responsive scene restoration retains exactly route and first-visit coverage');
+
+// The same guard can move to wide maps, with no other CSS or selector change.
+const sceneGuardRule = '.map-surface.is-map-switching :is(.map-node, .map-node-label, .map-camera) { transition: none; }';
+const sceneGuardCssBefore = `.spatial-intro, .spatial-search, .spatial-field { display: none; }
+@container map-viewport (max-width: 900px) {
+.focused-home .map-node { transition: opacity 180ms var(--motion-enter); }
+${sceneGuardRule}
+.focused-home .map-node__glyph { scale: var(--spatial-scale, 1); }
+}`;
+const sceneGuardCssAfter = sceneGuardCssBefore.replace(`\n${sceneGuardRule}`, '').replace('\n@container', `\n${sceneGuardRule}\n@container`);
+scoped('styles.css', sceneGuardCssBefore, sceneGuardCssAfter, 'components', sceneRestoreChecks);
+for (const after of [
+  sceneGuardCssAfter.replace('.map-camera)', '.map-camera, .site-header)'),
+  sceneGuardCssAfter.replace('transition: none', 'transition: opacity 500ms'),
+  sceneGuardCssAfter.replace('max-width: 900px', 'max-width: 901px'),
+  sceneGuardCssAfter + `\n${sceneGuardRule}`,
+  sceneGuardCssAfter + '\n.map-grid {opacity:0}',
+]) scoped('styles.css', sceneGuardCssBefore, after, 'full');
+
 // Project-caption placement owns no physics, picker or dependency changes.
 const captionBefore = 'function paint(){const labelRoot=label.offsetParent;if(labelRoot){label.style.top="0px";}drawSphere();}';
 const captionAfter = "const captionObstacle={entry:doc.querySelector('.overview-entry'),key:'',rect:null,pane:null,label:null};function paint(){const labelRoot=label.offsetParent;if(labelRoot){label.style.top='12px';}drawSphere();}";
@@ -656,6 +724,27 @@ const spatialBefore = 'import {pane} from "./pane-viewport.js";import {mapButton
 const spatialAfter = spatialBefore.replace('{mapButtons}', '{mapButtons,getMapCoreRadius}').replace('radius=1', 'radius=2');
 scoped('rendering/js/spatial-home.js', spatialBefore, spatialAfter, 'components', ['map-presentation']);
 scoped('rendering/js/spatial-home.js', spatialBefore, spatialAfter.replace('getMapCoreRadius}', 'getMapCoreRadius,setMapFilter}'), 'full');
+
+// An opened label's side tie-break keeps the complete hover/focus contract only.
+const hoverLabelChanged = mapEngine.replace('core.radius+4', 'core.radius+5');
+assert.notEqual(hoverLabelChanged, mapEngine);
+scoped('js/map-engine.js', mapEngine, hoverLabelChanged, 'components', ['check:hover-layout']);
+for (const after of [
+  hoverLabelChanged.replace('centerY:rect.top+rect.height/2-bounds.top,radius:getMapCoreRadius(glyph)', 'centerY:rect.top+rect.height/2-bounds.top,radius:getMapCoreRadius(glyph)*.9'),
+  hoverLabelChanged.replace('const duration = shouldMorph ? 440 : 320', 'const duration = shouldMorph ? 600 : 400'),
+  hoverLabelChanged.replace('const glyphDiameter = Math.max(10, item.size * glyphScale)', 'const glyphDiameter = Math.max(20, item.size * glyphScale)'),
+  hoverLabelChanged.replace('const placeMapLabel=(item,label)=>', 'const placeMapLabel=(label,item)=>'),
+  hoverLabelChanged.replace('core.radius+5', 'import("./new-global.js")'),
+  hoverLabelChanged + '\nimport "./new-global.js";',
+  hoverLabelChanged + '\nwindow.addEventListener("resize", globalAction);',
+]) {
+  assert.notEqual(after, hoverLabelChanged, 'Negative hover fixture changes a protected operation');
+  scoped('js/map-engine.js', mapEngine, after, 'full');
+}
+scoped('js/map-engine.js', mapEngine, hoverLabelChanged.replace('const sides=item.x>=72', 'const sides=item.x>=70'), 'components', ['map-labels']);
+for (const engine of ['chromium', 'webkit']) assert.deepEqual(
+  new Set(browserMatrix('components', ['check:hover-layout']).include.filter(job => job.browser === engine).flatMap(job => job.checks.split(','))),
+  new Set(['hover-layout']), 'Opened label placement retains the existing complete hover/focus coverage');
 
 const movedCaption = mapEngine.replace('glyphDiameter * .65 + 12', 'glyphDiameter * .7 + 14')
   .replace('item.id === "garage" ? y + offset', 'item.id === "garage" ? y + offset + 2');

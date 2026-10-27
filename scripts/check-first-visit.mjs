@@ -199,6 +199,34 @@ try {
   await switching.emulateMedia({ reducedMotion: 'reduce' });
   await switching.locator('[data-focused-map-open]').tap();
   assert.equal(await switching.locator('body').evaluate(e => e.classList.contains('has-full-mobile-map') && !e.classList.contains('is-map-switching')), true, 'Reduced motion retains both scenes without defocus');
+  await switching.emulateMedia({ reducedMotion: 'no-preference' });
+  for (const width of [903, 390, 1000, 390]) {
+    await switching.setViewportSize({ width, height: width === 390 ? 844 : 900 });
+    // Commit the new viewport before sampling frames; do not inspect old DOM
+    // coordinates ahead of the browser's layout callbacks in the same frame.
+    await switching.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    const transition = await switching.evaluate(() => new Promise(resolve => {
+      const started = performance.now(), overlaps = [];
+      const sample = () => {
+        for (const label of document.querySelectorAll('.map-axis-label')) {
+          const style = getComputedStyle(label), box = label.getBoundingClientRect();
+          if (!box.width || style.visibility === 'hidden' || style.display === 'none' || parseFloat(style.opacity) < .1) continue;
+          for (const node of document.querySelectorAll('.map-node:not([inert])')) {
+            const glyph = node.querySelector('.map-node__glyph').getBoundingClientRect();
+            const x = glyph.x + glyph.width / 2, y = glyph.y + glyph.height / 2;
+            if (Math.hypot(x - Math.max(box.left, Math.min(box.right, x)),
+              y - Math.max(box.top, Math.min(box.bottom, y))) < Math.min(glyph.width, glyph.height) / 2)
+              overlaps.push([node.dataset.mapId, label.textContent]);
+          }
+        }
+        if (performance.now() - started < 1200) requestAnimationFrame(sample);
+        else resolve({ overlaps, switching: document.body.classList.contains('is-map-switching') });
+      };
+      requestAnimationFrame(sample);
+    }));
+    assert.deepEqual(transition.overlaps, [], `${width}px: responsive map points never sweep across visible axis labels`);
+    assert.equal(transition.switching, false, 'The responsive scene guard is released after layout');
+  }
   await switching.close();
   assert.deepEqual(analyticsRequests, [], 'No tracker request is made during the declined visit.');
   assert.deepEqual(errors, []);
