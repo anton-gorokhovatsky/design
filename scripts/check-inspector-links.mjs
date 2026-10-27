@@ -111,7 +111,7 @@ try {
         assert.equal(state.hidden, Boolean(item.youtube && !item.youtube.href) || !(item.href || item.kind === "practice"), context);
         if (!state.hidden) {
           assert.notEqual(state.text, "ОТКРЫТЬ", context + ": name the destination");
-          const copy = { running: "БЕГ В INSTAGRAM", wave: "МОРЕ В INSTAGRAM" }[item.id]
+          const copy = { running: "НЕ СФОТКАЛ — НЕ БЕГАЛ", wave: "МОРЕ В INSTAGRAM" }[item.id]
             || (item.kind === "practice" ? "ПРИНЦИПЫ В NOTION" : "");
           if (copy) assert.equal(state.text.replace(/\s+/gu, " ").trim(), copy, context + ": explicit CTA copy");
           assert.equal(state.target, "_blank", context);

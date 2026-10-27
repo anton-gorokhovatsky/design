@@ -59,7 +59,14 @@ const checkStudy = async (page, root, name) => {
     await study.locator(`input[value="${value}"]`).check();
     assert.equal(await study.locator('figure:visible').count(), 1);
     assert.equal(await study.locator('figure:visible').getAttribute('data-state'), value);
-    for (const image of await study.locator('figure:visible img').all()) await image.evaluate(image => image.decode());
+    for (const image of await study.locator('figure:visible img').all()) {
+      // Native lazy loading can defer an offscreen figure indefinitely. Bring
+      // the selected image into view before waiting for the actual pixels.
+      await image.scrollIntoViewIfNeeded();
+      await page.waitForFunction(image => image.complete && image.naturalWidth > 0,
+        await image.elementHandle(), { timeout: 5000 });
+      await image.evaluate(image => image.decode());
+    }
   }
   await study.locator('input[value="a"]').focus();
   await page.keyboard.press('ArrowDown');
