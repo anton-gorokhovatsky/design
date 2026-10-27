@@ -149,14 +149,43 @@ try {
   }
   // A short hover label must not cover the painted core of a neighbouring point.
   {
-    const page = await browser.newPage({ viewport: { width: 903, height: 900 }, colorScheme: 'dark', reducedMotion: 'reduce' });
+    const page = await browser.newPage({ viewport: { width: 903, height: 900 }, colorScheme: 'dark', reducedMotion: 'no-preference' });
     page.on('pageerror', error => errors.push(error.message));
     await page.goto(origin + '/?scene=map');
     await declineAnalyticsNotice(page);
     await page.evaluate(() => document.fonts.ready);
     await page.waitForFunction(() => !document.querySelector('[data-map-links][data-layout-pending]'));
+    // Capture the actual CSS transition before the first painted frame, so a
+    // fast compositor crossing cannot disappear between main-thread samples.
+    await page.evaluate(() => {
+      document.querySelector('[data-map-id="music"]').addEventListener('pointerenter', () => {
+        const label = document.querySelector('[data-map-label-id="music"]');
+        const transitions = label.getAnimations().filter(animation => ['opacity', 'transform'].includes(animation.transitionProperty));
+        transitions.forEach(animation => animation.pause());
+        const frames = [0, 4, 8, 16, 90, 180].map(ms => {
+          transitions.forEach(animation => { animation.currentTime = ms; });
+          const rect = label.getBoundingClientRect();
+          const core = document.querySelector('[data-map-id="youtube"] .map-node__glyph').getBoundingClientRect();
+          const x = core.x + core.width / 2, y = core.y + core.height / 2;
+          return { opacity: Number(getComputedStyle(label).opacity), left: rect.left,
+            clearance: Math.hypot(x - Math.max(rect.left, Math.min(rect.right, x)),
+              y - Math.max(rect.top, Math.min(rect.bottom, y))) - core.width / 2 };
+        });
+        window.musicHoverMotion = { properties: transitions.map(animation => animation.transitionProperty), frames };
+        transitions.forEach(animation => { animation.currentTime = 0; animation.play(); });
+      }, { once: true });
+    });
     for (const action of ['hover', 'focus']) {
       await page.locator('[data-map-id="music"]')[action]();
+      if (action === 'hover') {
+        const motion = await page.evaluate(() => window.musicHoverMotion);
+        assert.ok(motion.properties.includes('opacity') && motion.properties.includes('transform'), 'The ordinary label entrance remains animated');
+        assert.equal(motion.frames[0].opacity, 0);
+        assert.equal(motion.frames.at(-1).opacity, 1);
+        assert.ok(Math.abs(motion.frames.at(-1).left - motion.frames[0].left) <= 4.01, 'A side change happens before the short 4px entrance');
+        assert.ok(motion.frames.every(frame => frame.clearance >= 0), 'Every sampled part of the actual entrance clears YouTube');
+      }
+      await page.waitForFunction(() => Number(getComputedStyle(document.querySelector('[data-map-label-id="music"]')).opacity) === 1);
       const clear = await page.evaluate(() => {
         const label = document.querySelector('[data-map-label-id="music"]').getBoundingClientRect();
         const core = document.querySelector('[data-map-id="youtube"] .map-node__glyph').getBoundingClientRect();
