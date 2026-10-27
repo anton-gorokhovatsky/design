@@ -1,10 +1,11 @@
 import {pane} from './pane-viewport.js';
-import { mapButtons, selectedMapId, syncMapAtmospherePosition } from './map-engine.js';
+import { getMapCoreRadius, mapButtons, selectedMapId, syncMapAtmospherePosition } from './map-engine.js';
 import { reducedMotion } from './preferences.js';
 
 const field = document.querySelector('.focused-home__map');
 const root = document.documentElement;
 const compact = pane.media('(max-width: 900px)');
+const forcedColors = matchMedia('(forced-colors:active)');
 const ns = 'http://www.w3.org/2000/svg';
 // Depth groups follow the existing map's branches, not an importance ranking.
 const depths = new Map([
@@ -113,17 +114,21 @@ const pathFrom = (points, geometry, endpoints = []) => {
 function measure() {
   let reflow = width !== field.clientWidth || height !== field.clientHeight;
   width = field.clientWidth; height = field.clientHeight;
+  const fieldScale = field.getBoundingClientRect().width / width || 1;
   for (const layer of [svg, relationSvg]) layer.setAttribute('viewBox', `0 0 ${width} ${height}`);
   for (const node of nodes) {
     const x = parseFloat(node.button.style.getPropertyValue('--x')) * width / 100;
     const y = parseFloat(node.button.style.getPropertyValue('--y')) * height / 100;
     reflow ||= node.baseX !== x || node.baseY !== y;
     node.baseX = x; node.baseY = y;
-    // The solid core owns line occlusion; labels clear the full orbital envelope.
-    node.radius = node.id === 'private-practice' ? 14 : node.glyph.offsetWidth / 2;
-    // Captions clear the whole orbital envelope, including moving satellites.
-    node.rx = node.id === 'private-practice' ? node.glyph.offsetWidth * .46 + 8 : node.radius + 2;
-    node.ry = node.id === 'private-practice' ? node.glyph.offsetWidth * .34 + 8 : node.radius + 2;
+    // Measure the painted core, excluding transparent beams, glow and orbits.
+    const spatialScale = parseFloat(node.button.style.getPropertyValue('--spatial-scale')) || 1;
+    node.fixedCore = !forcedColors.matches && Boolean(node.glyph.querySelector('.practice-orbits-canvas')?.getBoundingClientRect().width);
+    node.radius = getMapCoreRadius(node.glyph) / fieldScale / (node.fixedCore ? 1 : spatialScale);
+    // Preserve the accepted caption clearance independently of line occlusion.
+    const labelRadius = node.glyph.offsetWidth / 2;
+    node.rx = node.id === 'private-practice' ? node.glyph.offsetWidth * .46 + 8 : labelRadius + 2;
+    node.ry = node.id === 'private-practice' ? node.glyph.offsetWidth * .34 + 8 : labelRadius + 2;
     const transform = new DOMMatrixReadOnly(getComputedStyle(node.label).transform);
     const box = { width: node.label.offsetWidth, height: node.label.offsetHeight,
       x: node.label.offsetLeft + transform.m41 - node.baseX,
@@ -315,7 +320,7 @@ function draw() {
     }
     node.button.style.setProperty('--spatial-scale', scale.toFixed(4));
     geometry.set(node.id, {...point, id: node.id, z: point.z + lift, viewScale,
-      radius:node.radius * scale, rx:node.rx * scale, ry:node.ry * scale});
+      radius:node.radius * (node.fixedCore ? 1 : scale), rx:node.rx * scale, ry:node.ry * scale});
   }
   placeLabels(geometry);
   syncMapAtmospherePosition();
@@ -479,7 +484,10 @@ new ResizeObserver(() => {
 }).observe(field);
 new MutationObserver(sync).observe(document.body, {attributes:true, attributeFilter:['class']});
 reducedMotion.addEventListener('change', sync);
-new MutationObserver(sync).observe(root, {attributes:true, attributeFilter:['data-reduce-motion']});
+new MutationObserver(sync).observe(root, {attributes:true, attributeFilter:['data-reduce-motion','data-celestial-volume']});
+// The asynchronous renderer changes the solid silhouette, never its hit target.
+new MutationObserver(sync).observe(mapButtons.get('garage'), {attributes:true, attributeFilter:['data-gravity-ready']});
+forcedColors.addEventListener('change', sync);
 document.addEventListener('visibilitychange', () => { if (document.hidden) { stopMotion(); cancelAnimationFrame(request); request = 0; } else sync(); });
 window.addEventListener('pageshow', sync);
 compact.addEventListener('change', sync);

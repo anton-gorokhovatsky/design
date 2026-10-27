@@ -484,6 +484,132 @@ const consoleBoundsOutside = source => {
   });
 };
 
+// Core geometry owns solid silhouettes and only their readiness subscriptions.
+// Surrounding layout, routing, node creation, imports and other exports stay protected.
+const astShape = tree => JSON.stringify(tree, (key, value) => ["start", "end", "raw"].includes(key) ? undefined : value);
+const coreGeometryBindings = [
+  'new MutationObserver(scheduleMapLinksRender).observe(mapButtons.get("garage"),{attributes:true,attributeFilter:["data-gravity-ready"]});',
+  'matchMedia("(forced-colors:active)").addEventListener("change",scheduleMapLinksRender);'
+].map(source => astShape(parseJs(source, { ecmaVersion: "latest", sourceType: "module" }).body[0]));
+const mapCoreGeometryOutside = source => {
+  const tree = parseJs(source, { ecmaVersion: "latest", sourceType: "module" });
+  let helper = 0, exported = 0, geometry = 0;
+  const dependencies = [];
+  const inspect = node => {
+    if (!node || typeof node !== "object") return;
+    if (["ImportDeclaration", "ImportExpression"].includes(node.type)) dependencies.push(astShape(node));
+    for (const value of Object.values(node)) {
+      if (Array.isArray(value)) value.forEach(inspect);
+      else if (value && typeof value === "object") inspect(value);
+    }
+  };
+  inspect(tree);
+  const bindings = new Set();
+  tree.body = tree.body.filter(statement => {
+    if (statement.type !== "VariableDeclaration" || statement.declarations.length !== 1
+      || statement.declarations[0].id.name !== "getMapCoreRadius") return true;
+    const init = statement.declarations[0].init;
+    if (helper++ || statement.kind !== "const" || init?.type !== "ArrowFunctionExpression"
+      || init.async || init.params.length !== 1 || init.params[0].type !== "Identifier") throw new Error("Unknown core helper");
+    return false;
+  });
+  for (const statement of tree.body) if (statement.type === "ExportNamedDeclaration") {
+    statement.specifiers = statement.specifiers.filter(specifier => {
+      if (specifier.exported.name !== "getMapCoreRadius") return true;
+      if (exported++ || statement.source || specifier.local.name !== "getMapCoreRadius") throw new Error("Unknown core export");
+      return false;
+    });
+  }
+  for (const statement of tree.body) {
+    if (statement.type !== "IfStatement" || statement.test.type !== "Identifier"
+      || statement.test.name !== "mapLinksRoot" || statement.consequent.type !== "BlockStatement") continue;
+    statement.consequent.body = statement.consequent.body.filter(node => {
+      const binding = coreGeometryBindings.indexOf(astShape(node));
+      if (binding === -1) return true;
+      if (bindings.has(binding)) throw new Error("Duplicate core readiness subscription");
+      bindings.add(binding);
+      return false;
+    });
+  }
+  const visit = node => {
+    if (!node || typeof node !== "object") return node;
+    if (node.type === "VariableDeclarator" && node.id.name === "getNodeGeometry") {
+      if (geometry++ || node.init?.type !== "ArrowFunctionExpression" || node.init.async
+        || node.init.params.length !== 1 || node.init.params[0].type !== "Identifier") throw new Error("Unknown node geometry owner");
+      node.init.body = { type: "NodeCoreGeometry" };
+    }
+    for (const [key, value] of Object.entries(node)) {
+      if (Array.isArray(value)) node[key] = value.map(visit);
+      else if (value && typeof value === "object") node[key] = visit(value);
+    }
+    return node;
+  };
+  visit(tree);
+  if (geometry !== 1 || helper !== exported || (bindings.size && bindings.size !== 2)) throw new Error("Incomplete core geometry boundary");
+  return astShape([tree, dependencies]);
+};
+
+// This module owns the compact map's projection, gestures and labels. It keeps
+// their complete existing presentation suite; new dependencies remain full scope.
+const spatialMapBindings = source => {
+  const tree = parseJs(source, { ecmaVersion: "latest", sourceType: "module" });
+  const imports = [];
+  const visit = node => {
+    if (!node || typeof node !== "object") return;
+    if (node.type === "ImportExpression" || node.type?.startsWith("Export")) throw new Error("Unknown spatial dependency");
+    if (node.type === "ImportDeclaration") {
+      if (node.specifiers.some(specifier => specifier.type !== "ImportSpecifier")) throw new Error("Unknown spatial import");
+      imports.push([node.source.value, node.specifiers.map(specifier => specifier.imported.name)
+        .filter(name => !(node.source.value === "./map-engine.js" && name === "getMapCoreRadius")).sort()]);
+    }
+    for (const value of Object.values(node)) {
+      if (Array.isArray(value)) value.forEach(visit);
+      else if (value && typeof value === "object") visit(value);
+    }
+  };
+  visit(tree);
+  if (imports.length !== 3) throw new Error("Incomplete spatial imports");
+  return JSON.stringify(imports.sort(([a], [b]) => a.localeCompare(b)));
+};
+
+// Only the project-caption block and its exact layout cache belong here.
+// Physics, picker state, inputs, canvas painting and module dependencies stay protected.
+const practiceCaptionState = astShape(parseJs("const captionObstacle={entry:doc.querySelector('.overview-entry'),key:'',rect:null,pane:null,label:null};", { ecmaVersion: "latest", sourceType: "module" }).body[0]);
+const practiceCaptionOutside = source => {
+  const tree = parseJs(source, { ecmaVersion: "latest", sourceType: "module" });
+  let caption = 0, cache = 0;
+  const removed = Symbol("caption cache");
+  const inspect = node => {
+    if (!node || typeof node !== "object") return;
+    if (node.type === "ImportExpression") throw new Error("Unknown caption dependency");
+    for (const value of Object.values(node)) {
+      if (Array.isArray(value)) value.forEach(inspect);
+      else if (value && typeof value === "object") inspect(value);
+    }
+  };
+  inspect(tree);
+  const visit = node => {
+    if (!node || typeof node !== "object") return node;
+    if (node.type === "VariableDeclaration" && node.declarations.some(item => item.id.name === "captionObstacle")) {
+      if (cache++ || astShape(node) !== practiceCaptionState) throw new Error("Unknown caption cache");
+      return removed;
+    }
+    if (node.type === "IfStatement" && node.test.type === "Identifier" && node.test.name === "labelRoot") {
+      if (caption++ || node.alternate || node.consequent.type !== "BlockStatement") throw new Error("Unknown caption owner");
+      node.consequent = { type: "PracticeCaptionPlacement" };
+    }
+    for (const [key, value] of Object.entries(node)) {
+      if (Array.isArray(value)) node[key] = value.map(visit).filter(value => value !== removed);
+      else if (value && typeof value === "object") node[key] = visit(value);
+    }
+    return node;
+  };
+  visit(tree);
+  if (caption !== 1) throw new Error("Missing project caption owner");
+  return astShape(tree);
+};
+const practiceCaptionBuild = ["00c9771fcb854428009aed1b5d72d06458bc5242f89a1a4ca48fa6aa0cd94b33", "eadacc6d1651ba4a76c55635e9e565a39a261c03dc7b87f90efe53cbbfef9ec0"];
+
 // Label placement may change without rechecking media playback, WHOOP or the
 // signature. All node geometry, links, events and exports remain outside this
 // boundary. The two numeric offset expressions cannot execute arbitrary code.
@@ -635,11 +761,19 @@ export const affectedComponents = (path, before, after, maskHtmlCopy) => {
     if (["js/viewport-ui.js", "rendering/js/viewport-ui.js"].includes(path) && exactReplacements(before, after, commandFramePatch)) return ["check:command-placement"];
     if (path === "rendering/practice-orbits.js" && exactReplacements(before, after, pickerGlassSourcePatch)) return ["check:hover-layout"];
     if (path === "js/practice-orbits.js" && [before, after].every((source, index) => createHash("sha256").update(source).digest("hex") === pickerGlassBuild[index])) return ["check:hover-layout"];
+    if (path === "rendering/practice-orbits.js" && practiceCaptionOutside(before) === practiceCaptionOutside(after)) return ["map-presentation"];
+    if (path === "js/practice-orbits.js" && [before, after].every((source, index) => createHash("sha256").update(source).digest("hex") === practiceCaptionBuild[index])) return ["map-presentation"];
     if (["js/observation-route.js", "js/map-media.js", "js/panels.js"].includes(path)
       && overviewOutside(path, before) === overviewOutside(path, after)) return ["overview"];
     if (path === "404.html" && notFoundBindings(maskHtmlCopy(before).replaceAll("\0", "")) === notFoundBindings(maskHtmlCopy(after).replaceAll("\0", ""))) return ["not-found"];
     if (["js/viewport-ui.js", "rendering/js/viewport-ui.js"].includes(path) && isLensPointerGuard(before, after)) return ["scroll-lens-pointer"];
     if (path === "js/viewport-ui.js" && consoleBoundsOutside(before) === consoleBoundsOutside(after)) return ["console-bounds"];
+    if (path === "js/map-engine.js") {
+      try { if (mapCoreGeometryOutside(before) === mapCoreGeometryOutside(after)) return ["map-presentation"]; }
+      catch { /* Other owners may still prove a local edit. */ }
+    }
+    if (["js/spatial-home.js", "rendering/js/spatial-home.js"].includes(path)
+      && spatialMapBindings(before) === spatialMapBindings(after)) return ["map-presentation"];
     if (path === "js/map-engine.js" && mapLabelsOutside(before) === mapLabelsOutside(after)) return ["map-labels"];
     if (path === "js/map-engine.js" && mapDismissalOutside(before) === mapDismissalOutside(after)) {
       return ["check:hover-layout", "check:case-flow", "check:case-view", "check:point-address"];

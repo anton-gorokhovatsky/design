@@ -198,6 +198,7 @@ function initializePracticeOrbits() {
     new MutationObserver(syncInput).observe(map,{attributes:true,attributeFilter:['data-time-view','data-observation-active']});
     const system=createSystem(moons.map(moon=>({id:moon.item.id,radius:moon.orbit.radius,phase:moon.phase})),{weights:audienceMassWeights});
     let accumulator=0;
+    const captionObstacle={entry:doc.querySelector('.overview-entry'),key:'',rect:null,pane:null,label:null};
     const paint=()=>{
       const rect=canvas.getBoundingClientRect();
       const bounds=doc.body.classList.contains('has-focused-home')?home.getBoundingClientRect():null;
@@ -213,9 +214,38 @@ function initializePracticeOrbits() {
       const labelRoot=label.offsetParent;
       if(labelRoot){
         const rootRect=labelRoot.getBoundingClientRect();
-        label.style.setProperty('--project-caption-x',`${(rect.left+rect.width/2-rootRect.left)*labelRoot.offsetWidth/rootRect.width}px`);
         const orbitHalfHeight=groups.at(-1).radius*Math.hypot(Math.sin(angle),Math.cos(tilt)*Math.cos(angle));
-        const captionBottom=rect.top+rect.height*(.5-orbitHalfHeight/2.6)-10;
+        let captionX=rect.left+rect.width/2;
+        let captionBottom=rect.top+rect.height*(.5-orbitHalfHeight/2.6)-10;
+        if(pane.width>900&&captionObstacle.entry){
+          const entry=captionObstacle.entry;
+          const key=[pane.width,pane.height,rootRect.x,rootRect.y,rootRect.width,rootRect.height,
+            doc.body.className,entry.offsetWidth,entry.offsetHeight,label.offsetWidth,label.offsetHeight].join(':');
+          if(key!==captionObstacle.key){
+            captionObstacle.key=key;
+            const style=getComputedStyle(entry);
+            captionObstacle.rect=style.display!=='none'&&style.visibility==='visible'?entry.getBoundingClientRect():null;
+            captionObstacle.pane=pane.surface.getBoundingClientRect();
+            captionObstacle.label=label.getBoundingClientRect();
+          }
+          const obstacle=captionObstacle.rect;
+          if(obstacle?.width){
+            const gap=12;
+            const {width,height}=captionObstacle.label;
+            if(captionX+width/2>obstacle.left-gap&&captionX-width/2<obstacle.right+gap
+              &&captionBottom>obstacle.top-gap&&captionBottom-height<obstacle.bottom+gap){
+              const left=Math.max(rootRect.left,captionObstacle.pane.left)+gap;
+              const right=Math.min(rootRect.right,captionObstacle.pane.right)-gap;
+              const shiftedX=Math.max(left+width/2,obstacle.right+gap+width/2);
+              if(shiftedX+width/2<=right)captionX=shiftedX;
+              else{
+                captionX=Math.max(left+width/2,Math.min(right-width/2,captionX));
+                captionBottom=Math.max(Math.max(rootRect.top,captionObstacle.pane.top)+height+gap,obstacle.top-gap);
+              }
+            }
+          }
+        }
+        label.style.setProperty('--project-caption-x',`${(captionX-rootRect.left)*labelRoot.offsetWidth/rootRect.width}px`);
         label.style.setProperty('--project-caption-y',`${(captionBottom-rootRect.top)*labelRoot.offsetHeight/rootRect.height}px`);
       }
       ctx.clearRect(0,0,side,side);ctx.drawImage(back,0,0);ctx.drawImage(sphere,0,0);

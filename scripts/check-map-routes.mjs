@@ -126,7 +126,29 @@ try {
         const satellites = [...document.querySelectorAll('.project-satellite .map-node__glyph')]
           .filter(node => node.checkVisibility({ visibilityProperty: true, opacityProperty: true }))
           .map(node => ({ id: node.closest('[data-map-id]').dataset.mapId, rect: node.getBoundingClientRect() }));
+        // A transparent pulsar beam must not punch a hole in the map grid.
+        // Inspect actual SVG subpath exits against the opaque core in its canvas.
+        const pulse = document.querySelector('.celestial-volume--running');
+        const core = pulse.getBoundingClientRect(), radius = core.width * 27 / pulse.width;
+        const center = { x: core.x + core.width / 2, y: core.y + core.height / 2 };
+        const pulsarGaps = [...document.querySelectorAll('.spatial-axis,.spatial-orbit')].flatMap(path => {
+          const matrix = path.getScreenCTM(); let previous;
+          const gaps = [];
+          for (const [, command, x, y] of path.getAttribute('d').matchAll(/([ML])(-?[\d.]+),(-?[\d.]+)/g)) {
+            const point = new DOMPoint(Number(x), Number(y)).matrixTransform(matrix);
+            if (command === 'M' && previous) {
+              const middle = { x: (previous.x + point.x) / 2, y: (previous.y + point.y) / 2 };
+              if (Math.hypot(middle.x - center.x, middle.y - center.y) < radius * 2.6
+                && Math.max(Math.hypot(previous.x - center.x, previous.y - center.y),
+                  Math.hypot(point.x - center.x, point.y - center.y)) > radius + 2)
+                gaps.push({ from: previous, to: point, center, radius });
+            }
+            previous = { x: point.x, y: point.y };
+          }
+          return gaps;
+        });
         return {
+          pulsarGaps,
           visible: boxes.filter(box => box.visible).length,
           clipped: boxes.filter(({ rect }) => rect.left < field.left - 1 || rect.right > field.right + 1
             || rect.top < field.top - 1 || rect.bottom > field.bottom + 1).map(box => box.id),
@@ -138,6 +160,7 @@ try {
             && a.rect.top < b.rect.bottom && a.rect.bottom > b.rect.top).map(b => [a.id, b.id])),
         };
       });
+      assert.deepEqual(state.pulsarGaps, [], 'Grid lines only disappear behind the opaque pulsar core, including after rotation');
       assert.equal(state.visible, 6, `${engine} ${viewport.width}: all introductory captions remain available; private projects share their orbit picker`);
       assert.equal(await page.locator('.project-orbit-picker [data-picker-project]').count(), 10,
         'Every private project remains available in the touch picker');

@@ -609,6 +609,54 @@ scoped('scripts/unregistered-check.mjs', 'before', 'after', 'full');
 // The actual caption move is local even inside map-engine.js. A nearby change
 // to node placement, relationships or an executable offset remains full scope.
 const mapEngine = read('js/map-engine.js');
+// Solid-radius work is owned by the map; neighbouring code is not exempted.
+const geometryChanged = mapEngine.replace('radius:getMapCoreRadius(glyph)', 'radius:getMapCoreRadius(glyph)*.99');
+assert.notEqual(geometryChanged, mapEngine);
+scoped('js/map-engine.js', mapEngine, geometryChanged, 'components', ['map-presentation']);
+const coreBefore = 'const mapButtons = new Map(); if (mapLinksRoot) { const getNodeGeometry = item => ({radius:item.size/2}); } export {mapButtons};';
+const coreAfter = 'const getMapCoreRadius = glyph => glyph.clientWidth/2; const mapButtons = new Map(); if (mapLinksRoot) { const getNodeGeometry = item => ({radius:getMapCoreRadius(item)}); new MutationObserver(scheduleMapLinksRender).observe(mapButtons.get("garage"),{attributes:true,attributeFilter:["data-gravity-ready"]});matchMedia("(forced-colors:active)").addEventListener("change",scheduleMapLinksRender); } export {getMapCoreRadius,mapButtons};';
+scoped('js/map-engine.js', coreBefore, coreAfter, 'components', ['map-presentation']);
+for (const after of [
+  coreAfter.replace('attributeFilter:["data-gravity-ready"]', 'attributeFilter:["style"]'),
+  coreAfter.replace('"(forced-colors:active)"', '"(min-width:1px)"'),
+  coreAfter.replace('export {getMapCoreRadius,mapButtons}', 'export {getMapCoreRadius,mapButtons,newAPI}'),
+  coreAfter.replace('const mapButtons = new Map()', 'const mapButtons = new Map([[1,2]])'),
+  coreAfter + '\nimport "./new-global.js";',
+  coreAfter + '\nwindow.addEventListener("click", globalAction);',
+  coreAfter.replace('glyph.clientWidth/2', 'import("./new-global.js")'),
+  coreAfter.replace('if (mapLinksRoot)', 'if (unrelatedRoot)'),
+]) scoped('js/map-engine.js', coreBefore, after, 'full');
+for (const after of [
+  geometryChanged.replace('const duration = shouldMorph ? 440 : 320', 'const duration = shouldMorph ? 600 : 400'),
+  geometryChanged.replace('const glyphDiameter = Math.max(10, item.size * glyphScale)', 'const glyphDiameter = Math.max(20, item.size * glyphScale)'),
+]) scoped('js/map-engine.js', mapEngine, after, 'full');
+for (const path of ['rendering/js/spatial-home.js', 'js/spatial-home.js']) {
+  const source = read(path);
+  scoped(path, source, source + '\nconst localGeometryAdjustment = 1;', 'components', ['map-presentation']);
+  for (const after of [source + '\nimport "./new-global.js";', source + '\nimport("./new-global.js");', source + '\nexport const newAPI = 1;']) scoped(path, source, after, 'full');
+}
+// Project-caption placement owns no physics, picker or dependency changes.
+const captionBefore = 'function paint(){const labelRoot=label.offsetParent;if(labelRoot){label.style.top="0px";}drawSphere();}';
+const captionAfter = "const captionObstacle={entry:doc.querySelector('.overview-entry'),key:'',rect:null,pane:null,label:null};function paint(){const labelRoot=label.offsetParent;if(labelRoot){label.style.top='12px';}drawSphere();}";
+scoped('rendering/practice-orbits.js', captionBefore, captionAfter, 'components', ['map-presentation']);
+for (const after of [
+  captionAfter.replace('drawSphere()', 'changePhysics()'),
+  captionAfter.replace("querySelector('.overview-entry')", "querySelector('body')"),
+  captionAfter.replace("label.style.top='12px'", "import('./new-dependency.js')"),
+  captionAfter + '\nwindow.addEventListener("click", globalAction);',
+  captionAfter + '\nimport "./new-global.js";',
+]) scoped('rendering/practice-orbits.js', captionBefore, after, 'full');
+const captionRuntimeBefore = execFileSync('git', ['show','ace9fe154c18372b79f1c6055c60956e70a474d9:js/practice-orbits.js'], {cwd:root,encoding:'utf8'});
+const captionRuntimeAfter = read('js/practice-orbits.js');
+const knownCaptionRuntime = createHash('sha256').update(captionRuntimeAfter).digest('hex') === 'eadacc6d1651ba4a76c55635e9e565a39a261c03dc7b87f90efe53cbbfef9ec0';
+scoped('js/practice-orbits.js', captionRuntimeBefore, captionRuntimeAfter, knownCaptionRuntime ? 'components' : 'full', knownCaptionRuntime ? ['map-presentation'] : []);
+scoped('js/practice-orbits.js', captionRuntimeBefore, captionRuntimeAfter + '\nglobalThis.unrelated=1;', 'full');
+
+const spatialBefore = 'import {pane} from "./pane-viewport.js";import {mapButtons} from "./map-engine.js";import {reducedMotion} from "./preferences.js";const radius=1;';
+const spatialAfter = spatialBefore.replace('{mapButtons}', '{mapButtons,getMapCoreRadius}').replace('radius=1', 'radius=2');
+scoped('rendering/js/spatial-home.js', spatialBefore, spatialAfter, 'components', ['map-presentation']);
+scoped('rendering/js/spatial-home.js', spatialBefore, spatialAfter.replace('getMapCoreRadius}', 'getMapCoreRadius,setMapFilter}'), 'full');
+
 const movedCaption = mapEngine.replace('glyphDiameter * .65 + 12', 'glyphDiameter * .7 + 14')
   .replace('item.id === "garage" ? y + offset', 'item.id === "garage" ? y + offset + 2');
 assert.notEqual(movedCaption, mapEngine);
