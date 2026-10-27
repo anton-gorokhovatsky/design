@@ -110,7 +110,7 @@ function syncSceneSurfaces(host){
   for(const [scene,frame] of surfaceFrames){
     if(host&&scene!==host)continue;
     const visible=visibleFrames.has(scene);
-    frame.style.left=(visible?port.left:0)+'px';frame.style.top=(visible?port.top:0)+'px';frame.style.width=port.width+'px';frame.style.height=port.height+'px';
+    frame.style.left=(visible?port.left:0)+'px';frame.style.top=(visible?port.top:0)+'px';frame.style.width=(visible?port.width:storyRoot.clientWidth)+'px';frame.style.height=(visible?port.height:storyRoot.clientHeight)+'px';
     if(visible){
       if(!frame.matches(':popover-open')){
         frame.setAttribute('popover','manual');frame.showPopover();frame.style.visibility='visible';
