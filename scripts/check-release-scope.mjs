@@ -245,6 +245,13 @@ for (const path of ['js/viewport-ui.js','rendering/js/viewport-ui.js']) {
 }
 assert.equal(browserMatrix('components',['materials','scroll-lens-pointer']).include.length,11);
 const auditFixture = 'const readMaterialAuditExpression = `old`;\nconst unchanged = 1;';
+const menuFooterBefore = '@container map-viewport (max-width: 900px){.control-console .constellation-nav.is-open .constellation-nav__orbit{padding:0 8px 4px}.site-version--menu{margin-top:var(--space-2)}}';
+const menuFooterAfter = menuFooterBefore.replace('padding:0 8px 4px', 'padding:0 8px var(--space-4)').replace('margin-top:var(--space-2)', 'margin-top:0');
+scoped('styles.css', menuFooterBefore, menuFooterAfter, 'components', ['check:accessibility']);
+scoped('styles.css', menuFooterBefore, menuFooterAfter.replace('padding:0 8px var(--space-4)', 'padding:0 8px 48px'), 'full');
+scoped('styles.css', menuFooterBefore, menuFooterAfter.replace('max-width: 900px', 'max-width: 899px'), 'full');
+scoped('styles.css', menuFooterBefore, menuFooterAfter + ' .unrelated{padding:16px}', 'full');
+
 const separatorBefore = ':root{} .map-related__track > li + li{border-top:1px solid var(--line-soft)}';
 const separatorAfter = ':root{--separator-rule:1px solid var(--line-soft);--separator-edge:1px solid var(--line);--separator-control-before:var(--space-2);--separator-control-after:0px;--separator-row-compact:var(--space-3);--separator-row-regular:var(--space-4);--separator-row-roomy:var(--space-5);--separator-section-before:var(--space-5);--separator-section-after:var(--space-4);} .map-related__track > li + li{border-top:var(--separator-rule)}';
 scoped('styles.css', separatorBefore, separatorAfter, 'components', ['check:accessibility', 'check:case-view']);

@@ -194,7 +194,25 @@ const isSeparatorUpdate = (before, after) => {
   try { return separatorCss(before) === separatorCss(after); } catch { return false; }
 };
 
+// This footer adjustment changes only the compact menu's trailing space.
+const menuFooterCss = source => {
+  const tree = postcss.parse(source);
+  tree.walkRules('.control-console .constellation-nav.is-open .constellation-nav__orbit', rule => {
+    const parent = rule.parent;
+    if (parent.type !== 'atrule' || parent.name !== 'container'
+        || parent.params !== 'map-viewport (max-width: 900px)' || parent.parent.type !== 'root') return;
+    rule.walkDecls('padding', declaration => {
+      if (declaration.value === '0 8px var(--space-4)' && !declaration.important) declaration.value = '0 8px 4px';
+    });
+  });
+  return cssOutsideOwned(tree.toString(), ownsClass(/^site-version--menu$/));
+};
+const isMenuFooterSpacing = (before, after) => {
+  try { return menuFooterCss(before) === menuFooterCss(after); } catch { return false; }
+};
+
 const cssComponents = (before, after) => {
+  if (isMenuFooterSpacing(before, after)) return ['check:accessibility'];
   if (isSeparatorUpdate(before, after)) return ["check:accessibility", "check:case-view"];
   if (isMaterialForcedColorsPriority(before, after)) return ["check:core", "check:accessibility"];
   if (isMaterialCleanup(before, after)) return ["materials"];

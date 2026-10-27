@@ -7837,7 +7837,7 @@ position: relative;
 inset: auto;
 height: auto;
 max-height: calc(var(--pane-vh) * 100 - 80px);
-padding: 0 8px 4px;
+padding: 0 8px var(--space-4);
 overflow-y: auto;
 overscroll-behavior: contain;
 }
@@ -8361,7 +8361,7 @@ font-weight: 400;
 .site-version { margin: 0; color: var(--content-muted); font-size: var(--type-caption); line-height: var(--leading-label); font-variant-numeric: tabular-nums; }
 .site-version--menu { display: none; }
 @container map-viewport (max-width: 900px) {
-.site-version--menu { display: block; margin-top: var(--space-2); padding-inline-start: calc(24px + var(--space-3)); }
+.site-version--menu { display: block; margin-top: 0; padding-inline-start: calc(24px + var(--space-3)); }
 }
 .settings-panel__note {
 color: var(--content-muted);
