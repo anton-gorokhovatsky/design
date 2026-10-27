@@ -28,6 +28,17 @@ const caseData = read("js/case-content.json");
 const embeddedHtml = html.replace("</body>", `<script type="application/json" id="map-evidence-data">${JSON.stringify(JSON.parse(caseData).evidence, null, 2)}</script></body>`);
 change("js/case-content.json", caseData, "Развивать цифровые продукты Музея", "Развивать цифровую среду Музея", false);
 
+// A description-only edit keeps the same short gate as map-data copy.
+const descriptionFixture = '{"descriptions":{"running":"Бегаю."},"evidence":{"running":{"role":"Автор"}},"related":{"running":["hotline-camp"]},"figures":{"running":{"href":"https://example.com"}}}';
+change("js/case-content.json", descriptionFixture, "Бегаю.", "Бегаю пять раз в неделю.", true);
+change("js/case-content.json", descriptionFixture, '"running":"Бегаю."', '"sport":"Бегаю."', false);
+change("js/case-content.json", descriptionFixture, '"Бегаю."', '42', false);
+change("js/case-content.json", descriptionFixture, '"Бегаю."', '"Бегаю.","new":"Новая точка"', false);
+change("js/case-content.json", descriptionFixture, "Автор", "Другой вклад", false);
+change("js/case-content.json", descriptionFixture, "hotline-camp", "dd-camp", false);
+change("js/case-content.json", descriptionFixture, "https://example.com", "https://example.org", false);
+change("js/case-content.json", descriptionFixture, '"Бегаю."', '(() => "Бегаю.")()', false);
+
 // Reproduce the one-address release that previously selected the whole site.
 const addressFixture = {
   'js/map-data.js': 'const mapItems = [{id: "parfyonov", x: 29, y: 73}];',

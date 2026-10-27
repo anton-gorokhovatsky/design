@@ -508,7 +508,7 @@ const mapItems = [
     label: "БЕГ",
     title: "БЕГ",
     meta: "ЛИЧНЫЙ ЦЕНТР / ДИСТАНЦИЯ / РИТМ / INSTAGRAM",
-    description: "Бег — личный центр притяжения: он возвращает ритм, собранность и ощущение движения вперёд — на дистанции и вне её.",
+    description: "Бегаю пять раз в неделю.",
     href: "https://www.instagram.com/stories/highlights/18054491965888038/",
     linkLabel: "НЕ СФОТКАЛ — НЕ БЕГАЛ",
     kindLabel: "ЛИЧНОЕ / ЦЕНТР ПРИТЯЖЕНИЯ",

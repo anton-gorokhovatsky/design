@@ -51,6 +51,15 @@ const maskJavaScriptCopy = (path, source) => {
   return maskRanges(source, ranges);
 };
 
+// Deferred descriptions are display text. Keys, structure and every other
+// section remain byte-for-byte protected, including evidence and destinations.
+const maskCaseDescriptionCopy = (source) => {
+  const data = JSON.parse(source);
+  const object = parseJs(`(${source})`, { ecmaVersion: "latest" }).body[0].expression;
+  return maskRanges(source, object.properties.flatMap(property => keyOf(property) === "descriptions"
+    ? displayRanges(property.value, new Set(Object.keys(data.descriptions || {})), -1) : []));
+};
+
 const maskHtmlCopy = (source) => {
   const ranges = [];
   const visit = (node) => {
@@ -103,6 +112,7 @@ export const isCopyOnly = (path, before, after) => {
   if (before.includes("\0") || after.includes("\0")) return false;
   try {
     if (copyArrays[path]) return maskJavaScriptCopy(path, before) === maskJavaScriptCopy(path, after);
+    if (path === "js/case-content.json") return maskCaseDescriptionCopy(before) === maskCaseDescriptionCopy(after);
     if (["index.html", "404.html"].includes(path)) return maskHtmlCopy(before) === maskHtmlCopy(after);
   } catch {
     // Syntax errors and unrecognised forms never opt out of full checks.
@@ -150,7 +160,7 @@ export const planRelease = ({ projectRoot, base = "origin/gh-pages", target } = 
       const [status, path] = entries.slice(index, index + 2);
       const owner = ownedCheckComponent(path);
       let classification = staticCheckPaths.has(path) ? { mode: "copy", components: [] } : owner ? { mode: "components", components: [owner] } : { mode: "full", components: [] };
-      if (status === "M" && (copyArrays[path] || ["index.html", "404.html", "styles.css", "js/focused-home.js", "js/map-media.js", "js/map-engine.js", "js/whoop-day.js", "js/practice-orbits.js", "rendering/practice-orbits.js", "js/viewport-ui.js", "rendering/js/viewport-ui.js", "scripts/browser-contracts.cjs", "scripts/reel-specs.json", "README.md", "AGENTS.md"].includes(path) || /^docs\/.*\.md$/.test(path))) {
+      if (status === "M" && (copyArrays[path] || ["js/case-content.json", "index.html", "404.html", "styles.css", "js/focused-home.js", "js/map-media.js", "js/map-engine.js", "js/whoop-day.js", "js/practice-orbits.js", "rendering/practice-orbits.js", "js/viewport-ui.js", "rendering/js/viewport-ui.js", "scripts/browser-contracts.cjs", "scripts/reel-specs.json", "README.md", "AGENTS.md"].includes(path) || /^docs\/.*\.md$/.test(path))) {
         const before = git("show", `${baseSha}:${path}`);
         const after = targetSha ? git("show", `${targetSha}:${path}`) : readFileSync(resolve(projectRoot, path), "utf8");
         classification = classifyChange(path, before, after);
