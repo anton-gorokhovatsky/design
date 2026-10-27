@@ -74,10 +74,19 @@ function targetToolbar(host, items, positions, onSelect, hoverSelect=true) {
 }
 // Float only the material surfaces out of the scrolling ink filter. The scene
 // and its semantic controls keep their DOM, coordinates and reading order.
-const sceneSurfaces=new Map();
+// Native anchors follow compositor scrolling. A fixed frame clips their viewport
+// with legacy clip; clip-path would isolate the glass from the scene behind it.
+const sceneSurfaces=new Map(),surfaceFrames=new Map();
+const nativeAnchors=CSS.supports('position-anchor','--scene')&&CSS.supports('top','anchor(top)');
 function surface(node){
   let record=sceneSurfaces.get(node);
-  if(!record){record={node,host:node.parentElement,x:0,y:0,w:0,h:0,visible:false};sceneSurfaces.set(node,record);}
+  if(!record){
+    const host=node.parentElement;
+    let frame=surfaceFrames.get(host);
+    if(!frame){frame=document.createElement('div');frame.className='scene-surfaces';frame.style.visibility='hidden';host.append(frame);surfaceFrames.set(host,frame);}
+    if(nativeAnchors){const anchor=`--${host.id}-surface`;host.style.anchorName=anchor;node.style.positionAnchor=anchor;}
+    frame.append(node);record={node,host,x:0,y:0,w:0,h:0,visible:false};sceneSurfaces.set(node,record);
+  }
   return record;
 }
 function placeSurface(node,rect,opacity=1){
@@ -86,28 +95,28 @@ function placeSurface(node,rect,opacity=1){
 function syncSceneSurfaces(host){
   const shown=document.body.classList.contains('has-story-pane')&&!storyRoot.inert
     &&!document.body.matches('.story-is-moving,.story-menu-open,.has-settings-panel');
-  const port=storyRoot.getBoundingClientRect(),radius=getComputedStyle(storyRoot).borderTopLeftRadius;
-  const origins=new Map();
+  const port=storyRoot.getBoundingClientRect(),origins=new Map(),visibleFrames=new Set();
   for(const record of sceneSurfaces.values()){
     if(host&&record.host!==host)continue;
     const {node,x,y,w,h}=record;
     let origin=origins.get(record.host);if(!origin){origin=record.host.getBoundingClientRect();origins.set(record.host,origin);}
     const left=origin.left+x,top=origin.top+y;
     const visible=shown&&record.visible&&top+h>port.top&&top<port.bottom&&left+w>port.left&&left<port.right;
-    if(visible&&typeof node.showPopover==='function'){
-      node.style.visibility='visible';node.style.maxWidth=Math.max(1,origin.width-16)+'px';
-      node.style.transform=`translate3d(${left}px,${top}px,0)`;
-      node.style.clipPath=`inset(${port.top-top}px ${left+w-port.right}px ${top+h-port.bottom}px ${port.left-left}px round ${radius})`;
-      if(!node.matches(':popover-open')){
-        node.setAttribute('popover','manual');node.showPopover();
+    node.style.visibility=visible?'visible':'hidden';node.style.maxWidth=Math.max(1,origin.width-16)+'px';
+    node.style.left=nativeAnchors?'anchor(left)':'0px';node.style.top=nativeAnchors?'anchor(top)':'0px';
+    node.style.transform=`translate3d(${nativeAnchors?x:left}px,${nativeAnchors?y:top}px,0)`;
+    if(visible)visibleFrames.add(record.host);
+  }
+  for(const [scene,frame] of surfaceFrames){
+    if(host&&scene!==host)continue;
+    frame.style.left=port.left+'px';frame.style.top=port.top+'px';frame.style.width=port.width+'px';frame.style.height=port.height+'px';
+    if(visibleFrames.has(scene)){
+      if(!frame.matches(':popover-open')){
+        frame.setAttribute('popover','manual');frame.showPopover();frame.style.visibility='visible';
         const close=storyRoot.querySelector('.story-actions>[data-close-story]');
         if(close?.matches(':popover-open')){const focused=close===document.activeElement;close.hidePopover();close.showPopover();if(focused)close.focus({preventScroll:true});}
       }
-    }else{
-      if(node.matches(':popover-open'))node.hidePopover();
-      node.removeAttribute('popover');node.style.visibility=visible?'visible':'hidden';node.style.clipPath='';
-      node.style.transform=`translate3d(${x}px,${y}px,0)`;
-    }
+    }else{if(frame.matches(':popover-open'))frame.hidePopover();frame.removeAttribute('popover');frame.style.visibility='hidden';}
   }
 }
 const sceneNotes=new WeakMap();
@@ -115,13 +124,13 @@ function sceneNote(figure){
   let note=sceneNotes.get(figure);if(note)return note;
   const out=figure.querySelector('.scene-readout'),host=figure.querySelector('.scene');
   host.append(out);out.classList.add('scene-readout--anchored','map-node-label');out.dataset.materialSurface='story-readout';out.dataset.materialActive='always';out.inert=true;surface(out);
-  note={out,dirty:true,width:0,height:0,sceneWidth:0};sceneNotes.set(figure,note);
+  note={out,host,dirty:true,width:0,height:0,sceneWidth:0};sceneNotes.set(figure,note);
   new ResizeObserver(()=>{note.dirty=true;}).observe(out);
   return note;
 }
 function readout(figure,item,detail=''){
   const note=sceneNote(figure),out=note.out;
-  if(!item){surface(out).visible=false;out.classList.remove('is-visible');out.inert=true;delete out.dataset.point;out.parentElement.style.marginBottom='';note.space='';return;}
+  if(!item){surface(out).visible=false;out.classList.remove('is-visible');out.inert=true;delete out.dataset.point;note.host.style.marginBottom='';note.space='';return;}
   if(out.dataset.point===item.id&&out.dataset.detail===detail)return;
   const wasVisible=out.classList.contains('is-visible');
   out.dataset.point=item.id;out.dataset.detail=detail;
@@ -152,7 +161,7 @@ function positionReadout(figure,point,width,height,extent={x:10,y:10},obstacles=
   if(note.dirty){note.width=note.out.offsetWidth;note.height=note.out.offsetHeight;note.dirty=false;}
   let rect=labelBox(point,extent,{w:note.width,h:note.height},width,height,obstacles);
   const space=rect?'':note.height+8+'px';
-  if(note.space!==space){note.out.parentElement.style.marginBottom=space;note.space=space;}
+  if(note.space!==space){note.host.style.marginBottom=space;note.space=space;}
   rect??={x:8,y:height+8,w:note.width,h:note.height};
   placeSurface(note.out,rect);
   return rect;
@@ -324,6 +333,11 @@ function makeMap(figure) {
     const size=satelliteSeeds.has(item.id)?Math.max(2.5,width*.0045)*audienceSizeScales[item.id]:item.kind==='company'?r:Math.max(4,r*.65);
     return {x:size,y:size};
   }
+  // A caption belongs to the pulsar core and its halo, not the rotating beam envelope.
+  const captionExtent=(item,width,progress)=>{
+    if(item.id!=='running')return extentFor(item,width,progress);
+    const halo=Math.max(35,radiusFor(item,width)*7)*27*2.8/512;return {x:halo,y:halo};
+  };
   // Pack semantic families, not individual satellites. Their internal geometry
   // remains intact. Resolve on resize, never through a drifting simulation.
   function arrange(){
@@ -397,13 +411,14 @@ function makeMap(figure) {
     labelsById.forEach(label=>{surface(label).visible=false;label.style.opacity=0;});
     const yearSize=labelMetrics.get('year');
     const occupied=progress>.25&&yearSize?[1,.85,.64,.46].map(r=>({x:center.x-12-yearSize.w,y:center.y-height*.43*r-8-yearSize.h,w:yearSize.w,h:yearSize.h})):[];
-    const objects=allPoints.flatMap((p,i)=>{if(progress>.99&&!Number.isFinite(items[i].timeYear))return [];const e=extentFor(items[i],width,progress);return [{x:p.x-e.x,y:p.y-e.y,w:e.x*2,h:e.y*2}];});
+    const objects=allPoints.flatMap((p,i)=>{if(progress>.99&&!Number.isFinite(items[i].timeYear))return [];const e=extentFor(items[i],width,progress);return [{x:p.x-e.x,y:p.y-e.y,w:e.x*2,h:e.y*2,id:items[i].id}];});
     if(progress>.5)for(const r of [1,.85,.64,.46])for(let a=0;a<TAU;a+=.025)objects.push({x:center.x+Math.cos(a)*width*.44*r,y:center.y+Math.sin(a)*height*.43*r,w:1,h:1,gap:2});
+    const captionObjects=id=>id==='running'?objects.filter(box=>box.id!==id):objects;
     const active=items.findIndex(item=>item.id===selected);
-    if(active>=0){const rect=positionReadout(figure,allPoints[active],width,height,extentFor(items[active],width,progress),[...objects,...occupied]);if(rect)occupied.push(rect);}
+    if(active>=0){const rect=positionReadout(figure,allPoints[active],width,height,captionExtent(items[active],width,progress),[...captionObjects(items[active].id),...occupied]);if(rect)occupied.push(rect);}
     labels.forEach(id=>{const i=items.findIndex(item=>item.id===id),p=allPoints[i];
       const size=labelMetrics.get(id);if(!size||id===selected)return;
-      const rect=labelBox(p,extentFor(items[i],width,progress),size,width,height,[...objects,...occupied]);
+      const rect=labelBox(p,captionExtent(items[i],width,progress),size,width,height,[...captionObjects(id),...occupied]);
       if(!rect)return;occupied.push(rect);placeSurface(labelsById.get(id),rect,1-levels[i]);
 
     });
@@ -419,7 +434,7 @@ function makeMap(figure) {
     edges.forEach(edge=>{edge.level=ease(edge.level,items[edge.from].id===selected||items[edge.to].id===selected);});
     paint(c,w,h,dark,t,positions);syncSceneSurfaces(host);
   }
-  return {draw,resize(){if(host.clientWidth<1||host.clientHeight<1)return;w=host.clientWidth;h=host.clientHeight;labelsById.forEach((label,id)=>labelMetrics.set(id,{w:label.offsetWidth,h:label.offsetHeight}));arrange();years[0].hidden=false;labelMetrics.set('year',{w:years[0].offsetWidth,h:years[0].offsetHeight});c=contextFor(field,w,h);draw(0);},theme(){personalInk=getComputedStyle(root).getPropertyValue('--muted').trim();practicePlane.tracks(dark);practicePlane.paint();draw(0);},motion(){if(!motion){t=target;draw(0);}}};
+  return {draw,resize(){if(host.clientWidth<1||host.clientHeight<1)return;w=host.clientWidth;h=host.clientHeight;syncSceneSurfaces(host);labelsById.forEach((label,id)=>labelMetrics.set(id,{w:label.offsetWidth,h:label.offsetHeight}));arrange();years[0].hidden=false;labelMetrics.set('year',{w:years[0].offsetWidth,h:years[0].offsetHeight});c=contextFor(field,w,h);draw(0);},theme(){personalInk=getComputedStyle(root).getPropertyValue('--muted').trim();practicePlane.tracks(dark);practicePlane.paint();draw(0);},motion(){if(!motion){t=target;draw(0);}}};
 }
 
 function mount(figure){

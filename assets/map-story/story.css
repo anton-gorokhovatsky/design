@@ -38,8 +38,9 @@ html[data-reduce-motion=true] .story-is-moving #split-shell{transition:none}
 .scene-year{position:absolute;top:0;left:0;font:400 var(--type-utility)/var(--leading-control) var(--font-sans);color:var(--content-muted);pointer-events:none}
 @container story-viewport (max-width:700px){.figure--time .scene,.figure--geography .scene{min-height:40rem}}
 
-.map-story :is(.scene-label,.scene-readout)[popover]{position:fixed;inset:0 auto auto 0;margin:0;overflow:visible;max-width:none}
-.map-story :is(.scene-label,.scene-readout)::backdrop{background:transparent}
+.map-story .scene-surfaces{position:fixed;inset:auto;margin:0;padding:0;border:0;max-width:none;max-height:none;overflow:hidden;border-radius:var(--window-radius);corner-shape:var(--corner-card-shape);background:none;pointer-events:none;clip:rect(0,auto,auto,0)}
+.map-story .scene-surfaces>.scene-label,.map-story .scene-surfaces>.scene-readout{position:fixed}
+.map-story .scene-surfaces::backdrop{background:transparent}
 .gravity-formula{margin-block:var(--space-5);display:grid;grid-template-columns:minmax(5rem,1fr) minmax(0,2fr);gap:var(--space-5);align-items:center}
 .gravity-formula figcaption{margin:0}
 .gravity-formula dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:var(--space-2) var(--space-3);margin:0}
