@@ -5,6 +5,8 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { pathToFileURL } from 'node:url';
 import { chromium, webkit } from 'playwright';
 
+const { readMaterialAuditExpression } = createRequire(import.meta.url)('./browser-contracts.cjs');
+
 export async function checkLiveSurface(browser, origin, engine) {
   const dir = '.qa-artifacts/live-surface';
   mkdirSync(dir, { recursive: true });
@@ -88,8 +90,10 @@ export async function checkLiveSurface(browser, origin, engine) {
     const css = getComputedStyle(el);
     return { blur: css.backdropFilter || css.webkitBackdropFilter, shadow: css.boxShadow, border: css.borderTopWidth };
   });
-  assert.ok(settingsSurface.blur.includes('blur(24px)'));
-  assert.equal(settingsSurface.shadow, 'none');
+  const settingsMaterial = await page.evaluate(readMaterialAuditExpression);
+  assert.deepEqual(settingsMaterial.failures, [], 'Settings and their neighboring surfaces retain the accepted shared material');
+  assert.equal(settingsSurface.blur, settingsMaterial.expectedBackdrop);
+  assert.equal(settingsSurface.shadow, settingsMaterial.expectedShadow);
   assert.equal(settingsSurface.border, '0px');
   await page.keyboard.press('Escape');
   await page.waitForFunction(() => document.activeElement?.id === 'screen-controls-trigger');

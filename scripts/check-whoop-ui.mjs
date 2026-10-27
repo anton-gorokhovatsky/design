@@ -403,7 +403,7 @@ try {
   await controlsPage.waitForFunction(() => window.__settingsMetricCalls);
   const allowedHeight = await analytics.boundingBox();
   assert.equal(allowedHeight.height, unsetHeight.height, 'The three consent descriptions reserve one natural height.');
-  const before = await controlsPage.evaluate(() => performance.timeOrigin);
+  const before = await controlsPage.evaluate(() => window.__settingsDocumentToken = crypto.randomUUID());
   const revokedImmediately = await controlsPage.evaluate(() => new Promise(resolve => {
     const button = document.querySelector('[data-analytics-toggle]'); button.click();
     const result = {state: localStorage.getItem('anton-signal-analytics'), disabled: window.disableYaCounter111107350,
@@ -412,9 +412,9 @@ try {
   }));
   assert.deepEqual(revokedImmediately, {state: 'denied', disabled: true, destruct: true});
   await controlsPage.waitForTimeout(220);
-  assert.equal(await controlsPage.evaluate(() => performance.timeOrigin), before, 'A rapid explicit re-enable cancels the technical reload.');
+  assert.equal(await controlsPage.evaluate(() => window.__settingsDocumentToken), before, 'A rapid explicit re-enable cancels the technical reload.');
   await analytics.click();
-  await controlsPage.waitForFunction(earlier => performance.timeOrigin !== earlier, before);
+  await controlsPage.waitForFunction(earlier => window.__settingsDocumentToken !== earlier, before);
   await controlsPage.waitForFunction(() => document.activeElement?.matches('[data-analytics-toggle]'));
   assert.equal(await controlsPage.locator('#settings-panel').evaluate(node => getComputedStyle(node).animationName), 'none', 'Technical return restores its context without an entrance animation.');
   assert.equal(await controlsPage.locator('[data-analytics-toggle]').getAttribute('aria-checked'), 'false');
