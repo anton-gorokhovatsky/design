@@ -254,13 +254,14 @@ try {
     const list = page.locator('.project-orbit-picker');
     await list.evaluate(element => element.scrollTop = 64);
     const glass = await page.evaluate(() => {
-      const header = document.querySelector('.point-preview__head');
+      const header = document.querySelector('.project-picker-glass--header');
+      const title = document.querySelector('.point-preview__head');
       const body = document.querySelector('.project-picker-glass');
       const list = document.querySelector('.project-orbit-picker');
       return { expected: getComputedStyle(document.documentElement).getPropertyValue('--material-01-backdrop').trim(),
         header: getComputedStyle(header).backdropFilter || getComputedStyle(header).webkitBackdropFilter,
         body: getComputedStyle(body).backgroundColor, headerFill: getComputedStyle(header).backgroundColor,
-        listTop: list.getBoundingClientRect().top, headerBottom: header.getBoundingClientRect().bottom };
+        listTop: list.getBoundingClientRect().top, headerBottom: title.getBoundingClientRect().bottom };
     });
     assert.equal(glass.header, glass.expected, 'The pinned header must soften the scrolling projects with shared glass');
     assert.equal(glass.headerFill, glass.body, 'Header and body use the same material');

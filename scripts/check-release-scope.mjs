@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -147,6 +148,47 @@ const scoped = (path, before, after, mode, components = []) => {
   assert.deepEqual(classifyChange(path, before, after), { mode, components }, `${path}: ${after.slice(-180)}`);
   checks += 1;
 };
+// Compact overlay context keeps the map's contrast. Only these presentation
+// declarations are owned; colors, selectors and breakpoint changes stay full.
+const overlayContext = '@container map-viewport (max-width: 900px){.map-surface.has-focused-home.has-constellation-nav .focused-home{opacity:.48;transform:translateY(4px) scale(.97);pointer-events:none}}';
+const clearOverlayContext = '@container map-viewport (max-width: 900px){.map-surface.has-focused-home.has-constellation-nav .focused-home{pointer-events:none}}';
+const overlayCoverage = ['check:header','check:command-placement','check:accessibility'];
+scoped('styles.css', overlayContext, clearOverlayContext, 'components', overlayCoverage);
+for (const after of [
+  clearOverlayContext + ':root{--material-01:red}',
+  clearOverlayContext.replace('pointer-events:none', 'pointer-events:none;background:red'),
+  clearOverlayContext.replace('max-width: 900px', 'max-width: 850px'),
+  clearOverlayContext.replace('.focused-home{', '.map-grid{'),
+  clearOverlayContext + '.project-picker-glass{backdrop-filter:none}',
+]) scoped('styles.css', overlayContext, after, 'full');
+const frameViewportBefore = 'const f=()=>{ viewport.height = visual?.height || innerHeight; };';
+const frameViewportAfter = 'const f=()=>{ const frameInset = parseFloat(getComputedStyle(document.getElementById("split-shell")).paddingBottom) || 0;\n    viewport.height = Math.max(0, Math.min(viewport.top + (visual?.height || innerHeight), innerHeight - frameInset) - viewport.top); };';
+for (const path of ['js/viewport-ui.js','rendering/js/viewport-ui.js']) {
+  scoped(path, frameViewportBefore, frameViewportAfter, 'components', ['check:command-placement']);
+  scoped(path, frameViewportBefore, frameViewportAfter + '\nglobalThis.unrelated=1;', 'full');
+  scoped(path, frameViewportBefore, frameViewportAfter.replace('innerHeight - frameInset','innerHeight + frameInset'), 'full');
+}
+
+// The known picker migration owns only the two plane construction blocks.
+const pickerSourceBefore = "function init(){\n    preview.prepend(pickerGlass);\n    const sizePickerHead=()=>{if(!picker.hidden)preview.style.setProperty('--picker-head-height',`${pickerHead.getBoundingClientRect().height}px`);};\n    new ResizeObserver(sizePickerHead).observe(pickerHead);\n\n      pickerGlass.hidden=!selected;preview.dataset.materialActive=selected?'none':'always';\n      if(selected){pickerHead.dataset.materialSurface='project-picker-header';pickerHead.dataset.materialActive='always';sizePickerHead();}\n      else{delete pickerHead.dataset.materialSurface;delete pickerHead.dataset.materialActive;}\n\n}";
+const pickerSourceAfter = "function init(){\n    const headerGlass=pickerGlass.cloneNode();headerGlass.classList.add('project-picker-glass--header');headerGlass.dataset.materialSurface='project-picker-header';headerGlass.dataset.materialActive='always';\n    const glassClip=glass=>{const clip=doc.createElement('div');clip.className='project-picker-clip';clip.append(glass);return clip;};\n    const headerClip=glassClip(headerGlass);headerClip.classList.add('project-picker-clip--header');\n    preview.prepend(glassClip(pickerGlass),headerClip);\n    const sizePickerHead=()=>{if(!picker.hidden){preview.style.setProperty('--picker-head-height',`${pickerHead.getBoundingClientRect().height}px`);preview.style.setProperty('--picker-height',`${preview.clientHeight}px`);}};\n    const pickerSize=new ResizeObserver(sizePickerHead);pickerSize.observe(pickerHead);pickerSize.observe(preview);\n\n      pickerGlass.hidden=headerGlass.hidden=!selected;preview.dataset.materialActive=selected?'none':'always';\n      if(selected)sizePickerHead();\n\n}";
+scoped('rendering/practice-orbits.js', pickerSourceBefore, pickerSourceAfter, 'components', ['check:hover-layout']);
+for (const after of [pickerSourceAfter + '\nglobalThis.unrelated=1;', pickerSourceAfter.replace('project-picker-header','different-material'), 'const broken = ;' + pickerSourceAfter]) {
+  scoped('rendering/practice-orbits.js', pickerSourceBefore, after, 'full');
+}
+// The released baseline is immutable and available to Quality's full-history
+// checkout. Once a later release changes this runtime, it must classify full.
+const pickerRuntimeBefore = execFileSync('git', ['show','e65048f8bb842a6ca246394d8c620c31d36fd658:js/practice-orbits.js'], {cwd:root,encoding:'utf8'});
+const pickerRuntimeAfter = read('js/practice-orbits.js');
+const knownPickerRuntime = createHash('sha256').update(pickerRuntimeAfter).digest('hex') === '00c9771fcb854428009aed1b5d72d06458bc5242f89a1a4ca48fa6aa0cd94b33';
+scoped('js/practice-orbits.js', pickerRuntimeBefore, pickerRuntimeAfter, knownPickerRuntime ? 'components' : 'full', knownPickerRuntime ? ['check:hover-layout'] : []);
+scoped('js/practice-orbits.js', pickerRuntimeBefore, pickerRuntimeAfter + '\nglobalThis.unrelated=1;', 'full');
+const pickerContourBefore = '.project-picker-glass{position:absolute;inset:var(--picker-head-height) 0 0;z-index:0;border-radius:0 0 var(--window-radius) var(--window-radius);corner-shape:var(--corner-card-shape);clip-path:border-box;pointer-events:none}';
+const pickerContourAfter = ".project-picker-clip{position:absolute;inset:var(--picker-head-height) 0 0;overflow:hidden;z-index:0;pointer-events:none}.project-picker-clip--header{inset:0 0 auto;height:var(--picker-head-height);z-index:2}.project-picker-glass{position:absolute;inset:calc(-1 * var(--picker-head-height)) 0 0;border-radius:var(--window-radius);corner-shape:var(--corner-card-shape);pointer-events:none}.project-picker-glass--header{inset:0 0 auto;height:var(--picker-height)}";
+scoped('styles.css', pickerContourBefore, pickerContourAfter, 'components', ['check:hover-layout']);
+scoped('styles.css', pickerContourBefore, pickerContourAfter + '.project-picker-glass{background:red}', 'full');
+scoped('styles.css', pickerContourBefore, pickerContourAfter.replace('overflow:hidden','overflow:visible'), 'full');
+
 const styles = read("styles.css");
 for (const selector of ['#story-bridge button', '#story-bridge button::before', '.has-story-pane #story-bridge', '#story-bridge button:hover::before,#story-bridge button:focus-visible::before']) {
   scoped('styles.css', '', `${selector}{opacity:.8}`, 'components', ['story-bridge']);

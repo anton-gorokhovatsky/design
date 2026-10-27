@@ -95,9 +95,12 @@ function initializePracticeOrbits() {
     const pickerHead=preview.querySelector('.point-preview__head'),pickerGlass=doc.createElement('div');
     pickerGlass.className='project-picker-glass';pickerGlass.hidden=true;pickerGlass.setAttribute('aria-hidden','true');
     pickerGlass.dataset.materialSurface='project-picker-body';pickerGlass.dataset.materialActive='always';
-    preview.prepend(pickerGlass);
-    const sizePickerHead=()=>{if(!picker.hidden)preview.style.setProperty('--picker-head-height',`${pickerHead.getBoundingClientRect().height}px`);};
-    new ResizeObserver(sizePickerHead).observe(pickerHead);
+    const headerGlass=pickerGlass.cloneNode();headerGlass.classList.add('project-picker-glass--header');headerGlass.dataset.materialSurface='project-picker-header';headerGlass.dataset.materialActive='always';
+    const glassClip=glass=>{const clip=doc.createElement('div');clip.className='project-picker-clip';clip.append(glass);return clip;};
+    const headerClip=glassClip(headerGlass);headerClip.classList.add('project-picker-clip--header');
+    preview.prepend(glassClip(pickerGlass),headerClip);
+    const sizePickerHead=()=>{if(!picker.hidden){preview.style.setProperty('--picker-head-height',`${pickerHead.getBoundingClientRect().height}px`);preview.style.setProperty('--picker-height',`${preview.clientHeight}px`);}};
+    const pickerSize=new ResizeObserver(sizePickerHead);pickerSize.observe(pickerHead);pickerSize.observe(preview);
     backButton.type='button';backButton.className='project-orbit-back';backButton.textContent='Все проекты';backButton.hidden=true;
     preview.querySelector('.point-preview__head').before(backButton);
     preview.querySelector('.point-preview__description').before(picker);
@@ -166,9 +169,8 @@ function initializePracticeOrbits() {
     const syncPicker=()=>{
       const selected=mobile.matches&&!preview.hidden&&node.getAttribute('aria-expanded')==='true';
       preview.classList.toggle('is-project-picker',selected);picker.hidden=!selected;
-      pickerGlass.hidden=!selected;preview.dataset.materialActive=selected?'none':'always';
-      if(selected){pickerHead.dataset.materialSurface='project-picker-header';pickerHead.dataset.materialActive='always';sizePickerHead();}
-      else{delete pickerHead.dataset.materialSurface;delete pickerHead.dataset.materialActive;}
+      pickerGlass.hidden=headerGlass.hidden=!selected;preview.dataset.materialActive=selected?'none':'always';
+      if(selected)sizePickerHead();
       if(preview.hidden)pickerSession=false;
       backButton.hidden=!mobile.matches||!pickerSession||selected||preview.hidden;
       if(selected){pickerSession=true;scheduleAtlas();}

@@ -136,7 +136,7 @@ try {
         if (!surface || (document.getElementById('map-pane')?.clientWidth ?? innerWidth) > 900) return null;
         const header = surface.querySelector('.site-header');
         const scene = surface.classList.contains('has-focused-home') ? surface.querySelector('.focused-home') : header;
-        const expectedOpacity = surface.classList.contains('has-full-mobile-map') ? .45 : .48;
+        const expectedOpacity = 1;
         return { expectedOpacity, opacity: Number(getComputedStyle(scene).opacity),
           visibility: getComputedStyle(header).visibility, filter: getComputedStyle(header).filter,
           pointerEvents: getComputedStyle(header).pointerEvents, inert: !!header.closest('[inert]') };

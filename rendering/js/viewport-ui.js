@@ -565,7 +565,8 @@ const positionDetachedCommandResults = () => {
     const map = document.getElementById("map-pane").getBoundingClientRect();
     viewport.left = Math.max(visual?.offsetLeft || 0, map.left);
     viewport.width = Math.max(0, Math.min((visual?.offsetLeft || 0) + (visual?.width || innerWidth), map.right) - viewport.left);
-    viewport.height = visual?.height || innerHeight;
+    const frameInset = parseFloat(getComputedStyle(document.getElementById("split-shell")).paddingBottom) || 0;
+    viewport.height = Math.max(0, Math.min(viewport.top + (visual?.height || innerHeight), innerHeight - frameInset) - viewport.top);
   }
   const gap = 8;
   let anchorTop = surfaceBounds.top;

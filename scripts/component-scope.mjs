@@ -1,4 +1,5 @@
 import postcss from "postcss";
+import { createHash } from "node:crypto";
 import { isMaterialCleanup, isMaterialForcedColorsPriority, isMaterialRecipeChange } from "./material-contract.mjs";
 import { overviewOutside, overviewHtmlOutside, notFoundBindings } from "./overview-scope.mjs";
 import selectorParser from "postcss-selector-parser";
@@ -211,6 +212,61 @@ const isMenuFooterSpacing = (before, after) => {
   try { return menuFooterCss(before) === menuFooterCss(after); } catch { return false; }
 };
 
+// Exact presentation migration: the map stays undimmed below compact overlays,
+// while the picker clips one shared outer contour. Other declarations stay owned
+// by their existing component or require full coverage.
+const surfacePresentationRules = [
+  [[],".map-surface:is(.has-constellation-nav,.has-command-focus) :is(.site-header,.whoop-field)",{"opacity":[".16"],"filter":["blur(3px)"],"pointer-events":["none"]},["check:header","check:command-placement","check:accessibility"]],
+  [["@container map-viewport (max-width: 900px)"],".map-surface.has-constellation-nav .mobile-first-dock",{"opacity":[".4"]},["check:header","check:command-placement","check:accessibility"]],
+  [["@container map-viewport (max-width: 900px)"],".map-surface.has-focused-home.has-constellation-nav .focused-home",{"opacity":[".48"],"transform":["translateY(4px) scale(.97)"]},["check:header","check:command-placement","check:accessibility"]],
+  [["@container map-viewport (max-width: 900px)"],".map-surface.has-focused-home.has-constellation-nav .focused-home .site-header",{"opacity":["1"],"filter":["none"]},["check:header","check:command-placement","check:accessibility"]],
+  [["@container map-viewport (max-width: 900px)"],".map-surface.has-full-mobile-map.has-constellation-nav :is(.map-camera,.map-labels,.focused-return)",{"opacity":[".45"],"pointer-events":["none"]},["check:header","check:command-placement","check:accessibility"]],
+  [[],".point-preview.is-project-picker>.point-preview__head",{"z-index":["2","3"]},["check:hover-layout"]],
+  [[],".point-preview.is-project-picker>.point-preview__close",{"z-index":["3","4"]},["check:hover-layout"]],
+  [[],".project-picker-glass",{"inset":["var(--picker-head-height) 0 0","calc(-1 * var(--picker-head-height)) 0 0"],"z-index":["0"],"border-radius":["0 0 var(--window-radius) var(--window-radius)","var(--window-radius)"],"clip-path":["border-box"]},["check:hover-layout"]],
+  [["@media (max-width:999px)"],".story-menu-open #story-pane",{"opacity":[".45"]},["map-story"]],
+  [["@media (max-width:999px)"],".story-menu-open :is(#split-shell>#story-pane,[data-scroll-lens-frame]:has(>#story-pane))",{"filter":["blur(3px)"]},["map-story"]],
+  [["@container map-viewport (max-width: 900px)"],".map-surface.has-constellation-nav :is(.site-header,.whoop-field)",{"filter":["none"],"pointer-events":["none"]},["check:header","check:command-placement","check:accessibility"]],
+  [["@container map-viewport (max-width: 900px)"],".map-surface.has-constellation-nav :is(.map-camera,.map-labels,.focused-return)",{"opacity":["1"],"pointer-events":["none"]},["check:header","check:command-placement","check:accessibility"]],
+  [[],".project-picker-clip",{"position":["absolute"],"inset":["var(--picker-head-height) 0 0"],"overflow":["hidden"],"z-index":["0"],"pointer-events":["none"]},["check:hover-layout"]],
+  [[],".project-picker-clip--header",{"inset":["0 0 auto"],"height":["var(--picker-head-height)"],"z-index":["2"]},["check:hover-layout"]],
+  [[],".project-picker-glass--header",{"inset":["0 0 auto"],"height":["var(--picker-height)"]},["check:hover-layout"]],
+  [[],".map-surface:is(.has-constellation-nav,.has-command-focus) :is(.map-camera,.project-satellites)",{"opacity":["1"]},["check:header","check:command-placement","check:accessibility"]]
+];
+const surfacePresentationCss = source => {
+  const tree = postcss.parse(source), parts = new Map();
+  tree.walkRules(rule => {
+    if (!rule.nodes.every(node => ["decl", "comment"].includes(node.type))) return;
+    const context = [];
+    for (let parent = rule.parent; parent.type !== "root"; parent = parent.parent) context.unshift("@" + parent.name + " " + parent.params);
+    const groups = new Map();
+    for (const branch of selectorParser().astSync(rule.selector).nodes) {
+      const selector = selectorParser().processSync(branch.toString(), { lossless: false });
+      const copy = rule.clone({ selector });
+      copy.raws = {}; copy.nodes.forEach(node => { node.raws = {}; });
+      const spec = surfacePresentationRules.find(([scope, owner]) => owner === selector && JSON.stringify(scope) === JSON.stringify(context));
+      if (spec) copy.walkDecls(declaration => {
+        if (declaration.important || !spec[2][declaration.prop]?.includes(declaration.value)) return;
+        for (const owner of spec[3]) {
+          if (!parts.has(owner)) parts.set(owner, []);
+          parts.get(owner).push([context, selector, declaration.prop, declaration.value]);
+        }
+        declaration.remove();
+      });
+      if (copy.nodes.some(node => node.type !== "comment")) {
+        const key = JSON.stringify(copy.nodes.filter(node => node.type !== "comment").map(node => node.toString()));
+        if (groups.has(key)) groups.get(key).selector += "," + selector;
+        else groups.set(key, copy);
+      }
+    }
+    // Keep branches sharing declarations together: splitting an unrelated mixed
+    // selector would incorrectly turn a shared rule into component-owned rules.
+    for (const copy of groups.values()) rule.before(copy);
+    rule.remove();
+  });
+  return { css: tree.toString(), parts };
+};
+
 const cssComponents = (before, after) => {
   if (isMenuFooterSpacing(before, after)) return ['check:accessibility'];
   if (isSeparatorUpdate(before, after)) return ["check:accessibility", "check:case-view"];
@@ -219,9 +275,17 @@ const cssComponents = (before, after) => {
   const owners = Object.entries(cssOwners);
   // Mixed local edits select the union; a single shared rule keeps full CI.
   const owned = selector => owners.some(([, owns]) => owns(selector));
-  if (cssOutsideOwned(before, owned) !== cssOutsideOwned(after, owned)) return null;
-  return owners.filter(([, owns]) => cssOutsideOwned(before, selector => !owns(selector))
-    !== cssOutsideOwned(after, selector => !owns(selector))).map(([id]) => id);
+  const select = (left, right) => cssOutsideOwned(left, owned) !== cssOutsideOwned(right, owned) ? null
+    : owners.filter(([, owns]) => cssOutsideOwned(left, selector => !owns(selector))
+      !== cssOutsideOwned(right, selector => !owns(selector))).map(([id]) => id);
+  const ordinary = select(before, after);
+  if (ordinary) return ordinary;
+  const left = surfacePresentationCss(before), right = surfacePresentationCss(after);
+  const local = select(left.css, right.css);
+  if (!local) return null;
+  const presentation = [...new Set([...left.parts.keys(), ...right.parts.keys()])]
+    .filter(owner => JSON.stringify(left.parts.get(owner) || []) !== JSON.stringify(right.parts.get(owner) || []));
+  return [...new Set([...presentation, ...local])];
 };
 
 // Only passive header markup and the decorative search SVG can be replaced.
@@ -525,9 +589,42 @@ const mapDismissalOutside = source => {
   return JSON.stringify(tree, (key, value) => ["start", "end", "raw"].includes(key) ? undefined : value);
 };
 
+// Literal source migration and its exact Terser derivative. The runtime hash
+// accepts no additional physics, routing, event or rendering changes.
+const pickerGlassSourcePatch = [
+  [
+    "    preview.prepend(pickerGlass);\n    const sizePickerHead=()=>{if(!picker.hidden)preview.style.setProperty('--picker-head-height',`${pickerHead.getBoundingClientRect().height}px`);};\n    new ResizeObserver(sizePickerHead).observe(pickerHead);\n",
+    "    const headerGlass=pickerGlass.cloneNode();headerGlass.classList.add('project-picker-glass--header');headerGlass.dataset.materialSurface='project-picker-header';headerGlass.dataset.materialActive='always';\n    const glassClip=glass=>{const clip=doc.createElement('div');clip.className='project-picker-clip';clip.append(glass);return clip;};\n    const headerClip=glassClip(headerGlass);headerClip.classList.add('project-picker-clip--header');\n    preview.prepend(glassClip(pickerGlass),headerClip);\n    const sizePickerHead=()=>{if(!picker.hidden){preview.style.setProperty('--picker-head-height',`${pickerHead.getBoundingClientRect().height}px`);preview.style.setProperty('--picker-height',`${preview.clientHeight}px`);}};\n    const pickerSize=new ResizeObserver(sizePickerHead);pickerSize.observe(pickerHead);pickerSize.observe(preview);\n"
+  ],
+  [
+    "      pickerGlass.hidden=!selected;preview.dataset.materialActive=selected?'none':'always';\n      if(selected){pickerHead.dataset.materialSurface='project-picker-header';pickerHead.dataset.materialActive='always';sizePickerHead();}\n      else{delete pickerHead.dataset.materialSurface;delete pickerHead.dataset.materialActive;}\n",
+    "      pickerGlass.hidden=headerGlass.hidden=!selected;preview.dataset.materialActive=selected?'none':'always';\n      if(selected)sizePickerHead();\n"
+  ]
+];
+const exactReplacements = (before, after, patches) => {
+  try {
+    parseJs(before, { ecmaVersion: "latest", sourceType: "module" });
+    parseJs(after, { ecmaVersion: "latest", sourceType: "module" });
+  } catch { return false; }
+  let restored = after;
+  for (const [old, replacement] of patches) {
+    if (before.split(old).length !== 2 || restored.split(replacement).length !== 2) return false;
+    restored = restored.replace(replacement, old);
+  }
+  return restored === before;
+};
+const pickerGlassBuild = ["5f44f34c2f63dc345c6c9e4087e3e38fbaa2c6341384064b9c13315959d8c794","00c9771fcb854428009aed1b5d72d06458bc5242f89a1a4ca48fa6aa0cd94b33"];
+const commandFramePatch = [[
+  "viewport.height = visual?.height || innerHeight;",
+  'const frameInset = parseFloat(getComputedStyle(document.getElementById("split-shell")).paddingBottom) || 0;\n    viewport.height = Math.max(0, Math.min(viewport.top + (visual?.height || innerHeight), innerHeight - frameInset) - viewport.top);'
+]];
+
 export const affectedComponents = (path, before, after, maskHtmlCopy) => {
   if (before.includes("\0") || after.includes("\0")) return null;
   try {
+    if (["js/viewport-ui.js", "rendering/js/viewport-ui.js"].includes(path) && exactReplacements(before, after, commandFramePatch)) return ["check:command-placement"];
+    if (path === "rendering/practice-orbits.js" && exactReplacements(before, after, pickerGlassSourcePatch)) return ["check:hover-layout"];
+    if (path === "js/practice-orbits.js" && [before, after].every((source, index) => createHash("sha256").update(source).digest("hex") === pickerGlassBuild[index])) return ["check:hover-layout"];
     if (["js/observation-route.js", "js/map-media.js", "js/panels.js"].includes(path)
       && overviewOutside(path, before) === overviewOutside(path, after)) return ["overview"];
     if (path === "404.html" && notFoundBindings(maskHtmlCopy(before).replaceAll("\0", "")) === notFoundBindings(maskHtmlCopy(after).replaceAll("\0", ""))) return ["not-found"];

@@ -49,7 +49,10 @@ const budgets = {
   runtimeGzip: 128 * 1024,
   initialCompressed: 288 * 1024,
   story: 80 * 1024,
-  storyGzip: 26 * 1024,
+  // 27 October: rendered story labels bypass the text lens so shared glass
+  // works during scrolling. Measured story payload: 26.6 KiB gzip; bounded
+  // headroom follows the author-requested budget increase, initial limits stay.
+  storyGzip: 27 * 1024,
   deferredData: 56 * 1024,
   deferredDataGzip: 18 * 1024,
   // Add HTML and a complete-page ceiling; all prior ceilings remain unchanged.
