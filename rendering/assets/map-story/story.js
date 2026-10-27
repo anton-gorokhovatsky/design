@@ -175,6 +175,7 @@ function makePractice(figure) {
   let w=400,h=350,carry=0,paused=false,hovered=false,selected=null,pinned=false;
   let points=seeds.map(()=>({x:0,y:0}));
   const buttons=targetToolbar(host,seeds.map(s=>s.item),()=>points,(item,source)=>{
+    if(source==='hover'&&pinned)return;
     selected=item.id;pinned=source!=='hover';readout(figure,item);draw(0);
   });
   buttons.forEach((button,i)=>{
@@ -285,7 +286,7 @@ function makeMap(figure) {
   createGravityLens(relativistic).then(value=>{if(value){mapLens=value;mapLens.resize(180);draw(0);}}).catch(()=>{});
   relativistic.addEventListener('lens-unavailable',()=>{mapLens=null;draw(0);});
   const practice=canvas(),practicePlane=createPracticePlane(practice);practicePlane.sphere(.13);practicePlane.tracks(dark);practicePlane.paint();
-  const select=(item,source)=>{selected=item.id;pinned=source!=='hover';readout(figure,item,item.timeLabel||'');draw(0);};
+  const select=(item,source)=>{if(source==='hover'&&pinned)return;selected=item.id;pinned=source!=='hover';readout(figure,item,item.timeLabel||'');draw(0);};
   const buttons=targetToolbar(host,items,()=>positions,select,false);
   const clearSelection=()=>{selected=null;pinned=false;buttons.forEach(b=>b.setAttribute('aria-pressed','false'));readout(figure,null);draw(0);};
   dismissSceneNote(figure,buttons,clearSelection);
@@ -461,7 +462,8 @@ window.addEventListener('storage',e=>{if(e.key==='anton-signal-theme')changeThem
 new MutationObserver(()=>{const next=root.dataset.theme==='dark';if(next!==dark)changeTheme(next);}).observe(root,{attributes:true,attributeFilter:['data-theme']});
 
 // Geometry follows real scroll/resize events even when scene animation is paused.
-storyRoot.addEventListener('scroll',()=>syncSceneSurfaces(),{passive:true});
+// The lens reads these viewport rects in its bubble scroll listener.
+storyRoot.addEventListener('scroll',()=>syncSceneSurfaces(),{capture:true,passive:true});
 window.addEventListener('resize',()=>syncSceneSurfaces(),{passive:true});
 window.visualViewport?.addEventListener('resize',()=>syncSceneSurfaces(),{passive:true});
 window.visualViewport?.addEventListener('scroll',()=>syncSceneSurfaces(),{passive:true});
