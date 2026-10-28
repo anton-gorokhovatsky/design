@@ -87,6 +87,32 @@ try {
       } else {
         assert.equal(await page.locator('.map-space-label').count(), 0, 'Compact and chronological maps keep their own presentation.');
       }
+      if (width === 390 && view === 'map') {
+        const placement = () => page.evaluate(() => ({
+          points: [...document.querySelectorAll('[data-map-id]')].map(node => [node.dataset.mapId,
+            node.style.getPropertyValue('--x'), node.style.getPropertyValue('--y')]).sort((a, b) => a[0].localeCompare(b[0])),
+          captions: [...document.querySelectorAll('.mobile-landmark')].map(label => [label.dataset.mapLabelId,
+            label.style.getPropertyValue('--mobile-label-dx'), label.style.getPropertyValue('--mobile-label-dy')]),
+        }));
+        const settled = () => page.waitForFunction(() => !document.querySelector('[data-map-links][data-layout-pending]')
+          && !document.querySelector('[data-practice-map][data-time-transition]'));
+        // Match the public reproduction, then retain the surrounding route matrix.
+        await page.setViewportSize({ width: 390, height: 844 });
+        await page.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done))));
+        await settled();
+        await page.mouse.move(0, 0);
+        const initial = await placement();
+        for (const enabled of [true, false]) {
+          await page.locator('[data-constellation-nav-toggle]').click();
+          await page.locator('.constellation-nav [data-time-toggle]').click();
+          await page.waitForFunction(enabled => document.querySelector('[data-practice-map]').hasAttribute('data-time-view') === enabled, enabled);
+          await settled();
+        }
+        assert.deepEqual(await placement(), initial, 'Closing the chronology menu restores the same point and caption positions.');
+        await page.setViewportSize({ width: 390, height: 900 });
+        await page.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done))));
+        await settled();
+      }
       for (const id of view === "time" ? ["garage", "private-practice"] : ["garage", "private-practice", "running", "youtube"]) {
         if (width <= 900) await page.locator(`[data-map-id="${id}"]`).click();
         else await page.locator(`[data-map-id="${id}"]`).focus();
