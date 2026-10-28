@@ -29,7 +29,8 @@ export const staticCheckPaths = new Set([
   'scripts/audit-project.mjs', 'scripts/check-assets.mjs',
   'scripts/material-contract.mjs', 'scripts/check-css-cascade.mjs', 'scripts/check-performance-budget.mjs',
   'scripts/check-performance-budget.test.mjs', 'scripts/check-publication-assets.mjs']);
-export const ownedCheckComponent = path => signaturePath.test(path)
+export const ownedCheckComponent = path => path === 'assets/project-logos/academy-tn.svg'
+  ? 'check:case-flow' : signaturePath.test(path)
   ? 'signature' : processPaths.has(path) ? 'checks'
     : ['js/map-story.js', 'rendering/js/map-story.js', 'assets/map-story/content.html',
       'assets/map-story/story.css', 'assets/map-story/story.js', 'rendering/assets/map-story/story.js'].includes(path)

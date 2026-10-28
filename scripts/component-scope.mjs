@@ -833,9 +833,38 @@ const commandFramePatch = [[
   'const frameInset = parseFloat(getComputedStyle(document.getElementById("split-shell")).paddingBottom) || 0;\n    viewport.height = Math.max(0, Math.min(viewport.top + (visual?.height || innerHeight), innerHeight - frameInset) - viewport.top);'
 ]];
 
+// A static case illustration changes the work list only. Preserve every other
+// data field and every other byte of the panel controller.
+const casePostersOutside = source => {
+  const tree = parseJs(source, { ecmaVersion: "latest", sourceType: "module" });
+  const ranges = [];
+  for (const statement of tree.body) for (const declaration of statement.declarations || []) {
+    if (declaration.id.name !== "mapItems" || declaration.init?.type !== "ArrayExpression") continue;
+    for (const item of declaration.init.elements) {
+      const caseStudy = item.properties?.find(p => p.type === "Property" && !p.computed && p.key.name === "caseStudy");
+      if (caseStudy?.value.type !== "ObjectExpression") continue;
+      for (const prop of caseStudy.value.properties) {
+        if (prop.type !== "Property" || prop.computed || prop.method || prop.kind !== "init"
+          || prop.key.name !== "previewPoster" || prop.value.type !== "Literal"
+          || prop.value.value !== "assets/project-logos/academy-tn.svg") continue;
+        const start = source.lastIndexOf("\n", prop.start);
+        if (/^\n[ \t]*$/.test(source.slice(start, prop.start)) && source[prop.end] === ",") {
+          ranges.push([start, prop.end + 1]);
+        }
+      }
+    }
+  }
+  return ranges.sort((a, b) => b[0] - a[0]).reduce((text, [start, end]) => text.slice(0, start) + text.slice(end), source);
+};
+
 export const affectedComponents = (path, before, after, maskHtmlCopy) => {
   if (before.includes("\0") || after.includes("\0")) return null;
   try {
+    if (path === "js/map-data.js" && casePostersOutside(before) === casePostersOutside(after)) return ["check:case-flow"];
+    if (path === "js/panels.js") {
+      const casePoster = source => source.replace("const poster = item.caseStudy?.previewPoster || getMapPreviewPoster(item);", "const poster = getMapPreviewPoster(item);");
+      if (casePoster(before) === casePoster(after)) return ["check:case-flow"];
+    }
     if (["js/viewport-ui.js", "rendering/js/viewport-ui.js"].includes(path) && exactReplacements(before, after, commandFramePatch)) return ["check:command-placement"];
     if (path === "rendering/js/focused-home.js" && sceneRestoreOutside(before) === sceneRestoreOutside(after)) return ["check:map-routes", "check:first-visit"];
     if (path === "js/focused-home.js" && [before, after].every((source, index) => createHash("sha256").update(source).digest("hex") === sceneRestoreBuild[index])) return ["check:map-routes", "check:first-visit"];

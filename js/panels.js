@@ -228,7 +228,7 @@ for (const row of document.querySelectorAll(".work-row[data-map-point]")) {
   const tags = createWorkTags(item.id);
   if (tags) row.querySelector('.work-row__domain').before(tags);
   if (item.kind === "project") row.querySelector(".work-row__title").textContent = typographUiText(item.label);
-  const poster = getMapPreviewPoster(item);
+  const poster = item.caseStudy?.previewPoster || getMapPreviewPoster(item);
   if (!poster) {
     const cover = document.createElement("span");
     cover.className = "work-row__preview work-row__preview--type";

@@ -21,6 +21,16 @@ const change = (path, before, from, to, expected) => {
 
 const panels = read("js/panels.js");
 const map = read("js/map-data.js");
+// Static case artwork must stay scoped; changed routing, data or executable
+// poster expressions must not inherit this boundary.
+const casePosterLine = '\n      previewPoster: "assets/project-logos/academy-tn.svg",';
+const withoutCasePoster = map.replace(casePosterLine, "");
+assert.deepEqual(classifyChange("js/map-data.js", withoutCasePoster, map).components, ["check:case-flow"]);
+assert.equal(classifyChange("js/map-data.js", withoutCasePoster, map.replace('x: 24,', 'x: 25,')).mode, "full");
+assert.equal(classifyChange("js/map-data.js", withoutCasePoster, map.replace('previewPoster: "assets/project-logos/academy-tn.svg"', 'previewPoster: getPoster()')).mode, "full");
+const oldPanelPoster = panels.replace('item.caseStudy?.previewPoster || getMapPreviewPoster(item)', 'getMapPreviewPoster(item)');
+assert.deepEqual(classifyChange("js/panels.js", oldPanelPoster, panels).components, ["check:case-flow"]);
+assert.equal(classifyChange("js/panels.js", oldPanelPoster, panels.replace('item.caseStudy?.previewPoster ||', 'getPoster() ||')).mode, "full");
 const route = read("js/observation-route.js");
 const html = read("index.html");
 // Keep the legacy embedded-copy contract while current details are external data.
