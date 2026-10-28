@@ -117,6 +117,16 @@ constellationNavToggle?.addEventListener("click", () => {
   setConstellationNavOpen(!isConstellationNavOpen);
 });
 
+// A first click on the inert map or dock dismisses its compact menu only.
+pane.surface.addEventListener("click", (event) => {
+  if (!compactConstellationNav.matches || !isConstellationNavOpen
+    || constellationNav?.contains(event.target)) return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  setConstellationNavOpen(false);
+  constellationNavToggle?.focus({ preventScroll: true });
+}, true);
+
 document.querySelectorAll("[data-nav-view], [data-nav-utility]").forEach((item) => {
   item.addEventListener("click", (event) => {
     if (isModifiedLinkClick(event)) return;
@@ -124,7 +134,26 @@ document.querySelectorAll("[data-nav-view], [data-nav-utility]").forEach((item) 
   });
 });
 
-compactConstellationNav.addEventListener("change", syncConstellationNavInteractivity);
+compactConstellationNav.addEventListener("change", (event) => {
+  const focusedControl = document.activeElement;
+  const hadNavigationFocus = constellationNav?.contains(focusedControl);
+  if (!event.matches) setConstellationNavOpen(false);
+  else syncConstellationNavInteractivity();
+  if (!hadNavigationFocus) return;
+  // Let the scene reflow and a possible top-layer menu finish before restoring focus.
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    if (compactConstellationNav.matches !== event.matches
+      || ![focusedControl, document.body].includes(document.activeElement)) return;
+    if (!focusedControl.closest("[inert]")
+      && focusedControl.checkVisibility({ visibilityProperty: true })) return;
+    const stackedStory = document.body.classList.contains("has-story-pane")
+      && matchMedia("(max-width: 999px)").matches;
+    const visibleControl = event.matches ? constellationNavToggle
+      : stackedStory ? document.querySelector("[data-close-story]")
+        : constellationNavItems.find(item => item.dataset.navView === constellationNavCurrentView) || constellationNavHome;
+    visibleControl?.focus({ preventScroll: true });
+  }));
+});
 syncConstellationNavInteractivity();
 
 const contentPanel = document.querySelector("[data-content-panel]");
@@ -411,7 +440,7 @@ const closeContentPanel = (
   }
 
   if (restoreFocus) {
-    if (lastPanelTrigger instanceof HTMLElement && lastPanelTrigger.closest("#work")) {
+    if (lastPanelTrigger instanceof HTMLElement && lastPanelTrigger.closest('[data-panel-section="work"]')) {
       lastPanelTrigger = compactConstellationNav.matches
         ? document.querySelector(".mobile-first-cases") : constellationNavHome;
     }

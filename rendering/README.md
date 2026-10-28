@@ -48,6 +48,48 @@ npm exec --yes --package=terser@5.44.0 -- terser rendering/practice-orbits.js --
 области консоли. Строковые комментарии оставлять в читаемом исходнике,
 не включая их в поставляемый runtime.
 
+`map-engine.js` хранит весь проверенный исходник в `rendering/js/map-engine.js`.
+Чтобы сохранить именованные контракты подписей и жестов, компактная сборка
+затрагивает только два блока: от `const mapTargetDiameter=` до
+`const setMapDescription=` и от `const syncMapRelationships=` до
+`let inspectorReturnHandler=`. Terser 5.44.0 меняет форматирование и локальные
+имена без `--compress` и без переименования верхнего уровня; `id` и `evidence`
+во втором блоке сохраняются для существующих статических контрактов.
+Комментарии остаются в читаемом исходнике. Из корня репозитория:
+
+```sh
+node --input-type=module <<'JS'
+import fs from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { parse } from 'acorn';
+const temporary = fs.mkdtempSync(join(tmpdir(), 'portfolio-map-build-'));
+let code = fs.readFileSync('rendering/js/map-engine.js', 'utf8');
+try {
+  for (const [start, end, mangle] of [
+    ['const mapTargetDiameter=', 'const setMapDescription=', ''],
+    ['const syncMapRelationships=', 'let inspectorReturnHandler=', 'reserved=[id,evidence]'],
+  ]) {
+    const from = code.indexOf(start), to = code.indexOf(end, from);
+    if (from < 0 || to <= from) throw new Error('Map build boundary missing');
+    const input = join(temporary, 'block.js');
+    fs.writeFileSync(input, code.slice(from, to));
+    const args = ['exec', '--yes', '--package=terser@5.44.0', '--', 'terser', input, '--mangle'];
+    if (mangle) args.push(mangle);
+    const block = execFileSync('npm', args, { encoding: 'utf8' }).trimEnd();
+    code = code.slice(0, from) + block + '\n' + code.slice(to);
+  }
+  const comments = [];
+  parse(code, { ecmaVersion: 'latest', sourceType: 'module', onComment: comments });
+  for (const comment of comments.reverse()) code = code.slice(0, comment.start) + code.slice(comment.end);
+  fs.writeFileSync('js/map-engine.js', code);
+} finally {
+  fs.rmSync(temporary, { recursive: true, force: true });
+}
+JS
+```
+
 `analytics.js` сохраняет читаемый исходник в `rendering/js/analytics.js`.
 Его runtime сжимается только форматированием, без изменения выражений и имён:
 `terser rendering/js/analytics.js --ecma 2022 --module --output js/analytics.js`

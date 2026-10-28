@@ -217,6 +217,21 @@ for(const engine of [process.argv[2]||'chromium']) {
     page.setDefaultTimeout(5000);
     page.setDefaultNavigationTimeout(15000);
     page.on('pageerror',error=>result.errors.push(error.message));
+    // A managed route must not remain a native fragment target. WebKit can
+    // otherwise pin the work scroller to its first row after a direct visit.
+    await page.goto(origin + '/?story=1#work');
+    await page.waitForFunction(() => document.querySelector('#story-pane')?.dataset.ready === 'true'
+      && document.querySelector('[data-content-panel].is-open')?.dataset.view === 'work');
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    const directWorkBody = page.locator('.content-panel__body');
+    const directWorkBox = await directWorkBody.boundingBox();
+    await page.mouse.move(directWorkBox.x + directWorkBox.width / 2, directWorkBox.y + directWorkBox.height / 2);
+    await page.mouse.wheel(0, 600);
+    await page.waitForFunction(() => document.querySelector('.content-panel__body').scrollTop > 40);
+    await page.waitForTimeout(600);
+    assert.ok(await directWorkBody.evaluate(element => element.scrollTop > 40),
+      'Direct work route keeps the position reached by a real wheel gesture');
+    assert.equal(new URL(page.url()).hash, '#work', 'Direct scrolling preserves the public work URL');
     // Check the route around a case, including the place the reader returns to.
     for (const width of [1440, 390]) {
       await page.setViewportSize({ width, height: 900 });

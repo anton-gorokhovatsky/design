@@ -666,7 +666,11 @@ const authorCard = document.querySelector('.site-header');
 const authorField = document.querySelector('.whoop-field');
 const syncCompactControlGeometry = () => {
   const close = document.querySelector('#story-pane [data-close-story]');
-  if (pane.width > 900) { close?.style.removeProperty('--control-target'); return; }
+  if (pane.width > 900) {
+    close?.style.removeProperty('--control-target');
+    document.querySelector('#story-pane')?.style.removeProperty('--story-close-inset');
+    return;
+  }
   const toggle = document.querySelector('[data-constellation-nav-toggle]');
   const mark = toggle?.querySelector('.constellation-nav__cluster');
   const map = document.querySelector('.map-surface');

@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 
 const require = createRequire(import.meta.url);
 const { chromium, webkit } = require('playwright');
-const { startStaticServer, readMaterialAuditExpression } = require('./browser-contracts.cjs');
+const { startStaticServer, readMaterialAuditExpression, declineAnalyticsNotice } = require('./browser-contracts.cjs');
 const [engine = 'chromium', component] = process.argv.slice(2);
 assert.ok(['chromium', 'webkit'].includes(engine));
 assert.ok(['header', 'search-icon'].includes(component));
@@ -56,6 +56,57 @@ const checkHeader = async (page, width, height) => {
     await page.keyboard.press('Escape');
     assert.equal(await menu.getAttribute('aria-expanded'), 'false');
   }
+};
+const checkMenuResize = async page => {
+  const menu = page.locator('[data-constellation-nav-toggle]');
+  const checkClosedFocus = () => page.waitForFunction(() => {
+    const control = document.activeElement, box = control.getBoundingClientRect();
+    return document.querySelector('[data-constellation-nav-toggle]').getAttribute('aria-expanded') === 'false'
+      && !document.querySelector('[data-constellation-nav]').matches(':popover-open')
+      && control !== document.body && !control.closest('[inert]')
+      && control.checkVisibility({ visibilityProperty: true, opacityProperty: true })
+      && box.top >= 0 && box.left >= 0 && box.bottom <= innerHeight && box.right <= innerWidth;
+  });
+  await page.goto(origin, { waitUntil: 'load' });
+  await declineAnalyticsNotice(page);
+  await menu.focus();
+  await page.keyboard.press('Enter');
+  assert.equal(await menu.getAttribute('aria-expanded'), 'true');
+  await page.setViewportSize({ width: 930, height: 844 });
+  await checkClosedFocus();
+  assert.ok(await page.locator('[data-nav-view="map"]').evaluate(control => control === document.activeElement),
+    'Leaving compact mode closes its menu and moves focus to the visible current route.');
+  await page.locator('[data-nav-view="work"]').focus();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await checkClosedFocus();
+  assert.ok(await menu.evaluate(control => control === document.activeElement),
+    'A desktop navigation link that becomes hidden returns focus to the compact toggle.');
+  await page.keyboard.press('Enter');
+  assert.equal(await menu.getAttribute('aria-expanded'), 'true');
+  await page.keyboard.press('Escape');
+  await checkClosedFocus();
+
+  // At the story breakpoint the narrow left pane becomes a wide, clipped map.
+  await page.setViewportSize({ width: 1000, height: 750 });
+  await page.goto(`${origin}/?story=1`, { waitUntil: 'load' });
+  await page.waitForFunction(() => document.querySelector('#story-pane').dataset.ready === 'true');
+  await menu.focus();
+  await page.keyboard.press('Enter');
+  assert.equal(await menu.getAttribute('aria-expanded'), 'true');
+  await page.setViewportSize({ width: 999, height: 750 });
+  await checkClosedFocus();
+  assert.ok(await page.locator('#story-bridge [data-close-story]').evaluate(control => control === document.activeElement),
+    'The stacked story retains a visible exit instead of an orphaned navigation popover.');
+  const closePlacement = await page.locator('#story-pane').evaluate(story => {
+    const pane = story.getBoundingClientRect();
+    const close = story.querySelector('.story-actions > [data-close-story]').getBoundingClientRect();
+    return { paneRight: pane.right, closeRight: close.right, closeLeft: close.left };
+  });
+  assert.ok(closePlacement.closeRight <= closePlacement.paneRight + 1
+    && closePlacement.closeLeft >= closePlacement.paneRight - 100,
+  'The story close button stays at the panel right edge after the responsive transition.');
+  await page.setViewportSize({ width: 1000, height: 750 });
+  await checkClosedFocus();
 };
 const checkSearchIcon = async (page, width) => {
   const input = page.locator('[data-command-input]');
@@ -107,6 +158,15 @@ try {
       console.log(`PASS ${engine} ${component} ${width}px ${theme}`);
       await page.close();
     }
+  }
+  if (component === 'header') {
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 }, colorScheme: 'light' });
+    page.setDefaultTimeout(8000);
+    page.on('pageerror', error => errors.push(error.message));
+    await checkMenuResize(page);
+    if (directory) await page.screenshot({ path: join(directory, `${engine}-header-menu-resize.png`) });
+    await page.close();
+    console.log(`PASS ${engine} header: menu resize, visible focus and Escape across map/story layouts.`);
   }
   assert.deepEqual(errors, []);
 } finally {

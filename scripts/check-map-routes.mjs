@@ -105,6 +105,44 @@ try {
     console.log(`PASS ${engine} ${width}: both map layouts, four relation families, no loops or disproportionate detours.`);
     await page.close();
   }
+  // History and responsive changes preserve the scene from which an index point was opened.
+  {
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+    page.on('pageerror', error => errors.push(error.message));
+    for (const transition of ['history', 'resize']) {
+      await page.goto(origin);
+      await declineAnalyticsNotice(page);
+      await page.locator('[data-spatial-search]').click();
+      await page.locator('[data-command-input]').fill('гараж');
+      await page.locator('.command-result[data-result-id="garage"]').click();
+      await page.locator('.map-inspector.is-open').waitFor();
+      const pointUrl = page.url();
+      if (transition === 'history') {
+        await page.goBack();
+        await page.locator('.map-inspector.is-open').waitFor({ state: 'hidden' });
+        assert.ok(await page.locator('[data-focused-map-open]').isVisible(), 'Back returns to the introductory map.');
+        await page.goForward();
+        await page.locator('.map-inspector.is-open').waitFor();
+      } else {
+        for (const width of [930, 390]) {
+          await page.setViewportSize({ width, height: 844 });
+          await page.waitForFunction(width => document.querySelector('#map-pane').clientWidth === width, width);
+          await page.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done))));
+        }
+      }
+      assert.equal(page.url(), pointUrl, `${transition} retains the point route and its original scene.`);
+      await page.locator('[data-close-inspector]').click();
+      await page.locator('.map-inspector.is-open').waitFor({ state: 'hidden' });
+      assert.ok(await page.locator('[data-focused-map-open]').isVisible(), `Closing after ${transition} retains the introductory map.`);
+      assert.equal(await page.locator('[data-focused-return]').isVisible(), false);
+      assert.ok(await page.locator('[data-map-id="garage"]').evaluate(control => control === document.activeElement
+        && !control.closest('[inert]') && control.checkVisibility({ visibilityProperty: true })),
+      'Closing the restored card returns focus to its visible map point.');
+      await page.screenshot({ path: `${directory}/${engine}-focused-index-${transition}-return.png` });
+      console.log(`PASS ${engine}: index point ${transition}/close preserves its introductory scene and focus.`);
+    }
+    await page.close();
+  }
   // Introductory captions use the projected map, including release momentum.
   // The 740px viewport catches the gap between the former fixed breakpoints.
   for (const viewport of [{ width: 390, height: 740 }, { width: 320, height: 568 }, { width: 390, height: 568 }]) {

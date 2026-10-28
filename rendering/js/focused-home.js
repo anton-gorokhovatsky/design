@@ -241,7 +241,7 @@ function restoreScene(event) {
   const url = new URL(location.href);
   // A direct case link needs the complete map as its return destination.
   // Preview links retain the introductory scene and its selected point.
-  if (compact.matches && url.searchParams.has('point') && !url.searchParams.has('preview')) {
+  if (!event && compact.matches && url.searchParams.has('point') && !url.searchParams.has('preview')) {
     url.searchParams.set('scene', 'map');
     history.replaceState(history.state, '', url);
   }

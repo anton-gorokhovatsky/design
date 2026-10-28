@@ -2307,7 +2307,7 @@ content: "";
 width: 12px;
 height: 12px;
 
-color: currentColor;
+color: var(--content-ink);
 font-size: 0.75rem;
 opacity: 0.48;
 transition:
@@ -6385,7 +6385,9 @@ filter 260ms var(--ease-out);
 position: absolute;
 top: -7px;
 left: 50%;
-display: none;
+display: block;
+opacity: 0;
+transition: none;
 padding: 2px 5px;
 border-radius: 8px;
 background: var(--bg);
@@ -6427,7 +6429,23 @@ height: 82%;
 }
 
 .practice-map[data-time-view] .orbital-radar i span {
-display: block;
+opacity: 1;
+transition: opacity var(--duration-feedback) var(--ease-out);
+}
+
+/* Years and labels describe settled positions, never a destination still in transit. */
+.practice-map[data-time-transition] :is(.orbital-radar i span, .map-node-label) {
+opacity: 0 !important;
+transition: none !important;
+pointer-events: none !important;
+}
+
+html[data-reduce-motion="true"] .practice-map[data-time-view] .orbital-radar i span {
+transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+.practice-map[data-time-view] .orbital-radar i span { transition: none; }
 }
 
 .practice-map[data-time-view][data-time-view] .map-node:not([data-time-year]) {

@@ -391,7 +391,7 @@ const readAnnotationHierarchyExpression = `(() => {
     garage: readBox(document.querySelector(".map-node-label--garage")),
     overflowX: document.documentElement.scrollWidth
       - document.documentElement.clientWidth,
-    overviewInWork: Boolean(document.querySelector("#work [data-start-observation]")),
+    overviewInWork: Boolean(document.querySelector('[data-panel-section="work"] [data-start-observation]')),
   };
 })()`;
 
