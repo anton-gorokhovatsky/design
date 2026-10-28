@@ -9048,6 +9048,7 @@ max-height: none;
 .content-panel .content-panel__frame .contact-section { display: block; padding: 0; }
 .content-panel__frame .contact-copy { width: 100%; max-width: none; }
 @container map-viewport (max-width: 900px) {
+.content-panel[data-view="work"] { --panel-bottom: var(--window-edge); }
 .content-panel .content-panel__frame [data-panel-section] { display: block; }
 .content-panel .content-panel__frame .work-list { grid-template-columns: minmax(0, 1fr); }
 }

@@ -217,6 +217,7 @@ const isMenuFooterSpacing = (before, after) => {
 // while the picker clips one shared outer contour. Other declarations stay owned
 // by their existing component or require full coverage.
 const surfacePresentationRules = [
+  [["@container map-viewport (max-width: 900px)"],'.content-panel[data-view="work"]',{"--panel-bottom":["var(--window-edge)"]},["check:first-visit"]],
   [[],".map-surface:is(.has-constellation-nav,.has-command-focus) :is(.site-header,.whoop-field)",{"opacity":[".16"],"filter":["blur(3px)"],"pointer-events":["none"]},["check:header","check:command-placement","check:accessibility"]],
   [["@container map-viewport (max-width: 900px)"],".map-surface.has-constellation-nav .mobile-first-dock",{"opacity":[".4"]},["check:header","check:command-placement","check:accessibility"]],
   [["@container map-viewport (max-width: 900px)"],".map-surface.has-focused-home.has-constellation-nav .focused-home",{"opacity":[".48"],"transform":["translateY(4px) scale(.97)"]},["check:header","check:command-placement","check:accessibility"]],

@@ -206,6 +206,24 @@ for (const path of ['js/viewport-ui.js','rendering/js/viewport-ui.js']) {
   scoped(path, frameViewportBefore, frameViewportAfter.replace('innerHeight - frameInset','innerHeight + frameInset'), 'full');
 }
 
+// A compact Work panel can use its existing window edge when its dock is hidden.
+const compactWorkInset = '@container map-viewport (max-width: 900px){.content-panel[data-view="work"]{--panel-bottom:var(--window-edge)}}';
+scoped('styles.css', '', compactWorkInset, 'components', ['check:first-visit']);
+for (const after of [
+  compactWorkInset.replace('data-view="work"', 'data-view="contact"'),
+  compactWorkInset.replace('[data-view="work"]', ''),
+  compactWorkInset.replace('--panel-bottom', '--panel-frame-top'),
+  compactWorkInset.replace('var(--window-edge)', 'var(--window-gap)'),
+  compactWorkInset.replace('var(--window-edge)', 'var(--window-edge)!important'),
+  compactWorkInset.replace('max-width: 900px', 'max-width: 901px'),
+  compactWorkInset.replace('@container map-viewport', '@media'),
+  compactWorkInset.replace('--panel-bottom:var(--window-edge)', '--panel-bottom:var(--window-edge);opacity:.5'),
+  compactWorkInset + '.map-grid{opacity:0}',
+]) scoped('styles.css', '', after, 'full');
+for (const engine of ['chromium', 'webkit']) assert.deepEqual(
+  new Set(browserMatrix('components', ['check:first-visit']).include.filter(job => job.browser === engine).flatMap(job => job.checks.split(','))),
+  new Set(['first-visit']), 'Compact Work inset retains the existing entry, case return, and last-row keyboard checks');
+
 // The known picker migration owns only the two plane construction blocks.
 const pickerSourceBefore = "function init(){\n    preview.prepend(pickerGlass);\n    const sizePickerHead=()=>{if(!picker.hidden)preview.style.setProperty('--picker-head-height',`${pickerHead.getBoundingClientRect().height}px`);};\n    new ResizeObserver(sizePickerHead).observe(pickerHead);\n\n      pickerGlass.hidden=!selected;preview.dataset.materialActive=selected?'none':'always';\n      if(selected){pickerHead.dataset.materialSurface='project-picker-header';pickerHead.dataset.materialActive='always';sizePickerHead();}\n      else{delete pickerHead.dataset.materialSurface;delete pickerHead.dataset.materialActive;}\n\n}";
 const pickerSourceAfter = "function init(){\n    const headerGlass=pickerGlass.cloneNode();headerGlass.classList.add('project-picker-glass--header');headerGlass.dataset.materialSurface='project-picker-header';headerGlass.dataset.materialActive='always';\n    const glassClip=glass=>{const clip=doc.createElement('div');clip.className='project-picker-clip';clip.append(glass);return clip;};\n    const headerClip=glassClip(headerGlass);headerClip.classList.add('project-picker-clip--header');\n    preview.prepend(glassClip(pickerGlass),headerClip);\n    const sizePickerHead=()=>{if(!picker.hidden){preview.style.setProperty('--picker-head-height',`${pickerHead.getBoundingClientRect().height}px`);preview.style.setProperty('--picker-height',`${preview.clientHeight}px`);}};\n    const pickerSize=new ResizeObserver(sizePickerHead);pickerSize.observe(pickerHead);pickerSize.observe(preview);\n\n      pickerGlass.hidden=headerGlass.hidden=!selected;preview.dataset.materialActive=selected?'none':'always';\n      if(selected)sizePickerHead();\n\n}";
