@@ -66,6 +66,16 @@ const checkMenuResize = async page => {
       && control !== document.body && !control.closest('[inert]')
       && control.checkVisibility({ visibilityProperty: true, opacityProperty: true })
       && box.top >= 0 && box.left >= 0 && box.bottom <= innerHeight && box.right <= innerWidth;
+  }).catch(async error => {
+    console.error('Responsive menu focus:', await page.evaluate(() => {
+      const control = document.activeElement;
+      return { active: control.outerHTML.slice(0, 350), bounds: control.getBoundingClientRect().toJSON(),
+        visible: control.checkVisibility({ visibilityProperty: true, opacityProperty: true }),
+        inert: Boolean(control.closest('[inert]')), width: innerWidth,
+        expanded: document.querySelector('[data-constellation-nav-toggle]').getAttribute('aria-expanded'),
+        popover: document.querySelector('[data-constellation-nav]').matches(':popover-open') };
+    }));
+    throw error;
   });
   await page.goto(origin, { waitUntil: 'load' });
   await declineAnalyticsNotice(page);

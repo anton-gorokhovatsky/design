@@ -254,9 +254,12 @@ const readMaterialAuditExpression = `(() => {
     })
     .map((element) => {
       const style = getComputedStyle(element);
-      const backgroundDepth = !(mobile && element.matches(".map-surface.has-command-focus .site-header")) && (element.matches(
+      // Compact menu/index retain the ordinary map context; only input is inert.
+      const clearOverlayContext = mobile && element.matches(
+        ".map-surface:is(.has-command-focus, .has-constellation-nav) .site-header",
+      );
+      const backgroundDepth = !clearOverlayContext && (element.matches(
         "body.has-reading-surface :is(.site-header, .system-dock), "
-        + "body.has-constellation-nav:not(.has-focused-home) .site-header, "
         + "body.has-command-focus .site-header, "
         + "body:is([data-case-open], .has-settings-panel) .control-console",
       ) || (mobile && element.matches(
@@ -284,6 +287,7 @@ const readMaterialAuditExpression = `(() => {
         surface: element.dataset.materialSurface,
         materialAncestor,
         localMediaBackdrop,
+        clearOverlayContext,
         backgroundDepth,
         opacity: Number(style.opacity),
         pointerEvents: style.pointerEvents,
@@ -321,6 +325,7 @@ const readMaterialAuditExpression = `(() => {
       || surface.shadow !== expectedShadow
       || surface.filter !== (surface.backgroundDepth ? "blur(3px)" : "none")
       || (surface.backgroundDepth && (surface.opacity > .16 || surface.pointerEvents !== "none"))
+      || (surface.clearOverlayContext && (surface.opacity !== 1 || surface.filter !== "none" || surface.pointerEvents !== "none"))
       || !surface.border.startsWith("0px")
     )), ...unregistered, ...invalidModes],
   };

@@ -117,7 +117,7 @@ constellationNavToggle?.addEventListener("click", () => {
   setConstellationNavOpen(!isConstellationNavOpen);
 });
 
-// A first click on the inert map or dock dismisses its compact menu only.
+// The first outside click only dismisses the menu.
 pane.surface.addEventListener("click", (event) => {
   if (!compactConstellationNav.matches || !isConstellationNavOpen
     || constellationNav?.contains(event.target)) return;
@@ -134,18 +134,29 @@ document.querySelectorAll("[data-nav-view], [data-nav-utility]").forEach((item) 
   });
 });
 
+let navigationFocus = null;
+document.addEventListener("focusin", event => {
+  navigationFocus = constellationNav?.contains(event.target) ? event.target : null;
+});
+constellationNav?.addEventListener("focusout", event => {
+  if (event.relatedTarget || (!event.target.closest("[inert]")
+    && event.target.checkVisibility({ visibilityProperty: true }))) navigationFocus = null;
+});
 compactConstellationNav.addEventListener("change", (event) => {
-  const focusedControl = document.activeElement;
+  const focusedControl = document.activeElement === document.body ? navigationFocus : document.activeElement;
   const hadNavigationFocus = constellationNav?.contains(focusedControl);
   if (!event.matches) setConstellationNavOpen(false);
   else syncConstellationNavInteractivity();
   if (!hadNavigationFocus) return;
-  // Let the scene reflow and a possible top-layer menu finish before restoring focus.
+  // Restore focus after scene and popover reflow.
   requestAnimationFrame(() => requestAnimationFrame(() => {
     if (compactConstellationNav.matches !== event.matches
       || ![focusedControl, document.body].includes(document.activeElement)) return;
     if (!focusedControl.closest("[inert]")
-      && focusedControl.checkVisibility({ visibilityProperty: true })) return;
+      && focusedControl.checkVisibility({ visibilityProperty: true })) {
+      if (document.activeElement === document.body) focusedControl.focus({ preventScroll: true });
+      return;
+    }
     const stackedStory = document.body.classList.contains("has-story-pane")
       && matchMedia("(max-width: 999px)").matches;
     const visibleControl = event.matches ? constellationNavToggle
