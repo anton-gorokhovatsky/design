@@ -1,5 +1,6 @@
-const { execFileSync } = require("node:child_process");
-const { mkdir, rename } = require("node:fs/promises");
+const { execFileSync, spawn } = require("node:child_process");
+const { mkdir, mkdtemp, rename } = require("node:fs/promises");
+const { createServer } = require("node:net");
 const path = require("node:path");
 const { chromium } = require("playwright");
 
@@ -902,151 +903,236 @@ const runCaptureMotion = async (page, id, source) => {
     return;
   }
 
-  const browser = await chromium.launch({
-    headless: true,
-    executablePath: project.captureBrowser || chromePath,
-    args: [
-      "--autoplay-policy=no-user-gesture-required",
-      "--force-color-profile=srgb",
-    ],
-  });
-  const context = await browser.newContext({
-    viewport: sourceViewport,
-    colorScheme: "light",
-    recordVideo: {
-      dir: rawDirectory,
-      size: sourceViewport,
-    },
-  });
-
-  if (projectId === "tarski") {
-    await context.addInitScript(() => {
-      window.localStorage.setItem("tarski-theme", "light");
+  let browser, context, nativeBrowser;
+  try {
+    if (projectId === "dusty-camp") {
+      // One owner-requested production visit in ordinary Chrome. The site's
+      // map policy and navigator.webdriver are left unchanged.
+      const port = await new Promise(resolve => {
+        const server = createServer();
+        server.listen(0, "127.0.0.1", () => {
+          const port = server.address().port;
+          server.close(() => resolve(port));
+        });
+      });
+      const profile = await mkdtemp(path.join(captureRoot, "chrome-profile-"));
+      nativeBrowser = spawn(chromePath, [
+        `--remote-debugging-port=${port}`, `--user-data-dir=${profile}`,
+        "--no-first-run", "--no-default-browser-check",
+        "--autoplay-policy=no-user-gesture-required", "--force-color-profile=srgb", "about:blank",
+      ], { stdio: "ignore" });
+      process.once("exit", () => nativeBrowser?.kill());
+      const endpoint = `http://127.0.0.1:${port}`;
+      let ready = false;
+      for (let attempt = 0; attempt < 100 && !ready; attempt++) {
+        ready = await fetch(`${endpoint}/json/version`).then(response => response.ok).catch(() => false);
+        if (!ready) await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      if (!ready) throw new Error("Native Chrome did not become ready");
+      browser = await chromium.connectOverCDP(endpoint);
+    } else browser = await chromium.launch({
+      headless: true,
+      executablePath: project.captureBrowser || chromePath,
+      args: [
+        "--autoplay-policy=no-user-gesture-required",
+        "--force-color-profile=srgb",
+      ],
     });
-  }
-
-  const page = await context.newPage();
-  const recordingStartedAt = Date.now();
-  const video = page.video();
-
-  await page.goto(project.url, {
-    waitUntil: "domcontentloaded",
-    timeout: 30000,
-  });
-  await page.waitForLoadState("networkidle", { timeout: 12000 }).catch(() => {});
-  await page.evaluate(() => document.fonts?.ready).catch(() => {});
-  await page.waitForTimeout(1000);
-  await dismissVisibleOverlays(page, project.dismissSelectors);
-  await page.keyboard.press("Escape").catch(() => {});
-
-  if (projectId === "garage-archives") {
-    await prepareArchivesCapture(page);
-  }
-
-  if (projectId === "narkomfin") {
-    await prepareNarkomfinCapture(page);
-  }
-
-  if (projectId === "garage-webzine") {
-    await prepareGarageWebzineCapture(page);
-  }
-
-  if (projectId === "shirokostup") {
-    await prepareShirokostupCapture(page);
-  }
-
-  if (projectId === "herman") {
-    await prepareHermanCapture(page);
-  }
-
-  if (["krainiuk", "dusty-camp"].includes(projectId)) {
-    await page.evaluate(async () => {
-      const images = [...document.images].filter(image => image.getAttribute("src"));
-      images.forEach(image => { image.loading = "eager"; });
-      await Promise.all(images.map(image => image.decode()));
-    });
-  }
-
-  if (projectId === "dusty-camp") {
-    await page.locator("video").evaluate(async video => {
-      video.muted = true;
-      video.currentTime = 0;
-      await video.play();
-    });
-  }
-
-  await applyCaptureStyles(page);
-  await page.evaluate(() => {
-    const root = document.scrollingElement || document.documentElement;
-    root.scrollTop = 0;
-  });
-  await page.waitForTimeout(900);
-
-  const usefulStart = Math.max(
-    0,
-    (Date.now() - recordingStartedAt) / 1000 - 0.12,
-  );
-
-  await runCaptureMotion(page, projectId, project);
-  await page.waitForTimeout(project.finalHold || 1800);
-
-  const rawPath = await video.path();
-  await context.close();
-  await browser.close();
-
-  const rawDestination = path.join(
-    rawDirectory,
-    `${projectId}-${Date.now()}.webm`,
-  );
-  const finalDestination = path.join(finalDirectory, `${projectId}.mp4`);
-  await rename(rawPath, rawDestination);
-
-  execFileSync(
-    "ffmpeg",
-    [
-      "-hide_banner",
-      "-loglevel",
-      "error",
-      "-y",
-      "-ss",
-      usefulStart.toFixed(3),
-      "-i",
-      rawDestination,
-      "-t",
-      String(project.outputDuration),
-      "-vf",
-      `setpts=PTS-STARTPTS,fps=30,scale=${desktopVideo.width}:${desktopVideo.height}:flags=lanczos,setsar=1`,
-      "-c:v",
-      "libx264",
-      "-preset",
-      "slow",
-      "-crf",
-      "20",
-      "-pix_fmt",
-      "yuv420p",
-      "-an",
-      "-movflags",
-      "+faststart",
-      "-metadata",
-      "comment=source-fit=native-capture;"
-        + `source-viewport=${sourceViewport.width}x${sourceViewport.height};`
-        + "source-dar=3:2",
-      finalDestination,
-    ],
-    { stdio: "inherit" },
-  );
-
-  console.log(
-    JSON.stringify({
-      id: projectId,
-      raw: rawDestination,
-      final: finalDestination,
-      usefulStart,
+    context = await browser.newContext({
       viewport: sourceViewport,
-      video: desktopVideo,
-      duration: project.outputDuration,
-    }),
-  );
+      colorScheme: "light",
+      recordVideo: {
+        dir: rawDirectory,
+        size: sourceViewport,
+      },
+    });
+
+    if (projectId === "tarski") {
+      await context.addInitScript(() => {
+        window.localStorage.setItem("tarski-theme", "light");
+      });
+    }
+
+    const page = await context.newPage();
+    if (projectId === "dusty-camp") page.on("response", async response => {
+      const url = new URL(response.url());
+      if (response.status() < 400 || !url.hostname.endsWith("mapbox.com")) return;
+      const body = await response.json().catch(() => ({}));
+      const message = String(body.message || body.error || "")
+        .replace(/(?:pk|sk)\.[A-Za-z0-9._-]+/g, "[redacted]")
+        .replace(/https?:\/\/\S+/g, "[url]").slice(0, 160);
+      console.error(JSON.stringify({ mapResource: url.pathname, status: response.status(), message }));
+    });
+    const recordingStartedAt = Date.now();
+    const video = page.video();
+
+    await page.goto(project.url, {
+      waitUntil: "domcontentloaded",
+      timeout: 30000,
+    });
+    await page.waitForLoadState("networkidle", { timeout: 12000 }).catch(() => {});
+    await page.evaluate(() => document.fonts?.ready).catch(() => {});
+    await page.waitForTimeout(1000);
+    await dismissVisibleOverlays(page, project.dismissSelectors);
+    await page.keyboard.press("Escape").catch(() => {});
+
+    if (projectId === "garage-archives") {
+      await prepareArchivesCapture(page);
+    }
+
+    if (projectId === "narkomfin") {
+      await prepareNarkomfinCapture(page);
+    }
+
+    if (projectId === "garage-webzine") {
+      await prepareGarageWebzineCapture(page);
+    }
+
+    if (projectId === "shirokostup") {
+      await prepareShirokostupCapture(page);
+    }
+
+    if (projectId === "herman") {
+      await prepareHermanCapture(page);
+    }
+
+    if (["krainiuk", "dusty-camp"].includes(projectId)) {
+      await page.evaluate(async () => {
+        const images = [...document.images].filter(image => image.getAttribute("src"));
+        images.forEach(image => { image.loading = "eager"; });
+        await Promise.all(images.map(image => image.decode()));
+      });
+    }
+
+    if (projectId === "dusty-camp") {
+      await page.bringToFront();
+      const map = page.locator("[data-dd-map]");
+      await map.scrollIntoViewIfNeeded();
+      await page.waitForFunction(() => ["ready", "error", "preview"].includes(
+        document.querySelector("[data-dd-map]")?.dataset.mapState
+      ), null, { timeout: 30000 });
+      let mapState = await map.getAttribute("data-map-state");
+      if (mapState !== "ready") {
+        // A normal reload can recover the production map's first visit.
+        await page.reload({ waitUntil: "domcontentloaded" });
+        await page.bringToFront();
+        await page.evaluate(async () => {
+          const images = [...document.images].filter(image => image.getAttribute("src"));
+          images.forEach(image => { image.loading = "eager"; });
+          await Promise.all(images.map(image => image.decode()));
+        });
+        await map.scrollIntoViewIfNeeded();
+        await page.waitForFunction(() => ["ready", "error", "preview"].includes(
+          document.querySelector("[data-dd-map]")?.dataset.mapState
+        ), null, { timeout: 30000 });
+        mapState = await map.getAttribute("data-map-state");
+      }
+      if (mapState !== "ready") {
+        await page.screenshot({ path: path.join(captureRoot, "dusty-camp-map-not-ready.png") });
+        const reason = await map.getAttribute("data-map-error");
+        const status = await map.getAttribute("data-map-http-status");
+        throw new Error(`DD Camp map is ${mapState} (${reason || "policy"}, HTTP ${status || "n/a"}); recording cannot start`);
+      }
+      const canvas = page.frameLocator("[data-dd-map] iframe").locator("canvas.mapboxgl-canvas");
+      await canvas.waitFor({ state: "visible" });
+      await page.waitForTimeout(750);
+      await page.screenshot({ path: path.join(captureRoot, "dusty-camp-map-ready.png") });
+      console.log("DD Camp: real map ready; pre-recording screenshot saved.");
+      if (process.env.PORTFOLIO_CAPTURE_REVIEW === "1") {
+        console.log("Press Enter after inspecting the ready-map screenshot to start the 22-second capture.");
+        await new Promise(resolve => process.stdin.once("data", resolve));
+        process.stdin.pause();
+      }
+      await page.bringToFront();
+      await page.waitForFunction(() => document.visibilityState === "visible");
+      await page.locator("video").evaluate(async video => {
+        video.muted = true;
+        video.currentTime = 0;
+        await video.play();
+      });
+    }
+
+    await applyCaptureStyles(page);
+    await page.evaluate(() => {
+      const root = document.scrollingElement || document.documentElement;
+      root.scrollTop = 0;
+    });
+    await page.waitForTimeout(900);
+
+    const usefulStart = Math.max(
+      0,
+      (Date.now() - recordingStartedAt) / 1000 - 0.12,
+    );
+
+    await runCaptureMotion(page, projectId, project);
+    await page.waitForTimeout(project.finalHold || 1800);
+
+    const rawPath = await video.path();
+    await context.close();
+    context = null;
+    await browser.close();
+    browser = null;
+    nativeBrowser?.kill();
+    nativeBrowser = null;
+
+    const rawDestination = path.join(
+      rawDirectory,
+      `${projectId}-${Date.now()}.webm`,
+    );
+    const finalDestination = path.join(finalDirectory, `${projectId}.mp4`);
+    await rename(rawPath, rawDestination);
+
+    execFileSync(
+      "ffmpeg",
+      [
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-y",
+        "-ss",
+        usefulStart.toFixed(3),
+        "-i",
+        rawDestination,
+        "-t",
+        String(project.outputDuration),
+        "-vf",
+        `setpts=PTS-STARTPTS,fps=30,scale=${desktopVideo.width}:${desktopVideo.height}:flags=lanczos,setsar=1`,
+        "-c:v",
+        "libx264",
+        "-preset",
+        "slow",
+        "-crf",
+        "20",
+        "-pix_fmt",
+        "yuv420p",
+        "-an",
+        "-movflags",
+        "+faststart",
+        "-metadata",
+        "comment=source-fit=native-capture;"
+          + `source-viewport=${sourceViewport.width}x${sourceViewport.height};`
+          + "source-dar=3:2",
+        finalDestination,
+      ],
+      { stdio: "inherit" },
+    );
+
+    console.log(
+      JSON.stringify({
+        id: projectId,
+        raw: rawDestination,
+        final: finalDestination,
+        usefulStart,
+        viewport: sourceViewport,
+        video: desktopVideo,
+        duration: project.outputDuration,
+      }),
+    );
+  } finally {
+    try { await context?.close(); } finally {
+      try { await browser?.close(); } finally { nativeBrowser?.kill(); }
+    }
+  }
 })().catch((error) => {
   console.error(error);
   process.exit(1);
