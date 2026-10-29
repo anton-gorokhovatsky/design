@@ -34,10 +34,19 @@ try {
     const page = await browser.newPage({ viewport: { width: 1512, height: 862 }, colorScheme: "light", reducedMotion: "no-preference" });
     page.setDefaultTimeout(10000);
     page.on("pageerror", error => errors.push(error.message));
-    await page.goto(origin + '/?scene=map');
+    const loadMap = async (url) => {
+      // The scenario needs working controls and settled geometry, not the
+      // window load event. Keep the same 10 s bound for observable readiness.
+      await page.goto(url, { waitUntil: "domcontentloaded" });
+      await page.waitForFunction(() => document.documentElement.dataset.mapControlsReady === "true"
+        && document.fonts.status === "loaded"
+        && document.querySelector('.map-node[data-map-id="garage-archives"]')?.getBoundingClientRect().width > 0
+        && !document.querySelector('[data-map-links][data-layout-pending]'));
+    };
+    await loadMap(origin + '/?scene=map');
     await declineAnalyticsNotice(page);
     const open = async (id, story = false) => {
-      await page.goto(origin + `/?scene=map&point=${id}${story ? '&story=1' : ''}`);
+      await loadMap(origin + `/?scene=map&point=${id}${story ? '&story=1' : ''}`);
       await page.waitForFunction(() => document.querySelector('[data-map-inspector]').classList.contains('has-reading-frame'));
       if (story) await page.locator('#story-pane[data-ready="true"]').waitFor();
     };
