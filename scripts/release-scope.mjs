@@ -29,6 +29,12 @@ const sharePages = new Set(shareIds.map(id => `work/${id}/index.html`));
 // These existing JPEGs are static publication artwork, checked for format and size
 // by check-publication-assets. Runtime media never enters this boundary.
 const shareImages = new Set(shareIds.map(id => `assets/share/${id}.jpg`));
+const relatedPointMedia = Object.fromEntries(["running", "private-practice", "garage", "garage-app", "parfenov"]
+  .map(id => [id, Object.fromEntries(["light", "dark"].map(theme => [theme, `assets/point-thumbnails/${id}-${theme}.webp`]))]));
+const relatedPointImages = new Set(Object.values(relatedPointMedia).flatMap(Object.values));
+const relatedPointImageScope = { mode: "components", components: ["check:inspector-links", "check:case-view"] };
+const relatedPresentationDocs = new Set(["rendering/README.md", "docs/point-thumbnails.md"]);
+const relatedProductAction = { doronin: { label: "Купить тот самый ковёр от Вити", href: "https://doronin.store/tproduct/840694551052-kovyor" } };
 const focusedHomePaths = new Set(["js/focused-home.js", "rendering/js/focused-home.js"]);
 const evidenceFields = new Set(["task", "role", "idea", "result", "feature", "details", "weather", "timePreview", "technical"]);
 const keyOf = (property) => !property.computed && (property.key?.name ?? property.key?.value);
@@ -57,22 +63,23 @@ const maskJavaScriptCopy = (path, source) => {
   return maskRanges(source, ranges);
 };
 
+const parseCaseContent = source => {
+  const data = JSON.parse(source);
+  const visit = node => {
+    if (node.type === "ObjectExpression") {
+      const keys = node.properties.map(keyOf);
+      if (new Set(keys).size !== keys.length) throw new Error("Duplicate case-content keys");
+      node.properties.forEach(property => visit(property.value));
+    } else if (node.type === "ArrayExpression") node.elements.forEach(visit);
+  };
+  visit(parseJs(`(${source})`, { ecmaVersion: "latest" }).body[0].expression);
+  return data;
+};
+
 // Deferred editorial text and the reviewed tuple-to-ID migration. Routes,
 // identities, order, figure data and evidence metadata remain protected.
 const isCaseContentCopy = (before, after, allowMigration = false) => {
-  const parse = source => {
-    const data = JSON.parse(source);
-    const visit = node => {
-      if (node.type === "ObjectExpression") {
-        const keys = node.properties.map(keyOf);
-        if (new Set(keys).size !== keys.length) throw new Error("Duplicate case-content keys");
-        node.properties.forEach(property => visit(property.value));
-      } else if (node.type === "ArrayExpression") node.elements.forEach(visit);
-    };
-    visit(parseJs(`(${source})`, { ecmaVersion: "latest" }).body[0].expression);
-    return data;
-  };
-  const left = parse(before), right = parse(after);
+  const left = parseCaseContent(before), right = parseCaseContent(after);
   const relatedIds = related => Object.fromEntries(Object.entries(related || {}).map(([id, entries]) => {
     if (!Array.isArray(entries)) throw new Error("Unknown related list");
     return [id, entries.map(entry => {
@@ -118,6 +125,18 @@ const isCaseContentCopy = (before, after, allowMigration = false) => {
   // The first migration adds only captions for already known targets. Later
   // copy edits preserve its keys; an empty value deliberately hides a caption.
   if (!hadCaptions) delete right.relatedCaptions;
+  return JSON.stringify(left) === JSON.stringify(right);
+};
+
+// One reviewed data addition: five static theme pairs and one direct product
+// action. Every existing key, label, target order and URL stays unchanged.
+const isRelatedPointPresentation = (before, after) => {
+  const left = parseCaseContent(before), right = parseCaseContent(after);
+  if (Object.hasOwn(left, "relatedMedia") || Object.hasOwn(left, "relatedActions")
+    || JSON.stringify(right.relatedMedia) !== JSON.stringify(relatedPointMedia)
+    || JSON.stringify(right.relatedActions) !== JSON.stringify(relatedProductAction)) return false;
+  delete right.relatedMedia;
+  delete right.relatedActions;
   return JSON.stringify(left) === JSON.stringify(right);
 };
 
@@ -208,7 +227,8 @@ export const isCopyOnly = (path, before, after) => {
 };
 
 export const classifyChange = (path, before, after) => {
-  if (staticCheckPaths.has(path)) return { mode: "copy", components: [] };
+  if (staticCheckPaths.has(path) || relatedPresentationDocs.has(path)) return { mode: "copy", components: [] };
+  if (relatedPointImages.has(path)) return relatedPointImageScope;
   if (path === "assets/map-story/content.html" && isCopyOnly(path, before, after)) return { mode: "copy", components: [] };
   if (["js/map-story.js", "rendering/js/map-story.js"].includes(path)) {
     const components = affectedComponents(path, before, after, maskHtmlCopy);
@@ -219,6 +239,7 @@ export const classifyChange = (path, before, after) => {
   if (isCopyOnly(path, before, after)) return { mode: "copy", components: [] };
   if (path === "js/case-content.json") {
     try {
+      if (isRelatedPointPresentation(before, after)) return { mode: "components", components: ["check:inspector-links", "check:case-view", "check:case-flow"] };
       if (isCaseContentCopy(before, after, true)) return { mode: "components", components: ["check:inspector-links", "check:case-view"] };
     } catch { /* Invalid data cannot inherit the caption migration boundary. */ }
   }
@@ -267,13 +288,15 @@ export const planRelease = ({ projectRoot, base = "origin/gh-pages", target } = 
         classification = classifyChange(path, before, after);
       }
       if (status === "M" && shareImages.has(path)) classification = { mode: "copy", components: [] };
+      if (["A", "M"].includes(status) && relatedPresentationDocs.has(path)) classification = { mode: "copy", components: [] };
+      if (["A", "M"].includes(status) && relatedPointImages.has(path)) classification = relatedPointImageScope;
       if (status === "M" && mediaAssetPaths.has(path)) classification = { mode: "components", components: ["media"] };
       if (status === "M" && pointRename?.paths.includes(path)) classification = { mode: "components", components: ["point-address"] };
       changes.push({ path, ...classification });
     }
     if (!targetSha) {
       changes.push(...git("ls-files", "--others", "--exclude-standard", "-z").split("\0").filter(Boolean)
-        .map((path) => { const owner = ownedCheckComponent(path); return staticCheckPaths.has(path) ? { path, mode: "copy", components: [] } : { path, mode: owner ? "components" : "full", components: owner ? [owner] : [] }; }));
+        .map((path) => { const owner = ownedCheckComponent(path); return staticCheckPaths.has(path) || relatedPresentationDocs.has(path) ? { path, mode: "copy", components: [] } : relatedPointImages.has(path) ? { path, ...relatedPointImageScope } : { path, mode: owner ? "components" : "full", components: owner ? [owner] : [] }; }));
     }
     const fullPaths = changes.filter(({ mode }) => mode === "full").map(({ path }) => path);
     const components = [...new Set(changes.flatMap(({ components }) => components))].sort();

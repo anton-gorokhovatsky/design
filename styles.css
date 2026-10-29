@@ -4173,6 +4173,55 @@ border-radius: var(--space-2);
 pointer-events: none;
 }
 
+/* Static map objects share the photo slot and follow the chosen site theme. */
+.map-related__preview--point > img {
+display: block;
+width: 100%;
+height: 100%;
+object-fit: contain;
+}
+.map-related__preview--point > img:last-child { display: none; }
+html[data-theme="dark"] .map-related__preview--point > img:first-child { display: none; }
+html[data-theme="dark"] .map-related__preview--point > img:last-child { display: block; }
+
+.map-related__track > li:has(.map-related__action) {
+display: flow-root;
+padding: var(--separator-row-compact) 0;
+}
+.map-related__track > li:has(.map-related__action) .map-related__item {
+display: inline;
+height: auto;
+min-height: 0;
+padding: 0;
+}
+.map-related__track > li:has(.map-related__action) .map-related__item > .map-related__preview {
+float: inline-start;
+width: min(4.5rem, 25%);
+margin-inline-end: var(--space-3);
+pointer-events: auto;
+}
+.map-related__track > li:has(.map-related__action) .map-related__item > strong {
+margin-inline-start: calc(min(4.5rem, 25%) + var(--space-3));
+}
+.map-related__track .map-related__action {
+display: block;
+min-width: 0;
+min-height: 24px;
+margin-block-start: var(--space-1);
+padding: 0;
+font-size: var(--type-caption);
+line-height: var(--leading-label);
+word-spacing: var(--word-spacing-label);
+overflow-wrap: anywhere;
+}
+.map-related__track .map-related__action > span {
+display: inline-block;
+margin-inline-start: .32em;
+}
+.map-related__track:has(.map-related__preview) .map-related__action {
+margin-inline-start: calc(min(4.5rem, 25%) + var(--space-3));
+}
+
 .map-related__preview--circle {
 width: min(3rem, 100%);
 aspect-ratio: 1;

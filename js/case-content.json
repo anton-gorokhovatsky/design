@@ -301,6 +301,34 @@
     "doronin": "",
     "running": ""
   },
+  "relatedMedia": {
+    "running": {
+      "light": "assets/point-thumbnails/running-light.webp",
+      "dark": "assets/point-thumbnails/running-dark.webp"
+    },
+    "private-practice": {
+      "light": "assets/point-thumbnails/private-practice-light.webp",
+      "dark": "assets/point-thumbnails/private-practice-dark.webp"
+    },
+    "garage": {
+      "light": "assets/point-thumbnails/garage-light.webp",
+      "dark": "assets/point-thumbnails/garage-dark.webp"
+    },
+    "garage-app": {
+      "light": "assets/point-thumbnails/garage-app-light.webp",
+      "dark": "assets/point-thumbnails/garage-app-dark.webp"
+    },
+    "parfenov": {
+      "light": "assets/point-thumbnails/parfenov-light.webp",
+      "dark": "assets/point-thumbnails/parfenov-dark.webp"
+    }
+  },
+  "relatedActions": {
+    "doronin": {
+      "label": "Купить тот самый ковёр от Вити",
+      "href": "https://doronin.store/tproduct/840694551052-kovyor"
+    }
+  },
   "related": {
     "garage-site": [
       "collection",

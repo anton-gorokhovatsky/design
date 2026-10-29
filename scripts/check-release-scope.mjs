@@ -117,6 +117,37 @@ for (const targets of [
   checks += 2;
 }
 
+// Static point art and the carpet action are one directed data addition.
+// Existing content, related order and every other destination remain exact.
+const relatedPresentationBefore = execFileSync('git', ['show', 'b43f05f0cc1a50ef526027d7dacf0fba949ff22b:js/case-content.json'], { cwd: root, encoding: 'utf8' });
+const relatedPresentationData = JSON.parse(relatedPresentationBefore);
+relatedPresentationData.relatedMedia = Object.fromEntries(['running', 'private-practice', 'garage', 'garage-app', 'parfenov']
+  .map(id => [id, Object.fromEntries(['light', 'dark'].map(theme => [theme, `assets/point-thumbnails/${id}-${theme}.webp`]))]));
+relatedPresentationData.relatedActions = { doronin: { label: 'Купить тот самый ковёр от Вити', href: 'https://doronin.store/tproduct/840694551052-kovyor' } };
+const relatedPresentationAfter = JSON.stringify(relatedPresentationData);
+const relatedPresentationChecks = ['check:inspector-links', 'check:case-view', 'check:case-flow'];
+assert.equal(isCopyOnly('js/case-content.json', relatedPresentationBefore, relatedPresentationAfter), false);
+assert.deepEqual(classifyChange('js/case-content.json', relatedPresentationBefore, relatedPresentationAfter), { mode: 'components', components: relatedPresentationChecks });
+assert.equal(classifyChange('js/case-content.json', relatedPresentationAfter, relatedPresentationBefore).mode, 'full');
+for (const change of [
+  data => { data.relatedMedia.running.light = data.relatedMedia.running.dark; },
+  data => { delete data.relatedMedia.running.dark; },
+  data => { data.relatedMedia.unrelated = data.relatedMedia.running; },
+  data => { data.relatedActions.doronin.href = 'https://doronin.store/other'; },
+  data => { data.relatedActions.doronin.label = '<b>Купить</b>'; },
+  data => { data.relatedActions.unrelated = data.relatedActions.doronin; },
+  data => { data.related.dusty.reverse(); },
+  data => { data.related.dusty[0] = 'unrelated'; },
+  data => { data.descriptions.running = 'Unreviewed content'; },
+  data => { data.extra = true; },
+]) {
+  const changed = structuredClone(relatedPresentationData); change(changed);
+  assert.equal(classifyChange('js/case-content.json', relatedPresentationBefore, JSON.stringify(changed)).mode, 'full');
+  checks += 1;
+}
+assert.equal(classifyChange('js/case-content.json', relatedPresentationBefore, '{"relatedMedia":{},' + relatedPresentationAfter.slice(1)).mode, 'full', 'Duplicate JSON owners cannot hide data changes');
+assert.equal(classifyChange('js/case-content.json', relatedPresentationAfter, relatedPresentationAfter.replace('840694551052-kovyor', 'other-product')).mode, 'full', 'Later product URL changes do not inherit this migration');
+
 // Project names and share metadata are copy; routes, schema and scripts are not.
 const nameFixture = 'const mapItems = [{id:"dusty",mapLabel:"Мерч клуба",href:"https://example.com"}];';
 change("js/map-data.js", nameFixture, "Мерч клуба", "Мерч Dusty Dumbbells", true);
@@ -350,6 +381,38 @@ for (const [path, hash] of [
     scoped(path, before, changed, 'full');
   }
 }
+// The point-art renderer and its two separate links have their own exact pair.
+for (const [path, hash] of [
+  ['rendering/js/map-engine.js', 'b4a3bd7bb9ea80bd50cb529970eab29009e56ce1d69c1e285ab4f8114c7e38af'],
+  ['js/map-engine.js', '5d90729ad4d5f0b578887cdb32eeb04d87e9212e5c72c086715b8448a48ba647'],
+]) {
+  const before = execFileSync('git', ['show', `b43f05f0cc1a50ef526027d7dacf0fba949ff22b:${path}`], { cwd: root, encoding: 'utf8' });
+  const after = read(path), marker = 'const renderMapRelatedItems=', endMarker = 'const setInspectorOpen=';
+  const start = after.indexOf(marker), end = after.indexOf(endMarker), block = after.slice(start, end);
+  const known = start >= 0 && end > start && createHash('sha256').update(block).digest('hex') === hash;
+  if (!known) { scoped(path, before, after, 'full'); continue; }
+  const fixture = before.slice(0, before.indexOf(marker)) + block + before.slice(before.indexOf(endMarker));
+  scoped(path, before, fixture, 'components', relatedPresentationChecks);
+  if (after !== fixture) scoped(path, before, after, 'full');
+  scoped(path, fixture, before, 'full');
+  for (const changed of [
+    fixture.replace(/href="\?point=\$\{[^}]+\}"/, 'href="?point=unrelated"'),
+    fixture.replace('relatedActions', 'unreviewedActions'),
+    fixture + '\nglobalThis.unrelated = true;',
+    fixture + '\n' + block,
+    'import "./unrelated.js";\n' + fixture,
+  ]) {
+    assert.notEqual(changed, fixture);
+    scoped(path, before, changed, 'full');
+  }
+}
+for (const media of Object.values(relatedPresentationData.relatedMedia)) for (const path of Object.values(media)) {
+  scoped(path, 'previous art', 'reviewed art', 'components', relatedCoverage);
+}
+scoped('assets/point-thumbnails/unrelated-light.webp', 'before', 'after', 'full');
+scoped('assets/point-thumbnails/running-light.svg', 'before', 'after', 'full');
+for (const path of ['rendering/README.md', 'docs/point-thumbnails.md']) scoped(path, 'old notes', 'new notes', 'copy');
+scoped('rendering/unrelated.js', 'before', 'after', 'full');
 scoped('styles.css', '.map-related__track > li + li{border-top:var(--separator-rule)}', '', 'components', relatedCoverage);
 scoped('styles.css', '', '.map-related__track > li + .unrelated{color:red}', 'full');
 scoped('styles.css', '', '.map-related__track > li + li,.unrelated{color:red}', 'full');
@@ -1045,6 +1108,37 @@ try {
   rmSync(join(directory, "assets/share/unknown.jpg"));
   git('reset', '--hard', published);
   checks += 2;
+  mkdirSync(join(directory, 'assets/point-thumbnails'), { recursive: true });
+  const pointArtwork = join(directory, 'assets/point-thumbnails/running-light.webp');
+  writeFileSync(pointArtwork, 'reviewed point artwork');
+  assert.deepEqual(plan().components, [...relatedCoverage].sort(), 'Only registered point artwork selects its related-list owners');
+  writeFileSync(join(directory, 'assets/point-thumbnails/unrelated-light.webp'), 'unknown artwork');
+  assert.equal(plan().mode, 'full', 'An adjacent unregistered image cannot inherit the artwork boundary');
+  rmSync(join(directory, 'assets/point-thumbnails/unrelated-light.webp'));
+  git('add', 'assets/point-thumbnails/running-light.webp');
+  assert.deepEqual(plan().components, [...relatedCoverage].sort(), 'Staged point artwork retains its owners');
+  git('commit', '-m', 'point artwork fixture');
+  const pointArtworkBase = git('rev-parse', 'HEAD');
+  assert.deepEqual(plan({ target: 'HEAD' }).components, [...relatedCoverage].sort(), 'A committed artwork addition retains its owners');
+  rmSync(pointArtwork);
+  assert.equal(planRelease({ projectRoot: directory, base: pointArtworkBase }).mode, 'full', 'Deleting a registered image is not an artwork replacement');
+  git('reset', '--hard', published);
+  checks += 5;
+  mkdirSync(join(directory, 'rendering'), { recursive: true });
+  mkdirSync(join(directory, 'docs'), { recursive: true });
+  for (const path of ['rendering/README.md', 'docs/point-thumbnails.md']) writeFileSync(join(directory, path), 'Reviewed documentation');
+  assert.equal(plan().mode, 'copy', 'Only the two named new documents are copy');
+  git('add', 'rendering/README.md', 'docs/point-thumbnails.md');
+  assert.equal(plan().mode, 'copy', 'Staged named documentation is copy');
+  git('commit', '-m', 'documentation fixture');
+  const documentationBase = git('rev-parse', 'HEAD');
+  assert.equal(plan({ target: 'HEAD' }).mode, 'copy', 'Committed named documentation is copy');
+  writeFileSync(join(directory, 'rendering/README.md'), 'Updated build notes');
+  assert.equal(planRelease({ projectRoot: directory, base: documentationBase }).mode, 'copy', 'Named build-note changes are copy');
+  rmSync(join(directory, 'docs/point-thumbnails.md'));
+  assert.equal(planRelease({ projectRoot: directory, base: documentationBase }).mode, 'full', 'Documentation deletion is not an approved addition or edit');
+  git('reset', '--hard', published);
+  checks += 5;
   writeFileSync(join(directory, 'js/map-engine.js'), mapEngine);
   git('add', '.'); git('commit', '-m', 'caption fixture');
   const labelBase = git('rev-parse', 'HEAD');

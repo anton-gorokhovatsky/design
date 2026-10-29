@@ -46,8 +46,10 @@ const budgets = {
   fonts: 160 * 1024,
   initialSource: 812 * 1024,
   cssGzip: 50 * 1024,
-  runtimeGzip: 128 * 1024,
-  initialCompressed: 288 * 1024,
+  // 29 October: the author explicitly requested useful headroom instead of
+  // repeated byte fitting. Add 16 KiB to runtime and both aggregate gzip limits.
+  runtimeGzip: 144 * 1024,
+  initialCompressed: 304 * 1024,
   story: 80 * 1024,
   // 27 October: rendered story labels bypass the text lens so shared glass
   // works during scrolling. Measured story payload: 26.6 KiB gzip; bounded
@@ -62,7 +64,7 @@ const budgets = {
   initialPage: 880 * 1024,
   // 26 October: the author requested more headroom; CI measured 300.15 KiB.
   // Keep the complete-page ceiling bounded with a 4 KiB margin.
-  initialPageCompressed: 304 * 1024,
+  initialPageCompressed: 320 * 1024,
 };
 const htmlGzip = gzipSync(indexSource, { level: 9 }).length;
 const cssGzip = gzipSync(readProjectFile("styles.css"), { level: 9 }).length;

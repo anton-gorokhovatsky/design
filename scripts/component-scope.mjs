@@ -876,14 +876,16 @@ const relatedPosterBlocks = {
   "rendering/js/map-engine.js": [
     ["eccda6d4079dd22c5fa08d1d70f0cb1942670735f9bbe3febff05ef17a2ed562", "a7a29f11ffd6260b9872f45a5e29120aa096f3d9483cd15f40ea1b620279b41e"],
     ["a7a29f11ffd6260b9872f45a5e29120aa096f3d9483cd15f40ea1b620279b41e", "d7eb1fd759935ae61d8dfff842b95f5dd90085ebb530d55f51ac4593d1affa98"],
+    ["d7eb1fd759935ae61d8dfff842b95f5dd90085ebb530d55f51ac4593d1affa98", "b4a3bd7bb9ea80bd50cb529970eab29009e56ce1d69c1e285ab4f8114c7e38af", ["check:inspector-links", "check:case-view", "check:case-flow"]],
   ],
   "js/map-engine.js": [
     ["eefc1548613cb653bcc9a44cd73d3519d8952572bd235b4df3e75ce52e8941e0", "6217660eeabc11cc73980fffe7bde91ae0155f9fd4ae1bd6baf01ef7d69c9d74"],
     ["6217660eeabc11cc73980fffe7bde91ae0155f9fd4ae1bd6baf01ef7d69c9d74", "1fd5d2d3fe9976ab60b29e58129db59c94d317f1afe86d36e7bca6b045bb9079"],
+    ["1fd5d2d3fe9976ab60b29e58129db59c94d317f1afe86d36e7bca6b045bb9079", "5d90729ad4d5f0b578887cdb32eeb04d87e9212e5c72c086715b8448a48ba647", ["check:inspector-links", "check:case-view", "check:case-flow"]],
   ],
 };
-const isRelatedPosterLayout = (path, before, after) => {
-  if (!relatedPosterBlocks[path]) return false;
+const relatedPosterComponents = (path, before, after) => {
+  if (!relatedPosterBlocks[path]) return null;
   try {
     const blocks = [before, after].map(source => {
       parseJs(source, { ecmaVersion: "latest", sourceType: "module" });
@@ -893,9 +895,10 @@ const isRelatedPosterLayout = (path, before, after) => {
       if (end <= start) throw new Error("Unknown related-link boundaries");
       return { outside: source.slice(0, start) + source.slice(end), hash: createHash("sha256").update(source.slice(start, end)).digest("hex") };
     });
-    return blocks[0].outside === blocks[1].outside
-      && relatedPosterBlocks[path].some(pair => blocks.every((block, index) => block.hash === pair[index]));
-  } catch { return false; }
+    if (blocks[0].outside !== blocks[1].outside) return null;
+    const pair = relatedPosterBlocks[path].find(pair => blocks.every((block, index) => block.hash === pair[index]));
+    return pair ? pair[2] || ["check:inspector-links", "check:case-view"] : null;
+  } catch { return null; }
 };
 
 // Only these reviewed reading-context changes select case-flow. The hashes
@@ -947,7 +950,8 @@ export const affectedComponents = (path, before, after, maskHtmlCopy) => {
   if (before.includes("\0") || after.includes("\0")) return null;
   try {
     if (isReadingContextFix(path, before, after)) return ["check:case-flow"];
-    if (isRelatedPosterLayout(path, before, after)) return ["check:inspector-links", "check:case-view"];
+    const related = relatedPosterComponents(path, before, after);
+    if (related) return related;
     if (path === "rendering/practice-orbits.js" && exactReplacements(before, after, campIconSourcePatch)) return ["check:hover-layout"];
     if (path === "js/practice-orbits.js" && [before, after].every((source, index) => createHash("sha256").update(source).digest("hex") === campIconBuild[index])) return ["check:hover-layout"];
     if (path === "js/map-data.js" && casePostersOutside(before) === casePostersOutside(after)) return ["check:case-flow"];

@@ -49,7 +49,7 @@ test("combined source includes HTML even when each prior limit passes", () => {
 test("combined compressed page includes HTML", () => {
   const css = entropy(65_536), runtime = entropy(170_000);
   // Keep pre-HTML bytes just below their ceiling across zlib versions.
-  const font = 288 * 1024 - 64 - gzipSync(css, { level: 9 }).length
+  const font = 304 * 1024 - 64 - gzipSync(css, { level: 9 }).length
     - gzipSync(runtime, { level: 9 }).length;
   const result = check({ html: entropy(22_000), css, runtime, font });
   assert.equal(result.status, 1); assert.match(result.stderr, /initialPageCompressed: .* exceeds/);

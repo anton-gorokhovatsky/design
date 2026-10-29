@@ -351,7 +351,29 @@ for(const engine of [process.argv[2]||'chromium']) {
     await page.locator('[data-close-inspector]').click();
     await page.waitForFunction(() => document.querySelector('[data-content-panel]').dataset.view === 'contact');
     await page.goto(origin + '/?point=running');
-    await page.waitForFunction(() => document.querySelectorAll('[data-map-related] a').length === 9);
+    await page.waitForFunction(() => document.querySelectorAll('[data-map-related] a.map-related__item').length === 9);
+    const productHref = 'https://doronin.store/tproduct/840694551052-kovyor';
+    const productAction = page.locator('[data-map-related] a.map-related__action');
+    await productAction.waitFor();
+    assert.equal(await productAction.getAttribute('href'), productHref);
+    assert.equal(await productAction.getAttribute('target'), '_blank');
+    assert.ok((await productAction.getAttribute('rel')).includes('noreferrer'));
+    const merchCase = page.locator('[data-map-related] a.map-related__item[href="?point=doronin"]');
+    await merchCase.focus();
+    await page.keyboard.press(engine === 'webkit' && process.platform === 'darwin' ? 'Alt+Tab' : 'Tab');
+    assert.equal(await productAction.evaluate(el => document.activeElement === el), true,
+      'The project link and its product action are distinct consecutive keyboard stops');
+    await page.context().route(productHref, route => route.fulfill({ status: 200,
+      contentType: 'text/html', body: '<!doctype html><title>Product destination</title>' }));
+    const productPopupPromise = page.waitForEvent('popup');
+    await page.keyboard.press('Enter');
+    const productPopup = await productPopupPromise;
+    await productPopup.waitForLoadState('domcontentloaded');
+    assert.equal(productPopup.url(), productHref, 'Buy opens the real product URL directly');
+    assert.equal(await page.locator('[data-map-inspector]').getAttribute('data-selected-map-id'), 'running',
+      'The product action does not become a related case transition');
+    await productPopup.close();
+    await page.context().unroute(productHref);
     // Compare the document itself: WebKit can round timeOrigin differently
     // between reads, which is not evidence of a document navigation.
     const sourceDocument = await page.evaluateHandle(() => document);
