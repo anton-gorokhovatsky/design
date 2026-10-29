@@ -264,6 +264,48 @@ const scoped = (path, before, after, mode, components = []) => {
   checks += 1;
 };
 
+// Reading return fixes own exact directed blocks, including the capture-phase
+// settings exception. Unknown story edits retain the existing story coverage.
+for (const [path, hash, ranges, mutation] of [
+  ['js/case-view.js', '2828b862306bd3c0288a830d8ee023c186658b687bef035fe41ca3a6106c4464',
+    [['let activeId = null;', 'const frameMaterials = new Map();'], ['function reflect() {', 'new MutationObserver(reflect).observe(mapInspector, {']],
+    ['pendingPosition = null;', 'pendingPosition = {};']],
+  ['js/panels.js', '6be255860cfca630cb1c8ae14c22e902716ac1b65212aa525c3dd01a05e62bb9',
+    [['mapInspector?.querySelector("[data-map-related]")?.addEventListener("click",', 'constellationNavHome?.addEventListener("click",']],
+    ['casePosition: position', 'casePosition: null']],
+  ['js/map-story.js', '43b66f8b3c313de8a46f70a4203627f7c87bf0ca59c085aa787570cd700bfd1e',
+    [['if(h&&c.matches&&r.contains(o.target)', 'if(!a.contains(o.target))']],
+    ['&&!o.target.closest("[data-open-settings]")', '&&o.target.closest("[data-open-settings]")']],
+  ['rendering/js/map-story.js', '08b3cdd92a3bb4657be65f978b4bea69c86fc8a3b018324b6306bf4deb4c4715',
+    [['  if(opened&&compact.matches&&map.contains(event.target)', '  if(!story.contains(event.target))']],
+    ["&&!event.target.closest('[data-open-settings]')", "&&event.target.closest('[data-open-settings]')"]],
+]) {
+  const before = execFileSync('git', ['show', `01693bedbfef368fc88096ce1d9fb307f2cf8b17:${path}`], { cwd: root, encoding: 'utf8' });
+  const after = read(path);
+  const chunks = ranges.map(([start, end]) => after.slice(after.indexOf(start), after.indexOf(end)));
+  const known = ranges.every(([start, end]) => after.indexOf(start) >= 0 && after.indexOf(end) > after.indexOf(start))
+    && createHash('sha256').update(chunks.join('\0')).digest('hex') === hash;
+  const fallback = path.endsWith('map-story.js') ? ['components', ['map-story']] : ['full', []];
+  if (!known) { scoped(path, before, after, ...fallback); continue; }
+  const fixture = ranges.map(([start, end], index) => [before.indexOf(start), before.indexOf(end), chunks[index]])
+    .sort((left, right) => right[0] - left[0])
+    .reduce((source, [start, end, content]) => source.slice(0, start) + content + source.slice(end), before);
+  scoped(path, before, fixture, 'components', ['check:case-flow']);
+  if (after !== fixture) scoped(path, before, after, ...fallback);
+  assert.equal(isCopyOnly(path, before, fixture), false, 'Reading history is behavior, not copy');
+  scoped(path, fixture, before, ...fallback);
+  for (const changed of [
+    fixture.replace(...mutation),
+    fixture + '\nglobalThis.unrelated = true;',
+    'import "./unrelated.js";\n' + fixture,
+    fixture + '\n' + chunks[0],
+    'const broken = ;\n' + fixture,
+  ]) {
+    assert.notEqual(changed, fixture, 'Negative reading-context fixture changes protected code');
+    scoped(path, before, changed, ...fallback);
+  }
+}
+
 // Persistent related posters own their exact template/loader migration only.
 // A later implementation must earn a new boundary, not inherit these hashes.
 const relatedCoverage = ["check:inspector-links", "check:case-view"];
@@ -366,6 +408,23 @@ for (const after of [
 for (const engine of ['chromium', 'webkit']) assert.deepEqual(
   new Set(browserMatrix('components', ['check:first-visit']).include.filter(job => job.browser === engine).flatMap(job => job.checks.split(','))),
   new Set(['first-visit']), 'Compact Work inset retains the existing entry, case return, and last-row keyboard checks');
+
+// Only the reviewed desktop thumbnail width belongs to this visual follow-through.
+const workPreviewBefore = '@container map-viewport (min-width:901px){.content-panel img.work-row__preview{grid-column:2;grid-row:1;width:min(100%,20rem,30cqh);margin-bottom:var(--space-3)}}';
+const workPreviewAfter = workPreviewBefore.replace('min(100%,20rem,30cqh)', 'min(100%,22rem,35cqh)');
+scoped('styles.css', workPreviewBefore, workPreviewAfter, 'components', ['check:first-visit']);
+for (const after of [
+  workPreviewAfter.replace('min-width:901px', 'min-width:800px'),
+  workPreviewAfter.replace('map-viewport', 'other-viewport'),
+  workPreviewAfter.replace('img.work-row__preview', 'img.unrelated'),
+  workPreviewAfter.replace('min(100%,22rem,35cqh)', 'min(100%,24rem,40cqh)'),
+  workPreviewAfter.replace('grid-column:2', 'grid-column:1'),
+  workPreviewAfter.replace('width:min', 'object-fit:cover;width:min'),
+  workPreviewAfter + '.work-list{grid-template-columns:1fr}',
+]) scoped('styles.css', workPreviewBefore, after, 'full');
+const mixedRelatedBefore = '.map-related__item:has(.map-related__preview){grid-template-columns:min(4.5rem,25%) minmax(0,1fr)}';
+const mixedRelatedAfter = '.map-related__track:has(.map-related__preview) .map-related__item{grid-template-columns:min(4.5rem,25%) minmax(0,1fr)}';
+scoped('styles.css', workPreviewBefore + mixedRelatedBefore, workPreviewAfter + mixedRelatedAfter, 'components', ['check:first-visit', ...relatedCoverage]);
 
 // The known picker migration owns only the two plane construction blocks.
 const pickerSourceBefore = "function init(){\n    preview.prepend(pickerGlass);\n    const sizePickerHead=()=>{if(!picker.hidden)preview.style.setProperty('--picker-head-height',`${pickerHead.getBoundingClientRect().height}px`);};\n    new ResizeObserver(sizePickerHead).observe(pickerHead);\n\n      pickerGlass.hidden=!selected;preview.dataset.materialActive=selected?'none':'always';\n      if(selected){pickerHead.dataset.materialSurface='project-picker-header';pickerHead.dataset.materialActive='always';sizePickerHead();}\n      else{delete pickerHead.dataset.materialSurface;delete pickerHead.dataset.materialActive;}\n\n}";

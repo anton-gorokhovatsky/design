@@ -161,8 +161,10 @@ document.addEventListener('click',event=>{
   const entry=event.target.closest('.map-about-trigger,[data-map-story],.map-story-link');
   if(entry&&!event.ctrlKey&&!event.metaKey&&!event.shiftKey&&!event.altKey){event.preventDefault();event.stopImmediatePropagation();opener=entry;void show(true,{animate:event.detail>0});return;}
   if(event.target.closest('[data-close-story]')){event.preventDefault();void show(false,{animate:event.detail>0});return;}
-  if(opened&&compact.matches&&map.contains(event.target)&&event.target.closest('[data-nav-view],[data-nav-utility],[data-open-settings]')){
-    void show(false,{focus:false,animate:event.detail>0});
+  if(opened&&compact.matches&&map.contains(event.target)
+    &&!event.target.closest('[data-open-settings]')
+    &&event.target.closest('[data-nav-view]:not([data-nav-view="map"]),[data-nav-utility]')){
+    void show(false,{write:!event.target.closest('[data-nav-view]'),focus:false,animate:event.detail>0});
     return;
   }
   if(!story.contains(event.target))return;

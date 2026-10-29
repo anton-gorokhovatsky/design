@@ -282,6 +282,43 @@ for(const engine of [process.argv[2]||'chromium']) {
       await page.waitForFunction(() => document.body.hasAttribute('data-case-open'));
       await page.keyboard.press('Escape');
       await page.waitForFunction(() => document.activeElement.dataset.mapPoint === 'ilmix');
+      // Each case entry owns its reading position and source related link.
+      await page.goto(origin + '/?preview=garage&point=garage');
+      await page.waitForFunction(() => document.querySelector('[data-map-inspector]').dataset.selectedMapId === 'garage');
+      await waitForCaseLayout(page);
+      const related = page.locator('[data-map-related] a[href="?point=garage-endowment"]');
+      await related.scrollIntoViewIfNeeded();
+      await related.focus();
+      const caseTop = await page.locator('.case-scroll').evaluate(el => el.scrollTop);
+      assert.ok(caseTop > 20, 'The source related link is reached by scrolling the case');
+      await page.keyboard.press('Enter');
+      await page.waitForFunction(() => document.querySelector('[data-map-inspector]').dataset.selectedMapId === 'garage-endowment');
+      await waitForCaseLayout(page);
+      assert.equal(await page.locator('.case-scroll').evaluate(el => el.scrollTop), 0, 'A newly opened related project starts at its heading');
+      await page.goBack();
+      await page.waitForFunction(top => document.querySelector('[data-map-inspector]').dataset.selectedMapId === 'garage'
+        && Math.abs(document.querySelector('.case-scroll').scrollTop - top) < 2
+        && document.activeElement?.matches('[data-map-related] a[href="?point=garage-endowment"]'), caseTop);
+      // Closing and deliberately opening the same point creates a fresh entry;
+      // Forward must not inherit the earlier related-link reading position.
+      await page.locator('[data-close-inspector]').click();
+      await page.waitForFunction(() => !document.body.hasAttribute('data-case-open'));
+      await page.locator('[data-map-id="garage"]').first().click();
+      if (!await page.locator('body').evaluate(el => el.hasAttribute('data-case-open'))) {
+        await page.locator('.point-preview a').click();
+      }
+      await page.waitForFunction(() => document.body.hasAttribute('data-case-open')
+        && document.querySelector('[data-map-inspector]').dataset.selectedMapId === 'garage');
+      await waitForCaseLayout(page);
+      assert.equal(await page.locator('.case-scroll').evaluate(el => el.scrollTop), 0);
+      await page.goBack();
+      await page.waitForFunction(() => !document.body.hasAttribute('data-case-open'));
+      await page.goForward();
+      await page.waitForFunction(() => document.body.hasAttribute('data-case-open')
+        && document.querySelector('[data-map-inspector]').dataset.selectedMapId === 'garage'
+        && document.querySelector('.case-scroll').scrollTop === 0
+        && document.activeElement?.matches('[data-map-title]'));
+      (result.relatedReturns ||= []).push({width, restoredTop: caseTop, freshForwardTop: 0});
     }
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto(origin + '/#contact');
@@ -339,6 +376,23 @@ for(const engine of [process.argv[2]||'chromium']) {
       await page.waitForSelector('#story-pane[data-ready="true"]');
       assert.match(await page.locator('#story-pane').innerText(), /Соседство здесь определяется связями/);
       assert.equal(await page.locator('#story-pane').evaluate(e => e.scrollWidth > e.clientWidth + 1), false);
+      // A temporary settings dialog preserves the visible reader and its URL.
+      await page.locator('#story-pane').evaluate(el => el.scrollTop = 480);
+      await page.waitForFunction(() => document.querySelector('#story-pane').scrollTop === 480);
+      const readerUrl = page.url();
+      for (const exit of ['escape', 'close']) {
+        await page.locator('[data-constellation-nav-toggle]').click();
+        await page.locator('[data-constellation-nav] [data-open-settings]').click();
+        await page.waitForFunction(() => document.querySelector('[data-settings-panel]').open);
+        if (exit === 'escape') await page.keyboard.press('Escape');
+        else await page.locator('[data-close-settings]').click();
+        await page.waitForFunction(() => !document.querySelector('[data-settings-panel]').open
+          && document.body.classList.contains('has-story-pane')
+          && document.querySelector('#story-pane').scrollTop === 480);
+        assert.equal(page.url(), readerUrl, 'Closing settings preserves the reader route');
+      }
+      (result.settingsReturns ||= []).push({width, scrollTop: 480, exits: ['escape', 'close']});
+      await page.locator('#story-title').evaluate(el => el.focus({preventScroll: true}));
       await page.keyboard.press('Escape');
       await page.waitForFunction(() => document.querySelector('#story-pane').inert);
       await page.waitForFunction(selector => document.activeElement?.matches(selector), width === 1440 ? selector : '[data-constellation-nav-toggle]');

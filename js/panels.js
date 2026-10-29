@@ -624,11 +624,17 @@ mapInspector?.querySelector("[data-map-related]")?.addEventListener("click", (ev
   const pointId = new URL(link.href, location.href).searchParams.get("point");
   if (!mapButtons.has(pointId)) return;
   event.preventDefault();
+  const position = {
+    pointId: mapInspector.dataset.selectedMapId,
+    scrollTop: mapInspector.querySelector(".case-scroll")?.scrollTop || 0,
+    relatedPointId: pointId,
+  };
+  window.history.replaceState({ ...history.state, casePosition: position }, "", location.href);
   setTimeMode(false, { updateHistory: false });
   setMapFilter("all", { updateHistory: false });
   selectMapItem(pointId, { reveal: true, updateHistory: false });
   writeUrlState({ point: pointId, view: null, filter: null });
-  window.requestAnimationFrame(() => mapInspector.querySelector("[data-map-title]")?.focus({ preventScroll: true }));
+  window.history.replaceState({ ...history.state, casePosition: null }, "", location.href);
 });
 
 constellationNavHome?.addEventListener("click", (event) => {

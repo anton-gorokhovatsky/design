@@ -48,6 +48,8 @@ inlineSlot.className = "case-inline-media";
 const inlineMedia = pane.media("(max-width: 900px)");
 let activeId = null;
 let caseMode = false;
+let pendingPosition = window.history.state?.casePosition || null;
+let caseRevision = 0;
 const frameMaterials = new Map();
 let backgroundState = [];
 
@@ -250,7 +252,10 @@ function reflect() {
   const large = open && !observationRoute.active && ["company", "project"].includes(selected?.kind);
   caseEntry.hidden = !large;
   caseInquiry.hidden = !large;
-  if (nextId === activeId && large === caseMode) return;
+  if (nextId === activeId && large === caseMode && !pendingPosition) return;
+  const position = pendingPosition?.pointId === nextId ? pendingPosition : null;
+  pendingPosition = null;
+  const revision = ++caseRevision;
   const routeControl = observationRoute.active
     && document.activeElement?.closest("[data-observation-controls] button");
   const keepOverviewFrame = nextId && activeId && observationRoute.active
@@ -272,18 +277,32 @@ function reflect() {
       mapInspector.dataset.caseMedia = selected.previewVideo ? "true" : "false";
       pinReel(selected);
     }
-    viewport.scrollTop = 0;
+    viewport.scrollTop = position?.scrollTop || 0;
     mapInspector.scrollTop = 0;
     requestAnimationFrame(() => {
-      const target = routeControl?.isConnected && !routeControl.disabled && !routeControl.hidden
+      if (revision !== caseRevision || activeId !== nextId) return;
+      viewport.scrollTop = position?.scrollTop || 0;
+      const sourceRow = position?.relatedPointId && viewport.querySelector(
+        `.map-related__item[href="?point=${CSS.escape(position.relatedPointId)}"]`,
+      );
+      const target = sourceRow || (routeControl?.isConnected && !routeControl.disabled && !routeControl.hidden
         ? routeControl
-        : routeControl ? document.querySelector("[data-observation-next]") : identity.querySelector("h2");
+        : routeControl ? document.querySelector("[data-observation-next]") : identity.querySelector("h2"));
       target?.focus({ preventScroll: true });
     });
   }
   activeId = nextId;
   caseMode = large;
 }
+window.addEventListener("portfolio-url-change", () => {
+  if (window.history.state?.casePosition) {
+    window.history.replaceState({ ...history.state, casePosition: null }, "", location.href);
+  }
+});
+window.addEventListener("popstate", () => {
+  pendingPosition = window.history.state?.casePosition || null;
+  reflect();
+});
 new MutationObserver(reflect).observe(mapInspector, {
   attributes: true, attributeFilter: ["class", "data-selected-map-id", "aria-hidden"],
 });

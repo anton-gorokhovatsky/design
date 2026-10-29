@@ -4149,11 +4149,11 @@ overflow-wrap: anywhere;
 grid-column: 1;
 }
 
-.map-related__item:has(.map-related__preview) {
+.map-related__track:has(.map-related__preview) .map-related__item {
 grid-template-columns: min(4.5rem, 25%) minmax(0, 1fr);
 }
 
-.map-related__item:has(.map-related__preview) > :is(strong, span) {
+.map-related__track:has(.map-related__preview) .map-related__item > :is(strong, span) {
 grid-column: 2;
 }
 
@@ -10368,7 +10368,7 @@ html[data-reduce-motion="true"] .story-is-moving #map-pane{animation:none}
 html[data-reduce-motion="true"] .has-story-pane #story-pane{transition:none}
 @container map-viewport (min-width:901px){
 .content-panel .work-row:has(img.work-row__preview){grid-template-columns:1.25rem minmax(0,1fr);grid-template-rows:auto auto auto auto auto;padding-block:var(--space-4)}
-.content-panel img.work-row__preview{grid-column:2;grid-row:1;width:min(100%,20rem,30cqh);margin-bottom:var(--space-3)}
+.content-panel img.work-row__preview{grid-column:2;grid-row:1;width:min(100%,22rem,35cqh);margin-bottom:var(--space-3)}
 .content-panel .work-row:has(img.work-row__preview) .work-row__number{grid-column:1;grid-row:2}
 .content-panel .work-row:has(img.work-row__preview) .work-row__title{grid-column:2;grid-row:2}
 .content-panel .work-row:has(img.work-row__preview) .work-row__scope{grid-column:2;grid-row:3}

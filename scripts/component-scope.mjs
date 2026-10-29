@@ -222,6 +222,7 @@ const isMenuFooterSpacing = (before, after) => {
 // by their existing component or require full coverage.
 const surfacePresentationRules = [
   [["@container map-viewport (max-width: 900px)"],'.content-panel[data-view="work"]',{"--panel-bottom":["var(--window-edge)"]},["check:first-visit"]],
+  [["@container map-viewport (min-width:901px)"],".content-panel img.work-row__preview",{"width":["min(100%,20rem,30cqh)","min(100%,22rem,35cqh)"]},["check:first-visit"]],
   [[],".map-surface:is(.has-constellation-nav,.has-command-focus) :is(.site-header,.whoop-field)",{"opacity":[".16"],"filter":["blur(3px)"],"pointer-events":["none"]},["check:header","check:command-placement","check:accessibility"]],
   [["@container map-viewport (max-width: 900px)"],".map-surface.has-constellation-nav .mobile-first-dock",{"opacity":[".4"]},["check:header","check:command-placement","check:accessibility"]],
   [["@container map-viewport (max-width: 900px)"],".map-surface.has-focused-home.has-constellation-nav .focused-home",{"opacity":[".48"],"transform":["translateY(4px) scale(.97)"]},["check:header","check:command-placement","check:accessibility"]],
@@ -897,9 +898,55 @@ const isRelatedPosterLayout = (path, before, after) => {
   } catch { return false; }
 };
 
+// Only these reviewed reading-context changes select case-flow. The hashes
+// fix each directed patch; every gap between the owners stays byte-identical.
+const readingContextOwners = {
+  "js/case-view.js": {
+    ranges: [["let activeId = null;", "const frameMaterials = new Map();"],
+      ["function reflect() {", "new MutationObserver(reflect).observe(mapInspector, {"]],
+    hashes: ["546680ffe6ee138eb1fe462a4f08d09d1ab3f968a65db5699d0f4c4c721c596c", "2828b862306bd3c0288a830d8ee023c186658b687bef035fe41ca3a6106c4464"],
+  },
+  "js/panels.js": {
+    ranges: [['mapInspector?.querySelector("[data-map-related]")?.addEventListener("click",', 'constellationNavHome?.addEventListener("click",']],
+    hashes: ["a53ca5031eb341ab6f1ec97ac21f7cb7800d0b41729cc3ed09646dd2375b6fdb", "6be255860cfca630cb1c8ae14c22e902716ac1b65212aa525c3dd01a05e62bb9"],
+  },
+  "js/map-story.js": {
+    ranges: [["if(h&&c.matches&&r.contains(o.target)", "if(!a.contains(o.target))"]],
+    hashes: ["4c617c2051a6ced380dba6237ca0aa10b97b0e8b2edf13de6b022e211a20b50b", "43b66f8b3c313de8a46f70a4203627f7c87bf0ca59c085aa787570cd700bfd1e"],
+  },
+  "rendering/js/map-story.js": {
+    ranges: [["  if(opened&&compact.matches&&map.contains(event.target)", "  if(!story.contains(event.target))"]],
+    hashes: ["59d60d85a4c411c011834716bfc9c8a0488624070170c559f6120f3bc099d56d", "08b3cdd92a3bb4657be65f978b4bea69c86fc8a3b018324b6306bf4deb4c4715"],
+  },
+};
+const isReadingContextFix = (path, before, after) => {
+  const owner = readingContextOwners[path];
+  if (!owner) return false;
+  try {
+    const blocks = [before, after].map(source => {
+      parseJs(source, { ecmaVersion: "latest", sourceType: "module" });
+      const content = [], outside = [];
+      let cursor = 0;
+      for (const [startMarker, endMarker] of owner.ranges) {
+        if (source.split(startMarker).length !== 2 || source.split(endMarker).length !== 2) throw new Error("Unknown reading-context owner");
+        const start = source.indexOf(startMarker), end = source.indexOf(endMarker);
+        if (start < cursor || end <= start) throw new Error("Unknown reading-context boundaries");
+        outside.push(source.slice(cursor, start));
+        content.push(source.slice(start, end));
+        cursor = end;
+      }
+      outside.push(source.slice(cursor));
+      return { outside: JSON.stringify(outside), hash: createHash("sha256").update(content.join("\0")).digest("hex") };
+    });
+    return blocks[0].outside === blocks[1].outside
+      && blocks.every((block, index) => block.hash === owner.hashes[index]);
+  } catch { return false; }
+};
+
 export const affectedComponents = (path, before, after, maskHtmlCopy) => {
   if (before.includes("\0") || after.includes("\0")) return null;
   try {
+    if (isReadingContextFix(path, before, after)) return ["check:case-flow"];
     if (isRelatedPosterLayout(path, before, after)) return ["check:inspector-links", "check:case-view"];
     if (path === "rendering/practice-orbits.js" && exactReplacements(before, after, campIconSourcePatch)) return ["check:hover-layout"];
     if (path === "js/practice-orbits.js" && [before, after].every((source, index) => createHash("sha256").update(source).digest("hex") === campIconBuild[index])) return ["check:hover-layout"];
