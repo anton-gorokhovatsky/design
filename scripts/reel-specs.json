@@ -450,24 +450,54 @@
     "master": "dusty-camp.mp4",
     "chapters": [
       {
-        "label": "hero",
+        "label": "hero-and-photos",
         "start": 0.1,
-        "duration": 2.9
+        "duration": 10.8
       },
       {
-        "label": "programme-place",
-        "start": 3.1,
-        "duration": 4.4
+        "label": "menu-and-programme",
+        "start": 12.1,
+        "duration": 9.5
       }
     ],
     "posterAt": 1.45,
     "duration": {
-      "target": 7.8,
-      "min": 7.5,
-      "max": 8.1
+      "target": 22,
+      "min": 21.8,
+      "max": 22.2
     },
     "capture": {
-      "url": "https://camp.dustydumbbells.com/"
+      "url": "https://anton-gorokhovatsky.github.io/camp.dustydumbbells/",
+      "browser": "chromium",
+      "scenes": [
+        {
+          "id": "hero",
+          "url": "/camp.dustydumbbells/",
+          "duration": 3
+        },
+        {
+          "id": "photos",
+          "url": "/camp.dustydumbbells/",
+          "duration": 9,
+          "hold": 1200,
+          "scroll": 1600,
+          "carouselAt": 5200
+        },
+        {
+          "id": "menu",
+          "url": "/camp.dustydumbbells/",
+          "duration": 3,
+          "menu": true
+        },
+        {
+          "id": "programme",
+          "url": "/camp.dustydumbbells/",
+          "duration": 7,
+          "hold": 1800,
+          "scroll": 2200,
+          "scrollBy": 500
+        }
+      ]
     }
   },
   {

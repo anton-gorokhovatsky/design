@@ -84,6 +84,7 @@ const contractScripts = [
   "scripts/reel-specs.mjs",
   "scripts/reel-metadata.mjs",
   "scripts/prepare-reels.mjs",
+  "scripts/capture-reels.cjs",
   "scripts/check-catalog.mjs",
   "scripts/check-release-scope.mjs",
   "scripts/check-ui-contracts.mjs",

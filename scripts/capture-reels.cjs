@@ -751,6 +751,35 @@ const runNarkomfinCaptureMotion = async (page) => {
   await clickNarkomfinRoute(page, "О проекте", 2000);
 };
 
+// DD Camp: retain the rebuilt site's native video, photo stack and menu.
+// Scene duration and pacing live with the other media parameters in reel-specs.
+const runDustyCampCaptureMotion = async (page, source) => {
+  const park = () => page.mouse.move(-30, -30);
+  const nextPhoto = page.locator('button[aria-controls="carousel_1016322141"][aria-label="Следующая фотография"]');
+  for (const scene of source.scenes) {
+    const started = Date.now();
+    if (scene.id === "photos") {
+      await smoothScrollTo(page, "#dd-heading-about", scene.scroll, .1);
+      await page.waitForTimeout(scene.hold);
+      await smoothScrollTo(page, "#carousel_1016322141", scene.scroll, .1);
+      await page.waitForTimeout(Math.max(0, scene.carouselAt - (Date.now() - started)));
+      await activateControlWithoutScrolling(nextPhoto, "DD Camp photo stack");
+      await page.waitForTimeout(scene.hold);
+      await activateControlWithoutScrolling(nextPhoto, "DD Camp photo stack");
+    } else if (scene.id === "menu") {
+      await page.getByRole("button", { name: "Открыть меню", exact: true }).click();
+      await park();
+    } else if (scene.id === "programme") {
+      await page.getByRole("navigation", { name: "Основная навигация", exact: true })
+        .getByRole("link", { name: "Расписание", exact: true }).click();
+      await park();
+      await page.waitForTimeout(scene.hold);
+      await smoothScrollBy(page, scene.scrollBy, scene.scroll);
+    }
+    await page.waitForTimeout(Math.max(0, scene.duration * 1000 - (Date.now() - started)));
+  }
+};
+
 const dismissVisibleOverlays = async (page, selectors = []) => {
   for (const selector of selectors) {
     const controls = page.locator(selector);
@@ -775,6 +804,11 @@ const keepOverlaysDismissed = async (page, selectors = [], duration = 7600) => {
 };
 
 const runCaptureMotion = async (page, id, source) => {
+  if (id === "dusty-camp") {
+    await runDustyCampCaptureMotion(page, source);
+    return;
+  }
+
   if (id === "garage-archives") {
     await runArchivesCaptureMotion(page);
     return;
@@ -915,11 +949,19 @@ const runCaptureMotion = async (page, id, source) => {
     await prepareHermanCapture(page);
   }
 
-  if (projectId === "krainiuk") {
+  if (["krainiuk", "dusty-camp"].includes(projectId)) {
     await page.evaluate(async () => {
       const images = [...document.images].filter(image => image.getAttribute("src"));
       images.forEach(image => { image.loading = "eager"; });
       await Promise.all(images.map(image => image.decode()));
+    });
+  }
+
+  if (projectId === "dusty-camp") {
+    await page.locator("video").evaluate(async video => {
+      video.muted = true;
+      video.currentTime = 0;
+      await video.play();
     });
   }
 

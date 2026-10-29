@@ -31,6 +31,23 @@ assert.equal(classifyChange("js/map-data.js", withoutCasePoster, map.replace('pr
 const oldPanelPoster = panels.replace('item.caseStudy?.previewPoster || getMapPreviewPoster(item)', 'getMapPreviewPoster(item)');
 assert.deepEqual(classifyChange("js/panels.js", oldPanelPoster, panels).components, ["check:case-flow"]);
 assert.equal(classifyChange("js/panels.js", oldPanelPoster, panels.replace('item.caseStudy?.previewPoster ||', 'getPoster() ||')).mode, "full");
+// A known project's HTTPS destination joins the media lane and checks its links.
+const campDestination = 'const mapItems = [{id:"dd-camp",href:"https://old.example/",previewDuration:7.8,x:76}];';
+const newCampDestination = campDestination.replace('https://old.example/', 'https://new.example/');
+assert.deepEqual(classifyChange("js/map-data.js", campDestination, newCampDestination).components, ["media", "check:inspector-links"]);
+assert.deepEqual(classifyChange("js/map-data.js", campDestination, newCampDestination.replace('7.8', '22')).components, ["media", "check:inspector-links"]);
+for (const unsafe of ['javascript:alert(1)', 'http://example.com/', 'https://user:secret@example.com/']) {
+  assert.equal(classifyChange("js/map-data.js", campDestination, campDestination.replace('https://old.example/', unsafe)).mode, "full");
+}
+assert.equal(classifyChange("js/map-data.js", campDestination, newCampDestination.replace('x:76', 'x:77')).mode, "full");
+assert.equal(classifyChange("js/map-data.js", campDestination, campDestination.replace('"https://old.example/"', 'getDestination()')).mode, "full");
+assert.equal(classifyChange("js/map-data.js", campDestination.replace('dd-camp', 'unknown'), newCampDestination.replace('dd-camp', 'unknown')).mode, "full");
+assert.deepEqual(classifyChange("scripts/capture-reels.cjs", "", "").components, ["media"]);
+assert.deepEqual(classifyChange("assets/project-icons/dd-camp.svg", "", "").components, ["check:hover-layout"]);
+const campIconSource = read("rendering/practice-orbits.js");
+const campIconBefore = campIconSource.replace("\n  'dd-camp':'assets/project-icons/dd-camp.svg',", "");
+assert.deepEqual(classifyChange("rendering/practice-orbits.js", campIconBefore, campIconSource).components, ["check:hover-layout"]);
+assert.equal(classifyChange("rendering/practice-orbits.js", campIconBefore, campIconSource + "\nglobalThis.unrelated = true;").mode, "full");
 const route = read("js/observation-route.js");
 const html = read("index.html");
 // Keep the legacy embedded-copy contract while current details are external data.
@@ -195,6 +212,39 @@ const scoped = (path, before, after, mode, components = []) => {
   assert.deepEqual(classifyChange(path, before, after), { mode, components }, `${path}: ${after.slice(-180)}`);
   checks += 1;
 };
+
+// Persistent related posters own their exact template/loader migration only.
+// A later implementation must earn a new boundary, not inherit these hashes.
+const relatedCoverage = ["check:inspector-links", "check:case-view"];
+for (const [path, hash] of [
+  ["rendering/js/map-engine.js", "a7a29f11ffd6260b9872f45a5e29120aa096f3d9483cd15f40ea1b620279b41e"],
+  ["js/map-engine.js", "6217660eeabc11cc73980fffe7bde91ae0155f9fd4ae1bd6baf01ef7d69c9d74"],
+]) {
+  const before = execFileSync('git', ['show', `8cecaa4cfaf227ea52d551b1e5b343e317fe8c00:${path}`], { cwd: root, encoding: 'utf8' });
+  const after = read(path);
+  const start = after.indexOf('const renderMapRelatedItems='), end = after.indexOf('const setInspectorOpen=');
+  const known = start >= 0 && end > start && createHash('sha256').update(after.slice(start, end)).digest('hex') === hash;
+  scoped(path, before, after, known ? 'components' : 'full', known ? relatedCoverage : []);
+  scoped(path, before, after + '\nglobalThis.unrelated = true;', 'full');
+  if (known) for (const changed of [
+    after.replace('href="?point=${id}"', 'href="?point=changed"'),
+    after.replace('loading="lazy" decoding="async" width="72"', 'loading="eager" decoding="async" width="72"'),
+    after.replace('const setInspectorOpen=', 'window.addEventListener("click", globalAction);const setInspectorOpen='),
+    after + '\n' + after.slice(start, end),
+  ]) {
+    assert.notEqual(changed, after, 'Negative related-link fixture changes protected code');
+    scoped(path, before, changed, 'full');
+  }
+}
+for (const selector of ['.map-related__item', '.map-related__preview--circle', '.map-related__item:has(.map-related__preview) > :is(strong, span)']) {
+  scoped('styles.css', '', `${selector}{align-self:start}`, 'components', relatedCoverage);
+}
+scoped('styles.css', '', '@container related-projects (min-width:40rem){.map-related__track{column-gap:var(--space-6)}}', 'components', relatedCoverage);
+for (const selector of ['body:has(.map-related)', ':is(.map-related__item)', '.map-related__item + .unrelated', '.map-related__preview,.unrelated']) {
+  scoped('styles.css', '', `${selector}{color:red}`, 'full');
+}
+scoped('styles.css', '', '.map-related__preview{width:72px}:root{--material-01:red}', 'full');
+
 // Compact overlay context keeps the map's contrast. Only these presentation
 // declarations are owned; colors, selectors and breakpoint changes stay full.
 const overlayContext = '@container map-viewport (max-width: 900px){.map-surface.has-focused-home.has-constellation-nav .focused-home{opacity:.48;transform:translateY(4px) scale(.97);pointer-events:none}}';

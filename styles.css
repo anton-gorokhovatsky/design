@@ -4122,8 +4122,8 @@ display: grid;
 grid-template-columns: minmax(0, 1fr);
 min-width: 0;
 min-height: 52px;
-align-content: center;
-gap: 4px 16px;
+align-content: start;
+gap: var(--space-1) var(--space-3);
 padding: var(--separator-row-compact) 0;
 border-radius: 4px;
 background: transparent;
@@ -4153,30 +4153,35 @@ overflow-wrap: anywhere;
 grid-column: 1;
 }
 
-.map-related__preview {
-display: none;
+.map-related__item:has(.map-related__preview) {
+grid-template-columns: min(4.5rem, 25%) minmax(0, 1fr);
+}
+
+.map-related__item:has(.map-related__preview) > :is(strong, span) {
 grid-column: 2;
+}
+
+.map-related__item > strong { grid-row: 1; }
+.map-related__item > span { grid-row: 2; }
+
+.map-related__preview {
+display: block;
+grid-column: 1;
 grid-row: 1 / span 2;
-align-self: center;
-width: 4.5rem;
-height: 3rem;
+align-self: start;
+width: 100%;
+height: auto;
+aspect-ratio: 3 / 2;
 object-fit: contain;
 border-radius: var(--space-2);
-opacity: 0;
 pointer-events: none;
 }
 
 .map-related__preview--circle {
-width: 3rem;
-justify-self: end;
+width: min(3rem, 100%);
+aspect-ratio: 1;
+justify-self: start;
 clip-path: circle(49%);
-}
-@media (hover: hover) and (pointer: fine) {
-@container (min-width: 12rem) {
-.map-related__item:has(.map-related__preview) { grid-template-columns: minmax(0, 1fr) 4.5rem; }
-.map-related__preview { display: block; }
-.map-related__item:is(:hover, :focus-visible) .map-related__preview.is-ready { opacity: 1; }
-}
 }
 
 .map-inspector:not(.has-reading-frame):has(.map-related[data-related-kind="personal"]:not([hidden])) .map-readout__description {
@@ -7176,9 +7181,19 @@ content: "";
 .map-readout__destination[target="_blank"]::after {
 width: 12px;
 height: 12px;
-border-top: 1.5px solid currentColor;
-border-right: 1.5px solid currentColor;
-background: linear-gradient(135deg, transparent 43%, currentColor 44% 52%, transparent 53%);
+--external-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M.75 11.25 11.25 .75M.75 .75h10.5v10.5' fill='none' stroke='black' stroke-width='1.5'/%3E%3C/svg%3E");
+border: 0;
+background: currentColor;
+-webkit-mask: var(--external-arrow) center / 100% 100% no-repeat;
+mask: var(--external-arrow) center / 100% 100% no-repeat;
+}
+@media (forced-colors: active) {
+.contact-links a::after,
+.nav-external,
+.map-readout__destination[target="_blank"]::after {
+forced-color-adjust: none;
+background: LinkText;
+}
 }
 .nav-external { box-sizing: border-box; width: 1cap; height: 1cap; vertical-align: baseline; }
 .map-readout__destination[target="_blank"]::after {

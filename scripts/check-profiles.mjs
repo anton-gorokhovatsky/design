@@ -23,13 +23,16 @@ browserCheckPaths.set('scripts/webkit-regression.cjs', 'check:core');
 // publication contracts. Runtime and browser assertion owners remain separate.
 export const staticCheckPaths = new Set([
   'scripts/check-profiles.mjs', 'scripts/check-project.mjs', 'scripts/check-catalog.mjs',
+  'scripts/media-scope.mjs',
   'scripts/release-scope.mjs', 'scripts/component-scope.mjs', 'scripts/check-release-scope.mjs',
   'scripts/release.mjs', 'scripts/release-quality.mjs', 'scripts/release-version.mjs',
   'scripts/check-release-quality.mjs', 'scripts/publication-assets.mjs', 'scripts/check-runner.mjs',
   'scripts/audit-project.mjs', 'scripts/check-assets.mjs',
   'scripts/material-contract.mjs', 'scripts/check-css-cascade.mjs', 'scripts/check-performance-budget.mjs',
   'scripts/check-performance-budget.test.mjs', 'scripts/check-publication-assets.mjs']);
-export const ownedCheckComponent = path => path === 'assets/project-logos/academy-tn.svg'
+export const ownedCheckComponent = path => path === 'scripts/capture-reels.cjs' ? 'media'
+  : path === 'assets/project-icons/dd-camp.svg' ? 'check:hover-layout'
+  : path === 'assets/project-logos/academy-tn.svg'
   ? 'check:case-flow' : signaturePath.test(path)
   ? 'signature' : processPaths.has(path) ? 'checks'
     : ['js/map-story.js', 'rendering/js/map-story.js', 'assets/map-story/content.html',

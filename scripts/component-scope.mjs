@@ -38,7 +38,8 @@ const cssOwners = {
   header: ownsClass(/^(?:focused-return(?:__[\w-]+)?|site-header|brand(?:__[\w-]+)?|whoop-(?:readout|metrics|status|foot|stamp|level|compact-trigger))$/),
   "search-icon": ownsClass(/^command-dock__mark$/),
   "check:command-placement": ownsClass(/^(?:has-command-focus|command-dock__submit-mark)$/),
-  "check:inspector-links": ownsClass(/^(?:nav-external|contact-links|map-readout__destination)$/),
+  "check:inspector-links": ownsClass(/^(?:nav-external|contact-links|map-readout__destination|map-related(?:__[\w-]+)?)$/),
+  "check:case-view": ownsClass(/^map-related(?:__[\w-]+)?$/),
   "map-labels": ownsClass(/^map-(?:node-label|anchor-label|space-label)(?:$|--)/),
 };
 
@@ -857,9 +858,41 @@ const casePostersOutside = source => {
   return ranges.sort((a, b) => b[0] - a[0]).reduce((text, [start, end]) => text.slice(0, start) + text.slice(end), source);
 };
 
+// The DD Camp favicon adds one static entry; all picker behaviour is unchanged.
+const campIconSourcePatch = [[
+  "  doronin:'assets/project-icons/doronin.svg',krainiuk:'assets/project-icons/krainiuk.svg',",
+  "  doronin:'assets/project-icons/doronin.svg',krainiuk:'assets/project-icons/krainiuk.svg',\n  'dd-camp':'assets/project-icons/dd-camp.svg',"
+]];
+const campIconBuild = ["eadacc6d1651ba4a76c55635e9e565a39a261c03dc7b87f90efe53cbbfef9ec0", "f52cbee410307415b8314b4b5899dd93d536abd7f7eeb16f77b2f4b61e9d271d"];
+
+// Only the reviewed related-link template and removal of its hover loader.
+// Each source/build block is exact; selection, routes and every surrounding
+// byte remain protected, including all other event listeners.
+const relatedPosterBlocks = {
+  "rendering/js/map-engine.js": ["eccda6d4079dd22c5fa08d1d70f0cb1942670735f9bbe3febff05ef17a2ed562", "a7a29f11ffd6260b9872f45a5e29120aa096f3d9483cd15f40ea1b620279b41e"],
+  "js/map-engine.js": ["eefc1548613cb653bcc9a44cd73d3519d8952572bd235b4df3e75ce52e8941e0", "6217660eeabc11cc73980fffe7bde91ae0155f9fd4ae1bd6baf01ef7d69c9d74"],
+};
+const isRelatedPosterLayout = (path, before, after) => {
+  if (!relatedPosterBlocks[path]) return false;
+  try {
+    const outside = [before, after].map((source, index) => {
+      parseJs(source, { ecmaVersion: "latest", sourceType: "module" });
+      const startMarker = "const renderMapRelatedItems=", endMarker = "const setInspectorOpen=";
+      if (source.split(startMarker).length !== 2 || source.split(endMarker).length !== 2) throw new Error("Unknown related-link owner");
+      const start = source.indexOf(startMarker), end = source.indexOf(endMarker);
+      if (end <= start || createHash("sha256").update(source.slice(start, end)).digest("hex") !== relatedPosterBlocks[path][index]) throw new Error("Unreviewed related-link block");
+      return source.slice(0, start) + source.slice(end);
+    });
+    return outside[0] === outside[1];
+  } catch { return false; }
+};
+
 export const affectedComponents = (path, before, after, maskHtmlCopy) => {
   if (before.includes("\0") || after.includes("\0")) return null;
   try {
+    if (isRelatedPosterLayout(path, before, after)) return ["check:inspector-links", "check:case-view"];
+    if (path === "rendering/practice-orbits.js" && exactReplacements(before, after, campIconSourcePatch)) return ["check:hover-layout"];
+    if (path === "js/practice-orbits.js" && [before, after].every((source, index) => createHash("sha256").update(source).digest("hex") === campIconBuild[index])) return ["check:hover-layout"];
     if (path === "js/map-data.js" && casePostersOutside(before) === casePostersOutside(after)) return ["check:case-flow"];
     if (path === "js/panels.js") {
       const casePoster = source => source.replace("const poster = item.caseStudy?.previewPoster || getMapPreviewPoster(item);", "const poster = getMapPreviewPoster(item);");

@@ -385,7 +385,7 @@ computed styles, runtime state coverage, and matched before/after renders.
 - [Tarski](https://tarski.ru/)
 - [Herman & Co](https://barberherman.ru/)
 - [Dusty Dumbbells Merch](https://merch.dustydumbbells.com/)
-- [Dusty Dumbbells Camp](https://camp.dustydumbbells.com/)
+- [Dusty Dumbbells Camp](https://anton-gorokhovatsky.github.io/camp.dustydumbbells/)
 - [11 111](https://11111.life/)
 - [KS Fish](https://ks.fish/)
 - [Доронин в деле](https://doronin.store/)

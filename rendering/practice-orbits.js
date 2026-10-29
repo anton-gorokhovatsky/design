@@ -10,6 +10,7 @@ const projectIcons = {
   herman:'assets/project-icons/herman.png','ks-fish':'assets/project-icons/ks-fish.png',
   'hotline-camp':'assets/project-icons/hotline-camp.svg',eleven:'assets/project-icons/eleven.svg',
   doronin:'assets/project-icons/doronin.svg',krainiuk:'assets/project-icons/krainiuk.svg',
+  'dd-camp':'assets/project-icons/dd-camp.svg',
 };
 const cultural = new Set(['shirokostup', 'tarski']);
 const category = item => cultural.has(item.id) ? 'culture'

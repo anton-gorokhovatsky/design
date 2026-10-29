@@ -157,7 +157,11 @@ export const classifyChange = (path, before, after) => {
   const owner = ownedCheckComponent(path);
   if (owner) return { mode: "components", components: [owner] };
   if (isCopyOnly(path, before, after)) return { mode: "copy", components: [] };
-  if (isMediaOnly(path, before, after, isCopyOnly)) return { mode: "components", components: ["media"] };
+  if (isMediaOnly(path, before, after, isCopyOnly)) return {
+    mode: "components",
+    components: isMediaOnly(path, before, after, isCopyOnly, false)
+      ? ["media"] : ["media", "check:inspector-links"],
+  };
   const components = affectedComponents(path, before, after, maskHtmlCopy);
   return { mode: components ? "components" : "full", components: components || [] };
 };
@@ -192,7 +196,7 @@ export const planRelease = ({ projectRoot, base = "origin/gh-pages", target } = 
       const [status, path] = entries.slice(index, index + 2);
       const owner = ownedCheckComponent(path);
       let classification = staticCheckPaths.has(path) ? { mode: "copy", components: [] } : owner ? { mode: "components", components: [owner] } : { mode: "full", components: [] };
-      if (status === "M" && (copyArrays[path] || sharePages.has(path) || focusedHomePaths.has(path) || ["js/case-content.json", "index.html", "404.html", "styles.css", "js/focused-home.js", "js/map-media.js", "js/map-engine.js", "js/spatial-home.js", "rendering/js/spatial-home.js", "js/whoop-day.js", "js/practice-orbits.js", "rendering/practice-orbits.js", "js/viewport-ui.js", "rendering/js/viewport-ui.js", "scripts/browser-contracts.cjs", "scripts/reel-specs.json", "README.md", "AGENTS.md"].includes(path) || /^docs\/.*\.md$/.test(path))) {
+      if (status === "M" && (copyArrays[path] || sharePages.has(path) || focusedHomePaths.has(path) || ["js/case-content.json", "index.html", "404.html", "styles.css", "js/focused-home.js", "js/map-media.js", "js/map-engine.js", "rendering/js/map-engine.js", "js/spatial-home.js", "rendering/js/spatial-home.js", "js/whoop-day.js", "js/practice-orbits.js", "rendering/practice-orbits.js", "js/viewport-ui.js", "rendering/js/viewport-ui.js", "scripts/browser-contracts.cjs", "scripts/reel-specs.json", "README.md", "AGENTS.md"].includes(path) || /^docs\/.*\.md$/.test(path))) {
         const before = git("show", `${baseSha}:${path}`);
         const after = targetSha ? git("show", `${targetSha}:${path}`) : readFileSync(resolve(projectRoot, path), "utf8");
         classification = classifyChange(path, before, after);

@@ -10,7 +10,7 @@ const identity = specs => JSON.stringify(specs.map(({ itemId, master }) => [item
 const maskUrlHash = source => source.replace(/(assets\/(?:reels|reel-posters|reel-chapters)\/[a-z0-9-]+\.(?:mp4|jpg))\?v=[a-f0-9]{12}/g,
   (match, path) => mediaAssetPaths.has(path) ? `${path}?v=000000000000` : match);
 
-const maskMapMedia = source => {
+const maskMapMedia = (source, includeDestinations) => {
   const tree = parse(source, { ecmaVersion: "latest", sourceType: "module" }), ranges = [];
   for (const statement of tree.body) {
     if (statement.type !== "VariableDeclaration") continue;
@@ -33,6 +33,13 @@ const maskMapMedia = source => {
         if (id?.type !== "Literal" || !reelSpecs.some(spec => spec.itemId === id.value)) continue;
         for (const prop of props) {
           if (prop.value.type !== "Literal") continue;
+          if (includeDestinations && prop.key.name === "href" && typeof prop.value.value === "string"
+            && prop.value.value.startsWith("https://")) {
+            const destination = new URL(prop.value.value);
+            if (!destination.username && !destination.password) {
+              ranges.push([prop.value.start, prop.value.end, '"HTTPS_PROJECT_DESTINATION"']);
+            }
+          }
           if (["previewVideo", "previewPoster"].includes(prop.key.name) && typeof prop.value.value === "string") {
             ranges.push([prop.value.start, prop.value.end, JSON.stringify(maskUrlHash(prop.value.value))]);
           }
@@ -64,7 +71,7 @@ const maskHtmlMedia = source => {
   return ranges.sort((a, b) => b[0] - a[0]).reduce((text, [start, end, value]) => text.slice(0, start) + value + text.slice(end), source);
 };
 
-export const isMediaOnly = (path, before, after, isCopyOnly) => {
+export const isMediaOnly = (path, before, after, isCopyOnly, includeDestinations = true) => {
   if (before.includes("\0") || after.includes("\0")) return false;
   try {
     if (path === "scripts/reel-specs.json") {
@@ -72,7 +79,7 @@ export const isMediaOnly = (path, before, after, isCopyOnly) => {
       return identity(a) === identity(b);
     }
     if (path === "js/map-data.js") {
-      return isCopyOnly(path, maskMapMedia(before), maskMapMedia(after));
+      return isCopyOnly(path, maskMapMedia(before, includeDestinations), maskMapMedia(after, includeDestinations));
     }
     if (path === "index.html") return isCopyOnly(path, maskHtmlMedia(before), maskHtmlMedia(after));
   } catch {
