@@ -450,17 +450,17 @@
     "master": "dusty-camp.mp4",
     "chapters": [
       {
-        "label": "hero-and-photos",
+        "label": "intro-photos-and-menu",
         "start": 0.1,
-        "duration": 10.8
+        "duration": 5.3
       },
       {
-        "label": "menu-and-programme",
-        "start": 12.1,
-        "duration": 9.5
+        "label": "programme-weather-and-stay",
+        "start": 5.4,
+        "duration": 16.4
       }
     ],
-    "posterAt": 1.45,
+    "posterAt": 0.6,
     "duration": {
       "target": 22,
       "min": 21.8,
@@ -473,29 +473,59 @@
         {
           "id": "hero",
           "url": "/camp.dustydumbbells/",
-          "duration": 3
+          "duration": 1.2
+        },
+        {
+          "id": "intro",
+          "url": "/camp.dustydumbbells/",
+          "duration": 2,
+          "endHeading": "#carousel_1016322141",
+          "scroll": 1900
         },
         {
           "id": "photos",
           "url": "/camp.dustydumbbells/",
-          "duration": 9,
-          "hold": 1200,
-          "scroll": 1600,
-          "carouselAt": 5200
+          "duration": 1,
+          "hold": 420
         },
         {
           "id": "menu",
           "url": "/camp.dustydumbbells/",
-          "duration": 3,
-          "menu": true
+          "duration": 1.2,
+          "menu": true,
+          "hold": 650
         },
         {
           "id": "programme",
           "url": "/camp.dustydumbbells/",
-          "duration": 7,
-          "hold": 1800,
-          "scroll": 2200,
-          "scrollBy": 500
+          "duration": 6.4,
+          "endHeading": "#dd-heading-weather",
+          "scroll": 6300
+        },
+        {
+          "id": "weather",
+          "url": "/camp.dustydumbbells/",
+          "duration": 2.6,
+          "endHeading": "#dd-heading-travel",
+          "scroll": 2500
+        },
+        {
+          "id": "travel",
+          "url": "/camp.dustydumbbells/",
+          "duration": 3.8,
+          "endHeading": "#dd-heading-form",
+          "scroll": 3700
+        },
+        {
+          "id": "application",
+          "url": "/camp.dustydumbbells/",
+          "duration": 3,
+          "scroll": 2900
+        },
+        {
+          "id": "footer",
+          "url": "/camp.dustydumbbells/",
+          "duration": 0.8
         }
       ]
     }

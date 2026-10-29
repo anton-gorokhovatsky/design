@@ -9,7 +9,7 @@ Original favicons used by the selected Atlas picker. Checked 19 October 2026. Ic
 | Герман Винокуров | `herman.png` | https://barberherman.ru/assets/favicon.png | Original bytes; contained without cropping. |
 | Hotline Camp | `hotline-camp.svg` | https://hotlinecamp.ru/favicon.svg?v=20260821-1 | Original paths; animation/dash styles removed for a static mark. |
 | Dusty Merch | Text DM | https://merch.dustydumbbells.com/ | Public site returned 403; icon unverified. |
-| DD Camp | `dd-camp.svg` | https://anton-gorokhovatsky.github.io/camp.dustydumbbells/branding/favicon.svg | Original blue DD mark; original paths and colours, contained without cropping. Updated 29 October 2026. |
+| DD Camp | `dd-camp.svg` | https://anton-gorokhovatsky.github.io/camp.dustydumbbells/branding/favicon.svg | Original DD paths and colours at 24px; its blue #20469a fills the entire 32px picker circle, without a pale ring. Updated 29 October 2026. |
 | 11 111 | `eleven.svg` | https://11111.life/assets/favicon-light.svg | Official favicon-light.svg, displayed at 28px width. |
 | Рыбная лавка | `ks-fish.png` | https://ks.fish/assets/apple-touch-icon.png | Original bytes; fills a circular 32px crop without an added background. |
 | Доронин в деле | `doronin.svg` | https://static.tildacdn.com/tild6333-3663-4163-b534-646432323736/D.svg | Original bytes; contained without cropping. |

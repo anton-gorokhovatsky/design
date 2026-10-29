@@ -20,6 +20,7 @@ const ownsClass = (matches) => (selector) => selectorParser().astSync(selector).
   return owned;
 });
 const cssOwners = {
+  "check:hover-layout": selector => selector.trim() === '.project-orbit-picker [data-picker-project="dd-camp"] .project-atlas-mark',
   "map-story": selector => selectorParser().astSync(selector).nodes.every(branch =>
     branch.nodes.some(node => node.type === "id" && node.value === "story-pane")
     && branch.nodes.every(node => node.type !== "nesting"

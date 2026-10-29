@@ -10194,6 +10194,7 @@ html[data-theme="dark"] .project-atlas-track{stroke:var(--group-light)}
 .project-orbit-picker button{display:flex;align-items:flex-start;gap:var(--space-3);width:100%;min-height:48px;padding:var(--space-2) var(--space-1) var(--space-2) var(--arc-inset,20px);border:0;background:none;color:inherit;text-align:left;font:400 var(--type-body)/1.3 var(--font-sans);touch-action:pan-y;cursor:pointer}
 .project-atlas-mark{position:relative;display:grid;place-items:center;flex:0 0 32px;width:32px;height:32px;border-radius:50%;background:#f3f2ed;color:#252820;box-shadow:0 0 0 1px color-mix(in srgb,var(--group-color) 30%,transparent);font:500 var(--type-utility)/1 var(--font-sans)}
 .project-atlas-mark img{position:absolute;width:24px;height:24px;object-fit:contain}
+.project-orbit-picker [data-picker-project="dd-camp"] .project-atlas-mark{background:#20469a;color:#fff7ed;box-shadow:none}
 .project-orbit-picker :is([data-picker-project="ks-fish"],[data-picker-project="hotline-camp"],[data-picker-project="krainiuk"]) .project-atlas-mark:has(img){background:none;box-shadow:none}
 .project-orbit-picker :is([data-picker-project="ks-fish"],[data-picker-project="krainiuk"]) img{width:32px;height:32px;border-radius:50%}
 .project-orbit-picker [data-picker-project="hotline-camp"] img{width:40px;height:40px}

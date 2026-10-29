@@ -244,6 +244,11 @@ for (const selector of ['body:has(.map-related)', ':is(.map-related__item)', '.m
   scoped('styles.css', '', `${selector}{color:red}`, 'full');
 }
 scoped('styles.css', '', '.map-related__preview{width:72px}:root{--material-01:red}', 'full');
+const campIconSelector = '.project-orbit-picker [data-picker-project="dd-camp"] .project-atlas-mark';
+scoped('styles.css', '', `${campIconSelector}{background:#20469a;color:#fff7ed;box-shadow:none}`, 'components', ['check:hover-layout']);
+scoped('styles.css', '', `${campIconSelector},.unrelated{background:#20469a}`, 'full');
+scoped('styles.css', '', `${campIconSelector} + .unrelated{background:#20469a}`, 'full');
+scoped('styles.css', '', `${campIconSelector}{background:#20469a}:root{--material-01:red}`, 'full');
 
 // Compact overlay context keeps the map's contrast. Only these presentation
 // declarations are owned; colors, selectors and breakpoint changes stay full.

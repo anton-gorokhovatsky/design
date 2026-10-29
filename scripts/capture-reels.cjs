@@ -751,33 +751,43 @@ const runNarkomfinCaptureMotion = async (page) => {
   await clickNarkomfinRoute(page, "О проекте", 2000);
 };
 
-// DD Camp: retain the rebuilt site's native video, photo stack and menu.
+// One continuous DD Camp visit: every section, the photo stack, menu and footer.
 // Scene duration and pacing live with the other media parameters in reel-specs.
 const runDustyCampCaptureMotion = async (page, source) => {
   const park = () => page.mouse.move(-30, -30);
   const nextPhoto = page.locator('button[aria-controls="carousel_1016322141"][aria-label="Следующая фотография"]');
+  const captureStart = Date.now();
+  const milestones = [];
   for (const scene of source.scenes) {
     const started = Date.now();
     if (scene.id === "photos") {
-      await smoothScrollTo(page, "#dd-heading-about", scene.scroll, .1);
-      await page.waitForTimeout(scene.hold);
-      await smoothScrollTo(page, "#carousel_1016322141", scene.scroll, .1);
-      await page.waitForTimeout(Math.max(0, scene.carouselAt - (Date.now() - started)));
       await activateControlWithoutScrolling(nextPhoto, "DD Camp photo stack");
       await page.waitForTimeout(scene.hold);
       await activateControlWithoutScrolling(nextPhoto, "DD Camp photo stack");
     } else if (scene.id === "menu") {
       await page.getByRole("button", { name: "Открыть меню", exact: true }).click();
       await park();
-    } else if (scene.id === "programme") {
-      await page.getByRole("navigation", { name: "Основная навигация", exact: true })
-        .getByRole("link", { name: "Расписание", exact: true }).click();
-      await park();
       await page.waitForTimeout(scene.hold);
-      await smoothScrollBy(page, scene.scrollBy, scene.scroll);
+      await page.getByRole("button", { name: "Закрыть меню", exact: true }).click();
+      await park();
+    } else if (scene.endHeading) {
+      await smoothScrollTo(page, scene.endHeading, scene.scroll, .1);
+    } else if (scene.id === "application") {
+      const remaining = await page.evaluate(() => {
+        const root = document.scrollingElement || document.documentElement;
+        return root.scrollHeight - innerHeight - root.scrollTop;
+      });
+      await smoothScrollBy(page, remaining, scene.scroll);
     }
     await page.waitForTimeout(Math.max(0, scene.duration * 1000 - (Date.now() - started)));
+    milestones.push(await page.evaluate(({ id, time }) => {
+      const root = document.scrollingElement || document.documentElement;
+      return { id, time, scrollY: root.scrollTop, maximum: root.scrollHeight - innerHeight };
+    }, { id: scene.id, time: (Date.now() - captureStart) / 1000 }));
   }
+  const last = milestones.at(-1);
+  if (Math.abs(last.scrollY - last.maximum) > 1) throw new Error("DD Camp capture must reach the page footer");
+  console.log(JSON.stringify({ id: "dusty-camp", milestones }));
 };
 
 const dismissVisibleOverlays = async (page, selectors = []) => {
