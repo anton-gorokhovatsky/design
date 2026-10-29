@@ -19,6 +19,8 @@ const ownsClass = (matches) => (selector) => selectorParser().astSync(selector).
   }
   return owned;
 });
+// This sibling pair is inside the related list; arbitrary siblings stay unowned.
+const ownsRelatedRow = selector => selector.trim() === ".map-related__track > li + li";
 const cssOwners = {
   "check:hover-layout": selector => selector.trim() === '.project-orbit-picker [data-picker-project="dd-camp"] .project-atlas-mark',
   "map-story": selector => selectorParser().astSync(selector).nodes.every(branch =>
@@ -39,8 +41,8 @@ const cssOwners = {
   header: ownsClass(/^(?:focused-return(?:__[\w-]+)?|site-header|brand(?:__[\w-]+)?|whoop-(?:readout|metrics|status|foot|stamp|level|compact-trigger))$/),
   "search-icon": ownsClass(/^command-dock__mark$/),
   "check:command-placement": ownsClass(/^(?:has-command-focus|command-dock__submit-mark)$/),
-  "check:inspector-links": ownsClass(/^(?:nav-external|contact-links|map-readout__destination|map-related(?:__[\w-]+)?)$/),
-  "check:case-view": ownsClass(/^map-related(?:__[\w-]+)?$/),
+  "check:inspector-links": selector => ownsRelatedRow(selector) || ownsClass(/^(?:nav-external|contact-links|map-readout__destination|map-related(?:__[\w-]+)?|map-evidence)$/)(selector),
+  "check:case-view": selector => ownsRelatedRow(selector) || ownsClass(/^(?:map-related(?:__[\w-]+)?|map-evidence)$/)(selector),
   "map-labels": ownsClass(/^map-(?:node-label|anchor-label|space-label)(?:$|--)/),
 };
 
@@ -870,21 +872,28 @@ const campIconBuild = ["eadacc6d1651ba4a76c55635e9e565a39a261c03dc7b87f90efe53cb
 // Each source/build block is exact; selection, routes and every surrounding
 // byte remain protected, including all other event listeners.
 const relatedPosterBlocks = {
-  "rendering/js/map-engine.js": ["eccda6d4079dd22c5fa08d1d70f0cb1942670735f9bbe3febff05ef17a2ed562", "a7a29f11ffd6260b9872f45a5e29120aa096f3d9483cd15f40ea1b620279b41e"],
-  "js/map-engine.js": ["eefc1548613cb653bcc9a44cd73d3519d8952572bd235b4df3e75ce52e8941e0", "6217660eeabc11cc73980fffe7bde91ae0155f9fd4ae1bd6baf01ef7d69c9d74"],
+  "rendering/js/map-engine.js": [
+    ["eccda6d4079dd22c5fa08d1d70f0cb1942670735f9bbe3febff05ef17a2ed562", "a7a29f11ffd6260b9872f45a5e29120aa096f3d9483cd15f40ea1b620279b41e"],
+    ["a7a29f11ffd6260b9872f45a5e29120aa096f3d9483cd15f40ea1b620279b41e", "d7eb1fd759935ae61d8dfff842b95f5dd90085ebb530d55f51ac4593d1affa98"],
+  ],
+  "js/map-engine.js": [
+    ["eefc1548613cb653bcc9a44cd73d3519d8952572bd235b4df3e75ce52e8941e0", "6217660eeabc11cc73980fffe7bde91ae0155f9fd4ae1bd6baf01ef7d69c9d74"],
+    ["6217660eeabc11cc73980fffe7bde91ae0155f9fd4ae1bd6baf01ef7d69c9d74", "1fd5d2d3fe9976ab60b29e58129db59c94d317f1afe86d36e7bca6b045bb9079"],
+  ],
 };
 const isRelatedPosterLayout = (path, before, after) => {
   if (!relatedPosterBlocks[path]) return false;
   try {
-    const outside = [before, after].map((source, index) => {
+    const blocks = [before, after].map(source => {
       parseJs(source, { ecmaVersion: "latest", sourceType: "module" });
       const startMarker = "const renderMapRelatedItems=", endMarker = "const setInspectorOpen=";
       if (source.split(startMarker).length !== 2 || source.split(endMarker).length !== 2) throw new Error("Unknown related-link owner");
       const start = source.indexOf(startMarker), end = source.indexOf(endMarker);
-      if (end <= start || createHash("sha256").update(source.slice(start, end)).digest("hex") !== relatedPosterBlocks[path][index]) throw new Error("Unreviewed related-link block");
-      return source.slice(0, start) + source.slice(end);
+      if (end <= start) throw new Error("Unknown related-link boundaries");
+      return { outside: source.slice(0, start) + source.slice(end), hash: createHash("sha256").update(source.slice(start, end)).digest("hex") };
     });
-    return outside[0] === outside[1];
+    return blocks[0].outside === blocks[1].outside
+      && relatedPosterBlocks[path].some(pair => blocks.every((block, index) => block.hash === pair[index]));
   } catch { return false; }
 };
 

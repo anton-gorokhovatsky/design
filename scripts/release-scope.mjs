@@ -57,13 +57,68 @@ const maskJavaScriptCopy = (path, source) => {
   return maskRanges(source, ranges);
 };
 
-// Deferred descriptions are display text. Keys, structure and every other
-// section remain byte-for-byte protected, including evidence and destinations.
-const maskCaseDescriptionCopy = (source) => {
-  const data = JSON.parse(source);
-  const object = parseJs(`(${source})`, { ecmaVersion: "latest" }).body[0].expression;
-  return maskRanges(source, object.properties.flatMap(property => keyOf(property) === "descriptions"
-    ? displayRanges(property.value, new Set(Object.keys(data.descriptions || {})), -1) : []));
+// Deferred editorial text and the reviewed tuple-to-ID migration. Routes,
+// identities, order, figure data and evidence metadata remain protected.
+const isCaseContentCopy = (before, after, allowMigration = false) => {
+  const parse = source => {
+    const data = JSON.parse(source);
+    const visit = node => {
+      if (node.type === "ObjectExpression") {
+        const keys = node.properties.map(keyOf);
+        if (new Set(keys).size !== keys.length) throw new Error("Duplicate case-content keys");
+        node.properties.forEach(property => visit(property.value));
+      } else if (node.type === "ArrayExpression") node.elements.forEach(visit);
+    };
+    visit(parseJs(`(${source})`, { ecmaVersion: "latest" }).body[0].expression);
+    return data;
+  };
+  const left = parse(before), right = parse(after);
+  const relatedIds = related => Object.fromEntries(Object.entries(related || {}).map(([id, entries]) => {
+    if (!Array.isArray(entries)) throw new Error("Unknown related list");
+    return [id, entries.map(entry => {
+      if (typeof entry === "string") return entry;
+      if (Array.isArray(entry) && entry.length === 2 && entry.every(value => typeof value === "string")
+        && (!entry[1].trim() || maskHtmlCopy(entry[1]) === "\0COPY\0")) return entry[0];
+      throw new Error("Unknown related target");
+    })];
+  }));
+  const shapes = data => new Set(Object.values(data.related || {}).flat().map(entry => Array.isArray(entry) ? "tuple" : "id"));
+  const leftShapes = shapes(left), rightShapes = shapes(right);
+  // The one-way migration is atomic across the lists. The new renderer must
+  // never receive old tuples again, including in a mixed-format list.
+  if (leftShapes.size > 1 || rightShapes.size > 1 || (leftShapes.has("id") && rightShapes.has("tuple"))) return false;
+  const migrated = leftShapes.has("tuple") && rightShapes.has("id");
+  const addedCaptions = !Object.hasOwn(left, "relatedCaptions") && Object.hasOwn(right, "relatedCaptions");
+  if ((migrated || addedCaptions) && !allowMigration) return false;
+  const leftIds = relatedIds(left.related);
+  const knownIds = new Set([...Object.keys(left.descriptions || {}), ...Object.keys(left.evidence || {}),
+    ...Object.keys(leftIds), ...Object.values(leftIds).flat()]);
+  const normalize = data => {
+    // Preserve markup and hrefs inside existing rich-text strings as well.
+    const display = value => !value.trim() ? "\0COPY\0" : maskHtmlCopy(value);
+    for (const [id, value] of Object.entries(data.descriptions || {})) {
+      if (typeof value === "string") data.descriptions[id] = display(value);
+    }
+    for (const record of Object.values(data.evidence || {})) {
+      for (const field of evidenceFields) if (typeof record?.[field] === "string") record[field] = display(record[field]);
+    }
+    if (Object.hasOwn(data, "related")) data.related = relatedIds(data.related);
+    if (Object.hasOwn(data, "relatedCaptions")) {
+      const captions = data.relatedCaptions;
+      if (!captions || Array.isArray(captions) || typeof captions !== "object") throw new Error("Unknown captions");
+      for (const [id, value] of Object.entries(captions)) {
+        if (!knownIds.has(id) || typeof value !== "string" || display(value) !== "\0COPY\0") throw new Error("Unknown caption");
+        captions[id] = "\0COPY\0";
+      }
+    }
+    return data;
+  };
+  const hadCaptions = Object.hasOwn(left, "relatedCaptions");
+  normalize(left); normalize(right);
+  // The first migration adds only captions for already known targets. Later
+  // copy edits preserve its keys; an empty value deliberately hides a caption.
+  if (!hadCaptions) delete right.relatedCaptions;
+  return JSON.stringify(left) === JSON.stringify(right);
 };
 
 // Only the display names in the known landmark tuples; identifiers, direction
@@ -144,8 +199,8 @@ export const isCopyOnly = (path, before, after) => {
     if (copyArrays[path]) return maskJavaScriptCopy(path, before) === maskJavaScriptCopy(path, after);
     if (focusedHomePaths.has(path)) return maskLandmarkCopy(before) === maskLandmarkCopy(after);
     if (sharePages.has(path)) return maskHtmlCopy(before, true) === maskHtmlCopy(after, true);
-    if (path === "js/case-content.json") return maskCaseDescriptionCopy(before) === maskCaseDescriptionCopy(after);
-    if (["index.html", "404.html"].includes(path)) return maskHtmlCopy(before) === maskHtmlCopy(after);
+    if (path === "js/case-content.json") return isCaseContentCopy(before, after);
+    if (["index.html", "404.html", "assets/map-story/content.html"].includes(path)) return maskHtmlCopy(before) === maskHtmlCopy(after);
   } catch {
     // Syntax errors and unrecognised forms never opt out of full checks.
   }
@@ -154,9 +209,15 @@ export const isCopyOnly = (path, before, after) => {
 
 export const classifyChange = (path, before, after) => {
   if (staticCheckPaths.has(path)) return { mode: "copy", components: [] };
+  if (path === "assets/map-story/content.html" && isCopyOnly(path, before, after)) return { mode: "copy", components: [] };
   const owner = ownedCheckComponent(path);
   if (owner) return { mode: "components", components: [owner] };
   if (isCopyOnly(path, before, after)) return { mode: "copy", components: [] };
+  if (path === "js/case-content.json") {
+    try {
+      if (isCaseContentCopy(before, after, true)) return { mode: "components", components: ["check:inspector-links", "check:case-view"] };
+    } catch { /* Invalid data cannot inherit the caption migration boundary. */ }
+  }
   if (isMediaOnly(path, before, after, isCopyOnly)) return {
     mode: "components",
     components: isMediaOnly(path, before, after, isCopyOnly, false)
@@ -196,7 +257,7 @@ export const planRelease = ({ projectRoot, base = "origin/gh-pages", target } = 
       const [status, path] = entries.slice(index, index + 2);
       const owner = ownedCheckComponent(path);
       let classification = staticCheckPaths.has(path) ? { mode: "copy", components: [] } : owner ? { mode: "components", components: [owner] } : { mode: "full", components: [] };
-      if (status === "M" && (copyArrays[path] || sharePages.has(path) || focusedHomePaths.has(path) || ["js/case-content.json", "index.html", "404.html", "styles.css", "js/focused-home.js", "js/map-media.js", "js/map-engine.js", "rendering/js/map-engine.js", "js/spatial-home.js", "rendering/js/spatial-home.js", "js/whoop-day.js", "js/practice-orbits.js", "rendering/practice-orbits.js", "js/viewport-ui.js", "rendering/js/viewport-ui.js", "scripts/browser-contracts.cjs", "scripts/reel-specs.json", "README.md", "AGENTS.md"].includes(path) || /^docs\/.*\.md$/.test(path))) {
+      if (status === "M" && (copyArrays[path] || sharePages.has(path) || focusedHomePaths.has(path) || ["js/case-content.json", "index.html", "404.html", "assets/map-story/content.html", "styles.css", "js/focused-home.js", "js/map-media.js", "js/map-engine.js", "rendering/js/map-engine.js", "js/spatial-home.js", "rendering/js/spatial-home.js", "js/whoop-day.js", "js/practice-orbits.js", "rendering/practice-orbits.js", "js/viewport-ui.js", "rendering/js/viewport-ui.js", "scripts/browser-contracts.cjs", "scripts/reel-specs.json", "README.md", "AGENTS.md"].includes(path) || /^docs\/.*\.md$/.test(path))) {
         const before = git("show", `${baseSha}:${path}`);
         const after = targetSha ? git("show", `${targetSha}:${path}`) : readFileSync(resolve(projectRoot, path), "utf8");
         classification = classifyChange(path, before, after);

@@ -4113,10 +4113,6 @@ padding: 0;
 list-style: none;
 }
 
-.map-related__track > li + li {
-border-top: var(--separator-rule);
-}
-
 .map-related__item {
 display: grid;
 grid-template-columns: minmax(0, 1fr);
@@ -6304,7 +6300,6 @@ display: grid;
 gap: 9px;
 margin: var(--separator-section-before) 0 0;
 padding: var(--separator-section-after) 0 0;
-border-top: var(--separator-rule);
 }
 
 .map-evidence[hidden],
@@ -8824,7 +8819,6 @@ backdrop-filter: none;
 grid-template-columns: repeat(2, minmax(0, 1fr));
 column-gap: var(--space-6);
 }
-.map-related__track:has(> li:nth-child(5)) > li:nth-child(2) { border-top: 0; }
 .map-related__track:has(> li:nth-child(5)) .map-related__item { height: 100%; }
 }
 

@@ -51,9 +51,12 @@ assert.equal(classifyChange("rendering/practice-orbits.js", campIconBefore, camp
 const route = read("js/observation-route.js");
 const html = read("index.html");
 // Keep the legacy embedded-copy contract while current details are external data.
-const caseData = read("js/case-content.json");
-const embeddedHtml = html.replace("</body>", `<script type="application/json" id="map-evidence-data">${JSON.stringify(JSON.parse(caseData).evidence, null, 2)}</script></body>`);
-change("js/case-content.json", caseData, "Развивать цифровые продукты Музея", "Развивать цифровую среду Музея", false);
+const embeddedEvidence = {
+  garage: { task: "Развивать цифровые продукты Музея", role: "Старший менеджер веб-разработки" },
+  narkomfin: { idea: "Визуальный язык связали с местом", weather: "Цветовой цикл учитывает сезон" },
+  hotline: { feature: "UV-индекс меняет насыщенность палитры", timePreview: "В футере можно «прожить день в Сочи»", technical: "Свет регулируется в OKLCH" },
+};
+const embeddedHtml = html.replace("</body>", `<script type="application/json" id="map-evidence-data">${JSON.stringify(embeddedEvidence, null, 2)}</script></body>`);
 
 // A description-only edit keeps the same short gate as map-data copy.
 const descriptionFixture = '{"descriptions":{"running":"Бегаю."},"evidence":{"running":{"role":"Автор"}},"related":{"running":["hotline-camp"]},"figures":{"running":{"href":"https://example.com"}}}';
@@ -61,10 +64,58 @@ change("js/case-content.json", descriptionFixture, "Бегаю.", "Бегаю п
 change("js/case-content.json", descriptionFixture, '"running":"Бегаю."', '"sport":"Бегаю."', false);
 change("js/case-content.json", descriptionFixture, '"Бегаю."', '42', false);
 change("js/case-content.json", descriptionFixture, '"Бегаю."', '"Бегаю.","new":"Новая точка"', false);
-change("js/case-content.json", descriptionFixture, "Автор", "Другой вклад", false);
+change("js/case-content.json", descriptionFixture, "Автор", "Другой вклад", true);
 change("js/case-content.json", descriptionFixture, "hotline-camp", "dd-camp", false);
 change("js/case-content.json", descriptionFixture, "https://example.com", "https://example.org", false);
 change("js/case-content.json", descriptionFixture, '"Бегаю."', '(() => "Бегаю.")()', false);
+
+// Editorial evidence protects its fields, metadata and rich-text destinations.
+const evidenceCopyFixture = JSON.stringify({ evidence: { garage: { task: "Задача", role: "Работа", result: "Итог", roleSource: { label: "Источник", href: "https://example.com/source" }, labels: { role: "Роль" } } }, keywords: ["поиск"] });
+change("js/case-content.json", evidenceCopyFixture, "Задача", "Новая формулировка", true);
+change("js/case-content.json", evidenceCopyFixture, '"task":', '"href":', false);
+change("js/case-content.json", evidenceCopyFixture, "https://example.com/source", "https://other.example/", false);
+change("js/case-content.json", evidenceCopyFixture, "Источник", "Другое основание", false);
+change("js/case-content.json", evidenceCopyFixture, "поиск", "другой запрос", false);
+change("js/case-content.json", evidenceCopyFixture, "Задача", "<b>Задача</b>", false);
+
+// Exactly the old targets and order survive the caption migration. Empty text
+// hides only the caption; it cannot disguise an identity, URL or data change.
+const legacyRelatedFixture = JSON.stringify({ descriptions: { running: "Бегаю." }, evidence: { running: { role: "Автор" } }, related: { running: [["hotline-camp", "Программа кэмпа"], ["dusty", "Другой проект клуба"]] }, figures: { running: { href: "https://example.com" } } });
+const captionData = JSON.parse(legacyRelatedFixture);
+captionData.related.running = ["hotline-camp", "dusty"];
+captionData.relatedCaptions = { "hotline-camp": "Триатлонный кэмп в Сочи", dusty: "Магазин мерча" };
+const captionFixture = JSON.stringify(captionData);
+assert.equal(isCopyOnly("js/case-content.json", legacyRelatedFixture, captionFixture), false);
+assert.deepEqual(classifyChange("js/case-content.json", legacyRelatedFixture, captionFixture), { mode: "components", components: ["check:inspector-links", "check:case-view"] });
+change("js/case-content.json", captionFixture, "Магазин мерча", "", true);
+change("js/case-content.json", captionFixture, "Сочи", "Сочи перед стартом", true);
+for (const changed of [
+  captionFixture.replace('["hotline-camp","dusty"]', '["dusty","hotline-camp"]'),
+  captionFixture.replace('["hotline-camp","dusty"]', '["hotline-camp","dusty","new-project"]'),
+  captionFixture.replace('["hotline-camp","dusty"]', '["hotline-camp","dd-camp"]'),
+  captionFixture.replace('"hotline-camp":"Триатлонный', '"new-project":"Триатлонный'),
+  captionFixture.replace('"Магазин мерча"', '42'),
+  captionFixture.replace('"Магазин мерча"', '"<b>Магазин</b>"'),
+  captionFixture.replace('https://example.com', 'https://other.example/'),
+  captionFixture.replace('"role":"Автор"', '"role":"Автор","keywords":["new"]'),
+  captionFixture.replace('"running":[', '"new-project":['),
+  captionFixture.replace('"dusty":"Магазин мерча"', '"dusty":"Магазин мерча","dusty":"Дубликат"'),
+]) {
+  assert.notEqual(changed, captionFixture);
+  assert.equal(isCopyOnly("js/case-content.json", legacyRelatedFixture, changed), false);
+  assert.equal(classifyChange("js/case-content.json", legacyRelatedFixture, changed).mode, "full");
+  checks += 1;
+}
+
+for (const targets of [
+  [["hotline-camp", "Старый формат"], ["dusty", "Старый формат"]],
+  [["hotline-camp", "Старый формат"], "dusty"],
+]) {
+  const changed = JSON.stringify({ ...captionData, related: { running: targets } });
+  assert.equal(classifyChange("js/case-content.json", captionFixture, changed).mode, "full");
+  assert.equal(classifyChange("js/case-content.json", legacyRelatedFixture, changed).mode, targets.every(Array.isArray) ? "components" : "full");
+  checks += 2;
+}
 
 // Project names and share metadata are copy; routes, schema and scripts are not.
 const nameFixture = 'const mapItems = [{id:"dusty",mapLabel:"Мерч клуба",href:"https://example.com"}];';
@@ -236,6 +287,33 @@ for (const [path, hash] of [
     scoped(path, before, changed, 'full');
   }
 }
+// The caption migration earns one more exact owner pair, not arbitrary
+// future renderer code. Its selection and destination bytes stay immutable.
+for (const [path, hash] of [
+  ["rendering/js/map-engine.js", "d7eb1fd759935ae61d8dfff842b95f5dd90085ebb530d55f51ac4593d1affa98"],
+  ["js/map-engine.js", "1fd5d2d3fe9976ab60b29e58129db59c94d317f1afe86d36e7bca6b045bb9079"],
+]) {
+  const before = execFileSync('git', ['show', `9b093bd11863b1dc7b4ace4b8660c2b938cafcbc:${path}`], { cwd: root, encoding: 'utf8' });
+  const after = read(path);
+  const start = after.indexOf('const renderMapRelatedItems='), end = after.indexOf('const setInspectorOpen=');
+  const known = start >= 0 && end > start && createHash('sha256').update(after.slice(start, end)).digest('hex') === hash;
+  scoped(path, before, after, known ? 'components' : 'full', known ? relatedCoverage : []);
+  if (known) for (const changed of [
+    after.replace('href="?point=${id}"', 'href="?point=changed"'),
+    after.replace('relatedCaptions', 'unreviewedCaptions'),
+    after + '\nglobalThis.unrelated = true;',
+    after + '\n' + after.slice(start, end),
+  ]) {
+    assert.notEqual(changed, after);
+    scoped(path, before, changed, 'full');
+  }
+}
+scoped('styles.css', '.map-related__track > li + li{border-top:var(--separator-rule)}', '', 'components', relatedCoverage);
+scoped('styles.css', '', '.map-related__track > li + .unrelated{color:red}', 'full');
+scoped('styles.css', '', '.map-related__track > li + li,.unrelated{color:red}', 'full');
+scoped('styles.css', '.map-evidence{border-top:var(--separator-rule)}', '.map-evidence{}', 'components', relatedCoverage);
+scoped('styles.css', '', '.map-evidence + .unrelated{color:red}', 'full');
+scoped('styles.css', '', 'body:has(.map-evidence){color:red}', 'full');
 for (const selector of ['.map-related__item', '.map-related__preview--circle', '.map-related__item:has(.map-related__preview) > :is(strong, span)']) {
   scoped('styles.css', '', `${selector}{align-self:start}`, 'components', relatedCoverage);
 }
@@ -465,7 +543,10 @@ scoped('styles.css', '', '#story-pane .opening{padding-top:24px}', 'components',
 scoped('styles.css', '', '#story-pane + #map-pane{opacity:0}', 'full');
 scoped('styles.css', '', '#story-pane .opening{padding-top:24px}#map-pane{opacity:0}', 'full');
 scoped('js/map-story.js', 'before', 'after', 'components', ['map-story']);
-scoped('assets/map-story/content.html', 'before', 'after', 'components', ['map-story']);
+const storyCopyFixture = '<section id="story"><p>Рассказ</p><a href="?point=running" aria-label="Открыть бег">Бег</a></section>';
+scoped('assets/map-story/content.html', storyCopyFixture, storyCopyFixture.replace('Рассказ', 'История карты').replace('Открыть бег', 'О беге'), 'copy');
+scoped('assets/map-story/content.html', storyCopyFixture, storyCopyFixture.replace('?point=running', '?point=dusty'), 'components', ['map-story']);
+scoped('assets/map-story/content.html', storyCopyFixture, storyCopyFixture.replace('<p>Рассказ</p>', '<button>Рассказ</button>'), 'components', ['map-story']);
 scoped('assets/map-story/black-hole.js', 'before', 'after', 'full');
 scoped('js/viewport-ui.js', 'before', 'after', 'full');
 assert.deepEqual(componentCoverage['map-story'], ['map-story', 'scroll-lens', 'accessibility']);

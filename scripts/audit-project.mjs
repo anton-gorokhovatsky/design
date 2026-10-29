@@ -297,13 +297,17 @@ requireContract(
   "notion-project-facts",
   "Distinctive source facts from the seven Notion cards must remain represented.",
 );
+// Approved editorial pass, 2026-10-29: preserve the handover, year of work,
+// requirements, coordination and documented next steps in the revised wording.
+const optimalFactCopy = field => (mapEvidenceById.optimal?.[field] || "").replace(/\s+/g, " ");
 requireContract(
-  mapEvidenceById.optimal?.task.includes("вернуть управляемость")
-    && mapEvidenceById.optimal?.role.includes("Принял проект у другого менеджера")
-    && mapEvidenceById.optimal?.role.includes("навёл порядок")
-    && mapEvidenceById.optimal?.role.includes("оптимизировал")
-    && mapEvidenceById.optimal?.result.includes("Передал новому менеджеру")
-    && mapEvidenceById.optimal?.result.includes("дорожной карте")
+  optimalFactCopy("task").includes("наладить его поддержку и развитие")
+    && optimalFactCopy("role").includes("Принял проект у другого менеджера")
+    && optimalFactCopy("role").includes("За год упорядочил накопившиеся задачи")
+    && optimalFactCopy("role").includes("уточнил требования")
+    && optimalFactCopy("role").includes("координировал работу над поддержкой и развитием портала")
+    && optimalFactCopy("result").includes("Передал проект новому менеджеру")
+    && optimalFactCopy("result").includes("актуальными материалами, упорядоченным списком задач и планом дальнейшей работы")
     && mapEvidenceById.ilmix?.result.includes("19\u00a0905")
     && mapEvidenceById.ilmix?.result.includes("48\u00a0835")
     && mapEvidenceById.ilmix?.result.includes("66,9\u00a0%")
@@ -407,8 +411,9 @@ const authorialPrincipleDigest = createHash("sha256")
   .digest("hex");
 requireContract(
   authorialPrincipleDigest
-    // Author approved nine spelling/spacing corrections on 2026-09-29.
-    === "8ba0d5aa4c846768414d4c4f3e475e6125521719be4b03448c06b657dc0a42b6",
+    // Author approved this editorial pass on 2026-10-29: system, improve,
+    // communicate and ideas only; all other principle descriptions are unchanged.
+    === "e1db18928a612fb838af621ffee0381d229ede61f5eab7dddff9df097a1ded45",
   "principle-authorial-copy",
   "Principle descriptions are authorial source text and must stay verbatim; only headings and labels may be edited without an approved source-copy update.",
   { actual: authorialPrincipleDigest },
