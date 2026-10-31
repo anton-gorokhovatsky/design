@@ -18,6 +18,10 @@ for (const engine of ['chromium', 'webkit']) {
   assert.deepEqual(selected.reels, []);
   assert.deepEqual(selected.static, []);
   assert.deepEqual(selected.syntax, []);
+  const notFound = plan(`--scope=${engine}`, '--checks=not-found');
+  assert.deepEqual(notFound.browser.map(s => s.args), [['scripts/check-live-surface.mjs', engine, 'not-found']]);
+  assert.deepEqual(notFound.reels, []);
+  assert.deepEqual(notFound.static, []);
   const address = plan(`--scope=${engine}`, '--checks=point-address');
   assert.deepEqual(address.browser.map(s => s.args), [['scripts/check-point-address.mjs', engine]]);
   assert.deepEqual(address.reels, []);
@@ -52,6 +56,17 @@ const changedTooling = getPublicationAssets(root, { staticScope: 'checks', compo
 assert(changedTooling.assets.some(a => a.path === 'scripts/release-scope.mjs'));
 assert(changedTooling.assets.some(a => a.path === 'scripts/component-scope.mjs'), 'Unchanged helper hashes cannot prove deployment of the changed classifier');
 assert(!changedTooling.assets.some(a => a.path.startsWith('.github/')), 'GitHub Pages does not serve hidden workflow files');
+const errorAssets = getPublicationAssets(root, { staticScope: 'copy', components: ['not-found'], files: ['404.html'] });
+for (const path of ['404.html', 'assets/not-found/motion.js', 'assets/not-found/black-hole.js', 'assets/not-found/LICENSE.txt']) {
+  const asset = errorAssets.assets.find(asset => asset.path === path);
+  assert.ok(asset, `A 404 release proves its standalone bytes: ${path}`);
+  assert.match(asset.hash, /^[a-f0-9]{64}$/);
+  assert.equal(asset.reference, `${path}?v=${asset.hash.slice(0, 12)}`);
+}
+const notFoundMotion = errorAssets.assets.find(asset => asset.path === 'assets/not-found/motion.js');
+const notFoundKernel = errorAssets.assets.find(asset => asset.path === 'assets/not-found/black-hole.js');
+assert.ok(readFileSync(join(root, '404.html'), 'utf8').includes(`src="/${notFoundMotion.reference}"`), 'The 404 loads the current standalone module from the root');
+assert.ok(readFileSync(join(root, notFoundMotion.path), 'utf8').includes(`import('/${notFoundKernel.reference}')`), 'The standalone module imports the current kernel from the root');
 const mixedAssets = getPublicationAssets(root, { staticScope: 'static', components: ['signature'] });
 assert(mixedAssets.html !== null);
 assert(mixedAssets.assets.some(a => a.path.startsWith('signature/') && !a.linked), 'Mixed releases verify the shared module without requiring its demo link in portfolio HTML');

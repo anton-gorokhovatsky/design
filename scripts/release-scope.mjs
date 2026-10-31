@@ -35,7 +35,7 @@ const relatedPointMedia = Object.fromEntries(["running", "private-practice", "ga
   .map(id => [id, Object.fromEntries(["light", "dark"].map(theme => [theme, `assets/point-thumbnails/${id}-${theme}.webp`]))]));
 const relatedPointImages = new Set(Object.values(relatedPointMedia).flatMap(Object.values));
 const relatedPointImageScope = { mode: "components", components: ["check:inspector-links", "check:case-view"] };
-const relatedPresentationDocs = new Set(["rendering/README.md", "docs/point-thumbnails.md"]);
+const relatedPresentationDocs = new Set(["rendering/README.md", "docs/point-thumbnails.md", "docs/not-found.md"]);
 const relatedProductAction = { doronin: { label: "Купить тот самый ковёр от Вити", href: "https://doronin.store/tproduct/840694551052-kovyor" } };
 const focusedHomePaths = new Set(["js/focused-home.js", "rendering/js/focused-home.js"]);
 const evidenceFields = new Set(["task", "role", "idea", "result", "feature", "details", "weather", "timePreview", "technical"]);
@@ -251,6 +251,10 @@ export const classifyChange = (path, before, after) => {
     const components = affectedComponents(path, before, after, maskHtmlCopy);
     if (components) return { mode: "components", components };
   }
+  if (path === "scripts/check-live-surface.mjs") {
+    return { mode: "components", components: affectedComponents(path, before, after, maskHtmlCopy)
+      || ["check:whoop-ui", "not-found"] };
+  }
   const owner = ownedCheckComponent(path);
   if (owner) return { mode: "components", components: [owner] };
   if (isCopyOnly(path, before, after)) return { mode: "copy", components: [] };
@@ -299,7 +303,7 @@ export const planRelease = ({ projectRoot, base = "origin/gh-pages", target } = 
       const [status, path] = entries.slice(index, index + 2);
       const owner = ownedCheckComponent(path);
       let classification = staticCheckPaths.has(path) ? { mode: "copy", components: [] } : owner ? { mode: "components", components: [owner] } : { mode: "full", components: [] };
-      if (status === "M" && (copyArrays[path] || sharePages.has(path) || focusedHomePaths.has(path) || ["js/case-content.json", "js/case-view.js", "js/map-story.js", "rendering/js/map-story.js", "index.html", "404.html", "assets/map-story/content.html", "styles.css", "js/focused-home.js", "js/map-media.js", "js/map-engine.js", "rendering/js/map-engine.js", "js/spatial-home.js", "rendering/js/spatial-home.js", "js/whoop-day.js", "js/practice-orbits.js", "rendering/practice-orbits.js", "js/viewport-ui.js", "rendering/js/viewport-ui.js", "scripts/browser-contracts.cjs", "scripts/reel-specs.json", "README.md", "AGENTS.md"].includes(path) || /^docs\/.*\.md$/.test(path))) {
+      if (status === "M" && (copyArrays[path] || sharePages.has(path) || focusedHomePaths.has(path) || ["js/case-content.json", "js/case-view.js", "js/map-story.js", "rendering/js/map-story.js", "index.html", "404.html", "assets/map-story/content.html", "styles.css", "js/focused-home.js", "js/map-media.js", "js/map-engine.js", "rendering/js/map-engine.js", "js/spatial-home.js", "rendering/js/spatial-home.js", "js/whoop-day.js", "js/practice-orbits.js", "rendering/practice-orbits.js", "js/viewport-ui.js", "rendering/js/viewport-ui.js", "scripts/browser-contracts.cjs", "scripts/check-live-surface.mjs", "scripts/reel-specs.json", "README.md", "AGENTS.md"].includes(path) || /^docs\/.*\.md$/.test(path))) {
         const before = git("show", `${baseSha}:${path}`);
         const after = targetSha ? git("show", `${targetSha}:${path}`) : readFileSync(resolve(projectRoot, path), "utf8");
         classification = classifyChange(path, before, after);

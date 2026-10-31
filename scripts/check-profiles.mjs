@@ -13,8 +13,12 @@ const processPaths = new Set([
   'scripts/point-address-scope.mjs', 'scripts/check-point-address.mjs',
   'scripts/check-local-ui.mjs', 'scripts/overview-scope.mjs',
 ]);
+// The error document owns exactly these standalone files, never a folder glob.
+export const notFoundAssetPaths = new Set([
+  'assets/not-found/motion.js', 'assets/not-found/black-hole.js', 'assets/not-found/LICENSE.txt',
+]);
 const signaturePath = /^signature\/(?:src\/[^/]+\.(?:js|css|svg)|(?:v1|\d+\.\d+\.\d+)\/signature\.js|build\.mjs|demo\.html|README\.md|codex\/(?:SKILL|AGENTS\.fragment)\.md)$/;
-const browserCheckPaths = new Map(Object.keys(componentChecks).filter(id => !["header", "search-icon"].includes(id)).map(id => [`scripts/check-${id}.mjs`, `check:${id}`]));
+const browserCheckPaths = new Map(Object.keys(componentChecks).filter(id => !["header", "search-icon", "not-found"].includes(id)).map(id => [`scripts/check-${id}.mjs`, `check:${id}`]));
 browserCheckPaths.set('scripts/native-webkit-capture.mjs', 'check:accessibility');
 browserCheckPaths.set('scripts/check-live-surface.mjs', 'check:whoop-ui');
 browserCheckPaths.set('scripts/check-ui-contracts.mjs', 'check:core');
@@ -24,13 +28,14 @@ browserCheckPaths.set('scripts/webkit-regression.cjs', 'check:core');
 export const staticCheckPaths = new Set([
   'scripts/check-profiles.mjs', 'scripts/check-project.mjs', 'scripts/check-catalog.mjs',
   'scripts/media-scope.mjs',
-  'scripts/release-scope.mjs', 'scripts/component-scope.mjs', 'scripts/check-release-scope.mjs',
+  'scripts/release-scope.mjs', 'scripts/component-scope.mjs', 'scripts/overview-scope.mjs', 'scripts/check-release-scope.mjs',
   'scripts/release.mjs', 'scripts/release-quality.mjs', 'scripts/release-version.mjs',
   'scripts/check-release-quality.mjs', 'scripts/publication-assets.mjs', 'scripts/check-runner.mjs',
   'scripts/audit-project.mjs', 'scripts/check-assets.mjs',
   'scripts/material-contract.mjs', 'scripts/check-css-cascade.mjs', 'scripts/check-performance-budget.mjs',
   'scripts/check-performance-budget.test.mjs', 'scripts/check-publication-assets.mjs']);
-export const ownedCheckComponent = path => path === 'scripts/capture-reels.cjs' ? 'media'
+export const ownedCheckComponent = path => notFoundAssetPaths.has(path) ? 'not-found'
+  : path === 'scripts/capture-reels.cjs' ? 'media'
   : path === 'assets/project-icons/dd-camp.svg' ? 'check:hover-layout'
   : path === 'assets/project-logos/academy-tn.svg'
   ? 'check:case-flow' : signaturePath.test(path)

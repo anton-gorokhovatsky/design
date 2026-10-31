@@ -11,6 +11,7 @@ export const componentChecks = {
   "map-story": "Map story and split reading",
   "hover-layout": "Hover preview and persistent consoles",
   "whoop-ui": "WHOOP daily UI",
+  "not-found": "Standalone 404 motion, reflow and return",
   "first-visit": "First visit and named navigation",
   "command-placement": "Command popup placement",
   header: "Author header and map mode switch",
@@ -27,7 +28,7 @@ export const componentCoverage = {
   signature: ["signature"],
   overview: ["observation-route", "first-visit", "case-flow", "case-view", "hover-layout", "accessibility", "inspector-links"],
   "map-presentation": ["map-story", "map-routes", "hover-layout", "sphere-motion", "first-visit", "accessibility", "observation-route"],
-  "not-found": ["whoop-ui", "accessibility"],
+  "not-found": ["not-found"],
   checks: ["signature", "point-address", "header", "search-icon"],
   "point-address": ["point-address"],
   header: ["header"],
@@ -43,7 +44,7 @@ export const componentCoverage = {
   "scroll-lens-pointer": ["whoop-ui", "case-view", "map-story"],
   materials: ["core", "accessibility", "map-story", "map-routes", "hover-layout", "case-view", "whoop-ui", "first-visit", "command-placement"],
   // Console bounds also move the author aura and detached search results.
-  // WHOOP includes live-surface: 404 return, ResizeObserver and page errors.
+  // WHOOP includes live-surface: departure presence, ResizeObserver and page errors.
   "console-bounds": ["header", "hover-layout", "command-placement", "whoop-ui", "map-routes", "accessibility", "case-flow"],
   whoop: ["core", "accessibility", "whoop-ui", "hover-layout", "first-visit"],
 };
@@ -57,7 +58,7 @@ for (const id of checkIds) componentCoverage[`check:${id}`] = [id];
 // Browsers still run serially inside each worker; the full inventory is unchanged.
 const shards = {
   reading: ["case-flow", "personal-media", "case-view", "whoop-ui"],
-  interface: ["accessibility", "first-visit", "command-placement", "header", "search-icon"],
+  interface: ["accessibility", "first-visit", "command-placement", "header", "search-icon", "not-found"],
   map: ["map-story", "map-routes", "hover-layout", "sphere-motion", "point-address"],
   motion: ["scroll-lens", "observation-route", "inspector-links"],
 };
@@ -68,7 +69,8 @@ export const browserSteps = (browser) => [
     ? "scripts/check-ui-contracts.mjs" : "scripts/webkit-regression.cjs"] },
   ...Object.entries(componentChecks).map(([id, label]) => ({
     id, label: `${label}: ${browser}`, args: ["header", "search-icon"].includes(id)
-      ? ["scripts/check-local-ui.mjs", browser, id] : [`scripts/check-${id}.mjs`, browser],
+      ? ["scripts/check-local-ui.mjs", browser, id] : id === "not-found"
+        ? ["scripts/check-live-surface.mjs", browser, "not-found"] : [`scripts/check-${id}.mjs`, browser],
   })),
 ].map((step) => ({ ...step, scope: browser, command: process.execPath }));
 

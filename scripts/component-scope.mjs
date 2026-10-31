@@ -1,7 +1,7 @@
 import postcss from "postcss";
 import { createHash } from "node:crypto";
 import { isMaterialCleanup, isMaterialForcedColorsPriority, isMaterialRecipeChange } from "./material-contract.mjs";
-import { overviewOutside, overviewHtmlOutside, notFoundBindings } from "./overview-scope.mjs";
+import { overviewOutside, overviewHtmlOutside, notFoundBindings, notFoundChecksOutside } from "./overview-scope.mjs";
 import selectorParser from "postcss-selector-parser";
 import { parse as parseHtml } from "parse5";
 import { parse as parseJs } from "acorn";
@@ -949,6 +949,7 @@ const isReadingContextFix = (path, before, after) => {
 export const affectedComponents = (path, before, after, maskHtmlCopy) => {
   if (before.includes("\0") || after.includes("\0")) return null;
   try {
+    if (path === "scripts/check-live-surface.mjs" && notFoundChecksOutside(before) === notFoundChecksOutside(after)) return ["not-found"];
     if (isReadingContextFix(path, before, after)) return ["check:case-flow"];
     const related = relatedPosterComponents(path, before, after);
     if (related) return related;

@@ -835,7 +835,7 @@ assert.ok(consoleMatrix.filter(job => job.browser === 'webkit').every(job => job
 
 // The complete old browser inventory remains mandatory, once per engine;
 // WebKit core retains all four viewport/theme profiles. No shard may disappear.
-const retainedChecks = ["map-story", "signature", "case-flow", "personal-media", "inspector-links", "point-address", "accessibility", "map-routes", "hover-layout", "whoop-ui", "first-visit", "command-placement", "header", "search-icon", "sphere-motion", "case-view", "scroll-lens", "observation-route"];
+const retainedChecks = ["map-story", "signature", "case-flow", "personal-media", "inspector-links", "point-address", "accessibility", "map-routes", "hover-layout", "whoop-ui", "not-found", "first-visit", "command-placement", "header", "search-icon", "sphere-motion", "case-view", "scroll-lens", "observation-route"];
 const fullMatrix = browserMatrix("full").include;
 assert.equal(new Set(fullMatrix.map(({ artifact }) => artifact)).size, fullMatrix.length);
 for (const browser of ["chromium", "webkit"]) {
@@ -909,7 +909,24 @@ for (const changed of [interior.replace('data-start-observation>', 'data-start-o
 }
 const notFound = read('404.html');
 scoped('404.html', notFound, notFound.replace('margin: 1rem 0 0', 'margin: 2rem 0 0'), 'components', ['not-found']);
-scoped('404.html', notFound, notFound.replace('let paused = false', 'let paused = true'), 'full');
+const legacyNotFound = execFileSync('git', ['show', '250713e:404.html'], { cwd: root, encoding: 'utf8' });
+scoped('404.html', legacyNotFound, legacyNotFound.replace('let paused = false', 'let paused = true'), 'full');
+scoped('404.html', legacyNotFound, notFound, 'components', ['not-found']);
+for (const changed of [
+  notFound.replace('/assets/not-found/motion.js', '/assets/not-found/other.js'),
+  notFound.replace('let savedThemeMode = null', 'let savedThemeMode = "dark"'),
+  notFound.replace('</main>', '<script>run()</script></main>'),
+]) scoped('404.html', notFound, changed, 'full');
+for (const path of ['assets/not-found/motion.js', 'assets/not-found/black-hole.js', 'assets/not-found/LICENSE.txt']) {
+  scoped(path, 'before', 'after', 'components', ['not-found']);
+}
+for (const path of ['assets/not-found/other.js', 'assets/not-found/../other.js']) scoped(path, 'before', 'after', 'full');
+const liveSurface = read('scripts/check-live-surface.mjs');
+const legacyLiveSurface = execFileSync('git', ['show', '250713e:scripts/check-live-surface.mjs'], { cwd: root, encoding: 'utf8' });
+scoped('scripts/check-live-surface.mjs', legacyLiveSurface, liveSurface, 'components', ['not-found']);
+scoped('scripts/check-live-surface.mjs', liveSurface, liveSurface.replace('The disk brightness changes.', 'The disk changes.'), 'components', ['not-found']);
+scoped('scripts/check-live-surface.mjs', liveSurface, liveSurface.replace("assert.equal(hover.transform, 'none')", "assert.equal(hover.transform, 'scale(1)')"), 'components', ['check:whoop-ui', 'not-found']);
+
 scoped('404.html', notFound, notFound.replace('class="not-found__copy"', 'class="not-found__copy" onclick="run()"'), 'full');
 for (const id of ['observation-route', 'first-visit', 'case-flow', 'accessibility']) {
   scoped(`scripts/check-${id}.mjs`, 'before', 'after', 'components', [`check:${id}`]);
@@ -917,8 +934,10 @@ for (const id of ['observation-route', 'first-visit', 'case-flow', 'accessibilit
     .filter(job => job.browser === engine).flatMap(job => job.checks.split(',')), [id]);
 }
 scoped('scripts/audit-project.mjs', 'before', 'after', 'copy');
+scoped('scripts/overview-scope.mjs', 'before', 'after', 'copy');
 scoped('scripts/browser-contracts.cjs', 'before', 'after', 'full');
 scoped('scripts/unregistered-check.mjs', 'before', 'after', 'full');
+scoped('scripts/check-not-found.mjs', 'before', 'after', 'full');
 
 // The actual caption move is local even inside map-engine.js. A nearby change
 // to node placement, relationships or an executable offset remains full scope.
@@ -1116,6 +1135,7 @@ try {
   writeFileSync(join(directory, "js/panels.js"), panels);
   writeFileSync(join(directory, "js/observation-route.js"), route);
   writeFileSync(join(directory, "index.html"), shell);
+  writeFileSync(join(directory, "404.html"), legacyNotFound);
   writeFileSync(join(directory, "styles.css"), '.map-grid {color: black}');
   writeFileSync(join(directory, "js/whoop-day.js"), 'const interval = 1000;');
   writeFileSync(join(directory, "js/focused-home.js"), headerModule);
@@ -1167,6 +1187,25 @@ try {
   rmSync(join(directory, "scripts/capture-share-other.mjs"));
   git('reset', '--hard', published);
   checks += 8;
+  // Standalone 404 additions keep only their scenario. Adjacent paths cannot
+  // inherit it, including an unknown file removed from a published baseline.
+  mkdirSync(join(directory, 'assets/not-found'), { recursive: true });
+  mkdirSync(join(directory, 'docs'), { recursive: true });
+  const notFoundFiles = ['assets/not-found/motion.js', 'assets/not-found/black-hole.js', 'assets/not-found/LICENSE.txt', 'docs/not-found.md'];
+  writeFileSync(join(directory, '404.html'), notFound);
+  for (const path of notFoundFiles) writeFileSync(join(directory, path), read(path));
+  assert.deepEqual(plan().components, ['not-found']);
+  assert.equal(plan().staticScope, 'copy');
+  assert.deepEqual(plan().matrix, browserMatrix('components', ['not-found']));
+  writeFileSync(join(directory, 'assets/not-found/other.js'), 'unregistered');
+  assert.equal(plan().mode, 'full', 'An adjacent standalone asset is not owned');
+  git('add', 'assets/not-found/other.js'); git('commit', '-m', 'unknown path fixture');
+  const unknownNotFoundBase = git('rev-parse', 'HEAD');
+  rmSync(join(directory, 'assets/not-found/other.js'));
+  assert.equal(planRelease({ projectRoot: directory, base: unknownNotFoundBase }).mode, 'full', 'Deleting an unregistered path cannot inherit 404 scope');
+  git('reset', '--hard', published);
+  for (const path of notFoundFiles) rmSync(join(directory, path));
+  checks += 5;
   mkdirSync(join(directory, 'assets/point-thumbnails'), { recursive: true });
   const pointArtwork = join(directory, 'assets/point-thumbnails/running-light.webp');
   writeFileSync(pointArtwork, 'reviewed point artwork');

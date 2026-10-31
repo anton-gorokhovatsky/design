@@ -121,16 +121,6 @@
       }
       .not-found__actions { margin-top: 1.5rem; }
       .not-found__action { display: inline-flex; align-items: center; min-height: 44px; font-size: var(--type-body); }
-      .not-found__motion {
-        position: absolute;
-        top: 1rem;
-        right: max(12px, 2vw);
-        min-height: 44px;
-        max-width: calc(100% - 24px);
-        font-size: var(--type-label);
-        color: var(--content-muted);
-      }
-      .not-found__motion[hidden] { display: none; }
       @media (max-width: 680px) {
         .not-found { padding: 5.5rem 12px 2rem; }
         .not-found__terrain { right: -70%; width: 160%; height: 90%; }
@@ -140,16 +130,45 @@
         .not-found__terrain, .not-found__map { display: none; }
       }
     </style>
+<style>
+/* One scene and its caption. Viewport height limits the artwork, never the text. */
+.not-found {
+  display: flex; flex-direction: column; justify-content: center;
+  min-height: 100svh; gap: clamp(8px, 1.5svh, 16px);
+  padding: clamp(20px, 4svh, 36px) 24px;
+  overflow: visible;
+}
+.not-found__hole {
+  --hole-height: clamp(7rem, calc(100svh - 18rem), 35.5rem);
+  flex: none; width: min(100%, 74rem, calc(var(--hole-height) * 960 / 460));
+  aspect-ratio: 960 / 460;
+  min-width: 0; margin: 0; position: relative; color: #8a642d;
+}
+html[data-theme="dark"] .not-found__hole { color: #c3a46d; }
+.not-found__hole svg { display: block; width: 100%; height: 100%; }
+.not-found__hole canvas { visibility: hidden; position: absolute; inset: 0; width: 100%; height: 100%; }
+.not-found__hole[data-rendered] svg { visibility: hidden; }
+.not-found__hole[data-rendered] canvas { visibility: visible; }
+.not-found__message { flex: none; width: min(100%, 28rem); color: var(--content-ink); }
+.not-found__meta { margin: 0 0 .875rem; }
+.not-found__copy { max-width: none; }
+.not-found__actions { margin-top: 1rem; }
+@media(max-width: 680px) {
+  .not-found { padding-inline: 16px; }
+  .not-found__message { width: calc(100% - 24px); max-width: 28rem; }
+}
+@media (forced-colors: active), (prefers-contrast: more) {
+  .not-found__hole { display: none; }
+}
+</style>
   </head>
   <body class="map-surface">
     <main class="not-found" id="content">
-      <div class="not-found__map" aria-hidden="true"></div>
-      <div class="not-found__terrain" aria-hidden="true"></div>
+
+      <figure class="not-found__hole" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 120 960 460" aria-hidden="true"><g fill="currentColor" font-family="Consolas, 'Liberation Mono', monospace" font-size="16.666667" font-variant-ligatures="none"><text x="0" y="20" textLength="960" lengthAdjust="spacingAndGlyphs" xml:space="preserve" style="white-space:pre">                                                                                                </text><text x="0" y="40" textLength="960" lengthAdjust="spacingAndGlyphs" xml:space="preserve" style="white-space:pre">                                                                                                </text><text x="0" y="60" textLength="960" lengthAdjust="spacingAndGlyphs" xml:space="preserve" style="white-space:pre">                                                                                                </text><text x="0" y="80" textLength="960" lengthAdjust="spacingAndGlyphs" xml:space="preserve" style="white-space:pre">                                                                                                </text><text x="0" y="100" textLength="960" lengthAdjust="spacingAndGlyphs" xml:space="preserve" style="white-space:pre">                                                                                                </text><text x="0" y="120" textLength="960" lengthAdjust="spacingAndGlyphs" xml:space="preserve" style="white-space:pre">                                                                                                </text><text x="0" y="140" textLength="960" lengthAdjust="spacingAndGlyphs" xml:space="preserve" style="white-space:pre">                                                                                                </text><text x="0" y="160" textLength="960" lengthAdjust="spacingAndGlyphs" xml:space="preserve" style="white-space:pre">                                         .....:::::....                                         </text><text x="0" y="180" textLength="960" lengthAdjust="spacingAndGlyphs" xml:space="preserve" style="white-space:pre">                                    ..:::----======----:::..                                    </text><text x="0" y="200" textLength="960" lengthAdjust="spacingAndGlyphs" xml:space="preserve" style="white-space:pre">                                 .:::-===++++******++++==--:::.                                 </text><text x="0" y="220" textLength="960" lengthAdjust="spacingAndGlyphs" xml:space="preserve" style="white-space:pre">                              ..::-==+******++=====++****++==-::..                              </text><text x="0" y="240" textLength="960" lengthAdjust="spacingAndGlyphs" xml:space="preserve" style="white-space:pre">                            .::--=+**#*+-:            :-+***++=-:::.                            </text><text x="0" y="260" textLength="960" lengthAdjust="spacingAndGlyphs" xml:space="preserve" style="white-space:pre">                          .::--=+*##*-.                  .-+***+=-::..                          </text><text x="0" y="280" textLength="960" lengthAdjust="spacingAndGlyphs" xml:space="preserve" style="white-space:pre">                        .::-===*##*-                        -+***+=-::..                        </text><text x="0" y="300" textLength="960" lengthAdjust="spacingAndGlyphs" xml:space="preserve" style="white-space:pre">                     ..::-===*#%%+.                          .=***+==-::..                      </text><text x="0" y="320" textLength="960" lengthAdjust="spacingAndGlyphs" xml:space="preserve" style="white-space:pre">                 ..:::-=+++*#%@%=                              -****+=-:::...                   </text><text x="0" y="340" textLength="960" lengthAdjust="spacingAndGlyphs" xml:space="preserve" style="white-space:pre">            ..:::--===++*#%@@@%=                                -+++++=---:::.....              </text><text x="0" y="360" textLength="960" lengthAdjust="spacingAndGlyphs" xml:space="preserve" style="white-space:pre">       ..::::-======+*#%@@@@@#-    .                        :    .-====--::::::::.....          </text><text x="0" y="380" textLength="960" lengthAdjust="spacingAndGlyphs" xml:space="preserve" style="white-space:pre">    ..:::---====++*++*%@@@@@%*=:  .                         .=   :-=+===---:::::::::.....       </text><text x="0" y="400" textLength="960" lengthAdjust="spacingAndGlyphs" xml:space="preserve" style="white-space:pre">   ....:::--=====++*****####%%%%##*++===---::::::::::-------=**+++++===--::::::::::.....        </text><text x="0" y="420" textLength="960" lengthAdjust="spacingAndGlyphs" xml:space="preserve" style="white-space:pre">       ....:::--------==========+*+++++++***************++++=+#+-----::::::::........           </text><text x="0" y="440" textLength="960" lengthAdjust="spacingAndGlyphs" xml:space="preserve" style="white-space:pre">              .......:::::::::::-+=:::--------:::::::::::::::=+-:............                   </text><text x="0" y="460" textLength="960" lengthAdjust="spacingAndGlyphs" xml:space="preserve" style="white-space:pre">                               .:-=-..................      -+-:                                </text><text x="0" y="480" textLength="960" lengthAdjust="spacingAndGlyphs" xml:space="preserve" style="white-space:pre">                                .-=*+.                    :*#+-.                                </text><text x="0" y="500" textLength="960" lengthAdjust="spacingAndGlyphs" xml:space="preserve" style="white-space:pre">                                 .:=+*+:                -+#*=:.                                 </text><text x="0" y="520" textLength="960" lengthAdjust="spacingAndGlyphs" xml:space="preserve" style="white-space:pre">                                   .-=+**+=:..    ..-=+**+=-.                                   </text><text x="0" y="540" textLength="960" lengthAdjust="spacingAndGlyphs" xml:space="preserve" style="white-space:pre">                                     .:-=+++*********++=-:.                                     </text><text x="0" y="560" textLength="960" lengthAdjust="spacingAndGlyphs" xml:space="preserve" style="white-space:pre">                                        ..:----------:..                                        </text><text x="0" y="580" textLength="960" lengthAdjust="spacingAndGlyphs" xml:space="preserve" style="white-space:pre">                                                                                                </text><text x="0" y="600" textLength="960" lengthAdjust="spacingAndGlyphs" xml:space="preserve" style="white-space:pre">                                                                                                </text><text x="0" y="620" textLength="960" lengthAdjust="spacingAndGlyphs" xml:space="preserve" style="white-space:pre">                                                                                                </text><text x="0" y="640" textLength="960" lengthAdjust="spacingAndGlyphs" xml:space="preserve" style="white-space:pre">                                                                                                </text><text x="0" y="660" textLength="960" lengthAdjust="spacingAndGlyphs" xml:space="preserve" style="white-space:pre">                                                                                                </text><text x="0" y="680" textLength="960" lengthAdjust="spacingAndGlyphs" xml:space="preserve" style="white-space:pre">                                                                                                </text><text x="0" y="700" textLength="960" lengthAdjust="spacingAndGlyphs" xml:space="preserve" style="white-space:pre">                                                                                                </text><text x="0" y="720" textLength="960" lengthAdjust="spacingAndGlyphs" xml:space="preserve" style="white-space:pre">                                                                                                </text></g></svg><canvas></canvas></figure>
 
       <section
-        class="not-found__card"
-        data-material-surface="page-404"
-        data-material-active="always"
+        class="not-found__message"
         aria-labelledby="not-found-title"
       >
         <p class="not-found__meta">404 / Неизвестный участок</p>
@@ -164,30 +183,8 @@
           </a>
         </nav>
       </section>
-      <button class="not-found__motion text-link" type="button" data-terrain-motion hidden>Остановить движение</button>
+
     </main>
-    <script>
-      (() => {
-        const root = document.documentElement;
-        const button = document.querySelector('[data-terrain-motion]');
-        const system = matchMedia('(prefers-reduced-motion: reduce)');
-        let paused = false;
-        try { paused = localStorage.getItem('anton-signal-reduced-motion') === '1'; } catch {}
-        const sync = () => {
-          root.dataset.reduceMotion = String(paused || system.matches);
-          button.hidden = system.matches;
-          button.textContent = paused ? 'Включить движение' : 'Остановить движение';
-        };
-        button.addEventListener('click', () => {
-          paused = !paused;
-          try { localStorage.setItem('anton-signal-reduced-motion', paused ? '1' : '0'); } catch {}
-          sync();
-        });
-        system.addEventListener('change', sync);
-        document.addEventListener('visibilitychange', sync);
-        sync();
-      })();
-    </script>
-    <script type="module" src="/js/atlas-motion.js?v=06ea7b7c7898"></script>
+<script type="module" src="/assets/not-found/motion.js?v=09077cdaf4f2"></script>
   </body>
 </html>

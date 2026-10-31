@@ -1,4 +1,5 @@
 import { parse as parseJs } from 'acorn';
+import { createHash } from 'node:crypto';
 import { parse as parseHtml } from 'parse5';
 
 const ast = source => parseJs(source, { ecmaVersion: 'latest', sourceType: 'module' });
@@ -92,11 +93,12 @@ export const overviewHtmlOutside = source => {
   return JSON.stringify(outside);
 };
 
-// The error page is a separate document. Its scripts and external dependencies
-// stay identical; shared CSS/JS changes are classified independently as usual.
+// The error page is a separate document. Only the exact old terrain controller
+// may migrate to its standalone motion module. Theme bootstrap and other external
+// dependencies stay identical; shared CSS/JS changes are classified separately.
 export const notFoundBindings = source => {
   const bindings = [];
-  let roots = 0;
+  let roots = 0, scenes = 0, legacyMotion = false;
   const tree = parseHtml(source, { sourceCodeLocationInfo: true, onParseError(error) { if (error.code !== 'missing-doctype') throw new Error(error.code); } });
   const visit = node => {
     if (node.tagName === "main" && node.attrs?.some(({ name, value }) => name === "class" && value.split(/\s+/).includes("not-found"))) {
@@ -107,11 +109,45 @@ export const notFoundBindings = source => {
       || ['iframe', 'object', 'embed', 'base', 'template'].includes(node.tagName) || node.tagName?.includes('-')) throw new Error('Unknown error page content');
     if (['script', 'link'].includes(node.tagName)) {
       const loc = node.sourceCodeLocation;
-      bindings.push(source.slice(loc.startOffset, loc.endOffset));
+      const attrs = Object.fromEntries((node.attrs || []).map(({ name, value }) => [name, value]));
+      const code = node.tagName === 'script' ? source.slice(loc.startTag.endOffset, loc.endTag.startOffset) : '';
+      const oldController = node.tagName === 'script' && !node.attrs.length
+        && createHash('sha256').update(code).digest('hex') === '780b70811f92848c58cd79cc38b14831b77ac63cd99becd77f3217b98625fc98';
+      const standalone = node.tagName === 'script' && node.attrs.length === 2 && attrs.type === 'module'
+        && /^\/assets\/not-found\/motion\.js\?v=[a-f0-9]{12}$/.test(attrs.src) && !code.trim();
+      const oldModule = legacyMotion && node.tagName === 'script' && node.attrs.length === 2 && attrs.type === 'module'
+        && /^\/js\/atlas-motion\.js\?v=(?:[a-f0-9]{12}|HASH)$/.test(attrs.src) && !code.trim();
+      if (oldController || standalone) {
+        scenes++;
+        legacyMotion = oldController;
+        bindings.push('NOT_FOUND_MOTION');
+      } else if (!oldModule) bindings.push(source.slice(loc.startOffset, loc.endOffset));
     }
     (node.childNodes || []).forEach(visit);
   };
   visit(tree);
-  if (roots !== 1) throw new Error("Missing error page root");
+  if (roots !== 1 || scenes !== 1) throw new Error("Missing error page root or motion owner");
   return JSON.stringify(bindings);
+};
+
+
+// Isolating the existing 404 scenario must not mask edits to WHOOP assertions.
+// The one-time extraction accepts only the exact former 404 block. Later edits
+// are owned only inside checkNotFound; imports, CLI and other tests stay exact.
+export const notFoundChecksOutside = source => {
+  const start = source.indexOf("  phase = '404 animation and pause';");
+  if (start >= 0) {
+    const end = source.indexOf("  assert.deepEqual(errors, [], 'Uncaught browser errors with scenario, URL and stack');", start);
+    if (end < 0 || createHash('sha256').update(source.slice(start, end)).digest('hex')
+      !== '6cfa0e819a10eca380d3a9725ff84b1890ecd2acc863bb1b506e14dd87fb8b7f') throw new Error('Unknown legacy 404 assertions');
+    source = source.slice(0, start) + source.slice(end);
+  }
+  source = source.replace('presence deduplication and outage, 404 themes and mobile.', 'presence deduplication and outage.')
+    .replace("  const check = process.argv[3] === 'not-found' ? checkNotFound : checkLiveSurface;\n  try { await check(browser, origin, engine); }",
+      '  try { await checkLiveSurface(browser, origin, engine); }');
+  const tree = ast(source);
+  const owned = tree.body.filter(node => node.type === 'ExportNamedDeclaration' && node.declaration?.id?.name === 'checkNotFound');
+  if (owned.length > 1 || owned.some(node => node.declaration.type !== 'FunctionDeclaration' || !node.declaration.async)) throw new Error('Unknown 404 check owner');
+  tree.body = tree.body.filter(node => !owned.includes(node));
+  return stable(tree);
 };

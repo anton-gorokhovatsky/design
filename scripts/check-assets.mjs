@@ -9,6 +9,7 @@ import {
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { readRuntimeSource, runtimeDataFiles, storyFiles } from "./runtime-files.mjs";
+import { notFoundAssetPaths } from "./check-profiles.mjs";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(scriptDirectory, "..");
@@ -29,6 +30,8 @@ const sharePageSources = existsSync(sharePagesRoot)
   : [];
 const source = [
   readProjectFile("index.html"),
+  readProjectFile("404.html"),
+  ...[...notFoundAssetPaths].filter(path => path.endsWith(".js")).map(readProjectFile),
   readProjectFile("styles.css"),
   readRuntimeSource(projectRoot),
   ...runtimeDataFiles.map(readProjectFile),

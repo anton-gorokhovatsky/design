@@ -137,59 +137,110 @@ export async function checkLiveSurface(browser, origin, engine) {
   await other.evaluate(() => { document.dispatchEvent(new Event('visibilitychange')); });
   await other.waitForFunction(() => document.querySelector('[data-presence-count]').textContent === 'Нет связи');
   await other.close(); await tab.close();
-  phase = '404 animation and pause';
-  await page.goto(`${origin}/404.html`);
-  await page.evaluate(() => document.fonts.ready);
-  await page.waitForSelector('.not-found__terrain canvas', { state: 'attached' });
-  const start404 = await state('.not-found__terrain');
-  await page.waitForTimeout(700);
-  assert.notEqual((await state('.not-found__terrain')).pixels, start404.pixels);
-  await page.locator('[data-terrain-motion]').click();
-  await frozen('.not-found__terrain');
-  await page.locator('[data-terrain-motion]').click();
-  phase = '404 reduced motion and keyboard';
-  await page.emulateMedia({ reducedMotion: 'reduce' });
-  await frozen('.not-found__terrain');
-  await page.keyboard.press('Tab');
-  await page.locator('.not-found__action').focus();
-  assert.equal(await page.locator('.not-found__action').evaluate(n => getComputedStyle(n).outlineStyle), 'solid');
-  for (const theme of ['light', 'dark']) {
-    phase = `404 desktop ${theme}`;
-    await page.evaluate(t => { document.documentElement.dataset.theme = t; }, theme);
-    await page.screenshot({ path: `${dir}/${engine}-404-${theme}.png` });
-    phase = `404 mobile ${theme}`;
-    await page.setViewportSize({ width: 320, height: 568 });
-    await page.screenshot({ path: `${dir}/${engine}-404-mobile-${theme}.png`, fullPage: true });
-    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
-    const scale=await page.addStyleTag({content:'html { font-size:200% !important; }'});
-    const action=page.locator('.not-found__action');
-    await page.keyboard.press('Control+Home');
-    await page.mouse.move(160,280);
-    await page.mouse.wheel(0,1200);
-    await page.waitForFunction(()=>{
-      const r=document.querySelector('.not-found__action').getBoundingClientRect();
-      return r.top>=0 && r.bottom<=innerHeight;
-    });
-    assert.ok(await page.evaluate(()=>scrollY>0),'A long 404 remains a scrollable document at 320px/200%');
-    await page.keyboard.press('Control+Home');
-    await action.focus();
-    await page.waitForFunction(()=>{
-      const r=document.querySelector('.not-found__action').getBoundingClientRect();
-      return r.top>=0 && r.bottom<=innerHeight;
-    });
-    await page.screenshot({path:`${dir}/${engine}-404-mobile-text200-${theme}.png`});
-    await scale.evaluate(e=>e.remove());
-    await page.setViewportSize({ width: 1440, height: 900 });
-  }
-  phase = 'mobile return from 404 to map';
-  await page.setViewportSize({ width: 320, height: 568 });
-  await page.locator('.not-found__action').click();
-  await page.waitForFunction(() => document.querySelector('[data-whoop-recovery]')?.textContent.includes('77'));
-  await page.screenshot({ path: `${dir}/${engine}-mobile.png` });
-  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
   assert.deepEqual(errors, [], 'Uncaught browser errors with scenario, URL and stack');
   await context.close();
-  console.log(`PASS ${engine}: Aura/Atlas motion and pause, shared links, presence deduplication and outage, 404 themes and mobile.`);
+  console.log(`PASS ${engine}: Aura/Atlas motion and pause, shared links, presence deduplication and outage.`);
+}
+
+
+// The existing error-page scenario can run independently of WHOOP and the map.
+export async function checkNotFound(browser, origin, engine) {
+  const dir = '.qa-artifacts/live-surface';
+  mkdirSync(dir, { recursive: true });
+  const errors = [];
+  let phase = '404 animation';
+  const context = await browser.newContext({ viewport: { width: 1366, height: 600 }, reducedMotion: 'no-preference' });
+  const page = await context.newPage();
+  page.on('pageerror', error => errors.push({ engine, phase, url: page.url(),
+    viewport: page.viewportSize(), name: error.name, message: error.message, stack: error.stack || null }));
+  const state = () => page.locator('.not-found__hole').evaluate(node => ({
+    pixels: node.querySelector('canvas').toDataURL(),
+    rendered: node.hasAttribute('data-rendered'),
+    canvas: getComputedStyle(node.querySelector('canvas')).visibility,
+    fallback: getComputedStyle(node.querySelector('svg')).visibility,
+  }));
+  const frozen = async () => {
+    await page.waitForTimeout(80);
+    const before = await state();
+    await page.waitForTimeout(400);
+    assert.equal((await state()).pixels, before.pixels, 'The error-page frame stays still.');
+    assert.equal(before.rendered, false, 'Reduced motion keeps the static SVG.');
+    assert.equal(before.canvas, 'hidden');
+    assert.equal(before.fallback, 'visible');
+  };
+  try {
+    await page.goto(`${origin}/404.html`);
+    await page.evaluate(() => document.fonts.ready);
+    await page.waitForFunction(() => document.documentElement.dataset.sceneState === 'playing'
+      && document.querySelector('.not-found__hole')?.hasAttribute('data-rendered'));
+    const start404 = await state();
+    await page.waitForTimeout(700);
+    assert.notEqual((await state()).pixels, start404.pixels, 'The disk brightness changes.');
+    assert.equal(await page.locator('[data-terrain-motion]').count(), 0, 'The approved scene has no manual motion button.');
+    phase = '404 reduced motion and keyboard';
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.waitForFunction(() => document.documentElement.dataset.sceneState === 'still');
+    await frozen();
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await page.waitForFunction(() => document.documentElement.dataset.sceneState === 'playing'
+      && document.querySelector('.not-found__hole').hasAttribute('data-rendered'));
+    const resumed = await state();
+    await page.waitForTimeout(400);
+    assert.notEqual((await state()).pixels, resumed.pixels, 'Removing the device preference resumes the scene.');
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.waitForFunction(() => document.documentElement.dataset.sceneState === 'still');
+    const action = page.locator('.not-found__action');
+    assert.equal(await action.getAttribute('href'), '/#map', 'Nested missing URLs return to the root map.');
+    await page.keyboard.press(engine === 'webkit' && process.platform === 'darwin' ? 'Alt+Tab' : 'Tab');
+    assert.equal(await action.evaluate(node => document.activeElement === node), true, 'Tab reaches the return link.');
+    assert.equal(await action.evaluate(node => getComputedStyle(node).outlineStyle), 'solid');
+    for (const theme of ['light', 'dark']) {
+      phase = `404 desktop ${theme}`;
+      await page.evaluate(t => { document.documentElement.dataset.theme = t; }, theme);
+      await frozen();
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth
+        || document.documentElement.scrollHeight > innerHeight), false, 'The desktop 404 fits the viewport.');
+      await page.screenshot({ path: `${dir}/${engine}-404-${theme}.png` });
+      phase = `404 mobile ${theme}`;
+      await page.setViewportSize({ width: 320, height: 568 });
+      await frozen();
+      await page.screenshot({ path: `${dir}/${engine}-404-mobile-${theme}.png`, fullPage: true });
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth
+        || document.documentElement.scrollHeight > innerHeight), false, 'The mobile 404 fits the viewport.');
+      const scale = await page.addStyleTag({ content: 'html { font-size:200% !important; }' });
+      await page.keyboard.press('Control+Home');
+      await page.mouse.move(160, 280);
+      await page.mouse.wheel(0, 1200);
+      await page.waitForFunction(() => {
+        const r = document.querySelector('.not-found__action').getBoundingClientRect();
+        return r.top >= 0 && r.bottom <= innerHeight;
+      });
+      assert.ok(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight || scrollY > 0),
+        'An overflowing error document remains scrollable at 320px/200%.');
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false,
+        'Enlarged text retains the document width.');
+      await page.keyboard.press('Control+Home');
+      await action.focus();
+      await page.waitForFunction(() => {
+        const r = document.querySelector('.not-found__action').getBoundingClientRect();
+        return r.top >= 0 && r.bottom <= innerHeight;
+      });
+      await frozen();
+      await page.screenshot({ path: `${dir}/${engine}-404-mobile-text200-${theme}.png` });
+      await scale.evaluate(e => e.remove());
+      await page.setViewportSize({ width: 1366, height: 600 });
+    }
+    phase = 'mobile return from 404 to map';
+    await page.setViewportSize({ width: 320, height: 568 });
+    await action.focus();
+    await action.press('Enter');
+    await page.waitForURL(`${origin}/#map`);
+    await page.locator('.map-node').first().waitFor({ state: 'visible' });
+    await page.screenshot({ path: `${dir}/${engine}-404-return-mobile.png` });
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+    assert.deepEqual(errors, [], 'Uncaught browser errors with scenario, URL and stack');
+    console.log(`PASS ${engine}: 404 motion, reduced-motion fallback, keyboard, themes, mobile/200% and return.`);
+  } finally { await context.close(); }
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
@@ -197,6 +248,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const { server, origin } = await startStaticServer({ projectRoot: process.cwd() });
   const engine = process.argv[2] || 'chromium';
   const browser = await ({ chromium, webkit })[engine].launch();
-  try { await checkLiveSurface(browser, origin, engine); }
+  const check = process.argv[3] === 'not-found' ? checkNotFound : checkLiveSurface;
+  try { await check(browser, origin, engine); }
   finally { await browser.close(); server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); }
 }

@@ -3,7 +3,7 @@
 import { spawn } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { checkProfiles } from "./check-profiles.mjs";
+import { checkProfiles, notFoundAssetPaths } from "./check-profiles.mjs";
 import { runtimeFiles, storyFiles } from "./runtime-files.mjs";
 import { browserSteps, checkIds } from "./check-catalog.mjs";
 
@@ -71,6 +71,7 @@ const contractScripts = [
   "scripts/check-accessibility.mjs",
   "scripts/accessibility-audit.mjs",
   "scripts/check-whoop-ui.mjs",
+  "scripts/check-live-surface.mjs",
   "scripts/check-hover-layout.mjs",
   "scripts/check-map-routes.mjs",
   "scripts/check-sphere-motion.mjs",
@@ -93,7 +94,7 @@ const contractScripts = [
 ];
 
 const syntaxSteps = [
-  ...[...runtimeFiles,...storyFiles.filter(path=>path.endsWith('.js'))].map((path) => ({
+  ...[...runtimeFiles,...storyFiles.filter(path=>path.endsWith('.js')), ...[...notFoundAssetPaths].filter(path=>path.endsWith('.js'))].map((path) => ({
     label: `Runtime syntax: ${path}`,
     command: process.execPath,
     args: ["--check", path],
