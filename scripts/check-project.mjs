@@ -57,6 +57,7 @@ const contractScripts = [
   "scripts/check-performance-budget.test.mjs",
   "scripts/check-css-cascade.mjs",
   "scripts/check-publication-assets.mjs",
+  "scripts/capture-share-images.mjs",
   "scripts/check-reel-preview.mjs",
   "scripts/check-reels.mjs",
   "scripts/check-personal-media.mjs",

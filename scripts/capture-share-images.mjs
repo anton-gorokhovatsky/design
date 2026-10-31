@@ -82,7 +82,8 @@ try {
       await page.addStyleTag({ content: `
         html[data-capture="og"] .share-heading,
         html[data-capture="og"] .share-domain,
-        html[data-capture="og"] .whoop-field { visibility: hidden; }
+        html[data-capture="og"] .whoop-field,
+        html[data-capture="og"] .overview-entry { visibility: hidden; }
         html[data-capture="og"] .map-grid { opacity: .5; }
         html[data-capture="og"] .map-links path.is-garage-link { opacity: .6; }
         html[data-capture="og"] .map-links path { stroke-width: 1.2px; }
@@ -93,6 +94,7 @@ try {
       await page.evaluate(async mapImage => {
         const card = document.createElement("figure");
         card.className = "share-cover";
+        card.style.backgroundColor = getComputedStyle(document.body).backgroundColor;
         card.innerHTML = `<img alt="">
           <figcaption>
             <strong><span>Антон</span><span class="share-cover__surname">Гороховатский</span></strong>
@@ -110,8 +112,9 @@ try {
           margin: 0; overflow: hidden; background: #0b0f12; color: #eeeee6;
         }
         .share-cover img {
-          position: absolute; left: -88px; top: -97px;
-          width: 1500px; height: 787.5px; max-width: none; opacity: .72;
+          position: absolute; left: 150px; top: 8px;
+          width: 1152px; height: 604.8px; max-width: none; opacity: .72;
+          mask-image: linear-gradient(90deg, transparent, #000 9%, #000 94%, transparent);
         }
         .share-cover figcaption {
           position: relative; height: 100%;
@@ -160,7 +163,7 @@ try {
     if (capture.id === "site") {
       const version = createHash("sha256").update(readFileSync(capture.outputPath)).digest("hex").slice(0, 12);
       const indexPath = join(projectRoot, "index.html");
-      const alt = "Антон Гороховатский. Придумываю, разрабатываю и веду веб-проекты. Крупное имя авторским шрифтом на фоне ночной карты со сферами, орбитами и связями между проектами.";
+      const alt = "Антон Гороховатский. Придумываю, разрабатываю и веду веб-проекты. Крупное имя авторским шрифтом на фоне ночной карты с чёрной дырой, орбитами и связями между проектами.";
       const html = readFileSync(indexPath, "utf8")
         .replaceAll(/og-signal\.jpg\?v=[a-f0-9]{12}/g, `og-signal.jpg?v=${version}`)
         .replace(/(<meta\s+(?:property="og:image:alt"|name="twitter:image:alt")\s+content=")[^"]*(")/g, `$1${alt}$2`)

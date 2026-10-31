@@ -26,9 +26,11 @@ const copyArrays = {
 };
 const shareIds = ["garage", "narkomfin", "tarski", "doronin", "eleven", "shirokostup"];
 const sharePages = new Set(shareIds.map(id => `work/${id}/index.html`));
-// These existing JPEGs are static publication artwork, checked for format and size
-// by check-publication-assets. Runtime media never enters this boundary.
-const shareImages = new Set(shareIds.map(id => `assets/share/${id}.jpg`));
+// Existing publication artwork and its build-only generator use the publication
+// asset contract. Runtime media and new or deleted files never enter this boundary.
+const shareArtifactPaths = new Set(["assets/og-signal.jpg", "scripts/capture-share-images.mjs",
+  ...shareIds.map(id => `assets/share/${id}.jpg`)]);
+const mainShareUrl = /^https:\/\/gorokhovatsky\.tech\/assets\/og-signal\.jpg\?v=[a-f0-9]{12}$/;
 const relatedPointMedia = Object.fromEntries(["running", "private-practice", "garage", "garage-app", "parfenov"]
   .map(id => [id, Object.fromEntries(["light", "dark"].map(theme => [theme, `assets/point-thumbnails/${id}-${theme}.webp`]))]));
 const relatedPointImages = new Set(Object.values(relatedPointMedia).flatMap(Object.values));
@@ -156,7 +158,7 @@ const maskLandmarkCopy = (source) => {
   return maskRanges(source, ranges);
 };
 
-const maskHtmlCopy = (source, publication = false) => {
+const maskHtmlCopy = (source, publication = false, mainShare = false) => {
   const ranges = [];
   const visit = (node) => {
     const location = node.sourceCodeLocation;
@@ -171,12 +173,21 @@ const maskHtmlCopy = (source, publication = false) => {
           ranges.push(...displayRanges(property.value, evidenceFields, start - 1));
         }
       }
-      if (publication && attributes.type === "application/ld+json") {
+      if ((publication || mainShare) && attributes.type === "application/ld+json") {
         const start = location.startTag.endOffset;
         const json = source.slice(start, location.endTag.startOffset);
         JSON.parse(json);
         const object = parseJs(`(${json})`, { ecmaVersion: "latest" }).body[0].expression;
-        ranges.push(...displayRanges(object, new Set(["name"]), start - 1));
+        if (publication) ranges.push(...displayRanges(object, new Set(["name"]), start - 1));
+        if (mainShare) {
+          const graph = object.properties?.find(property => keyOf(property) === "@graph")?.value;
+          for (const entry of graph?.type === "ArrayExpression" ? graph.elements : []) {
+            const value = key => entry?.properties?.find(property => keyOf(property) === key)?.value?.value;
+            if (value("@id") !== "https://gorokhovatsky.tech/#share-image" || value("@type") !== "ImageObject") continue;
+            const fields = new Set(["caption", ...["url", "contentUrl"].filter(key => mainShareUrl.test(value(key)))]);
+            ranges.push(...displayRanges(entry, fields, start - 1));
+          }
+        }
       }
       return;
     }
@@ -186,6 +197,11 @@ const maskHtmlCopy = (source, publication = false) => {
     }
     const displayAttributes = ["aria-label", "title", "alt", "placeholder"];
     if (publication && node.tagName === "meta" && ["description", "og:title", "og:description", "og:image:alt", "twitter:title", "twitter:description", "twitter:image:alt"].includes(attributes.name || attributes.property)) displayAttributes.push("content");
+    if (mainShare && node.tagName === "meta" && (
+      ["og:image:alt", "twitter:image:alt"].includes(attributes.name || attributes.property)
+      || (["og:image", "og:image:secure_url", "twitter:image"].includes(attributes.name || attributes.property)
+        && mainShareUrl.test(attributes.content))
+    )) displayAttributes.push("content");
     if (node.attrs?.some(attribute => attribute.name === "data-floating-console")) displayAttributes.push("data-context");
     for (const name of displayAttributes) {
       const attribute = location?.attrs?.[name];
@@ -219,7 +235,8 @@ export const isCopyOnly = (path, before, after) => {
     if (focusedHomePaths.has(path)) return maskLandmarkCopy(before) === maskLandmarkCopy(after);
     if (sharePages.has(path)) return maskHtmlCopy(before, true) === maskHtmlCopy(after, true);
     if (path === "js/case-content.json") return isCaseContentCopy(before, after);
-    if (["index.html", "404.html", "assets/map-story/content.html"].includes(path)) return maskHtmlCopy(before) === maskHtmlCopy(after);
+    if (path === "index.html") return maskHtmlCopy(before, false, true) === maskHtmlCopy(after, false, true);
+    if (["404.html", "assets/map-story/content.html"].includes(path)) return maskHtmlCopy(before) === maskHtmlCopy(after);
   } catch {
     // Syntax errors and unrecognised forms never opt out of full checks.
   }
@@ -227,7 +244,7 @@ export const isCopyOnly = (path, before, after) => {
 };
 
 export const classifyChange = (path, before, after) => {
-  if (staticCheckPaths.has(path) || relatedPresentationDocs.has(path)) return { mode: "copy", components: [] };
+  if (staticCheckPaths.has(path) || relatedPresentationDocs.has(path) || shareArtifactPaths.has(path)) return { mode: "copy", components: [] };
   if (relatedPointImages.has(path)) return relatedPointImageScope;
   if (path === "assets/map-story/content.html" && isCopyOnly(path, before, after)) return { mode: "copy", components: [] };
   if (["js/map-story.js", "rendering/js/map-story.js"].includes(path)) {
@@ -287,7 +304,7 @@ export const planRelease = ({ projectRoot, base = "origin/gh-pages", target } = 
         const after = targetSha ? git("show", `${targetSha}:${path}`) : readFileSync(resolve(projectRoot, path), "utf8");
         classification = classifyChange(path, before, after);
       }
-      if (status === "M" && shareImages.has(path)) classification = { mode: "copy", components: [] };
+      if (status === "M" && shareArtifactPaths.has(path)) classification = { mode: "copy", components: [] };
       if (["A", "M"].includes(status) && relatedPresentationDocs.has(path)) classification = { mode: "copy", components: [] };
       if (["A", "M"].includes(status) && relatedPointImages.has(path)) classification = relatedPointImageScope;
       if (status === "M" && mediaAssetPaths.has(path)) classification = { mode: "components", components: ["media"] };

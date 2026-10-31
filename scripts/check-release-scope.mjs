@@ -166,6 +166,34 @@ for (const [from, to, expected] of [
   ['"name":"Проект"', '"name":run()', false],
 ]) change("work/eleven/index.html", shareFixture, from, to, expected);
 change("work/unknown/index.html", shareFixture, "Описание", "Другое описание", false);
+
+
+// The main cover changes only its versioned image URL and matching descriptions.
+// Destinations, schema, other metadata and executable page code stay protected.
+const mainShareAddress = "https://gorokhovatsky.tech/assets/og-signal.jpg?v=0123456789ab";
+const mainShareFixture = `<meta property="og:image" content="${mainShareAddress}"><meta property="og:image:secure_url" content="${mainShareAddress}"><meta name="twitter:image" content="${mainShareAddress}"><meta property="og:image:alt" content="Ночная карта"><meta name="twitter:image:alt" content="Ночная карта"><meta property="og:title" content="Портфолио"><script type="application/ld+json">{"@graph":[{"@type":"ImageObject","@id":"https://gorokhovatsky.tech/#share-image","url":"${mainShareAddress}","contentUrl":"${mainShareAddress}","width":1200,"height":630,"caption":"Ночная карта"},{"@type":"Person","name":"Автор"}]}</script><script>run("same")</script>`;
+const mainShareUpdated = mainShareFixture.replaceAll("0123456789ab", "abcdef012345").replaceAll("Ночная карта", "Обновлённая ночная карта");
+assert.equal(isCopyOnly("index.html", mainShareFixture, mainShareUpdated), true);
+for (const updated of [
+  mainShareUpdated.replaceAll("gorokhovatsky.tech/assets", "example.com/assets"),
+  mainShareUpdated.replaceAll("og-signal.jpg", "other.jpg"),
+  mainShareUpdated.replaceAll("abcdef012345", "invalid-hash"),
+  mainShareUpdated.replace('"width":1200', '"width":900'),
+  mainShareUpdated.replace('#share-image', '#other-image'),
+  mainShareUpdated.replace('"@type":"ImageObject"', '"@type":"Other"'),
+  mainShareUpdated.replace('"name":"Автор"', '"name":"Другой автор"'),
+  mainShareUpdated.replace('content="Портфолио"', 'content="Другой заголовок"'),
+  mainShareUpdated.replace('run("same")', 'run("changed")'),
+  mainShareUpdated.replace('"caption":', '"caption":run(),"other":'),
+]) {
+  assert.equal(classifyChange("index.html", mainShareFixture, updated).mode, "full");
+  checks += 1;
+}
+const copySteps = JSON.parse(execFileSync(process.execPath, ["scripts/check-project.mjs", "--scope=copy", "--list"], { cwd: root, encoding: "utf8" }));
+assert(copySteps.syntax.some(step => step.args.join(" ") === "--check scripts/capture-share-images.mjs"), "The build-only generator retains its syntax check");
+assert(copySteps.static.some(step => step.args.includes("scripts/check-publication-assets.mjs")), "The copy gate verifies image bytes and metadata");
+assert.deepEqual(copySteps.browser, [], "Publication artwork adds no unrelated browser matrix");
+checks += 4;
 for (const path of ["js/focused-home.js", "rendering/js/focused-home.js"]) {
   const source = read(path);
   change(path, source, "Челлендж «11 111»", "Велочеллендж «11 111»", true);
@@ -1096,6 +1124,9 @@ try {
   writeFileSync(join(directory, "assets/reels/garage-site.mp4"), "original master");
   mkdirSync(join(directory, "assets/share"), { recursive: true });
   writeFileSync(join(directory, "assets/share/eleven.jpg"), "published share artwork");
+  writeFileSync(join(directory, "assets/og-signal.jpg"), "published main artwork");
+  mkdirSync(join(directory, "scripts"));
+  writeFileSync(join(directory, "scripts/capture-share-images.mjs"), "const capture = 1;");
   writeFileSync(join(directory, "README.md"), "Published");
   git("add", "."); git("commit", "-m", "published");
   const published = git("rev-parse", "HEAD");
@@ -1108,6 +1139,34 @@ try {
   rmSync(join(directory, "assets/share/unknown.jpg"));
   git('reset', '--hard', published);
   checks += 2;
+  // Existing cover and generator edits retain the same static gate before and
+  // after commit; a runtime edit or removal cannot inherit that boundary.
+  writeFileSync(join(directory, "index.html"), mainShareFixture);
+  git("add", "index.html"); git("commit", "-m", "main share fixture");
+  const mainShareBase = git("rev-parse", "HEAD");
+  const mainSharePlan = (options = {}) => planRelease({ projectRoot: directory, base: mainShareBase, ...options });
+  writeFileSync(join(directory, "index.html"), mainShareUpdated);
+  writeFileSync(join(directory, "assets/og-signal.jpg"), "updated main artwork");
+  writeFileSync(join(directory, "scripts/capture-share-images.mjs"), "const capture = 2;");
+  assert.equal(mainSharePlan().mode, "copy");
+  assert.equal(mainSharePlan().staticScope, "copy");
+  assert.deepEqual(mainSharePlan().matrix.include, []);
+  git("add", "."); git("commit", "-m", "updated main share");
+  assert.equal(mainSharePlan({ target: "HEAD" }).mode, "copy", "The complete committed publication update stays static");
+  writeFileSync(join(directory, "styles.css"), '.map-grid {color: red}');
+  assert.equal(mainSharePlan().mode, "full", "Publication artwork cannot hide runtime style changes");
+  writeFileSync(join(directory, "styles.css"), '.map-grid {color: black}');
+  for (const artifact of ["assets/og-signal.jpg", "scripts/capture-share-images.mjs"]) {
+    const contents = readFileSync(join(directory, artifact));
+    rmSync(join(directory, artifact));
+    assert.equal(mainSharePlan().mode, "full", "Deleting a publication artifact is not a replacement");
+    writeFileSync(join(directory, artifact), contents);
+  }
+  writeFileSync(join(directory, "scripts/capture-share-other.mjs"), "const capture = 2;");
+  assert.equal(mainSharePlan().mode, "full", "An adjacent script does not inherit the build-only boundary");
+  rmSync(join(directory, "scripts/capture-share-other.mjs"));
+  git('reset', '--hard', published);
+  checks += 8;
   mkdirSync(join(directory, 'assets/point-thumbnails'), { recursive: true });
   const pointArtwork = join(directory, 'assets/point-thumbnails/running-light.webp');
   writeFileSync(pointArtwork, 'reviewed point artwork');
