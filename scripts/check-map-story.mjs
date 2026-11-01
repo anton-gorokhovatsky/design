@@ -167,13 +167,41 @@ try{
    const readingPosition=await story.evaluate(e=>e.scrollTop),address=page.url(),historyLength=await page.evaluate(()=>history.length);
    const toggle=page.locator('[data-constellation-nav-toggle]');
    const beforeClick=await toggle.evaluate(button=>{button.__qaInputs.length=0;return {expanded:button.getAttribute('aria-expanded'),rect:button.getBoundingClientRect().toJSON()};});
-   // This button does not navigate. WebKit has delivered the trusted click and
-   // opened it while locator post-input waiting remained pending in CI.
    try{
-    // Activate the headed native window before waiting for rendered stability;
-    // DOM visibility/focus flags do not establish that window state.
-    if(engine==='webkit')await page.bringToFront();
-    await toggle.click({noWaitAfter:engine==='webkit'});
+    if(engine==='webkit'){
+     // WebKit's locator action can stall after this filtered scroll. Check the
+     // same real target on Node timers, then send native mouse input directly.
+     const deadline=Date.now()+30000;
+     const nativeInput=async(name,action)=>{
+      const remaining=deadline-Date.now();
+      assert.ok(remaining>0,`Native WebKit menu ${name} starts within the 30000ms action deadline`);
+      let timer;
+      try{await Promise.race([action(),new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(`Native WebKit menu ${name} exceeded the 30000ms action deadline`)),remaining);})]);}
+      finally{clearTimeout(timer);}
+     };
+     const sample=()=>toggle.evaluate(button=>{
+      const r=button.getBoundingClientRect(),style=getComputedStyle(button),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);
+      return {rect:{x:r.x,y:r.y,width:r.width,height:r.height},connected:button.isConnected,
+       visible:style.visibility==='visible'&&style.display!=='none'&&+style.opacity>0,
+       enabled:!button.matches(':disabled')&&!button.closest('[aria-disabled="true"]'),inert:Boolean(button.closest('[inert]')),
+       inViewport:r.width>0&&r.height>0&&r.left>=0&&r.top>=0&&r.right<=innerWidth&&r.bottom<=innerHeight,
+       hit:hit===button||button.contains(hit)};
+     },undefined,{timeout:Math.max(1,deadline-Date.now())});
+     const ready=s=>s.connected&&s.visible&&s.enabled&&!s.inert&&s.inViewport&&s.hit;
+     let previous='',stable=0,target;
+     while(stable<3){
+      assert.ok(Date.now()<deadline,`The WebKit menu target becomes stable and receives input: ${JSON.stringify(target)}`);
+      target=await sample();const rect=JSON.stringify(target.rect);
+      stable=ready(target)?(rect===previous?stable+1:1):0;previous=rect;
+      if(stable<3)await new Promise(resolve=>setTimeout(resolve,50));
+     }
+     const point={x:target.rect.x+target.rect.width/2,y:target.rect.y+target.rect.height/2};
+     await nativeInput('mouse.move',()=>page.mouse.move(point.x,point.y));
+     const hovered=await sample();
+     assert.ok(ready(hovered),'The WebKit menu target remains visible, enabled and receives the pointer after hover');
+     assert.deepEqual(hovered.rect,target.rect,'Hover preserves the stable menu target');
+     await nativeInput('mouse.click',()=>page.mouse.click(point.x,point.y));
+    }else await toggle.click();
    }catch(error){
     const diagnostic=await toggle.evaluate(button=>{const r=button.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return {inputs:button.__qaInputs,expanded:button.getAttribute('aria-expanded'),menuOpen:document.querySelector('[data-constellation-nav]')?.classList.contains('is-open'),storyInert:document.querySelector('#story-pane')?.inert,active:{tag:document.activeElement?.tagName,id:document.activeElement?.id},visibility:document.visibilityState,focused:document.hasFocus(),hit:{tag:hit?.tagName,id:hit?.id,classes:hit?.getAttribute('class')},hitButton:hit===button||button.contains(hit),url:location.href};}).catch(diagnosticError=>({diagnosticError:String(diagnosticError)}));
     console.error('Story menu input diagnostic',JSON.stringify({engine,width,method,beforeClick,diagnostic}));
@@ -181,7 +209,7 @@ try{
     throw error;
    }
    await page.waitForFunction(()=>document.querySelector('[data-constellation-nav-toggle]').getAttribute('aria-expanded')==='true'
-    &&document.querySelector('[data-constellation-nav]').classList.contains('is-open'));
+    &&document.querySelector('[data-constellation-nav]').classList.contains('is-open'),undefined,{polling:50,timeout:30000});
    assert.deepEqual(await toggle.evaluate(button=>button.__qaInputs.map(({type,trusted})=>[type,trusted])),
     [['pointerdown',true],['pointerup',true],['click',true]],'The real pointer opens the menu with a complete trusted input sequence');
    assert.equal(await menuStory.locator('span').evaluate(e=>getComputedStyle(e).textDecorationLine),'none','The current story keeps the compact menu free of underlines');
