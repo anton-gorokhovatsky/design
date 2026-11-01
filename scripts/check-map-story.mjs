@@ -23,7 +23,8 @@ async function checkMassExample(page){
  });
  const shape=()=>figure.evaluate(e=>{
   const reference=e.querySelector('.mass-reference').getBoundingClientRect(),project=e.querySelector('.mass-sphere').getBoundingClientRect();
-  return {reference:reference.width,project:project.width,referenceY:reference.y+reference.height/2,projectY:project.y+project.height/2,referenceX:reference.x+reference.width/2,projectX:project.x+project.width/2,stacked:getComputedStyle(e.querySelector('.mass-comparison')).gridTemplateColumns.split(' ').length===1,overflow:e.scrollWidth>e.clientWidth+1};
+  const captions=[...e.querySelectorAll('.mass-caption')].map(caption=>caption.getBoundingClientRect());
+  return {reference:reference.width,project:project.width,referenceY:reference.y+reference.height/2,projectY:project.y+project.height/2,referenceLeft:reference.x,projectLeft:project.x,captionOffsets:[reference.x-captions[0].x,project.x-captions[1].x],stacked:getComputedStyle(e.querySelector('.mass-comparison')).gridTemplateColumns.split(' ').length===1,overflow:e.scrollWidth>e.clientWidth+1};
  });
  assert.equal(await figure.locator('input[type=radio]').count(),0,'The complete comparison needs no step selection');
  assert.equal(await figure.locator('.orbit-moon').count(),2,'Reference and named project are available simultaneously');
@@ -33,7 +34,8 @@ async function checkMassExample(page){
  assert.ok(comparison.reference>0&&comparison.project>0&&!comparison.overflow,'Both satellite sizes remain visible within the reading column');
  assert.ok(Math.abs(comparison.project/comparison.reference-expected.size)<.015,'The visible diameter uses the same median normalization as the map');
  assert.ok(Math.abs((comparison.project/comparison.reference)**2-expected.mass/(1+Math.LN2))<.04,'Visible area, not volume, follows mass relative to the same reference');
- assert.ok(Math.abs(comparison.stacked?comparison.projectX-comparison.referenceX:comparison.projectY-comparison.referenceY)<1,'Both satellites share an aligned comparison axis');
+ assert.ok(Math.abs(comparison.stacked?comparison.projectLeft-comparison.referenceLeft:comparison.projectY-comparison.referenceY)<1,'Both satellites share an aligned comparison axis');
+ assert.ok(comparison.captionOffsets.every(offset=>Math.abs(offset)<1),'Each visible sphere starts on the same left edge as its caption');
  const materials=await figure.locator('.orbit-moon').evaluateAll(es=>es.map(e=>getComputedStyle(e).backgroundImage));
  assert.equal(materials[0],materials[1],'The two conditions keep the same material and light');
  const link=figure.locator('[data-mass-project]');
@@ -48,6 +50,7 @@ async function checkMassExample(page){
  assert.equal(await details.getAttribute('open'),null,'Calculation detail is optional');
  await link.focus();await page.keyboard.press('Tab');await summary.press('Enter');
  assert.notEqual(await details.getAttribute('open'),null,'The native disclosure opens from the keyboard');
+ assert.ok(await summary.evaluate(e=>new DOMMatrixReadOnly(getComputedStyle(e,'::after').transform).a<0),'The chevron points up as soon as the calculation is open');
  const focus=await summary.evaluate(e=>({focused:e===document.activeElement,outline:getComputedStyle(e).outlineStyle}));
  assert.ok(focus.focused&&focus.outline!=='none','The disclosure retains visible keyboard focus');
  const calculation=await figure.locator('[data-mass-calculation]').innerText();
@@ -56,6 +59,7 @@ async function checkMassExample(page){
  assert.equal((await shape()).overflow,false,'The expanded calculation reflows within the reading column');
  await summary.press('Space');
  assert.equal(await details.getAttribute('open'),null,'The native disclosure closes without changing the comparison');
+ assert.ok(await summary.evaluate(e=>new DOMMatrixReadOnly(getComputedStyle(e,'::after').transform).a>0),'The chevron points down when the calculation is closed');
  await page.emulateMedia({reducedMotion:'reduce'});
  await page.waitForFunction(()=>document.documentElement.dataset.reduceMotion==='true');
  const reduced=await shape();
@@ -159,12 +163,18 @@ try{
    const readingPosition=await story.evaluate(e=>e.scrollTop),address=page.url(),historyLength=await page.evaluate(()=>history.length);
    const toggle=page.locator('[data-constellation-nav-toggle]');
    const beforeClick=await toggle.evaluate(button=>{button.__qaInputs.length=0;return {expanded:button.getAttribute('aria-expanded'),rect:button.getBoundingClientRect().toJSON()};});
-   try{await toggle.click();}catch(error){
+   // This button does not navigate. WebKit has delivered the trusted click and
+   // opened it while locator post-input waiting remained pending in CI.
+   try{await toggle.click({noWaitAfter:engine==='webkit'});}catch(error){
     const diagnostic=await toggle.evaluate(button=>{const r=button.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return {inputs:button.__qaInputs,expanded:button.getAttribute('aria-expanded'),menuOpen:document.querySelector('[data-constellation-nav]')?.classList.contains('is-open'),storyInert:document.querySelector('#story-pane')?.inert,active:{tag:document.activeElement?.tagName,id:document.activeElement?.id},visibility:document.visibilityState,focused:document.hasFocus(),hit:{tag:hit?.tagName,id:hit?.id,classes:hit?.getAttribute('class')},hitButton:hit===button||button.contains(hit),url:location.href};}).catch(diagnosticError=>({diagnosticError:String(diagnosticError)}));
     console.error('Story menu input diagnostic',JSON.stringify({engine,width,method,beforeClick,diagnostic}));
     if(process.env.PORTFOLIO_UI_ARTIFACT_DIR){mkdirSync(process.env.PORTFOLIO_UI_ARTIFACT_DIR,{recursive:true});await page.screenshot({path:resolve(process.env.PORTFOLIO_UI_ARTIFACT_DIR,`story-menu-${width}-${method}-FAIL.png`),timeout:3000}).catch(()=>{});}
     throw error;
    }
+   await page.waitForFunction(()=>document.querySelector('[data-constellation-nav-toggle]').getAttribute('aria-expanded')==='true'
+    &&document.querySelector('[data-constellation-nav]').classList.contains('is-open'));
+   assert.deepEqual(await toggle.evaluate(button=>button.__qaInputs.map(({type,trusted})=>[type,trusted])),
+    [['pointerdown',true],['pointerup',true],['click',true]],'The real pointer opens the menu with a complete trusted input sequence');
    assert.equal(await menuStory.locator('span').evaluate(e=>getComputedStyle(e).textDecorationLine),'none','The current story keeps the compact menu free of underlines');
    if(method==='pointer')await menuStory.click();else{await menuStory.focus();await page.keyboard.press('Enter');}
    await page.waitForFunction(()=>document.activeElement?.id==='story-pane');
