@@ -9,7 +9,41 @@ const {startStaticServer,readMaterialAuditExpression,declineAnalyticsNotice}=req
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 const engine=process.argv[2]||'chromium';
 const {origin,server}=await startStaticServer({projectRoot:root});
-const browser=await({chromium,webkit}[engine]).launch();
+// macOS WebKit's headless path can retain a filtered scrollport's old paint
+// and hit-test surface after scrolling. Exercise the actual window on macOS.
+const browser=await({chromium,webkit}[engine]).launch(engine==='webkit'&&process.platform==='darwin'?{headless:false}:{});
+async function checkMassExample(page){
+ const figure=page.locator('[data-mass-example]');
+ await figure.scrollIntoViewIfNeeded();
+ const expected=await page.evaluate(async()=>{const {audienceMassWeights,audiencePeriod}=await import('/js/practice-audience.js');return {mass:audienceMassWeights['ks-fish'],period:audiencePeriod};});
+ const shape=()=>figure.evaluate(e=>({height:e.getBoundingClientRect().height,diameter:e.querySelector('.mass-sphere').getBoundingClientRect().width,outline:e.querySelector('.mass-base-line').getBoundingClientRect().width,step:e.dataset.step,overflow:e.scrollWidth>e.clientWidth+1}));
+ await figure.locator('[value=base]').check();
+ await page.waitForFunction(()=>document.querySelector('[data-mass-example] .mass-sphere').getAnimations().every(a=>a.playState==='finished'));
+ const base=await shape();
+ await figure.locator('[value=audience]').check();
+ const audience=await shape();
+ assert.equal(audience.step,'audience','The audience contribution can be selected');
+ assert.ok(Math.abs(audience.diameter-base.diameter)<1,'The contribution surrounds the same initial satellite');
+ await figure.locator('[value=size]').check();
+ await page.waitForFunction(()=>document.querySelector('[data-mass-example] .mass-sphere').getAnimations().every(a=>a.playState==='finished'));
+ const total=await shape();
+ assert.ok(Math.abs((total.diameter/base.diameter)**2-expected.mass)<.04,'Visible area, not diameter, follows the shared map mass');
+ assert.ok(Math.abs(total.outline-base.outline)<.5,'The original size remains available for direct comparison');
+ assert.ok([audience,total].every(x=>Math.abs(x.height-base.height)<1&&!x.overflow),'Changing a step preserves the reading position and text width');
+ const period=await page.evaluate(({start,end})=>new Intl.DateTimeFormat('ru-RU',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).formatRange(new Date(start+'T00:00:00Z'),new Date(end+'T00:00:00Z')),expected.period);
+ assert.ok((await figure.locator('[data-mass-period]').innerText()).includes(period),'The example shows the complete period of the shared data, not a current-month guess');
+ const radio=figure.locator('[value=size]');await radio.focus();await radio.press('ArrowLeft');
+ assert.equal(await figure.getAttribute('data-step'),'audience','Native arrow-key navigation updates the same example');
+ const focus=await figure.locator('[value=audience]').evaluate(e=>({focused:e===document.activeElement,outline:getComputedStyle(e.closest('label')).outlineStyle}));
+ assert.ok(focus.focused&&focus.outline!=='none','The selected keyboard control retains a visible focus');
+ await page.emulateMedia({reducedMotion:'reduce'});
+ await figure.locator('[value=size]').check();
+ assert.equal(await figure.locator('.mass-sphere').evaluate(e=>getComputedStyle(e).transitionDuration),'0s','Reduced motion preserves the final comparison without movement');
+ await page.emulateMedia({reducedMotion:'no-preference'});
+ await figure.locator('[value=base]').check();await figure.locator('[value=size]').check();await figure.locator('[value=base]').check();
+ await page.waitForFunction(()=>document.querySelector('[data-mass-example] .mass-sphere').getAnimations().every(a=>a.playState==='finished'));
+ const reversed=await shape();assert.ok(Math.abs(reversed.diameter-base.diameter)<.5,'Rapid reversal returns to the original size');
+}
 async function checkFamilies(page){
  await page.emulateMedia({reducedMotion:'reduce'});
  await page.waitForFunction(()=>document.documentElement.dataset.reduceMotion==='true');
@@ -158,6 +192,7 @@ try{
   }
   await page.mouse.move(0,0);
   await page.keyboard.press('Tab');
+  await checkMassExample(page);
   const target=page.locator('#scene-practice button[data-point="tarski"]');await target.focus();await target.press('Enter');
   assert.deepEqual((await page.evaluate(readMaterialAuditExpression)).failures,[],'Scene readouts keep the same material without a filtered ancestor');
   const label=page.locator('#scene-practice .scene-readout.is-visible');await label.locator('a').focus();await label.locator('a').press('Escape');

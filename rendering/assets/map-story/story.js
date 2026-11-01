@@ -7,7 +7,7 @@ import { createTextField, attractPoint } from '/assets/map-story/text-field.js';
 import { mapItems } from '/js/map-data.js';
 import { blackHole, pulsar, practiceGroups, createPracticePlane, warpMapPoint } from '/js/map-scene-primitives.js';
 import { createSystem, STEP } from '/js/orbit-physics.js';
-import { audienceMassWeights, audienceSizeScales } from '/js/practice-audience.js';
+import { audienceMassWeights, audienceSizeScales, audiencePeriod } from '/js/practice-audience.js';
 
 const root = document.documentElement;
 const systemTheme = matchMedia('(prefers-color-scheme: dark)');
@@ -176,6 +176,53 @@ function dismissSceneNote(figure,buttons,clear){
   });
   document.addEventListener('click',e=>{if(!figure.contains(e.target))clear();});
 }
+
+// One explanatory satellite shares the map's mass and material. It adds no
+// animation loop: native radio controls drive interruptible CSS transitions.
+function setupMassExample(figure) {
+  if (!figure) return;
+  const id='ks-fish', mass=audienceMassWeights[id];
+  const group=practiceGroups.find(group=>group.projects.some(item=>item.id===id));
+  if (!group || !Number.isFinite(mass) || mass<1) return;
+  const number=new Intl.NumberFormat('ru-RU',{maximumFractionDigits:2});
+  const amount=value=>number.format(value);
+  const growth=Math.sqrt(mass), baseScale=1/growth;
+  const sphere=figure.querySelector('.mass-sphere');
+  const outline=figure.querySelector('.mass-base-line');
+  for (const node of figure.querySelectorAll('.orbit-moon')) {
+    group.surface.forEach((color,index)=>node.style.setProperty('--moon-'+index,color));
+  }
+  outline.style.transform=`scale(${baseScale})`;
+  figure.querySelector('[data-mass-contribution]').textContent=`+ ${amount(mass-1)} к собственной массе`;
+  figure.querySelector('[data-mass-result]').textContent=`Масса ${amount(mass)} · диаметр ×${amount(growth)}`;
+  const dates=new Intl.DateTimeFormat('ru-RU',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'});
+  const period=dates.formatRange(new Date(audiencePeriod.start+'T00:00:00Z'),new Date(audiencePeriod.end+'T00:00:00Z'));
+  figure.querySelector('[data-mass-period]').textContent=`Данные: ${period} Условная шкала карты, не оценка качества проекта.`;
+  const descriptions={
+    base:'Даже без аудитории у проекта есть собственный вес. Здесь он принят за единицу.',
+    audience:`1 + ${amount(mass-1)} = ${amount(mass)}. Кольцо показывает добавленную площадь. Вклад аудитории растёт логарифмически: каждый следующий посетитель добавляет чуть меньше.`,
+    size:`Площадь стала больше в ${amount(mass)} раза, диаметр — в ${amount(growth)} раза. Диаметр растёт как квадратный корень из массы.`
+  };
+  const explanation=figure.querySelector('[data-mass-explanation]');
+  const current=document.createElement('span');explanation.append(current);
+  // Reserve the tallest actual explanation at every text size without fixed
+  // heights, so changing a step cannot shift the reader's place.
+  for(const text of Object.values(descriptions)){
+    const measure=document.createElement('span');measure.className='mass-explanation-size';
+    measure.setAttribute('aria-hidden','true');measure.textContent=typographUiText(text);explanation.append(measure);
+  }
+  const update=()=>{
+    const step=figure.querySelector('input:checked').value;
+    figure.dataset.step=step;
+    sphere.style.transform=`scale(${step==='size'?1:baseScale})`;
+    current.textContent=typographUiText(descriptions[step]);
+  };
+  figure.addEventListener('keydown',()=>{figure.dataset.instant='true';});
+  figure.addEventListener('pointerdown',()=>{figure.dataset.instant='false';});
+  figure.addEventListener('change',update);
+  update();figure.hidden=false;
+}
+setupMassExample(storyRoot.querySelector('[data-mass-example]'));
 
 function makePractice(figure) {
   const host=figure.querySelector('.scene'), base=host.querySelector('canvas'); base.className='orbit-plane';

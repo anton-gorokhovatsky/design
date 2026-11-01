@@ -61,11 +61,11 @@ test("prior CSS ceiling is still enforced", () => {
 });
 
 test("deferred story source has its own ceiling", () => {
-  const result = check({story: "a".repeat(81 * 1024)});
+  const result = check({story: "a".repeat(113 * 1024)});
   assert.equal(result.status, 1); assert.match(result.stderr, /story: .* exceeds/);
   assert.doesNotMatch(result.stderr, /\n- initialPage: /);
 });
 test("deferred story compressed bytes remain bounded", () => {
-  const result = check({story: entropy(40_000)});
+  const result = check({story: entropy(60_000)});
   assert.equal(result.status, 1); assert.match(result.stderr, /storyGzip: .* exceeds/);
 });
