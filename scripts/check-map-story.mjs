@@ -48,9 +48,15 @@ async function checkMassExample(page){
  assert.ok((await figure.locator('[data-mass-period]').innerText()).includes(period),'The comparison shows the full period of the shared data');
  const details=figure.locator('.mass-method'),summary=details.locator('summary');
  assert.equal(await details.getAttribute('open'),null,'Calculation detail is optional');
+ const closedChevron=await summary.evaluate(e=>getComputedStyle(e,'::after').maskImage);
+ assert.notEqual(closedChevron,'none','The disclosure has a visible direction icon');
+ assert.equal(await summary.evaluate(e=>getComputedStyle(e,'::after').transform),'none','The closed chevron avoids a transformed layer inside the story filter');
  await link.focus();await page.keyboard.press('Tab');await summary.press('Enter');
  assert.notEqual(await details.getAttribute('open'),null,'The native disclosure opens from the keyboard');
- assert.ok(await summary.evaluate(e=>new DOMMatrixReadOnly(getComputedStyle(e,'::after').transform).a<0),'The chevron points up as soon as the calculation is open');
+ const openChevron=await summary.evaluate(e=>getComputedStyle(e,'::after').maskImage);
+ assert.notEqual(openChevron,'none','The open disclosure retains its direction icon');
+ assert.notEqual(openChevron,closedChevron,'The chevron changes as soon as the calculation is open');
+ assert.equal(await summary.evaluate(e=>getComputedStyle(e,'::after').transform),'none','The open chevron avoids a transformed layer inside the story filter');
  const focus=await summary.evaluate(e=>({focused:e===document.activeElement,outline:getComputedStyle(e).outlineStyle}));
  assert.ok(focus.focused&&focus.outline!=='none','The disclosure retains visible keyboard focus');
  const calculation=await figure.locator('[data-mass-calculation]').innerText();
@@ -59,7 +65,7 @@ async function checkMassExample(page){
  assert.equal((await shape()).overflow,false,'The expanded calculation reflows within the reading column');
  await summary.press('Space');
  assert.equal(await details.getAttribute('open'),null,'The native disclosure closes without changing the comparison');
- assert.ok(await summary.evaluate(e=>new DOMMatrixReadOnly(getComputedStyle(e,'::after').transform).a>0),'The chevron points down when the calculation is closed');
+ assert.equal(await summary.evaluate(e=>getComputedStyle(e,'::after').maskImage),closedChevron,'Closing restores the downward chevron');
  await page.emulateMedia({reducedMotion:'reduce'});
  await page.waitForFunction(()=>document.documentElement.dataset.reduceMotion==='true');
  const reduced=await shape();
@@ -168,40 +174,7 @@ try{
    const toggle=page.locator('[data-constellation-nav-toggle]');
    const beforeClick=await toggle.evaluate(button=>{button.__qaInputs.length=0;return {expanded:button.getAttribute('aria-expanded'),rect:button.getBoundingClientRect().toJSON()};});
    try{
-    if(engine==='webkit'){
-     // WebKit's locator action can stall after this filtered scroll. Check the
-     // same real target on Node timers, then send native mouse input directly.
-     const deadline=Date.now()+30000;
-     const nativeInput=async(name,action)=>{
-      const remaining=deadline-Date.now();
-      assert.ok(remaining>0,`Native WebKit menu ${name} starts within the 30000ms action deadline`);
-      let timer;
-      try{await Promise.race([action(),new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(`Native WebKit menu ${name} exceeded the 30000ms action deadline`)),remaining);})]);}
-      finally{clearTimeout(timer);}
-     };
-     const sample=()=>toggle.evaluate(button=>{
-      const r=button.getBoundingClientRect(),style=getComputedStyle(button),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);
-      return {rect:{x:r.x,y:r.y,width:r.width,height:r.height},connected:button.isConnected,
-       visible:style.visibility==='visible'&&style.display!=='none'&&+style.opacity>0,
-       enabled:!button.matches(':disabled')&&!button.closest('[aria-disabled="true"]'),inert:Boolean(button.closest('[inert]')),
-       inViewport:r.width>0&&r.height>0&&r.left>=0&&r.top>=0&&r.right<=innerWidth&&r.bottom<=innerHeight,
-       hit:hit===button||button.contains(hit)};
-     },undefined,{timeout:Math.max(1,deadline-Date.now())});
-     const ready=s=>s.connected&&s.visible&&s.enabled&&!s.inert&&s.inViewport&&s.hit;
-     let previous='',stable=0,target;
-     while(stable<3){
-      assert.ok(Date.now()<deadline,`The WebKit menu target becomes stable and receives input: ${JSON.stringify(target)}`);
-      target=await sample();const rect=JSON.stringify(target.rect);
-      stable=ready(target)?(rect===previous?stable+1:1):0;previous=rect;
-      if(stable<3)await new Promise(resolve=>setTimeout(resolve,50));
-     }
-     const point={x:target.rect.x+target.rect.width/2,y:target.rect.y+target.rect.height/2};
-     await nativeInput('mouse.move',()=>page.mouse.move(point.x,point.y));
-     const hovered=await sample();
-     assert.ok(ready(hovered),'The WebKit menu target remains visible, enabled and receives the pointer after hover');
-     assert.deepEqual(hovered.rect,target.rect,'Hover preserves the stable menu target');
-     await nativeInput('mouse.click',()=>page.mouse.click(point.x,point.y));
-    }else await toggle.click();
+    await toggle.click();
    }catch(error){
     const diagnostic=await toggle.evaluate(button=>{const r=button.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return {inputs:button.__qaInputs,expanded:button.getAttribute('aria-expanded'),menuOpen:document.querySelector('[data-constellation-nav]')?.classList.contains('is-open'),storyInert:document.querySelector('#story-pane')?.inert,active:{tag:document.activeElement?.tagName,id:document.activeElement?.id},visibility:document.visibilityState,focused:document.hasFocus(),hit:{tag:hit?.tagName,id:hit?.id,classes:hit?.getAttribute('class')},hitButton:hit===button||button.contains(hit),url:location.href};}).catch(diagnosticError=>({diagnosticError:String(diagnosticError)}));
     console.error('Story menu input diagnostic',JSON.stringify({engine,width,method,beforeClick,diagnostic}));

@@ -63,7 +63,10 @@ html[data-reduce-motion=true] .story-is-moving #split-shell{transition:none}
 .map-story .mass-caveat{margin-top:var(--space-1)}
 .mass-method{margin-top:var(--space-3)}
 .mass-method>summary{width:fit-content;max-width:100%;justify-content:flex-start;gap:var(--space-2)}
-.mass-method>summary::after{margin-inline:var(--space-1);transition:none}
+/* Keep the shared disclosure shape without a rotated layer inside the story SVG filter. */
+.mass-method>summary::after{width:10px;height:10px;margin-inline:var(--space-1);border:0;background:currentColor;transform:none;transition:none;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M.5 3 5 7.5 9.5 3' fill='none' stroke='black' stroke-width='1'/%3E%3C/svg%3E") center/contain no-repeat}
+.mass-method[open]>summary:not([aria-expanded="false"])::after{transform:none;mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M.5 7 5 2.5 9.5 7' fill='none' stroke='black' stroke-width='1'/%3E%3C/svg%3E")}
+@media (forced-colors:active){.mass-method>summary::after{forced-color-adjust:none;background:ButtonText}}
 .mass-method[open] summary{margin-bottom:var(--space-2)}
 .mass-method p:last-child{margin-bottom:0}
 @container story-viewport (max-width:17rem){.mass-comparison{grid-template-columns:minmax(0,1fr);row-gap:var(--space-5)}.mass-caption{line-height:var(--leading-body)}}
