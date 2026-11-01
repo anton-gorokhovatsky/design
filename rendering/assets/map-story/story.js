@@ -102,7 +102,8 @@ function syncSceneSurfaces(host){
     let origin=origins.get(record.host);if(!origin){origin=record.host.getBoundingClientRect();origins.set(record.host,origin);}
     const left=origin.left+x,top=origin.top+y;
     const visible=shown&&record.visible&&top+h>port.top&&top<port.bottom&&left+w>port.left&&left<port.right;
-    node.style.visibility=visible?'visible':'hidden';node.style.maxWidth=Math.max(1,origin.width-16)+'px';
+    node.style.visibility=visible?'visible':'hidden';
+    if(!node.classList.contains('scene-readout'))node.style.maxWidth=Math.max(1,origin.width-16)+'px';
     node.style.left=nativeAnchors?'anchor(left)':'0px';node.style.top=nativeAnchors?'anchor(top)':'0px';
     node.style.transform=`translate3d(${nativeAnchors?x:left}px,${nativeAnchors?y:top}px,0)`;
     if(visible)visibleFrames.add(record.host);
@@ -131,10 +132,10 @@ function sceneNote(figure){
 }
 function readout(figure,item,detail=''){
   const note=sceneNote(figure),out=note.out;
-  if(!item){surface(out).visible=false;out.classList.remove('is-visible');out.inert=true;delete out.dataset.point;note.host.style.marginBottom='';note.space='';return;}
+  if(!item){surface(out).visible=false;out.classList.remove('is-visible');out.inert=true;delete out.dataset.point;return;}
   if(out.dataset.point===item.id&&out.dataset.detail===detail)return;
   const wasVisible=out.classList.contains('is-visible');
-  out.dataset.point=item.id;out.dataset.detail=detail;
+  out.dataset.point=item.id;out.dataset.detail=detail;note.sceneWidth=0;
   const link=document.createElement('a');link.href=nodeLink(item);link.className='text-link';const title=document.createElement('span');title.textContent=typographUiText(item.label);link.append(title);
   out.replaceChildren(link);
   if(detail){const text=document.createElement('span');text.className='readout-caption';text.textContent=typographUiText(detail);link.append(text);}
@@ -142,7 +143,7 @@ function readout(figure,item,detail=''){
   if(wasVisible&&motion){out.getAnimations().forEach(a=>a.cancel());out.animate([{opacity:0},{opacity:1}],{duration:180,easing:'cubic-bezier(0.16,1,0.3,1)'});}
 }
 const intersects=(a,b)=>{const gap=b.gap??12;return a.x<b.x+b.w+gap&&a.x+a.w+gap>b.x&&a.y<b.y+b.h+gap&&a.y+a.h+gap>b.y;};
-function labelBox(point,extent,size,width,height,obstacles){
+function labelBox(point,extent,size,width,height,obstacles,nearby=false,attached=false){
   obstacles=[...obstacles,{x:point.x-extent.x,y:point.y-extent.y,w:extent.x*2,h:extent.y*2,gap:8}];
   const candidates=[];
   for(const gap of [12,20,28])for(const t of [.5,.25,.75,0,1]){
@@ -154,16 +155,49 @@ function labelBox(point,extent,size,width,height,obstacles){
     }
   }
   candidates.sort((a,b)=>Math.hypot(a.x+a.w/2-point.x,a.y+a.h/2-point.y)-Math.hypot(b.x+b.w/2-point.x,b.y+b.h/2-point.y));
-  return candidates.find(box=>!obstacles.some(a=>intersects(box,a)))||candidates.find(box=>!obstacles.some(a=>a.gap!==2&&intersects(box,a)))||null;
+  const distance=(box,p)=>Math.hypot(Math.max(box.x-p.x,0,p.x-box.x-box.w),Math.max(box.y-p.y,0,p.y-box.y-box.h));
+  const belongs=box=>!attached||!obstacles.some(other=>other.id&&distance(box,{x:other.x+other.w/2,y:other.y+other.h/2})<distance(box,point)-1);
+  const clear=box=>belongs(box)&&!obstacles.some(a=>a.gap!==2&&intersects(box,a));
+  const direct=candidates.find(box=>belongs(box)&&!obstacles.some(a=>intersects(box,a)))||candidates.find(clear);
+  if(direct||!nearby)return direct||null;
+  // Dense crosses need a two-dimensional search around the actual mark. Four
+  // cardinal placements alone can miss the small free space between neighbours.
+  const reach=nearby===true?64+Math.max(extent.x,extent.y):Math.max(width,height);
+  const left=Math.max(8,point.x-reach-size.w),right=Math.min(width-size.w-8,point.x+reach);
+  const top=Math.max(0,point.y-reach-size.h),bottom=Math.min(height-size.h,point.y+reach);
+  let best=null,nearest=Infinity;
+  for(let y=top;y<=bottom;y+=8)for(let x=left;x<=right;x+=8){
+    const box={x,y,...size},d=Math.hypot(x+size.w/2-point.x,y+size.h/2-point.y);
+    if(d<nearest&&clear(box)){best=box;nearest=d;}
+  }
+  return best;
 }
 function positionReadout(figure,point,width,height,extent={x:10,y:10},obstacles=[]){
   const note=sceneNotes.get(figure);if(!note||!point||!note.out.dataset.point)return;
-  if(note.sceneWidth!==width){note.out.style.maxWidth=Math.max(1,width-16)+'px';note.sceneWidth=width;note.dirty=true;}
+  if(note.sceneWidth!==width){note.unit=parseFloat(getComputedStyle(note.out.querySelector('a')).fontSize);note.out.style.maxWidth=Math.min(note.unit*16,width-16)+'px';note.sceneWidth=width;note.dirty=true;}
   if(note.dirty){note.width=note.out.offsetWidth;note.height=note.out.offsetHeight;note.dirty=false;}
-  let rect=labelBox(point,extent,{w:note.width,h:note.height},width,height,obstacles);
-  const space=rect?'':note.height+8+'px';
-  if(note.space!==space){note.host.style.marginBottom=space;note.space=space;}
-  rect??={x:8,y:height+8,w:note.width,h:note.height};
+  // Small marks need clearance from their visible contour, not an extra halo.
+  const clearances=obstacles.filter(box=>box.id!==note.out.dataset.point&&box.gap!==2).map(box=>({...box,gap:box.gap??4}));
+  const key=JSON.stringify([point,extent,note.width,note.height,clearances]);
+  if(note.placementKey===key){placeSurface(note.out,note.placement);return note.placement;}
+  let rect=labelBox(point,extent,{w:note.width,h:note.height},width,height,clearances,true,true);
+  if(!rect){
+    for(const limit of [note.unit*14,note.unit*12]){
+      if(note.width<=limit)continue;
+      note.out.style.maxWidth=limit+'px';note.width=note.out.offsetWidth;note.height=note.out.offsetHeight;
+      rect=labelBox(point,extent,{w:note.width,h:note.height},width,height,clearances,true,true);
+      if(rect)break;
+    }
+    rect??=labelBox(point,extent,{w:note.width,h:note.height},width,height,clearances,true,true)
+      ||labelBox(point,extent,{w:note.width,h:note.height},width,height,clearances,true);
+  }
+  // At large text sizes a caption can cover secondary marks, but it must
+  // stay beside its own visible point and clear of the major scene bodies.
+  const bodies=clearances.filter(box=>box.w>note.unit*2||box.h>note.unit*2);
+  rect??=labelBox(point,extent,{w:note.width,h:note.height},width,height,bodies,true)
+    ||labelBox(point,extent,{w:note.width,h:note.height},width,height,bodies,'scene');
+  if(!rect)return;
+  note.placementKey=JSON.stringify([point,extent,note.width,note.height,clearances]);note.placement=rect;
   placeSurface(note.out,rect);
   return rect;
 }
@@ -257,7 +291,11 @@ function makePractice(figure) {
       const behind=p[2]<0 && Math.hypot(p[0],p[1])<.14;buttons[i].querySelector('.orbit-moon').style.opacity=behind?'0':'1';buttons[i].style.pointerEvents=behind?'none':'';
       return {x,y,z:p[2]};
     });
-    positionReadout(figure,points[seeds.findIndex(seed=>seed.id===selected)],w,h);syncSceneSurfaces(host);
+    const active=seeds.findIndex(seed=>seed.id===selected);
+    const r=active<0?0:6.5*audienceSizeScales[seeds[active].id];
+    const obstacles=points.map((point,i)=>{const radius=6.5*audienceSizeScales[seeds[i].id];return {x:point.x-radius,y:point.y-radius,w:radius*2,h:radius*2,id:seeds[i].id};});
+    obstacles.push({x:w*.435,y:h/2-w*.065,w:w*.13,h:w*.13,id:'private-practice'});
+    positionReadout(figure,points[active],w,h,{x:r,y:r},obstacles);syncSceneSurfaces(host);
   }
   return {draw,resize(){if(host.clientWidth<1||host.clientHeight<1)return;w=host.clientWidth;h=host.clientHeight;plane.resize(w*(devicePixelRatio||1));plane.sphere(.13);plane.tracks(dark);plane.paint();draw(0);},theme(){plane.tracks(dark);plane.paint();}};
 }
@@ -343,7 +381,7 @@ function makeMap(figure) {
   createGravityLens(relativistic).then(value=>{if(value){mapLens=value;mapLens.resize(180);draw(0);}}).catch(()=>{});
   relativistic.addEventListener('lens-unavailable',()=>{mapLens=null;draw(0);});
   const practice=canvas(),practicePlane=createPracticePlane(practice);practicePlane.sphere(.13);practicePlane.tracks(dark);practicePlane.paint();
-  const select=(item,source)=>{if(source==='hover'&&pinned)return;selected=item.id;pinned=source!=='hover';readout(figure,item,item.timeLabel||'');draw(0);};
+  const select=(item,source)=>{if(source==='hover'&&pinned)return;selected=item.id;pinned=source!=='hover';readout(figure,item,target===1?item.timeLabel||'':'');draw(0);};
   const buttons=targetToolbar(host,items,()=>positions,select,false);
   const clearSelection=()=>{selected=null;pinned=false;buttons.forEach(b=>b.setAttribute('aria-pressed','false'));readout(figure,null);draw(0);};
   dismissSceneNote(figure,buttons,clearSelection);
@@ -356,7 +394,7 @@ function makeMap(figure) {
   }
   host.addEventListener('pointermove',e=>{if(e.pointerType!=='mouse'||e.target.closest('.scene-readout'))return;const i=nearest(e);aimHover(i>=0?items[i].id:null);});
   host.addEventListener('pointerleave',()=>aimHover(null));
-  function setMode(value){target=value==='time'?1:0;if(target&&!Number.isFinite(byId.get(selected)?.timeYear)){clearSelection();buttons.forEach((button,i)=>button.tabIndex=i?-1:0);}figure.querySelectorAll('[data-layout]').forEach(b=>b.checked=b.dataset.layout===value);if(!motion)t=target;draw(0);}
+  function setMode(value){target=value==='time'?1:0;if(selected)readout(figure,byId.get(selected),target?byId.get(selected).timeLabel||'':'');if(target&&!Number.isFinite(byId.get(selected)?.timeYear)){clearSelection();buttons.forEach((button,i)=>button.tabIndex=i?-1:0);}figure.querySelectorAll('[data-layout]').forEach(b=>b.checked=b.dataset.layout===value);if(!motion)t=target;draw(0);}
   figure.querySelectorAll('[data-layout]').forEach(b=>b.addEventListener('change',()=>setMode(b.dataset.layout)));
   const timeRadius=year=>year>=2021?.46+(2026-year)*.036:year>=2015?.64+(2021-year)*.035:.85+(2015-year)*.03;
   let spatial=[];
@@ -447,7 +485,7 @@ function makeMap(figure) {
         if(progress>0)sphere(ctx,p.x,p.y,Math.max(5,width*.013),['#bac7ad','#8c9f83','#4e6652','#101d16']);
       }else if(satelliteSeeds.has(item.id)){sphere(ctx,p.x,p.y,Math.max(2.5,width*.0045)*audienceSizeScales[item.id],satelliteSeeds.get(item.id).group.surface);
       }else if(item.kind==='company'){sphere(ctx,p.x,p.y,r,['#a1a392','#43483d','#151a13','#090d08']);}
-      else if(item.kind==='practice'){ctx.strokeStyle=ink(d);ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(p.x-4,p.y);ctx.lineTo(p.x+4,p.y);ctx.moveTo(p.x,p.y-4);ctx.lineTo(p.x,p.y+4);ctx.stroke();}
+      else if(item.kind==='practice'){ctx.strokeStyle=selected===item.id?signal(d):ink(d);ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(p.x-4,p.y);ctx.lineTo(p.x+4,p.y);ctx.moveTo(p.x,p.y-4);ctx.lineTo(p.x,p.y+4);ctx.stroke();}
       else if(item.kind==='personal'){
         if(item.shape==='sphere')sphere(ctx,p.x,p.y,Math.max(3,r),item.id==='youtube'?['#ffb4b4','#d51b30','#64051b','#360710']:['#d4c1cb','#86435a','#43182c','#230c19']);
         else{ctx.fillStyle=personalInk;ctx.beginPath();ctx.arc(p.x,p.y,Math.max(2.5,r*.65),0,TAU);ctx.fill();}
@@ -463,7 +501,16 @@ function makeMap(figure) {
     if(progress>.5)for(const r of [1,.85,.64,.46])for(let a=0;a<TAU;a+=.025)objects.push({x:center.x+Math.cos(a)*width*.44*r,y:center.y+Math.sin(a)*height*.43*r,w:1,h:1,gap:2});
     const captionObjects=id=>id==='running'?objects.filter(box=>box.id!==id):objects;
     const active=items.findIndex(item=>item.id===selected);
-    if(active>=0){const rect=positionReadout(figure,allPoints[active],width,height,captionExtent(items[active],width,progress),[...captionObjects(items[active].id),...occupied]);if(rect)occupied.push(rect);}
+    if(active>=0){
+      const point=allPoints[active],rect=positionReadout(figure,point,width,height,captionExtent(items[active],width,progress),[...captionObjects(items[active].id),...occupied]);
+      if(rect){
+        occupied.push(rect);
+        if(items[active].kind==='practice'){
+          const end={x:clamp(point.x,rect.x,rect.x+rect.w),y:clamp(point.y,rect.y,rect.y+rect.h)},dx=end.x-point.x,dy=end.y-point.y,length=Math.hypot(dx,dy);
+          if(length>20){ctx.save();ctx.strokeStyle=signal(d);ctx.globalAlpha=.6;ctx.lineWidth=.8;ctx.beginPath();ctx.moveTo(point.x+dx/length*7,point.y+dy/length*7);ctx.lineTo(end.x,end.y);ctx.stroke();ctx.restore();}
+        }
+      }
+    }
     labels.forEach(id=>{const i=items.findIndex(item=>item.id===id),p=allPoints[i];
       const size=labelMetrics.get(id);if(!size||id===selected)return;
       const rect=labelBox(p,captionExtent(items[i],width,progress),size,width,height,[...captionObjects(id),...occupied]);

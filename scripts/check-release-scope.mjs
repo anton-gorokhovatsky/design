@@ -1108,10 +1108,40 @@ for (const after of [
 for (const engine of ['chromium', 'webkit']) assert.deepEqual(
   new Set(browserMatrix('components', dismissalChecks).include.filter(job => job.browser === engine).flatMap(job => job.checks.split(','))),
   new Set(['hover-layout', 'case-flow', 'case-view', 'point-address']), 'Dismissal retains preview, card lifecycle and URL coverage');
-for (const selector of ['.map-node-label', 'html[data-map-controls-ready] .map-anchor-label[data-map-label-id="garage"]', '.focused-home .map-space-label--south']) {
+for (const selector of ['.map-node-label', 'html[data-map-controls-ready] .map-anchor-label[data-map-label-id="garage"]', '.focused-home .map-space-label--south',
+  '.project-orbit-tooltip', '.project-orbit-tooltip.is-visible', '.project-orbit-tooltip > span',
+  'html[data-theme="dark"] .project-orbit-tooltip', '.map-node-label,.project-orbit-tooltip',
+  '.focused-home .map-labels .direction-landmark', '.direction-landmark:has(small)',
+  'html[data-celestial-volume] .focused-home .map-labels .direction-landmark',
+  '.focused-home .map-labels [data-map-label-id="youtube"]', '.map-labels > [data-map-label-id]',
+  '.map-node-label, .map-labels [data-map-label-id]']) {
   scoped('styles.css', '', `@container map-viewport (min-width:901px){${selector} {transform:translate(-50%, 30px)}}`, 'components', ['map-labels']);
 }
-for (const selector of ['.map-anchor-label + .map-node', ':is(.map-anchor-label,.map-grid)', '.map-anchor-label,.map-grid']) {
+for (const selector of ['.scene-label', '.scene-readout--anchored a', '.scene-label,.scene-readout--anchored a']) {
+  scoped('styles.css', '', `${selector} {padding:4px 10px}`, 'components', ['map-story']);
+}
+const sharedLabelOwners = ['map-story', 'map-labels'];
+const sharedLabelSelector = 'html .map-labels .map-node-label, .project-orbit-tooltip, .scene-label, .scene-readout--anchored a';
+scoped('styles.css', '', `${sharedLabelSelector} {padding:4px 10px}`, 'components', sharedLabelOwners);
+scoped('styles.css', '', `@container map-viewport (min-width:901px){${sharedLabelSelector} {font-size:.64rem}}`, 'components', sharedLabelOwners);
+for (const components of [['map-story'], sharedLabelOwners]) for (const engine of ['chromium', 'webkit']) assert.deepEqual(
+  new Set(browserMatrix('components', components).include.filter(job => job.browser === engine).flatMap(job => job.checks.split(','))),
+  new Set(components.length === 1 ? ['map-story', 'scroll-lens', 'accessibility']
+    : ['map-routes', 'hover-layout', 'accessibility', 'map-story', 'scroll-lens']),
+  'Story-only and shared label recipes retain their complete owners in both engines');
+for (const selector of ['.map-anchor-label + .map-node', ':is(.map-anchor-label,.map-grid)', '.map-anchor-label,.map-grid',
+  '.project-orbit-tooltip + .map-grid', '.project-orbit-tooltip ~ .map-node-label', '.project-orbit-tooltip,.map-grid',
+  ':is(.project-orbit-tooltip,.map-grid)', ':is(.project-orbit-tooltip)', ':has(.project-orbit-tooltip)',
+  ':not(.project-orbit-tooltip)', '.map-grid:has(.project-orbit-tooltip)', '.project-orbit-tooltip-other',
+  '.scene-label,.map-grid', '.scene-readout--anchored + .map-grid',
+  ':is(.scene-label,.scene-readout--anchored)', ':has(.scene-readout--anchored)',
+  '.scene-label--other', '.scene-readout--anchored-other',
+  '.direction-landmark-other', ':is(.direction-landmark)',
+  '.map-node-label,.scene-label,.map-grid', '.project-orbit-tooltip,:is(.scene-label)',
+  '.map-labels + [data-map-label-id="youtube"]', '[data-map-label-id="youtube"]',
+  '.map-labels [data-map-label-id] + .map-grid', '.map-labels [data-other]', '.map-labels[data-map-label-id]',
+  ':is(.map-labels) [data-map-label-id]', '.map-labels :is([data-map-label-id])',
+  '.map-labels:has([data-map-label-id])', '.map-labels [data-map-label-id],.map-grid']) {
   scoped('styles.css', '', `${selector} {opacity:0}`, 'full');
 }
 for (const engine of ['chromium', 'webkit']) assert.deepEqual(

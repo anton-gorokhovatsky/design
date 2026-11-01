@@ -9893,17 +9893,17 @@ stroke-width: 1; vector-effect: non-scaling-stroke;
 .focused-home .map-links path.is-active-relation { opacity: .85; }
 .focused-home .map-labels .map-node-label { display: none; }
 .focused-home .map-labels .direction-landmark {
-display: grid; gap: 4px; padding: 5px 7px; max-width: 150px; font-size: var(--type-detail); line-height: 1.25; text-align: center;
+display: grid; gap: 4px; max-width: 150px;
 white-space: normal; text-wrap: balance; opacity: 1; pointer-events: auto; cursor: pointer; transform: translate(-50%, 20px);
 }
 .direction-landmark__kind { display: none; }
 .focused-home .direction-landmark__kind { display: block; font-size: var(--type-caption); font-weight: 400; letter-spacing: .045em; }
-.focused-home .map-labels .direction-landmark:has(small) { padding: 0; background: none; backdrop-filter: none; font-weight: 600; font-size: var(--type-detail); }
+.focused-home .map-labels .direction-landmark:has(small) { background: none; backdrop-filter: none; }
 .focused-home .map-labels [data-map-label-id="garage"] { transform: translate(-50%, calc(-100% - 44px)); white-space: nowrap; max-width: none; }
 .focused-home .map-labels [data-map-label-id="private-practice"] { transform: translate(-50%, calc(-100% - 24px)); max-width: 168px; }
 .focused-home .map-labels [data-map-label-id="principle-data-intuition"] { transform: translate(-50%, 22px); max-width: min(120px, 36cqw); }
 .focused-home .map-labels [data-map-label-id="running"] { transform: translate(34px, -50%); text-align: left; }
-.focused-home .map-labels [data-map-label-id="youtube"] { transform: translate(-50%, 22px); background: none; backdrop-filter: none; min-height: 0; padding: 0; font-size: var(--type-utility); }
+.focused-home .map-labels [data-map-label-id="youtube"] { transform: translate(-50%, 22px); background: none; backdrop-filter: none; min-height: 0;  font-size: var(--type-utility); }
 
 .map-surface[data-mobile-large-text] .focused-home .map-labels .direction-landmark { max-width: calc(100% - 24px); }
 .map-surface[data-mobile-large-text] .focused-home .map-labels [data-map-label-id="garage"] {
@@ -10072,9 +10072,6 @@ inset: 0 auto auto 0; padding: 0; overflow: hidden; clip-path: inset(50%); point
 html[data-focus-modality="keyboard"] .focused-home :is(.map-node, .direction-landmark) { transition: none; }
 html[data-reduce-motion="true"] .focused-home :is(.map-node, .direction-landmark) { transition: none; }
 html[data-reduce-motion="true"] .spatial-intro span:last-child { display: none; }
-@container map-viewport (max-width: 360px) {
-.focused-home .map-labels .direction-landmark.map-node-label--project:not(:has(small)) { min-height: 0; padding: 3px var(--space-1); }
-}
 .map-surface[data-mobile-large-text] .focused-home {
 grid-template-rows: max-content max-content minmax(38rem, 1fr);
 bottom: calc(var(--field-foot) - 8px);
@@ -10223,7 +10220,7 @@ inset-block: calc((min(var(--control-target-compact), 38px) - 44px) / 2);
 .project-satellite>.map-node__glyph{width:calc(var(--satellite-diameter,7px) * var(--audience-size,1));height:calc(var(--satellite-diameter,7px) * var(--audience-size,1));border-radius:50%;background:radial-gradient(circle at 32% 27%,var(--moon-0) 0%,var(--moon-1) 33%,var(--moon-2) 70%,var(--moon-3) 100%);box-shadow:0 0 0 .6px color-mix(in srgb,var(--ink) 22%,transparent)}
 .project-satellite:is(:hover,:focus-visible)>.map-node__glyph{box-shadow:0 0 0 3px color-mix(in srgb,var(--signal) 18%,transparent),0 0 0 1px var(--signal)}
 .project-satellite:focus-visible{outline:1px solid var(--signal);outline-offset:1px}
-.project-orbit-tooltip{position:fixed;z-index:40;left:0;top:0;max-width:230px;padding:7px 10px;border-radius:8px;color:var(--ink);font:500 var(--type-caption)/1.4 var(--font-sans);pointer-events:none}
+.project-orbit-tooltip{position:fixed;z-index:40;left:0;top:0;max-width:230px;color:var(--ink);pointer-events:none}
 .project-satellites[hidden],.project-orbit-picker[hidden],.project-orbit-back[hidden]{display:none}
 .map-surface:has(.point-preview.is-project-picker:not([hidden])) :is(.map-labels,.spatial-intro){pointer-events:none}
 .project-orbit-picker{margin:0;overflow:auto;overscroll-behavior:contain;min-height:0;scrollbar-width:thin;scrollbar-color:var(--line) transparent;padding:calc(var(--picker-head-height) + var(--space-4)) var(--window-pad) var(--window-pad);scroll-padding-block:calc(var(--picker-head-height) + var(--space-2)) var(--space-2);position:absolute;inset:0;z-index:1}
@@ -10318,7 +10315,19 @@ var(--moon-1) 30%, var(--moon-2) 68%, var(--moon-3) 100%);}
 html[data-celestial-volume] .project-satellite > .map-node__glyph{--satellite-diameter:8.5px;}}
 html[data-celestial-volume] [data-map-id="early-career"] .celestial-form{inset:-45%;width:190%;height:190%;filter:brightness(.9);}
 html[data-celestial-volume] .map-node--youtube .map-node__glyph{filter:saturate(.8);}
-html[data-celestial-volume] .map-labels .map-node-label{font-size:var(--type-detail);font-weight:400;line-height:var(--leading-label);}
+/* The same compact caption accompanies a map object in every scene. */
+html .map-labels .map-node-label,
+.project-orbit-tooltip,
+.scene-label,
+.scene-readout--anchored a {
+font:500 var(--type-utility)/var(--leading-control) var(--font-sans);
+letter-spacing:normal;
+min-height:0;
+padding:var(--space-1) var(--space-2);
+border-radius:var(--space-2);
+text-align:left;
+text-wrap:balance;
+}
 html[data-celestial-volume] .map-labels .direction-landmark[data-map-label-id="private-practice"]{max-width:min(13rem, calc(calc(var(--pane-vw) * 100) - var(--space-6)));}
 html[data-celestial-volume] .direction-landmark__kind{font-size:var(--type-caption);line-height:var(--leading-label);font-weight:400;}
 @container map-viewport (max-width: 900px){
@@ -10333,8 +10342,8 @@ html[data-celestial-volume] .site-header .whoop-readout[data-unavailable="true"]
 html[data-celestial-volume] .site-header .whoop-compact-trigger{min-height:32px;}
 html[data-celestial-volume] .map-surface[data-mobile-large-text] .focused-home .site-header{max-height:none;overflow:visible;}
 html[data-celestial-volume] .map-surface[data-mobile-large-text] .site-header .brand__name{padding-right:0;}
-html[data-celestial-volume] .focused-home .map-labels .direction-landmark{font-size:var(--type-detail);}
-html[data-celestial-volume] .focused-home .map-labels .direction-landmark:has(.direction-landmark__kind){gap:var(--space-1);font-size:var(--type-detail);font-weight:400;}
+
+html[data-celestial-volume] .focused-home .map-labels .direction-landmark:has(.direction-landmark__kind){gap:var(--space-1);}
 html[data-celestial-volume] .focused-home .map-labels .direction-landmark[data-map-label-id="private-practice"]{max-width:min(13rem, calc(100% - var(--space-4)));}}
 .study{margin:var(--space-5) 0;padding:0;border:0;min-width:0;}
 .study legend{margin-bottom:var(--space-2);font:600 var(--type-item)/var(--leading-item) var(--font-sans);}

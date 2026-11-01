@@ -52,6 +52,28 @@ async function checkFamilies(page){
  await page.mouse.move(0,0);
  await page.locator('#scene-time').evaluate(e=>e.scrollIntoView());
  await page.locator('[data-layout="map"]').check();
+ // The dense principles used to fall back below the whole figure. Compare
+ // their selected caption to the accepted idle one, and exercise both scenes.
+ for(const sceneId of ['scene-geography','scene-time']){
+  const scene=page.locator('#'+sceneId);await scene.scrollIntoViewIfNeeded();
+  const reference=await scene.locator('.scene-label').first().evaluate(e=>{const s=getComputedStyle(e);return {font:s.font,padding:s.padding};});
+  for(const id of ['principle-wings','principle-language','youtube']){
+   await scene.locator(`button[data-point="${id}"]`).focus();
+   const caption=await scene.evaluate(async(e,id)=>{
+    await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+    const a=e.querySelector('.scene-readout a'),r=a.getBoundingClientRect(),f=e.getBoundingClientRect(),p=e.querySelector(`button[data-point="${id}"]`).getBoundingClientRect(),s=getComputedStyle(a);
+    const x=p.x+p.width/2,y=p.y+p.height/2;
+    const hitHeight=parseFloat(getComputedStyle(a,"::before").height);
+    const hit=document.elementFromPoint(r.x+r.width/2,r.y-Math.max(0,hitHeight-r.height)/4);
+    return {font:s.font,padding:s.padding,inside:r.left>=f.left-1&&r.right<=f.right+1&&r.top>=f.top-1&&r.bottom<=f.bottom+1,gap:Math.hypot(Math.max(r.left-x,0,x-r.right),Math.max(r.top-y,0,y-r.bottom)),hit:hitHeight>=44&&a.contains(hit)};
+   },id);
+   assert.deepEqual({font:caption.font,padding:caption.padding},reference,'Selecting a point keeps the same compact visible label');
+   assert.ok(caption.inside&&caption.gap<68,`${sceneId}/${id}: the caption stays next to its object, not below the illustration (${caption.gap})`);
+   assert.ok(caption.hit,'The compact caption retains an invisible touch area above its visible glass');
+   await page.keyboard.press('Escape');
+  }
+ }
+ await page.locator('#scene-time').scrollIntoViewIfNeeded();
  const failures=await page.locator('#scene-time').evaluate(async scene=>{
   const {mapItems}=await import('/js/map-data.js');
   const button=id=>scene.querySelector(`[data-point="${id}"]`),center=id=>{const r=button(id).getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2};};
@@ -335,6 +357,15 @@ try{
  });
  assert.equal(await axisPage.locator('#story-pane').evaluate(e=>e.scrollWidth>e.clientWidth+1),false,'The aligned target fits the reading area beside a reserved scrollbar');
  assert.ok(await axisPage.locator('#story-pane [data-close-story]').evaluate(e=>e.clientWidth>=44&&e.clientHeight>=44));
+ await axisPage.locator('#scene-geography').scrollIntoViewIfNeeded();
+ await axisPage.locator('#scene-geography button[data-point="principle-autonomy"]').focus();
+ const largeCaption=await axisPage.locator('#scene-geography').evaluate(async scene=>{
+  await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+  const a=scene.querySelector('.scene-readout a'),r=a.getBoundingClientRect(),p=scene.querySelector('button[data-point="principle-autonomy"]').getBoundingClientRect(),s=getComputedStyle(a),range=document.createRange();range.selectNodeContents(a);
+  const text=range.getBoundingClientRect(),x=p.x+p.width/2,y=p.y+p.height/2;
+  return {covered:x>r.left&&x<r.right&&y>r.top&&y<r.bottom,contained:text.left>=r.left&&text.right<=r.right,lines:(r.height-parseFloat(s.paddingTop)-parseFloat(s.paddingBottom))/parseFloat(s.lineHeight),gap:Math.hypot(Math.max(r.left-x,0,x-r.right),Math.max(r.top-y,0,y-r.bottom))};
+ });
+ assert.ok(!largeCaption.covered&&largeCaption.contained&&largeCaption.lines<=3&&largeCaption.gap<68,'At 200% a long caption remains readable beside its own visible point');
  await axisPage.close();
  const failedOpening=await browser.newPage({viewport:{width:390,height:844}});
  const retryErrors=[];failedOpening.on('pageerror',error=>retryErrors.push(error.message));

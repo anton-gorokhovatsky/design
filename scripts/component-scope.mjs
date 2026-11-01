@@ -19,11 +19,38 @@ const ownsClass = (matches) => (selector) => selectorParser().astSync(selector).
   }
   return owned;
 });
+const ownsMapLabelClass = ownsClass(/^(?:map-(?:node-label|anchor-label|space-label)(?:$|--)|(?:project-orbit-tooltip|direction-landmark)$)/);
+const ownsMapLabelAttribute = branch => {
+  let container = false, descendant = false, label = false;
+  for (const node of branch.nodes) {
+    if (node.type === "nesting") return false;
+    if (node.type === "combinator") {
+      if (!["", ">"].includes(node.value.trim())) return false;
+      if (container) descendant = true;
+    }
+    if (node.type === "class" && node.value === "map-labels") { container = true; descendant = false; }
+    if (node.type === "attribute") {
+      if (node.attribute !== "data-map-label-id" || node.namespace || !descendant) return false;
+      label = true;
+    }
+  }
+  return label;
+};
+const ownsMapLabel = selector => selectorParser().astSync(selector).nodes.every(branch =>
+  ownsMapLabelClass(branch.toString()) || ownsMapLabelAttribute(branch));
+const ownsStoryLabel = ownsClass(/^(?:scene-label|scene-readout--anchored)$/);
+// A shared label recipe retains both owners. Every branch must still have a
+// positive label root; this does not admit arbitrary mixed component groups.
+const ownsSharedLabels = selector => {
+  const branches = selectorParser().astSync(selector).nodes.map(branch => branch.toString());
+  return branches.length > 1 && branches.every(branch => ownsMapLabel(branch) || ownsStoryLabel(branch))
+    && branches.some(ownsMapLabel) && branches.some(ownsStoryLabel);
+};
 // This sibling pair is inside the related list; arbitrary siblings stay unowned.
 const ownsRelatedRow = selector => selector.trim() === ".map-related__track > li + li";
 const cssOwners = {
   "check:hover-layout": selector => selector.trim() === '.project-orbit-picker [data-picker-project="dd-camp"] .project-atlas-mark',
-  "map-story": selector => selectorParser().astSync(selector).nodes.every(branch =>
+  "map-story": selector => ownsStoryLabel(selector) || ownsSharedLabels(selector) || selectorParser().astSync(selector).nodes.every(branch =>
     branch.nodes.some(node => node.type === "id" && node.value === "story-pane")
     && branch.nodes.every(node => node.type !== "nesting"
       && (node.type !== "combinator" || ["", ">"].includes(node.value.trim())))),
@@ -43,7 +70,7 @@ const cssOwners = {
   "check:command-placement": ownsClass(/^(?:has-command-focus|command-dock__submit-mark)$/),
   "check:inspector-links": selector => ownsRelatedRow(selector) || ownsClass(/^(?:nav-external|contact-links|map-readout__destination|map-related(?:__[\w-]+)?|map-evidence)$/)(selector),
   "check:case-view": selector => ownsRelatedRow(selector) || ownsClass(/^(?:map-related(?:__[\w-]+)?|map-evidence)$/)(selector),
-  "map-labels": ownsClass(/^map-(?:node-label|anchor-label|space-label)(?:$|--)/),
+  "map-labels": selector => ownsMapLabel(selector) || ownsSharedLabels(selector),
 };
 
 const cssOutsideOwned = (source, owns) => {

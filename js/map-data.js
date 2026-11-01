@@ -506,7 +506,7 @@ const mapItems = [
     id: "running",
     kind: "personal",
     shape: "sphere",
-    label: "БЕГ",
+    label: "Бег",
     title: "БЕГ",
     meta: "ЛИЧНЫЙ ЦЕНТР / ДИСТАНЦИЯ / РИТМ / INSTAGRAM",
     description: "Бегаю пять раз в неделю.",
@@ -520,7 +520,7 @@ const mapItems = [
   {
     id: "football",
     kind: "personal",
-    label: "ФУТБОЛ",
+    label: "Футбол",
     title: "ФУТБОЛ",
     meta: "СМОТРЕТЬ / ЧИТАТЬ / ОБСУЖДАТЬ",
     description: "Игра, в которой интересны движение, пространство, системы и исключения из них.",
@@ -534,7 +534,7 @@ const mapItems = [
   {
     id: "snow",
     kind: "personal",
-    label: "СНЕГ",
+    label: "Снег",
     title: "СНЕГ",
     meta: "СНОУБОРД / ДВИЖЕНИЕ",
     description: "Способ переключить режим внимания и снова почувствовать скорость, склон и тело.",
@@ -546,7 +546,7 @@ const mapItems = [
   {
     id: "music",
     kind: "personal",
-    label: "МУЗЫКА",
+    label: "Музыка",
     title: "МУЗЫКА",
     meta: "СЛУШАТЬ / ПОВТОРЯТЬ",
     description: "Постоянный фон, источник ритма и иногда самый быстрый способ изменить состояние.",
@@ -560,7 +560,7 @@ const mapItems = [
   {
     id: "coffee",
     kind: "personal",
-    label: "КОФЕ",
+    label: "Кофе",
     title: "КОФЕ",
     meta: "РИТУАЛ / ЧЁРНЫЙ",
     description: "Маленький ежедневный ритуал и уважительный кивок агенту Куперу.",
@@ -575,7 +575,7 @@ const mapItems = [
     id: "youtube",
     kind: "personal",
     shape: "sphere",
-    label: "YOUTUBE",
+    label: "YouTube",
     title: "YOUTUBE",
     meta: "ИГРЫ / КУПЛИНОВ / «ТЕНЬ ЧЕРНОБЫЛЯ»",
     description: "Люблю YouTube, особенно его игровой сегмент.",
@@ -598,7 +598,7 @@ const mapItems = [
     kind: "personal",
     shape: "sphere",
     relatedTo: ["youtube"],
-    label: "ЛЕОНИД ПАРФЁНОВ",
+    label: "Леонид Парфёнов",
     title: "ЛЕОНИД ПАРФЁНОВ",
     meta: "ЖУРНАЛИСТИКА / КИНО",
     description: "Леонид Парфёнов — любимый журналист.",
@@ -618,7 +618,7 @@ const mapItems = [
     kind: "personal",
     relatedPoster: "assets/personal-previews/clayton-young.jpg",
     relatedTo: ["running", "youtube"],
-    label: "КЛЕЙТОН ЯНГ",
+    label: "Клейтон Янг",
     title: "КЛЕЙТОН ЯНГ",
     meta: "БЕГ / ВИДЕОДНЕВНИК",
     description: "Сам бегаю пять раз в неделю и с удовольствием слежу за тем, как бегают и как показывают свой бег мои выдающиеся современники.",
@@ -635,7 +635,7 @@ const mapItems = [
     relatedPoster: "assets/personal-previews/beg-vreden.jpg",
     relatedPosterShape: "circle",
     relatedTo: ["running", "youtube"],
-    label: "БЕГ ВРЕДЕН",
+    label: "Бег вреден",
     title: "БЕГ ВРЕДЕН",
     meta: "БЕГ / ПУТЕШЕСТВИЯ / ЛЮДИ",
     description: "Бег, поездки на старты и истории людей вокруг спорта.",
@@ -659,7 +659,7 @@ const mapItems = [
     kind: "personal",
     relatedPoster: "assets/personal-previews/across-the-runiverse.jpg",
     relatedTo: ["running", "youtube"],
-    label: "ACROSS THE RUNIVERSE",
+    label: "Across the Runiverse",
     title: "ACROSS THE RUNIVERSE",
     meta: "БЕГ / ЛЁГКАЯ АТЛЕТИКА / КОСТЯ КАН",
     description: "Бег изнутри: сборы, тренировки, соревнования.",
@@ -681,7 +681,7 @@ const mapItems = [
   {
     id: "wave",
     kind: "personal",
-    label: "ВОЛНА",
+    label: "Волна",
     title: "ВОЛНА",
     meta: "МОРЕ / ГОРИЗОНТ / МАСШТАБ",
     description: "Открытый горизонт возвращает чувство масштаба и напоминает: за привычными границами всегда есть продолжение.",
@@ -695,7 +695,7 @@ const mapItems = [
   {
     id: "food",
     kind: "personal",
-    label: "ЕДА",
+    label: "Еда",
     title: "ЕДА",
     meta: "ВКУС / СЕРВИС / ДЕТАЛИ",
     description: "В «Медведе» цель сервиса формулируют без церемоний: сделать так, чтобы гостям буквально снесло крышу.",
@@ -711,7 +711,7 @@ const mapItems = [
   {
     id: "principle-wings",
     kind: "practice",
-    label: "ДОВЕРЯТЬ КРЫЛЬЯМ",
+    label: "Доверять крыльям",
     title: "ПТИЦА ДОВЕРЯЕТ КРЫЛЬЯМ",
     meta: "НЕОПРЕДЕЛЁННОСТЬ / ГИБКОСТЬ / РЕЗУЛЬТАТ",
     description: "Несмотря на времена — стандартные вещи перестают работать, сервисы прекращают оказывать услуги, механизмы ломаются, фундаменты рушатся, то, что раньше было очевидно и не обсуждаемо, стало неочевидно и обсуждаемо — в таких условиях задача не в том, чтобы держаться процедур, а в том чтобы перепридумывать их на лету и себя заодно (это же как раз про ту самую гибкость методологии, непрерывное сотрудничество и совершенствование).",
@@ -723,7 +723,7 @@ const mapItems = [
   {
     id: "principle-system",
     kind: "practice",
-    label: "СИСТЕМНОСТЬ",
+    label: "Системность",
     title: "СИСТЕМНЫЙ ПОДХОД",
     meta: "ТЕКУЩЕЕ → ЦЕЛЕВОЕ → РАЗРЫВЫ / ДЕКОМПОЗИЦИЯ",
     description: "Сначала разбираюсь, как устроен проект сейчас, к какому состоянию нужно прийти и чего для этого не хватает.",
@@ -735,7 +735,7 @@ const mapItems = [
   {
     id: "principle-autonomy",
     kind: "practice",
-    label: "САМОСТОЯТЕЛЬНОСТЬ",
+    label: "Самостоятельность",
     title: "САМОСТОЯТЕЛЬНОСТЬ",
     displayTitle: "САМО\u00adСТОЯ\u00adТЕЛЬ\u00adНОСТЬ",
     meta: "ПРОАКТИВНОСТЬ / УСТОЙЧИВОСТЬ / НАДЁЖНОСТЬ",
@@ -748,7 +748,7 @@ const mapItems = [
   {
     id: "principle-terms",
     kind: "practice",
-    label: "ДОКУМЕНТЫ + ФИНАНСЫ",
+    label: "Документы + финансы",
     title: "ДОКУМЕНТЫ И ФИНАНСЫ",
     meta: "ДОГОВОРЫ / АКТЫ / БЮДЖЕТ",
     description: "Внимателен к документам: сам составляю договоры, не пропускаю детали юридических договоренностей и вовремя закрываю все работы актами.",
@@ -760,7 +760,7 @@ const mapItems = [
   {
     id: "principle-goal",
     kind: "practice",
-    label: "ЦЕЛЬ > ФРЕЙМВОРКИ",
+    label: "Цель > фреймворки",
     title: "ЦЕЛЬ ВАЖНЕЕ ФРЕЙМВОРКОВ",
     displayTitle: "ЦЕЛЬ ВАЖНЕЕ ФРЕЙМ\u00adВОРКОВ",
     meta: "PMBOK / TRIPLE DIAMOND / JTBD / TDD",
@@ -773,7 +773,7 @@ const mapItems = [
   {
     id: "principle-improve",
     kind: "practice",
-    label: "УПРАВЛЯТЬ + УЛУЧШАТЬ",
+    label: "Управлять + улучшать",
     title: "УПРАВЛЯТЬ И УЛУЧШАТЬ",
     meta: "ПРОЕКТЫ / КОМАНДА / ПРОЦЕССЫ",
     description: "Руководил проектами разной сложности и командами до 10 человек; отвечал за сроки и бюджет.",
@@ -785,7 +785,7 @@ const mapItems = [
   {
     id: "principle-communicate",
     kind: "practice",
-    label: "ЛИДЕР + КОММУНИКАТОР",
+    label: "Лидер + коммуникатор",
     title: "ЛИДЕР И КОММУНИКАТОР",
     displayTitle: "ЛИДЕР И КОМ\u00adМУ\u00adНИ\u00adКА\u00adТОР",
     meta: "ДОГОВАРИВАТЬСЯ / МОТИВИРОВАТЬ / АРГУМЕНТИРОВАТЬ",
@@ -798,7 +798,7 @@ const mapItems = [
   {
     id: "principle-own",
     kind: "practice",
-    label: "БРАТЬ ОТВЕТСТВЕННОСТЬ",
+    label: "Брать ответственность",
     title: "РЕШЕНИЕ И ОТВЕТСТВЕННОСТЬ",
     displayTitle: "РЕ\u00adШЕ\u00adНИЕ И ОТ\u00adВЕТ\u00adСТВЕН\u00adНОСТЬ",
     meta: "РЕШЕНИЕ / ОТВЕТСТВЕННОСТЬ / ХЛАДНОКРОВИЕ",
@@ -811,7 +811,7 @@ const mapItems = [
   {
     id: "principle-learn",
     kind: "practice",
-    label: "УЧИТЬСЯ + ЗАМЕЧАТЬ",
+    label: "Учиться + замечать",
     title: "УЧИТЬСЯ И ВЕРИТЬ В ДЕТАЛИ",
     meta: "УЧИТЬСЯ / НАБЛЮДАТЬ / НАХОДИТЬ",
     description: "Люблю учиться и с энтузиазмом развиваю новые умения и навыки.",
@@ -823,7 +823,7 @@ const mapItems = [
   {
     id: "principle-ideas",
     kind: "practice",
-    label: "ИДЕИ + ТРЕНДЫ",
+    label: "Идеи + тренды",
     title: "КРЕАТИВНЫЕ ИДЕИ И ТРЕНДЫ",
     meta: "ЦИФРОВАЯ СРЕДА / МЕДИА / ТЕХНОЛОГИИ",
     description: "Быстро придумываю идеи и решения.",
@@ -835,7 +835,7 @@ const mapItems = [
   {
     id: "principle-language",
     kind: "practice",
-    label: "РУССКИЙ ЯЗЫК",
+    label: "Русский язык",
     title: "ГРАМОТНЫЙ РУССКИЙ ЯЗЫК",
     meta: "ЦИФРОВОЙ ЭТИКЕТ / ПУНКТУАЦИЯ / ГРАММАТИКА",
     description: "Неустанно оттачиваю грамотный русский язык: цифровой этикет, пунктуацию и грамматику.",
@@ -847,7 +847,7 @@ const mapItems = [
   {
     id: "principle-tools",
     kind: "practice",
-    label: "БЫСТРО НАЙТИ ПОДХОД",
+    label: "Быстро найти подход",
     title: "БЫСТРО НАЙТИ ПОДХОД",
     meta: "FIGMA / NOTION / КОД / ИИ / И ДАЛЬШЕ",
     description: "На «ты» с Figma, Photoshop, Notion, Trello, Jira, MailChimp, UniSender, Tilda, Readymag, Webflow, Miro, FigJam, JSON, HTML, большими языковыми моделями и нейросетями — а с чем ещё нет, то гарантированно быстро найду к этому подход.",
@@ -859,7 +859,7 @@ const mapItems = [
   {
     id: "principle-now",
     kind: "practice",
-    label: "НОВОЕ — СЕЙЧАС",
+    label: "Новое — сейчас",
     title: "НОВОЕ — ПРЯМО СЕЙЧАС",
     meta: "ИННОВАЦИИ / OPENAI / ПОВСЕДНЕВНАЯ РАБОТА",
     description: "Инновации: беру всё новое и лучшее и применяю прямо сейчас в повседневных задачах — вижу именно в этом смысл своей работы.",
@@ -871,7 +871,7 @@ const mapItems = [
   {
     id: "principle-data-intuition",
     kind: "practice",
-    label: "АНАЛИТИКА И ИНТУИЦИЯ",
+    label: "Аналитика и интуиция",
     title: "АНАЛИТИКА И ИНТУИЦИЯ",
     meta: "ДАННЫЕ / ВПЕЧАТЛЕНИЯ / ДОСТУПНОСТЬ",
     description: "C одной стороны считаю, что лучшие менеджеры — это аналитики, которые лучше всех на цифрах понимают как работает продукт, и имеют огромное желание свои исследования превратить в реальные продуктовые изменения и стараюсь это качество в себе развить.",
@@ -883,7 +883,7 @@ const mapItems = [
   {
     id: "principle-design-engineering",
     kind: "practice",
-    label: "ДИЗАЙН-ИНЖЕНЕР",
+    label: "Дизайн-инженер",
     title: "ДИЗАЙН-ИНЖЕНЕР",
     meta: "ДИЗАЙН / КОД / РАБОЧИЙ ПРОТОТИП",
     description: "Мехмет Байтас написал о дизайн-инженерах — универсальных специалистах, которые сочетают в себе навыки и дизайнера, и разработчика.",
@@ -895,7 +895,7 @@ const mapItems = [
   {
     id: "principle-shaper",
     kind: "practice",
-    label: "СКУЛЬПТОР / АРХЕОЛОГ",
+    label: "Скульптор / археолог",
     title: "СКУЛЬПТОР / АРХЕОЛОГ",
     meta: "ПРИДАТЬ ФОРМУ / УБРАТЬ ЛИШНЕЕ / НАЙТИ ЦЕННОСТЬ",
     description: "Я встречал ещё пару метафор своего подхода к работе.",
@@ -907,7 +907,7 @@ const mapItems = [
   {
     id: "principle-experiment",
     kind: "practice",
-    label: "ГОСТЕПРИИМСТВО + ЗАБОТА",
+    label: "Гостеприимство + забота",
     title: "ЦИФРОВОЕ ГОСТЕПРИИМСТВО И ЗАБОТА",
     displayTitle: "ЦИФ\u00adРО\u00adВОЕ ГОС\u00adТЕ\u00adПРИ\u00adИМ\u00adСТВО И ЗА\u00adБО\u00adТА",
     meta: "CX / IXD / ИНКЛЮЗИВНОСТЬ / ГЕНЕРАТИВНЫЙ ИИ",
