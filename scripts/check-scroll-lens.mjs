@@ -317,7 +317,7 @@ try {
       }
       assert.deepEqual(result.errors,[]);
     } catch(e) {
-      result.status='FAIL';result.error=e.stack;result.diagnostic=await page.evaluate(()=>({reduced:matchMedia('(prefers-reduced-motion: reduce)').matches,root:document.documentElement.dataset,filters:[...document.querySelectorAll('filter[id^="scroll-ink"]')].map(e=>e.id),effects:[...document.querySelectorAll('[style*="scroll-ink"]')].map(e=>({tag:e.tagName,cls:e.className,filter:e.style.filter})),scroll:(()=>{const s=document.querySelector('.case-scroll');return s&&{top:s.scrollTop,max:s.scrollHeight-s.clientHeight,rect:s.getBoundingClientRect().toJSON()};})()}));console.log(JSON.stringify(result.diagnostic));await page.screenshot({path:dir+engine+'-'+name+'-FAIL.png'}).catch(()=>{});
+      result.status='FAIL';result.error=e.stack;result.diagnostic=await page.evaluate(()=>({ready:document.readyState,visibility:document.visibilityState,focused:document.hasFocus(),reduced:matchMedia('(prefers-reduced-motion: reduce)').matches,root:document.documentElement.dataset,filters:[...document.querySelectorAll('filter[id^="scroll-ink"]')].map(e=>e.id),effects:[...document.querySelectorAll('[style*="scroll-ink"]')].map(e=>({tag:e.tagName,cls:e.className,filter:e.style.filter})),scroll:(()=>{const s=document.querySelector('.case-scroll');return s&&{top:s.scrollTop,max:s.scrollHeight-s.clientHeight,rect:s.getBoundingClientRect().toJSON()};})()}));result.diagnostic.frames=page.frames().map(frame=>frame.url());console.log(JSON.stringify(result.diagnostic));await page.screenshot({path:dir+engine+'-'+name+'-FAIL.png'}).catch(()=>{});
     } finally {await page.close();}
     report.push(result);console.log(result.status,engine,name,JSON.stringify(result.edges),result.error||'');
   }
