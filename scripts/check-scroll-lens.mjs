@@ -50,8 +50,8 @@ try {
     ['player-dark',320,568,'dark','youtube','[data-personal-media-screen]','player'],
     ['player-short',390,380,'light','youtube','[data-personal-media-screen]','player'],
     ['reel',390,480,'light','hotline-camp','.case-inline-media video','video'],
-    ['links',1440,650,'light','running','.map-related__item:nth-child(1)','links'],
-    ['links-mobile',390,568,'dark','running','.map-related__item:nth-child(1)','links'],
+    ['links',1440,650,'light','principle-data-intuition','[data-map-description]','links'],
+    ['links-mobile',390,568,'dark','principle-data-intuition','[data-map-description]','links'],
   ]) {
     if(process.env.LENS_CASES && !process.env.LENS_CASES.split(',').includes(name)) continue;
     const page=await browser.newPage({viewport:{width,height},colorScheme:theme,reducedMotion:'no-preference'});
@@ -96,7 +96,10 @@ try {
       const sheet=await page.locator('.case-sheet').boundingBox();
       let target;
       for(const edge of ['top','bottom']) {
-        target=type==='links'?`.map-related__track > li:nth-child(${edge==='top'?1:7}) strong`:selector;
+        // Related entries now contain permanent thumbnails, which correctly
+        // suspend the parent text filter. Keep the optical pixel comparison
+        // on real prose; exercise the native thumbnail links below.
+        target=selector;
         // The player projection must never feed its transformed bounds back into scrolling.
         await align(page,target,edge,type==='links'?-4:18);
         const port=await page.locator('.case-scroll').boundingBox();
@@ -231,6 +234,35 @@ try {
         }
       }
       if(type==='links') {
+        // Prove the transition from a painted text lens to native selection,
+        // not only the already-unfiltered state of the thumbnail list.
+        await page.locator(target).evaluate(e=>{const r=document.createRange();r.selectNodeContents(e);getSelection().addRange(r);});
+        await settle(page);
+        assert.equal(await page.locator('.case-scroll').evaluate(e=>getComputedStyle(e).filter),'none','Selecting refracted prose restores native text');
+        await page.evaluate(()=>getSelection().removeAllRanges());
+        await page.waitForFunction(()=>getComputedStyle(document.querySelector('.case-scroll')).filter.includes('scroll-ink'));
+        await page.goto(origin+'/?point=running',{waitUntil:'domcontentloaded'});
+        await page.evaluate(()=>document.fonts.ready);
+        await page.waitForFunction(()=>document.querySelector('.map-related__track img')
+          && document.querySelector('[data-map-inspector]').getAnimations().every(a=>a.playState!=='running'));
+        await settle(page);
+        for(const edge of ['top','bottom']) {
+          target=`.map-related__track > li:${edge==='top'?'first':'last'}-child strong`;
+          await page.locator(target).scrollIntoViewIfNeeded();
+          // Wait for the visible image's current source; WebKit can replace
+          // a lazy source while decode() is pending.
+          await page.waitForFunction(selector=>{const image=document.querySelector(selector)?.closest('a').querySelector('img');return image?.complete&&image.naturalWidth>0;},target);
+          await align(page,target,edge,-4);
+          const port=await page.locator('.case-scroll').boundingBox(),bounds=await page.locator(target).boundingBox();
+          assert.ok(edge==='top'?bounds.y<port.y+50:bounds.y+bounds.height>port.y+port.height-50,'Thumbnail links reach the '+edge+' edge');
+          const native=await page.locator(target).evaluate(e=>{
+            const link=e.closest('a'),image=link.querySelector('img');
+            return {filter:getComputedStyle(e.closest('.case-scroll')).filter,transform:getComputedStyle(link).transform,
+              image:!!image&&image.complete&&image.naturalWidth>0,opacity:image&&getComputedStyle(image).opacity};
+          });
+          assert.deepEqual(native,{filter:'none',transform:'none',image:true,opacity:'1'},'The thumbnail and its link stay native and sharp at the '+edge+' edge');
+          await page.screenshot({path:dir+engine+'-'+name+'-native-'+edge+'.png'});
+        }
         await page.locator(target).evaluate(e=>{const s=document.getSelection();s.removeAllRanges();const r=document.createRange();r.selectNodeContents(e);s.addRange(r);});
         await settle(page);
         assert.equal(await page.locator(target).evaluate(e=>getComputedStyle(e.closest('.case-scroll')).filter),'none','Selected text is native');
