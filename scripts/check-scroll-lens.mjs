@@ -68,9 +68,11 @@ try {
       await page.route('https://player.example.test/lens-fixture.mp4',r=>r.fulfill({path:root+'/assets/reels/hotline-camp.mp4',contentType:'video/mp4'}));
       await page.route('https://www.youtube-nocookie.com/embed/**',r=>{loads++;return r.fulfill({contentType:'text/html',body:'<!doctype html><script>location.replace("https://player.example.test/embed")</script>'});});
       await page.route('https://player.example.test/embed',r=>{return r.fulfill({contentType:'text/html',body:'<!doctype html><style>html,body{margin:0;height:100%;background:#000}video{width:100%;height:100%;object-fit:cover}button{position:absolute;top:45%;left:45%}</style><video autoplay muted loop playsinline src="https://player.example.test/lens-fixture.mp4"></video><button onclick="this.textContent=\'Clicked\'">Play</button>'});});
-      // Wait for the inspected content below, not every unrelated page resource.
-      assert.equal((await page.goto(origin+'/?point='+point,{waitUntil:'domcontentloaded'})).status(),200);
-      await page.evaluate(()=>document.fonts.ready);
+      // WebKit CI can leave the navigation lifecycle pending with an interactive
+      // document and a mounted card. Verify the response, parser and actual card
+      // readiness below instead of depending on that browser lifecycle event.
+      assert.equal((await page.goto(origin+'/?point='+point,{waitUntil:'commit'})).status(),200);
+      await page.waitForFunction(()=>document.readyState!=='loading');
       await page.waitForFunction(()=>document.querySelector('.case-scroll')?.clientHeight>0
         && document.querySelector('[data-map-inspector]').getAnimations().every(a=>a.playState!=='running'));
       // Every card uses the same deferred scroll reset and title focus, including
@@ -78,6 +80,7 @@ try {
       // Deferred case text must also be applied before measuring any target.
       await page.waitForFunction(()=>document.querySelector('[data-case-load-state]')?.hidden
         && document.activeElement?.matches('[data-map-title]'));
+      await page.evaluate(()=>document.fonts.ready);
       await settle(page);
       if(type==='image') {
         await page.locator(selector).evaluate(i=>i.decode());

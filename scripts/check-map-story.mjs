@@ -160,6 +160,10 @@ try{
   });
   for(const method of ['pointer','keyboard']){
    await story.evaluate(e=>e.scrollTop=480);
+   // Record a completed reading position after the native scroll/lens update,
+   // using the same active-lens and rendered-frame readiness as story-rapid.
+   await page.waitForFunction(()=>{const p=document.querySelector('#story-pane'),id=p&&getComputedStyle(p).filter.match(/scroll-ink-\d+/)?.[0];return Boolean(id&&document.querySelector(`#${id} feMergeNode:is([in=upper],[in=lower])`));});
+   await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
    const readingPosition=await story.evaluate(e=>e.scrollTop),address=page.url(),historyLength=await page.evaluate(()=>history.length);
    const toggle=page.locator('[data-constellation-nav-toggle]');
    const beforeClick=await toggle.evaluate(button=>{button.__qaInputs.length=0;return {expanded:button.getAttribute('aria-expanded'),rect:button.getBoundingClientRect().toJSON()};});
