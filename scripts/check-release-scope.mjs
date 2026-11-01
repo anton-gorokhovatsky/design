@@ -323,6 +323,67 @@ const scoped = (path, before, after, mode, components = []) => {
   checks += 1;
 };
 
+// Monthly data owns only dates and positive literals in the two shipped forms.
+// Formula, median, project identities and neutral estimates remain runtime code.
+const audienceCoverage = ['check:hover-layout', 'check:map-routes', 'check:map-story'];
+const audienceSnapshots = new Map(['js/practice-audience.js', 'rendering/js/practice-audience.js']
+  .map(path => [path, read(path)]));
+const audienceWeightLiteral = /(['"]ks-fish['"]\s*:\s*)(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?/i;
+const updateAudienceDates = source => source
+  .replace(/(\bstart:\s*['"])\d{4}-\d{2}-\d{2}/, (_, prefix) => prefix + '2030-02-01')
+  .replace(/(\bend:\s*['"])\d{4}-\d{2}-\d{2}/, (_, prefix) => prefix + '2030-02-28');
+const updateAudienceWeights = source => source.replace(audienceWeightLiteral, (_, prefix) => prefix + '0.42');
+const updateAudienceSnapshot = source => updateAudienceWeights(updateAudienceDates(source));
+for (const [path, before] of audienceSnapshots) {
+  const after = updateAudienceSnapshot(before);
+  assert.notEqual(after, before, 'The monthly fixture changes real data');
+  for (const positive of [updateAudienceDates(before), updateAudienceWeights(before), after,
+    after.replace(';', ';\n// Refreshed monthly snapshot.\n')]) {
+    scoped(path, before, positive, 'components', audienceCoverage);
+  }
+  assert.equal(isCopyOnly(path, before, after), false, 'Audience data changes rendered geometry, not just copy');
+  for (const value of ['0', '-1', '1 + 1', 'Number(0.42)', 'Infinity', 'NaN', '1e309', '"0.42"', '42n']) {
+    scoped(path, before, after.replace(audienceWeightLiteral, (_, prefix) => prefix + value), 'full');
+  }
+  for (const negative of [
+    after.replace('Math.log1p', 'Math.log'),
+    after.replace(/\b1(\s*\+\s*Math\.log1p)/, '2$1'),
+    after.replace('Math.sqrt', 'Math.cbrt'),
+    after.replace('Math.floor', 'Math.ceil'),
+    after.replace(/(['"])dusty\1/, '"other-neutral"'),
+    after.replace(/(['"])ks-fish\1/, '"other-project"'),
+    after.replace(audienceWeightLiteral, (_, prefix) => prefix + '0.42,added:0.2'),
+    after.replace(/['"]ks-fish['"]\s*:\s*0\.42,\s*/, ''),
+    after.replace(audienceWeightLiteral, (_, prefix) => prefix + '0.42,' + prefix + '0.2'),
+    after.replace(audienceWeightLiteral, '["ks-fish"]:0.42'),
+    after.replace(audienceWeightLiteral, 'get "ks-fish"() { return 0.42; }'),
+    after.replace(audienceWeightLiteral, '...{"ks-fish":0.42}'),
+    after.replace('2030-02-28', '2030-02-30'),
+    after.replace('2030-02-28', '2030-01-31'),
+    after.replace(/(\bend:\s*['"]2030-02-28['"])/, "$1,timezone:'Europe/Moscow'"),
+    after.replace(/\bend:\s*['"]2030-02-28['"]/, "finish:'2030-02-28'"),
+    after.replace(/['"]2030-02-01['"]/, 'getStart()'),
+    after.replace(/const\s+audienceWeights/, 'let audienceWeights'),
+    'import "./unrelated.js";\n' + after,
+    after + '\nglobalThis.unrelated = true;',
+    'const broken = ;\n' + after,
+  ]) {
+    assert.notEqual(negative, after, 'The negative monthly fixture changes its protected field');
+    scoped(path, before, negative, 'full');
+  }
+  scoped(path, '', after, 'full');
+  scoped(path, before, '', 'full');
+  for (const unknown of ['js/practice-audience-extra.js', 'rendering/practice-audience.js']) {
+    scoped(unknown, before, after, 'full');
+  }
+}
+const audienceMatrix = browserMatrix('components', audienceCoverage).include;
+assert.equal(audienceMatrix.length, 2, 'Monthly snapshots use one existing map shard per engine');
+for (const engine of ['chromium', 'webkit']) assert.deepEqual(
+  new Set(audienceMatrix.filter(job => job.browser === engine).flatMap(job => job.checks.split(','))),
+  new Set(['map-routes', 'map-story', 'hover-layout']), 'Both engines retain the existing geometry, story and target checks');
+checks += 5;
+
 // Reading return fixes own exact directed blocks, including the capture-phase
 // settings exception. Unknown story edits retain the existing story coverage.
 for (const [path, hash, ranges, mutation] of [
@@ -1170,6 +1231,8 @@ try {
   writeFileSync(join(directory, "js/whoop-day.js"), 'const interval = 1000;');
   writeFileSync(join(directory, "js/focused-home.js"), headerModule);
   writeFileSync(join(directory, "js/viewport-ui.js"), viewport);
+  mkdirSync(join(directory, "rendering/js"), { recursive: true });
+  for (const [path, before] of audienceSnapshots) writeFileSync(join(directory, path), before);
   mkdirSync(join(directory, "assets/reels"), { recursive: true });
   writeFileSync(join(directory, "assets/reels/garage-site.mp4"), "original master");
   mkdirSync(join(directory, "assets/share"), { recursive: true });
@@ -1182,6 +1245,34 @@ try {
   const published = git("rev-parse", "HEAD");
   const plan = (options = {}) => planRelease({ projectRoot: directory, base: published, ...options });
   requireReleaseBase(plan({ target: 'HEAD' }));
+  for (const [path, before] of audienceSnapshots) {
+    writeFileSync(join(directory, path), updateAudienceSnapshot(before));
+    const monthly = plan();
+    assert.equal(monthly.mode, 'components');
+    assert.deepEqual(monthly.components, audienceCoverage);
+    assert.equal(monthly.staticScope, 'copy', 'Monthly geometry keeps the existing static gate');
+    assert.deepEqual(monthly.matrix.include, audienceMatrix);
+    writeFileSync(join(directory, path), before);
+  }
+  for (const [path, before] of audienceSnapshots) writeFileSync(join(directory, path), updateAudienceSnapshot(before));
+  git('add', ...audienceSnapshots.keys()); git('commit', '-m', 'monthly audience fixture');
+  assert.deepEqual(plan({ target: 'HEAD' }).components, audienceCoverage, 'The committed source and runtime retain the same monthly gate');
+  writeFileSync(join(directory, 'js/panels.js'), panels + '\nglobalThis.unrelated = true;');
+  assert.equal(plan().mode, 'full', 'Monthly data cannot hide another runtime change');
+  writeFileSync(join(directory, 'js/panels.js'), panels);
+  writeFileSync(join(directory, 'rendering/js/practice-audience.js'), updateAudienceSnapshot(audienceSnapshots.get('rendering/js/practice-audience.js')).replace('Math.log1p', 'Math.log'));
+  assert.equal(plan().mode, 'full', 'A source formula change cannot hide behind valid runtime data');
+  git('reset', '--hard', published);
+  git('rm', 'js/practice-audience.js');
+  assert.equal(plan().mode, 'full', 'Removing the audience module stays full');
+  git('commit', '-m', 'missing audience fixture');
+  const missingAudienceBase = git('rev-parse', 'HEAD');
+  writeFileSync(join(directory, 'js/practice-audience.js'), audienceSnapshots.get('js/practice-audience.js'));
+  assert.equal(plan({ base: missingAudienceBase }).mode, 'full', 'An untracked audience module is not a monthly refresh');
+  git('add', 'js/practice-audience.js');
+  assert.equal(plan({ base: missingAudienceBase }).mode, 'full', 'Adding an audience module stays full');
+  git('reset', '--hard', published);
+  checks += 14;
   writeFileSync(join(directory, "assets/share/eleven.jpg"), "updated share artwork");
   assert.equal(plan().mode, "copy", "Existing share artwork uses publication asset checks");
   writeFileSync(join(directory, "assets/share/unknown.jpg"), "unregistered image");

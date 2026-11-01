@@ -46,38 +46,27 @@ html[data-reduce-motion=true] .story-is-moving #split-shell{transition:none}
 .gravity-formula dd{margin:0}
 @container story-viewport (max-width:380px){.gravity-formula{grid-template-columns:minmax(0,1fr)}.gravity-formula math{justify-self:start}}
 
-/* The mass example is part of the reading column, with the map's own moon. */
-.mass-example{max-width:32rem;margin:var(--space-5) 0 var(--space-6);font-size:var(--type-detail);line-height:var(--leading-body)}
-.mass-example>figcaption{font-size:var(--type-detail);color:var(--content-muted);margin:0 0 var(--space-3)}
-.mass-layout{display:grid;grid-template-columns:6.5rem minmax(0,1fr);gap:var(--space-5);align-items:center}
-.mass-steps{min-width:0;margin:0;padding:0;border:0;display:grid;gap:var(--space-2)}
-.mass-step{position:relative;display:grid;grid-template-columns:1.5em minmax(0,1fr);gap:var(--space-2);align-items:baseline;min-height:var(--control-target);padding-block:var(--space-2);cursor:pointer}
-.mass-step input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
-.mass-step-number{color:var(--content-muted);font-variant-numeric:tabular-nums}
-.mass-step-title{display:block;color:var(--content-ink);font-weight:500}
-.mass-step-value{display:block;color:var(--content-muted);font-variant-numeric:tabular-nums}
-.mass-step:has(:checked) .mass-step-title,.mass-step:has(:checked) .mass-step-number{color:var(--signal);font-weight:600}
-.mass-step:has(:checked) .mass-step-title{text-decoration:underline;text-underline-offset:.2em;text-decoration-thickness:1px}
-.mass-step:has(:focus-visible),.mass-example[data-instant=true] .mass-step:focus-within{outline:var(--focus-width) solid var(--signal);outline-offset:var(--space-1);border-radius:var(--space-1)}
-.mass-visual{min-width:0;text-align:left}
-.mass-drawing{position:relative;width:100%;aspect-ratio:1;margin:0 0 var(--space-5)}
-.mass-drawing .orbit-moon{inset:0;width:100%;height:100%;transform:none}
-.mass-drawing .mass-sphere{transition:transform var(--duration-feedback) var(--ease-out)}
-.mass-drawing .mass-audience{opacity:0;transition:opacity var(--duration-feedback) var(--ease-out)}
-.mass-base-line{position:absolute;inset:0;border:1px solid var(--content-muted);border-radius:50%;pointer-events:none}
-.mass-measure{position:absolute;inset:auto 0 calc(-1 * var(--space-3));height:var(--space-2);border-inline:1px solid var(--content-muted);opacity:0;transition:opacity var(--duration-feedback) var(--ease-out)}
-.mass-measure::before{content:'';position:absolute;inset:50% 0 auto;border-top:1px solid var(--content-muted)}
-.mass-example[data-step=audience] .mass-audience{opacity:.5}
-.mass-example[data-step=size] .mass-measure{opacity:1}
-.mass-visual-note{color:var(--content-muted);font-size:var(--type-detail);line-height:var(--leading-label)}
-.map-story .mass-explanation{display:grid;margin:var(--space-3) 0 0}
-.mass-explanation>span{grid-area:1 / 1}
-.mass-explanation-size{visibility:hidden}
-.map-story .mass-source{margin:var(--space-2) 0 0;color:var(--content-muted)}
-.mass-example[data-instant=true] .mass-sphere,.mass-example[data-instant=true] .mass-audience,.mass-example[data-instant=true] .mass-measure,html[data-reduce-motion=true] .mass-example .mass-drawing>*{transition:none}
-@media(prefers-reduced-motion:reduce){.mass-example .mass-drawing>*{transition:none}}
-@container story-viewport (max-width:23rem){.mass-layout{grid-template-columns:5.5rem minmax(0,1fr);gap:var(--space-4)}}
-@container story-viewport (max-width:17rem){.mass-layout{grid-template-columns:minmax(0,1fr)}.mass-visual{grid-row:1}.mass-drawing{width:min(100%,6.5rem)}.mass-explanation{min-height:0}}
-@media(forced-colors:active){.mass-drawing .orbit-moon{background:CanvasText}.mass-base-line{border-color:Highlight}.mass-step:has(:checked) .mass-step-title{color:LinkText}}
+/* One shared scale and material keep the reference and the real project comparable. */
+.mass-example{max-width:32rem;margin:0 0 var(--space-6);font-size:var(--type-detail);line-height:var(--leading-body);overflow-wrap:anywhere}
+.mass-example>figcaption{font-size:var(--type-body);font-weight:500;color:var(--content-ink);margin:0 0 var(--space-3)}
+.map-story .mass-intro{margin:0 0 var(--space-4)}
+.mass-comparison{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:var(--space-4);row-gap:var(--space-3);margin-block:var(--space-5)}
+.mass-case{display:grid;grid-template-rows:auto 1fr;gap:var(--space-3);min-width:0}
+.mass-drawing{position:relative;width:100%;max-width:min(8rem,128px);aspect-ratio:1;justify-self:center}
+.mass-drawing .orbit-moon{inset:0;width:100%;height:100%;transform:none;transform-origin:50% 50%}
+.mass-caption{min-width:0;line-height:var(--leading-label);hyphens:auto}
+.mass-name{display:block;font-weight:500}
+.mass-caption-note{display:block;margin-top:var(--space-1);color:var(--content-muted)}
+.mass-caption a{font-weight:500}
+.map-story .mass-explanation{margin:0 0 var(--space-3);font-size:var(--type-body)}
+.map-story .mass-source,.map-story .mass-caveat{margin:0;color:var(--content-muted)}
+.map-story .mass-caveat{margin-top:var(--space-1)}
+.mass-method{margin-top:var(--space-3)}
+.mass-method summary{width:fit-content;max-width:100%;min-height:var(--control-target);padding-block:var(--space-2);box-sizing:border-box;cursor:pointer;color:var(--content-ink)}
+.mass-method summary:focus-visible{outline:var(--focus-width) solid var(--signal);outline-offset:var(--space-1);border-radius:var(--space-1)}
+.mass-method[open] summary{margin-bottom:var(--space-2)}
+.mass-method p:last-child{margin-bottom:0}
+@container story-viewport (max-width:17rem){.mass-comparison{grid-template-columns:minmax(0,1fr);row-gap:var(--space-5)}.mass-caption{line-height:var(--leading-body)}}
+@media(forced-colors:active){.mass-drawing .orbit-moon{background:CanvasText}}
 
 .scene-readout--anchored a::before{content:"";position:absolute;inset:50% 0 auto;height:max(100%,var(--control-target));transform:translateY(-50%);border-radius:inherit}

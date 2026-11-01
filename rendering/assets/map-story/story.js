@@ -211,50 +211,69 @@ function dismissSceneNote(figure,buttons,clear){
   document.addEventListener('click',e=>{if(!figure.contains(e.target))clear();});
 }
 
-// One explanatory satellite shares the map's mass and material. It adds no
-// animation loop: native radio controls drive interruptible CSS transitions.
+// A simultaneous comparison uses the same median-normalized size as the map.
+// Its only motion is one finite transform; the complete result is the default.
 function setupMassExample(figure) {
   if (!figure) return;
-  const id='ks-fish', mass=audienceMassWeights[id];
-  const group=practiceGroups.find(group=>group.projects.some(item=>item.id===id));
-  if (!group || !Number.isFinite(mass) || mass<1) return;
+  const id='ks-fish',item=byId.get(id),mass=audienceMassWeights[id],size=audienceSizeScales[id];
+  const group=practiceGroups.find(group=>group.projects.some(project=>project.id===id));
+  if (!item || !group || !Number.isFinite(mass) || mass<1 || !Number.isFinite(size) || size<=0) return;
   const number=new Intl.NumberFormat('ru-RU',{maximumFractionDigits:2});
-  const amount=value=>number.format(value);
-  const growth=Math.sqrt(mass), baseScale=1/growth;
-  const sphere=figure.querySelector('.mass-sphere');
-  const outline=figure.querySelector('.mass-base-line');
+  const audienceNumber=new Intl.NumberFormat('ru-RU',{maximumFractionDigits:1});
+  const plurals=new Intl.PluralRules('ru-RU');
+  const times=(value,digits=2)=>{
+    const rounded=Number(value.toFixed(digits));
+    const word=['few','other'].includes(plurals.select(rounded))?'раза':'раз';
+    return `${(digits===1?audienceNumber:number).format(value)} ${word}`;
+  };
+  const relativeAudience=Math.expm1(mass-1),referenceMass=1+Math.LN2;
+  const sphere=figure.querySelector('.mass-sphere'),reference=figure.querySelector('.mass-reference');
+  // Both frames have equal dimensions, including when text or the pane resizes.
+  const envelope=Math.max(1,size),referenceScale=1/envelope,projectScale=size/envelope;
   for (const node of figure.querySelectorAll('.orbit-moon')) {
     group.surface.forEach((color,index)=>node.style.setProperty('--moon-'+index,color));
   }
-  outline.style.transform=`scale(${baseScale})`;
-  figure.querySelector('[data-mass-contribution]').textContent=`+ ${amount(mass-1)} к собственной массе`;
-  figure.querySelector('[data-mass-result]').textContent=`Масса ${amount(mass)} · диаметр ×${amount(growth)}`;
+  reference.style.transform=`scale(${referenceScale})`;
+  sphere.style.transform=`scale(${projectScale})`;
+  const link=figure.querySelector('[data-mass-project]');
+  link.href=nodeLink(item);link.textContent=typographUiText(item.mapLabel||item.label);
+  const audienceComparison=relativeAudience===0?'Аудитория сайта — 0 % от ориентира':
+    Number(relativeAudience.toFixed(1))===1?'Аудитория близка к ориентиру':
+    `Посетителей в ${times(relativeAudience>1?relativeAudience:1/relativeAudience,1)} ${relativeAudience>1?'больше':'меньше'}, чем у ориентира`;
+  const sizeComparison=Number(size.toFixed(2))===1?'диаметр спутника почти такой же':
+    `спутник ${size>1?'всего ':''}в ${times(size>1?size:1/size)} ${size>1?'шире':'меньше в диаметре'}`;
+  figure.querySelector('[data-mass-explanation]').textContent=typographUiText(`${audienceComparison}, а ${sizeComparison}.`);
   const dates=new Intl.DateTimeFormat('ru-RU',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'});
   const period=dates.formatRange(new Date(audiencePeriod.start+'T00:00:00Z'),new Date(audiencePeriod.end+'T00:00:00Z'));
-  figure.querySelector('[data-mass-period]').textContent=`Данные: ${period} Условная шкала карты, не оценка качества проекта.`;
-  const descriptions={
-    base:'Даже без аудитории у проекта есть собственный вес. Здесь он принят за единицу.',
-    audience:`1 + ${amount(mass-1)} = ${amount(mass)}. Кольцо показывает добавленную площадь. Вклад аудитории растёт логарифмически: каждый следующий посетитель добавляет чуть меньше.`,
-    size:`Площадь стала больше в ${amount(mass)} раза, диаметр — в ${amount(growth)} раза. Диаметр растёт как квадратный корень из массы.`
+  figure.querySelector('[data-mass-period]').textContent=`Данные: ${period}`;
+  figure.querySelector('[data-mass-calculation]').textContent=typographUiText(`Для этого сайта отношение аудитории к медиане — ${number.format(relativeAudience)}, условная масса — ${number.format(mass)}. Относительно ориентира площадь — ×${number.format(mass/referenceMass)}, диаметр — ×${number.format(size)}.`);
+  figure.hidden=false;
+  const noMotion=()=>systemMotion.matches||sharedMotion.matches||root.dataset.reduceMotion==='true';
+  if (noMotion() || !sphere.animate || !('IntersectionObserver' in window)) return;
+  let animation=null;
+  const finish=()=>{
+    observer.disconnect();animation?.cancel();animation=null;
+    systemMotion.removeEventListener('change',preferenceChanged);
+    sharedMotion.removeEventListener('change',preferenceChanged);
+    figure.removeEventListener('keydown',finish);
+    window.removeEventListener('pagehide',finish);
   };
-  const explanation=figure.querySelector('[data-mass-explanation]');
-  const current=document.createElement('span');explanation.append(current);
-  // Reserve the tallest actual explanation at every text size without fixed
-  // heights, so changing a step cannot shift the reader's place.
-  for(const text of Object.values(descriptions)){
-    const measure=document.createElement('span');measure.className='mass-explanation-size';
-    measure.setAttribute('aria-hidden','true');measure.textContent=typographUiText(text);explanation.append(measure);
-  }
-  const update=()=>{
-    const step=figure.querySelector('input:checked').value;
-    figure.dataset.step=step;
-    sphere.style.transform=`scale(${step==='size'?1:baseScale})`;
-    current.textContent=typographUiText(descriptions[step]);
-  };
-  figure.addEventListener('keydown',()=>{figure.dataset.instant='true';});
-  figure.addEventListener('pointerdown',()=>{figure.dataset.instant='false';});
-  figure.addEventListener('change',update);
-  update();figure.hidden=false;
+  const preferenceChanged=()=>{if(noMotion())finish();};
+  const observer=new IntersectionObserver(entries=>{
+    if(!entries.some(entry=>entry.isIntersecting))return;
+    observer.disconnect();
+    if(noMotion() || storyRoot.inert || transitioning() || document.hidden){finish();return;}
+    const style=getComputedStyle(sphere);
+    animation=sphere.animate([{transform:`scale(${referenceScale})`},{transform:`scale(${projectScale})`}],{
+      duration:650,easing:style.getPropertyValue('--ease-out').trim()||'ease-out'
+    });
+    animation.finished.then(finish,finish);
+  },{root:storyRoot,threshold:.01});
+  systemMotion.addEventListener('change',preferenceChanged);
+  sharedMotion.addEventListener('change',preferenceChanged);
+  figure.addEventListener('keydown',finish);
+  window.addEventListener('pagehide',finish);
+  observer.observe(sphere.closest('.mass-drawing'));
 }
 setupMassExample(storyRoot.querySelector('[data-mass-example]'));
 

@@ -1,21 +1,21 @@
-// Initial audience snapshot: unique visitors, 18 September–17 October 2026.
-// From 1 November 2026, refresh on each month's first day using the complete
-// previous calendar month (Europe/Moscow). See docs/practice-audience.md.
+// Monthly audience snapshot: unique visitors, 1-31 October 2026.
+// Refresh on each month's first day using the complete previous calendar month
+// (Europe/Moscow). See docs/practice-audience.md.
 // Missing counters use the measured median, explicitly approved by the author.
 // These are relative weights, not live analytics and not a quality ranking.
-export const audiencePeriod = { start: '2026-09-18', end: '2026-10-17' };
+export const audiencePeriod = { start: '2026-10-01', end: '2026-10-31' };
 export const neutralAudienceProjects = ['dusty', 'dd-camp', 'doronin'];
 export const audienceWeights = {
-  'ks-fish': 0.532051282051,
-  'eleven': 0.134615384615,
-  'herman': 0.018589743590,
-  'tarski': 0.042948717949,
-  'hotline-camp': 0.046153846154,
-  'krainiuk': 0.085897435897,
-  'shirokostup': 0.001282051282,
-  'dusty': 0.046153846154,
-  'dd-camp': 0.046153846154,
-  'doronin': 0.046153846154,
+  'ks-fish': 0.518454440600,
+  'eleven': 0.076124567474,
+  'herman': 0.018454440600,
+  'tarski': 0.054209919262,
+  'hotline-camp': 0.049596309112,
+  'krainiuk': 0.119377162630,
+  'shirokostup': 0.001153402537,
+  'dusty': 0.054209919262,
+  'dd-camp': 0.054209919262,
+  'doronin': 0.054209919262,
 };
 
 // Every project has a base mass; monthly audience adds a gentle logarithmic share.

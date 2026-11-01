@@ -38,6 +38,8 @@ const relatedPointImageScope = { mode: "components", components: ["check:inspect
 const relatedPresentationDocs = new Set(["rendering/README.md", "docs/point-thumbnails.md", "docs/not-found.md"]);
 const relatedProductAction = { doronin: { label: "Купить тот самый ковёр от Вити", href: "https://doronin.store/tproduct/840694551052-kovyor" } };
 const focusedHomePaths = new Set(["js/focused-home.js", "rendering/js/focused-home.js"]);
+const audienceSnapshotPaths = new Set(["js/practice-audience.js", "rendering/js/practice-audience.js"]);
+const audienceSnapshotChecks = ["check:hover-layout", "check:map-routes", "check:map-story"];
 const evidenceFields = new Set(["task", "role", "idea", "result", "feature", "details", "weather", "timePreview", "technical"]);
 const keyOf = (property) => !property.computed && (property.key?.name ?? property.key?.value);
 const isString = (node) => node?.type === "Literal" && typeof node.value === "string";
@@ -63,6 +65,46 @@ const maskJavaScriptCopy = (path, source) => {
     ));
   });
   return maskRanges(source, ranges);
+};
+
+// Monthly audience changes affect satellite geometry and the matching story.
+// Mask only period dates and positive number literals; identifiers, the neutral
+// list and every executable AST node remain protected in both source builds.
+const maskAudienceSnapshot = source => {
+  const tree = parseJs(source, { ecmaVersion: "latest", sourceType: "module" });
+  const names = new Set(["audiencePeriod", "audienceWeights"]);
+  const declarations = tree.body.flatMap(statement => {
+    const declaration = statement.type === "ExportNamedDeclaration" && statement.declaration;
+    return declaration?.type === "VariableDeclaration" && declaration.kind === "const"
+      ? declaration.declarations.filter(item => item.id.type === "Identifier" && names.has(item.id.name)) : [];
+  });
+  if (declarations.length !== names.size || new Set(declarations.map(item => item.id.name)).size !== names.size) {
+    throw new Error("Unknown audience snapshot declarations");
+  }
+  const isDate = node => isString(node) && /^\d{4}-\d{2}-\d{2}$/.test(node.value)
+    && Number.isFinite(Date.parse(node.value)) && new Date(node.value).toISOString().slice(0, 10) === node.value;
+  for (const { id, init } of declarations) {
+    if (init?.type !== "ObjectExpression" || !init.properties.length
+      || !init.properties.every(property => property.type === "Property" && property.kind === "init"
+        && !property.method && !property.computed && !property.shorthand && typeof keyOf(property) === "string")) {
+      throw new Error("Unknown audience snapshot object");
+    }
+    const keys = init.properties.map(keyOf);
+    if (new Set(keys).size !== keys.length) throw new Error("Duplicate audience snapshot keys");
+    if (id.name === "audiencePeriod") {
+      const period = Object.fromEntries(init.properties.map(property => [keyOf(property), property.value.value]));
+      if (keys.length !== 2 || !keys.includes("start") || !keys.includes("end")
+        || !init.properties.every(property => isDate(property.value)) || period.start > period.end) {
+        throw new Error("Unknown audience snapshot period");
+      }
+    } else if (!init.properties.every(({ value }) => value.type === "Literal"
+      && typeof value.value === "number" && Number.isFinite(value.value) && value.value > 0)) {
+      throw new Error("Audience weights must be positive number literals");
+    }
+    for (const property of init.properties) property.value = { type: "AudienceSnapshotValue" };
+  }
+  // Comments, formatting and literal spelling do not change executable code.
+  return JSON.stringify(tree, (key, value) => ["start", "end", "raw"].includes(key) ? undefined : value);
 };
 
 const parseCaseContent = source => {
@@ -246,6 +288,12 @@ export const isCopyOnly = (path, before, after) => {
 export const classifyChange = (path, before, after) => {
   if (staticCheckPaths.has(path) || relatedPresentationDocs.has(path) || shareArtifactPaths.has(path)) return { mode: "copy", components: [] };
   if (relatedPointImages.has(path)) return relatedPointImageScope;
+  if (audienceSnapshotPaths.has(path)) {
+    try {
+      if (maskAudienceSnapshot(before) === maskAudienceSnapshot(after)) return { mode: "components", components: audienceSnapshotChecks };
+    } catch { /* Invalid data or unknown syntax cannot narrow the runtime gate. */ }
+    return { mode: "full", components: [] };
+  }
   if (path === "assets/map-story/content.html" && isCopyOnly(path, before, after)) return { mode: "copy", components: [] };
   if (["js/map-story.js", "rendering/js/map-story.js"].includes(path)) {
     const components = affectedComponents(path, before, after, maskHtmlCopy);
@@ -303,7 +351,7 @@ export const planRelease = ({ projectRoot, base = "origin/gh-pages", target } = 
       const [status, path] = entries.slice(index, index + 2);
       const owner = ownedCheckComponent(path);
       let classification = staticCheckPaths.has(path) ? { mode: "copy", components: [] } : owner ? { mode: "components", components: [owner] } : { mode: "full", components: [] };
-      if (status === "M" && (copyArrays[path] || sharePages.has(path) || focusedHomePaths.has(path) || ["js/case-content.json", "js/case-view.js", "js/map-story.js", "rendering/js/map-story.js", "index.html", "404.html", "assets/map-story/content.html", "styles.css", "js/focused-home.js", "js/map-media.js", "js/map-engine.js", "rendering/js/map-engine.js", "js/spatial-home.js", "rendering/js/spatial-home.js", "js/whoop-day.js", "js/practice-orbits.js", "rendering/practice-orbits.js", "js/viewport-ui.js", "rendering/js/viewport-ui.js", "scripts/browser-contracts.cjs", "scripts/check-live-surface.mjs", "scripts/reel-specs.json", "README.md", "AGENTS.md"].includes(path) || /^docs\/.*\.md$/.test(path))) {
+      if (status === "M" && (copyArrays[path] || sharePages.has(path) || focusedHomePaths.has(path) || audienceSnapshotPaths.has(path) || ["js/case-content.json", "js/case-view.js", "js/map-story.js", "rendering/js/map-story.js", "index.html", "404.html", "assets/map-story/content.html", "styles.css", "js/focused-home.js", "js/map-media.js", "js/map-engine.js", "rendering/js/map-engine.js", "js/spatial-home.js", "rendering/js/spatial-home.js", "js/whoop-day.js", "js/practice-orbits.js", "rendering/practice-orbits.js", "js/viewport-ui.js", "rendering/js/viewport-ui.js", "scripts/browser-contracts.cjs", "scripts/check-live-surface.mjs", "scripts/reel-specs.json", "README.md", "AGENTS.md"].includes(path) || /^docs\/.*\.md$/.test(path))) {
         const before = git("show", `${baseSha}:${path}`);
         const after = targetSha ? git("show", `${targetSha}:${path}`) : readFileSync(resolve(projectRoot, path), "utf8");
         classification = classifyChange(path, before, after);
