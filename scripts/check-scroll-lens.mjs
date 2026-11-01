@@ -16,7 +16,9 @@ const local = process.env.PORTFOLIO_LENS_ORIGIN ? null : await startStaticServer
 const origin = process.env.PORTFOLIO_LENS_ORIGIN || local.origin;
 const dir = (process.env.PORTFOLIO_UI_ARTIFACT_DIR || root+'/.qa-artifacts/scroll-lens')+'/';
 mkdirSync(dir,{recursive:true});
-const browser = await ({chromium,webkit})[engine].launch();
+// Match the story contract's real macOS window. Headless CI has failed
+// both scrolling to the target and activating the composited player control.
+const browser = await ({chromium,webkit})[engine].launch(engine==='webkit'&&process.platform==='darwin'?{headless:false}:{});
 const report = [];
 const settle = page => page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
 const align = async (page, selector, edge, inset=18) => {
