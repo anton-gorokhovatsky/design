@@ -62,8 +62,6 @@ html[data-reduce-motion=true] .story-is-moving #split-shell{transition:none}
 .map-story .mass-source,.map-story .mass-caveat{margin:0;color:var(--content-muted)}
 .map-story .mass-caveat{margin-top:var(--space-1)}
 .mass-method{margin-top:var(--space-3)}
-.mass-method summary{width:fit-content;max-width:100%;min-height:var(--control-target);padding-block:var(--space-2);box-sizing:border-box;cursor:pointer;color:var(--content-ink)}
-.mass-method summary:focus-visible{outline:var(--focus-width) solid var(--signal);outline-offset:var(--space-1);border-radius:var(--space-1)}
 .mass-method[open] summary{margin-bottom:var(--space-2)}
 .mass-method p:last-child{margin-bottom:0}
 @container story-viewport (max-width:17rem){.mass-comparison{grid-template-columns:minmax(0,1fr);row-gap:var(--space-5)}.mass-caption{line-height:var(--leading-body)}}
