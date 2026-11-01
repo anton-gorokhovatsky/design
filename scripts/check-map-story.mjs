@@ -165,7 +165,12 @@ try{
    const beforeClick=await toggle.evaluate(button=>{button.__qaInputs.length=0;return {expanded:button.getAttribute('aria-expanded'),rect:button.getBoundingClientRect().toJSON()};});
    // This button does not navigate. WebKit has delivered the trusted click and
    // opened it while locator post-input waiting remained pending in CI.
-   try{await toggle.click({noWaitAfter:engine==='webkit'});}catch(error){
+   try{
+    // Activate the headed native window before waiting for rendered stability;
+    // DOM visibility/focus flags do not establish that window state.
+    if(engine==='webkit')await page.bringToFront();
+    await toggle.click({noWaitAfter:engine==='webkit'});
+   }catch(error){
     const diagnostic=await toggle.evaluate(button=>{const r=button.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return {inputs:button.__qaInputs,expanded:button.getAttribute('aria-expanded'),menuOpen:document.querySelector('[data-constellation-nav]')?.classList.contains('is-open'),storyInert:document.querySelector('#story-pane')?.inert,active:{tag:document.activeElement?.tagName,id:document.activeElement?.id},visibility:document.visibilityState,focused:document.hasFocus(),hit:{tag:hit?.tagName,id:hit?.id,classes:hit?.getAttribute('class')},hitButton:hit===button||button.contains(hit),url:location.href};}).catch(diagnosticError=>({diagnosticError:String(diagnosticError)}));
     console.error('Story menu input diagnostic',JSON.stringify({engine,width,method,beforeClick,diagnostic}));
     if(process.env.PORTFOLIO_UI_ARTIFACT_DIR){mkdirSync(process.env.PORTFOLIO_UI_ARTIFACT_DIR,{recursive:true});await page.screenshot({path:resolve(process.env.PORTFOLIO_UI_ARTIFACT_DIR,`story-menu-${width}-${method}-FAIL.png`),timeout:3000}).catch(()=>{});}

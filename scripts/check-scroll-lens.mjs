@@ -73,14 +73,12 @@ try {
       await page.evaluate(()=>document.fonts.ready);
       await page.waitForFunction(()=>document.querySelector('.case-scroll')?.clientHeight>0
         && document.querySelector('[data-map-inspector]').getAnimations().every(a=>a.playState!=='running'));
-      if(type==='links') {
-        // reflect() restores scrollTop and title focus on the next frame;
-        // deferred case text can also replace the initial short description.
-        // Align only after both real opening steps, not merely a nonempty box.
-        await page.waitForFunction(()=>document.querySelector('[data-case-load-state]')?.hidden
-          && document.activeElement?.matches('[data-map-title]'));
-        await settle(page);
-      }
+      // Every card uses the same deferred scroll reset and title focus, including
+      // a cached poster. Decode/media readiness does not finish that opening.
+      // Deferred case text must also be applied before measuring any target.
+      await page.waitForFunction(()=>document.querySelector('[data-case-load-state]')?.hidden
+        && document.activeElement?.matches('[data-map-title]'));
+      await settle(page);
       if(type==='image') {
         await page.locator(selector).evaluate(i=>i.decode());
         const glyph = await page.locator('.personal-media__play').evaluate(e => {
