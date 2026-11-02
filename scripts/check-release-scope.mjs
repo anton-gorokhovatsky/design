@@ -5,6 +5,7 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { parse as parseAudienceJs } from "acorn";
 import { classifyChange, isCopyOnly, planRelease, requireReleaseBase } from "./release-scope.mjs";
 import { reelSpecs } from "./reel-specs.mjs";
 import { browserMatrix, browserSteps, componentCoverage } from "./check-catalog.mjs";
@@ -323,8 +324,8 @@ const scoped = (path, before, after, mode, components = []) => {
   checks += 1;
 };
 
-// Monthly data owns only dates and positive literals in the two shipped forms.
-// Formula, median, project identities and neutral estimates remain runtime code.
+// Monthly data owns dates, positive literals and a literal neutral-ID subset.
+// Formula, median computation and project identities remain runtime code.
 const audienceCoverage = ['check:hover-layout', 'check:map-routes', 'check:map-story'];
 const audienceSnapshots = new Map(['js/practice-audience.js', 'rendering/js/practice-audience.js']
   .map(path => [path, read(path)]));
@@ -333,24 +334,46 @@ const updateAudienceDates = source => source
   .replace(/(\bstart:\s*['"])\d{4}-\d{2}-\d{2}/, (_, prefix) => prefix + '2030-02-01')
   .replace(/(\bend:\s*['"])\d{4}-\d{2}-\d{2}/, (_, prefix) => prefix + '2030-02-28');
 const updateAudienceWeights = source => source.replace(audienceWeightLiteral, (_, prefix) => prefix + '0.42');
-const updateAudienceSnapshot = source => updateAudienceWeights(updateAudienceDates(source));
+const replaceNeutralProjects = (source, expression) => {
+  const literal = /(\bneutralAudienceProjects\s*=\s*)\[[^\]]*\]/;
+  assert.match(source, literal, 'The monthly fixture contains the neutral-project array');
+  return source.replace(literal, (_, prefix) => prefix + expression);
+};
+const updateAudienceSnapshot = source => replaceNeutralProjects(updateAudienceWeights(updateAudienceDates(source)), '["dd-camp"]');
 for (const [path, before] of audienceSnapshots) {
   const after = updateAudienceSnapshot(before);
+  const weights = parseAudienceJs(before, { ecmaVersion: 'latest', sourceType: 'module' }).body
+    .flatMap(statement => statement.type === 'ExportNamedDeclaration' && statement.declaration?.type === 'VariableDeclaration'
+      ? statement.declaration.declarations : []).find(item => item.id.name === 'audienceWeights');
+  const projectIds = weights.init.properties.map(property => property.key.name ?? property.key.value);
+  const estimated = replaceNeutralProjects(before, '["dusty","dd-camp","doronin"]');
+  const measured = replaceNeutralProjects(before, '["dd-camp"]');
+  for (const positive of [measured, replaceNeutralProjects(before, '["doronin","dusty","dd-camp"]'),
+    replaceNeutralProjects(before, '[]'), replaceNeutralProjects(before, JSON.stringify(projectIds.slice(1)))]) {
+    scoped(path, estimated, positive, 'components', audienceCoverage);
+  }
+  scoped(path, measured, estimated, 'components', audienceCoverage);
+  assert.equal(isCopyOnly(path, estimated, measured), false, 'Measured membership still changes geometry and retains the map gate');
   assert.notEqual(after, before, 'The monthly fixture changes real data');
   for (const positive of [updateAudienceDates(before), updateAudienceWeights(before), after,
-    after.replace(';', ';\n// Refreshed monthly snapshot.\n')]) {
+    '// Refreshed monthly snapshot.\n' + after]) {
     scoped(path, before, positive, 'components', audienceCoverage);
   }
   assert.equal(isCopyOnly(path, before, after), false, 'Audience data changes rendered geometry, not just copy');
   for (const value of ['0', '-1', '1 + 1', 'Number(0.42)', 'Infinity', 'NaN', '1e309', '"0.42"', '42n']) {
     scoped(path, before, after.replace(audienceWeightLiteral, (_, prefix) => prefix + value), 'full');
   }
+  for (const expression of ['["unknown"]', '["dd-camp","dd-camp"]', JSON.stringify(projectIds),
+    '[... ["dd-camp"]]', '["dd-" + "camp"]', '[getProject()]', '[,"dd-camp"]', '[null]', '[42]',
+    '[`dd-camp`]', 'getNeutralProjects()', '["dd-camp"].filter(Boolean)', 'Object.keys(audienceWeights)']) {
+    scoped(path, before, replaceNeutralProjects(after, expression), 'full');
+  }
   for (const negative of [
     after.replace('Math.log1p', 'Math.log'),
     after.replace(/\b1(\s*\+\s*Math\.log1p)/, '2$1'),
     after.replace('Math.sqrt', 'Math.cbrt'),
     after.replace('Math.floor', 'Math.ceil'),
-    after.replace(/(['"])dusty\1/, '"other-neutral"'),
+    replaceNeutralProjects(after, '["other-neutral"]'),
     after.replace(/(['"])ks-fish\1/, '"other-project"'),
     after.replace(audienceWeightLiteral, (_, prefix) => prefix + '0.42,added:0.2'),
     after.replace(/['"]ks-fish['"]\s*:\s*0\.42,\s*/, ''),
@@ -364,6 +387,8 @@ for (const [path, before] of audienceSnapshots) {
     after.replace(/\bend:\s*['"]2030-02-28['"]/, "finish:'2030-02-28'"),
     after.replace(/['"]2030-02-01['"]/, 'getStart()'),
     after.replace(/const\s+audienceWeights/, 'let audienceWeights'),
+    after.replace(/const\s+neutralAudienceProjects/, 'let neutralAudienceProjects'),
+    after.replace(/export\s+const\s+neutralAudienceProjects/, 'const neutralAudienceProjects'),
     'import "./unrelated.js";\n' + after,
     after + '\nglobalThis.unrelated = true;',
     'const broken = ;\n' + after,

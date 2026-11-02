@@ -68,11 +68,11 @@ const maskJavaScriptCopy = (path, source) => {
 };
 
 // Monthly audience changes affect satellite geometry and the matching story.
-// Mask only period dates and positive number literals; identifiers, the neutral
-// list and every executable AST node remain protected in both source builds.
+// Mask dates, positive numbers and a literal subset of neutral project IDs.
+// The project set and every executable AST node stay protected in both builds.
 const maskAudienceSnapshot = source => {
   const tree = parseJs(source, { ecmaVersion: "latest", sourceType: "module" });
-  const names = new Set(["audiencePeriod", "audienceWeights"]);
+  const names = new Set(["audiencePeriod", "audienceWeights", "neutralAudienceProjects"]);
   const declarations = tree.body.flatMap(statement => {
     const declaration = statement.type === "ExportNamedDeclaration" && statement.declaration;
     return declaration?.type === "VariableDeclaration" && declaration.kind === "const"
@@ -84,6 +84,7 @@ const maskAudienceSnapshot = source => {
   const isDate = node => isString(node) && /^\d{4}-\d{2}-\d{2}$/.test(node.value)
     && Number.isFinite(Date.parse(node.value)) && new Date(node.value).toISOString().slice(0, 10) === node.value;
   for (const { id, init } of declarations) {
+    if (id.name === "neutralAudienceProjects") continue;
     if (init?.type !== "ObjectExpression" || !init.properties.length
       || !init.properties.every(property => property.type === "Property" && property.kind === "init"
         && !property.method && !property.computed && !property.shorthand && typeof keyOf(property) === "string")) {
@@ -103,6 +104,15 @@ const maskAudienceSnapshot = source => {
     }
     for (const property of init.properties) property.value = { type: "AudienceSnapshotValue" };
   }
+  const projectIds = new Set(declarations.find(item => item.id.name === "audienceWeights").init.properties.map(keyOf));
+  const neutral = declarations.find(item => item.id.name === "neutralAudienceProjects");
+  const neutralIds = neutral.init?.type === "ArrayExpression" && neutral.init.elements.every(isString)
+    ? neutral.init.elements.map(item => item.value) : null;
+  if (!neutralIds || new Set(neutralIds).size !== neutralIds.length
+    || neutralIds.some(id => !projectIds.has(id)) || neutralIds.length >= projectIds.size) {
+    throw new Error("Neutral projects must be unique known ID literals with at least one measured project");
+  }
+  neutral.init = { type: "AudienceSnapshotNeutralProjects" };
   // Comments, formatting and literal spelling do not change executable code.
   return JSON.stringify(tree, (key, value) => ["start", "end", "raw"].includes(key) ? undefined : value);
 };
