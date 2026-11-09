@@ -176,9 +176,14 @@ const isCaseContentCopy = (before, after, allowMigration = false) => {
   };
   const hadCaptions = Object.hasOwn(left, "relatedCaptions");
   normalize(left); normalize(right);
-  // The first migration adds only captions for already known targets. Later
-  // copy edits preserve its keys; an empty value deliberately hides a caption.
+  // A known target can gain its first plain-text caption without changing the
+  // destination. Keep existing keys: removal or renaming is not a copy edit.
   if (!hadCaptions) delete right.relatedCaptions;
+  else if (right.relatedCaptions) {
+    for (const id of Object.keys(right.relatedCaptions)) {
+      if (!Object.hasOwn(left.relatedCaptions, id)) delete right.relatedCaptions[id];
+    }
+  }
   return JSON.stringify(left) === JSON.stringify(right);
 };
 

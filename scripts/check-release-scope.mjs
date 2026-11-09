@@ -90,6 +90,12 @@ assert.equal(isCopyOnly("js/case-content.json", legacyRelatedFixture, captionFix
 assert.deepEqual(classifyChange("js/case-content.json", legacyRelatedFixture, captionFixture), { mode: "components", components: ["check:inspector-links", "check:case-view"] });
 change("js/case-content.json", captionFixture, "Магазин мерча", "", true);
 change("js/case-content.json", captionFixture, "Сочи", "Сочи перед стартом", true);
+const withFirstCaption = (id, text) => JSON.stringify({ ...captionData, relatedCaptions: { ...captionData.relatedCaptions, [id]: text } });
+assert.ok(isCopyOnly("js/case-content.json", captionFixture, withFirstCaption("running", "Марафоны и тренировки")));
+for (const [id, value] of [["unknown", "Новая точка"], ["running", "<b>Бег</b>"], ["running", 42]]) {
+  assert.equal(classifyChange("js/case-content.json", captionFixture, withFirstCaption(id, value)).mode, "full");
+}
+assert.equal(classifyChange("js/case-content.json", captionFixture, captionFixture.replace('"dusty":"Магазин мерча"', '"running":"Тренировки"')).mode, "full");
 for (const changed of [
   captionFixture.replace('["hotline-camp","dusty"]', '["dusty","hotline-camp"]'),
   captionFixture.replace('["hotline-camp","dusty"]', '["hotline-camp","dusty","new-project"]'),
