@@ -2997,7 +2997,7 @@ const auditBrowser = async (client, origin) => {
     || principleVerbatim.inspectorOverflowY !== "auto"
     || !principleVerbatim.descriptionReachable
     || principleVerbatim.linkHidden
-    || !principleVerbatim.linkText.includes("NOTION")
+    || principleVerbatim.linkText.replace(/\s+/gu, " ").trim() !== "Все принципы"
     || !principleVerbatim.inspector
     || principleVerbatim.inspector.top < -2
     || principleVerbatim.inspector.left < -2

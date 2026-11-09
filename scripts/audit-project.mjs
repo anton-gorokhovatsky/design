@@ -960,16 +960,19 @@ requireContract(
   "no-script-fallback",
   "The no-JavaScript path must expose selected work and contact routes without a tracking pixel.",
 );
+const panelPointSource = readProjectFile("js/panels.js").match(
+  /trackPortfolioEvent\("point_open",\s*\{\s*point_id: pointId,\s*source: ([^\n]+),\s*\}\);\s*openPointFromContentPanel\(pointId, caseLink\)/u,
+)?.[1];
 requireContract(
   indexSource.match(/data-map-point="[^"]+"/g)?.length === 8
     && indexSource.includes('id="work-title">Работы</h2>')
     && scriptSource.includes("listedWorks.has(item.id)")
-    && scriptSource.includes('source: "cases"')
+    && panelPointSource === 'activePanelView === "principles" ? "principles" : "cases"'
     && scriptSource.includes("evidence.task")
     && scriptSource.includes("evidence.role")
     && scriptSource.includes("evidence.result"),
   "employer-case-route",
-  "The work index keeps its eight editorial opening rows, includes the remaining works and preserves task, role and result evidence.",
+  "The work index keeps its eight editorial opening rows, includes the remaining works, preserves task, role and result evidence, and identifies point openings from the work or principles list.",
 );
 requireContract(
   scriptSource.includes("|| document.hidden")

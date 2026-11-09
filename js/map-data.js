@@ -1,5 +1,4 @@
 // deterministic portfolio map data.
-const principlesSourceHref = "https://app.notion.com/p/digital-web-digital-f68fc13247614ccb9738d9a85acf29b4?source=copy_link#70405c2623e342fb98d027c8634f2207";
 
 // reel-chapter-manifest:start
 const reelChapterSources = new Map([
@@ -919,6 +918,8 @@ const mapItems = [
   },
 ];
 
+const principleItems = mapItems.filter(item => item.kind === "practice");
+
 // Unaltered frames from the existing 900×600 masters; time records the source.
 // ks.fish and the Narkomfin night view use public browser captures from
 // 2026-10-03 (null time), retaining their original aspect ratios.
@@ -928,6 +929,6 @@ const getMapPreviewPoster = item => item.relatedPoster || item.previewPoster || 
 export {
   getMapPreviewPoster,
   mapItems,
-  principlesSourceHref,
+  principleItems,
   reelChapterSources,
 };

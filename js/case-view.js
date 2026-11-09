@@ -285,7 +285,8 @@ function reflect() {
       const sourceRow = position?.relatedPointId && viewport.querySelector(
         `.map-related__item[href="?point=${CSS.escape(position.relatedPointId)}"]`,
       );
-      const target = sourceRow || (routeControl?.isConnected && !routeControl.disabled && !routeControl.hidden
+      const principlesLink = position?.focus === "principles" && identity.querySelector("[data-open-principles]");
+      const target = sourceRow || principlesLink || (routeControl?.isConnected && !routeControl.disabled && !routeControl.hidden
         ? routeControl
         : routeControl ? document.querySelector("[data-observation-next]") : identity.querySelector("h2"));
       target?.focus({ preventScroll: true });

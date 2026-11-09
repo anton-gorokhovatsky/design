@@ -1,5 +1,5 @@
 import {pane} from './pane-viewport.js';
-import { mapItems, getMapPreviewPoster } from './map-data.js';
+import { mapItems, getMapPreviewPoster, principleItems } from './map-data.js';
 import { updateWorkTags } from './work-tags.js';
 import { mapButtons, clearMapSelection, selectMapItem, requestMapLinksRender, syncMapNodeAvailability, setMapRovingId, setTimeMode } from './map-engine.js';
 
@@ -20,7 +20,9 @@ const returnHome = document.querySelector('[data-focused-return]');
 const mobileDock = document.querySelector('.mobile-first-dock');
 const preview = document.querySelector('.point-preview');
 const previewTitle = preview.querySelector('h2');
-const previewLink = preview.querySelector('a');
+const previewActions = preview.querySelector('.point-preview__actions');
+const previewLink = previewActions.querySelector('.point-preview__link');
+const principlesLink = previewActions.querySelector('[data-open-principles]');
 const previewClose = preview.querySelector('button');
 const map = document.querySelector('[data-practice-map]');
 // Keep the overlay in the main landmark, outside the map's isolated stack.
@@ -70,6 +72,11 @@ async function changeScene(focused, event) {
   if (revision === sceneRevision) stopSceneMotion();
 }
 
+const principleForms = { one: 'принцип', few: 'принципа', many: 'принципов' };
+const principleCount = principleItems.length;
+const principleUnit = principleForms[new Intl.PluralRules('ru').select(principleCount)];
+const principleLandmarkId = 'principle-data-intuition';
+const principleCountId = 'focused-principle-count';
 const landmarks = {
   garage: ['ИНСТИТУЦИИ', 'Музей «Гараж»'],
   narkomfin: ['', 'Дом Наркомфина'],
@@ -87,7 +94,12 @@ for (const [id, [direction, name]] of Object.entries(landmarks)) {
   if (direction) {
     const caption = document.createElement('small');
     caption.className = 'direction-landmark__kind';
-    caption.textContent = direction;
+    if (id === principleLandmarkId) {
+      caption.id = principleCountId;
+      caption.textContent = `${principleCount} ${principleUnit}`;
+    } else {
+      caption.textContent = direction;
+    }
     label.append(caption);
   }
   const title = document.createElement('span');
@@ -104,7 +116,7 @@ for (const [id, [direction, name]] of Object.entries(landmarks)) {
 const summaries = {
   eleven: 'Сайт велопроекта Виктора Доронина: 11 111 км за 31 день. История заезда, маршрут и ритм дня и ночи.',
   'ks-fish': 'Каталог, рецепты и «Судовой журнал» московской рыбной лавки.',
-  'principle-data-intuition': 'О данных, интуиции и том, как рождается идея продукта.',
+  [principleLandmarkId]: 'О данных, интуиции и том, как рождается идея продукта.',
   youtube: 'Игровые видео и любимый стрим Дмитрия Куплинова.',
 };
 const actionLabel = item => item.id === 'garage' ? 'О работе в Музее'
@@ -119,6 +131,11 @@ function writePreview(id, replace = false) {
   if (id) url.searchParams.set('preview', id);
   else url.searchParams.delete('preview');
   history[replace ? 'replaceState' : 'pushState'](history.state, '', url);
+}
+function previewFromUrl(url) {
+  const id = url.searchParams.get('preview');
+  const point = url.searchParams.get('point');
+  return url.hash === '#principles' || (point && point !== id) ? null : id;
 }
 function positionPreview() {
   if (!previewId || preview.hidden) return;
@@ -141,7 +158,7 @@ function showPreview(id, { write = true, focus = true } = {}) {
   preview.querySelector('.point-preview__description').textContent = summaries[id] || (firstSentence.length > 240 ? firstSentence.slice(0, 237).replace(/\s+\S*$/, '') + '…' : firstSentence);
   updateWorkTags(preview, id);
   const tags = preview.querySelector(':scope > .work-tags');
-  if (tags) previewLink.before(tags);
+  if (tags) previewActions.before(tags);
   const image = preview.querySelector('img');
   const poster = getMapPreviewPoster(item);
   image.hidden = !poster;
@@ -155,6 +172,7 @@ function showPreview(id, { write = true, focus = true } = {}) {
   url.hash = 'map';
   previewLink.href = url;
   previewLink.querySelector('span').textContent = actionLabel(item);
+  principlesLink.hidden = item.kind !== 'practice';
   preview.hidden = false;
   document.body.classList.add('has-point-preview');
   mapButtons.forEach((button, key) => button.setAttribute('aria-expanded', String(key === id)));
@@ -163,17 +181,30 @@ function showPreview(id, { write = true, focus = true } = {}) {
   syncReading();
   if (focus) previewTitle.focus({ preventScroll: true });
 }
-function closePreview({ focus = true, write = true } = {}) {
-  const previous = previewId;
+function hidePreview() {
   previewId = null;
+  returnToPreview = false;
   preview.hidden = true;
   document.body.classList.remove('has-point-preview');
+}
+function closePreview({ focus = true, write = true } = {}) {
+  const previous = previewId;
+  hidePreview();
   clearMapSelection({ updateHistory: false });
   if (write) writePreview(null, true);
   if (focus && previous) setMapRovingId(previous, { focus: true });
 }
+function describePrincipleLandmark(focused) {
+  const button = mapButtons.get(principleLandmarkId);
+  const references = new Set((button.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean));
+  if (focused) references.add(principleCountId);
+  else references.delete(principleCountId);
+  if (references.size) button.setAttribute('aria-describedby', [...references].join(' '));
+  else button.removeAttribute('aria-describedby');
+}
 function setScene(focused, { write = false, focus = false } = {}) {
   focused = focused && compact.matches;
+  describePrincipleLandmark(focused);
   if (focused) setTimeMode(false, { updateHistory: false });
   document.body.classList.toggle('has-focused-home', focused);
   document.body.classList.toggle('has-full-mobile-map', compact.matches && !focused);
@@ -216,9 +247,11 @@ function syncReading() {
   mobileDock.inert = folded || compact.matches && document.body.classList.contains('has-constellation-nav');
   preview.inert = folded || reading || preview.hidden;
   if (wasReading && !reading && returnToPreview && previewId) {
+    const id = previewId;
     returnToPreview = false;
     requestAnimationFrame(() => {
-      showPreview(previewId, { write: false, focus: false });
+      if (previewId !== id || preview.inert) return;
+      showPreview(id, { write: false, focus: false });
       previewLink.focus({ preventScroll: true });
     });
   }
@@ -239,19 +272,22 @@ function restoreScene(event) {
   }
   restoring = true;
   const url = new URL(location.href);
+  const point = url.searchParams.get('point');
+  const id = previewFromUrl(url);
   // A direct case link needs the complete map as its return destination.
   // Preview links retain the introductory scene and its selected point.
-  if (!event && compact.matches && url.searchParams.has('point') && !url.searchParams.has('preview')) {
+  if (!event && compact.matches && point && !url.searchParams.has('preview') && url.hash !== '#principles') {
     url.searchParams.set('scene', 'map');
     history.replaceState(history.state, '', url);
   }
   setScene(url.searchParams.get('scene') !== 'map' && url.searchParams.get('view') !== 'time');
-  const id = url.searchParams.get('preview');
-  if (id && (!url.searchParams.has('point') || url.searchParams.get('point') === id)) {
-    if (url.searchParams.has('point')) returnToPreview = true;
+  if (id) {
+    if (point) returnToPreview = true;
     showPreview(id, { write: false, focus: false });
+  } else if (previewId) {
+    // The map router owns its selected point when a URL replaces the preview.
+    hidePreview();
   }
-  else if (!id && previewId) closePreview({ write: false, focus: false });
   restoring = false;
   if (responsive) requestAnimationFrame(() => requestAnimationFrame(() => {
     if (revision !== sceneRevision) return;
@@ -293,6 +329,9 @@ new MutationObserver(() => {
   }
 }).observe(map, { attributes: true, attributeFilter: ['data-observation-active', 'data-time-view'] });
 window.addEventListener('popstate', restoreScene);
+window.addEventListener('portfolio-url-change', () => {
+  if (previewId && previewFromUrl(new URL(location.href)) !== previewId) hidePreview();
+});
 compact.addEventListener('change', restoreScene);
 stackedStory.addEventListener('change', syncReading);
 window.addEventListener('resize', () => { pane.refresh(); syncMeasurements(); });

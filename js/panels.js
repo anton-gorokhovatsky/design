@@ -5,7 +5,7 @@ import {
   openSettingsPanel,
   trackPortfolioEvent,
 } from "./analytics.js";
-import { mapItems, getMapPreviewPoster } from "./map-data.js";
+import { mapItems, principleItems, getMapPreviewPoster } from "./map-data.js";
 import { createWorkTags } from "./work-tags.js";
 import {
   clearMapSelection,
@@ -190,6 +190,36 @@ contentFrameResize.observe(document.querySelector(".content-panel__frame"));
 window.addEventListener("resize", placeContentFrame, { passive: true });
 window.addEventListener("author-presence-change", placeContentFrame);
 const panelSections = Array.from(document.querySelectorAll("[data-panel-section]"));
+const principlesList = document.querySelector(".principles-list");
+
+function showPrinciples(currentId) {
+  if (!principlesList.childElementCount) {
+    for (const item of principleItems) {
+      const row = document.createElement("a");
+      row.className = "principle-row";
+      row.dataset.mapPoint = item.id;
+      row.href = `?point=${encodeURIComponent(item.id)}#map`;
+      const number = document.createElement("span");
+      number.className = "principle-row__number";
+      number.textContent = item.kindLabel.split(" / ").at(-1);
+      const title = document.createElement("span");
+      title.className = "principle-row__title";
+      const displayTitle = item.displayTitle || item.title;
+      title.textContent = typographUiText(displayTitle[0] + displayTitle.slice(1).toLocaleLowerCase("ru"));
+      row.append(number, title);
+      const entry = document.createElement("li");
+      entry.append(row);
+      principlesList.append(entry);
+    }
+  }
+  for (const row of principlesList.querySelectorAll(".principle-row")) {
+    if (row.dataset.mapPoint === currentId) row.setAttribute("aria-current", "true");
+    else row.removeAttribute("aria-current");
+  }
+  const currentNumber = principlesList.querySelector("[aria-current] .principle-row__number")?.textContent;
+  return currentNumber ? `Принцип ${Number(currentNumber)} из ${principleItems.length}` : `Принципы / ${principleItems.length}`;
+}
+
 // Keep the accepted opening order; include every remaining project from the map.
 // Institutional hubs and early career describe experience rather than a separate work.
 const workList = document.querySelector(".work-list");
@@ -272,6 +302,9 @@ const panelViews = {
   },
   approach: {
     title: "ПОДХОД",
+  },
+  principles: {
+    title: "Все принципы",
   },
   contact: {
     title: "СВЯЗАТЬСЯ",
@@ -365,6 +398,11 @@ const openContentPanel = (
   if (observationRoute.active) stopObservation({ updateHistory: false });
 
   if (view === "work") loadCaseContent().catch(() => {});
+  let indexLabel = config.title;
+  if (view === "principles") {
+    const params = new URLSearchParams(location.search);
+    indexLabel = showPrinciples(position?.pointId || params.get("point") || params.get("preview"));
+  }
   activePanelView = view;
   lastPanelTrigger = trigger instanceof HTMLElement && mapInspector.contains(trigger)
     ? view === "work" && compactConstellationNav.matches
@@ -387,7 +425,7 @@ const openContentPanel = (
 
   if (panelIndex) {
     const navItem = constellationNavItems.find(item => item.dataset.navView === view);
-    panelIndex.textContent = navItem ? `${navItem.dataset.navIndex} / ${navItem.querySelector(".constellation-nav__label").textContent}` : config.title;
+    panelIndex.textContent = navItem ? `${navItem.dataset.navIndex} / ${navItem.querySelector(".constellation-nav__label").textContent}` : indexLabel;
   }
 
   hideMapPreview({ immediate: true });
@@ -402,7 +440,7 @@ const openContentPanel = (
       source: "navigation",
     });
     writeUrlState(
-      {
+      view === "principles" ? { hash: "#principles" } : {
         ...(window.matchMedia('(max-width: 999px)').matches ? { story: null } : {}),
         point: null,
         route: null,
@@ -411,7 +449,10 @@ const openContentPanel = (
       },
       { replace: replaceHistory },
     );
-    window.history.replaceState({ ...history.state, panelPosition: position }, "", location.href);
+    window.history.replaceState({
+      ...history.state, panelPosition: position,
+      ...(view === "principles" ? { principlesEntry: location.href } : {}),
+    }, "", location.href);
   }
 
   const restorePanelEntry = () => window.requestAnimationFrame(() => {
@@ -420,9 +461,10 @@ const openContentPanel = (
     contentPanelBody?.scrollTo({ top: position?.scrollTop || 0, behavior: "auto" });
     if (document.activeElement?.closest("[data-command-form], [data-command-results]")) return;
     const sourceRow = position?.pointId && contentPanelBody?.querySelector(
-      `.work-row[data-map-point="${CSS.escape(position.pointId)}"]`,
+      `[data-panel-section="${view}"] [data-map-point="${CSS.escape(position.pointId)}"]`,
     );
-    (sourceRow || panelClose)?.focus({ preventScroll: true });
+    const heading = view === "principles" && document.getElementById("principles-title");
+    (sourceRow || heading || panelClose)?.focus({ preventScroll: true });
   });
   // Chromium resets fragment-navigation focus after DOMContentLoaded. Initial
   // route focus belongs after that native step; later navigation stays immediate.
@@ -438,6 +480,19 @@ const closeContentPanel = (
 ) => {
   if (!activePanelView) {
     return;
+  }
+  if (activePanelView === "principles" && updateHistory) {
+    if (history.state?.principlesEntry === location.href) {
+      history.back();
+      return;
+    }
+    // A shared list URL opens without an in-site history entry.
+    const url = new URL(location.href);
+    if (url.searchParams.has("point") || url.searchParams.has("preview")) {
+      url.hash = "map";
+      location.replace(url.href);
+      return;
+    }
   }
 
   setPanelOpen(false);
@@ -516,10 +571,20 @@ const openPointFromContentPanel = (pointId, sourceRow = null) => {
   setTimeMode(false, { updateHistory: false });
   setMapFilter("all", { updateHistory: false });
   selectMapItem(pointId, { reveal: true, updateHistory: false });
-  writeUrlState({ point: pointId, route: null, step: null, view: null, filter: null, hash: "#map" });
+  writeUrlState({
+    point: pointId, route: null, step: null, view: null, filter: null, hash: "#map",
+    ...(origin?.view === "principles" ? { preview: null } : {}),
+  });
   window.history.replaceState({ ...history.state, inspectorPanelOrigin: origin }, "", location.href);
   window.requestAnimationFrame(() => inspectorClose?.focus());
 };
+
+function returnToPrinciplesList() {
+  const origin = history.state?.inspectorPanelOrigin;
+  if (origin?.view !== "principles" || origin.pointId !== mapInspector.dataset.selectedMapId) return false;
+  history.back();
+  return true;
+}
 
 setInspectorReturnHandler(() => {
   const step = window.history.state?.inspectorOverviewStep;
@@ -530,6 +595,7 @@ setInspectorReturnHandler(() => {
   }
   const origin = window.history.state?.inspectorPanelOrigin;
   if (!origin || !panelViews[origin.view]) return false;
+  if (returnToPrinciplesList()) return true;
   openContentPanel(origin.view, null, { replaceHistory: true, position: origin });
   return true;
 });
@@ -544,6 +610,24 @@ document.querySelector("[data-map-link]").addEventListener("click", event => {
   stopObservation({ updateHistory: false });
   selectMapItem(point, { reveal: true });
   history.replaceState({ ...history.state, inspectorOverviewStep: step, inspectorOverviewFromMap: fromMap }, "", location.href);
+});
+
+// Both the compact preview and the full card lead to the same reading list.
+document.addEventListener("click", event => {
+  const link = event.target.closest?.("a[data-open-principles]");
+  if (!link || event.defaultPrevented || event.button !== 0
+    || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return;
+  event.preventDefault();
+  if (returnToPrinciplesList()) return;
+  if (mapInspector.contains(link)) {
+    const casePosition = {
+      pointId: mapInspector.dataset.selectedMapId,
+      scrollTop: mapInspector.querySelector(".case-scroll")?.scrollTop || 0,
+      focus: "principles",
+    };
+    history.replaceState({ ...history.state, casePosition }, "", location.href);
+  }
+  openContentPanel("principles", link);
 });
 
 panelOpenButtons.forEach((button) => {
@@ -589,7 +673,7 @@ panelClose?.addEventListener("click", () => closeContentPanel());
 panelScrim?.addEventListener("click", () => closeContentPanel());
 
 contentPanelBody?.addEventListener("click", (event) => {
-  const caseLink = event.target.closest?.(".work-row[data-map-point]");
+  const caseLink = event.target.closest?.(".work-row[data-map-point], .principle-row[data-map-point]");
 
   if (
     !caseLink
@@ -612,7 +696,7 @@ contentPanelBody?.addEventListener("click", (event) => {
   event.preventDefault();
   trackPortfolioEvent("point_open", {
     point_id: pointId,
-    source: "cases",
+    source: activePanelView === "principles" ? "principles" : "cases",
   });
   openPointFromContentPanel(pointId, caseLink);
 });
@@ -1406,6 +1490,7 @@ const applyUrlState = () => {
       return;
     }
 
+    const leavingPrinciples = activePanelView === "principles";
     if (activePanelView) {
       closeContentPanel({
         restoreFocus: false,
@@ -1457,6 +1542,9 @@ const applyUrlState = () => {
       });
     } else {
       clearMapSelection();
+    }
+    if (leavingPrinciples && !point && url.searchParams.has("preview")) {
+      requestAnimationFrame(() => document.querySelector("#mobile-point-preview [data-open-principles]")?.focus({ preventScroll: true }));
     }
   } finally {
     setApplyingUrlState(false);

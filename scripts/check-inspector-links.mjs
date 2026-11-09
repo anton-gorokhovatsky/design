@@ -18,6 +18,9 @@ if (directory) mkdirSync(directory, { recursive: true });
 const { server, origin } = await startStaticServer({ projectRoot });
 const errors = [];
 let browser;
+// Safari on macOS includes links in native keyboard navigation with Option-Tab.
+// https://support.apple.com/guide/safari/cpsh003/mac
+const nextLinkKey = engine === "webkit" && process.platform === "darwin" ? "Alt+Tab" : "Tab";
 const select = async (page, id) => {
   await page.evaluate(async (point) => {
     const script = [...document.scripts].find((entry) => entry.src.includes("/js/map-engine.js?")).src;
@@ -29,6 +32,48 @@ const select = async (page, id) => {
   // dialog is mounted. Measure the finished surface, not its entrance matrix.
   await page.waitForFunction(() => document.querySelector('[data-map-inspector]')
     .getAnimations().every(animation => animation.playState === 'finished'));
+};
+
+const checkPrinciplesNavigation = async (page) => {
+  const principles = mapItems.filter((item) => item.kind === "practice");
+  assert.equal(principles.length, 17, "The map contains the seventeen authored principles.");
+  const firstId = principles[0].id;
+  await page.setViewportSize({ width: 1440, height: 720 });
+  await page.goto(`${origin}/?point=${firstId}#map`);
+  await page.waitForFunction(() => document.activeElement?.id === "map-inspector-title");
+  await page.locator("[data-map-link]").focus();
+  await page.keyboard.press("Enter");
+  await page.waitForFunction(() => location.hash === "#principles"
+    && document.activeElement?.id === "principles-title");
+  assert.equal(new URL(page.url()).searchParams.get("point"), firstId, "The list keeps the originating point.");
+  const rows = page.locator("#panel-principles .principle-row");
+  const normalizedTitle = (text) => text.replace(/\u00ad/gu, "").replace(/\s+/gu, " ").trim().toLocaleLowerCase("ru");
+  const entries = await rows.evaluateAll((links) => links.map((link) => ({
+    href: link.getAttribute("href"), title: link.querySelector(".principle-row__title").textContent,
+  })));
+  assert.deepEqual(entries.map(({ href, title }) => [href, normalizedTitle(title)]),
+    principles.map(({ id, title }) => [`?point=${id}#map`, normalizedTitle(title)]),
+    "Every principle has its canonical title and point address in map order.");
+  assert.equal(await rows.first().getAttribute("aria-current"), "true", "The source principle is marked in the list.");
+  for (const { id } of principles) {
+    await page.keyboard.press(nextLinkKey);
+    assert.equal(await page.evaluate(() => document.activeElement?.dataset.mapPoint), id,
+      "Keyboard focus follows the principle list in reading order.");
+  }
+  const lastId = principles.at(-1).id;
+  const scrollTop = await page.locator(".content-panel__body").evaluate((element) => element.scrollTop);
+  assert.ok(scrollTop > 0, "The last principle is reached by scrolling the list.");
+  await page.keyboard.press("Enter");
+  await page.waitForFunction((id) => document.querySelector("[data-map-inspector].is-open")?.dataset.selectedMapId === id, lastId);
+  assert.equal(new URL(page.url()).searchParams.get("point"), lastId, "Selection opens the matching full card.");
+  assert.equal(new URL(page.url()).hash, "#map");
+  await page.goBack();
+  await page.waitForFunction(({ id, top }) => location.hash === "#principles"
+    && document.activeElement?.dataset.mapPoint === id && document.activeElement.getAttribute("aria-current") === "true"
+    && Math.abs(document.querySelector(".content-panel__body").scrollTop - top) < 2, { id: lastId, top: scrollTop });
+  await page.keyboard.press("Escape");
+  await page.waitForFunction((id) => document.querySelector("[data-map-inspector].is-open")?.dataset.selectedMapId === id
+    && document.activeElement?.matches("[data-map-link]") && location.hash === "#map", firstId);
 };
 
 // WebKit's macOS snapshot path can omit a backdrop blur that is present on
@@ -91,7 +136,7 @@ try {
           const style = getComputedStyle(link);
           const box = (element) => element.getBoundingClientRect().toJSON();
           return { hidden: link.hidden, text: link.textContent, href: link.getAttribute("href"),
-            target: link.target, rel: link.rel, inside: link.parentElement === identity,
+            target: link.target, rel: link.rel, principles: link.hasAttribute("data-open-principles"), inside: link.parentElement === identity,
             surface: link.getAttribute("data-material-surface"), count: document.querySelectorAll("[data-map-link]").length,
             link: box(link), identity: box(identity), description: box(description),
             inspector: box(inspector), scrollTop: (inspector.querySelector('.case-scroll') || inspector).scrollTop,
@@ -109,14 +154,20 @@ try {
           context + ": the whole inspector stays inside the viewport");
         assert.equal(state.scrollTop, 0, context + ": each point opens at its heading");
         assert.equal(state.hidden, Boolean(item.youtube && !item.youtube.href) || !(item.href || item.kind === "practice"), context);
+        assert.equal(state.principles, item.kind === "practice", context + ": only principles open the internal list");
         if (!state.hidden) {
           assert.notEqual(state.text, "ОТКРЫТЬ", context + ": name the destination");
           const copy = { running: "НЕ СФОТКАЛ — НЕ БЕГАЛ", wave: "МОРЕ В INSTAGRAM" }[item.id]
-            || (item.kind === "practice" ? "ПРИНЦИПЫ В NOTION" : "");
+            || (item.kind === "practice" ? "Все принципы" : "");
           if (copy) assert.equal(state.text.replace(/\s+/gu, " ").trim(), copy, context + ": explicit CTA copy");
-          assert.equal(state.target, "_blank", context);
-          assert.ok(state.rel.includes("noreferrer"), context);
-          if (item.href) assert.equal(state.href, item.href, context);
+          if (item.kind === "practice") {
+            assert.equal(state.href, "#principles", context);
+            assert.ok(["", "_self"].includes(state.target), context + ": internal navigation stays in this tab");
+          } else {
+            assert.equal(state.href, item.href, context);
+            assert.equal(state.target, "_blank", context);
+            assert.ok(state.rel.includes("noreferrer"), context);
+          }
           assert.ok(state.link.top >= state.meta.bottom + (state.expanded ? 3 : 7), context + ": follows metadata");
           const inset = state.framed ? 0 : 10;
           assert.ok(state.link.left >= state.identity.left + inset - 1 && state.link.right <= state.identity.right - inset + 1,
@@ -168,9 +219,6 @@ try {
       }));
       const link = page.locator("[data-map-link]");
       await page.locator("[data-close-inspector]").focus();
-      // Safari on macOS uses Option-Tab to include links in native keyboard navigation.
-      // https://support.apple.com/guide/safari/cpsh003/mac
-      const nextLinkKey = engine === "webkit" && process.platform === "darwin" ? "Alt+Tab" : "Tab";
       await page.keyboard.press(nextLinkKey);
       if (width > 900) {
         assert.equal(await page.locator('[data-case-pause]').evaluate((element) => element === document.activeElement), true,
@@ -190,6 +238,7 @@ try {
       const popup = await popupPromise;
       await popup.waitForURL("https://narkomfin.ru/");
       await popup.close();
+      if (label === "desktop" && theme === "light") await checkPrinciplesNavigation(page);
       console.log("PASS " + engine + " links " + label + " " + theme + ": " + items.length + " cards; keyboard navigation");
       await page.close();
     }

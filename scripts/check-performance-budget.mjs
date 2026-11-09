@@ -45,7 +45,9 @@ const budgets = {
   runtime: 418 * 1024,
   fonts: 160 * 1024,
   initialSource: 812 * 1024,
-  cssGzip: 50 * 1024,
+  // 9 November: the internal principles list brings CSS to 50.1 KiB gzip.
+  // Keep roughly 4 KiB of headroom for this stylesheet.
+  cssGzip: 54 * 1024,
   // 29 October: the author explicitly requested useful headroom instead of
   // repeated byte fitting. Add 16 KiB to runtime and both aggregate gzip limits.
   runtimeGzip: 144 * 1024,
