@@ -411,9 +411,9 @@ const authorialPrincipleDigest = createHash("sha256")
   .digest("hex");
 requireContract(
   authorialPrincipleDigest
-    // Author approved this editorial pass on 2026-10-29: system, improve,
-    // communicate and ideas only; all other principle descriptions are unchanged.
-    === "e1db18928a612fb838af621ffee0381d229ede61f5eab7dddff9df097a1ded45",
+    // Approved edits: four principles on 2026-10-29, and the sentence and
+    // paragraph boundary before “Такие проекты” in principle 17 on 2026-11-09.
+    === "e91fba01495fe604364e95af6f8ef5e678635897f2490ac8afa93fd96cb17ce2",
   "principle-authorial-copy",
   "Principle descriptions are authorial source text and must stay verbatim; only headings and labels may be edited without an approved source-copy update.",
   { actual: authorialPrincipleDigest },

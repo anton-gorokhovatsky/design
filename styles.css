@@ -6336,6 +6336,7 @@ overflow: visible;
 .map-inspector .map-readout__description > p {
 margin: 0;
 }
+.map-inspector .map-readout__description > [data-map-description-continuation] { margin-block-start: 1lh; }
 
 .map-quotation {
 margin: var(--space-5) 0 0;

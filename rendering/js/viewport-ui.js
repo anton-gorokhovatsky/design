@@ -17,6 +17,9 @@ const lensNamespace = "http://www.w3.org/2000/svg";
 const lensForcedColors = matchMedia("(forced-colors: active)");
 const lensDepth = 56;
 const lensBleed = 32;
+// A transparent inline citation belongs to the refracted prose until selection or keyboard focus.
+const lensControls = "[data-material-surface],a:not(.text-link--inline),button,input,select,textarea";
+const lensControlsAndMedia = "img,video,iframe," + lensControls;
 // Lens invariants: js/README.md#scroll-lens-invariants.
 const drawScrollLensMap = (record, width, height, top, bottom) => {
   const extent = height + lensBleed * 2;
@@ -353,13 +356,13 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
       bottom&&rect.bottom>port.bottom-lensDepth*scale&&rect.top<port.bottom];
     const textEdges=[false,false];
     for (const {element,rect,width,height} of geometry) {
-      if (!width||!height||element.matches("img,video,iframe,[data-material-surface],a,button,input,select,textarea")
-        ||element.querySelector("[data-material-surface],a,button,input,select,textarea")) continue;
+      if (!width||!height||element.matches(lensControlsAndMedia)
+        ||element.querySelector(lensControls)) continue;
       edges(rect).forEach((hit,i)=>textEdges[i] ||= hit);
     }
     const cutouts=[];
     let liveMedia=false;
-    for (const element of region.querySelectorAll("a,button,input,select,textarea,[data-material-surface],img,video,iframe")) {
+    for (const element of region.querySelectorAll(lensControlsAndMedia)) {
       const rect=element.getBoundingClientRect();
       if (!intersects(rect)) continue;
       const preview=element.closest(".map-related__preview"),style=getComputedStyle(element);
@@ -461,7 +464,7 @@ const observeScrollLens = (region, targets, { owner = region, enabled = () => tr
 };
 const lensInspector = document.querySelector("[data-map-inspector]");
 observeScrollLens(lensInspector, () => lensInspector.querySelectorAll(
-  ".map-readout__identity h2, .map-readout__identity p, [data-map-description], .map-evidence dt, .map-evidence dd:not(:has(.case-figure)), .map-evidence__copy, .case-details h3, .case-details h4, .case-details p, .observation-preview, .map-related__header, .map-related__item > :is(strong, span)",
+  ".map-readout__identity h2, .map-readout__identity p, [data-map-description], [data-map-description-continuation], .map-evidence dt, .map-evidence dd:not(:has(.case-figure)), .map-evidence__copy, .case-details h3, .case-details h4, .case-details p, .observation-preview, .map-related__header, .map-related__item > :is(strong, span)",
 ), { enabled: () => !lensInspector.classList.contains("has-reading-frame") });
 const lensPanel = document.querySelector(".content-panel__body");
 observeScrollLens(lensPanel, () => lensPanel.querySelectorAll(

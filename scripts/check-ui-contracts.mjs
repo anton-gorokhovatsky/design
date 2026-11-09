@@ -2104,7 +2104,7 @@ const auditBrowser = async (client, origin) => {
     });
   }
   await saveScreenshot(client, "desktop-employer-case-ks-fish");
-  await saveElementScreenshot(client, "crop-desktop-employer-case-optimal", ".map-inspector");
+  await saveElementScreenshot(client, "crop-desktop-employer-case-ks-fish", ".map-inspector");
 
   await navigate(client, `${origin}/?scene=map&qa=ui-contracts-settings-search`);
 
@@ -2700,6 +2700,7 @@ const auditBrowser = async (client, origin) => {
   await saveElementScreenshot(client, "crop-desktop-ilmix-copy", ".map-inspector");
 
   await navigate(client, `${origin}/?scene=map&qa=ui-contracts-optimal-copy&point=optimal#map`);
+  const academyEvidence = JSON.parse(readFileSync(join(projectRoot, "js/case-content.json"), "utf8")).evidence.optimal;
   const optimalCopy = await evaluate(client, `(() => {
     const evidence = document.querySelector("[data-map-evidence]");
     const task = document.querySelector("[data-map-evidence-task]");
@@ -2723,23 +2724,22 @@ const auditBrowser = async (client, origin) => {
       overflow: Math.max(0, document.documentElement.scrollWidth - window.innerWidth),
     };
   })()`);
+  const mismatchedFields = ["task", "role", "result"].filter(field => {
+    const expected = (academyEvidence[field] || "").replace(/\s+/g, " ").trim();
+    return !expected || optimalCopy[field] !== expected;
+  });
   if (
     optimalCopy.evidenceHidden
     || optimalCopy.taskHidden
     || optimalCopy.roleHidden
     || optimalCopy.resultHidden
-    || !optimalCopy.task.includes("вернуть управляемость")
-    || !optimalCopy.role.includes("Принял проект у другого менеджера")
-    || !optimalCopy.role.includes("навёл порядок")
-    || !optimalCopy.role.includes("оптимизировал")
-    || !optimalCopy.result.includes("Передал новому менеджеру")
-    || !optimalCopy.result.includes("дорожной карте")
+    || mismatchedFields.length > 0
     || !optimalCopy.linkVisible
     || optimalCopy.linkText !== "ОТКРЫТЬ КЕЙС"
     || optimalCopy.linkHref !== "https://optimalgroup.ru/projects/academy-tn-ru/"
     || optimalCopy.overflow > 1
   ) {
-    fail("optimal-copy: the Notion-backed role and scope regressed.", optimalCopy);
+    fail("optimal-copy: the Academy card must show its complete published task, role, result and case link.", { ...optimalCopy, mismatchedFields });
   }
   await saveScreenshot(client, "desktop-optimal-copy");
   await saveElementScreenshot(client, "crop-desktop-optimal-copy", ".map-inspector");

@@ -252,6 +252,23 @@ try {
         assert.equal(await page.locator('.case-scroll').evaluate(e=>getComputedStyle(e).filter),'none','Selecting refracted prose restores native text');
         await page.evaluate(()=>getSelection().removeAllRanges());
         await page.waitForFunction(()=>getComputedStyle(document.querySelector('.case-scroll')).filter.includes('scroll-ink'));
+        const citationSelector = `${selector} a[href]`;
+        const citation = page.locator(citationSelector);
+        await align(page, citationSelector, 'bottom', -8);
+        assert.ok(await citation.evaluate(link => {
+          const port = link.closest('.case-scroll');
+          const edgeGap = port.getBoundingClientRect().bottom - link.getBoundingClientRect().bottom;
+          const id = getComputedStyle(port).filter.match(/scroll-ink-\d+/)?.[0];
+          return edgeGap >= 0 && edgeGap < 56 && Boolean(id && document.getElementById(id)?.querySelector('[in="lower"]'));
+        }), 'The inline source shares the lower text lens when it reaches the edge');
+        const nextLinkKey = engine === 'webkit' && process.platform === 'darwin' ? 'Alt+Tab' : 'Tab';
+        await citation.focus();
+        await page.keyboard.press(`Shift+${nextLinkKey}`);
+        await page.keyboard.press(nextLinkKey);
+        await settle(page);
+        assert.ok(await citation.evaluate(link => link === document.activeElement && link.matches(':focus-visible')
+          && getComputedStyle(link).outlineStyle === 'solid' && getComputedStyle(link.closest('.case-scroll')).filter === 'none'),
+        'Returning to the inline source by keyboard restores native, visibly focused text');
         await page.goto(origin+'/?point=running',{waitUntil:'domcontentloaded'});
         await page.evaluate(()=>document.fonts.ready);
         await page.waitForFunction(()=>document.querySelector('.map-related__track img')

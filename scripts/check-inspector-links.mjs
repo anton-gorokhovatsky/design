@@ -153,6 +153,8 @@ try {
             sources: Array.from(description.querySelectorAll("a"), source => [
               source.textContent.replace(/\s+/gu, " "), source.getAttribute("href"),
             ]),
+            paragraphs: Array.from(description.querySelectorAll("p[data-map-description], p[data-map-description-continuation]"),
+              paragraph => paragraph.textContent.replace(/\s+/gu, " ")),
             inspector: box(inspector), scrollTop: (inspector.querySelector('.case-scroll') || inspector).scrollTop,
             expanded: inspector.classList.contains('is-case-view'), framed: inspector.classList.contains('has-reading-frame'), viewportHeight: innerHeight,
             related: related.hidden ? null : box(related), meta: box(document.querySelector("[data-map-meta]")),
@@ -173,6 +175,13 @@ try {
           const source = item.descriptionCredit;
           assert.deepEqual(state.sources, source ? [[source.label, source.href]] : [],
             context + ": the author's inline sources are preserved separately from list navigation");
+          if (item.id === "principle-experiment") {
+            assert.equal(state.paragraphs.length, 2, context + ": the final thought is a separate paragraph");
+            assert.match(state.paragraphs[0], /чего ещё не было\.$/u);
+            assert.match(state.paragraphs[1], /^Такие проекты /u);
+          } else {
+            assert.equal(state.paragraphs.length, 1, context + ": the previous point leaves no extra paragraph");
+          }
         }
         if (!state.hidden) {
           assert.notEqual(state.text, "ОТКРЫТЬ", context + ": name the destination");
