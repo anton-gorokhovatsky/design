@@ -592,6 +592,19 @@ const contactAudit = async (page, width) => {
     const intro = document.querySelector(".contact-intro");
     const links = document.querySelector(".contact-links");
     const actions = Array.from(document.querySelectorAll(".contact-links a"));
+    const address = links.querySelector(".contact-email-address");
+    const mail = links.querySelector('a[href^="mailto:"]');
+    const chat = links.querySelector('a[href^="https://t.me/"]');
+    const mailText = address?.textContent;
+    const emailReady = Boolean(mailText && !address.closest("a") && !address.querySelector("a")
+      && address.getBoundingClientRect().width > 0
+      && address.scrollWidth <= address.clientWidth + 1
+      && getComputedStyle(address).userSelect !== "none"
+      && mail?.getAttribute("href") === `mailto:${mailText}`
+      && mail.textContent.trim() === "Написать письмо"
+      && mail.getBoundingClientRect().height >= 44);
+    const chatReady = Boolean(chat?.href === "https://t.me/gorokhovatsky" && chat.textContent.includes("Открыть чат")
+      && !chat.textContent.includes(new URL(chat.href).pathname.slice(1)));
     const cardRect = card.getBoundingClientRect();
     const introRect = intro.getBoundingClientRect();
     const linksRect = links.getBoundingClientRect();
@@ -627,6 +640,8 @@ const contactAudit = async (page, width) => {
         borderLeft: linksStyle.borderLeftWidth,
       },
       actions: actionRects,
+      emailReady,
+      chatReady,
       horizontallyCentered,
       dividerAligned,
       horizontalOverflow: Math.max(
@@ -635,6 +650,7 @@ const contactAudit = async (page, width) => {
       ) > document.documentElement.clientWidth + 1,
       failure: !horizontallyCentered
         || !dividerAligned
+        || !emailReady || !chatReady
         || linksStyle.borderLeftWidth !== "0px"
         || Math.max(
           document.body.scrollWidth,

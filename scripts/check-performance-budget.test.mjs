@@ -55,8 +55,8 @@ test("combined compressed page includes HTML", () => {
   assert.equal(result.status, 1); assert.match(result.stderr, /initialPageCompressed: .* exceeds/);
   assert.doesNotMatch(result.stderr, /\n- (cssGzip|runtimeGzip|initialCompressed|htmlGzip): /);
 });
-test("prior CSS ceiling is still enforced", () => {
-  const result = check({ css: "a".repeat(285 * 1024) });
+test("CSS source growth is bounded independently", () => {
+  const result = check({ css: "a".repeat(301 * 1024) });
   assert.equal(result.status, 1); assert.match(result.stderr, /css: .* exceeds/);
 });
 

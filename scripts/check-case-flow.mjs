@@ -305,7 +305,7 @@ for(const engine of [process.argv[2]||'chromium']) {
       await page.waitForFunction(() => !document.body.hasAttribute('data-case-open'));
       await page.locator('[data-map-id="garage"]').first().click();
       if (!await page.locator('body').evaluate(el => el.hasAttribute('data-case-open'))) {
-        await page.locator('.point-preview a').click();
+        await page.getByRole('link', { name: 'О работе в Музее', exact: true }).click();
       }
       await page.waitForFunction(() => document.body.hasAttribute('data-case-open')
         && document.querySelector('[data-map-inspector]').dataset.selectedMapId === 'garage');

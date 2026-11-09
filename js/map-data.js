@@ -657,6 +657,7 @@ const mapItems = [
     id: "across-the-runiverse",
     kind: "personal",
     relatedPoster: "assets/personal-previews/across-the-runiverse.jpg",
+    relatedPosterShape: "square",
     relatedTo: ["running", "youtube"],
     label: "Across the Runiverse",
     title: "ACROSS THE RUNIVERSE",
@@ -758,6 +759,7 @@ const mapItems = [
   },
   {
     id: "principle-goal",
+    descriptionCredit: { label: "Triple Diamond от Zendesk", href: "https://vc.ru/design/887607-kak-vyglyadit-process-raboty-produktovogo-dizaynera-v-rossiyskom-bigtech-v-konce-2023-goda-d-p" },
     kind: "practice",
     label: "Цель > фреймворки",
     title: "ЦЕЛЬ ВАЖНЕЕ ФРЕЙМВОРКОВ",
@@ -869,6 +871,7 @@ const mapItems = [
   },
   {
     id: "principle-data-intuition",
+    descriptionCredit: { label: "вот здесь пишет о том", href: "https://andrewchen.substack.com/p/why-its-so-hard-to-be-data-driven" },
     kind: "practice",
     label: "Аналитика и интуиция",
     title: "АНАЛИТИКА И ИНТУИЦИЯ",
@@ -881,6 +884,7 @@ const mapItems = [
   },
   {
     id: "principle-design-engineering",
+    descriptionCredit: { label: "написал о дизайн-инженерах", href: "https://www.designdisciplin.com/p/design-engineering-101" },
     kind: "practice",
     label: "Дизайн-инженер",
     title: "ДИЗАЙН-ИНЖЕНЕР",

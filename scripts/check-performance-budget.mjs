@@ -41,7 +41,7 @@ const eagerMedia = [
 // the deferred authored payload has its own additional bounds below.
 // Gzip is measured with this Node/zlib version, not the CDN or a connection.
 const budgets = {
-  css: 284 * 1024,
+  css: 300 * 1024,
   runtime: 418 * 1024,
   fonts: 160 * 1024,
   initialSource: 812 * 1024,

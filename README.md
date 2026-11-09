@@ -189,11 +189,11 @@ the first stop without opening it; the axes remain visible below the entry.
   approach, and contact appear as groups of soft, dismissible floating
   materials; they never replace the map with a full-height drawer.
 - Contact is one compact material terminal rather than a separate empty
-  screen: a live status, a greeting, one short invitation, and two parallel
-  actions (`ЭЛ. ПОЧТА` and `TELEGRAM`). Destinations remain inside their
-  links, so neither the email address nor the Telegram handle is exposed as
-  display copy. Actions share a row on wide screens and reflow to one column
-  at narrow widths or enlarged text.
+  screen. A live status, greeting and short invitation precede two numbered
+  contact rows. The first displays the full, selectable email address and
+  the separate mail action `Написать письмо`. The second opens the Telegram
+  chat and keeps its handle in the link destination. The address can wrap
+  on narrow screens and remains selectable with JavaScript disabled.
 
 ## Instrument interface language
 

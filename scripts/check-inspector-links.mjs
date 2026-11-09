@@ -40,8 +40,16 @@ const checkPrinciplesNavigation = async (page) => {
   const firstId = principles[0].id;
   await page.setViewportSize({ width: 1440, height: 720 });
   await page.goto(`${origin}/?point=${firstId}#map`);
-  await page.waitForFunction(() => document.activeElement?.id === "map-inspector-title");
-  await page.locator("[data-map-link]").focus();
+  const card = page.locator(`[data-map-inspector].is-open[data-selected-map-id="${firstId}"]`);
+  const entry = card.getByRole("link", { name: "Все принципы", exact: true });
+  await entry.waitFor({ state: "visible" });
+  await waitForSurfaceRest(page, ["[data-map-inspector]"]);
+  // A direct #map visit can leave initial focus on the native fragment.
+  // Start in the card's reading region and reach its action by keyboard.
+  await card.getByRole("region", { name: "Содержимое карточки" }).focus();
+  await page.keyboard.press(nextLinkKey);
+  assert.equal(await entry.evaluate((link) => link === document.activeElement && link.matches(":focus-visible")), true,
+    "Tab from the reading region visibly focuses the internal destination before Enter.");
   await page.keyboard.press("Enter");
   await page.waitForFunction(() => location.hash === "#principles"
     && document.activeElement?.id === "principles-title");
@@ -74,6 +82,9 @@ const checkPrinciplesNavigation = async (page) => {
   await page.keyboard.press("Escape");
   await page.waitForFunction((id) => document.querySelector("[data-map-inspector].is-open")?.dataset.selectedMapId === id
     && document.activeElement?.matches("[data-map-link]") && location.hash === "#map", firstId);
+  await waitForSurfaceRest(page, ["[data-map-inspector]"]);
+  assert.equal(await entry.evaluate((link) => link === document.activeElement && link.matches(":focus-visible")), true,
+    "The reopened source card keeps visible keyboard focus on its list action.");
 };
 
 // WebKit's macOS snapshot path can omit a backdrop blur that is present on
@@ -139,6 +150,9 @@ try {
             target: link.target, rel: link.rel, principles: link.hasAttribute("data-open-principles"), inside: link.parentElement === identity,
             surface: link.getAttribute("data-material-surface"), count: document.querySelectorAll("[data-map-link]").length,
             link: box(link), identity: box(identity), description: box(description),
+            sources: Array.from(description.querySelectorAll("a"), source => [
+              source.textContent.replace(/\s+/gu, " "), source.getAttribute("href"),
+            ]),
             inspector: box(inspector), scrollTop: (inspector.querySelector('.case-scroll') || inspector).scrollTop,
             expanded: inspector.classList.contains('is-case-view'), framed: inspector.classList.contains('has-reading-frame'), viewportHeight: innerHeight,
             related: related.hidden ? null : box(related), meta: box(document.querySelector("[data-map-meta]")),
@@ -155,6 +169,11 @@ try {
         assert.equal(state.scrollTop, 0, context + ": each point opens at its heading");
         assert.equal(state.hidden, Boolean(item.youtube && !item.youtube.href) || !(item.href || item.kind === "practice"), context);
         assert.equal(state.principles, item.kind === "practice", context + ": only principles open the internal list");
+        if (item.kind === "practice") {
+          const source = item.descriptionCredit;
+          assert.deepEqual(state.sources, source ? [[source.label, source.href]] : [],
+            context + ": the author's inline sources are preserved separately from list navigation");
+        }
         if (!state.hidden) {
           assert.notEqual(state.text, "ОТКРЫТЬ", context + ": name the destination");
           const copy = { running: "НЕ СФОТКАЛ — НЕ БЕГАЛ", wave: "МОРЕ В INSTAGRAM" }[item.id]

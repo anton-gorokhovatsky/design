@@ -1,6 +1,7 @@
 import {pane} from './pane-viewport.js';
 import { mapItems, getMapPreviewPoster, principleItems } from './map-data.js';
 import { updateWorkTags } from './work-tags.js';
+import { setLinkedText } from './preferences.js';
 import { mapButtons, clearMapSelection, selectMapItem, requestMapLinksRender, syncMapNodeAvailability, setMapRovingId, setTimeMode } from './map-engine.js';
 
 const compact = pane.media('(max-width: 900px)');
@@ -133,9 +134,7 @@ function writePreview(id, replace = false) {
   history[replace ? 'replaceState' : 'pushState'](history.state, '', url);
 }
 function previewFromUrl(url) {
-  const id = url.searchParams.get('preview');
-  const point = url.searchParams.get('point');
-  return url.hash === '#principles' || (point && point !== id) ? null : id;
+  return url.hash === '#principles' ? null : url.searchParams.get('preview');
 }
 function positionPreview() {
   if (!previewId || preview.hidden) return;
@@ -155,7 +154,8 @@ function showPreview(id, { write = true, focus = true } = {}) {
   previewTitle.textContent = landmarks[id]?.[1] || item.title;
   preview.querySelector('.point-preview__kind').textContent = item.kindLabel;
   const firstSentence = item.description.split(/(?<=[.!?])\s+/)[0];
-  preview.querySelector('.point-preview__description').textContent = summaries[id] || (firstSentence.length > 240 ? firstSentence.slice(0, 237).replace(/\s+\S*$/, '') + '…' : firstSentence);
+  const summary = summaries[id] || (firstSentence.length > 240 ? firstSentence.slice(0, 237).replace(/\s+\S*$/, '') + '…' : firstSentence);
+  setLinkedText(preview.querySelector('.point-preview__description'), summary, item.descriptionCredit);
   updateWorkTags(preview, id);
   const tags = preview.querySelector(':scope > .work-tags');
   if (tags) previewActions.before(tags);
@@ -281,10 +281,10 @@ function restoreScene(event) {
     history.replaceState(history.state, '', url);
   }
   setScene(url.searchParams.get('scene') !== 'map' && url.searchParams.get('view') !== 'time');
-  if (id) {
+  if (id && (!point || point === id)) {
     if (point) returnToPreview = true;
     showPreview(id, { write: false, focus: false });
-  } else if (previewId) {
+  } else if (previewId && previewId !== id) {
     // The map router owns its selected point when a URL replaces the preview.
     hidePreview();
   }

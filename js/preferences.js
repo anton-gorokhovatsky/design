@@ -262,6 +262,22 @@ export {
   root,
   typographUiText,
 };
+
+export function setLinkedText(element, value, reference) {
+  const text = typographUiText(value);
+  element.textContent = text;
+  if (!reference) return;
+  const label = typographUiText(reference.label);
+  const start = text.indexOf(label);
+  if (start < 0) return;
+  const link = document.createElement("a");
+  link.className = "text-link text-link--inline";
+  link.href = reference.href;
+  link.textContent = label;
+  link.target = "_blank";
+  link.rel = "noreferrer";
+  element.replaceChildren(text.slice(0, start), link, text.slice(start + label.length));
+}
 // Shared by modal controllers: layout rectangles alone include invisible controls.
 export const getTabStops = (root) => Array.from(root.querySelectorAll(
   'a[href], button, input, select, textarea, iframe, [tabindex]',
