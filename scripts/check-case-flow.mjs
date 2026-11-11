@@ -410,11 +410,14 @@ for(const engine of [process.argv[2]||'chromium']) {
         else await page.locator('[data-close-settings]').click();
         await page.waitForFunction(() => !document.querySelector('[data-settings-panel]').open
           && document.body.classList.contains('has-story-pane')
-          && document.querySelector('#story-pane').scrollTop === 480);
+          && document.querySelector('#story-pane').scrollTop === 480
+          && document.activeElement === document.querySelector('[data-constellation-nav-toggle]'));
         assert.equal(page.url(), readerUrl, 'Closing settings preserves the reader route');
       }
       (result.settingsReturns ||= []).push({width, scrollTop: 480, exits: ['escape', 'close']});
       await page.locator('#story-title').evaluate(el => el.focus({preventScroll: true}));
+      assert.equal(await page.locator('#story-title').evaluate(el => document.activeElement === el), true,
+        'The reader owns focus before Escape closes it');
       await page.keyboard.press('Escape');
       await page.waitForFunction(() => document.querySelector('#story-pane').inert);
       await page.waitForFunction(selector => document.activeElement?.matches(selector), width === 1440 ? selector : '[data-constellation-nav-toggle]');
