@@ -3,6 +3,7 @@ import { componentChecks } from "./check-catalog.mjs";
 // Runtime outside these boundaries keeps the portfolio's existing coverage.
 const processPaths = new Set([
   '.github/workflows/quality.yml',
+  'scripts/cache-versions.mjs',
   'scripts/check-profiles.mjs', 'scripts/check-project.mjs',
   'scripts/check-catalog.mjs', 'scripts/release-scope.mjs',
   'scripts/component-scope.mjs', 'scripts/media-scope.mjs',
@@ -28,6 +29,7 @@ browserCheckPaths.set('scripts/webkit-regression.cjs', 'check:core');
 // Release and scope tooling is covered by the static chooser, execution and
 // publication contracts. Runtime and browser assertion owners remain separate.
 export const staticCheckPaths = new Set([
+  'scripts/cache-versions.mjs',
   'scripts/check-profiles.mjs', 'scripts/check-project.mjs', 'scripts/check-catalog.mjs',
   'scripts/media-scope.mjs',
   'scripts/release-scope.mjs', 'scripts/component-scope.mjs', 'scripts/overview-scope.mjs', 'scripts/check-release-scope.mjs',

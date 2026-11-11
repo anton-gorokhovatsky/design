@@ -12,6 +12,33 @@ try { savedReduced = localStorage.getItem('anton-signal-reduced-motion') === '1'
 let frame = null, timer = 0, previous = 0, time = 8;
 let inView = true, loading = false;
 let width = 0, height = 0, color = '';
+// One arrival gesture. The shape and text stay visible; ambient gas continues.
+let entrance = 0;
+const arrivalDuration = .95;
+const drawArrival = lines => {
+  const progress = Math.min(1, entrance / arrivalDuration);
+  scene.dataset.arrival = progress < 1 ? 'arriving' : 'settled';
+  if(progress === 0 || progress === 1) return;
+  const front = -Math.PI + progress * Math.PI * 2;
+  const strength = Math.sin(Math.PI * progress);
+  const advance = ctx.measureText('M').width;
+  ctx.fillStyle = root.dataset.theme === 'dark' ? '#fff0c5' : '#5e3914';
+  for(let row=0;row<lines.length;row++) {
+    const y = (row + 1) * 20;
+    for(let col=0;col<lines[row].length;col++) {
+      const glyph = lines[row][col];
+      if(glyph === ' ') continue;
+      const x = col * 10;
+      const angle = Math.atan2((y - 366) * 1.5, x - 475);
+      const distance = Math.atan2(Math.sin(angle-front),Math.cos(angle-front));
+      const alpha = strength * Math.exp(-(distance*distance)/.17);
+      if(alpha < .005) continue;
+      ctx.globalAlpha = alpha;
+      ctx.fillText(glyph,col * advance,y);
+    }
+  }
+  ctx.globalAlpha = 1;
+};
 const noMotion = () => reduced.matches || savedReduced || contrast.matches;
 const canPlay = () => frame && !noMotion() && inView && !document.hidden;
 const draw = () => {
@@ -25,6 +52,7 @@ const draw = () => {
   const glyphScale = 10 / ctx.measureText('M').width;
   ctx.save(); ctx.scale(glyphScale,1);
   for(let row=0;row<lines.length;row++) ctx.fillText(lines[row],0,(row+1)*20);
+  drawArrival(lines);
   ctx.restore();
   scene.dataset.rendered = '';
 };
@@ -40,7 +68,8 @@ const tick = () => {
   timer = 0;
   if(!canPlay()) return;
   const now = performance.now();
-  time += Math.min(.15, (now - previous) / 1000); previous = now;
+  const elapsed = Math.min(.15, (now - previous) / 1000);
+  time += elapsed; entrance = Math.min(arrivalDuration, entrance + elapsed); previous = now;
   draw(); timer = setTimeout(tick, 1000 / 15);
 };
 const sync = () => {

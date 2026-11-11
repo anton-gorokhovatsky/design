@@ -114,7 +114,7 @@ export const notFoundBindings = source => {
       const oldController = node.tagName === 'script' && !node.attrs.length
         && createHash('sha256').update(code).digest('hex') === '780b70811f92848c58cd79cc38b14831b77ac63cd99becd77f3217b98625fc98';
       const standalone = node.tagName === 'script' && node.attrs.length === 2 && attrs.type === 'module'
-        && /^\/assets\/not-found\/motion\.js\?v=[a-f0-9]{12}$/.test(attrs.src) && !code.trim();
+        && /^\/assets\/not-found\/motion\.js\?v=(?:[a-f0-9]{12}|HASH)$/.test(attrs.src) && !code.trim();
       const oldModule = legacyMotion && node.tagName === 'script' && node.attrs.length === 2 && attrs.type === 'module'
         && /^\/js\/atlas-motion\.js\?v=(?:[a-f0-9]{12}|HASH)$/.test(attrs.src) && !code.trim();
       if (oldController || standalone) {

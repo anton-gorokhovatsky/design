@@ -10,6 +10,8 @@ const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const defaultProjectRoot = resolve(scriptDirectory, "..");
 const indexPath = "index.html";
 const stylesheetPath = "styles.css";
+const notFoundMotionPath = "assets/not-found/motion.js";
+const notFoundKernelPath = "assets/not-found/black-hole.js";
 const hashLength = 12;
 const importMapStart = "    <!-- runtime-import-map:start -->";
 const importMapEnd = "    <!-- runtime-import-map:end -->";
@@ -19,6 +21,8 @@ export const cacheVersionFiles = [
   ...runtimeFiles,
   ...runtimeDataFiles,
   ...storyFiles,
+  notFoundKernelPath,
+  notFoundMotionPath,
 ];
 
 const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -104,16 +108,42 @@ export const buildVersionedIndexSource = (source, versions) => {
   return nextSource.replace(importMapPattern, renderImportMap(versions));
 };
 
+const versionNotFoundMotion = (source, versions) => {
+  const pattern = new RegExp(
+    `(import\\(\\s*["']/${escapeRegExp(notFoundKernelPath)})(?:\\?v=[^"']*)?(["']\\s*\\))`,
+    "g",
+  );
+  let replacements = 0;
+  const nextSource = source.replace(pattern, (_, prefix, suffix) => {
+    replacements += 1;
+    return `${prefix}?v=${versions.get(notFoundKernelPath)}${suffix}`;
+  });
+  if (replacements !== 1) {
+    throw new Error(`Expected one import for ${notFoundKernelPath}, found ${replacements}.`);
+  }
+  return nextSource;
+};
+
 const versionedPages = [indexPath, "404.html"];
 const versionPage = (path, source, versions) => path === indexPath
   ? buildVersionedIndexSource(source, versions)
-  : replaceVersionedAttribute(source, {
+  : replaceVersionedAttribute(replaceVersionedAttribute(source, {
     attribute: "href", path: "/styles.css", version: versions.get(stylesheetPath),
+  }), {
+    attribute: "src", path: `/${notFoundMotionPath}`, version: versions.get(notFoundMotionPath),
   });
 
 export const syncRuntimeAssetVersions = (projectRoot = defaultProjectRoot) => {
-  const versions = getCacheVersions(projectRoot);
   const changedPaths = [];
+  const motionFile = resolve(projectRoot, notFoundMotionPath);
+  const motionSource = readFileSync(motionFile, "utf8");
+  const nextMotionSource = versionNotFoundMotion(motionSource, getCacheVersions(projectRoot));
+  if (motionSource !== nextMotionSource) {
+    writeFileSync(motionFile, nextMotionSource);
+    changedPaths.push(notFoundMotionPath);
+  }
+  // Hash the consumer only after its dependency reference is up to date.
+  const versions = getCacheVersions(projectRoot);
   for (const path of versionedPages) {
     const absolutePath = resolve(projectRoot, path);
     const source = readFileSync(absolutePath, "utf8");
@@ -128,6 +158,10 @@ export const syncRuntimeAssetVersions = (projectRoot = defaultProjectRoot) => {
 
 export const verifyRuntimeAssetVersions = (projectRoot = defaultProjectRoot) => {
   const versions = getCacheVersions(projectRoot);
+  const motionSource = readFileSync(resolve(projectRoot, notFoundMotionPath), "utf8");
+  if (motionSource !== versionNotFoundMotion(motionSource, versions)) {
+    throw new Error(`${notFoundMotionPath} has a stale dependency hash; run pnpm cache.`);
+  }
   for (const path of versionedPages) {
     const source = readFileSync(resolve(projectRoot, path), "utf8");
     if (source !== versionPage(path, source, versions)) {
