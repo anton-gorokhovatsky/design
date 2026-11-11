@@ -43,9 +43,6 @@ jobs:
       - name: Install FFmpeg
         if: steps.scope.outputs.static-scope == 'static'
         run: |
-          if [ -f /etc/apt/apt-mirrors.txt ]; then
-            printf '%s\n' 'https://archive.ubuntu.com/ubuntu' | sudo tee /etc/apt/apt-mirrors.txt > /dev/null
-          fi
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends ffmpeg
       - run: node scripts/check-project.mjs --scope=${{ steps.scope.outputs.static-scope }}
@@ -87,9 +84,6 @@ jobs:
       - name: Install Playwright ${{ matrix.browser }}
         id: playwright-install
         run: |
-          if [ -f /etc/apt/apt-mirrors.txt ]; then
-            printf '%s\n' 'https://archive.ubuntu.com/ubuntu' | sudo tee /etc/apt/apt-mirrors.txt > /dev/null
-          fi
           pnpm exec playwright install --with-deps ${{ matrix.browser }}
       - run: node scripts/check-project.mjs --scope=${{ matrix.browser }} --checks=${{ matrix.checks }}
       - if: always()

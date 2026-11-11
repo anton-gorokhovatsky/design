@@ -1484,6 +1484,24 @@ try {
 // Run the actual aggregate shell from the workflow against all lanes and
 // failed/skipped dependencies. A skipped browser matrix alone is never green.
 const workflow = read(".github/workflows/quality.yml");
+// The DNS repair removes only both reviewed mirror overrides. Installation,
+// host validation, checks and every other workflow change retain their owner.
+const forcedMirrorFixture = [
+  "          if [ -f /etc/apt/apt-mirrors.txt ]; then",
+  "            printf '%s\\n' 'https://archive.ubuntu.com/ubuntu' | sudo tee /etc/apt/apt-mirrors.txt > /dev/null",
+  "          fi",
+  "",
+].join("\n");
+const workflowWithForcedMirrors = workflow
+  .replace("          sudo apt-get update\n", forcedMirrorFixture + "          sudo apt-get update\n")
+  .replace("          pnpm exec playwright install --with-deps", forcedMirrorFixture + "          pnpm exec playwright install --with-deps");
+assert.equal(workflowWithForcedMirrors.split(forcedMirrorFixture).length, 3, "Both install steps reconstruct the reviewed baseline");
+scoped('.github/workflows/quality.yml', workflowWithForcedMirrors, workflow, 'copy');
+for (const unsafe of [workflow.replace('--with-deps', ''), workflow.replace('test "$BROWSER_RESULT" = success', 'true'), workflow + '\n# unrelated workflow edit\n', workflowWithForcedMirrors.replace(forcedMirrorFixture, '')]) {
+  scoped('.github/workflows/quality.yml', workflowWithForcedMirrors, unsafe, 'components', ['checks']);
+}
+scoped('.github/workflows/quality.yml', workflow, workflowWithForcedMirrors, 'components', ['checks']);
+
 const gate = /- name: Require the selected checks[\s\S]*?        run: \|\n((?:          .*(?:\n|$))+)/.exec(workflow)?.[1]
   .replace(/^          /gm, "");
 assert.ok(gate, "Quality must have a final gate");
@@ -1550,6 +1568,21 @@ try {
   assert.equal(plan().mode, 'full', 'A signature cannot hide a shared portfolio style change');
   assert.equal(plan().staticScope, 'static');
   assert.deepEqual(plan().matrix, browserMatrix('full'));
+  // Reuse this Git fixture to prove the actual planner keeps the runtime's
+  // existing 13 jobs, while an adjacent workflow change restores checks scope.
+  const retiredStory = nativeScrollConsumers.find(([path]) => path === 'rendering/js/map-story.js')[1];
+  put('.github/workflows/quality.yml', workflowWithForcedMirrors);
+  put('rendering/js/map-story.js', retiredStory + '\nconst retainedOwner = 1;');
+  git('add', '.'); git('commit', '-m', 'mirror migration baseline');
+  const mirrorBase = git('rev-parse', 'HEAD');
+  put('.github/workflows/quality.yml', workflow);
+  put('rendering/js/map-story.js', 'const retainedOwner = 1;');
+  const mirrorPlan = () => planRelease({projectRoot: isolatedDirectory, base: mirrorBase});
+  assert.deepEqual(mirrorPlan().components, ['scroll-edges']);
+  assert.equal(mirrorPlan().matrix.include.length, 13);
+  assert.deepEqual(mirrorPlan().matrix, browserMatrix('components', ['scroll-edges']));
+  put('.github/workflows/quality.yml', workflow + '\n# unrelated workflow edit\n');
+  assert.deepEqual(mirrorPlan().components, ['checks', 'scroll-edges']);
 } finally { rmSync(isolatedDirectory, { recursive: true, force: true }); }
 console.log(`PASS: ${checks} copy/component/global changes; unsafe syntax, combined git history, complete browser coverage and all Quality lanes.`);
 

@@ -300,7 +300,19 @@ export const isCopyOnly = (path, before, after) => {
   return false;
 };
 
+// Only retire both reviewed single-mirror overrides. Every other workflow byte,
+// including dependency installation, browser selection and the final gate, stays.
+const forcedAptMirrorBlock = [
+  "          if [ -f /etc/apt/apt-mirrors.txt ]; then",
+  "            printf '%s\\n' 'https://archive.ubuntu.com/ubuntu' | sudo tee /etc/apt/apt-mirrors.txt > /dev/null",
+  "          fi",
+  "",
+].join("\n");
+const restoresRunnerAptMirrors = (before, after) => before.split(forcedAptMirrorBlock).length === 3
+  && before.replaceAll(forcedAptMirrorBlock, "") === after;
+
 export const classifyChange = (path, before, after) => {
+  if (path === ".github/workflows/quality.yml" && restoresRunnerAptMirrors(before, after)) return { mode: "copy", components: [] };
   if (staticCheckPaths.has(path) || relatedPresentationDocs.has(path) || shareArtifactPaths.has(path)) return { mode: "copy", components: [] };
   if (relatedPointImages.has(path)) return relatedPointImageScope;
   if (audienceSnapshotPaths.has(path)) {
@@ -366,7 +378,7 @@ export const planRelease = ({ projectRoot, base = "origin/gh-pages", target } = 
       const [status, path] = entries.slice(index, index + 2);
       const owner = ownedCheckComponent(path);
       let classification = staticCheckPaths.has(path) ? { mode: "copy", components: [] } : owner ? { mode: "components", components: [owner] } : { mode: "full", components: [] };
-      if (status === "M" && (copyArrays[path] || sharePages.has(path) || focusedHomePaths.has(path) || audienceSnapshotPaths.has(path) || ["js/case-content.json", "js/case-view.js", "js/map-story.js", "rendering/js/map-story.js", "index.html", "404.html", "assets/map-story/content.html", "styles.css", "js/focused-home.js", "js/map-media.js", "js/map-engine.js", "rendering/js/map-engine.js", "js/spatial-home.js", "rendering/js/spatial-home.js", "js/whoop-day.js", "js/practice-orbits.js", "rendering/practice-orbits.js", "js/viewport-ui.js", "rendering/js/viewport-ui.js", "scripts/browser-contracts.cjs", "scripts/check-live-surface.mjs", "scripts/reel-specs.json", "README.md", "AGENTS.md"].includes(path) || /^docs\/.*\.md$/.test(path))) {
+      if (status === "M" && (copyArrays[path] || sharePages.has(path) || focusedHomePaths.has(path) || audienceSnapshotPaths.has(path) || [".github/workflows/quality.yml", "js/case-content.json", "js/case-view.js", "js/map-story.js", "rendering/js/map-story.js", "index.html", "404.html", "assets/map-story/content.html", "styles.css", "js/focused-home.js", "js/map-media.js", "js/map-engine.js", "rendering/js/map-engine.js", "js/spatial-home.js", "rendering/js/spatial-home.js", "js/whoop-day.js", "js/practice-orbits.js", "rendering/practice-orbits.js", "js/viewport-ui.js", "rendering/js/viewport-ui.js", "scripts/browser-contracts.cjs", "scripts/check-live-surface.mjs", "scripts/reel-specs.json", "README.md", "AGENTS.md"].includes(path) || /^docs\/.*\.md$/.test(path))) {
         const before = git("show", `${baseSha}:${path}`);
         const after = targetSha ? git("show", `${targetSha}:${path}`) : readFileSync(resolve(projectRoot, path), "utf8");
         classification = classifyChange(path, before, after);
