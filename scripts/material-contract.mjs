@@ -88,9 +88,8 @@ export function independentMaterialPaint(source) {
     if (!surfaceFill && !blur) return;
     const selector=node.parent.selector || '';
     if (selector.includes('[data-material-surface][data-material-active=')) return;
-    // These are graphic ink and the scroll-edge optical layer, not UI surfaces.
+    // Graphic ink is not an interface surface.
     if (selector==='.origin-marker__cross::after' && surfaceFill) return;
-    if (selector==='.scroll-lens-frost' && blur && node.value==='blur(2.2px)') return;
     failures.push({selector,property:node.prop,value:node.value,line:node.source.start.line});
   });
   return failures;

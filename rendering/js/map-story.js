@@ -1,7 +1,6 @@
 import {selectMapItem,mapButtons} from './map-engine.js';
 import {getTabStops} from './preferences.js';
 import {pane} from './pane-viewport.js';
-import {observeScrollLens} from './viewport-ui.js';
 
 const map=document.getElementById('map-pane'),story=document.getElementById('story-pane');
 const bridge=document.getElementById('story-bridge');
@@ -9,9 +8,6 @@ const compact=matchMedia('(max-width:999px)'),reduce=matchMedia('(prefers-reduce
 const menu=map.querySelector('[data-constellation-nav]');
 let focusPlane;
 let opened=false,opener=null,readingPosition=0,loaded=false,loading,contentLoading,contentReady=false,activeTransition,showRevision=0;
-observeScrollLens(story,()=>story.querySelectorAll('h1,h2,p,figcaption,.gravity-texture'),{
-  owner:document.body,fullWidth:true,enabled:()=>opened&&!document.body.classList.contains('story-is-moving')
-});
 let readingAnchor=null,readingWidth=0,readingFrame=0,readingMetrics=[];
 function anchorAt(scroll){
   const top=scroll+24,metric=readingMetrics.find(m=>m.top+m.height>top+1);
@@ -190,7 +186,7 @@ document.addEventListener('keydown',event=>{
 void show(new URL(location.href).searchParams.has('story'),{write:false,focus:false});
 
 
-// Keep the shared glass outside the scroll lens backdrop root without moving
+// Keep the shared glass in its top layer without moving
 // the button out of the reader's DOM, focus order or close event delegation.
 let storyCloseFrame=0,observedStoryClose;
 const storyCloseResize=new ResizeObserver(scheduleStoryClose);

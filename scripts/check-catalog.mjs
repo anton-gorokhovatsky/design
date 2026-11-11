@@ -18,7 +18,7 @@ export const componentChecks = {
   "search-icon": "Search icon and its control",
   "sphere-motion": "Sphere axial motion",
   "case-view": "Expanded case view",
-  "scroll-lens": "Rendered scroll lenses",
+  "scroll-edges": "Native scroll edges and reading continuity",
   "observation-route": "Overview content and timing",
 };
 
@@ -36,12 +36,12 @@ export const componentCoverage = {
   // Reuse the complete existing geometry, hover/focus and reflow contracts.
   "map-labels": ["map-routes", "hover-layout", "accessibility"],
   "story-bridge": ["map-story", "accessibility"],
-  "map-story": ["map-story", "scroll-lens", "accessibility"],
+  "map-story": ["map-story", "scroll-edges", "accessibility"],
   media: ["reels", "case-view", "case-flow", "hover-layout", "observation-route"],
   settings: ["core", "accessibility", "whoop-ui"],
   consent: ["core", "accessibility", "first-visit"],
   // Shared surface painting: every surface context, without unrelated media/physics suites.
-  "scroll-lens-pointer": ["whoop-ui", "case-view", "map-story"],
+  "scroll-edges": ["scroll-edges", "case-view", "case-flow", "map-story", "core", "accessibility"],
   materials: ["core", "accessibility", "map-story", "map-routes", "hover-layout", "case-view", "whoop-ui", "first-visit", "command-placement"],
   // Console bounds also move the author aura and detached search results.
   // WHOOP includes live-surface: departure presence, ResizeObserver and page errors.
@@ -60,7 +60,7 @@ const shards = {
   reading: ["case-flow", "personal-media", "case-view", "whoop-ui"],
   interface: ["accessibility", "first-visit", "command-placement", "header", "search-icon", "not-found"],
   map: ["map-story", "map-routes", "hover-layout", "sphere-motion", "point-address"],
-  motion: ["scroll-lens", "observation-route", "inspector-links"],
+  motion: ["scroll-edges", "observation-route", "inspector-links"],
 };
 const webkitScenarios = ["390x844-light", "390x844-dark", "320x568-light", "320x568-dark"];
 

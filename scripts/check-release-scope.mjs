@@ -727,16 +727,41 @@ scoped('styles.css',tintBefore,tintAfter.replace('0.4)','0.4)!important'),'full'
 scoped('styles.css',tintBefore,tintAfter+'.settings-panel{--material-01:#fff}','full');
 scoped('styles.css',tintBefore,tintAfter.replace('--material-01-backdrop:','--material-01:rgba(246,248,242,0.4);--material-01-backdrop:'),'full');
 scoped('styles.css','@container map-viewport (max-width:900px){'+tintBefore+'}','@container map-viewport (max-width:899px){'+tintAfter+'}','full');
-const pointerBefore = "  const records = new Map();\n  let frame = 0;\n    region.style.removeProperty(\"--scroll-ink-filter\");\n    if (region.parentElement !== textFrame)\n      if (!textFrame && !region.querySelector(\"iframe\")) {\n        const style=getComputedStyle(region);\n  region.addEventListener(\"focusin\", schedule);\n  region.addEventListener(\"focusout\", schedule);";
-const pointerAfter = "  const records = new Map();\n  const pressedPointers = new Set();\n  let frame = 0;\n    region.style.removeProperty(\"--scroll-ink-filter\");\n    if (pressedPointers.size) return;\n    if (region.parentElement !== textFrame)\n      if (!textFrame && !region.querySelector(\"iframe\")) {\n        if (pressedPointers.size) return;\n        const style=getComputedStyle(region);\n  // WebKit cancels click if the pressed control is reparented before pointerup.\n  region.addEventListener(\"pointerdown\", event => pressedPointers.add(event.pointerId), { capture: true, passive: true });\n  const releasePointer = event => { if (pressedPointers.delete(event.pointerId)) schedule(); };\n  window.addEventListener(\"pointerup\", releasePointer, { capture: true, passive: true });\n  window.addEventListener(\"pointercancel\", releasePointer, { capture: true, passive: true });\n  const releasePointers = () => { if (pressedPointers.size) { pressedPointers.clear(); schedule(); } };\n  window.addEventListener(\"blur\", releasePointers);\n  window.addEventListener(\"pagehide\", releasePointers);\n  region.addEventListener(\"focusin\", schedule);\n  region.addEventListener(\"focusout\", schedule);";
-for (const path of ['js/viewport-ui.js','rendering/js/viewport-ui.js']) {
-  scoped(path,pointerBefore,pointerAfter,'components',['scroll-lens-pointer']);
-  scoped(path,pointerAfter,pointerBefore,'full');
-  scoped(path,pointerBefore,pointerAfter.replace('pressedPointers.size','false'),'full');
-  scoped(path,pointerBefore,pointerAfter.replace('pointerup','pointermove'),'full');
-  scoped(path,pointerBefore,pointerAfter+'\nrunOtherBehavior();','full');
+
+// Retiring the reviewed optical effect preserves all surrounding runtime AST.
+// These actual consumer statements are fixtures, not a name-only allowlist.
+const nativeScrollConsumers = [
+  ["js/map-story.js", "import{observeScrollLens as n}from\"./viewport-ui.js\";\nn(a,()=>a.querySelectorAll(\"h1,h2,p,figcaption,.gravity-texture\"),{owner:document.body,fullWidth:!0,enabled:()=>h&&!document.body.classList.contains(\"story-is-moving\")});"],
+  ["rendering/js/map-story.js", "import {observeScrollLens} from './viewport-ui.js';\nobserveScrollLens(story,()=>story.querySelectorAll('h1,h2,p,figcaption,.gravity-texture'),{\n  owner:document.body,fullWidth:true,enabled:()=>opened&&!document.body.classList.contains('story-is-moving')\n});"],
+];
+for (const [path, retired] of nativeScrollConsumers) {
+  const retained = 'const retainedOwner = () => keepReading();';
+  scoped(path, retired + '\n' + retained, retained, 'components', ['scroll-edges']);
+  scoped(path, retained, retired + '\n' + retained, 'components', ['map-story']);
+  scoped(path, retired + '\n' + retained, retained.replace('keepReading', 'changeNavigation'), 'components', ['map-story']);
+  scoped(path, retired + '\n' + retained, retained + '\nwindow.addEventListener("scroll", unrelated);', 'components', ['map-story']);
+  scoped(path, retired.replace('h1,h2,p', 'button,h1,h2,p') + '\n' + retained, retained, 'components', ['map-story']);
 }
-assert.equal(browserMatrix('components',['materials','scroll-lens-pointer']).include.length,11);
+// Map-story retains its pre-existing module coverage for non-migration edits.
+// Shared viewport and case neighbours still require the full lane.
+for (const path of ['js/viewport-ui.js', 'rendering/js/viewport-ui.js', 'js/case-view.js']) {
+  const current = read(path);
+  scoped(path, current, current + '\nwindow.addEventListener("scroll", unrelated);', 'full');
+  scoped(path, 'const observeScrollLens = () => unrelated();', '', 'full');
+  scoped(path, 'const e = new Map(); const keep = 1;', 'const keep = 1;', 'full');
+}
+const frostAuditBefore = 'const readMaterialAuditExpression = `if (element.hasAttribute("data-material-surface") || element.matches(".scroll-lens-frost")) return false;`;\nconst neighbour = 1;';
+const frostAuditAfter = frostAuditBefore.replace(' || element.matches(".scroll-lens-frost")', '');
+scoped('scripts/browser-contracts.cjs', frostAuditBefore, frostAuditAfter, 'components', ['scroll-edges']);
+scoped('scripts/browser-contracts.cjs', frostAuditBefore, frostAuditAfter.replace('const neighbour = 1', 'const neighbour = 2'), 'full');
+assert.deepEqual(componentCoverage['scroll-edges'], ['scroll-edges','case-view','case-flow','map-story','core','accessibility']);
+for (const engine of ['chromium','webkit']) {
+  const selected = browserMatrix('components', ['scroll-edges']).include.filter(row=>row.browser===engine).flatMap(row=>row.checks.split(','));
+  assert.deepEqual(new Set(selected), new Set(componentCoverage['scroll-edges']));
+}
+scoped('scripts/check-scroll-lens.mjs', 'old test', '', 'components', ['check:scroll-edges']);
+scoped('scripts/check-scroll-edges.mjs', '', 'native contract', 'components', ['check:scroll-edges']);
+
 const auditFixture = 'const readMaterialAuditExpression = `old`;\nconst unchanged = 1;';
 const menuFooterBefore = '@container map-viewport (max-width: 900px){.control-console .constellation-nav.is-open .constellation-nav__orbit{padding:0 8px 4px}.site-version--menu{margin-top:var(--space-2)}}';
 const menuFooterAfter = menuFooterBefore.replace('padding:0 8px 4px', 'padding:0 8px var(--space-4)').replace('margin-top:var(--space-2)', 'margin-top:0');
@@ -791,7 +816,7 @@ scoped('assets/map-story/content.html', storyCopyFixture, storyCopyFixture.repla
 scoped('assets/map-story/content.html', storyCopyFixture, storyCopyFixture.replace('<p>Рассказ</p>', '<button>Рассказ</button>'), 'components', ['map-story']);
 scoped('assets/map-story/black-hole.js', 'before', 'after', 'full');
 scoped('js/viewport-ui.js', 'before', 'after', 'full');
-assert.deepEqual(componentCoverage['map-story'], ['map-story', 'scroll-lens', 'accessibility']);
+assert.deepEqual(componentCoverage['map-story'], ['map-story', 'scroll-edges', 'accessibility']);
 scoped("styles.css", "", '.control-console .command-dock__mark svg {fill: none; stroke: currentColor}', "components", ["search-icon"]);
 scoped("styles.css", '.control-console .command-dock__mark::before {content: ""}', "", "components", ["search-icon"]);
 scoped("styles.css", "", '.control-console .command-dock__mark svg, .map-node {fill: none}', "full");
@@ -906,7 +931,7 @@ scoped("js/viewport-ui.js", viewport, consoleFix, "components", ["console-bounds
 scoped("js/viewport-ui.js", consoleFix.replaceAll('syncConsoleBounds', 'syncFloatingConsoleBounds'), viewport, "components", ["console-bounds"]);
 for (const mutate of [
   value => value.replace('new ResizeObserver', 'new MutationObserver'),
-  value => value.replace('observeScrollEdges,', 'observeScrollEdges as edges,'),
+  value => value.replace('scrollRegionFromKey,', 'scrollRegionFromKey as scrollKeys,'),
   value => value + '\nwindow.addEventListener("resize", unrelated);',
   value => 'import "./unrelated.js";\n' + value,
   value => value.replace('const syncConsoleBounds = () =>', 'const syncConsoleBounds = async () =>'),
@@ -927,7 +952,7 @@ assert.ok(consoleMatrix.filter(job => job.browser === 'webkit').every(job => job
 
 // The complete old browser inventory remains mandatory, once per engine;
 // WebKit core retains all four viewport/theme profiles. No shard may disappear.
-const retainedChecks = ["map-story", "signature", "case-flow", "personal-media", "inspector-links", "point-address", "accessibility", "map-routes", "hover-layout", "whoop-ui", "not-found", "first-visit", "command-placement", "header", "search-icon", "sphere-motion", "case-view", "scroll-lens", "observation-route"];
+const retainedChecks = ["map-story", "signature", "case-flow", "personal-media", "inspector-links", "point-address", "accessibility", "map-routes", "hover-layout", "whoop-ui", "not-found", "first-visit", "command-placement", "header", "search-icon", "sphere-motion", "case-view", "scroll-edges", "observation-route"];
 const fullMatrix = browserMatrix("full").include;
 assert.equal(new Set(fullMatrix.map(({ artifact }) => artifact)).size, fullMatrix.length);
 for (const browser of ["chromium", "webkit"]) {
@@ -943,7 +968,7 @@ for (const components of [["settings"], ["whoop"], ["settings", "whoop"]]) {
   for (const browser of ["chromium", "webkit"]) {
     assert.deepEqual(new Set(matrix.filter((row) => row.browser === browser).flatMap(({ checks }) => checks.split(","))), expected);
   }
-  assert.ok(!matrix.some(({ checks }) => /reels|scroll-lens|map-routes|sphere-motion/.test(checks)));
+  assert.ok(!matrix.some(({ checks }) => /reels|scroll-edges|map-routes|sphere-motion/.test(checks)));
 }
 const mediaMatrix = browserMatrix("components", ["media"]).include;
 assert.equal(mediaMatrix.length, 7);
@@ -1218,8 +1243,8 @@ scoped('styles.css', '', `${sharedLabelSelector} {padding:4px 10px}`, 'component
 scoped('styles.css', '', `@container map-viewport (min-width:901px){${sharedLabelSelector} {font-size:.64rem}}`, 'components', sharedLabelOwners);
 for (const components of [['map-story'], sharedLabelOwners]) for (const engine of ['chromium', 'webkit']) assert.deepEqual(
   new Set(browserMatrix('components', components).include.filter(job => job.browser === engine).flatMap(job => job.checks.split(','))),
-  new Set(components.length === 1 ? ['map-story', 'scroll-lens', 'accessibility']
-    : ['map-routes', 'hover-layout', 'accessibility', 'map-story', 'scroll-lens']),
+  new Set(components.length === 1 ? ['map-story', 'scroll-edges', 'accessibility']
+    : ['map-routes', 'hover-layout', 'accessibility', 'map-story', 'scroll-edges']),
   'Story-only and shared label recipes retain their complete owners in both engines');
 for (const selector of ['.map-anchor-label + .map-node', ':is(.map-anchor-label,.map-grid)', '.map-anchor-label,.map-grid',
   '.project-orbit-tooltip + .map-grid', '.project-orbit-tooltip ~ .map-node-label', '.project-orbit-tooltip,.map-grid',

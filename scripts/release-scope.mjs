@@ -35,7 +35,7 @@ const relatedPointMedia = Object.fromEntries(["running", "private-practice", "ga
   .map(id => [id, Object.fromEntries(["light", "dark"].map(theme => [theme, `assets/point-thumbnails/${id}-${theme}.webp`]))]));
 const relatedPointImages = new Set(Object.values(relatedPointMedia).flatMap(Object.values));
 const relatedPointImageScope = { mode: "components", components: ["check:inspector-links", "check:case-view"] };
-const relatedPresentationDocs = new Set(["rendering/README.md", "docs/point-thumbnails.md", "docs/not-found.md"]);
+const relatedPresentationDocs = new Set(["js/README.md", "rendering/README.md", "docs/point-thumbnails.md", "docs/not-found.md"]);
 const relatedProductAction = { doronin: { label: "Купить тот самый ковёр от Вити", href: "https://doronin.store/tproduct/840694551052-kovyor" } };
 const focusedHomePaths = new Set(["js/focused-home.js", "rendering/js/focused-home.js"]);
 const audienceSnapshotPaths = new Set(["js/practice-audience.js", "rendering/js/practice-audience.js"]);

@@ -3,7 +3,7 @@ import { hideMapPreview } from "./map-media.js";
 import { mapItems } from "./map-data.js";
 import { mapInspector, observationRoute } from "./map-engine.js";
 import { getTabStops, reducedMotion } from "./preferences.js";
-import { scrollRegionFromKey, observeScrollLens, clearScrollLenses, observeScrollEdges } from "./viewport-ui.js";
+import { scrollRegionFromKey } from "./viewport-ui.js";
 import { syncConstellationNavInteractivity } from "./panels.js";
 
 const items = new Map(mapItems.map(item => [item.id, item]));
@@ -63,10 +63,6 @@ function resumeBackground() {
   for (const [element, inert] of backgroundState) element.inert = inert;
   backgroundState = [];
 }
-const caseLens = observeScrollLens(viewport, () => viewport.querySelectorAll(
-  ".map-readout__identity h2, .map-readout__identity p, .case-inline-media video, [data-personal-media-poster], [data-personal-media-screen] iframe, [data-map-description], [data-map-description-continuation], .map-evidence dt, .map-evidence dd:not(:has(.case-figure)), .map-evidence__copy, .case-details h3, .case-details h4, .case-details p, .map-related__header, .map-related__item > :is(strong, span)",
-), { owner: mapInspector });
-
 // Move content while preserving its material registration.
 function restoreFrameMaterial(element, attributes) {
   element.classList.remove("reading-content");
@@ -87,9 +83,7 @@ function syncFrameMaterials() {
   }
 }
 new MutationObserver(syncFrameMaterials).observe(story, { childList: true, subtree: true });
-observeScrollEdges(viewport, { owner: mapInspector });
 function mount(large) {
-  clearScrollLenses(mapInspector);
   header.append(kind, observationIndex, close);
   story.append(...originalChildren.filter(element => ![kind, observationIndex, close].includes(element)));
   identity.after(inlineSlot);
@@ -109,7 +103,6 @@ function mount(large) {
   }
 }
 function unmount() {
-  caseLens.reset();
   resumeBackground();
   originalChildren.forEach(element => mapInspector.append(element));
   for (const [element, attributes] of frameMaterials) restoreFrameMaterial(element, attributes);

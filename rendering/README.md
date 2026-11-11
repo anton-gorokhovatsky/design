@@ -39,14 +39,9 @@ npm exec --yes --package=terser@5.44.0 -- terser rendering/practice-orbits.js --
 в одноимённый путь без префикса `rendering/`. Для `signal-field.js` сохранить
 имена `signalContext,fontSize,signalFont` через `--mangle reserved=[signalContext,fontSize,signalFont]`: статический контракт проверяет назначение общего шрифта canvas.
 
-Для `viewport-ui.js` читаемый файл содержит весь актуальный модуль, но Terser
-сжимает только блок от `const scrollLensControllers` до `const observeScrollEdges`.
-При сборке блока сохранить имена `observeScrollLens`, `clearScrollLenses`,
-`lensPanel` и их внешнее использование (временно экспортировать эти три имени
-для Terser, затем убрать только добавленный export). Исполняемый код префикса
-и суффикса переносить без изменений: они сохраняют именованные контракты
-области консоли. Строковые комментарии оставлять в читаемом исходнике,
-не включая их в поставляемый runtime.
+`viewport-ui.js` после удаления декоративных линз прокрутки содержит только
+читаемый код. Файл в `rendering/js/viewport-ui.js` соответствует runtime
+`js/viewport-ui.js` без отдельной минификации блока прокрутки.
 
 `map-engine.js` хранит весь проверенный исходник в `rendering/js/map-engine.js`.
 Чтобы сохранить именованные контракты подписей и жестов, компактная сборка

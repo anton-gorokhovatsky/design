@@ -34,7 +34,7 @@ native ES modules keep top-level names out of the browser global scope.
 14. `map-engine.js` — map geometry, relations, filters and inspector; connects
     observation, personal media, sphere surfaces and the map-media controller.
 15. `viewport-ui.js` — detached command geometry, draggable desktop consoles,
-    scroll lenses and scroll edges; imports preferences.
+    native scroll-key handling and viewport geometry.
 16. `panels.js` — content panels, search, navigation and URL state; uses public
     APIs from analytics, map data, map engine, map media, preferences, signal
     field and viewport UI.
@@ -84,26 +84,20 @@ evidence and editorial links after a reload.
 asset verification. Static content checks read it, and the performance gate
 bounds it separately while preserving every existing JavaScript/CSS limit.
 
-## Scroll lens invariants
+## Native reading edges
 
-Detailed rendering rationale for `viewport-ui.js` is kept here rather than
-in the initial download. The adjacent source comments identify each invariant.
+All reading surfaces use their native scrollport and the fixed rounded shell.
+Text, images, videos and embedded players keep their original DOM and geometry
+while crossing either edge. No scroll-edge SVG filters, optical canvas copies,
+iframe projections, dynamic wrappers or content-fade masks are used.
 
-- Refraction enlarges foreground content as it enters the matte edge. Keep baselines intact: vertical displacement clips glyphs in browser SVG pipelines.
-- The story opts into `fullWidth`: its text can expand across the reading gutters up to the fixed pane outline. The displacement map uses pane coordinates and extended filter bounds. Other readers and media keep their existing profile; the glass shell and its rounded corners never deform.
+This is one site-wide reading rule for the story, point/project cards,
+content sections and settings. Selection, focus and reduced motion do not switch
+between different edge renderers. Existing scroll padding keeps focused controls
+clear of the edge; native overflow makes the full content reachable.
 
-- Decode each edge texture once. Replacing a PNG data URL on every scroll frame made WebKit alternate between the previous and newly decoded map.
-
-- WebKit can discard the whole filter when a merged feImage lies entirely outside its bounds. Keep unused textures in bounds and merge transparency.
-
-- Keep the raster attached to its picture so native/inertial scrolling moves both together. A viewport-sized copy repositioned from scroll events lags behind Safari's compositor and leaves torn bands at the frame boundary.
-
-- Copy the undistorted centre in one operation. Only the two narrow edge bands need row sampling, even when a tall reel scrolls past the window.
-
-- Project the live iframe: cross-origin pixels cannot be sampled, and WebKit loses accelerated video under SVG URL filters (222757).
-
-- Text refraction filters the native scrollport inside a stationary transparent clipping frame. Native Safari can omit an ancestor SVG filter across the accelerated scrolling boundary; apply the URL through `--scroll-ink-filter` on the scrollport itself. The low-specificity CSS rule preserves the existing focus-plane filter. Apply menu/settings blur to the outer frame: replacing the scrollport SVG filter with CSS blur can leave native Safari stuck on its blurred raster after return. Keep the outer frame clipped, the edge maps fixed to the viewport, and the native scroll, reading position, focus and outer glass shell intact. Once the story creates its full-width filter, keep that layer between text edges and use neutral maps: dropping and rebuilding it during fast native scrolling can leave blank compositor frames. Selection, focus, live media and motion preferences retain their existing suspension.
-- A sticky close target has a neutral rectangle in the upper map. Visible controls suppress the intersecting edge; transparent text links keep refraction until focused. Selection and visible keyboard focus suspend the text filter. Visible images, videos and iframes suspend the parent text filter; their existing attached media/player projection remains responsible for the edge. Hidden previews do not suspend text. Never reparent a live iframe, and preserve video playback when moving its scrollport.
+The map's optical illustrations and focus-plane opening transitions are separate
+from reading edges and retain their own behavior.
 
 ## Focused index
 

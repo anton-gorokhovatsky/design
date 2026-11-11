@@ -8760,13 +8760,6 @@ transition: opacity 180ms var(--motion-enter), transform 240ms var(--motion-ente
 }
 }
 
-/* Text lists fade at their edges; settings controls retain native rendering. */
-.content-panel:not([data-view="work"]) .content-panel__body {
-mask-image: linear-gradient(to bottom, transparent, #000 var(--scroll-fade-top, 0px),
-#000 calc(100% - var(--scroll-fade-bottom, 0px)), transparent);
--webkit-mask-image: linear-gradient(to bottom, transparent, #000 var(--scroll-fade-top, 0px),
-#000 calc(100% - var(--scroll-fade-bottom, 0px)), transparent);
-}
 .settings-panel__body,
 .content-panel__body { scroll-padding-block: 18px; }
 
@@ -8990,16 +8983,6 @@ align-self: start;
 }
 .case-media[data-orientation="portrait"] { width: min(100%, calc(var(--case-media-height) * .8)); }
 .case-media .map-hover-preview__mosaic-main { position: relative; display: block; width: 100%; aspect-ratio: 3 / 2; overflow: hidden; border-radius: var(--window-radius); corner-shape:var(--corner-card-shape); }
-.scroll-lens-frost {
-position: absolute;
-inset: 0;
-pointer-events: none;
-backdrop-filter: blur(2.2px);
--webkit-backdrop-filter: blur(2.2px);
-}
-.scroll-lens-video { position: absolute; z-index: 1; top: 0; pointer-events: none; }
-.case-scroll .map-hover-preview__mosaic-main:has(.scroll-lens-video) { overflow: visible; background: transparent; }
-.case-scroll .personal-media__screen:has(.scroll-lens-video) { overflow: hidden; background: transparent; }
 .case-media[data-orientation="portrait"] .map-hover-preview__mosaic-main { aspect-ratio: 4 / 5; }
 .case-media video { display: block; width: 100%; height: 100%; object-fit: contain; }
 .case-media figcaption { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0 var(--case-space-medium); color: var(--content-muted); }
@@ -9051,14 +9034,6 @@ backdrop-filter: none !important;
 }
 }
 
-:where([data-scroll-lens-frame]) > :where(*) { filter: var(--scroll-ink-filter, none); }
-
-/* Preferences suppress optical effects before the next frame. */
-html[data-reduce-motion="true"] [style*="scroll-ink-"] { filter: none !important; }
-@media (prefers-reduced-motion: reduce), (forced-colors: active) {
-[style*="scroll-ink-"] { filter: none !important; }
-}
-
 /* Reading shell stays rounded and stationary during scroll. */
 .map-inspector.has-reading-frame:not(.is-case-view) {
 display: grid;
@@ -9104,13 +9079,7 @@ border-top: var(--separator-rule);
 overscroll-behavior: contain;
 scroll-behavior: auto;
 scroll-padding-block: 24px;
-mask-image: linear-gradient(to bottom, transparent, #000 var(--scroll-fade-top, 0px),
-#000 calc(100% - var(--scroll-fade-bottom, 0px)), transparent);
--webkit-mask-image: linear-gradient(to bottom, transparent, #000 var(--scroll-fade-top, 0px),
-#000 calc(100% - var(--scroll-fade-bottom, 0px)), transparent);
 }
-.case-scroll:has(.scroll-lens-video, .scroll-lens-frost),
-.case-scroll:has(:focus-visible) { mask-image: none; -webkit-mask-image: none; }
 /* CSS owns shell measure; JS measures the live header. */
 .content-panel { --panel-bottom: max(var(--window-edge), calc(var(--console-clearance, 88px) + var(--window-gap))); }
 .content-panel__frame {
@@ -9191,9 +9160,6 @@ max-height: none;
 .content-panel .content-panel__frame .work-list { grid-template-columns: minmax(0, 1fr); }
 }
 .settings-panel { overflow: hidden; }
-@media (forced-colors: active) {
-.case-scroll, .content-panel__body { mask-image: none; -webkit-mask-image: none; }
-}
 
 /* Reading windows sit above the stationary map consoles. */
 .map-surface.has-reading-surface:not(.has-contact-consoles) :is(.site-header, .whoop-field, .system-dock),.map-surface:is([data-case-open], .has-settings-panel) .control-console {
@@ -10439,7 +10405,7 @@ body.split-page{font-size:var(--type-body)}
 .has-story-pane #story-pane{visibility:visible;opacity:1}
 #story-pane .story-actions>.ui-close:popover-open{position:fixed;inset:auto;margin:0;overflow:visible}
 .has-story-pane.has-settings-panel :is(#story-pane,#story-bridge){opacity:.16;pointer-events:none}
-.has-story-pane.has-settings-panel :is(#story-bridge,#split-shell>#story-pane,[data-scroll-lens-frame]:has(>#story-pane)){filter:blur(3px)}
+.has-story-pane.has-settings-panel :is(#story-bridge,#split-shell>#story-pane){filter:blur(3px)}
 .has-story-pane #map-pane,.has-story-pane #story-pane{border-radius:var(--window-radius);corner-shape:var(--corner-card-shape)}
 #story-bridge{grid-area:1 / 2;position:relative;z-index:350;min-width:0;min-height:0;visibility:hidden}
 .has-story-pane #story-bridge{visibility:visible}
@@ -10470,7 +10436,6 @@ body.split-page{font-size:var(--type-body)}
 .has-story-pane .constellation-nav[popover]{margin:0}
 .has-story-pane .point-preview{visibility:hidden;pointer-events:none}
 .has-story-pane #story-pane{transition:filter var(--duration-feedback) var(--ease-out),opacity var(--duration-feedback) var(--ease-out)}
-.has-story-pane [data-scroll-lens-frame]:has(>#story-pane){transition:filter var(--duration-feedback) var(--ease-out)}
 #story-pane .page{max-width:760px}
 #story-bridge button{width:calc(var(--control-target) + var(--space-4));height:44px}
 #story-bridge button::before{width:var(--space-6);height:3px}}

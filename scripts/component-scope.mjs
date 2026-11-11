@@ -89,58 +89,6 @@ const cssOutsideOwned = (source, owns) => {
   return JSON.stringify(visit(postcss.parse(source)));
 };
 
-// Only the exact pointer-lifetime guard may use this existing reading-surface coverage.
-const lensPointerGuardPatch = [
-  [
-    [
-      "  const records = new Map();\n  let frame = 0;",
-      "  const records = new Map();\n  const pressedPointers = new Set();\n  let frame = 0;"
-    ],
-    [
-      "    region.style.removeProperty(\"--scroll-ink-filter\");\n    if (region.parentElement !== textFrame)",
-      "    region.style.removeProperty(\"--scroll-ink-filter\");\n    if (pressedPointers.size) return;\n    if (region.parentElement !== textFrame)"
-    ],
-    [
-      "      if (!textFrame && !region.querySelector(\"iframe\")) {\n        const style=getComputedStyle(region);",
-      "      if (!textFrame && !region.querySelector(\"iframe\")) {\n        if (pressedPointers.size) return;\n        const style=getComputedStyle(region);"
-    ],
-    [
-      "  region.addEventListener(\"focusin\", schedule);\n  region.addEventListener(\"focusout\", schedule);",
-      "  // WebKit cancels click if the pressed control is reparented before pointerup.\n  region.addEventListener(\"pointerdown\", event => pressedPointers.add(event.pointerId), { capture: true, passive: true });\n  const releasePointer = event => { if (pressedPointers.delete(event.pointerId)) schedule(); };\n  window.addEventListener(\"pointerup\", releasePointer, { capture: true, passive: true });\n  window.addEventListener(\"pointercancel\", releasePointer, { capture: true, passive: true });\n  const releasePointers = () => { if (pressedPointers.size) { pressedPointers.clear(); schedule(); } };\n  window.addEventListener(\"blur\", releasePointers);\n  window.addEventListener(\"pagehide\", releasePointers);\n  region.addEventListener(\"focusin\", schedule);\n  region.addEventListener(\"focusout\", schedule);"
-    ]
-  ],
-  [
-    [
-      "const h=new Map;let p,f,g,y,b=0;",
-      "const h=new Map,pressedPointers=new Set;let p,f,g,y,b=0;"
-    ],
-    [
-      "M=()=>{if(f)if(r.style.removeProperty(\"--scroll-ink-filter\"),r.parentElement===f)r.querySelector(\"iframe\")||w(()=>{v(f.parentElement,f),f.remove(),f=null;for(const[e,t]of y)r.style[e]=t});else{f.remove(),f=null;for(const[e,t]of y)r.style[e]=t}}",
-      "M=()=>{if(!f)return;r.style.removeProperty(\"--scroll-ink-filter\");if(pressedPointers.size)return;if(r.parentElement===f){r.querySelector(\"iframe\")||w(()=>{v(f.parentElement,f),f.remove(),f=null;for(const[e,t]of y)r.style[e]=t})}else{f.remove(),f=null;for(const[e,t]of y)r.style[e]=t}}"
-    ],
-    [
-      "if(!f&&!r.querySelector(\"iframe\")){const e=getComputedStyle(r);",
-      "if(!f&&!r.querySelector(\"iframe\")){if(pressedPointers.size)return;const e=getComputedStyle(r);"
-    ],
-    [
-      "},$=new ResizeObserver(E);",
-      "},$=new ResizeObserver(E),releasePointer=e=>{pressedPointers.delete(e.pointerId)&&E()},releasePointers=()=>{if(pressedPointers.size){pressedPointers.clear();E()}};"
-    ],
-    [
-      "r.addEventListener(\"focusin\",E),r.addEventListener(\"focusout\",E)",
-      "r.addEventListener(\"pointerdown\",e=>pressedPointers.add(e.pointerId),{capture:true,passive:true}),window.addEventListener(\"pointerup\",releasePointer,{capture:true,passive:true}),window.addEventListener(\"pointercancel\",releasePointer,{capture:true,passive:true}),window.addEventListener(\"blur\",releasePointers),window.addEventListener(\"pagehide\",releasePointers),r.addEventListener(\"focusin\",E),r.addEventListener(\"focusout\",E)"
-    ]
-  ]
-];
-const isLensPointerGuard = (before, after) => lensPointerGuardPatch.some(patches => {
-  let restored = after;
-  for (const [old, guarded] of patches) {
-    if (!before.includes(old) || before.includes(guarded) || restored.split(guarded).length !== 2) return false;
-    restored = restored.replace(guarded, old);
-  }
-  return restored === before;
-});
-
 // Exact migration of separator roles; other geometry and shared tokens stay protected.
 const separatorTokens = {
   "--separator-rule": "1px solid var(--line-soft)",
@@ -973,9 +921,151 @@ const isReadingContextFix = (path, before, after) => {
   } catch { return false; }
 };
 
+// Directed retirement of the reviewed scroll effect only. Every removed AST
+// statement is pinned; every remaining node must be identical. This is not an
+// allowance for arbitrary changes to scrolling, media or neighbouring handlers.
+const nativeScrollRemovalStatements = {
+  "js/viewport-ui.js": new Set([
+    "f37df34182f6894f6c0fdf268e8d0a9d69e638909443439f5985b574a8019f25", // retired import
+    "6373f842bf10eeb791b7c696232d2ba8d8901096bebd470303a7e0ba8d5f76c8", // lensControls
+    "be977c79b683ce28551993672731ce3f0574160e590100ecd94ad3f4cbf3d810", // lensControlsAndMedia
+    "6832c2597755e7207eee0213ca8247a17403166ac5fe9df4b33ccc4965bf054c", // e
+    "6db3fb07dd42d59d12d255481555f2b365b3550144744998f78042db35207d3d", // t
+    "d46c1183fc76f114a5efdda1f10c9e25a4c1c71c1e960d4cdee38e22b3edab21", // o,a,n,r,i,s,l,c,d,clearScrollLenses,observeScrollLens,m
+    "d2f0b054c56d5142858e70797a89e6a55e97865b0cb05d3e71859b5e3d1286dc", // observeScrollLens
+    "9e02f8243f60be25b0dfe2be306a2820bc6eb6cb0450bb545e73305687f7459a", // lensPanel
+    "100c3d667a953354e0e4a697f069dca5b42d66d3211a6ff443d229cd1a0bfdce", // observeScrollLens
+    "5eef4a935a387a602cce8e582a49e258ad3d160e109acc8fc1fa22e57a79ba63", // u
+    "b4ad765f14c5d2643261188683642273e32a86c406d90a21449bb872f3fbcf12", // observeScrollLens
+    "21ebcf46d17b619ac2cb026c03c9f7dfba1d18d60ba6c5524f1218bd6defc74b", // observeScrollEdges
+    "e599a54bbcfd3b8dc64bc34743513b8c5aefc46104be3dee36a87921560d5025", // observeScrollEdges
+    "f2c531626e580562f3374cfc72be6ade940dde662823d36070d4dc18103b3401", // observeScrollEdges
+  ]),
+  "rendering/js/viewport-ui.js": new Set([
+    "f37df34182f6894f6c0fdf268e8d0a9d69e638909443439f5985b574a8019f25", // retired import
+    "946a04abf37b3b2a5c2728f8090ba456ab8b3c6a7a94638b1e0c7cb37031be06", // scrollLensControllers
+    "19026420b6b128d257fe98674f80df42af4728404c13b23d68f95f40a2418acd", // scrollLensId
+    "ad625b1064edaf32afe8256b3c4b82ea574aa9d57d826782e3c2039eade8c70f", // lensNamespace
+    "ddeda1af3575de03a619966bdc95fceaff0c4a920c4aeb285cc204e47df040b5", // lensForcedColors
+    "31ae62152cbac4d441eeef9ecc517a46bf202456b1c698277908b0db4386587a", // lensDepth
+    "c38ff46cfd86ab0ebe6573fee90c58dafe7c3b4d935cd3f817156c93af185521", // lensBleed
+    "6373f842bf10eeb791b7c696232d2ba8d8901096bebd470303a7e0ba8d5f76c8", // lensControls
+    "be977c79b683ce28551993672731ce3f0574160e590100ecd94ad3f4cbf3d810", // lensControlsAndMedia
+    "af35f02c435177c7d0e47277d6368b6b9e3f57d9dd4b78912cd86a9ece396641", // drawScrollLensMap
+    "62fa0efe7ce551ec85b246def0dc4e8a9ef164dde75ac1afcbc36cb917a11a93", // lensDepthAt
+    "aa3e58baad632f4e23fe57090c6ec16c7836e58ec7b8a6e8243f0f74b103cfb5", // lensRow
+    "f87a8f744e8e9e4e9b42712a46a25f65a62910e6dc9da56b76d9dbf6b8c5a3f3", // createLensMedia
+    "87c71b2235c1785d44998f4337f69d5d5f4f717f118fec4390f3fcbc0e97c316", // createLensPlayer
+    "a212015ff2db079c908e61ded317185c5b0d95d3cab98d3bb29757e87ed86e17", // clearScrollLenses
+    "506f64d2a060ce1c80f60f79f599cc2954ccd2c7b565aae9bab1d31f4c84ce4f", // observeScrollLens
+    "a1a8aa28a333a6efc251d0fd772e6241da974a3fe8c4ac0eacf55b5e446e2e18", // lensInspector
+    "e2ebe34ad631d1fe0f2eaa502d0224b7fc376e80032474662bc813965984da3a", // observeScrollLens
+    "9e02f8243f60be25b0dfe2be306a2820bc6eb6cb0450bb545e73305687f7459a", // lensPanel
+    "100c3d667a953354e0e4a697f069dca5b42d66d3211a6ff443d229cd1a0bfdce", // observeScrollLens
+    "ed1588049f8afe424fa10401fbff3da19d79da2b57d30e85d11c1def90353e13", // lensSettings
+    "ea118821cd1bcd7a16f60e49fbda63bea05791d8b21634f42525805e6b8e5941", // observeScrollLens
+    "21ebcf46d17b619ac2cb026c03c9f7dfba1d18d60ba6c5524f1218bd6defc74b", // observeScrollEdges
+    "e599a54bbcfd3b8dc64bc34743513b8c5aefc46104be3dee36a87921560d5025", // observeScrollEdges
+    "f2c531626e580562f3374cfc72be6ade940dde662823d36070d4dc18103b3401", // observeScrollEdges
+  ]),
+  "js/map-story.js": new Set([
+    "624ba941f645dd888ee6370a984fa1722b8dd534d38efd2948dc7e6717e59dec", // retired import
+    "aa4b0d211e8ddac2f497ba8bef15eaaf752c6eb6e67859195b01997e53e0cb82", // n
+  ]),
+  "rendering/js/map-story.js": new Set([
+    "d36a3dc06e75cedde7a38368ebefeb7de2ea055b2d346ecdf8ea90cb15c42b41", // retired import
+    "ea06b4844781780a0fb4793aafd3b645f4ae891b1efbf3a516bd051552aeb09d", // observeScrollLens
+  ]),
+  "js/case-view.js": new Set([
+    "311a6f6ea3af3603144d8caf9fca05b44470d631c9763654876b95a577570125", // caseLens
+    "b557651751668c5fbaebde4e217ee2c4879dabcfc20bf01cfea8de98c8008d2d", // observeScrollEdges
+  ]),
+};
+const isNativeScrollRemoval = (path, before, after) => {
+  const allowed = nativeScrollRemovalStatements[path];
+  if (!allowed) return false;
+  const parse = source => parseJs(source, { ecmaVersion: "latest", sourceType: "module" });
+  const tree = parse(before);
+  let removed = 0;
+  const found = new Set();
+  const retired = new Set(["observeScrollLens", "clearScrollLenses", "observeScrollEdges"]);
+  tree.body = tree.body.filter(statement => {
+    if (!allowed.has(createHash("sha256").update(astShape(statement)).digest("hex"))) return true;
+    found.add(createHash("sha256").update(astShape(statement)).digest("hex"));
+    removed++; return false;
+  });
+  for (const statement of tree.body) {
+    if (path.endsWith("viewport-ui.js") && statement.type === "ExportNamedDeclaration" && !statement.source && !statement.declaration) {
+      statement.specifiers = statement.specifiers.filter(specifier => {
+        if (!retired.has(specifier.local.name) || specifier.local.name !== specifier.exported.name) return true;
+        removed++; return false;
+      });
+    }
+    if (path === "js/case-view.js") {
+      if (statement.type === "ImportDeclaration" && statement.source.value === "./viewport-ui.js") {
+        statement.specifiers = statement.specifiers.filter(specifier => {
+          if (specifier.type !== "ImportSpecifier" || !retired.has(specifier.imported.name) || specifier.local.name !== specifier.imported.name) return true;
+          removed++; return false;
+        });
+      }
+      if (statement.type === "FunctionDeclaration" && ["mount", "unmount"].includes(statement.id.name)) {
+        const expected = statement.id.name === "mount" ? "clearScrollLenses(mapInspector);" : "caseLens.reset();";
+        const expectedShape = astShape(parse(expected).body[0]);
+        statement.body.body = statement.body.body.filter(child => {
+          if (astShape(child) !== expectedShape) return true;
+          removed++; return false;
+        });
+      }
+    }
+  }
+  return removed > 0 && found.size === allowed.size && astShape(tree) === astShape(parse(after));
+};
+
+const nativeScrollCssRules = new Map([
+  ["fe2535538e91d5dcd9d04513502f3dd18c0ded0cb9b71fe03e56b5d986884c87", []], // .content-panel:not([data-view="work"]) .content-panel__body
+  ["e83a6f9834cd1e87aa7a93bcc0ed7c3257fd9388ebf03c6a767c3b958eae3bb0", []], // .scroll-lens-frost
+  ["ae076601fd034fb54491ab3d08410eec28ddb9ad62d7025e06f2e6c97cb19d6e", []], // .scroll-lens-video
+  ["89a0cb27d41b37a7094453380a3c6f3e1061086dde708cb9be611734002ce583", []], // .case-scroll .map-hover-preview__mosaic-main:has(.scroll-lens-video)
+  ["cf6aea1be940793907a50286f84b0df9110d7c39bc8383edc944384098975272", []], // .case-scroll .personal-media__screen:has(.scroll-lens-video)
+  ["08eab335dbd1600b5fb643816843d8d8228212379f27d3d3e5ce12db91f73606", []], // :where([data-scroll-lens-frame]) > :where(*)
+  ["320a4a62a1f2d42f10acb1b196f340ce43a5b4cb1acea97d7733ae5d2488b301", []], // html[data-reduce-motion="true"] [style*="scroll-ink-"]
+  ["5ababf1167d0424be0bfbf5252eda4c3b8b4cf5439acce843da3de5117cf467b", [["media","(prefers-reduced-motion: reduce), (forced-colors: active)"]]], // [style*="scroll-ink-"]
+  ["b77525f68e2e54e43e30d38912be6ab1321ce1ee7e0298cffb8f7a4a0594f646", []], // .case-scroll:has(.scroll-lens-video, .scroll-lens-frost), .case-scroll:has(:focus-visible)
+  ["8628076283692919c6cabd0f29fafb46a808d32990d1385e221d09d5c56886b2", [["media","(forced-colors: active)"]]], // .case-scroll, .content-panel__body
+  ["6335b52cb4fbe0dbee1ed931f19d62339c1a4fe64736e69a437e8cec63565e79", [["media","(max-width:999px)"]]], // .has-story-pane [data-scroll-lens-frame]:has(>#story-pane)
+]);
+const nativeCssShape = node => ({type:node.type,name:node.name,params:node.params,selector:node.selector,prop:node.prop,value:node.value,important:node.important,nodes:node.nodes?.filter(child=>child.type!=="comment").map(nativeCssShape)});
+const isNativeScrollCssRemoval = (before, after) => {
+  const tree = postcss.parse(before), found = new Set();
+  tree.walkRules(rule => {
+    const hash = createHash("sha256").update(JSON.stringify(nativeCssShape(rule))).digest("hex");
+    const context = [];
+    for (let parent=rule.parent;parent.type!=="root";parent=parent.parent) context.unshift([parent.name,parent.params]);
+    if (nativeScrollCssRules.has(hash) && JSON.stringify(context) === JSON.stringify(nativeScrollCssRules.get(hash))) {found.add(hash);rule.remove();return;}
+    if (rule.parent.type === "root" && rule.selector === ".case-scroll") {
+      rule.walkDecls(declaration => {
+        if (["mask-image", "-webkit-mask-image"].includes(declaration.prop)
+          && declaration.value === "linear-gradient(to bottom, transparent, #000 var(--scroll-fade-top, 0px),\n#000 calc(100% - var(--scroll-fade-bottom, 0px)), transparent)" && !declaration.important) declaration.remove();
+      });
+    }
+    if (rule.parent.type === "root" && rule.selector === ".has-story-pane.has-settings-panel :is(#story-bridge,#split-shell>#story-pane,[data-scroll-lens-frame]:has(>#story-pane))") {
+      rule.selector = ".has-story-pane.has-settings-panel :is(#story-bridge,#split-shell>#story-pane)";
+    }
+  });
+  tree.walkAtRules(rule=>{if(rule.nodes?.every(node=>node.type==="comment"))rule.remove();});
+  return found.size === nativeScrollCssRules.size
+    && JSON.stringify(nativeCssShape(tree)) === JSON.stringify(nativeCssShape(postcss.parse(after)));
+};
+const isNativeScrollAuditRemoval = (before, after) => before.includes(' || element.matches(".scroll-lens-frost")')
+  && before.replace('  // The 2.2px scroll-edge frost is an optical effect, not a material plane.\n','')
+    .replace(' || element.matches(".scroll-lens-frost")','') === after;
+
 export const affectedComponents = (path, before, after, maskHtmlCopy) => {
   if (before.includes("\0") || after.includes("\0")) return null;
   try {
+    if (isNativeScrollRemoval(path, before, after)
+      || (path === "styles.css" && isNativeScrollCssRemoval(before, after))
+      || (path === "scripts/browser-contracts.cjs" && isNativeScrollAuditRemoval(before, after))) return ["scroll-edges"];
     if (path === "scripts/check-live-surface.mjs" && notFoundChecksOutside(before) === notFoundChecksOutside(after)) return ["not-found"];
     if (isReadingContextFix(path, before, after)) return ["check:case-flow"];
     const related = relatedPosterComponents(path, before, after);
@@ -997,7 +1087,6 @@ export const affectedComponents = (path, before, after, maskHtmlCopy) => {
     if (["js/observation-route.js", "js/map-media.js", "js/panels.js"].includes(path)
       && overviewOutside(path, before) === overviewOutside(path, after)) return ["overview"];
     if (path === "404.html" && notFoundBindings(maskHtmlCopy(before).replaceAll("\0", "")) === notFoundBindings(maskHtmlCopy(after).replaceAll("\0", ""))) return ["not-found"];
-    if (["js/viewport-ui.js", "rendering/js/viewport-ui.js"].includes(path) && isLensPointerGuard(before, after)) return ["scroll-lens-pointer"];
     if (path === "js/viewport-ui.js" && consoleBoundsOutside(before) === consoleBoundsOutside(after)) return ["console-bounds"];
     if (path === "js/map-engine.js") {
       try { if (mapCoreGeometryOutside(before) === mapCoreGeometryOutside(after)) return ["map-presentation"]; }

@@ -9,8 +9,7 @@ const {startStaticServer,readMaterialAuditExpression,declineAnalyticsNotice}=req
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 const engine=process.argv[2]||'chromium';
 const {origin,server}=await startStaticServer({projectRoot:root});
-// macOS WebKit's headless path can retain a filtered scrollport's old paint
-// and hit-test surface after scrolling. Exercise the actual window on macOS.
+// Keep the established macOS window path for real input and scene painting.
 const browser=await({chromium,webkit}[engine]).launch(engine==='webkit'&&process.platform==='darwin'?{headless:false}:{});
 async function checkMassExample(page){
  const figure=page.locator('[data-mass-example]');
@@ -50,13 +49,13 @@ async function checkMassExample(page){
  assert.equal(await details.getAttribute('open'),null,'Calculation detail is optional');
  const closedChevron=await summary.evaluate(e=>getComputedStyle(e,'::after').maskImage);
  assert.notEqual(closedChevron,'none','The disclosure has a visible direction icon');
- assert.equal(await summary.evaluate(e=>getComputedStyle(e,'::after').transform),'none','The closed chevron avoids a transformed layer inside the story filter');
+ assert.equal(await summary.evaluate(e=>getComputedStyle(e,'::after').transform),'none','The closed chevron avoids a transformed layer in the story reader');
  await link.focus();await page.keyboard.press('Tab');await summary.press('Enter');
  assert.notEqual(await details.getAttribute('open'),null,'The native disclosure opens from the keyboard');
  const openChevron=await summary.evaluate(e=>getComputedStyle(e,'::after').maskImage);
  assert.notEqual(openChevron,'none','The open disclosure retains its direction icon');
  assert.notEqual(openChevron,closedChevron,'The chevron changes as soon as the calculation is open');
- assert.equal(await summary.evaluate(e=>getComputedStyle(e,'::after').transform),'none','The open chevron avoids a transformed layer inside the story filter');
+ assert.equal(await summary.evaluate(e=>getComputedStyle(e,'::after').transform),'none','The open chevron avoids a transformed layer in the story reader');
  const focus=await summary.evaluate(e=>({focused:e===document.activeElement,outline:getComputedStyle(e).outlineStyle}));
  assert.ok(focus.focused&&focus.outline!=='none','The disclosure retains visible keyboard focus');
  const calculation=await figure.locator('[data-mass-calculation]').innerText();
@@ -166,9 +165,9 @@ try{
   });
   for(const method of ['pointer','keyboard']){
    await story.evaluate(e=>e.scrollTop=480);
-   // Record a completed reading position after the native scroll/lens update,
-   // using the same active-lens and rendered-frame readiness as story-rapid.
-   await page.waitForFunction(()=>{const p=document.querySelector('#story-pane'),id=p&&getComputedStyle(p).filter.match(/scroll-ink-\d+/)?.[0];return Boolean(id&&document.querySelector(`#${id} feMergeNode:is([in=upper],[in=lower])`));});
+   // Record the reached native position before opening the menu.
+   await page.waitForFunction(()=>document.querySelector('#story-pane').scrollTop===480);
+   assert.equal(await story.evaluate(e=>getComputedStyle(e).filter),'none','Reading remains native before the menu detour');
    await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
    const readingPosition=await story.evaluate(e=>e.scrollTop),address=page.url(),historyLength=await page.evaluate(()=>history.length);
    const toggle=page.locator('[data-constellation-nav-toggle]');
@@ -246,7 +245,8 @@ try{
   assert.equal(await story.locator('footer,#share-story').count(),0,'The reader does not duplicate the visible map or expose sharing');
   const paragraph=story.locator('.intro p').last();
   await paragraph.evaluate(e=>{const s=e.closest('#story-pane');s.scrollTop+=e.getBoundingClientRect().top-s.getBoundingClientRect().top-12;});
-  await page.waitForFunction(()=>getComputedStyle(document.querySelector('#story-pane')).filter.includes('scroll-ink'));
+  await page.waitForFunction(()=>document.querySelector('#story-pane').scrollTop>0);
+  assert.deepEqual(await story.evaluate(e=>({filter:getComputedStyle(e).filter,mask:getComputedStyle(e).maskImage})),{filter:'none',mask:'none'},'Prose at the edge stays native and fully opaque');
   await story.evaluate(e=>e.scrollTop=0);
   const panels=await page.locator('#map-pane,#story-pane').evaluateAll(es=>es.map(e=>{const b=e.getBoundingClientRect();return{x:b.x,y:b.y,w:b.width,h:b.height};}));
   assert.ok(width>999?panels[1].x>panels[0].x+panels[0].w:panels[1].y>panels[0].y+panels[0].h,'The shared bridge joins both visible panes');

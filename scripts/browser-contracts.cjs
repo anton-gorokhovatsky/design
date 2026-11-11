@@ -304,9 +304,8 @@ const readMaterialAuditExpression = `(() => {
     && !["always", "mobile", "desktop", "none"].includes(element.dataset.materialActive)
   ).map(element => ({surface:element.dataset.materialSurface, reason:"Missing or invalid material activation mode"}));
   // Discover missing registrations as well as checking known members.
-  // The 2.2px scroll-edge frost is an optical effect, not a material plane.
   const unregistered = Array.from(document.querySelectorAll("*")).filter(element => {
-    if (element.hasAttribute("data-material-surface") || element.matches(".scroll-lens-frost")) return false;
+    if (element.hasAttribute("data-material-surface")) return false;
     const style = getComputedStyle(element);
     return (style.backdropFilter || style.webkitBackdropFilter || "none") !== "none"
       && element.checkVisibility({visibilityProperty:true, opacityProperty:true});

@@ -197,11 +197,9 @@ for (const engine of [process.argv[2] || 'chromium']) {
       await page.waitForFunction(() => document.body.hasAttribute('data-case-open'));
       assert.equal((await measure()).top,0,'Reopening starts at the beginning');
       if (name==='mobile-light') {
-        // Computed filter:url() is not evidence that Safari paints filtered video.
-        // Compare actual edge pixels against the same paused frame without the lens.
+        // Exercise the original video at both native clipping edges while
+        // normal motion is enabled. Scroll never replaces its decoder or pause.
         await page.emulateMedia({reducedMotion:'no-preference'});
-        // Verify the system preference on entry: after screenshots Chromium can
-        // update matchMedia without notifying the document's existing listeners.
         await page.reload({waitUntil:'load'});
         await page.waitForFunction(()=>!document.querySelector('[data-map-evidence]').hidden);
         await waitForCaseLayout(page);
@@ -209,37 +207,29 @@ for (const engine of [process.argv[2] || 'chromium']) {
           && document.querySelector('[data-case-pause]').textContent==='Пауза');
         await page.locator('[data-case-pause]').click();
         await page.waitForFunction(()=>document.querySelector('.case-media video').paused);
-        await scroll.evaluate(s=>{
-          const v=s.querySelector('video');
-          s.scrollTop+=v.getBoundingClientRect().top-s.getBoundingClientRect().top+24;
-        });
-        const lens=page.locator('.scroll-lens-video');
-        await lens.waitFor({state:'visible'});
         const frameBefore=await page.locator('.case-sheet').boundingBox();
-        const media=await page.locator('.case-media video').boundingBox();
-        const port=await scroll.boundingBox();
-        const clip={x:media.x+12,y:port.y+8,width:media.width-24,height:60};
-        const painted=await page.screenshot({clip});
-        await lens.evaluate(c=>{c.style.visibility='hidden';document.querySelector('.case-inline-media video').style.opacity='1';});
-        const plain=await page.screenshot({clip});
-        await lens.evaluate(c=>{c.style.visibility='';document.querySelector('.case-inline-media video').style.opacity='0';});
-        result.videoLensPixelDelta=await page.evaluate(async sources=>{
-          const read=async source=>{const i=new Image();i.src='data:image/png;base64,'+source;await i.decode();
-            const c=document.createElement('canvas');c.width=i.width;c.height=i.height;
-            const x=c.getContext('2d');x.drawImage(i,0,0);return x.getImageData(0,0,c.width,c.height).data;};
-          const [a,b]=await Promise.all(sources.map(read));let delta=0;
-          for(let n=0;n<a.length;n++)if(n%4!==3)delta+=Math.abs(a[n]-b[n]);
-          return delta/(a.length*.75);
-        },[painted.toString('base64'),plain.toString('base64')]);
-        assert.ok(result.videoLensPixelDelta>4,'The video edge is visibly refracted in this engine');
-        await page.screenshot({path:dir+engine+'-video-lens.png'});
+        const paused=await page.locator('.case-media video').evaluate(v=>{window.__qaNativeVideo=v;return {time:v.currentTime,source:v.currentSrc};});
+        for(const edge of ['top','bottom']) {
+          await scroll.evaluate((s,edge)=>{
+            const v=s.querySelector('video'),r=v.getBoundingClientRect(),p=s.getBoundingClientRect();
+            s.scrollTop+=edge==='top'?r.top-p.top+24:r.bottom-p.bottom-24;
+          },edge);
+          await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+          const state=await page.locator('.case-media video').evaluate(v=>({same:v===window.__qaNativeVideo,paused:v.paused,time:v.currentTime,source:v.currentSrc,
+            opacity:getComputedStyle(v).opacity,filter:getComputedStyle(v).filter,mask:getComputedStyle(v).maskImage,transform:getComputedStyle(v).transform}));
+          assert.equal(state.same,true,'The original video survives native scrolling');
+          assert.equal(state.paused,true,'Manual pause survives both clipping edges');
+          assert.equal(state.source,paused.source,'The video source is unchanged');
+          assert.ok(Math.abs(state.time-paused.time)<.05,'The paused frame does not restart');
+          assert.deepEqual([state.opacity,state.filter,state.mask,state.transform],['1','none','none','none'],'The original video paints without a projected substitute');
+          assert.equal(await page.locator('filter[id^="scroll-ink"],.scroll-lens-video,.scroll-lens-frost,[data-scroll-lens-frame]').count(),0,'No decorative edge resources are created');
+          assert.deepEqual(await page.locator('.case-sheet').boundingBox(),frameBefore,'Native clipping preserves the outer frame');
+        }
+        await page.screenshot({path:dir+engine+'-video-native-edges.png'});
         assert.equal(await page.locator('.case-media video').count(),1,'No duplicate video decoder');
-        assert.equal(await page.locator('.case-media video').evaluate(v=>v.paused),true,'The lens preserves manual pause');
-        assert.deepEqual(await page.locator('.case-sheet').boundingBox(),frameBefore,'The effect cannot reshape its outer frame');
         await page.locator('[data-motion-toggle]').first().evaluate(e=>e.click());
-        await lens.waitFor({state:'detached'});
-        assert.equal(await page.locator('.case-media video').evaluate(v=>v.style.opacity),'','Reduced motion restores native video immediately');
-        assert.equal(await page.locator('filter[id^="scroll-ink"]').count(),0,'Reduced motion removes optical filters');
+        assert.equal(await page.locator('.case-media video').evaluate(v=>getComputedStyle(v).opacity),'1','Changing motion preference keeps native video visible');
+        assert.equal(await page.locator('filter[id^="scroll-ink"],.scroll-lens-video,.scroll-lens-frost,[data-scroll-lens-frame]').count(),0,'Motion preference cannot reactivate a retired effect');
       }
       // A project without evidence still needs the full height of its lead.
       // Short mobile viewports exposed an old cap that let copy overlap links.
