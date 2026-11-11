@@ -1484,23 +1484,49 @@ try {
 // Run the actual aggregate shell from the workflow against all lanes and
 // failed/skipped dependencies. A skipped browser matrix alone is never green.
 const workflow = read(".github/workflows/quality.yml");
-// The DNS repair removes only both reviewed mirror overrides. Installation,
-// host validation, checks and every other workflow change retain their owner.
+// Exact environment migrations retain core browser validation. Unknown YAML
+// changes still select the complete workflow owner.
+const fallbackInstallerFixture = [
+  '          if [ "$RUNNER_OS" = Linux ] && [ "${{ matrix.browser }}" = chromium ]; then',
+  '            unset PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS',
+  '            rm -f -- "$HOME"/.cache/ms-playwright/chromium*/DEPENDENCIES_VALIDATED',
+  '            pnpm exec playwright install chromium',
+  '          else',
+  '            pnpm exec playwright install --with-deps ${{ matrix.browser }}',
+  '          fi',
+  '',
+].join("\n");
+assert.equal(workflow.split(fallbackInstallerFixture).length, 2, 'The reviewed installer appears exactly once');
+const workflowBeforeChromiumFallback = workflow.replace(fallbackInstallerFixture,
+  '          pnpm exec playwright install --with-deps ${{ matrix.browser }}\n');
 const forcedMirrorFixture = [
   "          if [ -f /etc/apt/apt-mirrors.txt ]; then",
   "            printf '%s\\n' 'https://archive.ubuntu.com/ubuntu' | sudo tee /etc/apt/apt-mirrors.txt > /dev/null",
   "          fi",
   "",
 ].join("\n");
-const workflowWithForcedMirrors = workflow
+const workflowWithForcedMirrors = workflowBeforeChromiumFallback
   .replace("          sudo apt-get update\n", forcedMirrorFixture + "          sudo apt-get update\n")
   .replace("          pnpm exec playwright install --with-deps", forcedMirrorFixture + "          pnpm exec playwright install --with-deps");
 assert.equal(workflowWithForcedMirrors.split(forcedMirrorFixture).length, 3, "Both install steps reconstruct the reviewed baseline");
-scoped('.github/workflows/quality.yml', workflowWithForcedMirrors, workflow, 'copy');
-for (const unsafe of [workflow.replace('--with-deps', ''), workflow.replace('test "$BROWSER_RESULT" = success', 'true'), workflow + '\n# unrelated workflow edit\n', workflowWithForcedMirrors.replace(forcedMirrorFixture, '')]) {
+scoped('.github/workflows/quality.yml', workflowWithForcedMirrors, workflowBeforeChromiumFallback, 'copy');
+for (const unsafe of [workflowBeforeChromiumFallback.replace('--with-deps', ''), workflowBeforeChromiumFallback.replace('test "$BROWSER_RESULT" = success', 'true'), workflowBeforeChromiumFallback + '\n# unrelated workflow edit\n', workflowWithForcedMirrors.replace(forcedMirrorFixture, '')]) {
   scoped('.github/workflows/quality.yml', workflowWithForcedMirrors, unsafe, 'components', ['checks']);
 }
-scoped('.github/workflows/quality.yml', workflow, workflowWithForcedMirrors, 'components', ['checks']);
+scoped('.github/workflows/quality.yml', workflowBeforeChromiumFallback, workflowWithForcedMirrors, 'components', ['checks']);
+for (const previous of [workflowBeforeChromiumFallback, workflowWithForcedMirrors]) {
+  scoped('.github/workflows/quality.yml', previous, workflow, 'components', ['check:core']);
+  for (const unsafe of [
+    workflow.replace('unset PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS', 'export PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=1'),
+    workflow.replace('            unset PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS\n', ''),
+    workflow.replace('chromium*/DEPENDENCIES_VALIDATED', '*/DEPENDENCIES_VALIDATED'),
+    workflow.replace('pnpm exec playwright install chromium', 'pnpm exec playwright install chromium || true'),
+    workflow.replace('pnpm exec playwright install --with-deps', 'pnpm exec playwright install'),
+    workflow.replace('[ "$RUNNER_OS" = Linux ] && ', ''),
+    workflow.replace('test "$BROWSER_RESULT" = success', 'true'),
+    workflow + '\n# unrelated workflow edit\n',
+  ]) scoped('.github/workflows/quality.yml', previous, unsafe, 'components', ['checks']);
+}
 
 const gate = /- name: Require the selected checks[\s\S]*?        run: \|\n((?:          .*(?:\n|$))+)/.exec(workflow)?.[1]
   .replace(/^          /gm, "");
@@ -1575,11 +1601,15 @@ try {
   put('rendering/js/map-story.js', retiredStory + '\nconst retainedOwner = 1;');
   git('add', '.'); git('commit', '-m', 'mirror migration baseline');
   const mirrorBase = git('rev-parse', 'HEAD');
-  put('.github/workflows/quality.yml', workflow);
+  put('.github/workflows/quality.yml', workflowBeforeChromiumFallback);
   put('rendering/js/map-story.js', 'const retainedOwner = 1;');
   const mirrorPlan = () => planRelease({projectRoot: isolatedDirectory, base: mirrorBase});
   assert.deepEqual(mirrorPlan().components, ['scroll-edges']);
   assert.equal(mirrorPlan().matrix.include.length, 13);
+  assert.deepEqual(mirrorPlan().matrix, browserMatrix('components', ['scroll-edges']));
+  put('.github/workflows/quality.yml', workflow);
+  assert.deepEqual(mirrorPlan().components, ['check:core', 'scroll-edges']);
+  assert.equal(mirrorPlan().matrix.include.length, 13, 'Environment validation reuses the runtime core jobs');
   assert.deepEqual(mirrorPlan().matrix, browserMatrix('components', ['scroll-edges']));
   put('.github/workflows/quality.yml', workflow + '\n# unrelated workflow edit\n');
   assert.deepEqual(mirrorPlan().components, ['checks', 'scroll-edges']);

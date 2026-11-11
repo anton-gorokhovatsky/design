@@ -311,7 +311,30 @@ const forcedAptMirrorBlock = [
 const restoresRunnerAptMirrors = (before, after) => before.split(forcedAptMirrorBlock).length === 3
   && before.replaceAll(forcedAptMirrorBlock, "") === after;
 
+// The reviewed Linux Chromium migration revalidates cached runtime libraries.
+// Match the complete installer replacement, optionally with both mirror removals;
+// any adjacent YAML edit keeps the normal workflow checks owner.
+const playwrightInstallWithDependencies = "          pnpm exec playwright install --with-deps ${{ matrix.browser }}\n";
+const playwrightInstallWithRunnerChromium = [
+  '          if [ "$RUNNER_OS" = Linux ] && [ "${{ matrix.browser }}" = chromium ]; then',
+  '            unset PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS',
+  '            rm -f -- "$HOME"/.cache/ms-playwright/chromium*/DEPENDENCIES_VALIDATED',
+  '            pnpm exec playwright install chromium',
+  '          else',
+  '            pnpm exec playwright install --with-deps ${{ matrix.browser }}',
+  '          fi',
+  '',
+].join("\n");
+const validatesRunnerChromiumLibraries = (before, after) => {
+  const mirrorCount = before.split(forcedAptMirrorBlock).length - 1;
+  if (mirrorCount !== 0 && mirrorCount !== 2) return false;
+  const previous = before.replaceAll(forcedAptMirrorBlock, "");
+  return previous.split(playwrightInstallWithDependencies).length === 2
+    && previous.replace(playwrightInstallWithDependencies, playwrightInstallWithRunnerChromium) === after;
+};
+
 export const classifyChange = (path, before, after) => {
+  if (path === ".github/workflows/quality.yml" && validatesRunnerChromiumLibraries(before, after)) return { mode: "components", components: ["check:core"] };
   if (path === ".github/workflows/quality.yml" && restoresRunnerAptMirrors(before, after)) return { mode: "copy", components: [] };
   if (staticCheckPaths.has(path) || relatedPresentationDocs.has(path) || shareArtifactPaths.has(path)) return { mode: "copy", components: [] };
   if (relatedPointImages.has(path)) return relatedPointImageScope;

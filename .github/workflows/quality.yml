@@ -84,7 +84,13 @@ jobs:
       - name: Install Playwright ${{ matrix.browser }}
         id: playwright-install
         run: |
-          pnpm exec playwright install --with-deps ${{ matrix.browser }}
+          if [ "$RUNNER_OS" = Linux ] && [ "${{ matrix.browser }}" = chromium ]; then
+            unset PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS
+            rm -f -- "$HOME"/.cache/ms-playwright/chromium*/DEPENDENCIES_VALIDATED
+            pnpm exec playwright install chromium
+          else
+            pnpm exec playwright install --with-deps ${{ matrix.browser }}
+          fi
       - run: node scripts/check-project.mjs --scope=${{ matrix.browser }} --checks=${{ matrix.checks }}
       - if: always()
         id: artifacts
