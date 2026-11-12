@@ -883,6 +883,8 @@ const readingContextOwners = {
     ranges: [["let activeId = null;", "const frameMaterials = new Map();"],
       ["function reflect() {", "new MutationObserver(reflect).observe(mapInspector, {"]],
     hashes: ["546680ffe6ee138eb1fe462a4f08d09d1ab3f968a65db5699d0f4c4c721c596c", "2828b862306bd3c0288a830d8ee023c186658b687bef035fe41ca3a6106c4464"],
+    // Saved reading position waits for the existing deferred-content state.
+    patches: [["524e8a076bd89c982a69e7fe0f3518d81a0f2f1f36ee6979fffc2e460eb055b3", "05d48104cf3cf5fef30ae2a23ebeb5ec8dd16422e0084e2d61090a7efba5a981"]],
   },
   "js/panels.js": {
     ranges: [['mapInspector?.querySelector("[data-map-related]")?.addEventListener("click",', 'constellationNavHome?.addEventListener("click",']],
@@ -917,7 +919,8 @@ const isReadingContextFix = (path, before, after) => {
       return { outside: JSON.stringify(outside), hash: createHash("sha256").update(content.join("\0")).digest("hex") };
     });
     return blocks[0].outside === blocks[1].outside
-      && blocks.every((block, index) => block.hash === owner.hashes[index]);
+      && [owner.hashes, ...(owner.patches || [])].some(hashes =>
+        blocks.every((block, index) => block.hash === hashes[index]));
   } catch { return false; }
 };
 

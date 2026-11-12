@@ -50,6 +50,7 @@ let activeId = null;
 let caseMode = false;
 let pendingPosition = window.history.state?.casePosition || null;
 let caseRevision = 0;
+let cancelPositionRestore = null;
 const frameMaterials = new Map();
 let backgroundState = [];
 
@@ -249,6 +250,7 @@ function reflect() {
   const position = pendingPosition?.pointId === nextId ? pendingPosition : null;
   pendingPosition = null;
   const revision = ++caseRevision;
+  cancelPositionRestore?.();
   const routeControl = observationRoute.active
     && document.activeElement?.closest("[data-observation-controls] button");
   const keepOverviewFrame = nextId && activeId && observationRoute.active
@@ -272,7 +274,7 @@ function reflect() {
     }
     viewport.scrollTop = position?.scrollTop || 0;
     mapInspector.scrollTop = 0;
-    requestAnimationFrame(() => {
+    const restorePosition = () => {
       if (revision !== caseRevision || activeId !== nextId) return;
       viewport.scrollTop = position?.scrollTop || 0;
       const sourceRow = position?.relatedPointId && viewport.querySelector(
@@ -283,6 +285,35 @@ function reflect() {
         ? routeControl
         : routeControl ? document.querySelector("[data-observation-next]") : identity.querySelector("h2"));
       target?.focus({ preventScroll: true });
+    };
+    requestAnimationFrame(() => {
+      if (revision !== caseRevision || activeId !== nextId) return;
+      const contentState = mapInspector.querySelector("[data-case-load-state]");
+      if (position && !contentState.hidden) {
+        // The saved row and scroll range arrive with the deferred case details.
+        let restoreFrame = 0;
+        const intentEvents = ["wheel", "pointerdown", "touchstart", "keydown"];
+        const observer = new MutationObserver(() => {
+          if (!contentState.hidden) return;
+          observer.disconnect();
+          restoreFrame = requestAnimationFrame(() => {
+            cancel();
+            restorePosition();
+          });
+        });
+        const cancel = () => {
+          observer.disconnect();
+          cancelAnimationFrame(restoreFrame);
+          for (const type of intentEvents) mapInspector.removeEventListener(type, cancel, true);
+          if (cancelPositionRestore === cancel) cancelPositionRestore = null;
+        };
+        cancelPositionRestore = cancel;
+        // Keep cancellation active until the ready frame, including forwarded
+        // wheel input over the media area. Programmatic scrolling is not input.
+        for (const type of intentEvents) mapInspector.addEventListener(type, cancel, { capture: true, passive: true });
+        observer.observe(contentState, { attributes: true, attributeFilter: ["hidden"] });
+      }
+      restorePosition();
     });
   }
   activeId = nextId;

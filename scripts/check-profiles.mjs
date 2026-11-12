@@ -25,6 +25,8 @@ browserCheckPaths.set('scripts/check-scroll-lens.mjs', 'check:scroll-edges');
 browserCheckPaths.set('scripts/native-webkit-capture.mjs', 'check:accessibility');
 browserCheckPaths.set('scripts/check-live-surface.mjs', 'check:whoop-ui');
 browserCheckPaths.set('scripts/check-ui-contracts.mjs', 'check:core');
+// Shared deferred-content scenarios are run by the inspector-links contract.
+browserCheckPaths.set('scripts/case-content-contract.mjs', 'check:inspector-links');
 browserCheckPaths.set('scripts/webkit-regression.cjs', 'check:core');
 // Release and scope tooling is covered by the static chooser, execution and
 // publication contracts. Runtime and browser assertion owners remain separate.

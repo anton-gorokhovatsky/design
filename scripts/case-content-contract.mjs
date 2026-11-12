@@ -1,4 +1,88 @@
 import assert from "node:assert/strict";
+import { waitForCaseLayout } from "./browser-contracts.cjs";
+
+// A history entry survives a document reload before its shared payload arrives.
+export async function checkDeferredCaseReturn(browser, origin) {
+  const errors = [];
+  for (const action of ["restore", "read", "close", "switch"]) {
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, reducedMotion: "reduce" });
+    page.on("pageerror", error => errors.push(error.message));
+    let release;
+    try {
+      await page.goto(origin + "/?point=dd-camp");
+      const sourceLink = page.locator('[data-map-related] a[href="?point=hotline-camp"]');
+      await sourceLink.waitFor({ state: "visible" });
+      await waitForCaseLayout(page);
+      await sourceLink.scrollIntoViewIfNeeded();
+      await sourceLink.focus();
+      const sourceTop = await page.locator(".case-scroll").evaluate(element => element.scrollTop);
+      assert.ok(sourceTop > 20, "The saved source link needs a real reading position");
+      await page.keyboard.press("Enter");
+      await page.waitForFunction(() => document.querySelector("[data-map-inspector]").dataset.selectedMapId === "hotline-camp");
+      await waitForCaseLayout(page);
+      assert.equal(await page.locator(".case-scroll").evaluate(element => element.scrollTop), 0,
+        "A newly opened related case starts at its heading");
+      await page.goBack();
+      await page.waitForFunction(top => Math.abs(document.querySelector(".case-scroll").scrollTop - top) < 2
+        && document.activeElement?.matches('[data-map-related] a[href="?point=hotline-camp"]'), sourceTop);
+      const sourceUrl = page.url();
+      const held = new Promise(resolve => { release = resolve; });
+      await page.route("**/case-content.json*", async route => { await held; await route.continue(); });
+      await page.reload({ waitUntil: "domcontentloaded" });
+      await page.locator("[data-case-load-state]").waitFor({ state: "visible" });
+      await waitForCaseLayout(page);
+      if (action === "close") {
+        await page.locator("[data-close-inspector]").click();
+        await page.waitForFunction(() => !document.body.hasAttribute("data-case-open"));
+      } else if (action === "switch") {
+        await page.locator('[data-map-related] a[href="?point=private-practice"]').click();
+        await page.waitForFunction(() => document.querySelector("[data-map-inspector]").dataset.selectedMapId === "private-practice");
+        await waitForCaseLayout(page);
+        await page.locator(".case-scroll").focus();
+      } else if (action === "read") {
+        await page.locator(".case-scroll").focus();
+        await page.keyboard.press("Home");
+        await page.waitForFunction(() => document.querySelector(".case-scroll").scrollTop === 0
+          && document.activeElement?.matches(".case-scroll"));
+      }
+      const focused = await page.evaluateHandle(() => document.activeElement);
+      const response = page.waitForResponse(response => response.url().includes("case-content.json"));
+      release();
+      const received = await response;
+      if (action !== "close") {
+        await page.waitForFunction(() => document.querySelector("[data-case-load-state]").hidden);
+        await waitForCaseLayout(page);
+      } else {
+        await received.finished();
+        await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+      }
+      if (action === "restore") {
+        assert.equal(page.url(), sourceUrl, "Reload preserves the saved case address");
+        assert.ok(Math.abs(await page.locator(".case-scroll").evaluate(element => element.scrollTop) - sourceTop) < 2,
+          "The complete payload restores the saved scroll range");
+        assert.equal(await sourceLink.evaluate(element => element === document.activeElement), true,
+          "The restored case focuses its source related link after that row arrives");
+      } else {
+        assert.equal(await focused.evaluate(element => element === document.activeElement), true,
+          "A completed old restoration cannot steal focus after " + action);
+        if (action === "close") {
+          assert.equal(await page.locator("[data-map-inspector]").evaluate(element => element.classList.contains("is-open")), false,
+            "A completed old restoration cannot reopen the dismissed case");
+        } else if (action === "switch") {
+          assert.equal(new URL(page.url()).searchParams.get("point"), "private-practice");
+          assert.equal(await page.locator(".case-scroll").evaluate(element => element.scrollTop), 0,
+            "A different case cannot inherit the earlier saved scroll position");
+        } else {
+          assert.equal(page.url(), sourceUrl, "Reading continues in the same case");
+          assert.equal(await page.locator(".case-scroll").evaluate(element => element.scrollTop), 0,
+            "A reader's Home command supersedes deferred history restoration");
+        }
+      }
+      await focused.dispose();
+    } finally { release?.(); await page.close(); }
+  }
+  assert.deepEqual(errors, [], "Deferred history restoration has no uncaught browser errors");
+}
 
 // User journeys for the shared on-demand payload, including failures and races.
 export async function checkDeferredCaseContent(browser, origin) {
@@ -97,4 +181,5 @@ export async function checkDeferredCaseContent(browser, origin) {
       "A response cannot reopen a dismissed card");
   } finally { release?.(); await page.close(); }
   assert.deepEqual(errors, [], "Deferred content has no uncaught browser errors");
+  await checkDeferredCaseReturn(browser, origin);
 }

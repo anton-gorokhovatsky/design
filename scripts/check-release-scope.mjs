@@ -417,10 +417,13 @@ checks += 5;
 
 // Reading return fixes own exact directed blocks, including the capture-phase
 // settings exception. Unknown story edits retain the existing story coverage.
-for (const [path, hash, ranges, mutation] of [
+for (const [path, hash, ranges, mutation, baseline = "01693bedbfef368fc88096ce1d9fb307f2cf8b17"] of [
   ['js/case-view.js', '2828b862306bd3c0288a830d8ee023c186658b687bef035fe41ca3a6106c4464',
     [['let activeId = null;', 'const frameMaterials = new Map();'], ['function reflect() {', 'new MutationObserver(reflect).observe(mapInspector, {']],
     ['pendingPosition = null;', 'pendingPosition = {};']],
+  ['js/case-view.js', '05d48104cf3cf5fef30ae2a23ebeb5ec8dd16422e0084e2d61090a7efba5a981',
+    [['let activeId = null;', 'const frameMaterials = new Map();'], ['function reflect() {', 'new MutationObserver(reflect).observe(mapInspector, {']],
+    ['if (position && !contentState.hidden)', 'if (position)'], 'dd5f7802006b755b897dba3d72336c0aef2ba834'],
   ['js/panels.js', '6be255860cfca630cb1c8ae14c22e902716ac1b65212aa525c3dd01a05e62bb9',
     [['mapInspector?.querySelector("[data-map-related]")?.addEventListener("click",', 'constellationNavHome?.addEventListener("click",']],
     ['casePosition: position', 'casePosition: null']],
@@ -431,7 +434,7 @@ for (const [path, hash, ranges, mutation] of [
     [['  if(opened&&compact.matches&&map.contains(event.target)', '  if(!story.contains(event.target))']],
     ["&&!event.target.closest('[data-open-settings]')", "&&event.target.closest('[data-open-settings]')"]],
 ]) {
-  const before = execFileSync('git', ['show', `01693bedbfef368fc88096ce1d9fb307f2cf8b17:${path}`], { cwd: root, encoding: 'utf8' });
+  const before = execFileSync('git', ['show', `${baseline}:${path}`], { cwd: root, encoding: 'utf8' });
   const after = read(path);
   const chunks = ranges.map(([start, end]) => after.slice(after.indexOf(start), after.indexOf(end)));
   const known = ranges.every(([start, end]) => after.indexOf(start) >= 0 && after.indexOf(end) > after.indexOf(start))
@@ -456,6 +459,11 @@ for (const [path, hash, ranges, mutation] of [
     scoped(path, before, changed, ...fallback);
   }
 }
+
+// The shared content regression retains its existing caller in both engines.
+assert.deepEqual(classifyChange('scripts/case-content-contract.mjs', '', ''),
+  { mode: 'components', components: ['check:inspector-links'] });
+checks += 1;
 
 // Persistent related posters own their exact template/loader migration only.
 // A later implementation must earn a new boundary, not inherit these hashes.
