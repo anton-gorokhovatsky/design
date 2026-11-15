@@ -254,6 +254,16 @@ const selectionAndFocus = async (page, regionSelector, textSelector, linkSelecto
     // This authored pair has no changing project labels between its controls.
     // Observe both neighbours before checking the immediate reverse/return.
     const toggle = page.locator('#story-pane .gravity-toggle');
+    // The button after the scene exists before the lazy scene's native control.
+    // Establish a visible, initialized scene before testing that authored pair.
+    await page.locator('#story-pane .figure--garage .scene').scrollIntoViewIfNeeded();
+    await page.waitForFunction(() => {
+      const hit = document.querySelector('#story-pane .gravity-hit');
+      if (!hit || hit.tabIndex < 0 || hit.closest('[inert]') || hit.matches(':disabled')) return false;
+      const rect = hit.getBoundingClientRect(), port = document.querySelector('#story-pane').getBoundingClientRect();
+      return getComputedStyle(hit).visibility === 'visible' && rect.width > 0 && rect.height > 0
+        && rect.top < port.bottom && rect.bottom > port.top;
+    });
     await toggle.scrollIntoViewIfNeeded(); await toggle.focus();
     await page.keyboard.press('Shift+' + tab);
     assert.equal(await page.evaluate(() => document.activeElement.matches('#story-pane .gravity-hit')), true,
