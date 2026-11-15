@@ -14,7 +14,7 @@ export function validateReelSpecs(specs) {
   assert.ok(Array.isArray(specs) && specs.length > 0);
   const ids = new Set(), files = new Set();
   for (const spec of specs) {
-    assert.ok(keys(spec, ["itemId", "master", "chapters", "posterAt", "duration", "capture"]));
+    assert.ok(keys(spec, ["itemId", "master", "chapters", "posterAt", "posterSource", "duration", "capture"]));
     assert.match(spec.itemId, /^[a-z0-9-]+$/);
     assert.match(spec.master, /^[a-z0-9-]+\.mp4$/);
     assert.ok(!ids.has(spec.itemId) && !files.has(spec.master));
@@ -23,6 +23,12 @@ export function validateReelSpecs(specs) {
     const { target, min, max } = spec.duration;
     assert.ok([min, target, max].every(Number.isFinite) && positive(min) && min <= target && target <= max && max <= 120);
     assert.ok(Number.isFinite(spec.posterAt) && spec.posterAt >= 0 && spec.posterAt < min);
+    if (spec.posterSource !== undefined) {
+      assert.ok(keys(spec.posterSource, ["file", "url"]));
+      assert.equal(spec.posterSource.file, `rendering/reel-poster-sources/${spec.itemId}.jpg`);
+      const source = new URL(spec.posterSource.url);
+      assert.ok(source.protocol === "https:" && !source.username && !source.password);
+    }
     assert.ok(Array.isArray(spec.chapters) && spec.chapters.length === 2);
     for (const chapter of spec.chapters) {
       assert.ok(keys(chapter, ["label", "start", "duration"]));

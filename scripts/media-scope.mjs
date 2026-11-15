@@ -4,13 +4,14 @@ import { reelSpecs, validateReelSpecs, getReelChapterFileName } from "./reel-spe
 
 export const mediaAssetPaths = new Set(reelSpecs.flatMap(spec => [
   `assets/reels/${spec.master}`, `assets/reel-posters/${spec.master.slice(0, -4)}.jpg`,
+  ...(spec.posterSource ? [spec.posterSource.file] : []),
   ...spec.chapters.map((_, index) => `assets/reel-chapters/${getReelChapterFileName(spec, index)}`),
 ]));
 const identity = specs => JSON.stringify(specs.map(({ itemId, master }) => [itemId, master]));
 const maskUrlHash = source => source.replace(/(assets\/(?:reels|reel-posters|reel-chapters)\/[a-z0-9-]+\.(?:mp4|jpg))\?v=[a-f0-9]{12}/g,
   (match, path) => mediaAssetPaths.has(path) ? `${path}?v=000000000000` : match);
 
-const maskMapMedia = (source, includeDestinations) => {
+export const maskMapMedia = (source, includeDestinations) => {
   const tree = parse(source, { ecmaVersion: "latest", sourceType: "module" }), ranges = [];
   for (const statement of tree.body) {
     if (statement.type !== "VariableDeclaration") continue;

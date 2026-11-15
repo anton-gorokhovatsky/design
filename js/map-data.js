@@ -219,7 +219,7 @@ const mapItems = [
     label: "Я иду в музей",
     title: "«Я иду в музей»",
     relatedPoster: "assets/project-icons/garage-app.png",
-    relatedPosterShape: "square",
+    relatedPosterShape: "squircle",
     meta: "ДОСТУПНОСТЬ / МОБИЛЬНЫЙ ПРОДУКТ / ПЕРЕЗАПУСК",
     description: "Перезапуск приложения для людей с ментальными особенностями и их близких: доступность, навигация и понятный маршрут.\n\nО новой версии — на сайте «Гаража».",
     descriptionCredit: {
@@ -482,7 +482,7 @@ const mapItems = [
     x: 70,
     y: 70,
     size: 13,
-    previewPoster: "assets/reel-posters/doronin.jpg?v=9040e16ffdcf",
+    previewPoster: "assets/reel-posters/doronin.jpg?v=58c1961b738b",
     previewDuration: 7.8,
   },
   {

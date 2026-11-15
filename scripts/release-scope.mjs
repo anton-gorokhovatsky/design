@@ -418,7 +418,7 @@ export const planRelease = ({ projectRoot, base = "origin/gh-pages", target } = 
       if (["A", "M"].includes(status) && relatedPresentationDocs.has(path)) classification = { mode: "copy", components: [] };
       if (["A", "M"].includes(status) && relatedPointImages.has(path)) classification = relatedPointImageScope;
       if (["A", "M", "D"].includes(status) && projectPresentationAssets.has(path)) classification = projectPresentationScope;
-      if (status === "M" && mediaAssetPaths.has(path)) classification = { mode: "components", components: ["media"] };
+      if (["A", "M"].includes(status) && mediaAssetPaths.has(path)) classification = { mode: "components", components: ["media"] };
       if (status === "M" && pointRename?.paths.includes(path)) classification = { mode: "components", components: ["point-address"] };
       changes.push({ path, ...classification });
     }
@@ -426,6 +426,7 @@ export const planRelease = ({ projectRoot, base = "origin/gh-pages", target } = 
       changes.push(...git("ls-files", "--others", "--exclude-standard", "-z").split("\0").filter(Boolean)
         .map((path) => { const owner = ownedCheckComponent(path); return staticCheckPaths.has(path) || relatedPresentationDocs.has(path) ? { path, mode: "copy", components: [] } : relatedPointImages.has(path) ? { path, ...relatedPointImageScope }
           : projectPresentationAssets.has(path) ? { path, ...projectPresentationScope }
+          : mediaAssetPaths.has(path) ? { path, mode: "components", components: ["media"] }
           : path === "js/scroll-edges.js" ? { path, ...classifyChange(path, "", readFileSync(resolve(projectRoot, path), "utf8")) }
             : { path, mode: owner ? "components" : "full", components: owner ? [owner] : [] }; }));
     }

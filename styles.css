@@ -2998,7 +2998,8 @@ transition: color var(--duration-feedback) var(--motion-shift);
 .content-panel .work-row__preview--logo { object-fit: cover; }
 /* App icons keep their square contour and the text column's left edge. */
 .content-panel .work-row > img.work-row__preview--square {
-width: min(calc(100% * 2 / 3), calc(22rem * 2 / 3), calc(35cqh * 2 / 3));
+--preview-square-size: min(calc(100% * 2 / 3), calc(22rem * 2 / 3), calc(35cqh * 2 / 3));
+width: var(--preview-square-size);
 aspect-ratio: 1;
 object-fit: contain;
 justify-self: start;
@@ -4230,11 +4231,30 @@ margin-inline-start: .32em;
 margin-inline-start: calc(min(4.5rem, 25%) + var(--space-3));
 }
 
-.map-related__preview--square {
-width: calc(100% * 2 / 3);
+.map-related__preview--square,
+.map-related__preview--squircle {
+--preview-square-size: calc(100% * 2 / 3);
+width: var(--preview-square-size);
 aspect-ratio: 1;
 justify-self: start;
 border-radius: 0;
+}
+
+/* App-icon contour: one continuous curve in both Chromium and WebKit. */
+.content-panel .work-row > img.work-row__preview--squircle,
+.map-related__preview--squircle {
+--app-icon-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 0C78.54 0 87.055 0 93.528 6.472C100 12.945 100 21.46 100 50C100 78.54 100 87.055 93.528 93.528C87.055 100 78.54 100 50 100C21.46 100 12.945 100 6.472 93.528C0 87.055 0 78.54 0 50C0 21.46 0 12.945 6.472 6.472C12.945 0 21.46 0 50 0Z'/%3E%3C/svg%3E");
+border-radius: 0;
+/* Preserve the ears and the source artwork's intentional left-edge bleed. */
+padding-block: calc(var(--preview-square-size) * .08) calc(var(--preview-square-size) * .02);
+object-position: left center;
+background-color: #a582ff;
+-webkit-mask-image: var(--app-icon-mask);
+mask-image: var(--app-icon-mask);
+-webkit-mask-size: 100% 100%;
+mask-size: 100% 100%;
+-webkit-mask-repeat: no-repeat;
+mask-repeat: no-repeat;
 }
 
 .map-related__preview--circle {

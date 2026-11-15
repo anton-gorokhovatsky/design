@@ -14,14 +14,15 @@ const args = process.argv.slice(2), flags = new Set(), ids = [];
 let master;
 for (let i = 0; i < args.length; i++) {
   if (args[i] === "--master") { assert.ok(args[i + 1] && !args[i + 1].startsWith("--")); master = resolve(args[++i]); }
-  else if (["--check", "--sync", "--capture"].includes(args[i])) flags.add(args[i]);
+  else if (["--check", "--sync", "--capture", "--poster-only"].includes(args[i])) flags.add(args[i]);
   else { assert.ok(!args[i].startsWith("--"), `Unknown option ${args[i]}`); ids.push(args[i]); }
 }
-assert.ok(ids.length <= 1 && flags.size <= 1, "Use: pnpm media:prepare [item-id] [--capture | --master path | --sync | --check]");
+assert.ok(ids.length <= 1 && flags.size <= 1, "Use: pnpm media:prepare [item-id] [--capture | --master path | --poster-only | --sync | --check]");
 assert.ok(!master || flags.size === 0, "--master cannot be combined with another mode");
 const selected = ids.length ? reelSpecs.filter(spec => [spec.itemId, spec.master.slice(0, -4)].includes(ids[0])) : reelSpecs;
 assert.ok(selected.length, `Unknown reel ${ids[0]}`);
 assert.ok(!(master || flags.has("--capture")) || selected.length === 1, "A source master or capture requires one item ID");
+assert.ok(!flags.has("--poster-only") || selected.length === 1, "A poster-only update requires one item ID");
 const ffmpeg = (...args) => execFileSync(process.env.PORTFOLIO_FFMPEG || "ffmpeg", ["-hide_banner", "-loglevel", "error", "-y", ...args], { stdio: "inherit" });
 
 if (!flags.has("--check") && !flags.has("--sync")) {
@@ -37,8 +38,20 @@ if (!flags.has("--check") && !flags.has("--sync")) {
       probeMaster(input, spec);
       if (master) outputs.push([master, `assets/reels/${spec.master}`]);
       const poster = spec.master.slice(0, -4) + ".jpg", posterPath = join(stage, poster);
-      ffmpeg("-ss", String(spec.posterAt), "-i", input, "-frames:v", "1", "-vf", `scale=${reelFrame.width}:${reelFrame.height}:flags=lanczos`, "-q:v", "3", posterPath);
+      let posterInput = ["-ss", String(spec.posterAt), "-i", input];
+      if (spec.posterSource) {
+        const source = join(root, spec.posterSource.file);
+        const probe = JSON.parse(execFileSync(process.env.PORTFOLIO_FFPROBE || "ffprobe", [
+          "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height", "-of", "json", source,
+        ], { encoding: "utf8" })).streams?.[0];
+        assert.ok(probe?.width >= reelFrame.width && probe.height >= reelFrame.height
+          && probe.width * reelFrame.height === probe.height * reelFrame.width,
+        `${spec.itemId}: source artwork must fit 3:2 without cropping, stretching or upscaling`);
+        posterInput = ["-i", source];
+      }
+      ffmpeg(...posterInput, "-frames:v", "1", "-vf", `scale=${reelFrame.width}:${reelFrame.height}:flags=lanczos`, "-q:v", "3", posterPath);
       outputs.push([posterPath, `assets/reel-posters/${poster}`]);
+      if (flags.has("--poster-only")) continue;
       for (const [index, chapter] of spec.chapters.entries()) {
         const name = getReelChapterFileName(spec, index), path = join(stage, name);
         const comment = `source-fit=native-chapter; source-master=${spec.master}; source-range=${chapter.start.toFixed(1)}-${(chapter.start + chapter.duration).toFixed(1)}; source-dar=3:2; chapter=${chapter.label}`;
@@ -54,7 +67,11 @@ if (!flags.has("--check") && !flags.has("--sync")) {
     }
   } finally { rmSync(stage, { recursive: true, force: true }); }
 }
-syncReelMetadata(root, { check: flags.has("--check") });
-if (flags.has("--check")) verifyRuntimeAssetVersions(root);
-else syncRuntimeAssetVersions(root);
-console.log(`${flags.has("--check") ? "Verified" : "Prepared"} media metadata for ${reelSpecs.length} masters, posters and ${reelSpecs.length * 2} chapters.`);
+if (flags.has("--poster-only")) {
+  console.log(`Prepared ${selected[0].itemId} poster only. Run pnpm media:prepare --sync before release to update media URLs.`);
+} else {
+  syncReelMetadata(root, { check: flags.has("--check") });
+  if (flags.has("--check")) verifyRuntimeAssetVersions(root);
+  else syncRuntimeAssetVersions(root);
+  console.log(`${flags.has("--check") ? "Verified" : "Prepared"} media metadata for ${reelSpecs.length} masters, posters and ${reelSpecs.length * 2} chapters.`);
+}

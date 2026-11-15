@@ -44,6 +44,10 @@ assert.equal(classifyChange("js/map-data.js", campDestination, newCampDestinatio
 assert.equal(classifyChange("js/map-data.js", campDestination, campDestination.replace('"https://old.example/"', 'getDestination()')).mode, "full");
 assert.equal(classifyChange("js/map-data.js", campDestination.replace('dd-camp', 'unknown'), newCampDestination.replace('dd-camp', 'unknown')).mode, "full");
 assert.deepEqual(classifyChange("scripts/capture-reels.cjs", "", "").components, ["media"]);
+for (const path of ['scripts/prepare-reels.mjs', 'scripts/reel-specs.mjs']) {
+  assert.deepEqual(classifyChange(path, 'before', 'after').components, ['media']);
+}
+assert.equal(classifyChange('scripts/prepare-other.mjs', 'before', 'after').mode, 'full');
 assert.deepEqual(classifyChange("assets/project-icons/dd-camp.svg", "", "").components, ["check:hover-layout"]);
 const campIconSource = read("rendering/practice-orbits.js");
 const campIconBefore = campIconSource.replace("\n  'dd-camp':'assets/project-icons/dd-camp.svg',", "");
@@ -845,6 +849,13 @@ const projectPresentationAfter = projectPresentationBefore
   .replace('ilmix-cutout.png', 'ilmix.svg').replace(',previewKind:"logo"', '')
   .replace('id:"garage-app",description:"App"', 'id:"garage-app",relatedPoster:"assets/project-icons/garage-app.png",relatedPosterShape:"square",description:"App. О новой версии — на сайте «Гаража».",descriptionCredit:{label:"О новой версии — на сайте «Гаража»",href:"https://garagemca.org/news/a-new-version-of-the-app-i-m-going-to-the-museum"}');
 scoped('js/map-data.js', projectPresentationBefore, projectPresentationAfter, 'components', projectPresentationCoverage);
+const squirclePresentation = projectPresentationAfter.replace('relatedPosterShape:"square"', 'relatedPosterShape:"squircle"');
+scoped('js/map-data.js', projectPresentationAfter, squirclePresentation, 'components', projectPresentationCoverage);
+scoped('js/map-data.js', projectPresentationBefore, squirclePresentation, 'components', projectPresentationCoverage);
+const presentationWithMedia = projectPresentationAfter.replace('];', ',{id:"doronin",previewPoster:"assets/reel-posters/doronin.jpg?v=aaaaaaaaaaaa",x:32}];');
+const updatedPresentationAndMedia = presentationWithMedia.replace('relatedPosterShape:"square"', 'relatedPosterShape:"squircle"').replace('v=aaaaaaaaaaaa', 'v=bbbbbbbbbbbb');
+scoped('js/map-data.js', presentationWithMedia, updatedPresentationAndMedia, 'components', [...projectPresentationCoverage, 'media']);
+scoped('js/map-data.js', presentationWithMedia, updatedPresentationAndMedia.replace('x:32', 'x:33'), 'full');
 for (const unsafe of [
   projectPresentationAfter.replace('garage-app.png', 'unknown.png'),
   projectPresentationAfter.replace('relatedPosterShape:"square"', 'relatedPosterShape:"circle"'),
@@ -857,13 +868,34 @@ for (const unsafe of [
   projectPresentationAfter.replace('relatedPosterShape:"square"', 'relatedPosterShape:"square",relatedPosterShape:"square"'),
 ]) scoped('js/map-data.js', projectPresentationBefore, unsafe, 'full');
 const squareClassLine = '  image.classList.toggle("work-row__preview--square", item.relatedPosterShape === "square");\n';
-const panelsBeforeSquare = panels.replace(squareClassLine, '');
+const squircleClassLines = '  image.classList.toggle("work-row__preview--square", ["square", "squircle"].includes(item.relatedPosterShape));\n  image.classList.toggle("work-row__preview--squircle", item.relatedPosterShape === "squircle");\n';
+assert.ok(panels.includes(squircleClassLines));
+const panelsSquare = panels.replace(squircleClassLines, squareClassLine), panelsBeforeSquare = panelsSquare.replace(squareClassLine, '');
+scoped('js/panels.js', panelsBeforeSquare, panelsSquare, 'components', projectPresentationCoverage);
 scoped('js/panels.js', panelsBeforeSquare, panels, 'components', projectPresentationCoverage);
-scoped('js/panels.js', panelsBeforeSquare, panels + '\nwindow.unrelated=true;', 'full');
-scoped('js/panels.js', panelsBeforeSquare, panels.replace('item.relatedPosterShape === "square"', 'item.kind === "project"'), 'full');
+scoped('js/panels.js', panelsSquare, panels, 'components', projectPresentationCoverage);
+for (const unsafe of [panels + '\nwindow.unrelated=true;', panels.replace('item.relatedPosterShape === "squircle"', 'item.kind === "project"'),
+  panels.replace('["square", "squircle"]', '["square", "circle"]'), panels.replace('image.alt = "";', 'image.alt = getAlt();')]) {
+  scoped('js/panels.js', panelsSquare, unsafe, 'full');
+}
 const projectSquareCss = '.content-panel .work-row > img.work-row__preview--square{width:min(66%,14rem);aspect-ratio:1;object-fit:contain;justify-self:start}@container map-viewport (max-width:900px){.content-panel .work-row > img.work-row__preview--square{grid-column:2}}';
 scoped('styles.css', '', projectSquareCss, 'components', projectPresentationCoverage);
 scoped('styles.css', '', projectSquareCss + readingEdgeCss, 'components', [...new Set([...readingEdgeCoverage, ...projectPresentationCoverage])]);
+const svgGeometry = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M50 0C100 0 100 100 50 100C0 100 0 0 50 0Z'/></svg>";
+const svgMask = svg => `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+const squircleCss = `.content-panel .work-row > img.work-row__preview--squircle, .map-related__preview--squircle{--app-icon-mask:${svgMask(svgGeometry)};border-radius:0;padding-block:calc(var(--preview-square-size) * .08) calc(var(--preview-square-size) * .02);object-position:left center;background-color:#a582ff;-webkit-mask-image:var(--app-icon-mask);mask-image:var(--app-icon-mask);-webkit-mask-size:100% 100%;mask-size:100% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}`;
+const relatedSquareCss = '.map-related__preview--square{width:calc(100% * 2 / 3);aspect-ratio:1;justify-self:start;border-radius:0}';
+const relatedSquircleCss = '.map-related__preview--square, .map-related__preview--squircle{--preview-square-size:calc(100% * 2 / 3);width:var(--preview-square-size);aspect-ratio:1;justify-self:start;border-radius:0}';
+scoped('styles.css', relatedSquareCss, relatedSquircleCss + squircleCss, 'components', projectPresentationCoverage);
+scoped('styles.css', '', projectSquareCss + squircleCss + readingEdgeCss, 'components', [...new Set([...readingEdgeCoverage, ...projectPresentationCoverage])]);
+for (const unsafe of [squircleCss.replace('--squircle,', '--unknown,'), squircleCss.replace('#a582ff', 'var(--material-01)'),
+  squircleCss.replace('#a582ff', '#111111'), squircleCss.replace('left center', 'right center'),
+  squircleCss.replace('padding-block:', 'backdrop-filter:'), squircleCss.replace('--app-icon-mask:', '--other-mask:'),
+  squircleCss.replace(svgMask(svgGeometry), 'url("https://example.com/icon.svg")'),
+  squircleCss.replace(svgMask(svgGeometry), svgMask(svgGeometry.replace("<path d=", "<path onload='run()' d="))),
+  squircleCss.replace(svgMask(svgGeometry), svgMask(svgGeometry.replace('<path ', "<image href='https://example.com/icon.png'/><path "))),
+  squircleCss.replace(svgMask(svgGeometry), svgMask(svgGeometry.replace('</svg>', '<script>run()</script></svg>'))),
+  squircleCss + '.map-node{display:none}']) scoped('styles.css', '', unsafe, 'full');
 for (const unsafe of [projectSquareCss.replace('img.work-row__preview--square', 'img.work-row__preview'),
   projectSquareCss.replace('object-fit:contain', 'background:var(--material-01)'), projectSquareCss + '.map-node{display:none}']) {
   scoped('styles.css', '', unsafe, 'full');
@@ -925,6 +957,19 @@ try {
   assert.equal(plan().mode, 'components', 'The published-base plan includes committed reader work and new source media');
   assert.deepEqual(plan().components, [...new Set([...readingEdgeCoverage, ...projectPresentationCoverage])].sort());
   assert.ok(plan().files.includes('assets/project-logos/ilmix-cutout.png'), 'Retirement of the old raster is part of the candidate');
+  mkdirSync(join(readingEdgeDirectory, 'rendering/reel-poster-sources'), { recursive: true });
+  const posterSourcePath = 'rendering/reel-poster-sources/doronin.jpg';
+  writeFileSync(join(readingEdgeDirectory, posterSourcePath), 'Declared source photograph');
+  assert.equal(plan().mode, 'components', 'A declared poster source keeps media ownership');
+  assert.deepEqual(plan().components, [...new Set([...readingEdgeCoverage, ...projectPresentationCoverage, 'media'])].sort());
+  git('add', posterSourcePath);
+  assert.equal(plan().mode, 'components', 'A staged poster source retains the same media ownership');
+  assert.ok(plan().changes.find(change => change.path === posterSourcePath)?.components.includes('media'));
+  git('reset', 'HEAD', '--', posterSourcePath);
+  rmSync(join(readingEdgeDirectory, posterSourcePath));
+  writeFileSync(join(readingEdgeDirectory, 'rendering/reel-poster-sources/unknown.jpg'), 'Unknown source');
+  assert.equal(plan().mode, 'full', 'Unregistered source files cannot inherit a known poster boundary');
+  rmSync(join(readingEdgeDirectory, 'rendering/reel-poster-sources/unknown.jpg'));
   writeFileSync(join(readingEdgeDirectory, 'js/map-data.js'), projectPresentationAfter + '\nwindow.unrelated=true;');
   assert.equal(plan().mode, 'full', 'Source artwork cannot hide neighboring runtime changes');
 } finally { rmSync(readingEdgeDirectory, { recursive: true, force: true }); }
@@ -1089,6 +1134,15 @@ scoped("scripts/reel-specs.json", specSource, changeSpec(spec => spec.master = "
 scoped("scripts/reel-specs.json", specSource, changeSpec(spec => spec.itemId = "new-item"), "full");
 scoped("scripts/reel-specs.json", specSource, changeSpec(spec => spec.chapters[0].duration = 500), "full");
 scoped("scripts/reel-specs.json", specSource, changeSpec(spec => spec.run = "code"), "full");
+const withoutPosterSources = JSON.stringify(reelSpecs.map(({ posterSource, ...spec }) => spec));
+scoped('scripts/reel-specs.json', withoutPosterSources, specSource, 'components', ['media']);
+for (const posterSource of [
+  { file: '../outside.jpg', url: 'https://example.com/source.jpg' },
+  { file: 'rendering/reel-poster-sources/other.jpg', url: 'https://example.com/source.jpg' },
+  { file: `rendering/reel-poster-sources/${reelSpecs[0].itemId}.jpg`, url: 'javascript:run()' },
+  { file: `rendering/reel-poster-sources/${reelSpecs[0].itemId}.jpg`, url: 'https://user:password@example.com/source.jpg' },
+  { file: `rendering/reel-poster-sources/${reelSpecs[0].itemId}.jpg`, url: 'https://example.com/source.jpg', execute: true },
+]) scoped('scripts/reel-specs.json', specSource, changeSpec(spec => { spec.posterSource = posterSource; }), 'full');
 
 // The console ResizeObserver fix must not run unrelated media/signature jobs.
 // Everything outside these two private callbacks still requires full coverage.

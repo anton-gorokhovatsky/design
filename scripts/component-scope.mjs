@@ -3,8 +3,9 @@ import { createHash } from "node:crypto";
 import { isMaterialCleanup, isMaterialForcedColorsPriority, isMaterialRecipeChange } from "./material-contract.mjs";
 import { overviewOutside, overviewHtmlOutside, notFoundBindings, notFoundChecksOutside } from "./overview-scope.mjs";
 import selectorParser from "postcss-selector-parser";
-import { parse as parseHtml } from "parse5";
+import { parse as parseHtml, parseFragment as parseHtmlFragment } from "parse5";
 import { parse as parseJs } from "acorn";
+import { maskMapMedia } from "./media-scope.mjs";
 
 // One bounded reader module owns the new optical edge. Include the project
 // picker, settings focus and deliberately unmasked adjacent search controls.
@@ -108,14 +109,47 @@ const readingEdgeCssParts = source => {
   return { css: tree.toString(), owned: JSON.stringify(owned) };
 };
 const readingEdgeCssOutside = source => cssOutsideOwned(readingEdgeCssParts(source).css, () => false);
+const isInlineAppIconGeometry = value => {
+  const match = /^url\("data:image\/svg\+xml,([^"\r\n]+)"\)$/.exec(value);
+  if (!match) return false;
+  let xml;
+  try { xml = decodeURIComponent(match[1]); } catch { return false; }
+  if (/[&]|<!|<\?/.test(xml)) return false;
+  const children = node => (node.childNodes || []).filter(child => child.nodeName !== '#text' || child.value.trim());
+  const nodes = children(parseHtmlFragment(xml)), svg = nodes[0];
+  if (nodes.length !== 1 || svg.tagName !== 'svg' || svg.attrs.length !== 2
+    || !svg.attrs.some(attr => attr.name === 'xmlns' && attr.value === 'http://www.w3.org/2000/svg')
+    || !svg.attrs.some(attr => attr.name === 'viewBox' && attr.value === '0 0 100 100')) return false;
+  const paths = children(svg), path = paths[0];
+  return paths.length === 1 && path.tagName === 'path' && path.attrs.length === 1 && !children(path).length
+    && path.attrs[0].name === 'd' && /^M[0-9.,\s+\-MmLlHhVvCcSsQqTtAaEe]*[Zz]$/.test(path.attrs[0].value);
+};
 const projectSquareCssParts = source => {
   const tree = postcss.parse(source), owned = [];
   tree.walkRules(rule => {
-    if (rule.selector.trim() !== '.content-panel .work-row > img.work-row__preview--square') return;
+    const selector = rule.selector.replace(/\s+/g, ' ').trim();
+    const work = selector === '.content-panel .work-row > img.work-row__preview--square';
+    const related = ['.map-related__preview--square', '.map-related__preview--square, .map-related__preview--squircle'].includes(selector);
+    const contour = selector === '.content-panel .work-row > img.work-row__preview--squircle, .map-related__preview--squircle';
+    if (!work && !related && !contour) return;
     let parent = rule.parent;
     while (parent.type === 'atrule' && ['media', 'container', 'supports'].includes(parent.name)) parent = parent.parent;
-    if (parent.type !== 'root' || !rule.nodes.every(node => node.type === 'comment' || (node.type === 'decl'
-      && ['width', 'aspect-ratio', 'object-fit', 'justify-self', 'grid-column', 'grid-area'].includes(node.prop)
+    if (parent.type !== 'root') return;
+    if (contour) {
+      const expected = { '--app-icon-mask': isInlineAppIconGeometry, 'border-radius': '0',
+        'padding-block': 'calc(var(--preview-square-size) * .08) calc(var(--preview-square-size) * .02)',
+        'object-position': 'left center', 'background-color': '#a582ff',
+        'mask-image': 'var(--app-icon-mask)', '-webkit-mask-image': 'var(--app-icon-mask)',
+        'mask-size': '100% 100%', '-webkit-mask-size': '100% 100%',
+        'mask-repeat': 'no-repeat', '-webkit-mask-repeat': 'no-repeat' };
+      const declarations = rule.nodes.filter(node => node.type !== 'comment');
+      if (rule.parent.type !== 'root' || declarations.length !== Object.keys(expected).length
+        || new Set(declarations.map(node => node.prop)).size !== declarations.length
+        || !declarations.every(node => node.type === 'decl' && !node.important && Object.hasOwn(expected, node.prop)
+          && (typeof expected[node.prop] === 'function' ? expected[node.prop](node.value) : expected[node.prop] === node.value))) return;
+    } else if (!rule.nodes.every(node => node.type === 'comment' || (node.type === 'decl'
+      && (work ? ['--preview-square-size', 'width', 'aspect-ratio', 'object-fit', 'justify-self', 'grid-column', 'grid-area']
+        : ['--preview-square-size', 'width', 'aspect-ratio', 'justify-self', 'border-radius']).includes(node.prop)
       && !node.important && !/url\(/i.test(node.value)))) return;
     owned.push(rule.toString()); rule.remove();
   });
@@ -979,7 +1013,7 @@ const projectPresentationOutside = source => {
       const name = key(property), value = property.value;
       const allowed = id === 'ilmix'
         ? { relatedPoster: ['assets/project-logos/ilmix-cutout.png', 'assets/project-logos/ilmix.svg'], previewKind: ['logo'] }
-        : { relatedPoster: ['assets/project-icons/garage-app.png'], relatedPosterShape: ['square'] };
+        : { relatedPoster: ['assets/project-icons/garage-app.png'], relatedPosterShape: ['square', 'squircle'] };
       if (Object.hasOwn(allowed, name)) {
         if (value.type !== 'Literal' || !allowed[name].includes(value.value)) throw new Error('Unknown project artwork');
         continue;
@@ -1008,6 +1042,11 @@ const squarePreviewClass = [[
   '  image.classList.toggle("work-row__preview--logo", item.previewKind === "logo");',
   '  image.classList.toggle("work-row__preview--logo", item.previewKind === "logo");\n  image.classList.toggle("work-row__preview--square", item.relatedPosterShape === "square");',
 ]];
+const squirclePreviewLines = '  image.classList.toggle("work-row__preview--square", ["square", "squircle"].includes(item.relatedPosterShape));\n  image.classList.toggle("work-row__preview--squircle", item.relatedPosterShape === "squircle");';
+const squirclePreviewClasses = [
+  ['  image.classList.toggle("work-row__preview--square", item.relatedPosterShape === "square");', squirclePreviewLines],
+  [squarePreviewClass[0][0], squarePreviewClass[0][0] + '\n' + squirclePreviewLines],
+];
 
 // The DD Camp favicon adds one static entry; all picker behaviour is unchanged.
 const campIconSourcePatch = [[
@@ -1241,8 +1280,14 @@ export const affectedComponents = (path, before, after, maskHtmlCopy) => {
     if (path === 'js/map-data.js') {
       try { if (projectPresentationOutside(before) === projectPresentationOutside(after)) return projectPresentationComponents; }
       catch { /* Unrelated records retain their existing owners. */ }
+      try {
+        if (projectPresentationOutside(maskMapMedia(before, false)) === projectPresentationOutside(maskMapMedia(after, false))) {
+          return [...projectPresentationComponents, 'media'];
+        }
+      } catch { /* Media normalization does not hide neighboring runtime. */ }
     }
     if (path === 'js/panels.js' && exactReplacements(before, after, squarePreviewClass)) return projectPresentationComponents;
+    if (path === 'js/panels.js' && squirclePreviewClasses.some(patch => exactReplacements(before, after, [patch]))) return projectPresentationComponents;
     if (path === 'styles.css' && before !== after) {
       const left = readingAndProjectCss(before), right = readingAndProjectCss(after);
       if (left.outside === right.outside && (left.edges !== right.edges || left.projects !== right.projects)) {

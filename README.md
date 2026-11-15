@@ -160,14 +160,18 @@ the first stop without opening it; the axes remain visible below the entry.
   SAR. A vertical receiver is reserved for a source proven mobile-native; it
   must never turn a desktop site into a portrait tablet. The reel has no title
   bar, footer, border, shadow, or decorative loading fallback. Each reel has a
-  selected `900×600` poster from the same native capture, so its composition
-  appears before video decoding. `scripts/reel-specs.json` owns capture settings,
-  poster timestamps, duration bounds and chapter ranges for all 18 masters.
+  selected `900×600` poster from the native capture or an explicitly declared
+  original `3:2` project photograph, introducing the project before video decoding.
+  `scripts/reel-specs.json` owns capture settings, poster timestamps or saved
+  `posterSource` files and their source URLs, duration bounds and chapter ranges for all 18 masters.
   Use `pnpm media:prepare <project-id>` to rebuild that project's poster and
   chapters and synchronize measured durations and SHA-256 media URLs in both
   map data and HTML. Omit the ID to rebuild all derivatives. Use
   `pnpm media:prepare <project-id> --capture` to record the source first, or
   `--master /absolute/path/video.mp4` to adopt an existing native capture.
+  Use `pnpm media:prepare <project-id> --poster-only` to rebuild just its poster
+  without touching the master or chapters, then `pnpm media:prepare --sync`
+  to update media URLs and cache keys before release.
   Node.js, Playwright, Chrome and FFmpeg are required for capture; derivative
   generation requires FFmpeg. Set `PORTFOLIO_CAPTURE_BROWSER` when Chrome is
   outside its default macOS path. `pnpm media:prepare --sync` refreshes only

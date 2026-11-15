@@ -608,6 +608,10 @@
   {
     "itemId": "doronin",
     "master": "doronin.mp4",
+    "posterSource": {
+      "file": "rendering/reel-poster-sources/doronin.jpg",
+      "url": "https://static.tildacdn.com/stor6631-3363-4737-a235-356638323464/75844547.jpg"
+    },
     "chapters": [
       {
         "label": "campaign",

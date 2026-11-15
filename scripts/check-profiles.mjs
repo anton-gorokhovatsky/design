@@ -41,7 +41,7 @@ export const staticCheckPaths = new Set([
   'scripts/material-contract.mjs', 'scripts/check-css-cascade.mjs', 'scripts/check-performance-budget.mjs',
   'scripts/check-performance-budget.test.mjs', 'scripts/check-publication-assets.mjs']);
 export const ownedCheckComponent = path => notFoundAssetPaths.has(path) ? 'not-found'
-  : path === 'scripts/capture-reels.cjs' ? 'media'
+  : ['scripts/capture-reels.cjs', 'scripts/prepare-reels.mjs', 'scripts/reel-specs.mjs'].includes(path) ? 'media'
   : path === 'assets/project-icons/dd-camp.svg' ? 'check:hover-layout'
   : path === 'assets/project-logos/academy-tn.svg'
   ? 'check:case-flow' : signaturePath.test(path)
