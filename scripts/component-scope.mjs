@@ -15,8 +15,45 @@ const isReadingEdgeModule = source => {
   const tree = parseJs(source, { ecmaVersion: "latest", sourceType: "module" });
   const declarations = tree.body.flatMap(node => node.type === "VariableDeclaration" ? node.declarations : []);
   const reader = declarations.filter(node => node.id.type === "Identifier" && node.id.name === "readers");
+  const bindings = tree.body.filter(node => /^(Import|Export)/.test(node.type));
   return reader.length === 1 && reader[0].init?.type === "Literal" && reader[0].init.value === readingEdgeReaders
-    && !tree.body.some(node => /^(Import|Export)/.test(node.type));
+    && bindings.length <= 1 && bindings.every(node => node.type === "ExportNamedDeclaration" && !node.source
+      && !node.specifiers.length && node.declaration?.type === "FunctionDeclaration"
+      && node.declaration.id?.name === "getScrollEdgeInsets" && !node.declaration.async && !node.declaration.generator
+      && node.declaration.params.length === 4 && node.declaration.params.every((parameter, index) => parameter.type === "Identifier"
+        && parameter.name === ["height", "scrollHeight", "scrollTop", "configuredDepth"][index]));
+};
+// Only the existing theme group's focus reveal consumes the shared inset helper.
+// Other preference logic, imports, listeners and exported APIs remain outside.
+const themeFocusOutside = source => {
+  const tree = parseJs(source, { ecmaVersion: "latest", sourceType: "module" });
+  let imported = 0, listeners = 0;
+  const callOn = (node, owner, method) => node?.type === "CallExpression" && !node.optional
+    && node.callee.type === "MemberExpression" && !node.callee.computed && !node.callee.optional
+    && node.callee.object.type === "Identifier" && node.callee.object.name === owner && node.callee.property.name === method;
+  tree.body = tree.body.filter(statement => {
+    if (statement.type !== "ImportDeclaration" || statement.source.value !== "./scroll-edges.js") return true;
+    const binding = statement.specifiers[0];
+    if (++imported > 1 || statement.specifiers.length !== 1 || binding.type !== "ImportSpecifier"
+      || binding.imported.name !== "getScrollEdgeInsets" || binding.local.name !== "getScrollEdgeInsets") {
+      throw new Error("Unknown reading edge helper import");
+    }
+    return false;
+  });
+  for (const statement of tree.body) {
+    const each = statement.type === "ExpressionStatement" && statement.expression;
+    if (!callOn(each, "themeGroups", "forEach") || each.arguments.length !== 1) continue;
+    const callback = each.arguments[0], subscription = callback.body;
+    if (callback.type !== "ArrowFunctionExpression" || callback.async || callback.params.length !== 1
+      || callback.params[0].type !== "Identifier" || callback.params[0].name !== "group"
+      || !callOn(subscription, "group", "addEventListener") || subscription.arguments[0]?.value !== "focusin") continue;
+    const handler = subscription.arguments[1];
+    if (++listeners > 1 || subscription.arguments.length !== 2 || handler?.type !== "ArrowFunctionExpression"
+      || handler.async || handler.params.length || handler.body.type !== "BlockStatement") throw new Error("Unknown theme focus reveal");
+    handler.body = { type: "ThemeFocusReveal" };
+  }
+  if (listeners !== 1) throw new Error("Missing unique theme focus reveal");
+  return astShape(tree);
 };
 const readingEdgeHtmlOutside = source => {
   const script = /^[ \t]*<script type="module" src="js\/scroll-edges\.js(?:\?v=[a-f0-9]{12})?"><\/script>\r?\n/gm;
@@ -1214,6 +1251,8 @@ export const affectedComponents = (path, before, after, maskHtmlCopy) => {
       }
     }
     if (path === "js/scroll-edges.js" && isReadingEdgeModule(after)) return readingEdgeComponents;
+    if (path === "js/preferences.js" && before !== after
+      && themeFocusOutside(before) === themeFocusOutside(after)) return readingEdgeComponents;
     if (path === "scripts/runtime-files.mjs" && !before.includes('"js/scroll-edges.js"')
       && after.split('  "js/scroll-edges.js",\n').length === 2
       && after.replace('  "js/scroll-edges.js",\n', '') === before) return readingEdgeComponents;

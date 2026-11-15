@@ -1,4 +1,6 @@
 // shared preferences, typography, theme, and clock.
+import { getScrollEdgeInsets } from "./scroll-edges.js";
+
 const root = document.documentElement;
 const setFocusModality = (modality) => {
   root.dataset.focusModality = modality;
@@ -58,11 +60,22 @@ themeGroups.forEach(group => group.addEventListener("focusin", () => {
     if (!body || !group.contains(document.activeElement)) return;
     const style = getComputedStyle(group);
     const ring = Math.max(0, parseFloat(style.outlineOffset)) + parseFloat(style.outlineWidth);
-    const frame = group.getBoundingClientRect(), viewport = body.getBoundingClientRect();
-    if (frame.height + ring * 2 > body.clientHeight) return;
-    const shift = frame.top - ring < viewport.top ? frame.top - ring - viewport.top
-      : Math.max(0, frame.bottom + ring - viewport.bottom);
-    if (shift) body.scrollTo({ top: body.scrollTop + (shift > 0 ? Math.ceil(shift) : Math.floor(shift)), behavior: "instant" });
+    const readerStyle = getComputedStyle(body);
+    const masked = (readerStyle.maskImage || readerStyle.webkitMaskImage || "none") !== "none";
+    const depth = masked ? parseFloat(readerStyle.getPropertyValue("--scroll-edge-depth")) || 0 : 0;
+    // Native focus scrolling precedes the edge controller's next frame. Derive
+    // its current insets from the real position, not the previous frame's CSS.
+    // Recheck once if revealing the group creates a previously absent top edge.
+    for (let pass = 0; pass < 2; pass++) {
+      const insets = getScrollEdgeInsets(body.clientHeight, body.scrollHeight, body.scrollTop, depth);
+      const frame = group.getBoundingClientRect(), viewport = body.getBoundingClientRect();
+      const top = viewport.top + insets.top, bottom = viewport.bottom - insets.bottom;
+      if (frame.height + ring * 2 > bottom - top) return;
+      const shift = frame.top - ring < top ? frame.top - ring - top
+        : Math.max(0, frame.bottom + ring - bottom);
+      if (!shift) break;
+      body.scrollTo({ top: body.scrollTop + (shift > 0 ? Math.ceil(shift) : Math.floor(shift)), behavior: "instant" });
+    }
   });
 }));
 const themeResize = new ResizeObserver(() => syncThemeIndicators());

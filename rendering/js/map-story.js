@@ -223,3 +223,56 @@ window.visualViewport?.addEventListener('resize',scheduleStoryClose);
 window.visualViewport?.addEventListener('scroll',scheduleStoryClose);
 story.addEventListener('scroll',scheduleStoryClose,{passive:true});
 scheduleStoryClose();
+
+// Story keyboard reveal — native focus stays inside the sharp reading area.
+import { getScrollEdgeInsets } from './scroll-edges.js';
+// Reveal native keyboard focus only within the story's reading viewport.
+const storyKeyboardReader = document.getElementById('story-pane');
+let storyKeyboardFrame = 0, storyKeyboardTab = false;
+function cancelStoryKeyboardReveal() {
+  cancelAnimationFrame(storyKeyboardFrame);
+  storyKeyboardFrame = 0;
+}
+function revealStoryKeyboardFocus() {
+  storyKeyboardFrame = 0;
+  const target = document.activeElement;
+  if (!document.body.classList.contains('has-story-pane') || storyKeyboardReader.inert
+    || document.documentElement.dataset.focusModality !== 'keyboard'
+    || !(target instanceof HTMLElement) || target === storyKeyboardReader
+    || !storyKeyboardReader.contains(target) || !target.matches(':focus-visible')
+    || target.closest('[popover]')) return;
+  let indicator = target, style = getComputedStyle(target);
+  if (style.outlineStyle === 'none' && target.matches('.scene-modes input')) {
+    indicator = target.closest('label'); style = getComputedStyle(indicator);
+  }
+  const ring = parseFloat(style.outlineWidth) + Math.max(0, parseFloat(style.outlineOffset));
+  const readerStyle = getComputedStyle(storyKeyboardReader);
+  const masked = (readerStyle.maskImage || readerStyle.webkitMaskImage || 'none') !== 'none';
+  const depth = masked ? parseFloat(readerStyle.getPropertyValue('--scroll-edge-depth')) || 0 : 0;
+  // A reveal may create the upper edge; resolve that new bound once more.
+  for (let pass = 0; pass < 2; pass++) {
+    const insets = getScrollEdgeInsets(storyKeyboardReader.clientHeight, storyKeyboardReader.scrollHeight, storyKeyboardReader.scrollTop, depth);
+    const rect = indicator.getBoundingClientRect(), port = storyKeyboardReader.getBoundingClientRect();
+    const top = port.top + insets.top, bottom = port.bottom - insets.bottom;
+    if (rect.height + ring * 2 > bottom - top) return;
+    const shift = rect.top - ring < top ? rect.top - ring - top : Math.max(0, rect.bottom + ring - bottom);
+    if (!shift) return;
+    storyKeyboardReader.scrollTo({ top: storyKeyboardReader.scrollTop + (shift > 0 ? Math.ceil(shift) : Math.floor(shift)), behavior: 'instant' });
+  }
+}
+document.addEventListener('keydown', event => {
+  storyKeyboardTab = event.key === 'Tab';
+  if (!storyKeyboardTab) cancelStoryKeyboardReveal();
+}, true);
+document.addEventListener('keyup', event => { if (event.key === 'Tab') storyKeyboardTab = false; }, true);
+storyKeyboardReader.addEventListener('focusin', () => {
+  cancelStoryKeyboardReveal();
+  if (storyKeyboardTab) storyKeyboardFrame = requestAnimationFrame(revealStoryKeyboardFocus);
+});
+for (const event of ['pointerdown', 'touchstart', 'wheel']) {
+  storyKeyboardReader.addEventListener(event, () => {
+    storyKeyboardTab = false;
+    cancelStoryKeyboardReveal();
+  }, { passive: true });
+}
+// End story keyboard reveal.

@@ -186,6 +186,33 @@ const exerciseScroll = async (page, selector, lastSelector, mobile, label) => {
   assert.equal(returned.edgeTop, 0, label + ': returning clears the upper edge');
   return {max: top.max, samples, input: 'native smooth scroll with reversal; automation is not a physical touch gesture'};
 };
+const assertFocusedInReader = async (page, regionSelector, target) => {
+  await target.evaluate(element => { delete element.__qaFocusRest; });
+  let focus;
+  try {
+    const state = await page.waitForFunction(focusState, { element: target, selector: regionSelector, settled: true }, { polling: 40, timeout: 8000 });
+    focus = await state.jsonValue();
+    await state.dispose();
+  } catch (error) {
+    const state = await page.evaluate(focusState, { element: target, selector: regionSelector });
+    throw new Error('Native keyboard focus did not settle inside the sharp reading area: ' + JSON.stringify(state), { cause: error });
+  }
+  if (focus.isRegion) {
+    assert.notEqual(focus.shellOutline, 'none', 'A focused reader has an unmasked outline on its stationary shell');
+    assert.equal(focus.shellMask, 'none');
+  } else {
+    assert.ok(focus.rect.top - focus.gutter >= focus.sharpTop - 1
+      && focus.rect.bottom + focus.gutter <= focus.sharpBottom + 1,
+    'The complete focused control and its outline remain in the sharp reading area: ' + JSON.stringify(focus));
+  }
+};
+const assertCurrentStoryFocus = async page => {
+  const target = await page.evaluateHandle(() => document.activeElement);
+  try {
+    assert.equal(await target.evaluate(e => e !== document.querySelector('#story-pane') && document.querySelector('#story-pane').contains(e)), true, 'Native Tab targets a control in the story');
+    await assertFocusedInReader(page, '#story-pane', target);
+  } finally { await target.dispose(); }
+};
 const selectionAndFocus = async (page, regionSelector, textSelector, linkSelector) => {
   const text = page.locator(textSelector + ':visible').first();
   await text.scrollIntoViewIfNeeded();
@@ -208,28 +235,46 @@ const selectionAndFocus = async (page, regionSelector, textSelector, linkSelecto
   const tab = engine === 'webkit' && process.platform === 'darwin' ? 'Alt+Tab' : 'Tab';
   await page.keyboard.press('Shift+' + tab);
   await page.keyboard.press(tab);
-  assert.equal(await link.evaluate((e, selector) => e === document.activeElement && e.matches(':focus-visible')
+  if (regionSelector !== '#story-pane') assert.equal(await link.evaluate((e, selector) => e === document.activeElement && e.matches(':focus-visible')
     && getComputedStyle(e === document.querySelector(selector) ? e.parentElement : e).outlineStyle !== 'none', regionSelector),
   true, 'Keyboard returns to a visible native focus indicator');
   await assertNative(page, regionSelector, 'keyboard focus');
-  const target = await link.elementHandle();
-  await target.evaluate(element => { delete element.__qaFocusRest; });
-  let focus;
-  try {
-    const state = await page.waitForFunction(focusState, { element: target, selector: regionSelector, settled: true }, { polling: 40, timeout: 8000 });
-    focus = await state.jsonValue();
-    await state.dispose();
-  } catch (error) {
-    const state = await page.evaluate(focusState, { element: target, selector: regionSelector });
-    throw new Error('Native keyboard focus did not settle inside the sharp reading area: ' + JSON.stringify(state), { cause: error });
-  } finally { await target.dispose(); }
-  if (focus.isRegion) {
-    assert.notEqual(focus.shellOutline, 'none', 'A focused reader has an unmasked outline on its stationary shell');
-    assert.equal(focus.shellMask, 'none');
-  } else {
-    assert.ok(focus.rect.top - focus.gutter >= focus.sharpTop - 1
-      && focus.rect.bottom + focus.gutter <= focus.sharpBottom + 1,
-    'The complete focused control and its outline remain in the sharp reading area: ' + JSON.stringify(focus));
+  const target = regionSelector === '#story-pane' ? await page.evaluateHandle(() => document.activeElement) : await link.elementHandle();
+  if (regionSelector === '#story-pane') assert.equal(await target.evaluate(e => e !== document.querySelector('#story-pane') && document.querySelector('#story-pane').contains(e)), true, 'Rapid Tab keeps focus in the story');
+  try { await assertFocusedInReader(page, regionSelector, target); }
+  finally { await target.dispose(); }
+  if (regionSelector === '#story-pane') {
+    // Revealing another chapter can expose new scene controls. Check the actual
+    // next native target, rather than assuming a formerly invisible tab order.
+    await link.scrollIntoViewIfNeeded(); await link.focus();
+    await page.keyboard.press('Shift+' + tab);
+    await assertCurrentStoryFocus(page);
+    await page.keyboard.press(tab);
+    await assertCurrentStoryFocus(page);
+    // This authored pair has no changing project labels between its controls.
+    // Observe both neighbours before checking the immediate reverse/return.
+    const toggle = page.locator('#story-pane .gravity-toggle');
+    await toggle.scrollIntoViewIfNeeded(); await toggle.focus();
+    await page.keyboard.press('Shift+' + tab);
+    assert.equal(await page.evaluate(() => document.activeElement.matches('#story-pane .gravity-hit')), true,
+      'The stable previous native stop is the gravity scene control');
+    const previous = await page.evaluateHandle(() => document.activeElement);
+    await assertCurrentStoryFocus(page);
+    await page.keyboard.press(tab);
+    assert.equal(await toggle.evaluate(e => e === document.activeElement), true, 'Tab returns to the observed gravity toggle');
+    await assertCurrentStoryFocus(page);
+    await page.keyboard.press('Shift+' + tab);
+    await page.keyboard.press(tab);
+    assert.equal(await toggle.evaluate(e => e === document.activeElement), true, 'Rapid return keeps the current target');
+    await assertCurrentStoryFocus(page);
+    await previous.dispose();
+    // A later user scroll may intentionally leave keyboard focus off-screen.
+    // It must not be pulled back by a persistent focus-following scroll handler.
+    const manual = await page.locator(regionSelector).evaluate(s => {
+      s.scrollBy({ top: 180, behavior: 'instant' }); return s.scrollTop;
+    });
+    await waitForScrollRest(page, regionSelector);
+    assert.equal(await page.locator(regionSelector).evaluate(s => s.scrollTop), manual, 'Following scroll is not pulled back to the old focus');
   }
 };
 

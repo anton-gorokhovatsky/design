@@ -243,7 +243,7 @@ try {
     // macOS WebKit's native Option-Tab visits all controls even when the host
     // keyboard preference limits Tab. Other engines/platforms use plain Tab.
     await page.keyboard.press(engine === "webkit" && process.platform === "darwin" ? "Alt+Tab" : "Tab");
-    await page.waitForFunction(() => {
+    const focusedTheme = await page.waitForFunction(() => {
       const group = document.querySelector('#settings-panel .preference-choices');
       const region = group.closest('.settings-panel__body'), body = region.getBoundingClientRect();
       const readerCss = getComputedStyle(region), masked = readerCss.maskImage !== 'none';
@@ -251,21 +251,26 @@ try {
       const bottom = body.bottom - (masked ? parseFloat(readerCss.getPropertyValue('--scroll-edge-bottom')) : 0);
       const frame = group.getBoundingClientRect(), css = getComputedStyle(group);
       const ring = parseFloat(css.outlineWidth) + Math.max(0, parseFloat(css.outlineOffset));
-      return frame.height + ring * 2 > bottom - top || (frame.top - ring >= top - .5 && frame.bottom + ring <= bottom + .5);
-    });
-    const themeFocus = await page.evaluate(() => {
-      const region = document.querySelector(".settings-panel__body"), body = region.getBoundingClientRect();
-      const css = getComputedStyle(region), masked = css.maskImage !== 'none';
       const focus = document.activeElement.getBoundingClientRect();
-      return {
+      const state = {
         theme: document.activeElement.hasAttribute("data-theme-choice"),
+        visibleFocus: document.activeElement.matches(':focus-visible'),
         element: document.activeElement.outerHTML.slice(0, 240),
         focus: focus.toJSON(), body: body.toJSON(),
-        sharpTop: body.top + (masked ? parseFloat(css.getPropertyValue('--scroll-edge-top')) : 0),
-        sharpBottom: body.bottom - (masked ? parseFloat(css.getPropertyValue('--scroll-edge-bottom')) : 0),
+        group: frame.toJSON(), ring, scrollTop: region.scrollTop,
+        groupFits: frame.height + ring * 2 <= bottom - top,
+        groupVisible: frame.top - ring >= top - .5 && frame.bottom + ring <= bottom + .5,
+        sharpTop: top, sharpBottom: bottom,
       };
+      const signature = JSON.stringify(state), previous = group.__qaFocusRest;
+      const since = previous?.signature === signature ? previous.since : performance.now();
+      group.__qaFocusRest = { signature, since };
+      return state.theme && state.visibleFocus && (!state.groupFits || state.groupVisible)
+        && focus.top >= top && focus.bottom <= bottom && performance.now() - since >= 120 ? state : false;
     });
-    assert.ok(themeFocus.theme && themeFocus.focus.top >= themeFocus.sharpTop && themeFocus.focus.bottom <= themeFocus.sharpBottom,
+    const themeFocus = await focusedTheme.jsonValue();
+    assert.ok(themeFocus.theme && themeFocus.visibleFocus && (!themeFocus.groupFits || themeFocus.groupVisible)
+      && themeFocus.focus.top >= themeFocus.sharpTop && themeFocus.focus.bottom <= themeFocus.sharpBottom,
       `Tab reaches the checked theme without clipping its focus ring at ${width}/${fontSize}: ${JSON.stringify(themeFocus)}`);
     await assertThemeGeometry(page, '#settings-panel .preference-choices');
     if (width === 320 && fontSize === 16) {

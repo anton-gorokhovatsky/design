@@ -409,7 +409,7 @@ export const planRelease = ({ projectRoot, base = "origin/gh-pages", target } = 
         const after = targetSha ? git("show", `${targetSha}:${path}`) : readFileSync(resolve(projectRoot, path), "utf8");
         classification = classifyChange(path, before, after);
       }
-      if (["A", "M"].includes(status) && ["js/scroll-edges.js", "scripts/runtime-files.mjs"].includes(path)) {
+      if (["A", "M"].includes(status) && ["js/scroll-edges.js", "js/preferences.js", "scripts/runtime-files.mjs"].includes(path)) {
         const before = status === "A" ? "" : git("show", `${baseSha}:${path}`);
         const after = targetSha ? git("show", `${targetSha}:${path}`) : readFileSync(resolve(projectRoot, path), "utf8");
         classification = classifyChange(path, before, after);

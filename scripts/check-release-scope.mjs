@@ -779,6 +779,34 @@ scoped('js/scroll-edges.js', readingEdgeModule, readingEdgeModule + '\n// Same r
 for (const candidate of ['', readingEdgeModule.replace('.project-orbit-picker\';', '.command-results\';'), readingEdgeModule + '\nimport "./other.js";', readingEdgeModule + '\n{']) {
   scoped('js/scroll-edges.js', readingEdgeModule, candidate, 'full');
 }
+for (const candidate of [
+  readingEdgeModule.replace('export function getScrollEdgeInsets', 'export function otherHelper'),
+  readingEdgeModule.replace('export function getScrollEdgeInsets', 'export default function getScrollEdgeInsets'),
+  readingEdgeModule.replace('export function getScrollEdgeInsets', 'export async function getScrollEdgeInsets'),
+  readingEdgeModule.replace('scrollTop, configuredDepth)', 'scrollTop, configuredDepth, other)'),
+  readingEdgeModule + '\nexport { discover };',
+  readingEdgeModule + '\nexport * from "./other.js";',
+]) scoped('js/scroll-edges.js', readingEdgeModule, candidate, 'full');
+const focusHelperImport = 'import { getScrollEdgeInsets } from "./scroll-edges.js";\n';
+const themeFocusBefore = 'const neighboringPreference = true;\nconst themeGroups = [];\n'
+  + 'themeGroups.forEach(group => group.addEventListener("focusin", () => { group.scrollTop = 1; }));\n';
+const themeFocusAfter = focusHelperImport + themeFocusBefore.replace('group.scrollTop = 1;',
+  'const insets = getScrollEdgeInsets(400, 800, group.scrollTop, 24); group.scrollTop += insets.top;');
+scoped('js/preferences.js', themeFocusBefore, themeFocusAfter, 'components', readingEdgeCoverage);
+scoped('js/preferences.js', themeFocusAfter, themeFocusAfter.replace('group.scrollTop, 24', 'group.scrollTop, 20'), 'components', readingEdgeCoverage);
+for (const candidate of [
+  themeFocusAfter.replace('neighboringPreference = true', 'neighboringPreference = false'),
+  themeFocusAfter.replace('"focusin"', '"click"'),
+  themeFocusAfter.replace('themeGroups.forEach', 'otherGroups.forEach'),
+  themeFocusAfter.replace('getScrollEdgeInsets } from', 'getScrollEdgeInsets as other } from'),
+  themeFocusAfter.replace('./scroll-edges.js', './other.js'),
+  themeFocusAfter.replace('getScrollEdgeInsets } from', 'getScrollEdgeInsets, other } from'),
+  themeFocusAfter.replace('"focusin", () =>', '"focusin", async () =>'),
+  themeFocusAfter + '\nwindow.unrelated = true;',
+  themeFocusAfter + '\nimport "./other.js";',
+  themeFocusAfter + '\nexport const unrelated = true;',
+  themeFocusAfter + '\nthemeGroups.forEach(group => group.addEventListener("focusin", () => {}));',
+]) scoped('js/preferences.js', themeFocusBefore, candidate, 'full');
 scoped('js/scroll-edges-other.js', '', readingEdgeModule, 'full');
 const readingEdgeScript = '<script type="module" src="js/scroll-edges.js"></script>\n';
 const readingEdgeHtml = '<html><head>\n</head><body><main>Map</main></body></html>';
@@ -861,12 +889,14 @@ try {
   mkdirSync(join(readingEdgeDirectory, 'js'));
   writeFileSync(join(readingEdgeDirectory, 'index.html'), readingEdgeHtml);
   writeFileSync(join(readingEdgeDirectory, 'js/map-data.js'), projectPresentationBefore);
+  writeFileSync(join(readingEdgeDirectory, 'js/preferences.js'), themeFocusBefore);
   mkdirSync(join(readingEdgeDirectory, 'assets/project-logos'), { recursive: true });
   writeFileSync(join(readingEdgeDirectory, 'assets/project-logos/ilmix-cutout.png'), 'old raster');
   git('init', '-b', 'main'); git('add', '.'); git('commit', '-m', 'baseline');
   const base = git('rev-parse', 'HEAD');
   writeFileSync(join(readingEdgeDirectory, 'js/scroll-edges.js'), readingEdgeModule);
   writeFileSync(join(readingEdgeDirectory, 'index.html'), withReadingEdge);
+  writeFileSync(join(readingEdgeDirectory, 'js/preferences.js'), themeFocusAfter);
   const expected = [...readingEdgeCoverage].sort();
   const plan = () => planRelease({ projectRoot: readingEdgeDirectory, base });
   assert.deepEqual(plan().components, expected, 'Untracked reader code receives its actual browser coverage');
@@ -874,6 +904,12 @@ try {
   git('add', '.'); git('commit', '-m', 'reader');
   assert.deepEqual(plan().components, expected, 'A committed addition retains the same coverage');
   const addedBase = git('rev-parse', 'HEAD');
+  writeFileSync(join(readingEdgeDirectory, 'js/preferences.js'), themeFocusAfter.replace('group.scrollTop, 24', 'group.scrollTop, 20'));
+  assert.equal(planRelease({ projectRoot: readingEdgeDirectory, base: addedBase }).mode, 'components', 'A preference focus edit is classified from file contents in the release plan');
+  assert.deepEqual(planRelease({ projectRoot: readingEdgeDirectory, base: addedBase }).components, expected, 'Theme focus retains the complete reader and settings coverage');
+  writeFileSync(join(readingEdgeDirectory, 'js/preferences.js'), themeFocusAfter + '\nwindow.unrelated = true;');
+  assert.equal(planRelease({ projectRoot: readingEdgeDirectory, base: addedBase }).mode, 'full', 'Theme focus ownership cannot hide neighboring preference runtime');
+  writeFileSync(join(readingEdgeDirectory, 'js/preferences.js'), themeFocusAfter);
   writeFileSync(join(readingEdgeDirectory, 'js/scroll-edges.js'), readingEdgeModule + '\n// Updated reader.\n');
   assert.deepEqual(planRelease({ projectRoot: readingEdgeDirectory, base: addedBase }).components, expected, 'A later reader-only edit keeps its bounded gate');
   writeFileSync(join(readingEdgeDirectory, 'index.html'), withReadingEdge.replace('<main>', '<main hidden>'));

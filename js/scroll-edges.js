@@ -3,6 +3,21 @@
 const readers = '.content-panel__body,.case-scroll,.settings-panel__body,#story-pane,.project-orbit-picker';
 const controllers = new WeakMap();
 
+// Shared by painting and focus reveal: native focus can scroll before the next
+// animation frame has published these values as CSS custom properties.
+export function getScrollEdgeInsets(height, scrollHeight, scrollTop, configuredDepth) {
+  const maximum = height > 0 ? Math.max(0, scrollHeight - height) : 0;
+  // Clamp fractional positions and Safari's elastic overscroll to the real range.
+  const position = Math.max(0, Math.min(maximum, scrollTop));
+  const depth = Math.min(configuredDepth, height / 4);
+  const active = maximum > 1;
+  return {
+    active,
+    top: active && position > 1 ? Math.min(depth, position) : 0,
+    bottom: active && maximum - position > 1 ? Math.min(depth, maximum - position) : 0,
+  };
+}
+
 function observeReader(region) {
   if (controllers.has(region)) {
     controllers.get(region)();
@@ -18,15 +33,12 @@ function observeReader(region) {
   const update = () => {
     frame = 0;
     const height = region.clientHeight;
-    const maximum = height > 0 ? Math.max(0, region.scrollHeight - height) : 0;
-    // Clamp fractional positions and Safari's elastic overscroll to the real range.
-    const top = Math.max(0, Math.min(maximum, region.scrollTop));
-    const depth = Math.min(parseFloat(getComputedStyle(region).getPropertyValue('--scroll-edge-depth')) || 0, height / 4);
-    const active = maximum > 1;
-    const next = String(active);
+    const depth = parseFloat(getComputedStyle(region).getPropertyValue('--scroll-edge-depth')) || 0;
+    const insets = getScrollEdgeInsets(height, region.scrollHeight, region.scrollTop, depth);
+    const next = String(insets.active);
     if (region.dataset.scrollEdgeActive !== next) region.dataset.scrollEdgeActive = next;
-    setDepth('top', active && top > 1 ? Math.min(depth, top) : 0);
-    setDepth('bottom', active && maximum - top > 1 ? Math.min(depth, maximum - top) : 0);
+    setDepth('top', insets.top);
+    setDepth('bottom', insets.bottom);
   };
   const schedule = () => { if (!frame) frame = requestAnimationFrame(update); };
   controllers.set(region, schedule);
