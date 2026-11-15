@@ -9034,6 +9034,38 @@ backdrop-filter: none !important;
 }
 }
 
+/* Reading edges — shared native scrollports. */
+[data-scroll-edge] {
+--scroll-edge-depth: 24px;
+}
+.content-panel__body[data-scroll-edge],
+.case-scroll[data-scroll-edge],
+.settings-panel__body[data-scroll-edge],
+#story-pane[data-scroll-edge] { scroll-padding-block: calc(var(--scroll-edge-depth) + var(--space-2)); }
+.settings-panel__body[data-scroll-edge] { padding-block-end: var(--space-2); }
+.project-orbit-picker[data-scroll-edge] {
+--scroll-edge-inset: var(--picker-head-height);
+scroll-padding-block: calc(var(--picker-head-height) + var(--scroll-edge-depth) + var(--space-2)) calc(var(--scroll-edge-depth) + var(--space-2));
+}
+[data-scroll-edge][data-scroll-edge-active="true"] {
+mask-image: linear-gradient(to bottom, transparent var(--scroll-edge-inset, 0px), #000 calc(var(--scroll-edge-inset, 0px) + var(--scroll-edge-top, 0px)), #000 calc(100% - var(--scroll-edge-bottom, 0px)), transparent);
+-webkit-mask-image: linear-gradient(to bottom, transparent var(--scroll-edge-inset, 0px), #000 calc(var(--scroll-edge-inset, 0px) + var(--scroll-edge-top, 0px)), #000 calc(100% - var(--scroll-edge-bottom, 0px)), transparent);
+}
+.content-panel__frame:has(> .content-panel__body:focus-visible),
+.case-sheet:has(> .case-scroll:focus-visible) {
+outline: var(--focus-width) solid var(--signal);
+outline-offset: -4px;
+}
+.content-panel__body[data-scroll-edge]:focus-visible,
+.case-scroll[data-scroll-edge]:focus-visible { outline: none; }
+html[data-contrast="true"] [data-scroll-edge] {
+mask-image: none;
+-webkit-mask-image: none;
+}
+@media (forced-colors: active), (prefers-contrast: more) {
+[data-scroll-edge][data-scroll-edge-active] { mask-image: none; -webkit-mask-image: none; }
+}
+
 /* Reading shell stays rounded and stationary during scroll. */
 .map-inspector.has-reading-frame:not(.is-case-view) {
 display: grid;

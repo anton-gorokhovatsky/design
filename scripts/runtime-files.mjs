@@ -23,6 +23,7 @@ export const runtimeFiles = [
   "js/celestial-bodies.js",
   "js/map-controls.js",
   "js/viewport-ui.js",
+  "js/scroll-edges.js",
   "js/panels.js",
   "js/case-view.js",
   "js/favicon.js",

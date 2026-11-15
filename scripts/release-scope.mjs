@@ -406,6 +406,11 @@ export const planRelease = ({ projectRoot, base = "origin/gh-pages", target } = 
         const after = targetSha ? git("show", `${targetSha}:${path}`) : readFileSync(resolve(projectRoot, path), "utf8");
         classification = classifyChange(path, before, after);
       }
+      if (["A", "M"].includes(status) && ["js/scroll-edges.js", "scripts/runtime-files.mjs"].includes(path)) {
+        const before = status === "A" ? "" : git("show", `${baseSha}:${path}`);
+        const after = targetSha ? git("show", `${targetSha}:${path}`) : readFileSync(resolve(projectRoot, path), "utf8");
+        classification = classifyChange(path, before, after);
+      }
       if (status === "M" && shareArtifactPaths.has(path)) classification = { mode: "copy", components: [] };
       if (["A", "M"].includes(status) && relatedPresentationDocs.has(path)) classification = { mode: "copy", components: [] };
       if (["A", "M"].includes(status) && relatedPointImages.has(path)) classification = relatedPointImageScope;
@@ -415,7 +420,9 @@ export const planRelease = ({ projectRoot, base = "origin/gh-pages", target } = 
     }
     if (!targetSha) {
       changes.push(...git("ls-files", "--others", "--exclude-standard", "-z").split("\0").filter(Boolean)
-        .map((path) => { const owner = ownedCheckComponent(path); return staticCheckPaths.has(path) || relatedPresentationDocs.has(path) ? { path, mode: "copy", components: [] } : relatedPointImages.has(path) ? { path, ...relatedPointImageScope } : { path, mode: owner ? "components" : "full", components: owner ? [owner] : [] }; }));
+        .map((path) => { const owner = ownedCheckComponent(path); return staticCheckPaths.has(path) || relatedPresentationDocs.has(path) ? { path, mode: "copy", components: [] } : relatedPointImages.has(path) ? { path, ...relatedPointImageScope }
+          : path === "js/scroll-edges.js" ? { path, ...classifyChange(path, "", readFileSync(resolve(projectRoot, path), "utf8")) }
+            : { path, mode: owner ? "components" : "full", components: owner ? [owner] : [] }; }));
     }
     const fullPaths = changes.filter(({ mode }) => mode === "full").map(({ path }) => path);
     const components = [...new Set(changes.flatMap(({ components }) => components))].sort();

@@ -770,6 +770,72 @@ for (const engine of ['chromium','webkit']) {
 scoped('scripts/check-scroll-lens.mjs', 'old test', '', 'components', ['check:scroll-edges']);
 scoped('scripts/check-scroll-edges.mjs', '', 'native contract', 'components', ['check:scroll-edges']);
 
+// The new reader edge is a standalone owner, not a reopened viewport-runtime
+// exemption. New/untracked modules and registration must receive the same gate.
+const readingEdgeCoverage = ['scroll-edges', 'check:hover-layout', 'check:whoop-ui', 'check:command-placement'];
+const readingEdgeModule = read('js/scroll-edges.js');
+scoped('js/scroll-edges.js', '', readingEdgeModule, 'components', readingEdgeCoverage);
+scoped('js/scroll-edges.js', readingEdgeModule, readingEdgeModule + '\n// Same reader boundary.\n', 'components', readingEdgeCoverage);
+for (const candidate of ['', readingEdgeModule.replace('.project-orbit-picker\';', '.command-results\';'), readingEdgeModule + '\nimport "./other.js";', readingEdgeModule + '\n{']) {
+  scoped('js/scroll-edges.js', readingEdgeModule, candidate, 'full');
+}
+scoped('js/scroll-edges-other.js', '', readingEdgeModule, 'full');
+const readingEdgeScript = '<script type="module" src="js/scroll-edges.js"></script>\n';
+const readingEdgeHtml = '<html><head>\n</head><body><main>Map</main></body></html>';
+const withReadingEdge = readingEdgeHtml.replace('</head>', readingEdgeScript + '</head>');
+scoped('index.html', readingEdgeHtml, withReadingEdge, 'components', readingEdgeCoverage);
+scoped('index.html', readingEdgeHtml, withReadingEdge.replace('scroll-edges.js', 'scroll-edges.js?v=123456abcdef'), 'components', readingEdgeCoverage);
+const readingImportMap = '<script type="importmap">\n{"imports": {\n  "./js/panels.js": "./js/panels.js?v=123456abcdef"\n}}\n</script>\n';
+const readingImportPair = '  "./js/scroll-edges.js": "./js/scroll-edges.js?v=123456abcdef",\n';
+const importedEdgeBefore = readingEdgeHtml.replace('</head>', readingImportMap + '</head>');
+const importedEdgeAfter = withReadingEdge.replace('</head>', readingImportMap.replace('  "./js/panels.js"', readingImportPair + '  "./js/panels.js"') + '</head>');
+scoped('index.html', importedEdgeBefore, importedEdgeAfter, 'components', readingEdgeCoverage);
+scoped('index.html', importedEdgeBefore, importedEdgeAfter.replace('"./js/scroll-edges.js?v=', '"./js/other.js?v='), 'full');
+scoped('index.html', importedEdgeBefore, importedEdgeAfter.replace('"./js/panels.js?v=', '"./js/other.js?v='), 'full');
+for (const unsafe of [withReadingEdge.replace('type="module"', 'async type="module"'),
+  withReadingEdge.replace(readingEdgeScript, readingEdgeScript + readingEdgeScript),
+  withReadingEdge.replace('scroll-edges.js', 'scroll-edges-other.js'),
+  withReadingEdge.replace('<main>', '<main hidden>')]) scoped('index.html', readingEdgeHtml, unsafe, 'full');
+const readingEdgeRegistry = read('scripts/runtime-files.mjs');
+const withoutReadingEdgeRegistry = readingEdgeRegistry.replace('  "js/scroll-edges.js",\n', '');
+scoped('scripts/runtime-files.mjs', withoutReadingEdgeRegistry, readingEdgeRegistry, 'components', readingEdgeCoverage);
+scoped('scripts/runtime-files.mjs', withoutReadingEdgeRegistry, readingEdgeRegistry.replace('js/map-engine.js', 'js/other.js'), 'full');
+const readingEdgeCss = '[data-scroll-edge]{--scroll-edge-depth:24px}\n'
+  + '.settings-panel__body[data-scroll-edge]{padding-block-end:var(--space-2)}\n'
+  + '[data-scroll-edge][data-scroll-edge-active="true"]{mask-image:linear-gradient(to bottom,transparent,#000 var(--scroll-edge-top),#000 calc(100% - var(--scroll-edge-bottom)),transparent);-webkit-mask-image:linear-gradient(to bottom,transparent,#000 var(--scroll-edge-top),#000 calc(100% - var(--scroll-edge-bottom)),transparent)}\n'
+  + '.project-orbit-picker[data-scroll-edge]{--scroll-edge-inset:var(--picker-head-height);scroll-padding-block:calc(var(--picker-head-height) + 32px) 32px}\n';
+scoped('styles.css', '.map-grid{color:red}', '.map-grid{color:red}' + readingEdgeCss, 'components', readingEdgeCoverage);
+for (const unsafe of [readingEdgeCss + '.map-grid{display:none}', readingEdgeCss.replace('--scroll-edge-depth:24px', 'height:24px'),
+  readingEdgeCss.replace('[data-scroll-edge]{', '[data-scroll-edge],.command-results{'),
+  readingEdgeCss.replace('--scroll-edge-depth:24px', '--scroll-edge-depth:24px!important'),
+  readingEdgeCss.replace('--scroll-edge-depth:24px', '--scroll-edge-depth:url(other.svg)')]) scoped('styles.css', '', unsafe, 'full');
+for (const engine of ['chromium', 'webkit']) {
+  const checks = browserMatrix('components', readingEdgeCoverage).include.filter(row => row.browser === engine).flatMap(row => row.checks.split(','));
+  assert.deepEqual(new Set(checks), new Set([...componentCoverage['scroll-edges'], 'hover-layout', 'whoop-ui', 'command-placement']));
+}
+const readingEdgeDirectory = mkdtempSync(join(tmpdir(), 'reading-edge-scope-'));
+try {
+  const git = (...args) => execFileSync('git', ['-c', 'user.name=Scope test', '-c', 'user.email=scope@example.invalid', '-c', 'core.hooksPath=/dev/null', ...args],
+    { cwd: readingEdgeDirectory, encoding: 'utf8', stdio: 'pipe' }).trim();
+  mkdirSync(join(readingEdgeDirectory, 'js'));
+  writeFileSync(join(readingEdgeDirectory, 'index.html'), readingEdgeHtml);
+  git('init', '-b', 'main'); git('add', '.'); git('commit', '-m', 'baseline');
+  const base = git('rev-parse', 'HEAD');
+  writeFileSync(join(readingEdgeDirectory, 'js/scroll-edges.js'), readingEdgeModule);
+  writeFileSync(join(readingEdgeDirectory, 'index.html'), withReadingEdge);
+  const expected = [...readingEdgeCoverage].sort();
+  const plan = () => planRelease({ projectRoot: readingEdgeDirectory, base });
+  assert.deepEqual(plan().components, expected, 'Untracked reader code receives its actual browser coverage');
+  assert.equal(plan().mode, 'components');
+  git('add', '.'); git('commit', '-m', 'reader');
+  assert.deepEqual(plan().components, expected, 'A committed addition retains the same coverage');
+  const addedBase = git('rev-parse', 'HEAD');
+  writeFileSync(join(readingEdgeDirectory, 'js/scroll-edges.js'), readingEdgeModule + '\n// Updated reader.\n');
+  assert.deepEqual(planRelease({ projectRoot: readingEdgeDirectory, base: addedBase }).components, expected, 'A later reader-only edit keeps its bounded gate');
+  writeFileSync(join(readingEdgeDirectory, 'index.html'), withReadingEdge.replace('<main>', '<main hidden>'));
+  assert.equal(plan().mode, 'full', 'Reader ownership cannot hide a neighboring navigation change');
+} finally { rmSync(readingEdgeDirectory, { recursive: true, force: true }); }
+
 const auditFixture = 'const readMaterialAuditExpression = `old`;\nconst unchanged = 1;';
 const menuFooterBefore = '@container map-viewport (max-width: 900px){.control-console .constellation-nav.is-open .constellation-nav__orbit{padding:0 8px 4px}.site-version--menu{margin-top:var(--space-2)}}';
 const menuFooterAfter = menuFooterBefore.replace('padding:0 8px 4px', 'padding:0 8px var(--space-4)').replace('margin-top:var(--space-2)', 'margin-top:0');

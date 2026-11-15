@@ -246,8 +246,18 @@ try{
   const paragraph=story.locator('.intro p').last();
   await paragraph.evaluate(e=>{const s=e.closest('#story-pane');s.scrollTop+=e.getBoundingClientRect().top-s.getBoundingClientRect().top-12;});
   await page.waitForFunction(()=>document.querySelector('#story-pane').scrollTop>0);
-  assert.deepEqual(await story.evaluate(e=>({filter:getComputedStyle(e).filter,mask:getComputedStyle(e).maskImage})),{filter:'none',mask:'none'},'Prose at the edge stays native and fully opaque');
+  await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+  const edge=await story.evaluate(e=>{const css=getComputedStyle(e),prose=getComputedStyle(e.querySelector('.intro p'));
+   return{registered:e.hasAttribute('data-scroll-edge'),filter:css.filter,mask:css.maskImage,
+    top:parseFloat(css.getPropertyValue('--scroll-edge-top')),proseFilter:prose.filter,proseMask:prose.maskImage};});
+  assert.equal(edge.registered,true,'The story uses the common reading edge');
+  assert.equal(edge.filter,'none','The story remains native rather than distorting its contents');
+  assert.match(edge.mask,/^linear-gradient\(/,'The viewport alone softens its clipped edge');
+  assert.ok(edge.top>0,'Passed prose softens at the upper edge');
+  assert.equal(edge.proseFilter,'none');assert.equal(edge.proseMask,'none','Individual prose is not masked or cloned');
   await story.evaluate(e=>e.scrollTop=0);
+  await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+  assert.equal(await story.evaluate(e=>parseFloat(getComputedStyle(e).getPropertyValue('--scroll-edge-top'))),0,'Returning to the beginning keeps the first line fully visible');
   const panels=await page.locator('#map-pane,#story-pane').evaluateAll(es=>es.map(e=>{const b=e.getBoundingClientRect();return{x:b.x,y:b.y,w:b.width,h:b.height};}));
   assert.ok(width>999?panels[1].x>panels[0].x+panels[0].w:panels[1].y>panels[0].y+panels[0].h,'The shared bridge joins both visible panes');
   await page.evaluate(()=>document.querySelector('[data-motion-toggle]').click());assert.equal(await page.locator('html').getAttribute('data-reduce-motion'),'true');

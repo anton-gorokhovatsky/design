@@ -20,15 +20,27 @@ const profiles = engine === 'webkit'
   ? [['mobile', 390, 844, 'light'], ['compact', 320, 568, 'dark']]
   : [['desktop', 1440, 900, 'light'], ['split', 1100, 720, 'dark']];
 
-// Test the reading surfaces, not the independent authored gravity illustration.
-// An icon's mask is intentional; gradients on real prose and scrollports are not.
+// One mask belongs to the transparent reading viewport. Text, original media,
+// the stationary glass shell and independent authored illustrations stay native.
+const readers = '.content-panel__body,.case-scroll,.settings-panel__body,#story-pane,.project-orbit-picker';
 const nativeState = async (page, selector) => page.locator(selector).evaluate((region, retired) => {
   const css = getComputedStyle(region);
-  const candidates = [region, ...region.querySelectorAll('h1,h2,h3,h4,p,summary,dt,dd,figcaption,video,iframe,[data-personal-media-poster]')];
+  const candidates = [...region.querySelectorAll('h1,h2,h3,h4,p,summary,dt,dd,figcaption,video,iframe,[data-personal-media-poster]')];
+  const shell = region.parentElement.closest('[data-material-surface]');
+  const shellCss = shell && getComputedStyle(shell);
   return {
     generated: document.querySelectorAll(retired).length,
     filter: css.filter, mask: css.maskImage, webkitMask: css.webkitMaskImage || 'none',
-    faded: candidates.filter(e => /gradient|scroll-ink/.test(getComputedStyle(e).maskImage + (getComputedStyle(e).webkitMaskImage || '') + getComputedStyle(e).filter)).map(e => e.tagName + '.' + e.className),
+    faded: candidates.filter(e => { const style = getComputedStyle(e); return style.filter !== 'none'
+      || (style.maskImage || 'none') !== 'none' || (style.webkitMaskImage || 'none') !== 'none'; }).map(e => e.tagName + '.' + e.className),
+    registered: region.hasAttribute('data-scroll-edge'), active: region.dataset.scrollEdgeActive,
+    edgeTop: parseFloat(css.getPropertyValue('--scroll-edge-top')),
+    edgeBottom: parseFloat(css.getPropertyValue('--scroll-edge-bottom')),
+    edgeInset: parseFloat(css.getPropertyValue('--scroll-edge-inset')) || 0,
+    depth: Math.min(parseFloat(css.getPropertyValue('--scroll-edge-depth')), region.clientHeight / 4),
+    contrast: document.documentElement.dataset.contrast === 'true'
+      || matchMedia('(forced-colors: active), (prefers-contrast: more)').matches,
+    shellMask: shellCss?.maskImage || 'none', shellWebkitMask: shellCss?.webkitMaskImage || 'none',
     top: region.scrollTop, max: Math.max(0, region.scrollHeight - region.clientHeight),
     overflowX: region.scrollWidth - region.clientWidth,
     overflowY: css.overflowY,
@@ -36,12 +48,32 @@ const nativeState = async (page, selector) => page.locator(selector).evaluate((r
   };
 }, retired);
 const assertNative = async (page, selector, label) => {
+  await settle(page);
   const state = await nativeState(page, selector);
   assert.equal(state.generated, 0, label + ': no generated edge filters, frame, canvas or frost');
   assert.equal(state.filter, 'none', label + ': the scrollport paints natively');
-  assert.equal(state.mask, 'none', label + ': no text fade mask');
-  assert.equal(state.webkitMask, 'none', label + ': no prefixed text fade mask');
-  assert.deepEqual(state.faded, [], label + ': real text and media have no scroll fade');
+  assert.equal(state.registered, true, label + ': the common reader owns its edge');
+  assert.equal(state.active, String(state.max > 1), label + ': the edge exists only for overflowing content');
+  assert.deepEqual(state.faded, [], label + ': real text and media have no individual masks or filters');
+  assert.equal(state.shellMask, 'none', label + ': the stationary material is not masked');
+  assert.equal(state.shellWebkitMask, 'none', label + ': the stationary material is not masked in WebKit');
+  assert.ok(Number.isFinite(state.edgeTop) && Number.isFinite(state.edgeBottom), label + ': both depths are explicit');
+  assert.ok(state.edgeTop >= 0 && state.edgeTop <= state.depth + .1
+    && state.edgeBottom >= 0 && state.edgeBottom <= state.depth + .1, label + ': edges stay shallow');
+  if (state.max <= 1) {
+    assert.equal(state.edgeTop, 0, label + ': short content has no upper fade');
+    assert.equal(state.edgeBottom, 0, label + ': short content has no lower fade');
+  }
+  if (state.max <= 1 || state.contrast) {
+    assert.equal(state.mask, 'none', label + ': short or high-contrast content stays sharp');
+    assert.equal(state.webkitMask, 'none', label + ': the sharp fallback also applies in WebKit');
+  } else {
+    assert.match(state.mask, /^linear-gradient\(/, label + ': only the viewport has the shared gradient');
+    assert.match(state.webkitMask, /^linear-gradient\(/, label + ': WebKit receives the same native mask');
+  }
+  assert.deepEqual(await page.locator('[data-scroll-edge]').evaluateAll((elements, readers) =>
+    elements.filter(e => !e.matches(readers)).map(e => e.tagName + '.' + e.className), readers), [],
+  label + ': menus, search and action popovers retain their native edge');
   assert.ok(['auto', 'scroll'].includes(state.overflowY), label + ': native overflow owns scrolling');
   assert.ok(state.overflowX <= 1, label + ': reading needs no horizontal scroll');
   return state;
@@ -75,11 +107,15 @@ const exerciseScroll = async (page, selector, lastSelector, mobile, label) => {
   });
   await settle(page);
   const top = await assertNative(page, selector, label + ' top');
+  assert.equal(top.edgeTop, 0, label + ': the first content is fully visible');
+  if (top.max > 2) assert.ok(top.edgeBottom > 0, label + ': the lower edge indicates more content');
   if (selector === '#story-pane') await page.screenshot({path:dir + engine + '-' + label + '-top.png'});
   if (top.max > 2) {
     await inputScroll(page, selector, Math.min(240, top.max), mobile);
     await page.waitForFunction(({selector, threshold}) => document.querySelector(selector).scrollTop >= threshold, {selector, threshold: Math.min(100, top.max / 2)});
     const middle = await assertNative(page, selector, label + ' down');
+    assert.ok(middle.edgeTop > 0, label + ': passed content has a soft upper edge');
+    if (middle.max - middle.top > 2) assert.ok(middle.edgeBottom > 0, label + ': remaining content has a soft lower edge');
     assertRect(middle.rect, top.rect, label + ': moving content preserves reader geometry');
     samples.push({phase:'down',top:middle.top});
     if (selector === '#story-pane') await page.screenshot({path:dir + engine + '-' + label + '-moving-down.png'});
@@ -101,6 +137,8 @@ const exerciseScroll = async (page, selector, lastSelector, mobile, label) => {
     await settle(page);
     const bottom = await assertNative(page, selector, label + ' bottom');
     assert.ok(Math.abs(bottom.max - bottom.top) <= 2, label + ': native bottom is reachable');
+    assert.equal(bottom.edgeBottom, 0, label + ': the final content is fully visible');
+    assert.ok(bottom.edgeTop > 0, label + ': the upper continuation remains visible at the bottom');
     assertRect(bottom.rect, top.rect, label + ': scrolling preserves the outer geometry');
   }
   const last = await page.locator(lastSelector).last().boundingBox(), port = await region.boundingBox();
@@ -112,7 +150,9 @@ const exerciseScroll = async (page, selector, lastSelector, mobile, label) => {
   await page.screenshot({path: dir + engine + '-' + label + '-bottom.png'});
   await region.evaluate(s => s.scrollTop = 0);
   await settle(page);
-  assert.equal((await assertNative(page, selector, label + ' return')).top, 0, label + ': top is reachable after reversal');
+  const returned = await assertNative(page, selector, label + ' return');
+  assert.equal(returned.top, 0, label + ': top is reachable after reversal');
+  assert.equal(returned.edgeTop, 0, label + ': returning clears the upper edge');
   return {max: top.max, samples, input: 'native smooth scroll with reversal; automation is not a physical touch gesture'};
 };
 const selectionAndFocus = async (page, regionSelector, textSelector, linkSelector) => {
@@ -136,9 +176,30 @@ const selectionAndFocus = async (page, regionSelector, textSelector, linkSelecto
   const tab = engine === 'webkit' && process.platform === 'darwin' ? 'Alt+Tab' : 'Tab';
   await page.keyboard.press('Shift+' + tab);
   await page.keyboard.press(tab);
-  assert.equal(await link.evaluate(e => e === document.activeElement && e.matches(':focus-visible')
-    && getComputedStyle(e).outlineStyle !== 'none'), true, 'Keyboard returns to a visible native focus indicator');
+  assert.equal(await link.evaluate((e, selector) => e === document.activeElement && e.matches(':focus-visible')
+    && getComputedStyle(e === document.querySelector(selector) ? e.parentElement : e).outlineStyle !== 'none', regionSelector),
+  true, 'Keyboard returns to a visible native focus indicator');
   await assertNative(page, regionSelector, 'keyboard focus');
+  const focus = await link.evaluate((element, selector) => {
+    const region = document.querySelector(selector), css = getComputedStyle(region);
+    const port = region.getBoundingClientRect(), rect = element.getBoundingClientRect();
+    const ring = getComputedStyle(element), gutter = parseFloat(ring.outlineWidth) + Math.max(0, parseFloat(ring.outlineOffset));
+    const masked = (css.maskImage || css.webkitMaskImage || 'none') !== 'none';
+    const shell = getComputedStyle(region.parentElement);
+    return { isRegion: element === region, rect: rect.toJSON(), gutter,
+      sharpTop: port.top + (parseFloat(css.getPropertyValue('--scroll-edge-inset')) || 0)
+        + (masked ? parseFloat(css.getPropertyValue('--scroll-edge-top')) : 0),
+      sharpBottom: port.bottom - (masked ? parseFloat(css.getPropertyValue('--scroll-edge-bottom')) : 0),
+      shellOutline: shell.outlineStyle, shellMask: shell.maskImage || shell.webkitMaskImage || 'none' };
+  }, regionSelector);
+  if (focus.isRegion) {
+    assert.notEqual(focus.shellOutline, 'none', 'A focused reader has an unmasked outline on its stationary shell');
+    assert.equal(focus.shellMask, 'none');
+  } else {
+    assert.ok(focus.rect.top - focus.gutter >= focus.sharpTop - 1
+      && focus.rect.bottom + focus.gutter <= focus.sharpBottom + 1,
+    'The complete focused control and its outline remain in the sharp reading area: ' + JSON.stringify(focus));
+  }
 };
 
 try {
@@ -293,10 +354,42 @@ try {
         await waitForSurfaceRest(page, ['.settings-panel__body', '.settings-panel']);
         result.scroll = await exerciseScroll(page, '.settings-panel__body', '.settings-panel__details[href]', mobile, profile + '-settings');
         await selectionAndFocus(page, '.settings-panel__body', '.settings-presence p:not([hidden])', '.settings-panel__details[href]');
+        await page.locator('.settings-panel__body').evaluate(s => s.scrollTop = s.scrollHeight / 2);
+        await page.evaluate(() => document.documentElement.dataset.contrast = 'true');
+        await assertNative(page, '.settings-panel__body', 'high-contrast settings');
+        await page.evaluate(() => delete document.documentElement.dataset.contrast);
+        await assertNative(page, '.settings-panel__body', 'settings after contrast return');
         await page.keyboard.press('Escape');
         await page.waitForFunction(() => !document.querySelector('[data-settings-panel]').open
           && document.activeElement?.matches('[data-nav-utility][data-open-settings], [data-constellation-nav-toggle], #screen-controls-trigger'));
         assert.equal(await page.locator(retired).count(), 0);
+      });
+      await check('project-picker', async result => {
+        const pickerWidth = Math.min(width, 600);
+        if (pickerWidth !== width) await page.setViewportSize({ width: pickerWidth, height });
+        try {
+          await goto(page, '/');
+          await declineAnalyticsNotice(page);
+          await page.locator('.map-node[data-map-id="private-practice"]').click();
+          const picker = page.locator('.project-orbit-picker');
+          await picker.waitFor({ state: 'visible' });
+          const header = await page.locator('.point-preview__head').boundingBox();
+          result.viewport = { width: pickerWidth, height };
+          result.scroll = await exerciseScroll(page, '.project-orbit-picker', '.project-orbit-picker [data-picker-project]', true, profile + '-picker');
+          assertRect(await page.locator('.point-preview__head').boundingBox(), header, 'The project index retains its pinned glass header');
+          const geometry = await assertNative(page, '.project-orbit-picker', 'project index geometry');
+          assert.ok(Math.abs(geometry.rect.top + geometry.edgeInset - header.y - header.height) < 1,
+            'The project edge begins at the visible boundary below its pinned header');
+          await selectionAndFocus(page, '.project-orbit-picker', '.project-atlas-name', '.project-orbit-picker [data-picker-project]');
+          await page.locator('.project-orbit-picker [data-picker-project]').last().click();
+          await page.locator('.project-orbit-back').click();
+          await picker.waitFor({ state: 'visible' });
+          await assertNative(page, '.project-orbit-picker', 'project index after preview return');
+          assert.equal(await page.locator('.point-preview').getAttribute('data-scroll-edge'), null,
+            'The preview material stays separate from the scrolling project list');
+        } finally {
+          if (pickerWidth !== width) await page.setViewportSize({ width, height });
+        }
       });
     } finally { await page.close(); }
   }

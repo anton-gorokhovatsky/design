@@ -6,6 +6,65 @@ import selectorParser from "postcss-selector-parser";
 import { parse as parseHtml } from "parse5";
 import { parse as parseJs } from "acorn";
 
+// One bounded reader module owns the new optical edge. Include the project
+// picker, settings focus and deliberately unmasked adjacent search controls.
+const readingEdgeComponents = ["scroll-edges", "check:hover-layout", "check:whoop-ui", "check:command-placement"];
+const readingEdgeReaders = '.content-panel__body,.case-scroll,.settings-panel__body,#story-pane,.project-orbit-picker';
+const isReadingEdgeModule = source => {
+  const tree = parseJs(source, { ecmaVersion: "latest", sourceType: "module" });
+  const declarations = tree.body.flatMap(node => node.type === "VariableDeclaration" ? node.declarations : []);
+  const reader = declarations.filter(node => node.id.type === "Identifier" && node.id.name === "readers");
+  return reader.length === 1 && reader[0].init?.type === "Literal" && reader[0].init.value === readingEdgeReaders
+    && !tree.body.some(node => /^(Import|Export)/.test(node.type));
+};
+const readingEdgeHtmlOutside = source => {
+  const script = /^[ \t]*<script type="module" src="js\/scroll-edges\.js(?:\?v=[a-f0-9]{12})?"><\/script>\r?\n/gm;
+  if ([...source.matchAll(script)].length > 1) throw new Error("Duplicate reading edge module");
+  let html = source.replace(script, "");
+  const ranges = [];
+  const visit = node => {
+    if (node.tagName === 'script' && node.attrs?.some(attribute => attribute.name === 'type' && attribute.value === 'importmap')) {
+      const text = node.childNodes?.[0], location = text?.sourceCodeLocation;
+      if (!text || !location) return;
+      const data = JSON.parse(text.value);
+      if (Object.hasOwn(data.imports || {}, './js/scroll-edges.js')) {
+        if (!/^\.\/js\/scroll-edges\.js\?v=[a-f0-9]{12}$/.test(data.imports['./js/scroll-edges.js'])) throw new Error('Unknown reading edge import');
+        const mapping = /^[ \t]*"\.\/js\/scroll-edges\.js": "\.\/js\/scroll-edges\.js\?v=[a-f0-9]{12}",\r?\n/gm;
+        const matches = [...text.value.matchAll(mapping)];
+        if (matches.length !== 1) throw new Error('Unknown reading edge import formatting');
+        ranges.push([location.startOffset + matches[0].index, location.startOffset + matches[0].index + matches[0][0].length]);
+      }
+    }
+    for (const child of node.childNodes || []) visit(child);
+  };
+  visit(parseHtml(html, { sourceCodeLocationInfo: true }));
+  if (ranges.length > 1) throw new Error('Duplicate reading edge import map');
+  for (const [start, end] of ranges.reverse()) html = html.slice(0, start) + html.slice(end);
+  return html;
+};
+const readingEdgeCssOutside = source => {
+  const tree = postcss.parse(source);
+  tree.walkRules(rule => {
+    const selector = rule.selector.replace(/\s+/g, " ").trim();
+    const root = rule.parent.type === "root";
+    const contrast = rule.parent.type === "atrule" && rule.parent.name === "media"
+      && rule.parent.params === "(forced-colors: active), (prefers-contrast: more)" && rule.parent.parent.type === "root";
+    const properties = root && selector === '[data-scroll-edge]' ? ['--scroll-edge-depth']
+      : root && selector === '.content-panel__body[data-scroll-edge], .case-scroll[data-scroll-edge], .settings-panel__body[data-scroll-edge], #story-pane[data-scroll-edge]'
+        ? ['scroll-padding-block']
+      : root && selector === '.project-orbit-picker[data-scroll-edge]' ? ['--scroll-edge-inset', 'scroll-padding-block']
+      : root && selector === '.settings-panel__body[data-scroll-edge]' ? ['padding-block-end']
+      : root && selector === '.content-panel__body[data-scroll-edge]:focus-visible, .case-scroll[data-scroll-edge]:focus-visible' ? ['outline']
+      : ((root && ['[data-scroll-edge][data-scroll-edge-active="true"]', 'html[data-contrast="true"] [data-scroll-edge]'].includes(selector))
+        || (contrast && selector === '[data-scroll-edge][data-scroll-edge-active]')) ? ['mask-image', '-webkit-mask-image']
+        : root && selector === '.content-panel__frame:has(> .content-panel__body:focus-visible), .case-sheet:has(> .case-scroll:focus-visible)'
+          ? ['outline', 'outline-offset'] : null;
+    if (properties && rule.nodes.every(node => node.type === 'comment' || (node.type === 'decl'
+      && properties.includes(node.prop) && !node.important && !/url\(/i.test(node.value)))) rule.remove();
+  });
+  return cssOutsideOwned(tree.toString(), () => false);
+};
+
 // A positive component root must own every selector branch. References inside
 // :is/:has/:not do not establish ownership; siblings outside the root stay full.
 const settingsClass = /^settings-(?:panel|whoop|presence)(?:$|__|--)/;
@@ -1066,6 +1125,14 @@ const isNativeScrollAuditRemoval = (before, after) => before.includes(' || eleme
 export const affectedComponents = (path, before, after, maskHtmlCopy) => {
   if (before.includes("\0") || after.includes("\0")) return null;
   try {
+    if (path === "js/scroll-edges.js" && isReadingEdgeModule(after)) return readingEdgeComponents;
+    if (path === "scripts/runtime-files.mjs" && !before.includes('"js/scroll-edges.js"')
+      && after.split('  "js/scroll-edges.js",\n').length === 2
+      && after.replace('  "js/scroll-edges.js",\n', '') === before) return readingEdgeComponents;
+    if (path === "styles.css" && before !== after
+      && readingEdgeCssOutside(before) === readingEdgeCssOutside(after)) return readingEdgeComponents;
+    if (path === "index.html" && before !== after
+      && maskHtmlCopy(readingEdgeHtmlOutside(before)) === maskHtmlCopy(readingEdgeHtmlOutside(after))) return readingEdgeComponents;
     if (isNativeScrollRemoval(path, before, after)
       || (path === "styles.css" && isNativeScrollCssRemoval(before, after))
       || (path === "scripts/browser-contracts.cjs" && isNativeScrollAuditRemoval(before, after))) return ["scroll-edges"];

@@ -198,6 +198,7 @@ try {
     await page.locator("[data-constellation-nav-toggle]").click();
     await page.getByRole("button", { name: "НАСТРОЙКИ САЙТА", exact: true }).click();
     await page.waitForFunction(() => document.activeElement?.hasAttribute("data-close-settings"));
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
     const geometry = await page.evaluate(() => {
       const panel = document.querySelector("[data-settings-panel]");
       const body = panel.querySelector(".settings-panel__body");
@@ -214,6 +215,10 @@ try {
         storyOpacity: getComputedStyle(document.querySelector("#story-pane")).opacity,
         storyFilter: getComputedStyle(document.querySelector("#story-pane")).filter,
         mask: getComputedStyle(body).maskImage,
+        edgeTop: parseFloat(getComputedStyle(body).getPropertyValue('--scroll-edge-top')),
+        edgeBottom: parseFloat(getComputedStyle(body).getPropertyValue('--scroll-edge-bottom')),
+        maxScroll: Math.max(0, body.scrollHeight - body.clientHeight),
+        panelMask: getComputedStyle(panel).maskImage,
         overflow: document.documentElement.scrollWidth - innerWidth,
         viewport: { width: innerWidth, height: innerHeight },
       };
@@ -224,7 +229,15 @@ try {
     assert.equal(geometry.scrollTop, 0, "The general entry starts at the introduction, including at 200% text.");
     assert.ok(geometry.intro.top >= geometry.panel.top && geometry.body.height >= 150, "The title can scroll at large text without displacing the entire control viewport.");
     assert.ok(geometry.focus.top >= geometry.panel.top && geometry.focus.bottom <= geometry.panel.bottom);
-    assert.equal(geometry.mask, "none", "A scroll mask must not fade settings controls or their focus rings.");
+    assert.equal(geometry.edgeTop, 0, "The settings introduction is sharp at the real beginning.");
+    if (geometry.maxScroll > 1) {
+      assert.match(geometry.mask, /^linear-gradient\(/, "Only the overflowing settings body uses the common edge.");
+      assert.ok(geometry.edgeBottom > 0 && geometry.edgeBottom <= 24);
+    } else {
+      assert.equal(geometry.mask, "none", "Settings that fit remain entirely sharp.");
+      assert.equal(geometry.edgeBottom, 0);
+    }
+    assert.equal(geometry.panelMask, "none", "The settings material and close control remain unmasked.");
     assert.equal(geometry.overflow, 0);
     await page.screenshot({ path: `${directory}/${engine}-settings-split-${width}-${fontSize}.png` });
     // macOS WebKit's native Option-Tab visits all controls even when the host
@@ -232,21 +245,27 @@ try {
     await page.keyboard.press(engine === "webkit" && process.platform === "darwin" ? "Alt+Tab" : "Tab");
     await page.waitForFunction(() => {
       const group = document.querySelector('#settings-panel .preference-choices');
-      const body = group.closest('.settings-panel__body').getBoundingClientRect();
+      const region = group.closest('.settings-panel__body'), body = region.getBoundingClientRect();
+      const readerCss = getComputedStyle(region), masked = readerCss.maskImage !== 'none';
+      const top = body.top + (masked ? parseFloat(readerCss.getPropertyValue('--scroll-edge-top')) : 0);
+      const bottom = body.bottom - (masked ? parseFloat(readerCss.getPropertyValue('--scroll-edge-bottom')) : 0);
       const frame = group.getBoundingClientRect(), css = getComputedStyle(group);
       const ring = parseFloat(css.outlineWidth) + Math.max(0, parseFloat(css.outlineOffset));
-      return frame.height + ring * 2 > body.height || (frame.top - ring >= body.top - .5 && frame.bottom + ring <= body.bottom + .5);
+      return frame.height + ring * 2 > bottom - top || (frame.top - ring >= top - .5 && frame.bottom + ring <= bottom + .5);
     });
     const themeFocus = await page.evaluate(() => {
-      const body = document.querySelector(".settings-panel__body").getBoundingClientRect();
+      const region = document.querySelector(".settings-panel__body"), body = region.getBoundingClientRect();
+      const css = getComputedStyle(region), masked = css.maskImage !== 'none';
       const focus = document.activeElement.getBoundingClientRect();
       return {
         theme: document.activeElement.hasAttribute("data-theme-choice"),
         element: document.activeElement.outerHTML.slice(0, 240),
         focus: focus.toJSON(), body: body.toJSON(),
+        sharpTop: body.top + (masked ? parseFloat(css.getPropertyValue('--scroll-edge-top')) : 0),
+        sharpBottom: body.bottom - (masked ? parseFloat(css.getPropertyValue('--scroll-edge-bottom')) : 0),
       };
     });
-    assert.ok(themeFocus.theme && themeFocus.focus.top >= themeFocus.body.top && themeFocus.focus.bottom <= themeFocus.body.bottom,
+    assert.ok(themeFocus.theme && themeFocus.focus.top >= themeFocus.sharpTop && themeFocus.focus.bottom <= themeFocus.sharpBottom,
       `Tab reaches the checked theme without clipping its focus ring at ${width}/${fontSize}: ${JSON.stringify(themeFocus)}`);
     await assertThemeGeometry(page, '#settings-panel .preference-choices');
     if (width === 320 && fontSize === 16) {
