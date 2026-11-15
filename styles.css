@@ -2996,6 +2996,13 @@ transition: color var(--duration-feedback) var(--motion-shift);
 .content-panel .work-row__preview { grid-row: 1 / 4; grid-column: 1; display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; object-fit: contain; border-radius: 12px; corner-shape: var(--corner-card-shape); }
 /* Logo boards may trim their empty margins; the complete mark stays visible. */
 .content-panel .work-row__preview--logo { object-fit: cover; }
+/* App icons keep their square contour and the text column's left edge. */
+.content-panel .work-row > img.work-row__preview--square {
+width: min(calc(100% * 2 / 3), calc(22rem * 2 / 3), calc(35cqh * 2 / 3));
+aspect-ratio: 1;
+object-fit: contain;
+justify-self: start;
+}
 .content-panel .work-row__preview--type {
 display: grid;
 align-content: center;
@@ -6165,6 +6172,7 @@ grid-row: 1;
 grid-column: 1 / -1;
 margin-bottom: var(--space-4);
 }
+.content-panel .work-row > img.work-row__preview--square { grid-column: 2; }
 .content-panel .work-row:has(img.work-row__preview) .work-row__number { grid-row: 2; }
 .content-panel .work-row:has(img.work-row__preview) .work-row__title { grid-row: 2; }
 .content-panel .work-row:has(img.work-row__preview) .work-row__scope { grid-row: 3; }
@@ -9040,8 +9048,9 @@ backdrop-filter: none !important;
 }
 .content-panel__body[data-scroll-edge],
 .case-scroll[data-scroll-edge],
-.settings-panel__body[data-scroll-edge],
-#story-pane[data-scroll-edge] { scroll-padding-block: calc(var(--scroll-edge-depth) + var(--space-2)); }
+.settings-panel__body[data-scroll-edge] { scroll-padding-block: calc(var(--scroll-edge-depth) + var(--space-2)); }
+/* Keep the story's existing 24px reading anchor through viewport changes. */
+#story-pane[data-scroll-edge] { scroll-padding-block: var(--scroll-edge-depth); }
 .settings-panel__body[data-scroll-edge] { padding-block-end: var(--space-2); }
 .project-orbit-picker[data-scroll-edge] {
 --scroll-edge-inset: var(--picker-head-height);
@@ -10498,6 +10507,7 @@ html[data-reduce-motion="true"] .has-story-pane #story-pane{transition:none}
 html[data-celestial-volume] .site-header .brand__name{display:block;max-width:none;padding-right:0;}
 html[data-celestial-volume] .site-header .brand__name::before{content:'';float:right;width:max(0px, calc(100% - var(--author-menu-text-width, 100%) + var(--space-2)));height:44px;}
 .content-panel .work-list .work-row,.content-panel .content-panel__frame .approach-grid li{grid-template-columns:minmax(0, 1fr);}
+.content-panel .work-row > img.work-row__preview--square{grid-area:auto;}
 .content-panel .content-panel__frame .work-list .work-row > :not(.work-row__preview),.content-panel .content-panel__frame .approach-grid li > *{grid-area:auto;}}
 @container map-viewport (max-width: 12rem){
 .map-surface{--window-pad:20px;}

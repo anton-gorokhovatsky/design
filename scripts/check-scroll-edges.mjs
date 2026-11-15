@@ -93,6 +93,46 @@ const inputScroll = async (page, selector, amount) => {
   await page.locator(selector).evaluate((s, amount) => s.scrollBy({top: amount, behavior: 'smooth'}), amount);
   await settle(page);
 };
+const waitForScrollRest = async (page, selector, edge = null) => {
+  await page.locator(selector).evaluate(s => { delete s.__qaScrollRest; });
+  await page.waitForFunction(({ selector, edge }) => {
+    const s = document.querySelector(selector), maximum = Math.max(0, s.scrollHeight - s.clientHeight);
+    const previous = s.__qaScrollRest;
+    const since = previous?.top === s.scrollTop && previous?.maximum === maximum ? previous.since : performance.now();
+    s.__qaScrollRest = { top: s.scrollTop, maximum, since };
+    const reached = edge === 'top' ? s.scrollTop === 0 : edge === 'bottom' ? Math.abs(maximum - s.scrollTop) <= 1 : true;
+    return reached && performance.now() - since >= 120;
+  }, { selector, edge }, { polling: 40, timeout: 8000 });
+};
+const scrollToEdge = async (page, selector, edge) => {
+  // A preceding disclosure/focus may still be scrolling. Finish that native
+  // movement before establishing the exact initial state of the edge test.
+  await waitForScrollRest(page, selector);
+  await page.locator(selector).evaluate((s, edge) => s.scrollTo({ top: edge === 'top' ? 0 : s.scrollHeight, behavior: 'instant' }), edge);
+  await waitForScrollRest(page, selector, edge);
+  await settle(page);
+};
+const focusState = ({ element, selector, settled = false }) => {
+  const region = document.querySelector(selector), css = getComputedStyle(region);
+  const port = region.getBoundingClientRect(), rect = element.getBoundingClientRect();
+  const ring = getComputedStyle(element), gutter = parseFloat(ring.outlineWidth) + Math.max(0, parseFloat(ring.outlineOffset));
+  const masked = (css.maskImage || css.webkitMaskImage || 'none') !== 'none';
+  const shell = getComputedStyle(region.parentElement);
+  const state = { isRegion: element === region, rect: rect.toJSON(), gutter,
+    focused: element === document.activeElement && element.matches(':focus-visible'),
+    sharpTop: port.top + (parseFloat(css.getPropertyValue('--scroll-edge-inset')) || 0)
+      + (masked ? parseFloat(css.getPropertyValue('--scroll-edge-top')) : 0),
+    sharpBottom: port.bottom - (masked ? parseFloat(css.getPropertyValue('--scroll-edge-bottom')) : 0),
+    shellOutline: shell.outlineStyle, shellMask: shell.maskImage || shell.webkitMaskImage || 'none' };
+  if (!settled) return state;
+  const visible = state.isRegion ? state.shellOutline !== 'none' && state.shellMask === 'none'
+    : ring.outlineStyle !== 'none' && rect.top - gutter >= state.sharpTop - 1 && rect.bottom + gutter <= state.sharpBottom + 1;
+  const signature = JSON.stringify([region.scrollTop, state.rect, state.sharpTop, state.sharpBottom, state.focused, visible]);
+  const previous = element.__qaFocusRest;
+  const since = previous?.signature === signature ? previous.since : performance.now();
+  element.__qaFocusRest = { signature, since };
+  return state.focused && visible && performance.now() - since >= 120 ? state : false;
+};
 const assertRect = (actual, expected, message) => {
   assert.ok(['x','y','width','height'].every(key => Math.abs(actual[key] - expected[key]) < .5), message + ': ' + JSON.stringify({actual,expected}));
 };
@@ -101,12 +141,12 @@ const exerciseScroll = async (page, selector, lastSelector, mobile, label) => {
   await waitForSurfaceRest(page, [selector]);
   const samples = [];
   await region.evaluate(s => {
-    s.scrollTop = 0;
     s.__qaParent = s.parentElement; s.__qaInert = s.inert;
     s.__qaStableNodes = [...s.querySelectorAll('p,a,button,video,iframe,[data-personal-media-poster]')].map(node => [node, node.parentElement]);
   });
-  await settle(page);
+  await scrollToEdge(page, selector, 'top');
   const top = await assertNative(page, selector, label + ' top');
+  assert.equal(top.top, 0, label + ': the native scrollport has reached its real beginning');
   assert.equal(top.edgeTop, 0, label + ': the first content is fully visible');
   if (top.max > 2) assert.ok(top.edgeBottom > 0, label + ': the lower edge indicates more content');
   if (selector === '#story-pane') await page.screenshot({path:dir + engine + '-' + label + '-top.png'});
@@ -126,15 +166,7 @@ const exerciseScroll = async (page, selector, lastSelector, mobile, label) => {
     assertRect(reversed.rect, top.rect, label + ': direction changes preserve reader geometry');
     samples.push({phase:'reverse',from:beforeReverse,top:reversed.top});
     if (selector === '#story-pane') await page.screenshot({path:dir + engine + '-' + label + '-moving-reverse.png'});
-    await region.evaluate(s => { delete s.__qaScrollRest; });
-    await page.waitForFunction(selector => {
-      const s=document.querySelector(selector),previous=s.__qaScrollRest;
-      const since=previous?.top===s.scrollTop?previous.since:performance.now();
-      s.__qaScrollRest={top:s.scrollTop,since};return performance.now()-since>=120;
-    },selector,{polling:40});
-    await region.evaluate(s => s.scrollTo({top:s.scrollHeight,behavior:'instant'}));
-    await page.waitForFunction(selector=>{const s=document.querySelector(selector);return Math.abs(s.scrollHeight-s.clientHeight-s.scrollTop)<=2;},selector);
-    await settle(page);
+    await scrollToEdge(page, selector, 'bottom');
     const bottom = await assertNative(page, selector, label + ' bottom');
     assert.ok(Math.abs(bottom.max - bottom.top) <= 2, label + ': native bottom is reachable');
     assert.equal(bottom.edgeBottom, 0, label + ': the final content is fully visible');
@@ -148,8 +180,7 @@ const exerciseScroll = async (page, selector, lastSelector, mobile, label) => {
     && s.__qaStableNodes.every(([node, parent]) => node.isConnected && node.parentElement === parent)), true,
   label + ': scrolling never reparents the reader or its existing content');
   await page.screenshot({path: dir + engine + '-' + label + '-bottom.png'});
-  await region.evaluate(s => s.scrollTop = 0);
-  await settle(page);
+  await scrollToEdge(page, selector, 'top');
   const returned = await assertNative(page, selector, label + ' return');
   assert.equal(returned.top, 0, label + ': top is reachable after reversal');
   assert.equal(returned.edgeTop, 0, label + ': returning clears the upper edge');
@@ -170,6 +201,7 @@ const selectionAndFocus = async (page, regionSelector, textSelector, linkSelecto
   assertRect((await assertNative(page, regionSelector, 'selected text after scroll')).rect, selectedState.rect, 'Selection and scrolling preserve reader geometry');
   assert.equal(await page.evaluate(() => getSelection().toString()), selected, 'Selection survives the native paint checkpoint');
   await page.evaluate(() => getSelection().removeAllRanges());
+  await waitForScrollRest(page, regionSelector);
   const link = page.locator(linkSelector + ':visible').first();
   await link.scrollIntoViewIfNeeded();
   await link.focus();
@@ -180,18 +212,17 @@ const selectionAndFocus = async (page, regionSelector, textSelector, linkSelecto
     && getComputedStyle(e === document.querySelector(selector) ? e.parentElement : e).outlineStyle !== 'none', regionSelector),
   true, 'Keyboard returns to a visible native focus indicator');
   await assertNative(page, regionSelector, 'keyboard focus');
-  const focus = await link.evaluate((element, selector) => {
-    const region = document.querySelector(selector), css = getComputedStyle(region);
-    const port = region.getBoundingClientRect(), rect = element.getBoundingClientRect();
-    const ring = getComputedStyle(element), gutter = parseFloat(ring.outlineWidth) + Math.max(0, parseFloat(ring.outlineOffset));
-    const masked = (css.maskImage || css.webkitMaskImage || 'none') !== 'none';
-    const shell = getComputedStyle(region.parentElement);
-    return { isRegion: element === region, rect: rect.toJSON(), gutter,
-      sharpTop: port.top + (parseFloat(css.getPropertyValue('--scroll-edge-inset')) || 0)
-        + (masked ? parseFloat(css.getPropertyValue('--scroll-edge-top')) : 0),
-      sharpBottom: port.bottom - (masked ? parseFloat(css.getPropertyValue('--scroll-edge-bottom')) : 0),
-      shellOutline: shell.outlineStyle, shellMask: shell.maskImage || shell.webkitMaskImage || 'none' };
-  }, regionSelector);
+  const target = await link.elementHandle();
+  await target.evaluate(element => { delete element.__qaFocusRest; });
+  let focus;
+  try {
+    const state = await page.waitForFunction(focusState, { element: target, selector: regionSelector, settled: true }, { polling: 40, timeout: 8000 });
+    focus = await state.jsonValue();
+    await state.dispose();
+  } catch (error) {
+    const state = await page.evaluate(focusState, { element: target, selector: regionSelector });
+    throw new Error('Native keyboard focus did not settle inside the sharp reading area: ' + JSON.stringify(state), { cause: error });
+  } finally { await target.dispose(); }
   if (focus.isRegion) {
     assert.notEqual(focus.shellOutline, 'none', 'A focused reader has an unmasked outline on its stationary shell');
     assert.equal(focus.shellMask, 'none');

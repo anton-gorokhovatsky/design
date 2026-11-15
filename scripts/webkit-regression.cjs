@@ -857,7 +857,8 @@ const mobileSearchViewportAudit = async (browser) => {
       restored,
     }),
     ...validateMobileMetricGroups(metricGroups),
-  ].map((failure) => failure.message);
+  ].map((failure) => failure.details === undefined ? failure.message
+    : `${failure.message}: ${JSON.stringify(failure.details)}`);
   await page.screenshot({
     path: path.join(artifactDir, "390x844-dark-narkomfin-number.png"),
     fullPage: false,

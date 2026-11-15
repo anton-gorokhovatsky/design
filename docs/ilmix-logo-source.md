@@ -1,8 +1,18 @@
-# Project logo sources
+# ИльмиксГрупп: исходник логотипа
 
-[`rendering/ilmix-logo-source.webp`](../rendering/ilmix-logo-source.webp) is the original presentation raster of the final Russian logo from
-[Hors / ИльмиксГрупп](https://readymag.website/hors/next/).
+[`assets/project-logos/ilmix.svg`](../assets/project-logos/ilmix.svg) — оригинальный
+векторный логотип из футера [портфолио в Readymag](https://my.readymag.com/edit/2712745/preview/),
+указанного автором сайта. Извлечён 15 ноября 2026 года из виджета
+`6069e826a2cdce008a11b719`: 15 контуров, исходные градиенты и прозрачность,
+`viewBox="0 -0.00006103515625 4218.8828125 2837.65869140625"`.
+Форма знака, цвета и пропорции не изменялись; растровая обработка и перерисовка
+не применялись.
 
-[`assets/project-logos/ilmix-cutout.png`](../assets/project-logos/ilmix-cutout.png) is a transparent cutout made from that raster with the image
-editing tool on 23 October 2026, then resized to 256 px for previews. The original
-is retained above. The cutout is used by both compact previews and related links.
+Единый `relatedPoster` в `js/map-data.js` используется в списке работ,
+компактных превью и связанных проектах. Изображение вписывается целиком,
+без обрезки контура.
+
+Прежняя растровая вырезка `ilmix-cutout.png` размером 256 × 153 удалена.
+[`rendering/ilmix-logo-source.webp`](../rendering/ilmix-logo-source.webp) — сохранённый
+архивный растр презентации [Hors / ИльмиксГрупп](https://readymag.website/hors/next/);
+он больше не является источником опубликованного логотипа.

@@ -9,6 +9,7 @@ import { parse as parseJs } from "acorn";
 // One bounded reader module owns the new optical edge. Include the project
 // picker, settings focus and deliberately unmasked adjacent search controls.
 const readingEdgeComponents = ["scroll-edges", "check:hover-layout", "check:whoop-ui", "check:command-placement"];
+export const projectPresentationComponents = ["check:case-flow", "check:inspector-links", "check:hover-layout", "check:case-view", "check:core", "check:accessibility"];
 const readingEdgeReaders = '.content-panel__body,.case-scroll,.settings-panel__body,#story-pane,.project-orbit-picker';
 const isReadingEdgeModule = source => {
   const tree = parseJs(source, { ecmaVersion: "latest", sourceType: "module" });
@@ -42,15 +43,17 @@ const readingEdgeHtmlOutside = source => {
   for (const [start, end] of ranges.reverse()) html = html.slice(0, start) + html.slice(end);
   return html;
 };
-const readingEdgeCssOutside = source => {
+const readingEdgeCssParts = source => {
   const tree = postcss.parse(source);
+  const owned = [];
   tree.walkRules(rule => {
     const selector = rule.selector.replace(/\s+/g, " ").trim();
     const root = rule.parent.type === "root";
     const contrast = rule.parent.type === "atrule" && rule.parent.name === "media"
       && rule.parent.params === "(forced-colors: active), (prefers-contrast: more)" && rule.parent.parent.type === "root";
     const properties = root && selector === '[data-scroll-edge]' ? ['--scroll-edge-depth']
-      : root && selector === '.content-panel__body[data-scroll-edge], .case-scroll[data-scroll-edge], .settings-panel__body[data-scroll-edge], #story-pane[data-scroll-edge]'
+      : root && ['.content-panel__body[data-scroll-edge], .case-scroll[data-scroll-edge], .settings-panel__body[data-scroll-edge], #story-pane[data-scroll-edge]',
+        '.content-panel__body[data-scroll-edge], .case-scroll[data-scroll-edge], .settings-panel__body[data-scroll-edge]', '#story-pane[data-scroll-edge]'].includes(selector)
         ? ['scroll-padding-block']
       : root && selector === '.project-orbit-picker[data-scroll-edge]' ? ['--scroll-edge-inset', 'scroll-padding-block']
       : root && selector === '.settings-panel__body[data-scroll-edge]' ? ['padding-block-end']
@@ -60,9 +63,30 @@ const readingEdgeCssOutside = source => {
         : root && selector === '.content-panel__frame:has(> .content-panel__body:focus-visible), .case-sheet:has(> .case-scroll:focus-visible)'
           ? ['outline', 'outline-offset'] : null;
     if (properties && rule.nodes.every(node => node.type === 'comment' || (node.type === 'decl'
-      && properties.includes(node.prop) && !node.important && !/url\(/i.test(node.value)))) rule.remove();
+      && properties.includes(node.prop) && !node.important && !/url\(/i.test(node.value)))) {
+      owned.push(rule.toString());
+      rule.remove();
+    }
   });
-  return cssOutsideOwned(tree.toString(), () => false);
+  return { css: tree.toString(), owned: JSON.stringify(owned) };
+};
+const readingEdgeCssOutside = source => cssOutsideOwned(readingEdgeCssParts(source).css, () => false);
+const projectSquareCssParts = source => {
+  const tree = postcss.parse(source), owned = [];
+  tree.walkRules(rule => {
+    if (rule.selector.trim() !== '.content-panel .work-row > img.work-row__preview--square') return;
+    let parent = rule.parent;
+    while (parent.type === 'atrule' && ['media', 'container', 'supports'].includes(parent.name)) parent = parent.parent;
+    if (parent.type !== 'root' || !rule.nodes.every(node => node.type === 'comment' || (node.type === 'decl'
+      && ['width', 'aspect-ratio', 'object-fit', 'justify-self', 'grid-column', 'grid-area'].includes(node.prop)
+      && !node.important && !/url\(/i.test(node.value)))) return;
+    owned.push(rule.toString()); rule.remove();
+  });
+  return { css: tree.toString(), owned: JSON.stringify(owned) };
+};
+const readingAndProjectCss = source => {
+  const edges = readingEdgeCssParts(source), projects = projectSquareCssParts(edges.css);
+  return { outside: cssOutsideOwned(projects.css, () => false), edges: edges.owned, projects: projects.owned };
 };
 
 // A positive component root must own every selector branch. References inside
@@ -896,6 +920,58 @@ const casePostersOutside = source => {
   return ranges.sort((a, b) => b[0] - a[0]).reduce((text, [start, end]) => text.slice(0, start) + text.slice(end), source);
 };
 
+// Two existing identities gain source artwork and one separate editorial link.
+// Normalize only their literal presentation fields; all routing, relations,
+// neighboring records and executable code must retain the same AST.
+const projectPresentationOutside = source => {
+  const tree = parseJs(source, { ecmaVersion: 'latest', sourceType: 'module' });
+  const arrays = tree.body.flatMap(node => node.type === 'VariableDeclaration' ? node.declarations : [])
+    .filter(node => node.id.type === 'Identifier' && node.id.name === 'mapItems' && node.init?.type === 'ArrayExpression');
+  if (arrays.length !== 1) throw new Error('Unknown project collection');
+  const seen = new Set();
+  const key = property => property.key?.name ?? property.key?.value;
+  for (const item of arrays[0].init.elements) {
+    const id = item?.properties?.find(property => key(property) === 'id')?.value?.value;
+    if (!['ilmix', 'garage-app'].includes(id)) continue;
+    if (seen.has(id)) throw new Error('Duplicate project presentation');
+    seen.add(id);
+    if (!item.properties.every(property => property.type === 'Property' && !property.computed && !property.method && property.kind === 'init')
+      || new Set(item.properties.map(key)).size !== item.properties.length) throw new Error('Unknown project fields');
+    const kept = [];
+    for (const property of item.properties) {
+      const name = key(property), value = property.value;
+      const allowed = id === 'ilmix'
+        ? { relatedPoster: ['assets/project-logos/ilmix-cutout.png', 'assets/project-logos/ilmix.svg'], previewKind: ['logo'] }
+        : { relatedPoster: ['assets/project-icons/garage-app.png'], relatedPosterShape: ['square'] };
+      if (Object.hasOwn(allowed, name)) {
+        if (value.type !== 'Literal' || !allowed[name].includes(value.value)) throw new Error('Unknown project artwork');
+        continue;
+      }
+      if (id === 'garage-app' && name === 'description') {
+        if (value.type !== 'Literal' || typeof value.value !== 'string') throw new Error('Nonliteral project copy');
+        property.value = { type: 'ProjectDescriptionCopy' };
+      }
+      if (id === 'garage-app' && name === 'descriptionCredit') {
+        const credit = value.type === 'ObjectExpression' && value.properties;
+        if (!credit || credit.length !== 2 || !credit.every(field => field.type === 'Property' && !field.computed && !field.method && field.kind === 'init' && field.value.type === 'Literal')
+          || new Set(credit.map(key)).size !== 2) throw new Error('Unknown project credit');
+        const fields = Object.fromEntries(credit.map(field => [key(field), field.value.value]));
+        if (fields.label !== 'О новой версии — на сайте «Гаража»'
+          || fields.href !== 'https://garagemca.org/news/a-new-version-of-the-app-i-m-going-to-the-museum') throw new Error('Unknown news destination');
+        continue;
+      }
+      kept.push(property);
+    }
+    item.properties = kept;
+  }
+  if (!seen.size) throw new Error('No known project presentation');
+  return JSON.stringify(tree, (name, value) => ['start', 'end', 'raw'].includes(name) ? undefined : value);
+};
+const squarePreviewClass = [[
+  '  image.classList.toggle("work-row__preview--logo", item.previewKind === "logo");',
+  '  image.classList.toggle("work-row__preview--logo", item.previewKind === "logo");\n  image.classList.toggle("work-row__preview--square", item.relatedPosterShape === "square");',
+]];
+
 // The DD Camp favicon adds one static entry; all picker behaviour is unchanged.
 const campIconSourcePatch = [[
   "  doronin:'assets/project-icons/doronin.svg',krainiuk:'assets/project-icons/krainiuk.svg',",
@@ -1125,6 +1201,18 @@ const isNativeScrollAuditRemoval = (before, after) => before.includes(' || eleme
 export const affectedComponents = (path, before, after, maskHtmlCopy) => {
   if (before.includes("\0") || after.includes("\0")) return null;
   try {
+    if (path === 'js/map-data.js') {
+      try { if (projectPresentationOutside(before) === projectPresentationOutside(after)) return projectPresentationComponents; }
+      catch { /* Unrelated records retain their existing owners. */ }
+    }
+    if (path === 'js/panels.js' && exactReplacements(before, after, squarePreviewClass)) return projectPresentationComponents;
+    if (path === 'styles.css' && before !== after) {
+      const left = readingAndProjectCss(before), right = readingAndProjectCss(after);
+      if (left.outside === right.outside && (left.edges !== right.edges || left.projects !== right.projects)) {
+        return [...new Set([...(left.edges !== right.edges ? readingEdgeComponents : []),
+          ...(left.projects !== right.projects ? projectPresentationComponents : [])])];
+      }
+    }
     if (path === "js/scroll-edges.js" && isReadingEdgeModule(after)) return readingEdgeComponents;
     if (path === "scripts/runtime-files.mjs" && !before.includes('"js/scroll-edges.js"')
       && after.split('  "js/scroll-edges.js",\n').length === 2

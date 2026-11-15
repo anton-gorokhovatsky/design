@@ -805,6 +805,47 @@ const readingEdgeCss = '[data-scroll-edge]{--scroll-edge-depth:24px}\n'
   + '[data-scroll-edge][data-scroll-edge-active="true"]{mask-image:linear-gradient(to bottom,transparent,#000 var(--scroll-edge-top),#000 calc(100% - var(--scroll-edge-bottom)),transparent);-webkit-mask-image:linear-gradient(to bottom,transparent,#000 var(--scroll-edge-top),#000 calc(100% - var(--scroll-edge-bottom)),transparent)}\n'
   + '.project-orbit-picker[data-scroll-edge]{--scroll-edge-inset:var(--picker-head-height);scroll-padding-block:calc(var(--picker-head-height) + 32px) 32px}\n';
 scoped('styles.css', '.map-grid{color:red}', '.map-grid{color:red}' + readingEdgeCss, 'components', readingEdgeCoverage);
+const sharedReadingPadding = '.content-panel__body[data-scroll-edge],.case-scroll[data-scroll-edge],.settings-panel__body[data-scroll-edge],#story-pane[data-scroll-edge]{scroll-padding-block:32px}';
+const separateStoryPadding = '.content-panel__body[data-scroll-edge], .case-scroll[data-scroll-edge], .settings-panel__body[data-scroll-edge]{scroll-padding-block:32px}#story-pane[data-scroll-edge]{scroll-padding-block:var(--scroll-edge-depth)}';
+// Formatting keeps selector branches explicit; a separate story anchor retains
+// the exact pre-existing resize coordinate without changing the material.
+scoped('styles.css', sharedReadingPadding.replaceAll(',', ', '), separateStoryPadding, 'components', readingEdgeCoverage);
+scoped('styles.css', '', '#story-pane[data-scroll-edge]{scroll-padding-block:var(--scroll-edge-depth)}.map-grid{display:none}', 'full');
+const projectPresentationCoverage = ['check:case-flow', 'check:inspector-links', 'check:hover-layout', 'check:case-view', 'check:core', 'check:accessibility'];
+const projectPresentationBefore = 'const mapItems=[{id:"ilmix",relatedPoster:"assets/project-logos/ilmix-cutout.png",previewKind:"logo",href:"https://ilmix.example/"},{id:"garage-app",description:"App",href:"https://apps.apple.com/ru/app/id1558275984"}];\nconst unrelated=()=>true;';
+const projectPresentationAfter = projectPresentationBefore
+  .replace('ilmix-cutout.png', 'ilmix.svg').replace(',previewKind:"logo"', '')
+  .replace('id:"garage-app",description:"App"', 'id:"garage-app",relatedPoster:"assets/project-icons/garage-app.png",relatedPosterShape:"square",description:"App. О новой версии — на сайте «Гаража».",descriptionCredit:{label:"О новой версии — на сайте «Гаража»",href:"https://garagemca.org/news/a-new-version-of-the-app-i-m-going-to-the-museum"}');
+scoped('js/map-data.js', projectPresentationBefore, projectPresentationAfter, 'components', projectPresentationCoverage);
+for (const unsafe of [
+  projectPresentationAfter.replace('garage-app.png', 'unknown.png'),
+  projectPresentationAfter.replace('relatedPosterShape:"square"', 'relatedPosterShape:"circle"'),
+  projectPresentationAfter.replace('relatedPosterShape:"square"', 'relatedPosterShape:getShape()'),
+  projectPresentationAfter.replace('https://garagemca.org/news/a-new-version-of-the-app-i-m-going-to-the-museum', 'javascript:alert(1)'),
+  projectPresentationAfter.replace('https://garagemca.org/news/a-new-version-of-the-app-i-m-going-to-the-museum', 'https://garagemca.org/other'),
+  projectPresentationAfter.replace('https://apps.apple.com/ru/app/id1558275984', 'https://other.example/'),
+  projectPresentationAfter.replace('id:"garage-app"', 'id:"other-app"'),
+  projectPresentationAfter.replace('const unrelated=()=>true', 'const unrelated=()=>false'),
+  projectPresentationAfter.replace('relatedPosterShape:"square"', 'relatedPosterShape:"square",relatedPosterShape:"square"'),
+]) scoped('js/map-data.js', projectPresentationBefore, unsafe, 'full');
+const squareClassLine = '  image.classList.toggle("work-row__preview--square", item.relatedPosterShape === "square");\n';
+const panelsBeforeSquare = panels.replace(squareClassLine, '');
+scoped('js/panels.js', panelsBeforeSquare, panels, 'components', projectPresentationCoverage);
+scoped('js/panels.js', panelsBeforeSquare, panels + '\nwindow.unrelated=true;', 'full');
+scoped('js/panels.js', panelsBeforeSquare, panels.replace('item.relatedPosterShape === "square"', 'item.kind === "project"'), 'full');
+const projectSquareCss = '.content-panel .work-row > img.work-row__preview--square{width:min(66%,14rem);aspect-ratio:1;object-fit:contain;justify-self:start}@container map-viewport (max-width:900px){.content-panel .work-row > img.work-row__preview--square{grid-column:2}}';
+scoped('styles.css', '', projectSquareCss, 'components', projectPresentationCoverage);
+scoped('styles.css', '', projectSquareCss + readingEdgeCss, 'components', [...new Set([...readingEdgeCoverage, ...projectPresentationCoverage])]);
+for (const unsafe of [projectSquareCss.replace('img.work-row__preview--square', 'img.work-row__preview'),
+  projectSquareCss.replace('object-fit:contain', 'background:var(--material-01)'), projectSquareCss + '.map-node{display:none}']) {
+  scoped('styles.css', '', unsafe, 'full');
+}
+for (const path of ['assets/project-logos/ilmix.svg', 'assets/project-icons/garage-app.png', 'assets/project-logos/ilmix-cutout.png']) {
+  scoped(path, '', 'source artifact', 'components', projectPresentationCoverage);
+  scoped(path, 'old source artifact', '', 'components', projectPresentationCoverage);
+}
+scoped('assets/project-logos/other.svg', '', 'other source', 'full');
+scoped('docs/garage-app-icon-source.md', '', 'Source provenance', 'copy');
 for (const unsafe of [readingEdgeCss + '.map-grid{display:none}', readingEdgeCss.replace('--scroll-edge-depth:24px', 'height:24px'),
   readingEdgeCss.replace('[data-scroll-edge]{', '[data-scroll-edge],.command-results{'),
   readingEdgeCss.replace('--scroll-edge-depth:24px', '--scroll-edge-depth:24px!important'),
@@ -819,6 +860,9 @@ try {
     { cwd: readingEdgeDirectory, encoding: 'utf8', stdio: 'pipe' }).trim();
   mkdirSync(join(readingEdgeDirectory, 'js'));
   writeFileSync(join(readingEdgeDirectory, 'index.html'), readingEdgeHtml);
+  writeFileSync(join(readingEdgeDirectory, 'js/map-data.js'), projectPresentationBefore);
+  mkdirSync(join(readingEdgeDirectory, 'assets/project-logos'), { recursive: true });
+  writeFileSync(join(readingEdgeDirectory, 'assets/project-logos/ilmix-cutout.png'), 'old raster');
   git('init', '-b', 'main'); git('add', '.'); git('commit', '-m', 'baseline');
   const base = git('rev-parse', 'HEAD');
   writeFileSync(join(readingEdgeDirectory, 'js/scroll-edges.js'), readingEdgeModule);
@@ -834,6 +878,19 @@ try {
   assert.deepEqual(planRelease({ projectRoot: readingEdgeDirectory, base: addedBase }).components, expected, 'A later reader-only edit keeps its bounded gate');
   writeFileSync(join(readingEdgeDirectory, 'index.html'), withReadingEdge.replace('<main>', '<main hidden>'));
   assert.equal(plan().mode, 'full', 'Reader ownership cannot hide a neighboring navigation change');
+  git('restore', 'index.html');
+  writeFileSync(join(readingEdgeDirectory, 'js/map-data.js'), projectPresentationAfter);
+  rmSync(join(readingEdgeDirectory, 'assets/project-logos/ilmix-cutout.png'));
+  writeFileSync(join(readingEdgeDirectory, 'assets/project-logos/ilmix.svg'), '<svg/>');
+  mkdirSync(join(readingEdgeDirectory, 'assets/project-icons'), { recursive: true });
+  writeFileSync(join(readingEdgeDirectory, 'assets/project-icons/garage-app.png'), 'source app icon');
+  mkdirSync(join(readingEdgeDirectory, 'docs'));
+  writeFileSync(join(readingEdgeDirectory, 'docs/garage-app-icon-source.md'), 'Source provenance');
+  assert.equal(plan().mode, 'components', 'The published-base plan includes committed reader work and new source media');
+  assert.deepEqual(plan().components, [...new Set([...readingEdgeCoverage, ...projectPresentationCoverage])].sort());
+  assert.ok(plan().files.includes('assets/project-logos/ilmix-cutout.png'), 'Retirement of the old raster is part of the candidate');
+  writeFileSync(join(readingEdgeDirectory, 'js/map-data.js'), projectPresentationAfter + '\nwindow.unrelated=true;');
+  assert.equal(plan().mode, 'full', 'Source artwork cannot hide neighboring runtime changes');
 } finally { rmSync(readingEdgeDirectory, { recursive: true, force: true }); }
 
 const auditFixture = 'const readMaterialAuditExpression = `old`;\nconst unchanged = 1;';

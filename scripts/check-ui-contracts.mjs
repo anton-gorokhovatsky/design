@@ -2279,6 +2279,8 @@ const auditBrowser = async (client, origin) => {
     : false;
   const tarskiPreviewDiagnostics = await evaluate(client, `(() => {
     const target = document.querySelector('[data-map-id="tarski"]');
+    const dispatchedPoint = ${JSON.stringify(tarskiHoverPoint)};
+    const dispatchedHit = dispatchedPoint ? document.elementFromPoint(dispatchedPoint.x, dispatchedPoint.y) : null;
     const targetBounds = target?.getBoundingClientRect();
     const targetPoint = targetBounds ? {
       x: targetBounds.left + targetBounds.width / 2,
@@ -2304,6 +2306,11 @@ const auditBrowser = async (client, origin) => {
         ?.classList.contains("is-open") || false,
       targetExists: Boolean(target),
       targetHovered: target?.matches(":hover") || false,
+      dispatchedPoint,
+      hitAtDispatchedPoint: dispatchedHit?.closest("[data-map-id]")?.dataset.mapId || "",
+      hoveredMapIds: [...document.querySelectorAll("[data-map-id]:hover")].map(element => element.dataset.mapId),
+      documentFocused: document.hasFocus(),
+      visibilityState: document.visibilityState,
       hitMapId: topElement?.closest("[data-map-id]")?.dataset.mapId || "",
       targetBounds: targetBounds ? {
         left: targetBounds.left,

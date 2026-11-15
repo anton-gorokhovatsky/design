@@ -100,9 +100,9 @@ const mapItems = [
     label: "ИльмиксГрупп",
     title: "«ИльмиксГрупп»",
     caseStudy: { title: "Цифровые продукты «ИльмиксГрупп»" },
-    // Final Russian logo: https://readymag.website/hors/next/
-    relatedPoster: "assets/project-logos/ilmix-cutout.png",
-    previewKind: "logo",
+    // Original footer SVG, widget 6069e826a2cdce008a11b719:
+    // https://my.readymag.com/edit/2712745/preview/
+    relatedPoster: "assets/project-logos/ilmix.svg",
     meta: "ОКОЛО 5 ЛЕТ В СУММЕ / ЦИФРОВОЕ НАПРАВЛЕНИЕ",
     description: "Перезапустил шесть сайтов, занимался разработкой логотипа и остального брендинга.",
     timeYear: 2018.5,
@@ -218,8 +218,14 @@ const mapItems = [
     kind: "project",
     label: "Я иду в музей",
     title: "«Я иду в музей»",
+    relatedPoster: "assets/project-icons/garage-app.png",
+    relatedPosterShape: "square",
     meta: "ДОСТУПНОСТЬ / МОБИЛЬНЫЙ ПРОДУКТ / ПЕРЕЗАПУСК",
-    description: "Перезапуск приложения для людей с ментальными особенностями и их близких: доступность, навигация и понятный маршрут.",
+    description: "Перезапуск приложения для людей с ментальными особенностями и их близких: доступность, навигация и понятный маршрут.\n\nО новой версии — на сайте «Гаража».",
+    descriptionCredit: {
+      label: "О новой версии — на сайте «Гаража»",
+      href: "https://garagemca.org/news/a-new-version-of-the-app-i-m-going-to-the-museum",
+    },
     timeYear: 2024,
     href: "https://apps.apple.com/ru/app/я-иду-в-музей/id1558275984",
     linkLabel: "ОТКРЫТЬ В\u00a0APP STORE",

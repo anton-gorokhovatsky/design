@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { parse as parseJs } from "acorn";
 import { parse as parseHtml } from "parse5";
 import { cacheVersionFiles } from "./cache-versions.mjs";
-import { affectedComponents } from "./component-scope.mjs";
+import { affectedComponents, projectPresentationComponents } from "./component-scope.mjs";
 import { isMediaOnly, mediaAssetPaths } from "./media-scope.mjs";
 import { ownedCheckComponent, staticCheckPaths, staticScopeFor } from "./check-profiles.mjs";
 import { browserMatrix } from "./check-catalog.mjs";
@@ -35,7 +35,9 @@ const relatedPointMedia = Object.fromEntries(["running", "private-practice", "ga
   .map(id => [id, Object.fromEntries(["light", "dark"].map(theme => [theme, `assets/point-thumbnails/${id}-${theme}.webp`]))]));
 const relatedPointImages = new Set(Object.values(relatedPointMedia).flatMap(Object.values));
 const relatedPointImageScope = { mode: "components", components: ["check:inspector-links", "check:case-view"] };
-const relatedPresentationDocs = new Set(["js/README.md", "rendering/README.md", "docs/point-thumbnails.md", "docs/not-found.md"]);
+const relatedPresentationDocs = new Set(["js/README.md", "rendering/README.md", "docs/point-thumbnails.md", "docs/not-found.md", "docs/ilmix-logo-source.md", "docs/garage-app-icon-source.md"]);
+const projectPresentationAssets = new Set(["assets/project-logos/ilmix-cutout.png", "assets/project-logos/ilmix.svg", "assets/project-icons/garage-app.png"]);
+const projectPresentationScope = { mode: "components", components: projectPresentationComponents };
 const relatedProductAction = { doronin: { label: "Купить тот самый ковёр от Вити", href: "https://doronin.store/tproduct/840694551052-kovyor" } };
 const focusedHomePaths = new Set(["js/focused-home.js", "rendering/js/focused-home.js"]);
 const audienceSnapshotPaths = new Set(["js/practice-audience.js", "rendering/js/practice-audience.js"]);
@@ -338,6 +340,7 @@ export const classifyChange = (path, before, after) => {
   if (path === ".github/workflows/quality.yml" && restoresRunnerAptMirrors(before, after)) return { mode: "copy", components: [] };
   if (staticCheckPaths.has(path) || relatedPresentationDocs.has(path) || shareArtifactPaths.has(path)) return { mode: "copy", components: [] };
   if (relatedPointImages.has(path)) return relatedPointImageScope;
+  if (projectPresentationAssets.has(path)) return projectPresentationScope;
   if (audienceSnapshotPaths.has(path)) {
     try {
       if (maskAudienceSnapshot(before) === maskAudienceSnapshot(after)) return { mode: "components", components: audienceSnapshotChecks };
@@ -414,6 +417,7 @@ export const planRelease = ({ projectRoot, base = "origin/gh-pages", target } = 
       if (status === "M" && shareArtifactPaths.has(path)) classification = { mode: "copy", components: [] };
       if (["A", "M"].includes(status) && relatedPresentationDocs.has(path)) classification = { mode: "copy", components: [] };
       if (["A", "M"].includes(status) && relatedPointImages.has(path)) classification = relatedPointImageScope;
+      if (["A", "M", "D"].includes(status) && projectPresentationAssets.has(path)) classification = projectPresentationScope;
       if (status === "M" && mediaAssetPaths.has(path)) classification = { mode: "components", components: ["media"] };
       if (status === "M" && pointRename?.paths.includes(path)) classification = { mode: "components", components: ["point-address"] };
       changes.push({ path, ...classification });
@@ -421,6 +425,7 @@ export const planRelease = ({ projectRoot, base = "origin/gh-pages", target } = 
     if (!targetSha) {
       changes.push(...git("ls-files", "--others", "--exclude-standard", "-z").split("\0").filter(Boolean)
         .map((path) => { const owner = ownedCheckComponent(path); return staticCheckPaths.has(path) || relatedPresentationDocs.has(path) ? { path, mode: "copy", components: [] } : relatedPointImages.has(path) ? { path, ...relatedPointImageScope }
+          : projectPresentationAssets.has(path) ? { path, ...projectPresentationScope }
           : path === "js/scroll-edges.js" ? { path, ...classifyChange(path, "", readFileSync(resolve(projectRoot, path), "utf8")) }
             : { path, mode: owner ? "components" : "full", components: owner ? [owner] : [] }; }));
     }

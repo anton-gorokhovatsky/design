@@ -270,6 +270,7 @@ for (const row of document.querySelectorAll(".work-row[data-map-point]")) {
   const image = document.createElement("img");
   image.className = "work-row__preview";
   image.classList.toggle("work-row__preview--logo", item.previewKind === "logo");
+  image.classList.toggle("work-row__preview--square", item.relatedPosterShape === "square");
   image.src = poster;
   image.alt = "";
   image.width = 900;
