@@ -6,6 +6,7 @@ import { runInNewContext } from "node:vm";
 import { createRequire } from "node:module";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { mapItems } from "../js/map-data.js";
 
 const require = createRequire(import.meta.url);
 const { chromium, webkit } = require("playwright");
@@ -98,8 +99,8 @@ const assertPageRestoration = async (page) => {
     layers: document.querySelectorAll('.project-satellites').length,
   }));
   const before = await inventory();
-  assert.equal(before.ids.length, 53, 'All map objects exist before leaving');
-  assert.equal(new Set(before.ids).size, 53, 'Map objects have unique identities');
+  assert.deepEqual(before.ids, mapItems.map(({ id }) => id).sort(), 'All map objects exist before leaving');
+  assert.equal(new Set(before.ids).size, before.ids.length, 'Map objects have unique identities');
   assert.equal(before.satellites, 10, 'All private projects exist before leaving');
   for (let cycle = 0; cycle < 2; cycle++) {
     const bodies = await readCelestial(page);
