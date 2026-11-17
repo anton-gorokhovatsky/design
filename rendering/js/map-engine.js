@@ -116,7 +116,8 @@ const mapMeasurementRect=()=>{
 };
 const applyPendingMapLayout=()=>{
  const key=[mapGeometryKey(),mapNodesRoot.clientWidth,mapNodesRoot.clientHeight,...[...mapLabels.values()].flatMap(label=>[label.offsetWidth,label.offsetHeight])].join("|");
- if(timeLayoutKey===key)return;
+ // The projected boxes can be reused during motion, but the settle pass must measure the actual field.
+ if(timeLayoutKey===key&&signalField?.hasAttribute("data-time-transition"))return;
  applyMapLayout();
  if(signalField?.hasAttribute("data-time-transition"))timeLayoutKey=[mapGeometryKey(),mapNodesRoot.clientWidth,mapNodesRoot.clientHeight,...[...mapLabels.values()].flatMap(label=>[label.offsetWidth,label.offsetHeight])].join("|");
 };
@@ -309,12 +310,16 @@ mapFilterButtons.forEach((button)=>{button.addEventListener("click",()=>{toggleM
 // Only chronology changes suppress labels; hover and responsive measurement stay immediate.
 let timeTransitionId=0;
 const settleTimeTransition=(id)=>{
- if(id!==timeTransitionId)return;
+ if(id!==timeTransitionId||!signalField?.hasAttribute("data-time-transition"))return;
  const moving=[
   ...mapNodesRoot.getAnimations({subtree:true}).filter(animation=>["top","left"].includes(animation.transitionProperty)&&animation.effect?.target.matches(".map-node")),
   ...signalField.querySelector(".map-camera").getAnimations().filter(animation=>animation.transitionProperty==="transform")
  ].filter(animation=>animation.playState!=="finished");
- if(!moving.length){signalField?.removeAttribute("data-time-transition");return;}
+ if(!moving.length){
+  signalField.removeAttribute("data-time-transition");
+  if(!mapLinksRoot?.hasAttribute("data-layout-pending"))scheduleMapLinksRender();
+  return;
+ }
  Promise.allSettled(moving.map(animation=>animation.finished)).then(()=>settleTimeTransition(id));
 };
 reducedMotion.addEventListener?.("change",()=>{

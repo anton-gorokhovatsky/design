@@ -107,6 +107,11 @@ try {
           await page.locator('.constellation-nav [data-time-toggle]').click();
           await page.waitForFunction(enabled => document.querySelector('[data-practice-map]').hasAttribute('data-time-view') === enabled, enabled);
           await settled();
+          if (enabled) {
+            // A resize notification may invalidate measurements even when the viewport has returned to the same size.
+            await page.evaluate(() => window.dispatchEvent(new Event('resize')));
+            await settled();
+          }
         }
         assert.deepEqual(await placement(), initial, 'Closing the chronology menu restores the same point and caption positions.');
         await page.setViewportSize({ width: 390, height: 900 });
