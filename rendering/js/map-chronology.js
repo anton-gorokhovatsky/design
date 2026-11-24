@@ -28,6 +28,7 @@ const timeGroupSectors = {
 };
 
 const timeRootAngles = {
+  "a-house": [null, .92],
   optimal: [1.25, 1.25],
   "early-career": [-2.3, -2.08],
   ilmix: [2.9, 2.9],
