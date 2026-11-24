@@ -204,7 +204,7 @@ const isRelatedPointPresentation = (before, after) => {
 // Only the display names in the known landmark tuples; identifiers, direction
 // labels and executable code stay byte-for-byte protected in both source builds.
 const maskLandmarkCopy = (source) => {
-  const keys = ["garage", "narkomfin", "private-practice", "eleven", "ks-fish", "principle-data-intuition", "running", "youtube"];
+  const keys = ["garage", "a-house", "narkomfin", "private-practice", "eleven", "ks-fish", "principle-data-intuition", "running", "youtube"];
   const tree = parseJs(source, { ecmaVersion: "latest", sourceType: "module" });
   const ranges = tree.body.flatMap(statement => statement.type === "VariableDeclaration"
     ? statement.declarations.flatMap(({ init }) => {

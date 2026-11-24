@@ -190,8 +190,7 @@ try {
         const labels = [...document.querySelectorAll('.focused-home .direction-landmark')]
           .filter(label => getComputedStyle(label).visibility !== 'hidden');
         const field = document.querySelector('.focused-home__map').getBoundingClientRect();
-        const boxes = labels.map(label => ({ id: label.dataset.mapLabelId,
-          visible: getComputedStyle(label).visibility !== 'hidden', rect: label.getBoundingClientRect() }));
+        const boxes = labels.map(label => ({ id: label.dataset.mapLabelId, rect: label.getBoundingClientRect() }));
         const satellites = [...document.querySelectorAll('.project-satellite .map-node__glyph')]
           .filter(node => node.checkVisibility({ visibilityProperty: true, opacityProperty: true }))
           .map(node => ({ id: node.closest('[data-map-id]').dataset.mapId, rect: node.getBoundingClientRect() }));
@@ -218,7 +217,7 @@ try {
         });
         return {
           pulsarGaps,
-          visible: boxes.filter(box => box.visible).length,
+          visible: boxes.map(({ id }) => id).sort(),
           clipped: boxes.filter(({ rect }) => rect.left < field.left - 1 || rect.right > field.right + 1
             || rect.top < field.top - 1 || rect.bottom > field.bottom + 1).map(box => box.id),
           overlaps: boxes.flatMap((a, index) => boxes.slice(index + 1).filter(b =>
@@ -230,7 +229,8 @@ try {
         };
       });
       assert.deepEqual(state.pulsarGaps, [], 'Grid lines only disappear behind the opaque pulsar core, including after rotation');
-      assert.equal(state.visible, 6, `${engine} ${viewport.width}: all introductory captions remain available; private projects share their orbit picker`);
+      assert.deepEqual(state.visible, ['a-house', 'garage', 'narkomfin', 'principle-data-intuition', 'private-practice', 'running', 'youtube'],
+        `${engine} ${viewport.width}: all introductory captions remain available; private projects share their orbit picker`);
       assert.equal(await page.locator('.project-orbit-picker [data-picker-project]').count(), 10,
         'Every private project remains available in the touch picker');
       assert.deepEqual(state.clipped, [], 'Introductory captions stay inside their field');
@@ -372,7 +372,7 @@ try {
     await page.waitForFunction(time => Number(document.querySelector('.practice-orbits-canvas').dataset.orbitTime) > Number(time), idle.time);
     await page.screenshot({ path: `${directory}/${engine}-${viewport.width}-introductory-captions.png` });
     await page.close();
-    console.log(`PASS ${engine} ${viewport.width}: six introductory captions, ten picker projects, rotation and momentum without overlap.`);
+    console.log(`PASS ${engine} ${viewport.width}: introductory captions, ten picker projects, rotation and momentum without overlap.`);
   }
   for (const [width, height, font] of [[320, 844, 32], [390, 844, 32], [320, 568, 16], [320, 568, 32]]) {
     const page = await browser.newPage({ viewport: { width, height }, hasTouch: true, isMobile: true, reducedMotion: 'reduce' });

@@ -10030,7 +10030,7 @@ position: relative; inset: auto; margin: -8px -8px var(--space-4);
 .focused-home .map-camera { perspective: none; transition: none; }
 .focused-home :is(.map-nodes, .map-links) { transform: none; }
 .focused-home :is(.origin-marker, .map-axis-label, .map-depth-grid, .map-specks) { display: none; }
-.focused-home .map-node:not([data-map-id="garage"], [data-map-id="narkomfin"], [data-map-id="private-practice"], [data-map-id="eleven"], [data-map-id="ks-fish"], [data-map-id="principle-data-intuition"], [data-map-id="running"], [data-map-id="youtube"]) { display: none; }
+.focused-home .map-node:not([data-focused-home-point]) { display: none; }
 /* iOS: composite each moving node with its filtered artwork. */
 .focused-home .map-node { --home-sphere-unit:clamp(.76px,min(.257cqw,.18cqh),.9px); --node-rest-scale: 1; --node-scale: var(--node-rest-scale); --map-target-scale: 1; --map-target-size: 26px; transform: translate3d(-50%, -50%, 0); }
 .focused-home .map-node--garage { --map-target-size: calc(76 * var(--home-sphere-unit)); }

@@ -9,7 +9,7 @@ const forcedColors = matchMedia('(forced-colors:active)');
 const ns = 'http://www.w3.org/2000/svg';
 // Depth groups follow the existing map's branches, not an importance ranking.
 const depths = new Map([
-  ['garage', -56], ['narkomfin', -56],
+  ['garage', -56], ['a-house', -56], ['narkomfin', -56],
   ['private-practice', 0],
   ['principle-data-intuition', 0], ['running', 56], ['youtube', 56],
 ]);

@@ -117,7 +117,8 @@ try {
     if (width <= 390) {
       const targets = await readMapTargets(page);
       report.push({ name, targets });
-      assert.equal(targets.length, 6, 'Each introductory direction has a reachable target; projects share the practice picker.');
+      assert.equal(targets.length, 7, 'Each introductory point has a reachable target; projects share the practice picker.');
+      assert.ok(targets.some(target => target.id === 'a-house'), 'A–House is reachable from the introductory map.');
       assert.equal(await page.locator('[data-picker-project]').count(), 10, 'All private projects have a touch-picker row.');
       assert.deepEqual(targets.filter(target => target.misses.length || target.width < 24 || target.height < 24), [], `Mobile targets ${name}`);
     }

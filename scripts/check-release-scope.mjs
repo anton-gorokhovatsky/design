@@ -208,6 +208,7 @@ checks += 4;
 for (const path of ["js/focused-home.js", "rendering/js/focused-home.js"]) {
   const source = read(path);
   change(path, source, "Челлендж «11 111»", "Велочеллендж «11 111»", true);
+  change(path, source, "A–House", "A–House Москва", true);
   change(path, source, "ИНСТИТУЦИИ", "КОМПАНИИ", false);
   assert.equal(isCopyOnly(path, source, source + "\nrun();"), false);
   checks += 1;

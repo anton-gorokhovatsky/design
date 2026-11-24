@@ -80,6 +80,7 @@ const principleLandmarkId = 'principle-data-intuition';
 const principleCountId = 'focused-principle-count';
 const landmarks = {
   garage: ['ИНСТИТУЦИИ', 'Музей «Гараж»'],
+  'a-house': ['', 'A–House'],
   narkomfin: ['', 'Дом Наркомфина'],
   'private-practice': ['ПРОЕКТЫ', 'Частная практика'],
   eleven: ['', 'Челлендж «11 111»'],
